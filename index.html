@@ -455,6 +455,10 @@
             background: #e94560;
             color: white;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -488,9 +492,8 @@
                 layers: [
                     { id: 'buildings', name: 'מבנים', on: true },
                     { id: 'roads', name: 'כבישים', on: true },
-                    { id: 'stations', name: 'תחנות', on: false },
-                    { id: 'rakl_src', name: 'רק"ל מקור', on: false },
-                    { id: 'rakl', name: 'רק"ל', on: false },
+                    { id: 'stations', name: 'תחנות רק"ל', on: false },
+                    { id: 'rakl', name: 'רק"ל', on: false, combined: ['rakl', 'rakl_src'] },
                 ]
             },
             admin: {
@@ -537,12 +540,6 @@
                 desc: 'מפת רחובות ושמות',
                 url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 attribution: '&copy; OpenStreetMap contributors'
-            },
-            esriImagery: {
-                name: 'אורתופוטו',
-                desc: 'צילום אוויר ברזולוציה גבוהה',
-                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                attribution: '&copy; Esri'
             },
             cartoDark: {
                 name: 'כהה',
@@ -602,11 +599,17 @@
             const [opacity, setOpacity] = useState(0.85);
             const [basemap, setBasemap] = useState('cartoLight');
             const [loading, setLoading] = useState(false);
+            const [loadingBuildings, setLoadingBuildings] = useState(false);
             const [cursorPos, setCursorPos] = useState(null);
             const [searchText, setSearchText] = useState('');
             const [planSearch, setPlanSearch] = useState('');
             const [planIndex, setPlanIndex] = useState([]);
             const [showSearchResults, setShowSearchResults] = useState(false);
+            const [planningTopics, setPlanningTopics] = useState({
+                overlapping: false,   // תבעות כפולות על אותו מרחב
+                densification: false, // תכניות לעיבוי שטחים חומים
+                objections: false     // תכניות המופקדות להתנגדויות
+            });
 
             // Load plan search index
             useEffect(() => {
@@ -668,66 +671,131 @@
                 }
             }, [basemap]);
 
-            // Update WMS as single image overlays (no tiles, no white gaps)
-            // Uses double-buffering: keeps old image visible while new one loads
-            // Handles always-on layers, toggled layers, and the permits CQL filter
+            // WMS overlays split by priority:
+            // 1. High priority: plans + always-on + non-buildings layers (loads first)
+            // 2. Low priority: buildings layer (loads with 1s delay)
+            // 3. Separate: permits (CQL filtered)
+            // All use double-buffering to keep old image while new loads.
             useEffect(() => {
                 const map = mapInstanceRef.current;
                 if (!map) return;
 
                 // Clean up previous
                 if (wmsLayerRef.current) {
-                    if (wmsLayerRef.current.front) map.removeLayer(wmsLayerRef.current.front);
-                    if (wmsLayerRef.current.back) map.removeLayer(wmsLayerRef.current.back);
-                    if (wmsLayerRef.current.permitFront) map.removeLayer(wmsLayerRef.current.permitFront);
-                    if (wmsLayerRef.current.permitBack) map.removeLayer(wmsLayerRef.current.permitBack);
-                    map.off('moveend', wmsLayerRef.current.handler);
-                    clearTimeout(wmsLayerRef.current.debounceTimer);
+                    const r = wmsLayerRef.current;
+                    [r.mainFront, r.mainBack, r.bldgFront, r.bldgBack, r.permitFront, r.permitBack]
+                        .forEach(o => { if (o) map.removeLayer(o); });
+                    map.off('moveend', r.handler);
+                    clearTimeout(r.debounceTimer);
+                    clearTimeout(r.bldgDelayTimer);
                     wmsLayerRef.current = null;
                 }
 
-                // Build list of active WMS layers: always-on + toggled (excluding virtual 'permits')
+                // Expand combined layers (e.g. rakl -> rakl + rakl_src)
+                const combinedMap = {};
+                Object.values(LAYER_CONFIG).forEach(g =>
+                    g.layers.forEach(l => { if (l.combined) combinedMap[l.id] = l.combined; })
+                );
                 const toggledLayers = Object.entries(layers)
-                    .filter(([id, on]) => on && id !== 'permits')
-                    .map(([id]) => id);
-                const allWmsLayers = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])];
+                    .filter(([id, on]) => on && id !== 'permits' && id !== 'buildings')
+                    .flatMap(([id]) => combinedMap[id] || [id]);
+                const mainLayers = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])];
+                const showBuildings = layers['buildings'];
                 const showPermits = layers['permits'];
 
-                if (allWmsLayers.length === 0 && !showPermits) return;
+                if (mainLayers.length === 0 && !showBuildings && !showPermits) return;
 
-                const layersCsv = allWmsLayers.join(',');
+                // Build CQL_FILTER for planning topics (applied to plans layer)
+                let plansCqlFilter = null;
+                const topicFilters = [];
+                if (planningTopics.overlapping) topicFilters.push('overlapping_plans > 0');
+                if (planningTopics.densification) topicFilters.push("status_mavat IN ('תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור') AND units_add > 0");
+                if (planningTopics.objections) topicFilters.push("status_mavat = 'הפקדה להתנגדויות/השגות'");
+                if (topicFilters.length > 0) {
+                    plansCqlFilter = topicFilters.join(' AND ');
+                }
+
+                // Build CQL_FILTER string for multi-layer request
+                // Each layer needs its own filter separated by ';', use INCLUDE for no-filter layers
+                let mainCqlFilter = null;
+                if (plansCqlFilter && mainLayers.includes('plans')) {
+                    mainCqlFilter = mainLayers.map(l => l === 'plans' ? plansCqlFilter : 'INCLUDE').join(';');
+                }
+
+                const mainCsv = mainLayers.join(',');
                 const bounds = map.getBounds();
                 const size = map.getSize();
 
-                // Main WMS overlay
-                let front = null;
-                let back = null;
-                if (allWmsLayers.length > 0) {
-                    const url = buildWmsUrl(WMS_URL, layersCsv, bounds, size);
-                    front = L.imageOverlay(url, bounds, {
-                        opacity: opacity,
-                        interactive: false,
-                        className: 'wms-overlay'
-                    }).addTo(map);
+                // --- High priority: main layers (plans, always-on, roads, etc.) ---
+                let mainFront = null, mainBack = null;
+                if (mainLayers.length > 0) {
+                    mainFront = L.imageOverlay(
+                        buildWmsUrl(WMS_URL, mainCsv, bounds, size, mainCqlFilter), bounds,
+                        { opacity, interactive: false, className: 'wms-overlay' }
+                    ).addTo(map);
                 }
 
-                // Permits overlay (plans layer with CQL filter)
-                let permitFront = null;
-                let permitBack = null;
+                // --- Low priority: buildings (delayed 1s) ---
+                let bldgFront = null, bldgBack = null, bldgDelayTimer = null;
+                if (showBuildings) {
+                    setLoadingBuildings(true);
+                    bldgDelayTimer = setTimeout(() => {
+                        bldgFront = L.imageOverlay(
+                            buildWmsUrl(WMS_URL, 'buildings', bounds, size), bounds,
+                            { opacity, interactive: false, className: 'wms-overlay' }
+                        ).addTo(map);
+                        bldgFront.bringToBack();
+                        const el = bldgFront.getElement();
+                        if (el) {
+                            el.onload = () => setLoadingBuildings(false);
+                            el.onerror = () => setLoadingBuildings(false);
+                        }
+                    }, 1000);
+                }
+
+                // --- Separate: permits overlay ---
+                let permitFront = null, permitBack = null;
                 if (showPermits) {
-                    const permitUrl = buildWmsUrl(WMS_URL, 'plans', bounds, size,
-                        "building_permit IS NOT NULL AND building_permit != ''");
-                    permitFront = L.imageOverlay(permitUrl, bounds, {
-                        opacity: opacity,
-                        interactive: false,
-                        className: 'wms-overlay'
-                    }).addTo(map);
+                    permitFront = L.imageOverlay(
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size,
+                            "stage IS NOT NULL AND stage != ''"),
+                        bounds, { opacity, interactive: false, className: 'wms-overlay' }
+                    ).addTo(map);
                 }
 
                 let debounceTimer = null;
 
+                // Helper: double-buffer swap for an overlay pair
+                function swapOverlay(url, b, frontRef, backRef, onSwapped) {
+                    if (backRef.current) map.removeLayer(backRef.current);
+                    backRef.current = L.imageOverlay(url, b, {
+                        opacity: 0, interactive: false, className: 'wms-overlay'
+                    }).addTo(map);
+                    const el = backRef.current.getElement();
+                    if (el) {
+                        el.onload = () => {
+                            backRef.current.setOpacity(opacity);
+                            if (frontRef.current) map.removeLayer(frontRef.current);
+                            frontRef.current = backRef.current;
+                            backRef.current = null;
+                            onSwapped();
+                        };
+                        el.onerror = () => {
+                            if (backRef.current) map.removeLayer(backRef.current);
+                            backRef.current = null;
+                            onSwapped();
+                        };
+                    }
+                }
+
+                // Mutable refs for the swap helper
+                const mf = { current: mainFront }, mb = { current: mainBack };
+                const bf = { current: bldgFront }, bb = { current: bldgBack };
+                const pf = { current: permitFront }, pb = { current: permitBack };
+
                 function onMoveEnd() {
                     clearTimeout(debounceTimer);
+                    clearTimeout(bldgDelayTimer);
                     debounceTimer = setTimeout(() => {
                         const b = map.getBounds();
                         const s = map.getSize();
@@ -735,75 +803,54 @@
 
                         let pending = 0;
                         const checkDone = () => { if (--pending <= 0) setLoading(false); };
-
                         setLoading(true);
 
-                        // Update main overlay
-                        if (allWmsLayers.length > 0) {
+                        // High priority: main layers
+                        if (mainLayers.length > 0) {
                             pending++;
-                            const newUrl = buildWmsUrl(WMS_URL, layersCsv, b, s);
-                            if (back) map.removeLayer(back);
-                            back = L.imageOverlay(newUrl, b, {
-                                opacity: 0, interactive: false, className: 'wms-overlay'
-                            }).addTo(map);
-                            const imgEl = back.getElement();
-                            if (imgEl) {
-                                imgEl.onload = function() {
-                                    back.setOpacity(opacity);
-                                    if (front) map.removeLayer(front);
-                                    front = back;
-                                    back = null;
-                                    checkDone();
-                                };
-                                imgEl.onerror = function() {
-                                    if (back) map.removeLayer(back);
-                                    back = null;
-                                    checkDone();
-                                };
-                            }
+                            swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainCqlFilter), b, mf, mb, checkDone);
                         }
 
-                        // Update permits overlay
+                        // Permits
                         if (showPermits) {
                             pending++;
-                            const permitUrl = buildWmsUrl(WMS_URL, 'plans', b, s,
-                                "building_permit IS NOT NULL AND building_permit != ''");
-                            if (permitBack) map.removeLayer(permitBack);
-                            permitBack = L.imageOverlay(permitUrl, b, {
-                                opacity: 0, interactive: false, className: 'wms-overlay'
-                            }).addTo(map);
-                            const pEl = permitBack.getElement();
-                            if (pEl) {
-                                pEl.onload = function() {
-                                    permitBack.setOpacity(opacity);
-                                    if (permitFront) map.removeLayer(permitFront);
-                                    permitFront = permitBack;
-                                    permitBack = null;
-                                    checkDone();
-                                };
-                                pEl.onerror = function() {
-                                    if (permitBack) map.removeLayer(permitBack);
-                                    permitBack = null;
-                                    checkDone();
-                                };
-                            }
+                            swapOverlay(
+                                buildWmsUrl(WMS_URL, 'plans', b, s,
+                                    "stage IS NOT NULL AND stage != ''"),
+                                b, pf, pb, checkDone
+                            );
                         }
 
                         if (pending === 0) setLoading(false);
+
+                        // Low priority: buildings with 1s delay
+                        if (showBuildings) {
+                            setLoadingBuildings(true);
+                            bldgDelayTimer = setTimeout(() => {
+                                swapOverlay(
+                                    buildWmsUrl(WMS_URL, 'buildings', b, s), b, bf, bb,
+                                    () => setLoadingBuildings(false)
+                                );
+                                if (bf.current) bf.current.bringToBack();
+                            }, 1000);
+                        }
                     }, 300);
                 }
 
                 map.on('moveend', onMoveEnd);
 
                 wmsLayerRef.current = {
-                    get front() { return front; },
-                    get back() { return back; },
-                    get permitFront() { return permitFront; },
-                    get permitBack() { return permitBack; },
+                    get mainFront() { return mf.current; },
+                    get mainBack() { return mb.current; },
+                    get bldgFront() { return bf.current; },
+                    get bldgBack() { return bb.current; },
+                    get permitFront() { return pf.current; },
+                    get permitBack() { return pb.current; },
                     handler: onMoveEnd,
-                    debounceTimer
+                    debounceTimer,
+                    bldgDelayTimer
                 };
-            }, [layers, opacity]);
+            }, [layers, opacity, planningTopics]);
 
             // Build the plan popup HTML
             function buildPlanPopup(props, featureData) {
@@ -814,7 +861,7 @@
                 const unitsTotal = props.units_total || '-';
                 const unitsAdd = props.units_add != null ? props.units_add : '-';
                 const mavatUrl = props.mavat_url || '';
-                const hasPermit = props.building_permit && props.building_permit.trim() !== '';
+                const hasPermit = props.stage && props.stage.trim() !== '';
 
                 let html = '<div>';
                 // Header
@@ -844,26 +891,25 @@
 
             // Build the permit details popup HTML
             function buildPermitPopup(props, featureData) {
-                const permitNum = props.building_permit || '';
-                const permitStatus = props.permit_status || '-';
-                const permitDate = props.permit_date || '-';
+                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const subtitle = props.plan_name || props.taba || '';
+                const permitNum = props.building_permit || '-';
+                const stage = props.stage || '-';
+                const permitDate = props.permit_date || props.permit_date_data || '-';
                 const permitAddition = props.permit_addition || '-';
-                const planName = props.plan_name_he || props.plan_name || '';
 
                 let html = '<div>';
                 // Header
                 html += '<div class="permit-detail-header">';
-                html += `<div class="popup-header-title">היתר בנייה</div>`;
-                html += `<div class="popup-header-subtitle">${permitNum}</div>`;
+                html += `<div class="popup-header-title">${title}</div>`;
+                html += `<div class="popup-header-subtitle">${subtitle}</div>`;
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
-                html += `<div class="popup-row"><span class="popup-row-label">סטטוס היתר</span><span class="popup-status-badge">${permitStatus}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">מספר היתר</span><span class="popup-row-value">${permitNum}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge">${stage}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
-                if (permitAddition && permitAddition !== '-') {
-                    html += `<div class="popup-row"><span class="popup-row-label">תוספת היתר</span><span class="popup-row-value">${permitAddition}</span></div>`;
-                }
-                html += `<div class="popup-row"><span class="popup-row-label">תוכנית</span><span class="popup-row-value">${planName}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תוספת יח"ד בהיתר</span><span class="popup-row-value">${permitAddition}</span></div>`;
                 html += '</div>';
                 // Footer - back button
                 html += '<div class="popup-footer">';
@@ -1124,6 +1170,28 @@
                         </div>
 
                         <div className="sidebar-section">
+                            <h3>נושאים תכנוניים</h3>
+                            <div className="layer-item"
+                                 title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
+                                <input type="checkbox" checked={planningTopics.overlapping} onChange={() => {}} />
+                                <label>תבעות כפולות על אותו מרחב</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תוכניות לעיבוי שטחים חומים - תוספת יח"ד בשטחים מאושרים'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, densification: !prev.densification}))}>
+                                <input type="checkbox" checked={planningTopics.densification} onChange={() => {}} />
+                                <label>תכניות לעיבוי שטחים חומים</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תוכניות בשלב הפקדה להתנגדויות'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, objections: !prev.objections}))}>
+                                <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
+                                <label>תכניות המופקדות להתנגדויות</label>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
                             <h3>שקיפות שכבות</h3>
                             <input
                                 className="opacity-slider"
@@ -1189,6 +1257,25 @@
                         <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
                             טוען שכבות...
                         </div>
+                        {loadingBuildings && (
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '30px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: 'rgba(26,26,46,0.85)',
+                                color: '#8ecae6',
+                                padding: '6px 16px',
+                                borderRadius: '16px',
+                                fontSize: '13px',
+                                zIndex: 1000,
+                                backdropFilter: 'blur(4px)',
+                                border: '1px solid rgba(142,202,230,0.3)',
+                                animation: 'fadeIn 0.3s ease'
+                            }}>
+                                טוען שכבת מבנים...
+                            </div>
+                        )}
                     </div>
                 </>
             );
