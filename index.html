@@ -687,8 +687,34 @@
         const CENTER = [31.7530, 35.2100];
         const DEFAULT_ZOOM = 15;
 
+        // Helper: build OGC XML filter for a single property equality
+        function ogcEq(prop, val) {
+            return `<PropertyIsEqualTo><PropertyName>${prop}</PropertyName><Literal>${val}</Literal></PropertyIsEqualTo>`;
+        }
+        function ogcNeq(prop, val) {
+            return `<PropertyIsNotEqualTo><PropertyName>${prop}</PropertyName><Literal>${val}</Literal></PropertyIsNotEqualTo>`;
+        }
+        function ogcGt(prop, val) {
+            return `<PropertyIsGreaterThan><PropertyName>${prop}</PropertyName><Literal>${val}</Literal></PropertyIsGreaterThan>`;
+        }
+        function ogcOr(parts) { return parts.length === 1 ? parts[0] : `<Or>${parts.join('')}</Or>`; }
+        function ogcAnd(parts) { return parts.length === 1 ? parts[0] : `<And>${parts.join('')}</And>`; }
+        function ogcFilter(body) { return `<Filter>${body}</Filter>`; }
+
+        // Build multi-layer FILTER param: (filter1)(filter2)... empty () means no filter
+        function buildMultiFilter(layersCsv, filterMap) {
+            const layers = layersCsv.split(',');
+            const parts = layers.map(l => {
+                const f = filterMap[l];
+                return f ? `(${ogcFilter(f)})` : '()';
+            });
+            // If no filters at all, return null
+            if (parts.every(p => p === '()')) return null;
+            return parts.join('');
+        }
+
         // Helper: build a WMS GetMap URL for the current map view
-        function buildWmsUrl(baseUrl, layersCsv, bounds, size, cqlFilter) {
+        function buildWmsUrl(baseUrl, layersCsv, bounds, size, ogcFilterStr) {
             const sw = bounds.getSouthWest();
             const ne = bounds.getNorthEast();
             const params = new URLSearchParams({
@@ -704,8 +730,8 @@
                 TRANSPARENT: 'true',
                 DPI: 96
             });
-            if (cqlFilter) {
-                params.set('CQL_FILTER', cqlFilter);
+            if (ogcFilterStr) {
+                params.set('FILTER', ogcFilterStr);
             }
             return baseUrl + '?' + params.toString();
         }
@@ -843,54 +869,52 @@
 
                 if (mainLayers.length === 0 && !showBuildings && !showPermits) return;
 
-                // --- Minahak spatial filter ---
+                // --- Minahak spatial filter (OGC XML) ---
                 const adminLayers = LAYER_CONFIG.admin.layers;
                 const allAdminOn = adminLayers.every(l => layers[l.id]);
                 const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
-                // Only apply minahak filter when NOT all are selected
-                let minahakPlansFilter = null;
-                let minahakTama38Filter = null;
+
+                // Build OGC filter fragments for minahak
+                let minahakPlansOgc = null;
+                let minahakTama38Ogc = null;
                 if (!allAdminOn && selectedMinahaks.length > 0) {
-                    const escaped = selectedMinahaks.map(m => `'${m}'`).join(',');
-                    minahakPlansFilter = `minahak IN (${escaped})`;
-                    // For tama38: collect sub-neighborhoods of selected minahaks
+                    // OR of PropertyIsEqualTo for each selected minahak
+                    minahakPlansOgc = ogcOr(selectedMinahaks.map(m => ogcEq('minahak', m)));
+                    // For tama38: collect sub-neighborhoods
                     const subs = selectedMinahaks.flatMap(m => MINAHAK_SUBS[m] || []);
                     if (subs.length > 0) {
-                        const escapedSubs = subs.map(s => `'${s}'`).join(',');
-                        minahakTama38Filter = `neighborho IN (${escapedSubs})`;
+                        minahakTama38Ogc = ogcOr(subs.map(s => ogcEq('neighborho', s)));
                     }
                 } else if (selectedMinahaks.length === 0) {
-                    // None selected - hide all plans
-                    minahakPlansFilter = '1=0';
-                    minahakTama38Filter = '1=0';
+                    // None selected - impossible filter to hide all
+                    minahakPlansOgc = ogcEq('minahak', '__NONE__');
+                    minahakTama38Ogc = ogcEq('neighborho', '__NONE__');
                 }
 
-                // --- Planning topics filter (applied to plans layer) ---
-                const topicFilters = [];
-                if (planningTopics.overlapping) topicFilters.push('overlapping_plans > 0');
-                if (planningTopics.densification) topicFilters.push("status_mavat IN ('תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור') AND units_add > 0");
-                if (planningTopics.objections) topicFilters.push("status_mavat = 'הפקדה להתנגדויות/השגות'");
-
-                // Combine plans filters (minahak + topics)
-                const allPlansFilters = [];
-                if (minahakPlansFilter) allPlansFilters.push(minahakPlansFilter);
-                if (topicFilters.length > 0) allPlansFilters.push(topicFilters.join(' AND '));
-                const plansCqlFilter = allPlansFilters.length > 0 ? allPlansFilters.join(' AND ') : null;
-
-                // Combine tama38 filters (minahak only, topics don't apply to tama38)
-                const tama38CqlFilter = minahakTama38Filter;
-
-                // Build CQL_FILTER string for multi-layer request
-                // Each layer needs its own filter separated by ';', use INCLUDE for no-filter layers
-                const needsFilter = plansCqlFilter || tama38CqlFilter;
-                let mainCqlFilter = null;
-                if (needsFilter && mainLayers.length > 0) {
-                    mainCqlFilter = mainLayers.map(l => {
-                        if (l === 'plans' && plansCqlFilter) return plansCqlFilter;
-                        if (l === 'tama38' && tama38CqlFilter) return tama38CqlFilter;
-                        return 'INCLUDE';
-                    }).join(';');
+                // --- Planning topics filter (OGC XML, applied to plans) ---
+                const topicParts = [];
+                if (planningTopics.overlapping) topicParts.push(ogcGt('overlapping_plans', '0'));
+                if (planningTopics.densification) {
+                    const statusVals = ['תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור'];
+                    topicParts.push(ogcAnd([
+                        ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
+                        ogcGt('units_add', '0')
+                    ]));
                 }
+                if (planningTopics.objections) topicParts.push(ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות'));
+
+                // Combine plans OGC filter (minahak + topics)
+                const plansOgcParts = [];
+                if (minahakPlansOgc) plansOgcParts.push(minahakPlansOgc);
+                if (topicParts.length > 0) plansOgcParts.push(ogcAnd(topicParts));
+                const plansOgc = plansOgcParts.length > 0 ? ogcAnd(plansOgcParts) : null;
+                const tama38Ogc = minahakTama38Ogc;
+
+                // Build multi-layer FILTER param
+                const filterMap = {};
+                if (plansOgc) filterMap['plans'] = plansOgc;
+                if (tama38Ogc) filterMap['tama38'] = tama38Ogc;
+                const mainOgcFilter = buildMultiFilter(mainLayers.join(','), filterMap);
 
                 const mainCsv = mainLayers.join(',');
                 let size = map.getSize();
@@ -906,14 +930,14 @@
                 const bounds = map.getBounds();
 
                 console.log('[WMS] Main layers:', mainCsv);
-                console.log('[WMS] CQL_FILTER:', mainCqlFilter || '(none)');
-                if (showPermits) console.log('[WMS] Permits filter:', permitFilter);
+                console.log('[WMS] OGC FILTER:', mainOgcFilter || '(none)');
+                if (showPermits) console.log('[WMS] Permits OGC filter:', permitOgcFilter);
 
                 // --- High priority: main layers (plans, always-on, roads, etc.) ---
                 let mainFront = null, mainBack = null;
                 if (mainLayers.length > 0) {
                     mainFront = L.imageOverlay(
-                        buildWmsUrl(WMS_URL, mainCsv, bounds, size, mainCqlFilter), bounds,
+                        buildWmsUrl(WMS_URL, mainCsv, bounds, size, mainOgcFilter), bounds,
                         { opacity, interactive: false, className: 'wms-overlay' }
                     ).addTo(map);
                 }
@@ -938,11 +962,14 @@
 
                 // --- Separate: permits overlay (renders ABOVE plans via zIndex) ---
                 let permitFront = null, permitBack = null;
-                const permitFilter = ["stage IS NOT NULL AND stage != ''", minahakPlansFilter].filter(Boolean).join(' AND ');
+                // Build OGC filter for permits: stage not empty + optional minahak
+                const permitOgcParts = [ogcNeq('stage', '')];
+                if (minahakPlansOgc) permitOgcParts.push(minahakPlansOgc);
+                const permitOgcFilter = ogcFilter(ogcAnd(permitOgcParts));
                 if (showPermits) {
-                    console.log('[WMS] Permits ON, filter:', permitFilter);
+                    console.log('[WMS] Permits ON, OGC filter:', permitOgcFilter);
                     permitFront = L.imageOverlay(
-                        buildWmsUrl(WMS_URL, 'plans', bounds, size, permitFilter),
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size, permitOgcFilter),
                         bounds, { opacity, interactive: false, className: 'wms-overlay wms-permits', zIndex: 500 }
                     ).addTo(map);
                     // Ensure permits pane is above main overlay
@@ -995,14 +1022,14 @@
                         // High priority: main layers
                         if (mainLayers.length > 0) {
                             pending++;
-                            swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainCqlFilter), b, mf, mb, checkDone);
+                            swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, checkDone);
                         }
 
                         // Permits (above plans)
                         if (showPermits) {
                             pending++;
                             swapOverlay(
-                                buildWmsUrl(WMS_URL, 'plans', b, s, permitFilter),
+                                buildWmsUrl(WMS_URL, 'plans', b, s, permitOgcFilter),
                                 b, pf, pb, () => {
                                     if (pf.current) {
                                         const el = pf.current.getElement();
