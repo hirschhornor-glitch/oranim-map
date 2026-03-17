@@ -781,6 +781,7 @@
                 setTimeout(updateScale, 200);
 
                 mapInstanceRef.current = map;
+                window.__map = map;
 
                 // Ensure map fills container after initial render
                 setTimeout(() => map.invalidateSize(), 100);
@@ -935,14 +936,18 @@
                     }, 1000);
                 }
 
-                // --- Separate: permits overlay ---
+                // --- Separate: permits overlay (renders ABOVE plans via zIndex) ---
                 let permitFront = null, permitBack = null;
                 const permitFilter = ["stage IS NOT NULL AND stage != ''", minahakPlansFilter].filter(Boolean).join(' AND ');
                 if (showPermits) {
+                    console.log('[WMS] Permits ON, filter:', permitFilter);
                     permitFront = L.imageOverlay(
                         buildWmsUrl(WMS_URL, 'plans', bounds, size, permitFilter),
-                        bounds, { opacity, interactive: false, className: 'wms-overlay' }
+                        bounds, { opacity, interactive: false, className: 'wms-overlay wms-permits', zIndex: 500 }
                     ).addTo(map);
+                    // Ensure permits pane is above main overlay
+                    const permitEl = permitFront.getElement();
+                    if (permitEl) permitEl.style.zIndex = '500';
                 }
 
                 let debounceTimer = null;
@@ -993,12 +998,18 @@
                             swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainCqlFilter), b, mf, mb, checkDone);
                         }
 
-                        // Permits
+                        // Permits (above plans)
                         if (showPermits) {
                             pending++;
                             swapOverlay(
                                 buildWmsUrl(WMS_URL, 'plans', b, s, permitFilter),
-                                b, pf, pb, checkDone
+                                b, pf, pb, () => {
+                                    if (pf.current) {
+                                        const el = pf.current.getElement();
+                                        if (el) el.style.zIndex = '500';
+                                    }
+                                    checkDone();
+                                }
                             );
                         }
 
@@ -1079,10 +1090,12 @@
             // Build the permit details popup HTML
             function buildPermitPopup(props, featureData) {
                 const title = props.plan_name_he || props.plan_summary || 'תוכנית';
-                const subtitle = props.plan_name || props.taba || '';
+                const planName = props.plan_name || props.taba || '';
                 const permitNum = props.building_permit || '-';
+                const subtitle = [planName, permitNum !== '-' ? permitNum : null].filter(Boolean).join(' | ');
                 const stage = props.stage || '-';
                 const stageColor = STAGE_COLORS[stage] || '#5dade2';
+                const requestType = props.request_type || props.mahut_bakasha || '-';
                 const permitDate = props.permit_date || props.permit_date_data || '-';
                 const permitAddition = props.permit_addition || '-';
                 const permitAddDisplay = permitAddition !== '-' && permitAddition !== 0 ? '+' + permitAddition : permitAddition;
@@ -1095,14 +1108,14 @@
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
-                html += `<div class="popup-row"><span class="popup-row-label">מספר היתר</span><span class="popup-row-value">${permitNum}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">מהות הבקשה</span><span class="popup-row-value" style="font-size:11px;max-width:180px;text-align:left">${requestType}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">תוספת יח"ד בהיתר</span><span class="popup-row-value">${permitAddDisplay}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת בהיתר</span><span class="popup-row-value">${permitAddDisplay}</span></div>`;
                 html += '</div>';
-                // Footer - back button
+                // Footer - back button styled red with left arrow
                 html += '<div class="popup-footer">';
-                html += `<button class="popup-btn-back" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>חזרה לתוכנית \u2192</button>`;
+                html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}' data-action="back-to-plan">\u2190 לתב"ע</button>`;
                 html += '</div>';
                 html += '</div>';
                 return html;
@@ -1155,19 +1168,21 @@
                             .setContent(html)
                             .openOn(map);
 
-                        // Bind click for permit button
+                        // Bind click for permit/back buttons
                         popup.getElement().addEventListener('click', function(ev) {
                             const permitBtn = ev.target.closest('.popup-btn-permit');
                             if (permitBtn) {
+                                ev.stopPropagation();
                                 const fd = JSON.parse(permitBtn.dataset.feature);
-                                popup.setContent(buildPermitPopup(fd.properties, fd));
-                                // Enable the permits layer
-                                setLayers(prev => ({ ...prev, permits: true }));
-                            }
-                            const backBtn = ev.target.closest('.popup-btn-back');
-                            if (backBtn) {
-                                const fd = JSON.parse(backBtn.dataset.feature);
-                                popup.setContent(buildPlanPopup(fd.properties, fd));
+                                if (permitBtn.dataset.action === 'back-to-plan') {
+                                    // Back to plan view - turn off permits highlight
+                                    popup.setContent(buildPlanPopup(fd.properties, fd));
+                                    setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
+                                } else {
+                                    // Switch to permit detail view
+                                    popup.setContent(buildPermitPopup(fd.properties, fd));
+                                    setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
+                                }
                             }
                         });
                     })
@@ -1241,14 +1256,15 @@
                             popup.getElement().addEventListener('click', function(ev) {
                                 const permitBtn = ev.target.closest('.popup-btn-permit');
                                 if (permitBtn) {
+                                    ev.stopPropagation();
                                     const fd = JSON.parse(permitBtn.dataset.feature);
-                                    popup.setContent(buildPermitPopup(fd.properties, fd));
-                                    setLayers(prev => ({ ...prev, permits: true }));
-                                }
-                                const backBtn = ev.target.closest('.popup-btn-back');
-                                if (backBtn) {
-                                    const fd = JSON.parse(backBtn.dataset.feature);
-                                    popup.setContent(buildPlanPopup(fd.properties, fd));
+                                    if (permitBtn.dataset.action === 'back-to-plan') {
+                                        popup.setContent(buildPlanPopup(fd.properties, fd));
+                                        setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
+                                    } else {
+                                        popup.setContent(buildPermitPopup(fd.properties, fd));
+                                        setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
+                                    }
                                 }
                             });
                         })
