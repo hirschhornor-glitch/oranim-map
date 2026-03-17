@@ -274,10 +274,77 @@
             color: #8888aa !important;
             font-size: 18px !important;
             top: 6px !important;
-            right: 8px !important;
+            right: auto !important;
+            left: 8px !important;
         }
 
         .leaflet-popup-close-button:hover { color: #e94560 !important; }
+
+        .layer-legend-btn {
+            background: none;
+            border: none;
+            color: #6a6a8a;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            margin-right: auto;
+        }
+        .layer-legend-btn:hover { color: #e94560; }
+
+        .legend-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 12px;
+            padding: 16px 20px;
+            z-index: 2000;
+            min-width: 220px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .legend-popup-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e94560;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .legend-popup-close {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: none;
+            border: none;
+            color: #8888aa;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .legend-popup-close:hover { color: #e94560; }
+        .legend-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1999;
+        }
+
+        .scale-display {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            background: rgba(255,255,255,0.85);
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            z-index: 800;
+            pointer-events: none;
+        }
 
         .plan-search-wrap {
             position: relative;
@@ -473,12 +540,6 @@
         const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods', 'MinhalKehilati'];
 
         const LAYER_CONFIG = {
-            base: {
-                title: 'שכבות רקע',
-                layers: [
-                    { id: 'google_satellite', name: 'לוויין', desc: 'תצלום אוויר מלוויין', on: true },
-                ]
-            },
             planning: {
                 title: 'תכנון',
                 layers: [
@@ -492,8 +553,8 @@
                 layers: [
                     { id: 'buildings', name: 'מבנים', on: true },
                     { id: 'roads', name: 'כבישים', on: true },
-                    { id: 'stations', name: 'תחנות רק"ל', on: false },
-                    { id: 'rakl', name: 'רק"ל', on: false, combined: ['rakl', 'rakl_src'] },
+                    { id: 'stations', name: 'תחנות רק"ל', on: true },
+                    { id: 'rakl', name: 'רק"ל', on: true, combined: ['rakl', 'rakl_src'] },
                 ]
             },
             admin: {
@@ -505,7 +566,6 @@
                     { id: 'beit_tzfafa', name: 'בית צפפא', on: true, minahak: 'בית צפאפא' },
                     { id: 'gonennim', name: 'גוננים', on: true, minahak: 'גוננים' },
                     { id: 'baka', name: 'בקעה', on: true, minahak: 'בקעה רבתי' },
-                    { id: 'givat_hamatos', name: 'גבעת המטוס', on: true, minahak: 'גבעת המטוס' },
                 ]
             }
         };
@@ -562,19 +622,70 @@
             }
         };
 
+        // Status colors matching QGIS Cloud WMS symbology
+        const STATUS_COLORS = {
+            'אישור': '#50d25a',
+            'מאושרת': '#50d25a',
+            'תבע מאושרת': '#50d25a',
+            'תבע - טרום אישור': '#50d25a',
+            'תחילת תוקף': '#50d25a',
+            'בהליך אישור': '#50d25a',
+            'דיון בהתנגדויות ותיקונים': '#fafa3c',
+            'הפקדה להתנגדויות/השגות': '#f56e05',
+            'במילוי תנאים להפקדה': '#f56e05',
+            'נפתח תיק למתכנן': '#eb0000',
+            'נפתח תיק תב"ע': '#eb0000',
+            'בבדיקה תכנונית': '#eb0000',
+            'תכנית עומדת בתנאי סף': '#eb0000',
+            'נקלטה מקובץ מבאת': '#eb0000',
+            'נגנזה': '#888888',
+            'נדחתה': '#888888',
+        };
+
+        const STAGE_COLORS = {
+            'ג-רישוי בתהליך': '#4ba1f0',
+            'ג-רישוי  בתהליך': '#4ba1f0',
+            'ד-היתר בנייה': '#4b85e0',
+            'ה-בבנייה': '#4a69d1',
+            'ו-גמר בנייה': '#494cc2',
+        };
+
+        const PLANS_LEGEND = [
+            { label: 'אישור / מאושרת', color: '#50d25a' },
+            { label: 'בהליך אישור', color: '#50d25a' },
+            { label: 'התנגדויות', color: '#fafa3c' },
+            { label: 'הפקדה', color: '#f56e05' },
+            { label: 'במילוי תנאים להפקדה', color: '#f56e05' },
+            { label: 'פתיחת תיק / בבדיקה', color: '#eb0000' },
+            { label: 'נגנזה / נדחתה', color: '#888888' },
+        ];
+
+        const PERMITS_LEGEND = [
+            { label: 'ג-רישוי בתהליך', color: '#4ba1f0' },
+            { label: 'ד-היתר בנייה', color: '#4b85e0' },
+            { label: 'ה-בבנייה', color: '#4a69d1' },
+            { label: 'ו-גמר בנייה', color: '#494cc2' },
+        ];
+
+        const TOPICS_LEGEND = [
+            { label: 'תבעות כפולות על אותו מרחב', color: '#ff6b6b' },
+            { label: 'תכניות לעיבוי שטחים חומים', color: '#644100' },
+            { label: 'תכניות המופקדות להתנגדויות', color: '#f56e05' },
+        ];
+
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
             'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
             'בקעה רבתי': ['ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות', 'תלפיות', 'תלפיות ארנונה'],
-            'גבעת המטוס': ['גבעת המטוס'],
+            // 'גבעת המטוס': ['גבעת המטוס'], // no WMS layer available
             'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'קטמונים ח-ט', 'רסקו', 'רסקו - גבעת הורדים'],
             'גינות העיר': ['המושבה היוונית', 'ניות', 'עמק רפאים - המושבה הגרמנית', 'קוממיות - טלביה', 'קטמון הישנה', 'רחביה'],
             'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
         };
 
-        const CENTER = [31.7430, 35.2090];
-        const DEFAULT_ZOOM = 16;
+        const CENTER = [31.7530, 35.2100];
+        const DEFAULT_ZOOM = 15;
 
         // Helper: build a WMS GetMap URL for the current map view
         function buildWmsUrl(baseUrl, layersCsv, bounds, size, cqlFilter) {
@@ -622,6 +733,8 @@
                 densification: false, // תכניות לעיבוי שטחים חומים
                 objections: false     // תכניות המופקדות להתנגדויות
             });
+            const [legendPopup, setLegendPopup] = useState(null); // { title, items }
+            const [mapScale, setMapScale] = useState('');
 
             // Load plan search index
             useEffect(() => {
@@ -654,6 +767,18 @@
                 map.on('mousemove', (e) => {
                     setCursorPos({ lat: e.latlng.lat.toFixed(5), lng: e.latlng.lng.toFixed(5) });
                 });
+
+                // Scale indicator
+                const updateScale = () => {
+                    const center = map.getCenter();
+                    const metersPerPixel = 40075016.686 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+                    const dpi = 96;
+                    const metersPerInch = metersPerPixel * dpi;
+                    const scale = Math.round(metersPerInch * 39.3701);
+                    setMapScale('1:' + scale.toLocaleString());
+                };
+                map.on('zoomend moveend', updateScale);
+                setTimeout(updateScale, 200);
 
                 mapInstanceRef.current = map;
 
@@ -767,8 +892,21 @@
                 }
 
                 const mainCsv = mainLayers.join(',');
+                let size = map.getSize();
+                // Skip if map not yet sized (initial render)
+                if (size.x === 0 || size.y === 0) {
+                    const retry = setTimeout(() => {
+                        map.invalidateSize();
+                        // Trigger re-render by firing moveend
+                        map.fire('moveend');
+                    }, 300);
+                    return () => clearTimeout(retry);
+                }
                 const bounds = map.getBounds();
-                const size = map.getSize();
+
+                console.log('[WMS] Main layers:', mainCsv);
+                console.log('[WMS] CQL_FILTER:', mainCqlFilter || '(none)');
+                if (showPermits) console.log('[WMS] Permits filter:', permitFilter);
 
                 // --- High priority: main layers (plans, always-on, roads, etc.) ---
                 let mainFront = null, mainBack = null;
@@ -896,13 +1034,19 @@
             }, [layers, opacity, planningTopics]);
 
             // Build the plan popup HTML
+            function getStatusColor(status) {
+                return STATUS_COLORS[status] || '#5dade2';
+            }
+
             function buildPlanPopup(props, featureData) {
                 const title = props.plan_name_he || props.plan_summary || 'תוכנית';
                 const subtitle = props.plan_name || props.taba || '';
                 const status = props.status_mavat || '';
+                const statusColor = getStatusColor(status);
                 const unitsIn = props.units_in || '-';
                 const unitsTotal = props.units_total || '-';
                 const unitsAdd = props.units_add != null ? props.units_add : '-';
+                const unitsAddDisplay = unitsAdd !== '-' && unitsAdd !== 0 ? '+' + unitsAdd : unitsAdd;
                 const mavatUrl = props.mavat_url || '';
                 const hasPermit = props.stage && props.stage.trim() !== '';
 
@@ -914,10 +1058,10 @@
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
-                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge">${status || '-'}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAdd}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
                 html += '</div>';
                 // Footer
                 html += '<div class="popup-footer">';
@@ -938,8 +1082,10 @@
                 const subtitle = props.plan_name || props.taba || '';
                 const permitNum = props.building_permit || '-';
                 const stage = props.stage || '-';
+                const stageColor = STAGE_COLORS[stage] || '#5dade2';
                 const permitDate = props.permit_date || props.permit_date_data || '-';
                 const permitAddition = props.permit_addition || '-';
+                const permitAddDisplay = permitAddition !== '-' && permitAddition !== 0 ? '+' + permitAddition : permitAddition;
 
                 let html = '<div>';
                 // Header
@@ -950,9 +1096,9 @@
                 // Body
                 html += '<div class="popup-body">';
                 html += `<div class="popup-row"><span class="popup-row-label">מספר היתר</span><span class="popup-row-value">${permitNum}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge">${stage}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">תוספת יח"ד בהיתר</span><span class="popup-row-value">${permitAddition}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תוספת יח"ד בהיתר</span><span class="popup-row-value">${permitAddDisplay}</span></div>`;
                 html += '</div>';
                 // Footer - back button
                 html += '<div class="popup-footer">';
@@ -1170,20 +1316,6 @@
                         </div>
 
                         <div className="sidebar-section">
-                            <h3>מפת בסיס</h3>
-                            <select
-                                className="basemap-select"
-                                value={basemap}
-                                onChange={(e) => setBasemap(e.target.value)}
-                                title={BASEMAPS[basemap]?.desc || ''}
-                            >
-                                {Object.entries(BASEMAPS).map(([key, bm]) => (
-                                    <option key={key} value={key} title={bm.desc}>{bm.name} - {bm.desc}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="sidebar-section">
                             <h3>שכבות ({activeCount} פעילות)</h3>
                             <input
                                 className="search-input"
@@ -1198,22 +1330,28 @@
                                     <div className="layer-group-title">{group.title}</div>
                                     {group.layers.map(layer => (
                                         <div className="layer-item" key={layer.id}
-                                             title={layer.desc || ''}
-                                             onClick={() => toggleLayer(layer.id)}>
+                                             title={layer.desc || ''}>
                                             <input
                                                 type="checkbox"
                                                 checked={layers[layer.id] || false}
                                                 onChange={() => toggleLayer(layer.id)}
+                                                onClick={(e) => e.stopPropagation()}
                                             />
-                                            <label>{layer.name}</label>
+                                            <label onClick={() => toggleLayer(layer.id)}>{layer.name}</label>
+                                            {layer.id === 'plans' && (
+                                                <button className="layer-legend-btn" title="מקרא סטטוס"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תב"ע - סטטוס תכנית', items: PLANS_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'permits' && (
+                                                <button className="layer-legend-btn" title="מקרא שלבים"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             ))}
-                        </div>
 
-                        <div className="sidebar-section">
-                            <h3>נושאים תכנוניים</h3>
+                            <div className="layer-group-title">נושאים תכנוניים</div>
                             <div className="layer-item"
                                  title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
                                  onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
@@ -1232,6 +1370,8 @@
                                 <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
                                 <label>תכניות המופקדות להתנגדויות</label>
                             </div>
+                            <button className="layer-legend-btn" style={{marginTop:'4px',fontSize:'13px',color:'#8888aa'}}
+                                onClick={() => setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND })}>⋯ מקרא</button>
                         </div>
 
                         <div className="sidebar-section">
@@ -1319,7 +1459,26 @@
                                 טוען שכבת מבנים...
                             </div>
                         )}
+                        {mapScale && (
+                            <div className="scale-display">{mapScale}</div>
+                        )}
                     </div>
+
+                    {legendPopup && (
+                        <>
+                            <div className="legend-popup-overlay" onClick={() => setLegendPopup(null)} />
+                            <div className="legend-popup">
+                                <button className="legend-popup-close" onClick={() => setLegendPopup(null)}>&times;</button>
+                                <div className="legend-popup-title">{legendPopup.title}</div>
+                                {legendPopup.items.map((item, i) => (
+                                    <div className="legend-item" key={i}>
+                                        <div className="legend-color" style={{background: item.color}}></div>
+                                        <span>{item.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </>
             );
         }
