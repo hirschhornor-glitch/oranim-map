@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אורנים - תכנון עירוני</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            direction: rtl;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #root { height: 100vh; display: flex; }
+
+        .sidebar {
+            width: 320px;
+            min-width: 320px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: margin-right 0.3s ease;
+            z-index: 1000;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            margin-right: -320px;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5em;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85em;
+            color: #a0a0b0;
+        }
+
+        .sidebar-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.9em;
+            color: #e94560;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .layer-group-title {
+            font-size: 0.8em;
+            color: #8888aa;
+            margin: 10px 0 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .layer-item:hover { background: #2a2a4a; }
+
+        .layer-item input[type="checkbox"] {
+            margin-left: 10px;
+            accent-color: #e94560;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .layer-item label {
+            cursor: pointer;
+            font-size: 0.9em;
+            flex: 1;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+        .leaflet-control-attribution {
+            font-size: 10px !important;
+            opacity: 0.5 !important;
+        }
+
+        .wms-overlay {
+            transition: opacity 0.3s ease;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #1a1a2e;
+            color: white;
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover { background: #e94560; }
+
+        .leaflet-popup-content {
+            direction: rtl;
+            text-align: right;
+            margin: 0 !important;
+            width: 300px !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+            padding: 0;
+            overflow: hidden;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .leaflet-popup-tip { border-top-color: #1a1a2e; }
+
+        .popup-header {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 14px 16px 10px;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .popup-header-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.4;
+            margin-bottom: 2px;
+        }
+
+        .popup-header-subtitle {
+            font-size: 12px;
+            color: #8899bb;
+            font-family: monospace;
+        }
+
+        .popup-body {
+            padding: 12px 16px;
+        }
+
+        .popup-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .popup-row:last-child { border-bottom: none; }
+
+        .popup-row-label {
+            font-size: 12px;
+            color: #8888aa;
+        }
+
+        .popup-row-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .popup-footer {
+            padding: 10px 16px;
+            border-top: 1px solid #2a2a4a;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .popup-link {
+            display: block;
+            text-align: center;
+            color: #5dade2;
+            font-size: 13px;
+            text-decoration: none;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .popup-link:hover { background: #2a2a4a; }
+
+        .popup-btn-permit {
+            display: block;
+            text-align: center;
+            background: #e94560;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-btn-permit:hover { background: #c73650; }
+
+        .popup-btn-back {
+            display: block;
+            text-align: center;
+            background: transparent;
+            color: #5dade2;
+            font-size: 12px;
+            padding: 6px;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-btn-back:hover { background: #2a2a4a; }
+
+        .popup-status-badge {
+            display: inline-block;
+            background: #0f3460;
+            color: #5dade2;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .permit-detail-header {
+            background: linear-gradient(135deg, #2d1a3e, #3d1a2e);
+            padding: 14px 16px 10px;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .leaflet-popup-close-button {
+            color: #8888aa !important;
+            font-size: 18px !important;
+            top: 6px !important;
+            right: 8px !important;
+        }
+
+        .leaflet-popup-close-button:hover { color: #e94560 !important; }
+
+        .plan-search-wrap {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .plan-search-input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.95em;
+            direction: rtl;
+        }
+
+        .plan-search-input::placeholder { color: #6a6a8a; }
+        .plan-search-input:focus { outline: none; border-color: #e94560; }
+
+        .plan-search-clear {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6a6a8a;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .plan-search-clear:hover { color: #e94560; }
+
+        .plan-search-results {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: 0;
+            background: #1e1e36;
+            border: 1px solid #3a3a5a;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1100;
+            direction: rtl;
+        }
+
+        .plan-search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #2a2a4a;
+            transition: background 0.15s;
+        }
+
+        .plan-search-item:hover { background: #2a2a4a; }
+
+        .plan-search-item-name {
+            font-size: 13px;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .plan-search-item-num {
+            font-size: 11px;
+            color: #6a6a8a;
+            font-family: monospace;
+        }
+
+        .plan-search-empty {
+            padding: 12px;
+            text-align: center;
+            color: #6a6a8a;
+            font-size: 13px;
+        }
+
+        .opacity-slider {
+            width: 100%;
+            margin-top: 8px;
+            accent-color: #e94560;
+        }
+
+        .opacity-label {
+            font-size: 0.8em;
+            color: #8888aa;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .loading-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.9);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-indicator.visible { display: block; }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 0.85em;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-left: 8px;
+            border: 1px solid #555;
+        }
+
+        .basemap-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            direction: rtl;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            direction: rtl;
+            margin-bottom: 8px;
+        }
+
+        .search-input::placeholder { color: #6a6a8a; }
+        .search-input:focus { outline: none; border-color: #e94560; }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #0f0f1e;
+            font-size: 0.75em;
+            color: #6a6a8a;
+            border-top: 1px solid #2a2a4a;
+            margin-top: auto;
+        }
+
+        .btn-reset {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid #e94560;
+            color: #e94560;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-reset:hover {
+            background: #e94560;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        const WMS_URL = 'https://wms.qgiscloud.com/OrHirschhorn/ORANIM/wms';
+
+        // Layers that are always visible (no toggle)
+        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods', 'MinhalKehilati'];
+
+        const LAYER_CONFIG = {
+            base: {
+                title: 'שכבות רקע',
+                layers: [
+                    { id: 'google_satellite', name: 'לוויין', desc: 'תצלום אוויר מלוויין', on: true },
+                ]
+            },
+            planning: {
+                title: 'תכנון',
+                layers: [
+                    { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true },
+                    { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
+                    { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
+                ]
+            },
+            infrastructure: {
+                title: 'תשתיות ומבנים',
+                layers: [
+                    { id: 'buildings', name: 'מבנים', on: true },
+                    { id: 'roads', name: 'כבישים', on: true },
+                    { id: 'stations', name: 'תחנות', on: false },
+                    { id: 'rakl_src', name: 'רק"ל מקור', on: false },
+                    { id: 'rakl', name: 'רק"ל', on: false },
+                ]
+            },
+            admin: {
+                title: 'מנהלי',
+                layers: [
+                    { id: 'talpiot', name: 'תלפיות', on: false },
+                    { id: 'malha', name: 'מלחה', on: false },
+                    { id: 'ginot_hair', name: 'גינות העיר', on: false },
+                    { id: 'beit_tzfafa', name: 'בית צפפא', on: false },
+                    { id: 'gonennim', name: 'גוננים', on: false },
+                    { id: 'baka', name: 'בקעה', on: false },
+                ]
+            }
+        };
+
+        const HEBREW_FIELD_NAMES = {
+            'id': 'מזהה', 'name': 'שם', 'type': 'סוג', 'status': 'סטטוס',
+            'area': 'שטח', 'address': 'כתובת', 'street': 'רחוב',
+            'number': 'מספר', 'plan_id': 'מס תוכנית', 'plan_name': 'שם תוכנית',
+            'description': 'תיאור', 'date': 'תאריך', 'units': 'יחידות',
+            'floors': 'קומות', 'height': 'גובה', 'population': 'אוכלוסייה',
+            'neighborhood': 'שכונה', 'sub_neighborhood': 'תת שכונה',
+            'OBJECTID': 'מזהה', 'SHAPE_Area': 'שטח', 'SHAPE_Length': 'היקף',
+            'SHEM_1': 'שם', 'SHEM': 'שם', 'SUG': 'סוג', 'MAHOZ': 'מחוז',
+            'TAVLA': 'תבלי"ת', 'MISPAR': 'מספר', 'SEMEL': 'סמל',
+            'SHEM_YESHU': 'שם ישוב', 'MS_TOCHNIT': 'מס תוכנית',
+            'SEM_TOCHNIT': 'שם תוכנית', 'MATARA': 'מטרה',
+            'TOCHNIT_MATAT': 'תוכנית מתאר', 'STATUS': 'סטטוס',
+            'MAVAT_CODE': 'קוד מבא"ת', 'gush': 'גוש', 'helka': 'חלקה',
+            'combinedke': 'מפתח משולב', 'created_da': 'תאריך יצירה',
+            'created_us': 'נוצר ע"י', 'descr_rova': 'תיאור רובע',
+            'fid': 'מזהה', 'last_edi_1': 'עריכה אחרונה',
+            'last_edite': 'נערך ע"י', 'name_rova': 'מספר רובע',
+            'qc_id': 'מזהה QC', 'supervis_1': 'טלפון פיקוח',
+            'supervis_2': 'דוא"ל פיקוח', 'supervisor': 'מפקח',
+            'shape_area': 'שטח', 'shape_leng': 'היקף',
+            'SHAPE_Area': 'שטח', 'SHAPE_Leng': 'היקף',
+            'layer': 'שכבה', 'path': 'נתיב',
+        };
+
+        const BASEMAPS = {
+            osm: {
+                name: 'OpenStreetMap',
+                desc: 'מפת רחובות ושמות',
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '&copy; OpenStreetMap contributors'
+            },
+            esriImagery: {
+                name: 'אורתופוטו',
+                desc: 'צילום אוויר ברזולוציה גבוהה',
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '&copy; Esri'
+            },
+            cartoDark: {
+                name: 'כהה',
+                desc: 'מפת רקע כהה',
+                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                attribution: '&copy; CartoDB'
+            },
+            cartoLight: {
+                name: 'בהיר',
+                desc: 'מפת רקע בהירה',
+                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                attribution: '&copy; CartoDB'
+            },
+            none: {
+                name: 'ללא',
+                desc: 'ללא מפת רקע',
+                url: '',
+                attribution: ''
+            }
+        };
+
+        const CENTER = [31.7430, 35.2090];
+        const DEFAULT_ZOOM = 16;
+
+        // Helper: build a WMS GetMap URL for the current map view
+        function buildWmsUrl(baseUrl, layersCsv, bounds, size, cqlFilter) {
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            const params = new URLSearchParams({
+                SERVICE: 'WMS',
+                VERSION: '1.3.0',
+                REQUEST: 'GetMap',
+                LAYERS: layersCsv,
+                CRS: 'EPSG:4326',
+                BBOX: [sw.lat, sw.lng, ne.lat, ne.lng].join(','),
+                WIDTH: Math.round(size.x),
+                HEIGHT: Math.round(size.y),
+                FORMAT: 'image/png',
+                TRANSPARENT: 'true',
+                DPI: 96
+            });
+            if (cqlFilter) {
+                params.set('CQL_FILTER', cqlFilter);
+            }
+            return baseUrl + '?' + params.toString();
+        }
+
+        function App() {
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [layers, setLayers] = useState(() => {
+                const initial = {};
+                Object.values(LAYER_CONFIG).forEach(group => {
+                    group.layers.forEach(l => { initial[l.id] = l.on; });
+                });
+                return initial;
+            });
+            const [opacity, setOpacity] = useState(0.85);
+            const [basemap, setBasemap] = useState('cartoLight');
+            const [loading, setLoading] = useState(false);
+            const [cursorPos, setCursorPos] = useState(null);
+            const [searchText, setSearchText] = useState('');
+            const [planSearch, setPlanSearch] = useState('');
+            const [planIndex, setPlanIndex] = useState([]);
+            const [showSearchResults, setShowSearchResults] = useState(false);
+
+            // Load plan search index
+            useEffect(() => {
+                fetch('plans_index.json')
+                    .then(res => res.json())
+                    .then(data => setPlanIndex(data))
+                    .catch(err => console.error('Failed to load plan index:', err));
+            }, []);
+
+            const mapRef = useRef(null);
+            const mapInstanceRef = useRef(null);
+            const wmsLayerRef = useRef(null);
+            const baseTileRef = useRef(null);
+
+            // Initialize map
+            useEffect(() => {
+                if (mapInstanceRef.current) return;
+
+                const map = L.map('map', {
+                    center: CENTER,
+                    zoom: DEFAULT_ZOOM,
+                    zoomControl: false,
+                    maxZoom: 22,
+                    minZoom: 13
+                });
+
+                L.control.zoom({ position: 'topleft' }).addTo(map);
+                L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+
+                map.on('mousemove', (e) => {
+                    setCursorPos({ lat: e.latlng.lat.toFixed(5), lng: e.latlng.lng.toFixed(5) });
+                });
+
+                mapInstanceRef.current = map;
+
+                // Ensure map fills container after initial render
+                setTimeout(() => map.invalidateSize(), 100);
+
+                return () => { map.remove(); mapInstanceRef.current = null; };
+            }, []);
+
+            // Update basemap
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+
+                if (baseTileRef.current) {
+                    map.removeLayer(baseTileRef.current);
+                    baseTileRef.current = null;
+                }
+
+                const bm = BASEMAPS[basemap];
+                if (bm.url) {
+                    baseTileRef.current = L.tileLayer(bm.url, {
+                        attribution: bm.attribution,
+                        maxZoom: 22
+                    }).addTo(map);
+                    baseTileRef.current.bringToBack();
+                }
+            }, [basemap]);
+
+            // Update WMS as single image overlays (no tiles, no white gaps)
+            // Uses double-buffering: keeps old image visible while new one loads
+            // Handles always-on layers, toggled layers, and the permits CQL filter
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+
+                // Clean up previous
+                if (wmsLayerRef.current) {
+                    if (wmsLayerRef.current.front) map.removeLayer(wmsLayerRef.current.front);
+                    if (wmsLayerRef.current.back) map.removeLayer(wmsLayerRef.current.back);
+                    if (wmsLayerRef.current.permitFront) map.removeLayer(wmsLayerRef.current.permitFront);
+                    if (wmsLayerRef.current.permitBack) map.removeLayer(wmsLayerRef.current.permitBack);
+                    map.off('moveend', wmsLayerRef.current.handler);
+                    clearTimeout(wmsLayerRef.current.debounceTimer);
+                    wmsLayerRef.current = null;
+                }
+
+                // Build list of active WMS layers: always-on + toggled (excluding virtual 'permits')
+                const toggledLayers = Object.entries(layers)
+                    .filter(([id, on]) => on && id !== 'permits')
+                    .map(([id]) => id);
+                const allWmsLayers = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])];
+                const showPermits = layers['permits'];
+
+                if (allWmsLayers.length === 0 && !showPermits) return;
+
+                const layersCsv = allWmsLayers.join(',');
+                const bounds = map.getBounds();
+                const size = map.getSize();
+
+                // Main WMS overlay
+                let front = null;
+                let back = null;
+                if (allWmsLayers.length > 0) {
+                    const url = buildWmsUrl(WMS_URL, layersCsv, bounds, size);
+                    front = L.imageOverlay(url, bounds, {
+                        opacity: opacity,
+                        interactive: false,
+                        className: 'wms-overlay'
+                    }).addTo(map);
+                }
+
+                // Permits overlay (plans layer with CQL filter)
+                let permitFront = null;
+                let permitBack = null;
+                if (showPermits) {
+                    const permitUrl = buildWmsUrl(WMS_URL, 'plans', bounds, size,
+                        "building_permit IS NOT NULL AND building_permit != ''");
+                    permitFront = L.imageOverlay(permitUrl, bounds, {
+                        opacity: opacity,
+                        interactive: false,
+                        className: 'wms-overlay'
+                    }).addTo(map);
+                }
+
+                let debounceTimer = null;
+
+                function onMoveEnd() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const b = map.getBounds();
+                        const s = map.getSize();
+                        if (s.x === 0 || s.y === 0) return;
+
+                        let pending = 0;
+                        const checkDone = () => { if (--pending <= 0) setLoading(false); };
+
+                        setLoading(true);
+
+                        // Update main overlay
+                        if (allWmsLayers.length > 0) {
+                            pending++;
+                            const newUrl = buildWmsUrl(WMS_URL, layersCsv, b, s);
+                            if (back) map.removeLayer(back);
+                            back = L.imageOverlay(newUrl, b, {
+                                opacity: 0, interactive: false, className: 'wms-overlay'
+                            }).addTo(map);
+                            const imgEl = back.getElement();
+                            if (imgEl) {
+                                imgEl.onload = function() {
+                                    back.setOpacity(opacity);
+                                    if (front) map.removeLayer(front);
+                                    front = back;
+                                    back = null;
+                                    checkDone();
+                                };
+                                imgEl.onerror = function() {
+                                    if (back) map.removeLayer(back);
+                                    back = null;
+                                    checkDone();
+                                };
+                            }
+                        }
+
+                        // Update permits overlay
+                        if (showPermits) {
+                            pending++;
+                            const permitUrl = buildWmsUrl(WMS_URL, 'plans', b, s,
+                                "building_permit IS NOT NULL AND building_permit != ''");
+                            if (permitBack) map.removeLayer(permitBack);
+                            permitBack = L.imageOverlay(permitUrl, b, {
+                                opacity: 0, interactive: false, className: 'wms-overlay'
+                            }).addTo(map);
+                            const pEl = permitBack.getElement();
+                            if (pEl) {
+                                pEl.onload = function() {
+                                    permitBack.setOpacity(opacity);
+                                    if (permitFront) map.removeLayer(permitFront);
+                                    permitFront = permitBack;
+                                    permitBack = null;
+                                    checkDone();
+                                };
+                                pEl.onerror = function() {
+                                    if (permitBack) map.removeLayer(permitBack);
+                                    permitBack = null;
+                                    checkDone();
+                                };
+                            }
+                        }
+
+                        if (pending === 0) setLoading(false);
+                    }, 300);
+                }
+
+                map.on('moveend', onMoveEnd);
+
+                wmsLayerRef.current = {
+                    get front() { return front; },
+                    get back() { return back; },
+                    get permitFront() { return permitFront; },
+                    get permitBack() { return permitBack; },
+                    handler: onMoveEnd,
+                    debounceTimer
+                };
+            }, [layers, opacity]);
+
+            // Build the plan popup HTML
+            function buildPlanPopup(props, featureData) {
+                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const subtitle = props.plan_name || props.taba || '';
+                const status = props.status_mavat || '';
+                const unitsIn = props.units_in || '-';
+                const unitsTotal = props.units_total || '-';
+                const unitsAdd = props.units_add != null ? props.units_add : '-';
+                const mavatUrl = props.mavat_url || '';
+                const hasPermit = props.building_permit && props.building_permit.trim() !== '';
+
+                let html = '<div>';
+                // Header
+                html += '<div class="popup-header">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                html += '</div>';
+                // Body
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge">${status || '-'}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAdd}</span></div>`;
+                html += '</div>';
+                // Footer
+                html += '<div class="popup-footer">';
+                if (mavatUrl) {
+                    html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
+                }
+                if (hasPermit) {
+                    html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
+                }
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            // Build the permit details popup HTML
+            function buildPermitPopup(props, featureData) {
+                const permitNum = props.building_permit || '';
+                const permitStatus = props.permit_status || '-';
+                const permitDate = props.permit_date || '-';
+                const permitAddition = props.permit_addition || '-';
+                const planName = props.plan_name_he || props.plan_name || '';
+
+                let html = '<div>';
+                // Header
+                html += '<div class="permit-detail-header">';
+                html += `<div class="popup-header-title">היתר בנייה</div>`;
+                html += `<div class="popup-header-subtitle">${permitNum}</div>`;
+                html += '</div>';
+                // Body
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס היתר</span><span class="popup-status-badge">${permitStatus}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
+                if (permitAddition && permitAddition !== '-') {
+                    html += `<div class="popup-row"><span class="popup-row-label">תוספת היתר</span><span class="popup-row-value">${permitAddition}</span></div>`;
+                }
+                html += `<div class="popup-row"><span class="popup-row-label">תוכנית</span><span class="popup-row-value">${planName}</span></div>`;
+                html += '</div>';
+                // Footer - back button
+                html += '<div class="popup-footer">';
+                html += `<button class="popup-btn-back" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>חזרה לתוכנית \u2192</button>`;
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            const handleMapClick = useCallback((e, map) => {
+                const size = map.getSize();
+                const bounds = map.getBounds();
+                const sw = bounds.getSouthWest();
+                const ne = bounds.getNorthEast();
+
+                // Always query the plans layer for popup
+                const params = new URLSearchParams({
+                    SERVICE: 'WMS',
+                    VERSION: '1.3.0',
+                    REQUEST: 'GetFeatureInfo',
+                    LAYERS: 'plans',
+                    QUERY_LAYERS: 'plans',
+                    CRS: 'EPSG:4326',
+                    BBOX: `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`,
+                    WIDTH: size.x,
+                    HEIGHT: size.y,
+                    I: Math.round(e.containerPoint.x),
+                    J: Math.round(e.containerPoint.y),
+                    INFO_FORMAT: 'application/json',
+                    FEATURE_COUNT: 5
+                });
+
+                const url = `${WMS_URL}?${params.toString()}`;
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.features || data.features.length === 0) return;
+
+                        // Use the first plans feature
+                        const feature = data.features[0];
+                        const props = feature.properties;
+                        const featureData = { properties: props };
+
+                        const html = buildPlanPopup(props, featureData);
+
+                        const popup = L.popup({
+                            maxWidth: 320,
+                            minWidth: 300,
+                            className: 'dark-popup',
+                            closeButton: true
+                        })
+                            .setLatLng(e.latlng)
+                            .setContent(html)
+                            .openOn(map);
+
+                        // Bind click for permit button
+                        popup.getElement().addEventListener('click', function(ev) {
+                            const permitBtn = ev.target.closest('.popup-btn-permit');
+                            if (permitBtn) {
+                                const fd = JSON.parse(permitBtn.dataset.feature);
+                                popup.setContent(buildPermitPopup(fd.properties, fd));
+                                // Enable the permits layer
+                                setLayers(prev => ({ ...prev, permits: true }));
+                            }
+                            const backBtn = ev.target.closest('.popup-btn-back');
+                            if (backBtn) {
+                                const fd = JSON.parse(backBtn.dataset.feature);
+                                popup.setContent(buildPlanPopup(fd.properties, fd));
+                            }
+                        });
+                    })
+                    .catch(err => console.error('GetFeatureInfo error:', err));
+            }, [layers]);
+
+            // Re-bind click handler when layers change
+            const clickHandlerRef = useRef(null);
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                // Remove only our previous handler, not all click handlers
+                if (clickHandlerRef.current) {
+                    map.off('click', clickHandlerRef.current);
+                }
+                const handler = (e) => handleMapClick(e, map);
+                clickHandlerRef.current = handler;
+                map.on('click', handler);
+                return () => { map.off('click', handler); };
+            }, [handleMapClick]);
+
+            const toggleLayer = (id) => {
+                setLayers(prev => ({ ...prev, [id]: !prev[id] }));
+            };
+
+            const resetView = () => {
+                mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM);
+            };
+
+            // Plan search results
+            const searchResults = planSearch.length >= 2
+                ? planIndex.filter(p =>
+                    p.h.includes(planSearch) || p.n.includes(planSearch)
+                ).slice(0, 15)
+                : [];
+
+            const handleSearchSelect = (plan) => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                setPlanSearch('');
+                setShowSearchResults(false);
+                // Zoom to plan location and query for popup
+                map.setView(plan.c, 18);
+                // After map settles, trigger GetFeatureInfo at the plan center
+                setTimeout(() => {
+                    const size = map.getSize();
+                    const bounds = map.getBounds();
+                    const sw = bounds.getSouthWest();
+                    const ne = bounds.getNorthEast();
+                    const point = map.latLngToContainerPoint(plan.c);
+                    const params = new URLSearchParams({
+                        SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
+                        LAYERS: 'plans', QUERY_LAYERS: 'plans', CRS: 'EPSG:4326',
+                        BBOX: `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`,
+                        WIDTH: size.x, HEIGHT: size.y,
+                        I: Math.round(point.x), J: Math.round(point.y),
+                        INFO_FORMAT: 'application/json', FEATURE_COUNT: 5
+                    });
+                    fetch(`${WMS_URL}?${params.toString()}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.features || data.features.length === 0) return;
+                            const feature = data.features[0];
+                            const props = feature.properties;
+                            const featureData = { properties: props };
+                            const html = buildPlanPopup(props, featureData);
+                            const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
+                                .setLatLng(plan.c)
+                                .setContent(html)
+                                .openOn(map);
+                            popup.getElement().addEventListener('click', function(ev) {
+                                const permitBtn = ev.target.closest('.popup-btn-permit');
+                                if (permitBtn) {
+                                    const fd = JSON.parse(permitBtn.dataset.feature);
+                                    popup.setContent(buildPermitPopup(fd.properties, fd));
+                                    setLayers(prev => ({ ...prev, permits: true }));
+                                }
+                                const backBtn = ev.target.closest('.popup-btn-back');
+                                if (backBtn) {
+                                    const fd = JSON.parse(backBtn.dataset.feature);
+                                    popup.setContent(buildPlanPopup(fd.properties, fd));
+                                }
+                            });
+                        })
+                        .catch(err => console.error('Search popup error:', err));
+                }, 1000);
+            };
+
+            const activeCount = Object.values(layers).filter(Boolean).length;
+
+            const filteredConfig = {};
+            Object.entries(LAYER_CONFIG).forEach(([key, group]) => {
+                const filtered = group.layers.filter(l =>
+                    !searchText || l.name.includes(searchText) || l.id.includes(searchText)
+                );
+                if (filtered.length > 0) {
+                    filteredConfig[key] = { ...group, layers: filtered };
+                }
+            });
+
+            return (
+                <>
+                    <div className={`sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
+                        <div className="sidebar-header">
+                            <h1>אורנים</h1>
+                            <p>כלי תכנון עירוני - ירושלים</p>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>חיפוש תוכניות</h3>
+                            <div className="plan-search-wrap">
+                                <input
+                                    className="plan-search-input"
+                                    type="text"
+                                    placeholder='חיפוש תכנית או מספר...'
+                                    value={planSearch}
+                                    onChange={(e) => {
+                                        setPlanSearch(e.target.value);
+                                        setShowSearchResults(true);
+                                    }}
+                                    onFocus={() => planSearch.length >= 2 && setShowSearchResults(true)}
+                                />
+                                {planSearch && (
+                                    <button
+                                        className="plan-search-clear"
+                                        onClick={() => { setPlanSearch(''); setShowSearchResults(false); }}
+                                    >&times;</button>
+                                )}
+                                {showSearchResults && planSearch.length >= 2 && (
+                                    <div className="plan-search-results">
+                                        {searchResults.length > 0 ? searchResults.map((plan, i) => (
+                                            <div
+                                                key={i}
+                                                className="plan-search-item"
+                                                onClick={() => handleSearchSelect(plan)}
+                                            >
+                                                <div className="plan-search-item-name">{plan.h}</div>
+                                                <div className="plan-search-item-num">{plan.n}</div>
+                                            </div>
+                                        )) : (
+                                            <div className="plan-search-empty">לא נמצאו תוצאות</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>מפת בסיס</h3>
+                            <select
+                                className="basemap-select"
+                                value={basemap}
+                                onChange={(e) => setBasemap(e.target.value)}
+                                title={BASEMAPS[basemap]?.desc || ''}
+                            >
+                                {Object.entries(BASEMAPS).map(([key, bm]) => (
+                                    <option key={key} value={key} title={bm.desc}>{bm.name} - {bm.desc}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>שכבות ({activeCount} פעילות)</h3>
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="חיפוש שכבה..."
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                            />
+
+                            {Object.entries(filteredConfig).map(([groupKey, group]) => (
+                                <div key={groupKey}>
+                                    <div className="layer-group-title">{group.title}</div>
+                                    {group.layers.map(layer => (
+                                        <div className="layer-item" key={layer.id}
+                                             title={layer.desc || ''}
+                                             onClick={() => toggleLayer(layer.id)}>
+                                            <input
+                                                type="checkbox"
+                                                checked={layers[layer.id] || false}
+                                                onChange={() => toggleLayer(layer.id)}
+                                            />
+                                            <label>{layer.name}</label>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>שקיפות שכבות</h3>
+                            <input
+                                className="opacity-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={opacity}
+                                onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                            />
+                            <div className="opacity-label">
+                                <span>שקוף</span>
+                                <span>{Math.round(opacity * 100)}%</span>
+                                <span>אטום</span>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <button className="btn-reset" onClick={resetView}>
+                                איפוס תצוגה
+                            </button>
+                            <button className="btn-reset" onClick={() => {
+                                const all = {};
+                                Object.values(LAYER_CONFIG).forEach(g =>
+                                    g.layers.forEach(l => { all[l.id] = true; })
+                                );
+                                setLayers(all);
+                            }} style={{marginTop: '4px'}}>
+                                הצג הכל
+                            </button>
+                            <button className="btn-reset" onClick={() => {
+                                const none = {};
+                                Object.values(LAYER_CONFIG).forEach(g =>
+                                    g.layers.forEach(l => { none[l.id] = false; })
+                                );
+                                setLayers(none);
+                            }} style={{marginTop: '4px'}}>
+                                הסתר הכל
+                            </button>
+                        </div>
+
+                        <div className="status-bar">
+                            {cursorPos && (
+                                <span>{cursorPos.lat}, {cursorPos.lng}</span>
+                            )}
+                            <br />
+                            <span>WMS: qgiscloud.com/OrHirschhorn/ORANIM</span>
+                        </div>
+                    </div>
+
+                    <div className="map-container">
+                        <button
+                            className="toggle-btn"
+                            onClick={() => {
+                                setSidebarOpen(prev => !prev);
+                                setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350);
+                            }}
+                            title={sidebarOpen ? 'הסתר תפריט' : 'הצג תפריט'}
+                        >
+                            {sidebarOpen ? '◀' : '▶'}
+                        </button>
+                        <div id="map" ref={mapRef}></div>
+                        <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
+                            טוען שכבות...
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
