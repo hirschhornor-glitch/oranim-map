@@ -497,14 +497,15 @@
                 ]
             },
             admin: {
-                title: 'מנהלי',
+                title: 'מינהלים קהילתיים',
                 layers: [
-                    { id: 'talpiot', name: 'תלפיות', on: false },
-                    { id: 'malha', name: 'מלחה', on: false },
-                    { id: 'ginot_hair', name: 'גינות העיר', on: false },
-                    { id: 'beit_tzfafa', name: 'בית צפפא', on: false },
-                    { id: 'gonennim', name: 'גוננים', on: false },
-                    { id: 'baka', name: 'בקעה', on: false },
+                    { id: 'talpiot', name: 'תלפיות', on: true, minahak: 'א.ת. תלפיות' },
+                    { id: 'malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
+                    { id: 'ginot_hair', name: 'גינות העיר', on: true, minahak: 'גינות העיר' },
+                    { id: 'beit_tzfafa', name: 'בית צפפא', on: true, minahak: 'בית צפאפא' },
+                    { id: 'gonennim', name: 'גוננים', on: true, minahak: 'גוננים' },
+                    { id: 'baka', name: 'בקעה', on: true, minahak: 'בקעה רבתי' },
+                    { id: 'givat_hamatos', name: 'גבעת המטוס', on: true, minahak: 'גבעת המטוס' },
                 ]
             }
         };
@@ -559,6 +560,17 @@
                 url: '',
                 attribution: ''
             }
+        };
+
+        // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
+        const MINAHAK_SUBS = {
+            'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
+            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
+            'בקעה רבתי': ['ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות', 'תלפיות', 'תלפיות ארנונה'],
+            'גבעת המטוס': ['גבעת המטוס'],
+            'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'קטמונים ח-ט', 'רסקו', 'רסקו - גבעת הורדים'],
+            'גינות העיר': ['המושבה היוונית', 'ניות', 'עמק רפאים - המושבה הגרמנית', 'קוממיות - טלביה', 'קטמון הישנה', 'רחביה'],
+            'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
         };
 
         const CENTER = [31.7430, 35.2090];
@@ -705,21 +717,53 @@
 
                 if (mainLayers.length === 0 && !showBuildings && !showPermits) return;
 
-                // Build CQL_FILTER for planning topics (applied to plans layer)
-                let plansCqlFilter = null;
+                // --- Minahak spatial filter ---
+                const adminLayers = LAYER_CONFIG.admin.layers;
+                const allAdminOn = adminLayers.every(l => layers[l.id]);
+                const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
+                // Only apply minahak filter when NOT all are selected
+                let minahakPlansFilter = null;
+                let minahakTama38Filter = null;
+                if (!allAdminOn && selectedMinahaks.length > 0) {
+                    const escaped = selectedMinahaks.map(m => `'${m}'`).join(',');
+                    minahakPlansFilter = `minahak IN (${escaped})`;
+                    // For tama38: collect sub-neighborhoods of selected minahaks
+                    const subs = selectedMinahaks.flatMap(m => MINAHAK_SUBS[m] || []);
+                    if (subs.length > 0) {
+                        const escapedSubs = subs.map(s => `'${s}'`).join(',');
+                        minahakTama38Filter = `neighborho IN (${escapedSubs})`;
+                    }
+                } else if (selectedMinahaks.length === 0) {
+                    // None selected - hide all plans
+                    minahakPlansFilter = '1=0';
+                    minahakTama38Filter = '1=0';
+                }
+
+                // --- Planning topics filter (applied to plans layer) ---
                 const topicFilters = [];
                 if (planningTopics.overlapping) topicFilters.push('overlapping_plans > 0');
                 if (planningTopics.densification) topicFilters.push("status_mavat IN ('תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור') AND units_add > 0");
                 if (planningTopics.objections) topicFilters.push("status_mavat = 'הפקדה להתנגדויות/השגות'");
-                if (topicFilters.length > 0) {
-                    plansCqlFilter = topicFilters.join(' AND ');
-                }
+
+                // Combine plans filters (minahak + topics)
+                const allPlansFilters = [];
+                if (minahakPlansFilter) allPlansFilters.push(minahakPlansFilter);
+                if (topicFilters.length > 0) allPlansFilters.push(topicFilters.join(' AND '));
+                const plansCqlFilter = allPlansFilters.length > 0 ? allPlansFilters.join(' AND ') : null;
+
+                // Combine tama38 filters (minahak only, topics don't apply to tama38)
+                const tama38CqlFilter = minahakTama38Filter;
 
                 // Build CQL_FILTER string for multi-layer request
                 // Each layer needs its own filter separated by ';', use INCLUDE for no-filter layers
+                const needsFilter = plansCqlFilter || tama38CqlFilter;
                 let mainCqlFilter = null;
-                if (plansCqlFilter && mainLayers.includes('plans')) {
-                    mainCqlFilter = mainLayers.map(l => l === 'plans' ? plansCqlFilter : 'INCLUDE').join(';');
+                if (needsFilter && mainLayers.length > 0) {
+                    mainCqlFilter = mainLayers.map(l => {
+                        if (l === 'plans' && plansCqlFilter) return plansCqlFilter;
+                        if (l === 'tama38' && tama38CqlFilter) return tama38CqlFilter;
+                        return 'INCLUDE';
+                    }).join(';');
                 }
 
                 const mainCsv = mainLayers.join(',');
@@ -755,10 +799,10 @@
 
                 // --- Separate: permits overlay ---
                 let permitFront = null, permitBack = null;
+                const permitFilter = ["stage IS NOT NULL AND stage != ''", minahakPlansFilter].filter(Boolean).join(' AND ');
                 if (showPermits) {
                     permitFront = L.imageOverlay(
-                        buildWmsUrl(WMS_URL, 'plans', bounds, size,
-                            "stage IS NOT NULL AND stage != ''"),
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size, permitFilter),
                         bounds, { opacity, interactive: false, className: 'wms-overlay' }
                     ).addTo(map);
                 }
@@ -815,8 +859,7 @@
                         if (showPermits) {
                             pending++;
                             swapOverlay(
-                                buildWmsUrl(WMS_URL, 'plans', b, s,
-                                    "stage IS NOT NULL AND stage != ''"),
+                                buildWmsUrl(WMS_URL, 'plans', b, s, permitFilter),
                                 b, pf, pb, checkDone
                             );
                         }
