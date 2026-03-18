@@ -706,87 +706,74 @@
                 `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
         }
 
-        // SLD for planning topics: per-topic styling (hatching or outline-only)
-        function buildTopicsHatchingSLD(planningTopics, minahakOgcFragment) {
+        // Build topic definitions: filter, color, style type
+        function getTopicDefs(planningTopics) {
             const topics = [];
-            // תבעות כפולות - thin blue hatching (1px lines, 10px spacing)
             if (planningTopics.overlapping) {
                 topics.push({
-                    filter: addOgcNamespace(ogcGt('overlapping_plans', '0')),
+                    ogcFilter: ogcGt('overlapping_plans', '0'),
                     color: '#3366ff',
-                    style: 'hatch',
-                    strokeWidth: 1,
-                    hatchSize: 10
+                    style: 'hatch'
                 });
             }
-            // עיבוי שטחים חומים - orange hatching
             if (planningTopics.densification) {
                 const statusVals = ['תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור'];
-                const densFilter = ogcAnd([
-                    ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
-                    ogcGt('units_add', '0')
-                ]);
                 topics.push({
-                    filter: addOgcNamespace(densFilter),
+                    ogcFilter: ogcAnd([
+                        ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
+                        ogcGt('units_add', '0')
+                    ]),
                     color: '#ff8c00',
-                    style: 'hatch',
-                    strokeWidth: 1.5,
-                    hatchSize: 8
+                    style: 'hatch'
                 });
             }
-            // המופקדות להתנגדויות - RED outline only (no fill, no hatching)
             if (planningTopics.objections) {
                 topics.push({
-                    filter: addOgcNamespace(ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות')),
+                    ogcFilter: ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות'),
                     color: '#dd0000',
                     style: 'outline'
                 });
             }
-            if (topics.length === 0) return null;
+            return topics;
+        }
 
+        // SLD for topics: solid fill (hatching via CSS mask) or outline-only
+        // FILTER param pre-filters to only matching features, so no ElseFilter needed
+        function buildTopicsSLD(topicDefs, minahakOgcFragment) {
+            if (topicDefs.length === 0) return null;
             const nsMinahak = minahakOgcFragment ? addOgcNamespace(minahakOgcFragment) : null;
-
             let rules = '';
-            topics.forEach(t => {
-                let filterBody = t.filter;
-                if (nsMinahak) {
-                    filterBody = `<ogc:And>${t.filter}${nsMinahak}</ogc:And>`;
-                }
+            topicDefs.forEach(t => {
+                const nsFilter = addOgcNamespace(t.ogcFilter);
+                let filterBody = nsMinahak ? `<ogc:And>${nsFilter}${nsMinahak}</ogc:And>` : nsFilter;
                 if (t.style === 'outline') {
-                    // Outline only: thick red border, no fill
                     rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
                         `<PolygonSymbolizer>` +
                         `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">3</CssParameter></Stroke>` +
                         `</PolygonSymbolizer></Rule>`;
                 } else {
-                    // Hatching: QGIS shape://backslash for diagonal line pattern fill
+                    // Solid fill — CSS mask-image will create the hatching pattern
                     rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
                         `<PolygonSymbolizer>` +
-                        `<Fill>` +
-                        `<GraphicFill>` +
-                        `<Graphic>` +
-                        `<Mark><WellKnownName>shape://backslash</WellKnownName>` +
-                        `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">${t.strokeWidth || 1}</CssParameter></Stroke>` +
-                        `</Mark>` +
-                        `<Size>${t.hatchSize || 10}</Size>` +
-                        `</Graphic>` +
-                        `</GraphicFill>` +
-                        `</Fill>` +
+                        `<Fill><CssParameter name="fill">${t.color}</CssParameter><CssParameter name="fill-opacity">0.7</CssParameter></Fill>` +
                         `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2</CssParameter></Stroke>` +
                         `</PolygonSymbolizer></Rule>`;
                 }
             });
-            // ElseFilter rule: render unmatched features as fully transparent (no visible style)
-            rules += `<Rule><ElseFilter/>` +
-                `<PolygonSymbolizer>` +
-                `<Fill><CssParameter name="fill">#000000</CssParameter><CssParameter name="fill-opacity">0</CssParameter></Fill>` +
-                `<Stroke><CssParameter name="stroke">#000000</CssParameter><CssParameter name="stroke-opacity">0</CssParameter><CssParameter name="stroke-width">0</CssParameter></Stroke>` +
-                `</PolygonSymbolizer></Rule>`;
             return `<?xml version="1.0" encoding="UTF-8"?>` +
                 `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
-                `<NamedLayer><Name>plans</Name><UserStyle><Title>topics_hatch</Title>` +
+                `<NamedLayer><Name>plans</Name><UserStyle><Title>topics</Title>` +
                 `<FeatureTypeStyle>${rules}</FeatureTypeStyle>` +
                 `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
+        }
+
+        // Build OGC FILTER for pre-filtering matching features (OR of all active topics)
+        function buildTopicsFilter(topicDefs, minahakOgcFragment) {
+            if (topicDefs.length === 0) return null;
+            const parts = topicDefs.map(t => t.ogcFilter);
+            let combined = parts.length === 1 ? parts[0] : ogcOr(parts);
+            if (minahakOgcFragment) combined = ogcAnd([combined, minahakOgcFragment]);
+            return `(${ogcFilter(combined)})`;
         }
 
         const PLANS_LEGEND = [
@@ -873,7 +860,7 @@
                 params.set('FILTER', ogcFilterStr);
             }
             if (opts && opts.sldBody) {
-                params.delete('FILTER'); // SLD includes its own filters
+                // Keep FILTER if present - FILTER pre-filters features, SLD styles them
                 params.set('SLD_BODY', opts.sldBody);
             }
             return baseUrl + '?' + params.toString();
@@ -1088,17 +1075,27 @@
                     }, 1000);
                 }
 
-                // --- Hatching overlay for planning topics (zIndex 450, above plans, below permits) ---
+                // --- Topics overlay (zIndex 450, above plans, below permits) ---
+                // Uses FILTER to pre-filter features + SLD for coloring + CSS mask for hatching
                 let hatchFront = null, hatchBack = null;
-                const topicsSLD = buildTopicsHatchingSLD(planningTopics, minahakPlansOgc);
+                const topicDefs = getTopicDefs(planningTopics);
+                const topicsSLD = buildTopicsSLD(topicDefs, minahakPlansOgc);
+                const topicsFilter = buildTopicsFilter(topicDefs, minahakPlansOgc);
+                const hasHatchTopics = topicDefs.some(t => t.style === 'hatch');
                 if (topicsSLD) {
-                    console.log('[WMS] Topics hatching ON');
+                    console.log('[WMS] Topics ON, FILTER:', topicsFilter);
                     hatchFront = L.imageOverlay(
-                        buildWmsUrl(WMS_URL, 'plans', bounds, size, null, { sldBody: topicsSLD }),
-                        bounds, { opacity: 0.8, interactive: false, className: 'wms-overlay wms-hatch', zIndex: 450 }
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size, topicsFilter, { sldBody: topicsSLD }),
+                        bounds, { opacity: 1, interactive: false, className: 'wms-overlay wms-hatch', zIndex: 450 }
                     ).addTo(map);
                     const hatchEl = hatchFront.getElement();
-                    if (hatchEl) hatchEl.style.zIndex = '450';
+                    if (hatchEl) {
+                        hatchEl.style.zIndex = '450';
+                        if (hasHatchTopics) {
+                            hatchEl.style.maskImage = 'repeating-linear-gradient(-45deg, black 0px, black 2px, transparent 2px, transparent 8px)';
+                            hatchEl.style.webkitMaskImage = 'repeating-linear-gradient(-45deg, black 0px, black 2px, transparent 2px, transparent 8px)';
+                        }
+                    }
                 }
 
                 // --- Permits overlay (solid opaque fill via SLD_BODY, above everything, zIndex 500) ---
@@ -1163,16 +1160,22 @@
                             swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, checkDone);
                         }
 
-                        // Topics hatching (zIndex 450)
+                        // Topics overlay (zIndex 450, FILTER+SLD+CSS mask)
                         if (topicsSLD) {
                             pending++;
                             swapOverlay(
-                                buildWmsUrl(WMS_URL, 'plans', b, s, null, { sldBody: topicsSLD }),
+                                buildWmsUrl(WMS_URL, 'plans', b, s, topicsFilter, { sldBody: topicsSLD }),
                                 b, hf, hb, () => {
                                     if (hf.current) {
                                         const el = hf.current.getElement();
-                                        if (el) el.style.zIndex = '450';
-                                        hf.current.setOpacity(0.8);
+                                        if (el) {
+                                            el.style.zIndex = '450';
+                                            if (hasHatchTopics) {
+                                                el.style.maskImage = 'repeating-linear-gradient(-45deg, black 0px, black 2px, transparent 2px, transparent 8px)';
+                                                el.style.webkitMaskImage = 'repeating-linear-gradient(-45deg, black 0px, black 2px, transparent 2px, transparent 8px)';
+                                            }
+                                        }
+                                        hf.current.setOpacity(1);
                                     }
                                     checkDone();
                                 }
@@ -1305,64 +1308,139 @@
                 return html;
             }
 
+            // Build the tama38 popup HTML
+            function buildTama38Popup(props) {
+                const title = props.address || 'תמ"א 38';
+                const subtitle = props.neighborho ? `שכונה: ${props.neighborho}` : '';
+                const status = props.status || '';
+                const status1 = props.status_1 || '';
+                const displayStatus = status || status1 || '-';
+                const harisaa = props.harisaa || '-';
+                const unitsExist = props.units_exis != null ? props.units_exis : '-';
+                const unitsTose = props.units_tose != null ? props.units_tose : '-';
+                const tik = props.tik || '-';
+                const dateOpen = props.open_ || '-';
+                const dateApproval = props.date || '-';
+                const comment = props.comment || '';
+
+                // Status color for tama38
+                const statusColor = displayStatus.includes('היתר') ? '#50d25a' :
+                    displayStatus.includes('אושר') ? '#50d25a' :
+                    displayStatus.includes('הופק') ? '#50d25a' :
+                    displayStatus.includes('בנייה') ? '#4a69d1' :
+                    displayStatus.includes('נפתח') ? '#f56e05' :
+                    displayStatus.includes('בתהליך') ? '#4ba1f0' :
+                    '#5dade2';
+
+                let html = '<div>';
+                html += '<div class="popup-header" style="border-right:4px solid #e94560">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                html += `<div class="popup-header-subtitle" style="font-size:10px;opacity:0.6">תמ"א 38</div>`;
+                html += '</div>';
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${displayStatus}</span></div>`;
+                if (status1 && status1 !== status && status1 !== '-') {
+                    html += `<div class="popup-row"><span class="popup-row-label">סטטוס משני</span><span class="popup-row-value">${status1}</span></div>`;
+                }
+                html += `<div class="popup-row"><span class="popup-row-label">הריסה</span><span class="popup-row-value">${harisaa}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד קיימות</span><span class="popup-row-value">${unitsExist}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsTose !== '-' ? '+' + unitsTose : '-'}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תיק</span><span class="popup-row-value">${tik}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך פתיחה</span><span class="popup-row-value">${dateOpen}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך אישור</span><span class="popup-row-value">${dateApproval}</span></div>`;
+                if (comment) {
+                    const shortComment = comment.length > 120 ? comment.substring(0, 120) + '...' : comment;
+                    html += `<div class="popup-row" style="flex-direction:column;align-items:flex-start"><span class="popup-row-label" style="margin-bottom:4px">הערות</span><span class="popup-row-value" style="font-size:11px;line-height:1.4;text-align:right;white-space:pre-wrap;max-width:100%">${shortComment}</span></div>`;
+                }
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
             const handleMapClick = useCallback((e, map) => {
                 const size = map.getSize();
                 const bounds = map.getBounds();
                 const sw = bounds.getSouthWest();
                 const ne = bounds.getNorthEast();
+                const showPlans = layers['plans'];
                 const showPermits = layers['permits'];
+                const showTama38 = layers['tama38'];
 
-                const params = new URLSearchParams({
+                // Global rule: only query layers that are toggled ON
+                if (!showPlans && !showPermits && !showTama38) return;
+
+                const bboxStr = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
+                const commonParams = {
                     SERVICE: 'WMS',
                     VERSION: '1.3.0',
                     REQUEST: 'GetFeatureInfo',
-                    LAYERS: 'plans',
-                    QUERY_LAYERS: 'plans',
                     CRS: 'EPSG:4326',
-                    BBOX: `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`,
+                    BBOX: bboxStr,
                     WIDTH: size.x,
                     HEIGHT: size.y,
                     I: Math.round(e.containerPoint.x),
                     J: Math.round(e.containerPoint.y),
                     INFO_FORMAT: 'application/json',
                     FEATURE_COUNT: 10
-                });
+                };
 
-                const url = `${WMS_URL}?${params.toString()}`;
+                // Build fetch promises only for active layers
+                const fetches = [];
 
-                fetch(url)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.features || data.features.length === 0) return;
+                if (showPlans || showPermits) {
+                    const params = new URLSearchParams({ ...commonParams, LAYERS: 'plans', QUERY_LAYERS: 'plans' });
+                    fetches.push(
+                        fetch(`${WMS_URL}?${params.toString()}`).then(r => r.json()).then(d => ({ layer: 'plans', data: d }))
+                    );
+                }
 
-                        // Log all fields for debugging
-                        console.log('[GetFeatureInfo] All features:', data.features.length);
-                        data.features.forEach((f, i) => {
-                            const p = f.properties;
-                            console.log(`[Feature ${i}] plan=${p.plan_name} stage='${p.stage || ''}' permit='${p.building_permit || ''}'`);
-                            if (i === 0) {
-                                console.log('[Feature 0] ALL FIELDS:', JSON.stringify(p));
-                            }
-                        });
+                if (showTama38) {
+                    const params = new URLSearchParams({ ...commonParams, LAYERS: 'tama38', QUERY_LAYERS: 'tama38' });
+                    fetches.push(
+                        fetch(`${WMS_URL}?${params.toString()}`).then(r => r.json()).then(d => ({ layer: 'tama38', data: d }))
+                    );
+                }
 
-                        let feature, props, featureData, html;
+                Promise.all(fetches)
+                    .then(results => {
+                        const plansResult = results.find(r => r.layer === 'plans');
+                        const tama38Result = results.find(r => r.layer === 'tama38');
 
-                        if (showPermits) {
-                            // When permits layer is active, prefer features with stage data
-                            feature = data.features.find(f => f.properties.stage && f.properties.stage.trim()) || data.features[0];
-                            props = feature.properties;
+                        const plansFeatures = (plansResult && plansResult.data.features) || [];
+                        const tama38Features = (tama38Result && tama38Result.data.features) || [];
+
+                        // Log for debugging
+                        console.log('[GetFeatureInfo] plans:', plansFeatures.length, 'tama38:', tama38Features.length);
+                        if (tama38Features.length > 0) {
+                            console.log('[tama38 Feature 0] ALL FIELDS:', JSON.stringify(tama38Features[0].properties));
+                        }
+
+                        let html = null;
+                        let featureData = null;
+
+                        // Priority: permits > plans > tama38
+                        // Only show popup for layers that are ON
+                        if (showPermits && plansFeatures.length > 0) {
+                            const feature = plansFeatures.find(f => f.properties.stage && f.properties.stage.trim()) || plansFeatures[0];
+                            const props = feature.properties;
                             featureData = { properties: props };
                             if (props.stage && props.stage.trim()) {
                                 html = buildPermitPopup(props, featureData);
-                            } else {
+                            } else if (showPlans) {
                                 html = buildPlanPopup(props, featureData);
                             }
-                        } else {
-                            feature = data.features[0];
-                            props = feature.properties;
+                        } else if (showPlans && plansFeatures.length > 0) {
+                            const feature = plansFeatures[0];
+                            const props = feature.properties;
                             featureData = { properties: props };
                             html = buildPlanPopup(props, featureData);
+                        } else if (showTama38 && tama38Features.length > 0) {
+                            const props = tama38Features[0].properties;
+                            html = buildTama38Popup(props);
                         }
+
+                        if (!html) return;
 
                         const popup = L.popup({
                             maxWidth: 320,
