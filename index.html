@@ -2604,6 +2604,7 @@
                                 ev.stopPropagation();
                                 const p = JSON.parse(compareBtn.dataset.props);
                                 if (window.__addToCompare) window.__addToCompare(p);
+                                map.closePopup();
                                 return;
                             }
 
@@ -2712,6 +2713,7 @@
                                     ev.stopPropagation();
                                     const p = JSON.parse(compareBtn.dataset.props);
                                     if (window.__addToCompare) window.__addToCompare(p);
+                                    map.closePopup();
                                     return;
                                 }
                                 const permitBtn = ev.target.closest('.popup-btn-permit');
