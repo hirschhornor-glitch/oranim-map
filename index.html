@@ -706,14 +706,17 @@
                 `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
         }
 
-        // SLD for planning topics hatching: diagonal lines pattern fill per topic
+        // SLD for planning topics: per-topic styling (hatching or outline-only)
         function buildTopicsHatchingSLD(planningTopics, minahakOgcFragment) {
             const topics = [];
-            // תבעות כפולות - blue hatching
+            // תבעות כפולות - thin blue hatching (1px lines, 10px spacing)
             if (planningTopics.overlapping) {
                 topics.push({
                     filter: addOgcNamespace(ogcGt('overlapping_plans', '0')),
-                    color: '#3366ff'
+                    color: '#3366ff',
+                    style: 'hatch',
+                    strokeWidth: 1,
+                    hatchSize: 10
                 });
             }
             // עיבוי שטחים חומים - orange hatching
@@ -725,14 +728,18 @@
                 ]);
                 topics.push({
                     filter: addOgcNamespace(densFilter),
-                    color: '#ff8c00'
+                    color: '#ff8c00',
+                    style: 'hatch',
+                    strokeWidth: 1.5,
+                    hatchSize: 8
                 });
             }
-            // המופקדות להתנגדויות - purple hatching
+            // המופקדות להתנגדויות - RED outline only (no fill, no hatching)
             if (planningTopics.objections) {
                 topics.push({
                     filter: addOgcNamespace(ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות')),
-                    color: '#9933cc'
+                    color: '#dd0000',
+                    style: 'outline'
                 });
             }
             if (topics.length === 0) return null;
@@ -745,21 +752,29 @@
                 if (nsMinahak) {
                     filterBody = `<ogc:And>${t.filter}${nsMinahak}</ogc:And>`;
                 }
-                // Hatching: QGIS shape://backslash for diagonal line pattern fill
-                rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
-                    `<PolygonSymbolizer>` +
-                    `<Fill>` +
-                    `<GraphicFill>` +
-                    `<Graphic>` +
-                    `<Mark><WellKnownName>shape://backslash</WellKnownName>` +
-                    `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2</CssParameter></Stroke>` +
-                    `</Mark>` +
-                    `<Size>10</Size>` +
-                    `</Graphic>` +
-                    `</GraphicFill>` +
-                    `</Fill>` +
-                    `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2.5</CssParameter></Stroke>` +
-                    `</PolygonSymbolizer></Rule>`;
+                if (t.style === 'outline') {
+                    // Outline only: thick red border, no fill
+                    rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
+                        `<PolygonSymbolizer>` +
+                        `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">3</CssParameter></Stroke>` +
+                        `</PolygonSymbolizer></Rule>`;
+                } else {
+                    // Hatching: QGIS shape://backslash for diagonal line pattern fill
+                    rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
+                        `<PolygonSymbolizer>` +
+                        `<Fill>` +
+                        `<GraphicFill>` +
+                        `<Graphic>` +
+                        `<Mark><WellKnownName>shape://backslash</WellKnownName>` +
+                        `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">${t.strokeWidth || 1}</CssParameter></Stroke>` +
+                        `</Mark>` +
+                        `<Size>${t.hatchSize || 10}</Size>` +
+                        `</Graphic>` +
+                        `</GraphicFill>` +
+                        `</Fill>` +
+                        `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2</CssParameter></Stroke>` +
+                        `</PolygonSymbolizer></Rule>`;
+                }
             });
             return `<?xml version="1.0" encoding="UTF-8"?>` +
                 `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
@@ -785,9 +800,9 @@
         ];
 
         const TOPICS_LEGEND = [
-            { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff' },
-            { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00' },
-            { label: 'תכניות המופקדות להתנגדויות', color: '#9933cc' },
+            { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
+            { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
+            { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
         ];
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -1550,7 +1565,12 @@
                                 </div>
                             ))}
 
-                            <div className="layer-group-title">נושאים תכנוניים</div>
+                            <div className="layer-group-title" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <span>נושאים תכנוניים</span>
+                                <button className="layer-legend-btn" title="מקרא נושאים תכנוניים"
+                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND }); }}
+                                    style={{fontSize:'14px',margin:0}}>⋯</button>
+                            </div>
                             <div className="layer-item"
                                  title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
                                  onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
@@ -1569,8 +1589,6 @@
                                 <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
                                 <label>תכניות המופקדות להתנגדויות</label>
                             </div>
-                            <button className="layer-legend-btn" style={{marginTop:'4px',fontSize:'13px',color:'#8888aa'}}
-                                onClick={() => setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND })}>⋯ מקרא</button>
                         </div>
 
                         <div className="sidebar-section">
@@ -1670,7 +1688,19 @@
                                 <div className="legend-popup-title">{legendPopup.title}</div>
                                 {legendPopup.items.map((item, i) => (
                                     <div className="legend-item" key={i}>
-                                        <div className="legend-color" style={{background: item.color}}></div>
+                                        {item.style === 'hatch' ? (
+                                            <div className="legend-color" style={{
+                                                background: `repeating-linear-gradient(-45deg, transparent, transparent 3px, ${item.color} 3px, ${item.color} 4.5px)`,
+                                                border: `2px solid ${item.color}`
+                                            }}></div>
+                                        ) : item.style === 'outline' ? (
+                                            <div className="legend-color" style={{
+                                                background: 'transparent',
+                                                border: `3px solid ${item.color}`
+                                            }}></div>
+                                        ) : (
+                                            <div className="legend-color" style={{background: item.color}}></div>
+                                        )}
                                         <span>{item.label}</span>
                                     </div>
                                 ))}
