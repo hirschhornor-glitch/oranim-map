@@ -654,9 +654,26 @@
             'ו-גמר בנייה': '#494cc2',
         };
 
-        // SLD for permits: thick colored outlines by STAGE, very light fill
+        // Helper: add ogc: namespace prefix to OGC filter fragments for use inside SLD
+        function addOgcNamespace(fragment) {
+            if (!fragment) return '';
+            return fragment
+                .replace(/<PropertyIsEqualTo>/g, '<ogc:PropertyIsEqualTo>')
+                .replace(/<\/PropertyIsEqualTo>/g, '</ogc:PropertyIsEqualTo>')
+                .replace(/<PropertyIsNotEqualTo>/g, '<ogc:PropertyIsNotEqualTo>')
+                .replace(/<\/PropertyIsNotEqualTo>/g, '</ogc:PropertyIsNotEqualTo>')
+                .replace(/<PropertyIsGreaterThan>/g, '<ogc:PropertyIsGreaterThan>')
+                .replace(/<\/PropertyIsGreaterThan>/g, '</ogc:PropertyIsGreaterThan>')
+                .replace(/<PropertyName>/g, '<ogc:PropertyName>')
+                .replace(/<\/PropertyName>/g, '</ogc:PropertyName>')
+                .replace(/<Literal>/g, '<ogc:Literal>')
+                .replace(/<\/Literal>/g, '</ogc:Literal>')
+                .replace(/<Or>/g, '<ogc:Or>').replace(/<\/Or>/g, '</ogc:Or>')
+                .replace(/<And>/g, '<ogc:And>').replace(/<\/And>/g, '</ogc:And>');
+        }
+
+        // SLD for permits: solid opaque fill by STAGE, with border
         function buildPermitsSLD(minahakOgcFragment) {
-            // Each stage gets an SLD Rule with outline stroke + transparent fill
             const stages = [
                 { values: ['ג-רישוי בתהליך', 'ג-רישוי  בתהליך'], color: '#4ba1f0' },
                 { values: ['ד-היתר בנייה'], color: '#4b85e0' },
@@ -665,39 +682,88 @@
             ];
             let rules = '';
             stages.forEach(s => {
-                // Build stage filter: OR of values
                 const stageFilters = s.values.map(v =>
                     `<ogc:PropertyIsEqualTo><ogc:PropertyName>stage</ogc:PropertyName><ogc:Literal>${v}</ogc:Literal></ogc:PropertyIsEqualTo>`
                 );
                 let stageOgc = stageFilters.length === 1 ? stageFilters[0] : `<ogc:Or>${stageFilters.join('')}</ogc:Or>`;
-                // Combine with optional minahak filter
                 let filterBody;
                 if (minahakOgcFragment) {
-                    // Wrap minahak fragment with ogc: namespace prefix
-                    const nsMinahak = minahakOgcFragment
-                        .replace(/<PropertyIs/g, '<ogc:PropertyIs')
-                        .replace(/<\/PropertyIs/g, '</ogc:PropertyIs')
-                        .replace(/<PropertyName>/g, '<ogc:PropertyName>')
-                        .replace(/<\/PropertyName>/g, '</ogc:PropertyName>')
-                        .replace(/<Literal>/g, '<ogc:Literal>')
-                        .replace(/<\/Literal>/g, '</ogc:Literal>')
-                        .replace(/<Or>/g, '<ogc:Or>')
-                        .replace(/<\/Or>/g, '</ogc:Or>')
-                        .replace(/<And>/g, '<ogc:And>')
-                        .replace(/<\/And>/g, '</ogc:And>');
+                    const nsMinahak = addOgcNamespace(minahakOgcFragment);
                     filterBody = `<ogc:And>${stageOgc}${nsMinahak}</ogc:And>`;
                 } else {
                     filterBody = stageOgc;
                 }
                 rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
                     `<PolygonSymbolizer>` +
-                    `<Fill><CssParameter name="fill">${s.color}</CssParameter><CssParameter name="fill-opacity">0.1</CssParameter></Fill>` +
-                    `<Stroke><CssParameter name="stroke">${s.color}</CssParameter><CssParameter name="stroke-width">3</CssParameter></Stroke>` +
+                    `<Fill><CssParameter name="fill">${s.color}</CssParameter><CssParameter name="fill-opacity">0.85</CssParameter></Fill>` +
+                    `<Stroke><CssParameter name="stroke">${s.color}</CssParameter><CssParameter name="stroke-width">2</CssParameter></Stroke>` +
                     `</PolygonSymbolizer></Rule>`;
             });
             return `<?xml version="1.0" encoding="UTF-8"?>` +
                 `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
-                `<NamedLayer><Name>plans</Name><UserStyle><Title>permits_outline</Title>` +
+                `<NamedLayer><Name>plans</Name><UserStyle><Title>permits_solid</Title>` +
+                `<FeatureTypeStyle>${rules}</FeatureTypeStyle>` +
+                `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
+        }
+
+        // SLD for planning topics hatching: diagonal lines pattern fill per topic
+        function buildTopicsHatchingSLD(planningTopics, minahakOgcFragment) {
+            const topics = [];
+            // תבעות כפולות - blue hatching
+            if (planningTopics.overlapping) {
+                topics.push({
+                    filter: addOgcNamespace(ogcGt('overlapping_plans', '0')),
+                    color: '#3366ff'
+                });
+            }
+            // עיבוי שטחים חומים - orange hatching
+            if (planningTopics.densification) {
+                const statusVals = ['תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור'];
+                const densFilter = ogcAnd([
+                    ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
+                    ogcGt('units_add', '0')
+                ]);
+                topics.push({
+                    filter: addOgcNamespace(densFilter),
+                    color: '#ff8c00'
+                });
+            }
+            // המופקדות להתנגדויות - purple hatching
+            if (planningTopics.objections) {
+                topics.push({
+                    filter: addOgcNamespace(ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות')),
+                    color: '#9933cc'
+                });
+            }
+            if (topics.length === 0) return null;
+
+            const nsMinahak = minahakOgcFragment ? addOgcNamespace(minahakOgcFragment) : null;
+
+            let rules = '';
+            topics.forEach(t => {
+                let filterBody = t.filter;
+                if (nsMinahak) {
+                    filterBody = `<ogc:And>${t.filter}${nsMinahak}</ogc:And>`;
+                }
+                // Hatching: QGIS shape://backslash for diagonal line pattern fill
+                rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
+                    `<PolygonSymbolizer>` +
+                    `<Fill>` +
+                    `<GraphicFill>` +
+                    `<Graphic>` +
+                    `<Mark><WellKnownName>shape://backslash</WellKnownName>` +
+                    `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2</CssParameter></Stroke>` +
+                    `</Mark>` +
+                    `<Size>10</Size>` +
+                    `</Graphic>` +
+                    `</GraphicFill>` +
+                    `</Fill>` +
+                    `<Stroke><CssParameter name="stroke">${t.color}</CssParameter><CssParameter name="stroke-width">2.5</CssParameter></Stroke>` +
+                    `</PolygonSymbolizer></Rule>`;
+            });
+            return `<?xml version="1.0" encoding="UTF-8"?>` +
+                `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
+                `<NamedLayer><Name>plans</Name><UserStyle><Title>topics_hatch</Title>` +
                 `<FeatureTypeStyle>${rules}</FeatureTypeStyle>` +
                 `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
         }
@@ -719,9 +785,9 @@
         ];
 
         const TOPICS_LEGEND = [
-            { label: 'תבעות כפולות על אותו מרחב', color: '#ff6b6b' },
-            { label: 'תכניות לעיבוי שטחים חומים', color: '#644100' },
-            { label: 'תכניות המופקדות להתנגדויות', color: '#f56e05' },
+            { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff' },
+            { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00' },
+            { label: 'תכניות המופקדות להתנגדויות', color: '#9933cc' },
         ];
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -903,7 +969,7 @@
                 // Clean up previous
                 if (wmsLayerRef.current) {
                     const r = wmsLayerRef.current;
-                    [r.mainFront, r.mainBack, r.bldgFront, r.bldgBack, r.permitFront, r.permitBack]
+                    [r.mainFront, r.mainBack, r.bldgFront, r.bldgBack, r.permitFront, r.permitBack, r.hatchFront, r.hatchBack]
                         .forEach(o => { if (o) map.removeLayer(o); });
                     map.off('moveend', r.handler);
                     clearTimeout(r.debounceTimer);
@@ -947,23 +1013,8 @@
                     minahakTama38Ogc = ogcEq('neighborho', '__NONE__');
                 }
 
-                // --- Planning topics filter (OGC XML, applied to plans) ---
-                const topicParts = [];
-                if (planningTopics.overlapping) topicParts.push(ogcGt('overlapping_plans', '0'));
-                if (planningTopics.densification) {
-                    const statusVals = ['תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור'];
-                    topicParts.push(ogcAnd([
-                        ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
-                        ogcGt('units_add', '0')
-                    ]));
-                }
-                if (planningTopics.objections) topicParts.push(ogcEq('status_mavat', 'הפקדה להתנגדויות/השגות'));
-
-                // Combine plans OGC filter (minahak + topics)
-                const plansOgcParts = [];
-                if (minahakPlansOgc) plansOgcParts.push(minahakPlansOgc);
-                if (topicParts.length > 0) plansOgcParts.push(ogcAnd(topicParts));
-                const plansOgc = plansOgcParts.length > 0 ? ogcAnd(plansOgcParts) : null;
+                // Plans OGC filter: only minahak spatial filter (topics are separate hatching overlay)
+                const plansOgc = minahakPlansOgc || null;
                 const tama38Ogc = minahakTama38Ogc;
 
                 // Build multi-layer FILTER param
@@ -1016,11 +1067,24 @@
                     }, 1000);
                 }
 
-                // --- Separate: permits overlay (outline style via SLD_BODY, above plans) ---
+                // --- Hatching overlay for planning topics (zIndex 450, above plans, below permits) ---
+                let hatchFront = null, hatchBack = null;
+                const topicsSLD = buildTopicsHatchingSLD(planningTopics, minahakPlansOgc);
+                if (topicsSLD) {
+                    console.log('[WMS] Topics hatching ON');
+                    hatchFront = L.imageOverlay(
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size, null, { sldBody: topicsSLD }),
+                        bounds, { opacity: 0.8, interactive: false, className: 'wms-overlay wms-hatch', zIndex: 450 }
+                    ).addTo(map);
+                    const hatchEl = hatchFront.getElement();
+                    if (hatchEl) hatchEl.style.zIndex = '450';
+                }
+
+                // --- Permits overlay (solid opaque fill via SLD_BODY, above everything, zIndex 500) ---
                 let permitFront = null, permitBack = null;
                 const permitSLD = buildPermitsSLD(minahakPlansOgc);
                 if (showPermits) {
-                    console.log('[WMS] Permits ON with SLD outline style');
+                    console.log('[WMS] Permits ON with SLD solid fill');
                     permitFront = L.imageOverlay(
                         buildWmsUrl(WMS_URL, 'plans', bounds, size, null, { sldBody: permitSLD }),
                         bounds, { opacity: 1, interactive: false, className: 'wms-overlay wms-permits', zIndex: 500 }
@@ -1058,6 +1122,7 @@
                 const mf = { current: mainFront }, mb = { current: mainBack };
                 const bf = { current: bldgFront }, bb = { current: bldgBack };
                 const pf = { current: permitFront }, pb = { current: permitBack };
+                const hf = { current: hatchFront }, hb = { current: hatchBack };
 
                 function onMoveEnd() {
                     clearTimeout(debounceTimer);
@@ -1077,7 +1142,23 @@
                             swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, checkDone);
                         }
 
-                        // Permits (outline style above plans)
+                        // Topics hatching (zIndex 450)
+                        if (topicsSLD) {
+                            pending++;
+                            swapOverlay(
+                                buildWmsUrl(WMS_URL, 'plans', b, s, null, { sldBody: topicsSLD }),
+                                b, hf, hb, () => {
+                                    if (hf.current) {
+                                        const el = hf.current.getElement();
+                                        if (el) el.style.zIndex = '450';
+                                        hf.current.setOpacity(0.8);
+                                    }
+                                    checkDone();
+                                }
+                            );
+                        }
+
+                        // Permits (solid fill above everything, zIndex 500)
                         if (showPermits) {
                             pending++;
                             swapOverlay(
@@ -1086,7 +1167,7 @@
                                     if (pf.current) {
                                         const el = pf.current.getElement();
                                         if (el) el.style.zIndex = '500';
-                                        pf.current.setOpacity(1); // SLD handles its own transparency
+                                        pf.current.setOpacity(1);
                                     }
                                     checkDone();
                                 }
@@ -1118,6 +1199,8 @@
                     get bldgBack() { return bb.current; },
                     get permitFront() { return pf.current; },
                     get permitBack() { return pb.current; },
+                    get hatchFront() { return hf.current; },
+                    get hatchBack() { return hb.current; },
                     handler: onMoveEnd,
                     debounceTimer,
                     bldgDelayTimer
