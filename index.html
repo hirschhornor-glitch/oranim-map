@@ -1141,12 +1141,8 @@
                 });
             }
             if (planningTopics.densification) {
-                const statusVals = ['תחילת תוקף','תבע מאושרת','מאושרת','אישור','בהליך אישור'];
                 topics.push({
-                    ogcFilter: ogcAnd([
-                        ogcOr(statusVals.map(s => ogcEq('status_mavat', s))),
-                        ogcGt('units_add', '0')
-                    ]),
+                    ogcFilter: ogcEq('plan_type', 'עיבוי שטחים חומים'),
                     color: '#ff8c00',
                     style: 'hatch'
                 });
