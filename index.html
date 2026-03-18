@@ -819,7 +819,19 @@
             padding: 16px 20px; border-bottom: 1px solid #2a2a4a;
             position: relative; z-index: 2;
         }
-        .units-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; }
+        .units-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; flex: 1; }
+        .units-back-btn {
+            background: #2a2a4a; border: 1px solid #3a3a5a; color: #8ecae6;
+            padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            margin-left: 12px; white-space: nowrap; transition: background 0.2s;
+        }
+        .units-back-btn:hover { background: #3a3a5a; }
+        .units-minahak-clickable {
+            cursor: pointer; transition: color 0.2s, background 0.2s;
+            text-decoration: underline; text-decoration-style: dotted;
+            text-underline-offset: 3px;
+        }
+        .units-minahak-clickable:hover { background: #252550 !important; color: #e94560; }
         .units-body { padding: 16px 20px; overflow: auto; flex: 1; position: relative; z-index: 2; }
         .units-table {
             width: 100%; border-collapse: separate; border-spacing: 0;
@@ -856,6 +868,19 @@
             background: #12122a;
         }
         .units-sub-row td:first-child { padding-right: 28px; font-style: italic; }
+        .units-toggle-row td { padding: 4px 8px !important; border-bottom: none !important; }
+        .units-toggle-btns {
+            display: flex; gap: 6px; justify-content: center;
+        }
+        .units-toggle-btn {
+            background: #1e1e3e; border: 1px solid #2a2a4a; color: #8888aa;
+            padding: 3px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; transition: all 0.2s;
+        }
+        .units-toggle-btn:hover { background: #2a2a4a; color: #c0c0dd; }
+        .units-toggle-btn.active {
+            background: #2a2a5a; border-color: #8ecae6; color: #8ecae6; font-weight: 600;
+        }
         .units-loading {
             text-align: center; padding: 40px; color: #8888aa; font-size: 14px;
         }
@@ -1303,7 +1328,8 @@
             const [showUnits, setShowUnits] = useState(false);
             const [unitsData, setUnitsData] = useState(null); // { minahaks, byMinahak }
             const [unitsLoading, setUnitsLoading] = useState(false);
-            const [unitsExpanded, setUnitsExpanded] = useState(false); // expand sub-rows
+            const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
+            const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
 
             // Load plan search index
             useEffect(() => {
@@ -1821,7 +1847,19 @@
                 setShowPrint(false);
             }, [printTitle, printShowLegend, printShowTitle, mapScale]);
 
-            // ── Units summary: fetch all plans and aggregate by minahak ──
+            // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
+            // Map tama38 neighborho → minahak
+            const NEIGHBORHOOD_TO_MINAHAK = {
+                'טלביה': 'גינות העיר', 'רחביה': 'גינות העיר',
+                'קטמון הישנה': 'גוננים', 'גבעת הורדים': 'גוננים',
+                'גבעת הורדים - רסקו': 'גוננים', 'ארנונה': 'גוננים',
+                'עמק רפאים': 'בקעה רבתי', 'עמק רפאים - המושבה הגרמנית': 'בקעה רבתי',
+                'עמק רפאים- המושבה הגרמנית': 'בקעה רבתי',
+                'תלפיות': 'א.ת. תלפיות',
+                'בית צפאפא': 'בית צפאפא',
+                'מלחה': 'מינהל מוסדי מלחה',
+            };
+
             const fetchUnitsData = useCallback(() => {
                 if (unitsData) { setShowUnits(true); return; } // cached
                 setUnitsLoading(true);
@@ -1829,9 +1867,10 @@
 
                 const bbox = '31.73,35.18,31.78,35.24';
                 const W = 800, H = 800;
-                const allFeatures = new Map();
+                const planFeatures = new Map();
+                const tamaFeatures = new Map();
 
-                // Coarser grid (100px step) but high FEATURE_COUNT per point
+                // Grid of probe points
                 const points = [];
                 for (let x = 50; x < W; x += 100) {
                     for (let y = 50; y < H; y += 100) {
@@ -1839,74 +1878,138 @@
                     }
                 }
 
-                // Parallel batches of 20
                 const batchSize = 20;
-                const batches = [];
-                for (let i = 0; i < points.length; i += batchSize) {
-                    batches.push(points.slice(i, i + batchSize));
-                }
 
-                let bIdx = 0;
-                function runBatch() {
-                    if (bIdx >= batches.length) {
-                        // Aggregate
-                        const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
-                        const byMinahak = {};
-                        minahakOrder.forEach(m => { byMinahak[m] = { units_add: 0, renewal: 0, densification: 0 }; });
-
-                        allFeatures.forEach(p => {
-                            const m = p.minahak || '';
-                            if (!byMinahak[m]) byMinahak[m] = { units_add: 0, renewal: 0, densification: 0 };
-                            const add = parseInt(p.units_add) || 0;
-                            byMinahak[m].units_add += add;
-
-                            const pt = (p.plan_type || '').trim();
-                            if (pt.includes('התחדשות')) {
-                                byMinahak[m].renewal += add;
-                            } else if (pt.includes('עיבוי')) {
-                                byMinahak[m].densification += add;
-                            }
-                        });
-
-                        // Override: א.ת. תלפיות = 0 per user instruction
-                        if (byMinahak['א.ת. תלפיות']) {
-                            byMinahak['א.ת. תלפיות'] = { units_add: 0, renewal: 0, densification: 0 };
-                        }
-
-                        const minahaks = minahakOrder.filter(m => byMinahak[m]);
-                        // Add any extra minahaks not in the order
-                        Object.keys(byMinahak).forEach(m => {
-                            if (!minahaks.includes(m) && m) minahaks.push(m);
-                        });
-
-                        setUnitsData({ minahaks, byMinahak });
-                        setUnitsLoading(false);
-                        return;
+                // Fetch both plans and tama38 in parallel per point
+                function fetchBatches(layerName, featureMap) {
+                    const batches = [];
+                    for (let i = 0; i < points.length; i += batchSize) {
+                        batches.push(points.slice(i, i + batchSize));
                     }
-
-                    Promise.all(batches[bIdx].map(([i, j]) => {
-                        const params = new URLSearchParams({
-                            SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
-                            CRS: 'EPSG:4326', BBOX: bbox, WIDTH: W, HEIGHT: H,
-                            I: i, J: j, INFO_FORMAT: 'application/json',
-                            FEATURE_COUNT: 100, LAYERS: 'plans', QUERY_LAYERS: 'plans'
-                        });
-                        return fetch(`${WMS_URL}?${params}`)
-                            .then(r => r.json())
-                            .then(d => d.features || [])
-                            .catch(() => []);
-                    })).then(results => {
-                        results.flat().forEach(f => {
-                            const id = f.properties.fid;
-                            if (id != null && !allFeatures.has(id)) {
-                                allFeatures.set(id, f.properties);
-                            }
-                        });
-                        bIdx++;
+                    let bIdx = 0;
+                    return new Promise(resolve => {
+                        function runBatch() {
+                            if (bIdx >= batches.length) { resolve(); return; }
+                            Promise.all(batches[bIdx].map(([i, j]) => {
+                                const params = new URLSearchParams({
+                                    SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
+                                    CRS: 'EPSG:4326', BBOX: bbox, WIDTH: W, HEIGHT: H,
+                                    I: i, J: j, INFO_FORMAT: 'application/json',
+                                    FEATURE_COUNT: 100, LAYERS: layerName, QUERY_LAYERS: layerName
+                                });
+                                return fetch(`${WMS_URL}?${params}`)
+                                    .then(r => r.json())
+                                    .then(d => d.features || [])
+                                    .catch(() => []);
+                            })).then(results => {
+                                results.flat().forEach(f => {
+                                    const id = f.properties.fid;
+                                    if (id != null && !featureMap.has(id)) featureMap.set(id, f.properties);
+                                });
+                                bIdx++;
+                                runBatch();
+                            });
+                        }
                         runBatch();
                     });
                 }
-                runBatch();
+
+                // Fetch plans first, then tama38
+                fetchBatches('plans', planFeatures).then(() => {
+                    return fetchBatches('tama38', tamaFeatures);
+                }).then(() => {
+                    // Aggregate
+                    const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const byMinahak = {};
+                    const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
+                    const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, status_open: 0, status_approved: 0 });
+                    minahakOrder.forEach(m => {
+                        byMinahak[m] = emptyRow();
+                        bySub[m] = {};
+                    });
+
+                    // Plans
+                    planFeatures.forEach(p => {
+                        const m = p.minahak || '';
+                        if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
+                        // Skip rejected/archived plans for units_add
+                        const status = (p.status_mavat || '').trim();
+                        const isRejected = status === 'נגנזה/נדחתה';
+                        const addVal = isRejected ? 0 : (parseInt(p.units_add) || 0);
+                        const inVal = parseInt(p.units_in) || 0;
+                        byMinahak[m].units_in += inVal;
+                        byMinahak[m].units_add += addVal;
+
+                        const pt = (p.plan_type || '').trim();
+                        if (pt.includes('התחדשות')) {
+                            byMinahak[m].renewal += addVal;
+                        } else if (pt.includes('עיבוי')) {
+                            byMinahak[m].densification += addVal;
+                        }
+
+                        // Status-based breakdown
+                        const approvedStatuses = ['אישור','מאושרת','תבע מאושרת','תבע - טרום אישור','תחילת תוקף','בהליך אישור'];
+                        if (status === 'נפתח תיק למתכנן') {
+                            byMinahak[m].status_open += addVal;
+                        } else if (approvedStatuses.includes(status)) {
+                            byMinahak[m].status_approved += addVal;
+                        }
+
+                        // Per sub-neighborhood breakdown
+                        const sub = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
+                        bySub[m][sub].units_in += inVal;
+                        bySub[m][sub].units_add += addVal;
+                        if (pt.includes('התחדשות')) {
+                            bySub[m][sub].renewal += addVal;
+                        } else if (pt.includes('עיבוי')) {
+                            bySub[m][sub].densification += addVal;
+                        }
+                        if (status === 'נפתח תיק למתכנן') {
+                            bySub[m][sub].status_open += addVal;
+                        } else if (approvedStatuses.includes(status)) {
+                            bySub[m][sub].status_approved += addVal;
+                        }
+                    });
+
+                    // Tama38 — add to units_add and to renewal (התחדשות עירונית)
+                    tamaFeatures.forEach(p => {
+                        const neighborho = (p.neighborho || '').trim();
+                        const m = NEIGHBORHOOD_TO_MINAHAK[neighborho] || '';
+                        if (!m) return;
+                        if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
+                        const tose = parseInt(p.units_tose) || 0;
+                        byMinahak[m].units_add += tose;
+                        byMinahak[m].renewal += tose; // tama38 = התחדשות עירונית
+
+                        // Per sub-neighborhood: use neighborho as sub name
+                        const sub = neighborho || 'אחר';
+                        if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
+                        bySub[m][sub].units_add += tose;
+                        bySub[m][sub].renewal += tose;
+                    });
+
+                    // Fixed units_in values provided by user
+                    const fixedUnitsIn = {
+                        'בית צפאפא': 4262,
+                        'גוננים': 9235,
+                        'בקעה רבתי': 11521,
+                        'גינות העיר': 16569,
+                        'מינהל מוסדי מלחה': 0,
+                        'א.ת. תלפיות': 643,
+                    };
+                    Object.entries(fixedUnitsIn).forEach(([m, val]) => {
+                        if (byMinahak[m]) byMinahak[m].units_in = val;
+                    });
+
+                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
+                    Object.keys(byMinahak).forEach(m => {
+                        if (!minahaks.includes(m) && m) minahaks.push(m);
+                    });
+
+                    setUnitsData({ minahaks, byMinahak, bySub });
+                    setUnitsLoading(false);
+                });
             }, [unitsData]);
 
             // WMS overlays split by priority:
@@ -3058,8 +3161,17 @@
                             <div className="units-modal" onClick={e => e.stopPropagation()}>
                                 <div className="units-watermark"><span>טבלה בעבודה</span></div>
                                 <div className="units-header">
-                                    <h2>🏠 תוספת יח"ד לפי מינהל קהילתי</h2>
-                                    <button className="compare-close" onClick={() => setShowUnits(false)}>&times;</button>
+                                    {unitsDrilldown ? (
+                                        <>
+                                            <button className="units-back-btn" onClick={() => setUnitsDrilldown(null)}>
+                                                → חזרה
+                                            </button>
+                                            <h2>🏠 {unitsDrilldown} — פירוט לפי תת שכונה</h2>
+                                        </>
+                                    ) : (
+                                        <h2>🏠 תוספת יח"ד לפי מינהל קהילתי</h2>
+                                    )}
+                                    <button className="compare-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
                                     {unitsLoading || !unitsData ? (
@@ -3067,24 +3179,114 @@
                                             <p style={{fontSize: '28px', marginBottom: '10px'}}>⏳</p>
                                             <p>טוען נתוני תוכניות...</p>
                                         </div>
-                                    ) : (
+                                    ) : unitsDrilldown ? (() => {
+                                        const subData = unitsData.bySub[unitsDrilldown] || {};
+                                        const subs = Object.keys(subData).sort();
+                                        if (subs.length === 0) return <div className="units-loading"><p>אין נתוני תת-שכונות עבור {unitsDrilldown}</p></div>;
+                                        return (
+                                            <table className="units-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        {subs.map(s => <th key={s}>{s}</th>)}
+                                                        <th style={{background: '#141440', color: '#e94560'}}>סה"כ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>יח"ד תוספת</td>
+                                                        {subs.map(s => (
+                                                            <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
+                                                                {subData[s].units_add.toLocaleString()}
+                                                            </td>
+                                                        ))}
+                                                        <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
+                                                            {Object.values(subData).reduce((sum, d) => sum + d.units_add, 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                    <tr className="units-toggle-row">
+                                                        <td colSpan={subs.length + 2}>
+                                                            <div className="units-toggle-btns">
+                                                                <button className={`units-toggle-btn ${unitsExpanded === 'type' ? 'active' : ''}`}
+                                                                    onClick={() => setUnitsExpanded(prev => prev === 'type' ? null : 'type')}>
+                                                                    סוג
+                                                                </button>
+                                                                <button className={`units-toggle-btn ${unitsExpanded === 'status' ? 'active' : ''}`}
+                                                                    onClick={() => setUnitsExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                    סטטוס
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {unitsExpanded === 'type' && (
+                                                        <>
+                                                            <tr className="units-sub-row">
+                                                                <td>התחדשות עירונית</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].renewal.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.renewal, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                            <tr className="units-sub-row">
+                                                                <td>עיבוי ובניה חדשה</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].densification.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.densification, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    )}
+                                                    {unitsExpanded === 'status' && (
+                                                        <>
+                                                            <tr className="units-sub-row">
+                                                                <td>פתיחת תיק</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].status_open.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_open, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                            <tr className="units-sub-row">
+                                                                <td>מאושר</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].status_approved.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_approved, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        );
+                                    })() : (
                                         <table className="units-table">
                                             <thead>
                                                 <tr>
                                                     <th></th>
                                                     {unitsData.minahaks.map(m => (
-                                                        <th key={m}>{m}</th>
+                                                        <th key={m}
+                                                            className="units-minahak-clickable"
+                                                            onClick={() => setUnitsDrilldown(m)}
+                                                            title={`לחץ לפירוט תת-שכונות ${m}`}
+                                                        >{m}</th>
                                                     ))}
                                                     <th style={{background: '#141440', color: '#e94560'}}>סה"כ</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {/* יח"ד תוספת */}
-                                                <tr className="units-row-expand" onClick={() => setUnitsExpanded(prev => !prev)}>
-                                                    <td style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                                                        <span className={`units-expand-arrow ${unitsExpanded ? 'open' : ''}`}>◀</span>
-                                                        יח"ד תוספת
+                                                {/* יח"ד קיימות */}
+                                                <tr>
+                                                    <td>יח"ד קיימות</td>
+                                                    {unitsData.minahaks.map(m => (
+                                                        <td key={m}>{unitsData.byMinahak[m].units_in.toLocaleString()}</td>
+                                                    ))}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.units_in, 0).toLocaleString()}
                                                     </td>
+                                                </tr>
+
+                                                {/* יח"ד תוספת row */}
+                                                <tr>
+                                                    <td>יח"ד תוספת</td>
                                                     {unitsData.minahaks.map(m => (
                                                         <td key={m} style={{color: '#8ecae6', fontWeight: 600}}>
                                                             {unitsData.byMinahak[m].units_add.toLocaleString()}
@@ -3095,8 +3297,24 @@
                                                     </td>
                                                 </tr>
 
-                                                {/* Expandable sub-rows */}
-                                                {unitsExpanded && (
+                                                {/* Toggle buttons row for סוג / סטטוס */}
+                                                <tr className="units-toggle-row">
+                                                    <td colSpan={unitsData.minahaks.length + 2}>
+                                                        <div className="units-toggle-btns">
+                                                            <button className={`units-toggle-btn ${unitsExpanded === 'type' ? 'active' : ''}`}
+                                                                onClick={() => setUnitsExpanded(prev => prev === 'type' ? null : 'type')}>
+                                                                סוג
+                                                            </button>
+                                                            <button className={`units-toggle-btn ${unitsExpanded === 'status' ? 'active' : ''}`}
+                                                                onClick={() => setUnitsExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                סטטוס
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                {/* Sub-rows by type */}
+                                                {unitsExpanded === 'type' && (
                                                     <>
                                                         <tr className="units-sub-row">
                                                             <td>התחדשות עירונית</td>
@@ -3118,6 +3336,42 @@
                                                         </tr>
                                                     </>
                                                 )}
+
+                                                {/* Sub-rows by status */}
+                                                {unitsExpanded === 'status' && (
+                                                    <>
+                                                        <tr className="units-sub-row">
+                                                            <td>פתיחת תיק</td>
+                                                            {unitsData.minahaks.map(m => (
+                                                                <td key={m}>{unitsData.byMinahak[m].status_open.toLocaleString()}</td>
+                                                            ))}
+                                                            <td style={{background: '#12122a'}}>
+                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.status_open, 0).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="units-sub-row">
+                                                            <td>מאושר</td>
+                                                            {unitsData.minahaks.map(m => (
+                                                                <td key={m}>{unitsData.byMinahak[m].status_approved.toLocaleString()}</td>
+                                                            ))}
+                                                            <td style={{background: '#12122a'}}>
+                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.status_approved, 0).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    </>
+                                                )}
+
+                                                {/* סה"כ */}
+                                                <tr className="total-row">
+                                                    <td>סה"כ</td>
+                                                    {unitsData.minahaks.map(m => {
+                                                        const d = unitsData.byMinahak[m];
+                                                        return <td key={m}>{(d.units_in + d.units_add).toLocaleString()}</td>;
+                                                    })}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.units_in + d.units_add, 0).toLocaleString()}
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     )}
