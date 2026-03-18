@@ -654,6 +654,54 @@
             'ו-גמר בנייה': '#494cc2',
         };
 
+        // SLD for permits: thick colored outlines by STAGE, very light fill
+        function buildPermitsSLD(minahakOgcFragment) {
+            // Each stage gets an SLD Rule with outline stroke + transparent fill
+            const stages = [
+                { values: ['ג-רישוי בתהליך', 'ג-רישוי  בתהליך'], color: '#4ba1f0' },
+                { values: ['ד-היתר בנייה'], color: '#4b85e0' },
+                { values: ['ה-בבנייה'], color: '#4a69d1' },
+                { values: ['ו-גמר בנייה'], color: '#494cc2' },
+            ];
+            let rules = '';
+            stages.forEach(s => {
+                // Build stage filter: OR of values
+                const stageFilters = s.values.map(v =>
+                    `<ogc:PropertyIsEqualTo><ogc:PropertyName>stage</ogc:PropertyName><ogc:Literal>${v}</ogc:Literal></ogc:PropertyIsEqualTo>`
+                );
+                let stageOgc = stageFilters.length === 1 ? stageFilters[0] : `<ogc:Or>${stageFilters.join('')}</ogc:Or>`;
+                // Combine with optional minahak filter
+                let filterBody;
+                if (minahakOgcFragment) {
+                    // Wrap minahak fragment with ogc: namespace prefix
+                    const nsMinahak = minahakOgcFragment
+                        .replace(/<PropertyIs/g, '<ogc:PropertyIs')
+                        .replace(/<\/PropertyIs/g, '</ogc:PropertyIs')
+                        .replace(/<PropertyName>/g, '<ogc:PropertyName>')
+                        .replace(/<\/PropertyName>/g, '</ogc:PropertyName>')
+                        .replace(/<Literal>/g, '<ogc:Literal>')
+                        .replace(/<\/Literal>/g, '</ogc:Literal>')
+                        .replace(/<Or>/g, '<ogc:Or>')
+                        .replace(/<\/Or>/g, '</ogc:Or>')
+                        .replace(/<And>/g, '<ogc:And>')
+                        .replace(/<\/And>/g, '</ogc:And>');
+                    filterBody = `<ogc:And>${stageOgc}${nsMinahak}</ogc:And>`;
+                } else {
+                    filterBody = stageOgc;
+                }
+                rules += `<Rule><ogc:Filter>${filterBody}</ogc:Filter>` +
+                    `<PolygonSymbolizer>` +
+                    `<Fill><CssParameter name="fill">${s.color}</CssParameter><CssParameter name="fill-opacity">0.1</CssParameter></Fill>` +
+                    `<Stroke><CssParameter name="stroke">${s.color}</CssParameter><CssParameter name="stroke-width">3</CssParameter></Stroke>` +
+                    `</PolygonSymbolizer></Rule>`;
+            });
+            return `<?xml version="1.0" encoding="UTF-8"?>` +
+                `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
+                `<NamedLayer><Name>plans</Name><UserStyle><Title>permits_outline</Title>` +
+                `<FeatureTypeStyle>${rules}</FeatureTypeStyle>` +
+                `</UserStyle></NamedLayer></StyledLayerDescriptor>`;
+        }
+
         const PLANS_LEGEND = [
             { label: 'אישור / מאושרת', color: '#50d25a' },
             { label: 'בהליך אישור', color: '#50d25a' },
@@ -717,7 +765,8 @@
         }
 
         // Helper: build a WMS GetMap URL for the current map view
-        function buildWmsUrl(baseUrl, layersCsv, bounds, size, ogcFilterStr) {
+        // opts: { sldBody } for SLD_BODY styling
+        function buildWmsUrl(baseUrl, layersCsv, bounds, size, ogcFilterStr, opts) {
             const sw = bounds.getSouthWest();
             const ne = bounds.getNorthEast();
             const params = new URLSearchParams({
@@ -735,6 +784,10 @@
             });
             if (ogcFilterStr) {
                 params.set('FILTER', ogcFilterStr);
+            }
+            if (opts && opts.sldBody) {
+                params.delete('FILTER'); // SLD includes its own filters
+                params.set('SLD_BODY', opts.sldBody);
             }
             return baseUrl + '?' + params.toString();
         }
@@ -934,7 +987,7 @@
 
                 console.log('[WMS] Main layers:', mainCsv);
                 console.log('[WMS] OGC FILTER:', mainOgcFilter || '(none)');
-                if (showPermits) console.log('[WMS] Permits OGC filter:', permitOgcFilter);
+                if (showPermits) console.log('[WMS] Permits ON with SLD_BODY');
 
                 // --- High priority: main layers (plans, always-on, roads, etc.) ---
                 let mainFront = null, mainBack = null;
@@ -963,19 +1016,15 @@
                     }, 1000);
                 }
 
-                // --- Separate: permits overlay (renders ABOVE plans via zIndex) ---
+                // --- Separate: permits overlay (outline style via SLD_BODY, above plans) ---
                 let permitFront = null, permitBack = null;
-                // Build OGC filter for permits: stage not empty + optional minahak
-                const permitOgcParts = [ogcNeq('stage', '')];
-                if (minahakPlansOgc) permitOgcParts.push(minahakPlansOgc);
-                const permitOgcFilter = ogcFilter(ogcAnd(permitOgcParts));
+                const permitSLD = buildPermitsSLD(minahakPlansOgc);
                 if (showPermits) {
-                    console.log('[WMS] Permits ON, OGC filter:', permitOgcFilter);
+                    console.log('[WMS] Permits ON with SLD outline style');
                     permitFront = L.imageOverlay(
-                        buildWmsUrl(WMS_URL, 'plans', bounds, size, permitOgcFilter),
-                        bounds, { opacity, interactive: false, className: 'wms-overlay wms-permits', zIndex: 500 }
+                        buildWmsUrl(WMS_URL, 'plans', bounds, size, null, { sldBody: permitSLD }),
+                        bounds, { opacity: 1, interactive: false, className: 'wms-overlay wms-permits', zIndex: 500 }
                     ).addTo(map);
-                    // Ensure permits pane is above main overlay
                     const permitEl = permitFront.getElement();
                     if (permitEl) permitEl.style.zIndex = '500';
                 }
@@ -1028,15 +1077,16 @@
                             swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, checkDone);
                         }
 
-                        // Permits (above plans)
+                        // Permits (outline style above plans)
                         if (showPermits) {
                             pending++;
                             swapOverlay(
-                                buildWmsUrl(WMS_URL, 'plans', b, s, permitOgcFilter),
+                                buildWmsUrl(WMS_URL, 'plans', b, s, null, { sldBody: permitSLD }),
                                 b, pf, pb, () => {
                                     if (pf.current) {
                                         const el = pf.current.getElement();
                                         if (el) el.style.zIndex = '500';
+                                        pf.current.setOpacity(1); // SLD handles its own transparency
                                     }
                                     checkDone();
                                 }
