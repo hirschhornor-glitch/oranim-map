@@ -564,12 +564,12 @@
             admin: {
                 title: 'מינהלים קהילתיים',
                 layers: [
-                    { id: 'talpiot', name: 'תלפיות', on: true, minahak: 'א.ת. תלפיות' },
-                    { id: 'malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
                     { id: 'ginot_hair', name: 'גינות העיר', on: true, minahak: 'גינות העיר' },
-                    { id: 'beit_tzfafa', name: 'בית צפפא', on: true, minahak: 'בית צפאפא' },
+                    { id: 'beit_tzfafa', name: 'בית צפאפא', on: true, minahak: 'בית צפאפא' },
                     { id: 'gonennim', name: 'גוננים', on: true, minahak: 'גוננים' },
-                    { id: 'baka', name: 'בקעה', on: true, minahak: 'בקעה רבתי' },
+                    { id: 'baka', name: 'בקעה רבתי', on: true, minahak: 'בקעה רבתי' },
+                    { id: 'malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
+                    { id: 'talpiot', name: 'א.ת. תלפיות', on: true, minahak: 'א.ת. תלפיות' },
                 ]
             }
         };
@@ -776,6 +776,12 @@
                         `</PolygonSymbolizer></Rule>`;
                 }
             });
+            // ElseFilter rule: render unmatched features as fully transparent (no visible style)
+            rules += `<Rule><ElseFilter/>` +
+                `<PolygonSymbolizer>` +
+                `<Fill><CssParameter name="fill">#000000</CssParameter><CssParameter name="fill-opacity">0</CssParameter></Fill>` +
+                `<Stroke><CssParameter name="stroke">#000000</CssParameter><CssParameter name="stroke-opacity">0</CssParameter><CssParameter name="stroke-width">0</CssParameter></Stroke>` +
+                `</PolygonSymbolizer></Rule>`;
             return `<?xml version="1.0" encoding="UTF-8"?>` +
                 `<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
                 `<NamedLayer><Name>plans</Name><UserStyle><Title>topics_hatch</Title>` +
