@@ -587,6 +587,80 @@
         .basemap-select { cursor: pointer; }
         .toggle-btn { cursor: pointer; }
 
+        /* ── Mobile sidebar close button (inside sidebar) ── */
+        .sidebar-close-mobile {
+            display: none;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.3em;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .sidebar-close-mobile:hover { background: #c73650; }
+
+        /* ── Mobile overlay when sidebar is open ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 85vw;
+                max-width: 320px;
+                min-width: unset;
+                z-index: 1100;
+                box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.collapsed {
+                margin-right: 0;
+                transform: translateX(100%);
+            }
+            .sidebar:not(.collapsed) {
+                transform: translateX(0);
+            }
+            .sidebar-close-mobile {
+                display: flex;
+            }
+            .sidebar-overlay.visible {
+                display: block;
+            }
+            .toggle-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.4em;
+            }
+            .map-toolbar {
+                top: 60px;
+                padding: 3px 4px;
+            }
+            .toolbar-btn {
+                padding: 6px 8px !important;
+            }
+            .toolbar-label {
+                font-size: 9px !important;
+            }
+        }
+
         /* ── Map Toolbar ── */
         .map-toolbar {
             position: absolute;
@@ -2630,7 +2704,18 @@
 
             return (
                 <>
+                    {/* Mobile overlay — click to close sidebar */}
+                    <div
+                        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+                        onClick={() => { setSidebarOpen(false); setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350); }}
+                    ></div>
+
                     <div className={`sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
+                        {/* Mobile close button */}
+                        <button
+                            className="sidebar-close-mobile"
+                            onClick={() => { setSidebarOpen(false); setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350); }}
+                        >&times;</button>
                         <div className="sidebar-header">
                             <h1>אורנים</h1>
                             <p>כלי תכנון עירוני - ירושלים</p>
