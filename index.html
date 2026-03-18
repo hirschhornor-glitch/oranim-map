@@ -108,7 +108,9 @@
             overflow: hidden;
         }
 
-        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: grab; }
+        #map:active { cursor: grabbing; }
+        #map .leaflet-interactive { cursor: pointer; }
 
         .leaflet-control-attribution {
             font-size: 10px !important;
@@ -219,6 +221,7 @@
             text-decoration: none;
             padding: 6px;
             border-radius: 6px;
+            cursor: pointer;
             transition: background 0.2s;
         }
 
@@ -431,6 +434,7 @@
             width: 100%;
             margin-top: 8px;
             accent-color: #e94560;
+            cursor: pointer;
         }
 
         .opacity-label {
@@ -483,6 +487,7 @@
             color: #e0e0e0;
             font-size: 0.9em;
             direction: rtl;
+            cursor: pointer;
         }
 
         .search-input {
@@ -530,6 +535,135 @@
             from { opacity: 0; transform: translateX(-50%) translateY(8px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
+
+        /* Map cursor overrides */
+        .leaflet-container { cursor: grab !important; }
+        .leaflet-container:active { cursor: grabbing !important; }
+        .leaflet-container.leaflet-drag-target { cursor: grabbing !important; }
+        .leaflet-grab { cursor: grab !important; }
+        .leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
+        .leaflet-control-zoom a, .leaflet-control a { cursor: pointer !important; }
+        .leaflet-popup-close-button { cursor: pointer !important; }
+
+        /* AI Query panel */
+        .query-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border: 1px solid #e94560;
+            color: #e94560;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .query-btn:hover { background: #e94560; color: #fff; }
+        .query-panel {
+            margin-top: 10px;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #12122a;
+        }
+        .query-input-wrap {
+            display: flex;
+            padding: 8px;
+            gap: 6px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .query-input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            direction: rtl;
+        }
+        .query-input::placeholder { color: #6a6a8a; }
+        .query-input:focus { outline: none; border-color: #e94560; }
+        .query-submit {
+            padding: 8px 14px;
+            background: #e94560;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .query-submit:hover { background: #c73650; }
+        .query-submit:disabled { background: #555; cursor: not-allowed; }
+        .query-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            direction: rtl;
+        }
+        .query-msg {
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .query-msg.user {
+            background: #2a2a4a;
+            color: #e0e0e0;
+            border-right: 3px solid #e94560;
+        }
+        .query-msg.assistant {
+            background: #16213e;
+            color: #ccc;
+            border-right: 3px solid #5dade2;
+        }
+        .query-msg.error {
+            background: #2a1a1a;
+            color: #ff6b6b;
+            border-right: 3px solid #ff6b6b;
+        }
+        .query-loading {
+            text-align: center;
+            padding: 12px;
+            color: #8888aa;
+            font-size: 0.85em;
+        }
+        .query-loading::after {
+            content: '';
+            animation: queryDots 1.5s infinite;
+        }
+        @keyframes queryDots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+        .query-examples {
+            padding: 8px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .query-example {
+            background: #2a2a4a;
+            color: #8ecae6;
+            border: none;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .query-example:hover { background: #3a3a5a; }
     </style>
 </head>
 <body>
@@ -617,6 +751,12 @@
                 desc: 'מפת רקע בהירה',
                 url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                 attribution: '&copy; CartoDB'
+            },
+            satellite: {
+                name: 'תצ"א',
+                desc: 'תצלום אוויר',
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '&copy; Esri, Maxar, Earthstar Geographics'
             },
             none: {
                 name: 'ללא',
@@ -891,6 +1031,10 @@
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
+            const [queryOpen, setQueryOpen] = useState(false);
+            const [queryInput, setQueryInput] = useState('');
+            const [queryMessages, setQueryMessages] = useState([]);
+            const [queryLoading, setQueryLoading] = useState(false);
 
             // Load plan search index
             useEffect(() => {
@@ -1554,6 +1698,80 @@
                 }, 1000);
             };
 
+            // AI Query handler
+            const handleQuery = async (question) => {
+                if (!question.trim() || queryLoading) return;
+                setQueryMessages(prev => [...prev, { role: 'user', text: question }]);
+                setQueryInput('');
+                setQueryLoading(true);
+
+                const systemPrompt = `You are an assistant for an urban planning map app for the Oranim neighborhood in Jerusalem.
+The app uses a WMS layer called "plans" with these fields:
+- plan_name_he: Hebrew plan name
+- plan_name: Plan code/number
+- status_mavat: Plan status (values: אישור, מאושרת, תבע מאושרת, תחילת תוקף, בהליך אישור, הפקדה להתנגדויות/השגות, במילוי תנאים להפקדה, נפתח תיק למתכנן, נגנזה, נדחתה, etc.)
+- stage: Permit stage (values: ג-רישוי בתהליך, ד-היתר בנייה, ה-בבנייה, ו-גמר בנייה)
+- minahak: Community admin area (values: גינות העיר, בית צפאפא, גוננים, בקעה רבתי, מינהל מוסדי מלחה, א.ת. תלפיות)
+- sub_neighborhood: Sub-neighborhood name
+- units_in: Housing units entering
+- units_total: Total housing units
+- units_add: Additional housing units
+- mavat_url: Link to MAVAT planning portal
+- overlapping_plans: Number of overlapping plans
+
+There is also a "tama38" layer with fields: address, neighborho, status, status_1, harisaa, units_exis, units_tose, tik, date, open_, comment
+
+You can query the WMS using GetFeatureInfo or by analyzing the data.
+When the user asks a question, provide a concise Hebrew answer.
+If you can translate the question to a WMS query, describe which filter you would use.
+Always respond in Hebrew. Be concise.`;
+
+                try {
+                    const response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': window.__ANTHROPIC_API_KEY || '',
+                            'anthropic-version': '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true'
+                        },
+                        body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 1024,
+                            system: systemPrompt,
+                            messages: [
+                                ...queryMessages.filter(m => m.role === 'user' || m.role === 'assistant').slice(-6).map(m => ({
+                                    role: m.role === 'user' ? 'user' : 'assistant',
+                                    content: m.text
+                                })),
+                                { role: 'user', content: question }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.text();
+                        if (response.status === 401 || !window.__ANTHROPIC_API_KEY) {
+                            setQueryMessages(prev => [...prev, {
+                                role: 'error',
+                                text: 'נדרש מפתח API של Anthropic.\nהגדר בקונסול: window.__ANTHROPIC_API_KEY = "sk-ant-..."'
+                            }]);
+                        } else {
+                            setQueryMessages(prev => [...prev, { role: 'error', text: 'שגיאה: ' + err }]);
+                        }
+                        setQueryLoading(false);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    const answer = data.content?.[0]?.text || 'לא התקבלה תשובה';
+                    setQueryMessages(prev => [...prev, { role: 'assistant', text: answer }]);
+                } catch (err) {
+                    setQueryMessages(prev => [...prev, { role: 'error', text: 'שגיאת רשת: ' + err.message }]);
+                }
+                setQueryLoading(false);
+            };
+
             const activeCount = Object.values(layers).filter(Boolean).length;
 
             const filteredConfig = {};
@@ -1691,6 +1909,19 @@
                                 <span>{Math.round(opacity * 100)}%</span>
                                 <span>אטום</span>
                             </div>
+
+                            <div style={{marginTop: '12px'}}>
+                                <div className="opacity-label" style={{marginBottom: '6px'}}><span>מפת רקע</span></div>
+                                <select
+                                    className="basemap-select"
+                                    value={basemap}
+                                    onChange={(e) => setBasemap(e.target.value)}
+                                >
+                                    {Object.entries(BASEMAPS).map(([key, bm]) => (
+                                        <option key={key} value={key}>{bm.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="sidebar-section">
@@ -1715,6 +1946,47 @@
                             }} style={{marginTop: '4px'}}>
                                 הסתר הכל
                             </button>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <button className="query-btn" onClick={() => setQueryOpen(prev => !prev)}>
+                                <span>🤖</span>
+                                <span>שאילתות AI</span>
+                            </button>
+                            {queryOpen && (
+                                <div className="query-panel">
+                                    <div className="query-examples">
+                                        {['כמה יח"ד מתווספות בגוננים?', 'כמה פרויקטים בשלב רישוי?', 'אילו תוכניות מופקדות להתנגדויות?'].map((ex, i) => (
+                                            <button key={i} className="query-example" onClick={() => { setQueryInput(ex); handleQuery(ex); }}>{ex}</button>
+                                        ))}
+                                    </div>
+                                    <div className="query-input-wrap">
+                                        <input
+                                            className="query-input"
+                                            type="text"
+                                            placeholder="שאל שאלה על התכניות..."
+                                            value={queryInput}
+                                            onChange={(e) => setQueryInput(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleQuery(queryInput); }}
+                                            disabled={queryLoading}
+                                        />
+                                        <button
+                                            className="query-submit"
+                                            onClick={() => handleQuery(queryInput)}
+                                            disabled={queryLoading || !queryInput.trim()}
+                                        >שלח</button>
+                                    </div>
+                                    {queryMessages.length > 0 && (
+                                        <div className="query-messages">
+                                            {queryMessages.map((msg, i) => (
+                                                <div key={i} className={`query-msg ${msg.role}`}>{msg.text}</div>
+                                            ))}
+                                            {queryLoading && <div className="query-loading">חושב</div>}
+                                        </div>
+                                    )}
+                                    {queryLoading && queryMessages.length === 0 && <div className="query-loading" style={{padding:'16px'}}>חושב</div>}
+                                </div>
+                            )}
                         </div>
 
                         <div className="status-bar">
