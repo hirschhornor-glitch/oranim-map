@@ -1821,19 +1821,7 @@
                         .print-actions { margin-top: 16px; text-align: center; }
                         .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
                     </style>
-                    <script>
-                        function scaleMap() {
-                            var outer = document.querySelector('.map-outer');
-                            var frame = document.querySelector('.map-frame');
-                            if (!outer || !frame) return;
-                            var scale = outer.clientWidth / ${mapRect.width};
-                            frame.style.transform = 'scale(' + scale + ')';
-                            outer.style.height = (${mapRect.height} * scale) + 'px';
-                        }
-                        window.addEventListener('load', scaleMap);
-                        window.addEventListener('resize', scaleMap);
-                    <\/script>
-                </head><body>
+                </head><body onload="(function(){var o=document.querySelector('.map-outer'),f=document.querySelector('.map-frame');if(!o||!f)return;var s=o.clientWidth/${mapRect.width};f.style.transform='scale('+s+')';o.style.height=(${mapRect.height}*s)+'px';window.addEventListener('resize',function(){var s2=o.clientWidth/${mapRect.width};f.style.transform='scale('+s2+')';o.style.height=(${mapRect.height}*s2)+'px';})})()"
                     ${title ? `<div class="print-title">${title}</div>` : ''}
                     <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${mapScale}</div>
                     <div class="map-outer"><div class="map-frame">${imgsHtml}${svgHtml}</div></div>
