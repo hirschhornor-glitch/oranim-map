@@ -1758,7 +1758,6 @@
             // ── Comparison table: add feature from popup ──
             const addToCompare = useCallback((props) => {
                 setCompareFeatures(prev => {
-                    // Avoid duplicates by pl_number
                     if (prev.some(f => f.pl_number === props.pl_number)) return prev;
                     return [...prev, props];
                 });
