@@ -587,6 +587,135 @@
         .basemap-select { cursor: pointer; }
         .toggle-btn { cursor: pointer; }
 
+        /* ── Map Toolbar ── */
+        .map-toolbar {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            display: flex;
+            gap: 4px;
+            background: rgba(15, 15, 30, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 4px 8px;
+            direction: rtl;
+        }
+        .toolbar-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #b0b0cc;
+            padding: 5px 12px;
+            border-radius: 7px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .toolbar-btn:hover { background: #2a2a4a; color: #e0e0ff; border-color: #3a3a5a; }
+        .toolbar-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
+        .toolbar-btn svg { width: 16px; height: 16px; }
+
+        /* Measurement dropdown */
+        .measure-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: #16162e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 4px 0;
+            min-width: 170px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 1002;
+        }
+        .measure-dropdown-item {
+            padding: 8px 14px;
+            color: #c0c0dd;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: right;
+            direction: rtl;
+        }
+        .measure-dropdown-item:hover { background: #2a2a4a; color: #fff; }
+
+        /* Measurement result panel */
+        .measure-result {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: rgba(15, 15, 30, 0.94);
+            backdrop-filter: blur(8px);
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: #e0e0ff;
+            font-size: 14px;
+            direction: rtl;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            animation: fadeIn 0.25s ease;
+        }
+        .measure-result-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #8ecae6;
+        }
+        .measure-result-label { color: #8888aa; font-size: 12px; }
+        .measure-result-btn {
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            color: #e0e0e0;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        .measure-result-btn:hover { background: #e94560; border-color: #e94560; }
+
+        /* Measurement tooltip on map */
+        .measure-tooltip {
+            background: rgba(15, 15, 30, 0.9);
+            border: 1px solid #4a69d1;
+            border-radius: 6px;
+            padding: 4px 10px;
+            color: #8ecae6;
+            font-size: 12px;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            white-space: nowrap;
+            direction: rtl;
+            pointer-events: none;
+        }
+        .measure-tooltip::before { display: none; }
+        .leaflet-tooltip.measure-tooltip { background: rgba(15, 15, 30, 0.9); border: 1px solid #4a69d1; }
+
+        /* Crosshair cursor when measuring */
+        #map.measuring,
+        #map.measuring * { cursor: crosshair !important; }
+        #map.measuring.leaflet-dragging,
+        #map.measuring.leaflet-dragging * { cursor: grabbing !important; }
+
     </style>
 </head>
 <body>
@@ -954,6 +1083,10 @@
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
+            const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
+            const [measureDropdown, setMeasureDropdown] = useState(false);
+            const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
+            const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
 
             // Load plan search index
             useEffect(() => {
@@ -1155,6 +1288,228 @@
                     setCursorPointer(false);
                 };
             }, []);
+
+            // ── Measurement tool logic ──
+            const clearMeasurement = useCallback(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const m = measureRef.current;
+                m.layers.forEach(l => map.removeLayer(l));
+                if (m.tooltip) map.removeLayer(m.tooltip);
+                if (m.guideLine) map.removeLayer(m.guideLine);
+                m.points = [];
+                m.layers = [];
+                m.tooltip = null;
+                m.guideLine = null;
+                setMeasureResult(null);
+            }, []);
+
+            const stopMeasure = useCallback(() => {
+                clearMeasurement();
+                setMeasureMode(null);
+                const map = mapInstanceRef.current;
+                if (map) map.getContainer().classList.remove('measuring');
+            }, [clearMeasurement]);
+
+            // Format distance in m/km
+            function fmtDist(m) {
+                if (m >= 1000) return (m / 1000).toFixed(2) + ' ק"מ';
+                return Math.round(m) + ' מ\'';
+            }
+            // Format area in dunam / sqm
+            function fmtArea(sqm) {
+                const dunam = sqm / 1000;
+                if (dunam >= 1) return dunam.toFixed(2) + ' דונם' + ' (' + Math.round(sqm).toLocaleString() + ' מ"ר)';
+                return Math.round(sqm).toLocaleString() + ' מ"ר';
+            }
+            // Compute total polyline distance
+            function polylineDist(pts) {
+                let d = 0;
+                for (let i = 1; i < pts.length; i++) d += pts[i - 1].distanceTo(pts[i]);
+                return d;
+            }
+            // Compute polygon area using Shoelace on projected coords
+            function polygonArea(pts) {
+                if (pts.length < 3) return 0;
+                // Use L.GeometryUtil if available, otherwise Gauss's formula on EPSG:4326
+                // Spherical excess method for better accuracy
+                const toRad = Math.PI / 180;
+                const R = 6378137;
+                let area = 0;
+                const n = pts.length;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    const k = (i + 2) % n;
+                    area += (pts[j].lng * toRad - pts[i].lng * toRad) *
+                        (2 + Math.sin(pts[i].lat * toRad) + Math.sin(pts[j].lat * toRad));
+                }
+                area = Math.abs(area * R * R / 2);
+                return area;
+            }
+
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const container = map.getContainer();
+
+                if (!measureMode) {
+                    container.classList.remove('measuring');
+                    return;
+                }
+
+                container.classList.add('measuring');
+                const m = measureRef.current;
+                // Clear any previous measurement
+                m.layers.forEach(l => map.removeLayer(l));
+                if (m.tooltip) map.removeLayer(m.tooltip);
+                if (m.guideLine) map.removeLayer(m.guideLine);
+                m.points = [];
+                m.layers = [];
+                m.tooltip = null;
+                m.guideLine = null;
+                setMeasureResult(null);
+
+                const lineStyle = { color: '#e94560', weight: 2, dashArray: '6 4' };
+                const fillStyle = { color: '#e94560', fillColor: 'rgba(233,69,96,0.15)', weight: 2, dashArray: '6 4' };
+                const vertexStyle = { radius: 5, color: '#e94560', fillColor: '#fff', fillOpacity: 1, weight: 2 };
+
+                function updateTooltip(latlng, text) {
+                    if (m.tooltip) {
+                        m.tooltip.setLatLng(latlng).setContent(text);
+                    } else {
+                        m.tooltip = L.tooltip({
+                            permanent: true,
+                            direction: 'top',
+                            offset: [0, -10],
+                            className: 'measure-tooltip'
+                        }).setLatLng(latlng).setContent(text).addTo(map);
+                    }
+                }
+
+                function onMapClick(e) {
+                    // Ignore clicks on controls/popups
+                    if (e.originalEvent && (
+                        e.originalEvent.target.closest('.leaflet-control') ||
+                        e.originalEvent.target.closest('.leaflet-popup') ||
+                        e.originalEvent.target.closest('.map-toolbar') ||
+                        e.originalEvent.target.closest('.measure-result')
+                    )) return;
+
+                    const pt = e.latlng;
+                    m.points.push(pt);
+
+                    // Add vertex marker
+                    const marker = L.circleMarker(pt, vertexStyle).addTo(map);
+                    m.layers.push(marker);
+
+                    if (measureMode === 'distance') {
+                        if (m.points.length > 1) {
+                            const line = L.polyline(m.points, lineStyle).addTo(map);
+                            // Remove old line if exists
+                            if (m.mainLine) map.removeLayer(m.mainLine);
+                            m.mainLine = line;
+                            m.layers.push(line);
+                        }
+                        const dist = polylineDist(m.points);
+                        if (dist > 0) {
+                            updateTooltip(pt, fmtDist(dist));
+                            setMeasureResult({ type: 'distance', value: fmtDist(dist) });
+                        }
+                    } else {
+                        // Area mode
+                        if (m.mainPoly) map.removeLayer(m.mainPoly);
+                        if (m.points.length >= 2) {
+                            const poly = L.polygon(m.points, fillStyle).addTo(map);
+                            m.mainPoly = poly;
+                            m.layers.push(poly);
+                        }
+                        if (m.points.length >= 3) {
+                            const area = polygonArea(m.points);
+                            updateTooltip(pt, fmtArea(area));
+                            setMeasureResult({ type: 'area', value: fmtArea(area) });
+                        } else {
+                            updateTooltip(pt, 'לחצו נקודות נוספות');
+                        }
+                    }
+                }
+
+                function onMouseMove(e) {
+                    if (m.points.length === 0) return;
+                    const lastPt = m.points[m.points.length - 1];
+                    // Draw guide line from last point to cursor
+                    if (m.guideLine) map.removeLayer(m.guideLine);
+                    m.guideLine = L.polyline([lastPt, e.latlng], {
+                        color: '#8888aa', weight: 1, dashArray: '4 4'
+                    }).addTo(map);
+
+                    // Show running measurement in tooltip
+                    if (measureMode === 'distance') {
+                        const totalDist = polylineDist(m.points) + lastPt.distanceTo(e.latlng);
+                        updateTooltip(e.latlng, fmtDist(totalDist));
+                    } else if (m.points.length >= 2) {
+                        const tempPts = [...m.points, e.latlng];
+                        const area = polygonArea(tempPts);
+                        updateTooltip(e.latlng, fmtArea(area));
+                    }
+                }
+
+                function onDblClick(e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    // Finish measurement
+                    if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
+
+                    if (measureMode === 'distance' && m.points.length >= 2) {
+                        // Finalize line — solid
+                        if (m.mainLine) map.removeLayer(m.mainLine);
+                        const finalLine = L.polyline(m.points, { color: '#e94560', weight: 3 }).addTo(map);
+                        m.layers.push(finalLine);
+                        const dist = polylineDist(m.points);
+                        setMeasureResult({ type: 'distance', value: fmtDist(dist) });
+                        updateTooltip(m.points[m.points.length - 1], fmtDist(dist));
+                    } else if (measureMode === 'area' && m.points.length >= 3) {
+                        if (m.mainPoly) map.removeLayer(m.mainPoly);
+                        const finalPoly = L.polygon(m.points, {
+                            color: '#e94560', fillColor: 'rgba(233,69,96,0.2)', weight: 3
+                        }).addTo(map);
+                        m.layers.push(finalPoly);
+                        const area = polygonArea(m.points);
+                        setMeasureResult({ type: 'area', value: fmtArea(area) });
+                        updateTooltip(m.points[m.points.length - 1], fmtArea(area));
+                    }
+
+                    // Stop listening but keep result visible
+                    map.off('click', onMapClick);
+                    map.off('mousemove', onMouseMove);
+                    map.off('dblclick', onDblClick);
+                    container.classList.remove('measuring');
+                }
+
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') {
+                        stopMeasure();
+                        document.removeEventListener('keydown', onKeyDown);
+                    }
+                }
+
+                // Disable double-click zoom while measuring
+                map.doubleClickZoom.disable();
+
+                map.on('click', onMapClick);
+                map.on('mousemove', onMouseMove);
+                map.on('dblclick', onDblClick);
+                document.addEventListener('keydown', onKeyDown);
+
+                return () => {
+                    map.off('click', onMapClick);
+                    map.off('mousemove', onMouseMove);
+                    map.off('dblclick', onDblClick);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.doubleClickZoom.enable();
+                    container.classList.remove('measuring');
+                    if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
+                };
+            }, [measureMode, stopMeasure]);
 
             // WMS overlays split by priority:
             // 1. High priority: plans + always-on + non-buildings layers (loads first)
@@ -1565,6 +1920,9 @@
             }
 
             const handleMapClick = useCallback((e, map) => {
+                // Don't open popups while measuring
+                if (measureMode) return;
+
                 const size = map.getSize();
                 const bounds = map.getBounds();
                 const sw = bounds.getSouthWest();
@@ -1706,7 +2064,7 @@
                         });
                     })
                     .catch(err => console.error('GetFeatureInfo error:', err));
-            }, [layers]);
+            }, [layers, measureMode]);
 
             // Re-bind click handler when layers change
             const clickHandlerRef = useRef(null);
@@ -2005,6 +2363,71 @@
                             {sidebarOpen ? '◀' : '▶'}
                         </button>
                         <div id="map" ref={mapRef}></div>
+
+                        {/* ── Map Toolbar ── */}
+                        <div className="map-toolbar">
+                            <div style={{ position: 'relative' }}>
+                                <button
+                                    className={`toolbar-btn ${measureMode ? 'active' : ''}`}
+                                    onClick={() => {
+                                        if (measureMode) {
+                                            stopMeasure();
+                                            setMeasureDropdown(false);
+                                        } else {
+                                            setMeasureDropdown(prev => !prev);
+                                        }
+                                    }}
+                                    title="מדידה"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M2 20L20 2" />
+                                        <path d="M5.5 16.5L8 14" />
+                                        <path d="M9.5 12.5L12 10" />
+                                        <path d="M13.5 8.5L16 6" />
+                                        <path d="M2 20h4v-4" />
+                                        <path d="M20 2h-4v4" />
+                                    </svg>
+                                    <span>{measureMode === 'distance' ? 'מדידת מרחק' : measureMode === 'area' ? 'מדידת שטח' : 'מדידה'}</span>
+                                </button>
+                                {measureDropdown && !measureMode && (
+                                    <div className="measure-dropdown">
+                                        <button className="measure-dropdown-item" onClick={() => {
+                                            clearMeasurement();
+                                            setMeasureMode('distance');
+                                            setMeasureDropdown(false);
+                                        }}>
+                                            📏 מדידת מרחק
+                                        </button>
+                                        <button className="measure-dropdown-item" onClick={() => {
+                                            clearMeasurement();
+                                            setMeasureMode('area');
+                                            setMeasureDropdown(false);
+                                        }}>
+                                            📐 מדידת שטח
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Measurement result panel */}
+                        {measureResult && (
+                            <div className="measure-result">
+                                <div>
+                                    <div className="measure-result-label">
+                                        {measureResult.type === 'distance' ? 'מרחק' : 'שטח'}
+                                    </div>
+                                    <div className="measure-result-value">{measureResult.value}</div>
+                                </div>
+                                <button className="measure-result-btn" onClick={() => {
+                                    clearMeasurement();
+                                    setMeasureMode(null);
+                                }}>
+                                    ✕ נקה
+                                </button>
+                            </div>
+                        )}
+
                         <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
                             טוען שכבות...
                         </div>
