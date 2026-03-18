@@ -663,93 +663,20 @@
         }
         .toolbar-dropdown-item:hover { background: #2a2a4a; color: #fff; }
 
-        /* ── Comparison Side Panel ── */
-        .compare-panel {
-            position: absolute;
-            top: 0; right: 0; bottom: 0;
-            width: 360px;
-            max-width: 45vw;
-            background: #16162e;
-            border-left: 2px solid #2a2a4a;
-            z-index: 1002;
-            display: flex; flex-direction: column;
-            direction: rtl;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.4);
-            animation: slideInRight 0.25s ease;
-        }
-        @keyframes slideInRight {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-        .compare-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px; border-bottom: 1px solid #2a2a4a;
-            background: linear-gradient(135deg, #16213e, #0f3460);
-            flex-shrink: 0;
-        }
-        .compare-header h2 { margin: 0; font-size: 15px; color: #e0e0ff; display: flex; align-items: center; gap: 6px; }
-        .compare-close {
+        /* ── Shared modal styles ── */
+        .modal-close {
             background: none; border: none; color: #8888aa; font-size: 22px;
             cursor: pointer; padding: 4px 8px; border-radius: 6px;
         }
-        .compare-close:hover { color: #e94560; background: #2a2a4a; }
-        .compare-hint-bar {
-            padding: 10px 16px; background: rgba(142,202,230,0.08);
-            border-bottom: 1px solid #2a2a4a; color: #8ecae6;
-            font-size: 12px; text-align: center; flex-shrink: 0;
-        }
-        .compare-body { padding: 0; overflow-y: auto; flex: 1; }
-        .compare-hint {
-            color: #8888aa; font-size: 13px; text-align: center;
-            padding: 40px 20px;
-        }
-        /* Card-based layout for each plan in comparison */
-        .compare-card {
-            padding: 12px 16px; border-bottom: 1px solid #1e1e3e;
-            position: relative;
-        }
-        .compare-card:hover { background: rgba(142,202,230,0.03); }
-        .compare-card-title {
-            font-size: 13px; font-weight: 600; color: #e0e0ff;
-            margin-bottom: 6px; padding-left: 24px;
-        }
-        .compare-card-num {
-            font-size: 11px; color: #8888aa; margin-bottom: 8px;
-        }
-        .compare-card-remove {
-            position: absolute; top: 10px; left: 10px;
-            background: none; border: none; color: #555;
-            cursor: pointer; font-size: 16px; padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .compare-card-remove:hover { color: #e94560; background: #2a2a4a; }
-        .compare-card-rows {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 4px 12px; font-size: 12px;
-        }
-        .compare-card-row {
-            display: flex; justify-content: space-between;
-            padding: 3px 0;
-        }
-        .compare-card-row-label { color: #8888aa; }
-        .compare-card-row-value { color: #c0c0dd; font-weight: 500; }
-        .compare-card-status {
-            display: inline-block; padding: 2px 10px; border-radius: 10px;
-            font-size: 11px; font-weight: 600;
-        }
-        .compare-actions {
-            padding: 10px 16px; border-top: 1px solid #2a2a4a;
-            display: flex; gap: 8px; justify-content: center;
-            flex-shrink: 0;
-        }
-        .compare-action-btn {
+        .modal-close:hover { color: #e94560; background: #2a2a4a; }
+        .modal-action-btn {
             background: #2a2a4a; border: 1px solid #3a3a5a; color: #c0c0dd;
             padding: 6px 16px; border-radius: 7px; cursor: pointer;
             font-size: 12px; font-family: inherit; transition: all 0.15s;
         }
-        .compare-action-btn:hover { background: #3a3a5a; color: #fff; }
-        .compare-action-btn.primary { background: #e94560; border-color: #e94560; color: #fff; }
-        .compare-action-btn.primary:hover { background: #d6375a; }
+        .modal-action-btn:hover { background: #3a3a5a; color: #fff; }
+        .modal-action-btn.primary { background: #e94560; border-color: #e94560; color: #fff; }
+        .modal-action-btn.primary:hover { background: #d6375a; }
 
         /* ── Print Modal ── */
         .print-overlay {
@@ -1318,8 +1245,6 @@
             const [measureDropdown, setMeasureDropdown] = useState(false);
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
-            const [showCompare, setShowCompare] = useState(false);
-            const [compareFeatures, setCompareFeatures] = useState([]); // array of feature props
             const [showPrint, setShowPrint] = useState(false);
             const [printTitle, setPrintTitle] = useState('');
             const [printShowLegend, setPrintShowLegend] = useState(true);
@@ -1344,7 +1269,7 @@
             const wmsLayerRef = useRef(null);
             const baseTileRef = useRef(null);
             const layersRef = useRef(layers);
-            const showCompareRef = useRef(showCompare);
+
 
             // Initialize map
             useEffect(() => {
@@ -1408,8 +1333,6 @@
 
             // Keep refs in sync
             useEffect(() => { layersRef.current = layers; }, [layers]);
-            useEffect(() => { showCompareRef.current = showCompare; }, [showCompare]);
-
             // Cursor probe: throttled GetFeatureInfo on mousemove
             // Fires immediately on first move, then at most every 300ms.
             // Does NOT abort in-flight requests — uses a sequence counter
@@ -1754,18 +1677,6 @@
                     if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
                 };
             }, [measureMode, stopMeasure]);
-
-            // ── Comparison table: add feature from popup ──
-            const addToCompare = useCallback((props) => {
-                setCompareFeatures(prev => {
-                    if (prev.some(f => f.pl_number === props.pl_number)) return prev;
-                    return [...prev, props];
-                });
-                setShowCompare(true);
-            }, []);
-
-            // Expose addToCompare globally so popup buttons can call it
-            window.__addToCompare = addToCompare;
 
             // ── Print function ──
             const handlePrint = useCallback(() => {
@@ -2368,7 +2279,6 @@
                 if (hasPermit) {
                     html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
-                html += `<button class="popup-btn-permit" data-action="add-compare" data-props='${JSON.stringify(props).replace(/'/g, "&#39;")}' style="background:#2a2a4a;border-color:#3a3a5a;color:#8ecae6;font-size:11px">📊 השוואה</button>`;
                 html += '</div>';
                 html += '</div>';
                 return html;
@@ -2471,10 +2381,8 @@
                 const showPlans = layers['plans'];
                 const showPermits = layers['permits'];
                 const showTama38 = layers['tama38'];
-                const isComparing = showCompareRef.current;
-
-                // Global rule: only query layers that are toggled ON (but always allow plans when comparing)
-                if (!showPlans && !showPermits && !showTama38 && !isComparing) return;
+                // Global rule: only query layers that are toggled ON
+                if (!showPlans && !showPermits && !showTama38) return;
 
                 const bboxStr = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
                 const commonParams = {
@@ -2494,7 +2402,7 @@
                 // Build fetch promises only for active layers
                 const fetches = [];
 
-                if (showPlans || showPermits || isComparing) {
+                if (showPlans || showPermits) {
                     const params = new URLSearchParams({ ...commonParams, LAYERS: 'plans', QUERY_LAYERS: 'plans' });
                     fetches.push(
                         fetch(`${WMS_URL}?${params.toString()}`).then(r => r.json()).then(d => ({ layer: 'plans', data: d }))
@@ -2528,11 +2436,11 @@
                                 const fd = { properties: props };
                                 if (props.stage && props.stage.trim()) {
                                     allFeatures.push({ type: 'permit', props, featureData: fd });
-                                } else if (showPlans || isComparing) {
+                                } else if (showPlans) {
                                     allFeatures.push({ type: 'plan', props, featureData: fd });
                                 }
                             });
-                        } else if ((showPlans || isComparing) && plansFeatures.length > 0) {
+                        } else if (showPlans && plansFeatures.length > 0) {
                             plansFeatures.forEach(f => {
                                 const props = f.properties;
                                 const fd = { properties: props };
@@ -2547,15 +2455,6 @@
                         }
 
                         if (allFeatures.length === 0) return;
-
-                        // When compare panel is open, auto-add all plan features at click point
-                        if (showCompareRef.current) {
-                            const planEntries = allFeatures.filter(f => f.type === 'plan');
-                            if (planEntries.length > 0 && window.__addToCompare) {
-                                planEntries.forEach(entry => window.__addToCompare(entry.props));
-                                return; // Don't open popup — just add to comparison
-                            }
-                        }
 
                         // Build popup HTML for a given feature index
                         let currentIdx = 0;
@@ -2595,16 +2494,6 @@
                                     currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
                                 }
                                 popup.setContent(buildForIndex(currentIdx));
-                                return;
-                            }
-
-                            // Compare button
-                            const compareBtn = ev.target.closest('[data-action="add-compare"]');
-                            if (compareBtn) {
-                                ev.stopPropagation();
-                                const p = JSON.parse(compareBtn.dataset.props);
-                                if (window.__addToCompare) window.__addToCompare(p);
-                                map.closePopup();
                                 return;
                             }
 
@@ -2706,14 +2595,6 @@
                                         currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
                                     }
                                     popup.setContent(buildForIndex(currentIdx));
-                                    return;
-                                }
-                                const compareBtn = ev.target.closest('[data-action="add-compare"]');
-                                if (compareBtn) {
-                                    ev.stopPropagation();
-                                    const p = JSON.parse(compareBtn.dataset.props);
-                                    if (window.__addToCompare) window.__addToCompare(p);
-                                    map.closePopup();
                                     return;
                                 }
                                 const permitBtn = ev.target.closest('.popup-btn-permit');
@@ -2979,26 +2860,6 @@
 
                             <div className="toolbar-sep" />
 
-                            {/* טבלת השוואה */}
-                            <button
-                                className={`toolbar-btn ${showCompare ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowCompare(true);
-                                    setActiveDropdown(null);
-                                }}
-                                title="טבלת השוואה"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                    <line x1="3" y1="9" x2="21" y2="9" />
-                                    <line x1="3" y1="15" x2="21" y2="15" />
-                                    <line x1="12" y1="3" x2="12" y2="21" />
-                                </svg>
-                                <span className="toolbar-label">השוואה</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
                             {/* הדפסה */}
                             <button
                                 className="toolbar-btn"
@@ -3085,77 +2946,6 @@
                             <div className="scale-display">{mapScale}</div>
                         )}
 
-                        {/* ── Comparison Side Panel ── */}
-                        {showCompare && (
-                            <div className="compare-panel">
-                                <div className="compare-header">
-                                    <h2>📊 השוואת תוכניות</h2>
-                                    <button className="compare-close" onClick={() => setShowCompare(false)}>&times;</button>
-                                </div>
-                                <div className="compare-hint-bar">
-                                    לחצו על תוכניות במפה כדי להוסיף להשוואה
-                                </div>
-                                <div className="compare-body">
-                                    {compareFeatures.length === 0 ? (
-                                        <div className="compare-hint">
-                                            <p style={{fontSize: '40px', marginBottom: '12px'}}>📋</p>
-                                            <p>לחצו על תוכנית במפה</p>
-                                            <p style={{marginTop: '4px'}}>התוכנית תתווסף אוטומטית</p>
-                                        </div>
-                                    ) : (
-                                        compareFeatures.map((f, i) => {
-                                            const status = f.status_mavat || '-';
-                                            const statusColor = getStatusColor(status);
-                                            return (
-                                                <div className="compare-card" key={f.pl_number || i}>
-                                                    <button className="compare-card-remove" onClick={() => {
-                                                        setCompareFeatures(prev => prev.filter((_, j) => j !== i));
-                                                    }} title="הסר">&times;</button>
-                                                    <div className="compare-card-title">
-                                                        {f.plan_name_he || f.plan_summary || f.pl_name || `תוכנית ${i + 1}`}
-                                                    </div>
-                                                    <div className="compare-card-num">{f.pl_number || '-'}</div>
-                                                    <div style={{marginBottom: '8px'}}>
-                                                        <span className="compare-card-status" style={{
-                                                            background: statusColor + '22',
-                                                            color: statusColor,
-                                                            border: `1px solid ${statusColor}`
-                                                        }}>{status}</span>
-                                                    </div>
-                                                    <div className="compare-card-rows">
-                                                        <div className="compare-card-row">
-                                                            <span className="compare-card-row-label">יח"ד נכנס</span>
-                                                            <span className="compare-card-row-value">{f.units_in != null ? f.units_in : '-'}</span>
-                                                        </div>
-                                                        <div className="compare-card-row">
-                                                            <span className="compare-card-row-label">יח"ד יוצא</span>
-                                                            <span className="compare-card-row-value">{f.units_total != null ? f.units_total : '-'}</span>
-                                                        </div>
-                                                        <div className="compare-card-row">
-                                                            <span className="compare-card-row-label">תוספת</span>
-                                                            <span className="compare-card-row-value" style={{color: '#8ecae6'}}>
-                                                                {f.units_add != null && f.units_add !== 0 ? '+' + f.units_add : (f.units_add === 0 ? '0' : '-')}
-                                                            </span>
-                                                        </div>
-                                                        <div className="compare-card-row">
-                                                            <span className="compare-card-row-label">שכונה</span>
-                                                            <span className="compare-card-row-value">{f.neighborho || '-'}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                                {compareFeatures.length > 0 && (
-                                    <div className="compare-actions">
-                                        <button className="compare-action-btn" onClick={() => setCompareFeatures([])}>
-                                            🗑️ נקה הכל
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
 
                     {/* ── Print Modal ── */}
@@ -3164,7 +2954,7 @@
                             <div className="print-modal" onClick={e => e.stopPropagation()}>
                                 <div className="print-header">
                                     <h2>🖨️ הדפסת מפה</h2>
-                                    <button className="compare-close" onClick={() => setShowPrint(false)}>&times;</button>
+                                    <button className="modal-close" onClick={() => setShowPrint(false)}>&times;</button>
                                 </div>
                                 <div className="print-body">
                                     <div className="print-field">
@@ -3186,10 +2976,10 @@
                                     </label>
                                 </div>
                                 <div className="print-actions">
-                                    <button className="compare-action-btn primary" onClick={handlePrint}>
+                                    <button className="modal-action-btn primary" onClick={handlePrint}>
                                         🖨️ הדפס
                                     </button>
-                                    <button className="compare-action-btn" onClick={() => setShowPrint(false)}>
+                                    <button className="modal-action-btn" onClick={() => setShowPrint(false)}>
                                         ביטול
                                     </button>
                                 </div>
@@ -3213,7 +3003,7 @@
                                     ) : (
                                         <h2>🏠 תוספת יח"ד לפי מינהל קהילתי</h2>
                                     )}
-                                    <button className="compare-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
+                                    <button className="modal-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
                                     {unitsLoading || !unitsData ? (
