@@ -572,8 +572,8 @@
                 layers: [
                     { id: 'buildings', name: 'מבנים', on: true },
                     { id: 'roads', name: 'כבישים', on: true },
-                    { id: 'stations', name: 'תחנות רק"ל', on: true },
                     { id: 'rakl', name: 'רק"ל', on: true, combined: ['rakl', 'rakl_src'] },
+                    { id: 'stations', name: 'תחנות רק"ל', on: true },
                 ]
             },
             admin: {
@@ -1002,7 +1002,7 @@
                         .forEach(o => { if (o) map.removeLayer(o); });
                     map.off('moveend', r.handler);
                     clearTimeout(r.debounceTimer);
-                    clearTimeout(r.bldgDelayTimer);
+                    clearTimeout(r.bldgTimerRef.current);
                     wmsLayerRef.current = null;
                 }
 
@@ -1079,15 +1079,18 @@
                 }
 
                 // --- Low priority: buildings (delayed 1s) ---
-                let bldgFront = null, bldgBack = null, bldgDelayTimer = null;
+                let bldgFront = null, bldgBack = null;
+                const bldgTimerRef = { current: null };
                 if (showBuildings) {
                     setLoadingBuildings(true);
-                    bldgDelayTimer = setTimeout(() => {
+                    bldgTimerRef.current = setTimeout(() => {
                         bldgFront = L.imageOverlay(
                             buildWmsUrl(WMS_URL, 'buildings', bounds, size), bounds,
                             { opacity, interactive: false, className: 'wms-overlay' }
                         ).addTo(map);
                         bldgFront.bringToBack();
+                        // Update the mutable ref so moveend handler and cleanup can track it
+                        bf.current = bldgFront;
                         const el = bldgFront.getElement();
                         if (el) {
                             el.onload = () => setLoadingBuildings(false);
@@ -1165,7 +1168,7 @@
 
                 function onMoveEnd() {
                     clearTimeout(debounceTimer);
-                    clearTimeout(bldgDelayTimer);
+                    clearTimeout(bldgTimerRef.current);
                     debounceTimer = setTimeout(() => {
                         const b = map.getBounds();
                         const s = map.getSize();
@@ -1224,7 +1227,7 @@
                         // Low priority: buildings with 1s delay
                         if (showBuildings) {
                             setLoadingBuildings(true);
-                            bldgDelayTimer = setTimeout(() => {
+                            bldgTimerRef.current = setTimeout(() => {
                                 swapOverlay(
                                     buildWmsUrl(WMS_URL, 'buildings', b, s), b, bf, bb,
                                     () => setLoadingBuildings(false)
@@ -1248,7 +1251,7 @@
                     get hatchBack() { return hb.current; },
                     handler: onMoveEnd,
                     debounceTimer,
-                    bldgDelayTimer
+                    bldgTimerRef
                 };
             }, [layers, opacity, planningTopics]);
 
