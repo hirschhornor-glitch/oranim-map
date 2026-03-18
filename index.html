@@ -1805,23 +1805,38 @@
                     svgHtml += `<div style="position:absolute;left:${left}px;top:${top}px;width:${r.width}px;height:${r.height}px">${svg.outerHTML}</div>`;
                 });
 
+                const pageWidth = 'calc(100vw - 40px)';
+
                 printWin.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head>
                     <meta charset="UTF-8">
                     <title>${title || 'הדפסת מפה'}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; }
-                        @media print { body { padding: 10px; } .no-print { display: none !important; } @page { margin: 10mm; } }
+                        @media print { body { padding: 10px; } .no-print { display: none !important; } @page { size: landscape; margin: 10mm; } }
                         .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 12px; color: #1a1a2e; }
                         .print-date { font-size: 11px; color: #888; text-align: center; margin-bottom: 12px; }
-                        .map-frame { position: relative; width: 100%; aspect-ratio: ${mapRect.width}/${mapRect.height}; overflow: hidden; border: 2px solid #333; border-radius: 4px; background: #f0f0f0; }
+                        .map-outer { width: 100%; overflow: hidden; border: 2px solid #333; border-radius: 4px; background: #f0f0f0; }
+                        .map-frame { position: relative; width: ${mapRect.width}px; height: ${mapRect.height}px; overflow: hidden; transform-origin: top left; }
                         .print-actions { margin-top: 16px; text-align: center; }
                         .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
                     </style>
+                    <script>
+                        function scaleMap() {
+                            var outer = document.querySelector('.map-outer');
+                            var frame = document.querySelector('.map-frame');
+                            if (!outer || !frame) return;
+                            var scale = outer.clientWidth / ${mapRect.width};
+                            frame.style.transform = 'scale(' + scale + ')';
+                            outer.style.height = (${mapRect.height} * scale) + 'px';
+                        }
+                        window.addEventListener('load', scaleMap);
+                        window.addEventListener('resize', scaleMap);
+                    </script>
                 </head><body>
                     ${title ? `<div class="print-title">${title}</div>` : ''}
                     <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${mapScale}</div>
-                    <div class="map-frame">${imgsHtml}${svgHtml}</div>
+                    <div class="map-outer"><div class="map-frame">${imgsHtml}${svgHtml}</div></div>
                     ${legendHtml}
                     <div class="print-actions no-print">
                         <button onclick="window.print()">🖨️ הדפס</button>
