@@ -1753,78 +1753,151 @@
             }, [measureMode, stopMeasure]);
 
             // ── Print function ──
+            const [printScale, setPrintScale] = useState('current'); // 'current' | '1:2500' | '1:5000' | ...
+            const PRINT_SCALES = [
+                { value: 'current', label: 'קנ"מ נוכחי' },
+                { value: '1:2500', label: '1:2,500', denom: 2500 },
+                { value: '1:5000', label: '1:5,000', denom: 5000 },
+                { value: '1:10000', label: '1:10,000', denom: 10000 },
+                { value: '1:15000', label: '1:15,000', denom: 15000 },
+                { value: '1:25000', label: '1:25,000', denom: 25000 },
+            ];
+
             const handlePrint = useCallback(() => {
                 const map = mapInstanceRef.current;
                 if (!map) return;
 
-                // Build a print-friendly page
-                const mapContainer = map.getContainer();
-                const canvas = mapContainer.querySelector('canvas');
-
-                // Use leaflet-image alternative: screenshot via html2canvas-like approach
-                // For simplicity, use window.print() with a styled print view
                 const title = printShowTitle ? (printTitle || 'מפת אורנים - תכנון עירוני') : '';
 
-                // Build legend HTML
+                // Build legend HTML with print-safe colors
                 let legendHtml = '';
                 if (printShowLegend) {
-                    legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl">';
+                    legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl;print-color-adjust:exact;-webkit-print-color-adjust:exact">';
                     legendHtml += '<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';
                     legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
                     PLANS_LEGEND.forEach(item => {
                         legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
-                            `<span style="width:14px;height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa"></span>` +
+                            `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` +
                             `${item.label}</div>`;
                     });
                     legendHtml += '</div></div>';
                 }
 
+                // Determine map bounds based on selected scale
+                const mapContainer = map.getContainer();
+                const mapRect = mapContainer.getBoundingClientRect();
+                const center = map.getCenter();
+
+                let printBounds, printScaleLabel;
+                const selectedScale = PRINT_SCALES.find(s => s.value === printScale);
+
+                if (printScale !== 'current' && selectedScale && selectedScale.denom) {
+                    // Calculate bounds for exact scale
+                    // At this scale, 1 cm on paper = denom cm in reality
+                    // Print area ~ A4 landscape = ~27cm x 17cm
+                    const paperWidthCm = 27;
+                    const paperHeightCm = 17;
+                    const metersWide = (selectedScale.denom * paperWidthCm) / 100;
+                    const metersHigh = (selectedScale.denom * paperHeightCm) / 100;
+
+                    // Convert meters to degrees (approximate at Jerusalem latitude ~31.75)
+                    const lat = center.lat;
+                    const mPerDegLat = 111320;
+                    const mPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
+                    const dLat = (metersHigh / 2) / mPerDegLat;
+                    const dLng = (metersWide / 2) / mPerDegLng;
+
+                    printBounds = L.latLngBounds(
+                        [center.lat - dLat, center.lng - dLng],
+                        [center.lat + dLat, center.lng + dLng]
+                    );
+                    printScaleLabel = selectedScale.label;
+                } else {
+                    printBounds = map.getBounds();
+                    // Calculate current scale
+                    const centerPx = map.latLngToContainerPoint(center);
+                    const rightPx = L.point(centerPx.x + 100, centerPx.y);
+                    const rightLL = map.containerPointToLatLng(rightPx);
+                    const distM = center.distanceTo(rightLL);
+                    const dpi = 96;
+                    const distCm = 100 / dpi * 2.54;
+                    const scaleDenom = Math.round((distM * 100) / distCm);
+                    printScaleLabel = '1:' + scaleDenom.toLocaleString('he-IL');
+                }
+
+                // For custom scale: generate a fresh WMS image at the right bounds
+                const printW = 1200;
+                const bSw = printBounds.getSouthWest();
+                const bNe = printBounds.getNorthEast();
+                const aspect = (bNe.lng - bSw.lng) / (bNe.lat - bSw.lat) * Math.cos(center.lat * Math.PI / 180);
+                const printH = Math.round(printW / Math.max(aspect, 0.5));
+                const bbox = `${bSw.lat},${bSw.lng},${bNe.lat},${bNe.lng}`;
+
+                // Build WMS GetMap URL for print
+                const toggledLayers = Object.entries(layers)
+                    .filter(([id, on]) => on && id !== 'buildings')
+                    .flatMap(([id]) => {
+                        const combined = {};
+                        Object.values(LAYER_CONFIG).forEach(g =>
+                            g.layers.forEach(l => { if (l.combined) combined[l.id] = l.combined; })
+                        );
+                        return combined[id] || [id];
+                    });
+                const printLayers = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])].join(',');
+
+                const wmsParams = new URLSearchParams({
+                    SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetMap',
+                    CRS: 'EPSG:4326', BBOX: bbox, WIDTH: printW, HEIGHT: printH,
+                    FORMAT: 'image/png', TRANSPARENT: 'true', LAYERS: printLayers,
+                });
+                const wmsImgUrl = `${WMS_URL}?${wmsParams}`;
+
+                // Scale bar: compute a nice round distance
+                function niceScaleBar(boundsWidthM, imgWidthPx) {
+                    const mPerPx = boundsWidthM / imgWidthPx;
+                    const targetPx = 150;
+                    const targetM = targetPx * mPerPx;
+                    const nice = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+                    let bestM = nice[0];
+                    for (const n of nice) { if (n <= targetM * 1.5) bestM = n; }
+                    const barPx = Math.round(bestM / mPerPx);
+                    const label = bestM >= 1000 ? (bestM / 1000) + ' ק"מ' : bestM + ' מ\'';
+                    return { barPx, label };
+                }
+                const boundsWidthM = bSw.distanceTo(L.latLng(bSw.lat, bNe.lng));
+                const scaleBar = niceScaleBar(boundsWidthM, printW);
+
                 const printWin = window.open('', '_blank');
                 if (!printWin) { alert('נא לאפשר חלונות קופצים להדפסה'); return; }
-
-                // Capture all tile/overlay images from the map
-                const imgs = mapContainer.querySelectorAll('img');
-                const mapRect = mapContainer.getBoundingClientRect();
-
-                let imgsHtml = '';
-                imgs.forEach(img => {
-                    if (!img.src || img.style.display === 'none' || !img.offsetParent) return;
-                    const r = img.getBoundingClientRect();
-                    const left = r.left - mapRect.left;
-                    const top = r.top - mapRect.top;
-                    imgsHtml += `<img src="${img.src}" style="position:absolute;left:${left}px;top:${top}px;width:${r.width}px;height:${r.height}px;opacity:${img.style.opacity || 1}" crossorigin="anonymous" />`;
-                });
-
-                // Also capture SVG overlays (polylines etc)
-                const svgs = mapContainer.querySelectorAll('svg.leaflet-zoom-animated');
-                let svgHtml = '';
-                svgs.forEach(svg => {
-                    const r = svg.getBoundingClientRect();
-                    const left = r.left - mapRect.left;
-                    const top = r.top - mapRect.top;
-                    svgHtml += `<div style="position:absolute;left:${left}px;top:${top}px;width:${r.width}px;height:${r.height}px">${svg.outerHTML}</div>`;
-                });
-
-                const pageWidth = 'calc(100vw - 40px)';
 
                 printWin.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head>
                     <meta charset="UTF-8">
                     <title>${title || 'הדפסת מפה'}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; }
-                        @media print { body { padding: 10px; } .no-print { display: none !important; } @page { size: landscape; margin: 10mm; } }
-                        .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 12px; color: #1a1a2e; }
-                        .print-date { font-size: 11px; color: #888; text-align: center; margin-bottom: 12px; }
-                        .map-outer { width: 100%; overflow: hidden; border: 2px solid #333; border-radius: 4px; background: #f0f0f0; }
-                        .map-frame { position: relative; width: ${mapRect.width}px; height: ${mapRect.height}px; overflow: hidden; transform-origin: top left; }
+                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        @media print { body { padding: 5mm; } .no-print { display: none !important; } @page { size: landscape; margin: 8mm; } }
+                        .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 6px; color: #1a1a2e; }
+                        .print-date { font-size: 11px; color: #666; text-align: center; margin-bottom: 10px; }
+                        .map-container { position: relative; width: 100%; border: 2px solid #333; border-radius: 4px; overflow: hidden; background: #e8e8e8; }
+                        .map-container img { width: 100%; height: auto; display: block; }
+                        .scale-bar-box { position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #333; border: 1px solid #999; }
+                        .scale-bar-line { height: 4px; background: #333; margin-top: 3px; border-radius: 1px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        .scale-label { font-size: 12px; font-weight: bold; position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 4px; color: #333; border: 1px solid #999; }
                         .print-actions { margin-top: 16px; text-align: center; }
                         .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
                     </style>
-                </head><body onload="(function(){var o=document.querySelector('.map-outer'),f=document.querySelector('.map-frame');if(!o||!f)return;var s=o.clientWidth/${mapRect.width};f.style.transform='scale('+s+')';o.style.height=(${mapRect.height}*s)+'px';window.addEventListener('resize',function(){var s2=o.clientWidth/${mapRect.width};f.style.transform='scale('+s2+')';o.style.height=(${mapRect.height}*s2)+'px';})})()"
+                </head><body>
                     ${title ? `<div class="print-title">${title}</div>` : ''}
-                    <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${mapScale}</div>
-                    <div class="map-outer"><div class="map-frame">${imgsHtml}${svgHtml}</div></div>
+                    <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${printScaleLabel}</div>
+                    <div class="map-container">
+                        <img src="${wmsImgUrl}" alt="מפה" />
+                        <div class="scale-bar-box">
+                            <div>${scaleBar.label}</div>
+                            <div class="scale-bar-line" style="width:${scaleBar.barPx * (100 / printW) * 100}%"></div>
+                        </div>
+                        <div class="scale-label">${printScaleLabel}</div>
+                    </div>
                     ${legendHtml}
                     <div class="print-actions no-print">
                         <button onclick="window.print()">🖨️ הדפס</button>
@@ -1832,7 +1905,7 @@
                 </body></html>`);
                 printWin.document.close();
                 setShowPrint(false);
-            }, [printTitle, printShowLegend, printShowTitle, mapScale]);
+            }, [printTitle, printShowLegend, printShowTitle, printScale, layers]);
 
             // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
             // Map tama38 neighborho → minahak
@@ -3053,6 +3126,18 @@
                                             value={printTitle}
                                             onChange={e => setPrintTitle(e.target.value)}
                                         />
+                                    </div>
+                                    <div className="print-field">
+                                        <label>קנה מידה</label>
+                                        <select
+                                            value={printScale}
+                                            onChange={e => setPrintScale(e.target.value)}
+                                            style={{width:'100%',background:'#1a1a3a',border:'1px solid #2a2a4a',borderRadius:'7px',padding:'8px 12px',color:'#e0e0ff',fontSize:'13px',fontFamily:'inherit',direction:'rtl'}}
+                                        >
+                                            {PRINT_SCALES.map(s => (
+                                                <option key={s.value} value={s.value}>{s.label}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <label className="print-checkbox">
                                         <input type="checkbox" checked={printShowTitle} onChange={e => setPrintShowTitle(e.target.checked)} />
