@@ -2472,9 +2472,10 @@
                 const showPlans = layers['plans'];
                 const showPermits = layers['permits'];
                 const showTama38 = layers['tama38'];
+                const isComparing = showCompareRef.current;
 
-                // Global rule: only query layers that are toggled ON
-                if (!showPlans && !showPermits && !showTama38) return;
+                // Global rule: only query layers that are toggled ON (but always allow plans when comparing)
+                if (!showPlans && !showPermits && !showTama38 && !isComparing) return;
 
                 const bboxStr = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
                 const commonParams = {
@@ -2494,7 +2495,7 @@
                 // Build fetch promises only for active layers
                 const fetches = [];
 
-                if (showPlans || showPermits) {
+                if (showPlans || showPermits || isComparing) {
                     const params = new URLSearchParams({ ...commonParams, LAYERS: 'plans', QUERY_LAYERS: 'plans' });
                     fetches.push(
                         fetch(`${WMS_URL}?${params.toString()}`).then(r => r.json()).then(d => ({ layer: 'plans', data: d }))
@@ -2528,11 +2529,11 @@
                                 const fd = { properties: props };
                                 if (props.stage && props.stage.trim()) {
                                     allFeatures.push({ type: 'permit', props, featureData: fd });
-                                } else if (showPlans) {
+                                } else if (showPlans || isComparing) {
                                     allFeatures.push({ type: 'plan', props, featureData: fd });
                                 }
                             });
-                        } else if (showPlans && plansFeatures.length > 0) {
+                        } else if ((showPlans || isComparing) && plansFeatures.length > 0) {
                             plansFeatures.forEach(f => {
                                 const props = f.properties;
                                 const fd = { properties: props };
@@ -2548,11 +2549,11 @@
 
                         if (allFeatures.length === 0) return;
 
-                        // When compare panel is open, auto-add first plan feature
+                        // When compare panel is open, auto-add all plan features at click point
                         if (showCompareRef.current) {
-                            const planEntry = allFeatures.find(f => f.type === 'plan');
-                            if (planEntry && window.__addToCompare) {
-                                window.__addToCompare(planEntry.props);
+                            const planEntries = allFeatures.filter(f => f.type === 'plan');
+                            if (planEntries.length > 0 && window.__addToCompare) {
+                                planEntries.forEach(entry => window.__addToCompare(entry.props));
                                 return; // Don't open popup — just add to comparison
                             }
                         }
