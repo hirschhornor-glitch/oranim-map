@@ -108,9 +108,7 @@
             overflow: hidden;
         }
 
-        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: grab; }
-        #map:active { cursor: grabbing; }
-        #map .leaflet-interactive { cursor: pointer; }
+        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
         .leaflet-control-attribution {
             font-size: 10px !important;
@@ -564,14 +562,30 @@
         }
         .popup-nav-btn:hover { background: #e94560; }
 
-        /* Map cursor overrides */
-        .leaflet-container { cursor: grab !important; }
-        .leaflet-container:active { cursor: grabbing !important; }
-        .leaflet-container.leaflet-drag-target { cursor: grabbing !important; }
-        .leaflet-grab { cursor: grab !important; }
-        .leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
+        /* Map cursor — managed via .wms-pointer class toggled by JS probe */
+        #map.wms-pointer,
+        #map.wms-pointer *:not(.leaflet-control):not(.leaflet-control *):not(.leaflet-popup):not(.leaflet-popup *) {
+            cursor: pointer !important;
+        }
+
+        #map.leaflet-dragging,
+        #map.leaflet-dragging.wms-pointer,
+        #map.leaflet-dragging *,
+        #map.leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
+
+        /* Controls & popup elements */
         .leaflet-control-zoom a, .leaflet-control a { cursor: pointer !important; }
         .leaflet-popup-close-button { cursor: pointer !important; }
+        .popup-link, .popup-btn-permit, .popup-btn-back { cursor: pointer !important; }
+
+        /* Sidebar interactive elements */
+        .layer-item, .layer-item label, .layer-item input[type="checkbox"] { cursor: pointer; }
+        .layer-legend-btn { cursor: pointer; }
+        .plan-search-item { cursor: pointer; }
+        .plan-search-clear { cursor: pointer; }
+        .btn-reset { cursor: pointer; }
+        .basemap-select { cursor: pointer; }
+        .toggle-btn { cursor: pointer; }
 
     </style>
 </head>
@@ -953,6 +967,8 @@
             const mapInstanceRef = useRef(null);
             const wmsLayerRef = useRef(null);
             const baseTileRef = useRef(null);
+            const layersRef = useRef(layers);
+            const cursorProbeRef = useRef({ timer: null, controller: null });
 
             // Initialize map
             useEffect(() => {
@@ -1013,6 +1029,121 @@
                     baseTileRef.current.bringToBack();
                 }
             }, [basemap]);
+
+            // Keep layersRef in sync
+            useEffect(() => { layersRef.current = layers; }, [layers]);
+
+            // Cursor probe: debounced GetFeatureInfo on mousemove
+            // Sets cursor to 'pointer' when hovering over clickable WMS features
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const container = map.getContainer();
+                let isDragging = false;
+                let isPointer = false;
+
+                function setCursorStyle(pointer) {
+                    if (pointer === isPointer) return;
+                    isPointer = pointer;
+                    if (pointer) {
+                        container.classList.add('wms-pointer');
+                    } else {
+                        container.classList.remove('wms-pointer');
+                    }
+                }
+
+                function onDragStart() {
+                    isDragging = true;
+                    // Don't change isPointer — we'll restore after drag
+                }
+                function onDragEnd() {
+                    isDragging = false;
+                }
+
+                function onMouseMove(e) {
+                    if (isDragging) return;
+                    const probe = cursorProbeRef.current;
+
+                    // Clear previous debounce timer
+                    clearTimeout(probe.timer);
+                    // Abort previous in-flight request
+                    if (probe.controller) { probe.controller.abort(); probe.controller = null; }
+
+                    const ly = layersRef.current;
+                    const hasPlans = ly['plans'];
+                    const hasPermits = ly['permits'];
+                    const hasTama38 = ly['tama38'];
+                    if (!hasPlans && !hasPermits && !hasTama38) {
+                        setCursorStyle(false);
+                        return;
+                    }
+
+                    probe.timer = setTimeout(() => {
+                        if (isDragging) return;
+                        const size = map.getSize();
+                        const bounds = map.getBounds();
+                        const sw = bounds.getSouthWest();
+                        const ne = bounds.getNorthEast();
+                        const bboxStr = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
+
+                        // Build query layers: plans covers plans+permits
+                        const queryLayers = [];
+                        if (hasPlans || hasPermits) queryLayers.push('plans');
+                        if (hasTama38) queryLayers.push('tama38');
+
+                        const params = new URLSearchParams({
+                            SERVICE: 'WMS', VERSION: '1.3.0', REQUEST: 'GetFeatureInfo',
+                            CRS: 'EPSG:4326', BBOX: bboxStr,
+                            WIDTH: size.x, HEIGHT: size.y,
+                            I: Math.round(e.containerPoint.x),
+                            J: Math.round(e.containerPoint.y),
+                            INFO_FORMAT: 'application/json',
+                            FEATURE_COUNT: 1,
+                            LAYERS: queryLayers.join(','),
+                            QUERY_LAYERS: queryLayers.join(',')
+                        });
+
+                        const controller = new AbortController();
+                        probe.controller = controller;
+
+                        fetch(`${WMS_URL}?${params.toString()}`, { signal: controller.signal })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (controller.signal.aborted) return;
+                                setCursorStyle(!!(data.features && data.features.length > 0));
+                            })
+                            .catch(err => {
+                                if (err.name !== 'AbortError') {
+                                    setCursorStyle(false);
+                                }
+                            });
+                    }, 150);
+                }
+
+                // Also set cursor when mouse leaves map
+                function onMouseOut() {
+                    const probe = cursorProbeRef.current;
+                    clearTimeout(probe.timer);
+                    if (probe.controller) { probe.controller.abort(); probe.controller = null; }
+                    setCursorStyle(false);
+                }
+
+                map.on('mousemove', onMouseMove);
+                map.on('mouseout', onMouseOut);
+                map.on('dragstart', onDragStart);
+                map.on('dragend', onDragEnd);
+
+                return () => {
+                    map.off('mousemove', onMouseMove);
+                    map.off('mouseout', onMouseOut);
+                    map.off('dragstart', onDragStart);
+                    map.off('dragend', onDragEnd);
+                    const probe = cursorProbeRef.current;
+                    clearTimeout(probe.timer);
+                    if (probe.controller) probe.controller.abort();
+                    setCursorStyle(false);
+                };
+            }, []);
 
             // WMS overlays split by priority:
             // 1. High priority: plans + always-on + non-buildings layers (loads first)
@@ -1555,7 +1686,7 @@
                                 const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                                 if (permitBtn.dataset.action === 'back-to-plan') {
                                     popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
-                                    setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
+                                    setTimeout(() => setLayers(prev => ({ ...prev, plans: true, permits: false })), 100);
                                 } else {
                                     popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                                     setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
@@ -1654,7 +1785,7 @@
                                     const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                                     if (permitBtn.dataset.action === 'back-to-plan') {
                                         popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
-                                        setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
+                                        setTimeout(() => setLayers(prev => ({ ...prev, plans: true, permits: false })), 100);
                                     } else {
                                         popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                                         setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
