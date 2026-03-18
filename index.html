@@ -1946,7 +1946,26 @@
                     const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
                     const byMinahak = {};
                     const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
-                    const allStatuses = new Set();
+                    const STATUS_GROUPS = [
+                        { key: 'approved', label: 'אישור / מאושרת', color: '#4CAF50',
+                          match: ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'] },
+                        { key: 'in_approval', label: 'בהליך אישור', color: '#66BB6A',
+                          match: ['בהליך אישור','תבע - טרום אישור'] },
+                        { key: 'objections', label: 'התנגדויות', color: '#FDD835',
+                          match: ['דיון בהתנגדויות ותיקונים'] },
+                        { key: 'deposit', label: 'הפקדה', color: '#FDD835',
+                          match: ['הפקדה להתנגדויות/השגות'] },
+                        { key: 'conditions', label: 'במילוי תנאים להפקדה', color: '#FF9800',
+                          match: ['במילוי תנאים להפקדה','תכנית עומדת בתנאי סף'] },
+                        { key: 'open', label: 'פתיחת תיק / בדיקה', color: '#F44336',
+                          match: ['נפתח תיק למתכנן','נפתח תיק תבע','בבדיקה תכנונית','נקלטה מקובץ מבאת'] },
+                    ];
+                    function getStatusGroup(status) {
+                        for (const g of STATUS_GROUPS) {
+                            if (g.match.includes(status)) return g.key;
+                        }
+                        return null;
+                    }
                     const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {} });
                     minahakOrder.forEach(m => {
                         byMinahak[m] = emptyRow();
@@ -1972,10 +1991,10 @@
                             byMinahak[m].densification += addVal;
                         }
 
-                        // Per-status breakdown (all statuses except rejected)
+                        // Per-status group breakdown
                         if (!isRejected && addVal > 0 && status) {
-                            allStatuses.add(status);
-                            byMinahak[m].byStatus[status] = (byMinahak[m].byStatus[status] || 0) + addVal;
+                            const grp = getStatusGroup(status);
+                            if (grp) byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
                         }
 
                         // Per sub-neighborhood breakdown
@@ -2028,8 +2047,7 @@
                         if (!minahaks.includes(m) && m) minahaks.push(m);
                     });
 
-                    const statusList = [...allStatuses].sort();
-                    setUnitsData({ minahaks, byMinahak, bySub, statusList });
+                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS });
                     setUnitsLoading(false);
                 });
             }, [unitsData]);
@@ -3355,15 +3373,15 @@
                                                     </>
                                                 )}
 
-                                                {/* Sub-rows by status — all statuses dynamically */}
-                                                {unitsExpanded === 'status' && unitsData.statusList && unitsData.statusList.map(st => (
-                                                    <tr key={st} className="units-sub-row">
-                                                        <td>{st}</td>
+                                                {/* Sub-rows by status group */}
+                                                {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => (
+                                                    <tr key={g.key} className="units-sub-row">
+                                                        <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
                                                         {unitsData.minahaks.map(m => (
-                                                            <td key={m}>{(unitsData.byMinahak[m].byStatus[st] || 0).toLocaleString()}</td>
+                                                            <td key={m}>{(unitsData.byMinahak[m].byStatus[g.key] || 0).toLocaleString()}</td>
                                                         ))}
                                                         <td style={{background: '#12122a'}}>
-                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[st] || 0), 0).toLocaleString()}
+                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                 ))}
