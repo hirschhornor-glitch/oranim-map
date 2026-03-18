@@ -2202,6 +2202,8 @@
                         buildWmsUrl(WMS_URL, mainCsv, bounds, size, mainOgcFilter), bounds,
                         { opacity, interactive: false, className: 'wms-overlay' }
                     ).addTo(map);
+                    const mel = mainFront.getElement();
+                    if (mel) mel.style.zIndex = '200';
                 }
 
                 // --- Low priority: buildings (delayed 1s) ---
@@ -2214,7 +2216,8 @@
                             buildWmsUrl(WMS_URL, 'buildings', bounds, size), bounds,
                             { opacity, interactive: false, className: 'wms-overlay' }
                         ).addTo(map);
-                        bldgFront.bringToBack();
+                        const bel = bldgFront.getElement();
+                        if (bel) bel.style.zIndex = '100';
                         // Update the mutable ref so moveend handler and cleanup can track it
                         bf.current = bldgFront;
                         const el = bldgFront.getElement();
@@ -2307,7 +2310,13 @@
                         // High priority: main layers
                         if (mainLayers.length > 0) {
                             pending++;
-                            swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, checkDone);
+                            swapOverlay(buildWmsUrl(WMS_URL, mainCsv, b, s, mainOgcFilter), b, mf, mb, () => {
+                                if (mf.current) {
+                                    const el = mf.current.getElement();
+                                    if (el) el.style.zIndex = '200';
+                                }
+                                checkDone();
+                            });
                         }
 
                         // Topics overlay (zIndex 450, FILTER+SLD+CSS mask)
@@ -2356,9 +2365,14 @@
                             bldgTimerRef.current = setTimeout(() => {
                                 swapOverlay(
                                     buildWmsUrl(WMS_URL, 'buildings', b, s), b, bf, bb,
-                                    () => setLoadingBuildings(false)
+                                    () => {
+                                        if (bf.current) {
+                                            const el = bf.current.getElement();
+                                            if (el) el.style.zIndex = '100';
+                                        }
+                                        setLoadingBuildings(false);
+                                    }
                                 );
-                                if (bf.current) bf.current.bringToBack();
                             }, 1000);
                         }
                     }, 300);
