@@ -595,48 +595,57 @@
             transform: translateX(-50%);
             z-index: 1001;
             display: flex;
-            gap: 4px;
-            background: rgba(15, 15, 30, 0.92);
-            backdrop-filter: blur(8px);
+            gap: 0;
+            background: rgba(15, 15, 30, 0.94);
+            backdrop-filter: blur(10px);
             border: 1px solid #2a2a4a;
-            border-radius: 10px;
-            padding: 4px 8px;
+            border-radius: 12px;
+            padding: 4px 6px;
             direction: rtl;
         }
         .toolbar-btn {
             background: transparent;
             border: 1px solid transparent;
-            color: #b0b0cc;
-            padding: 5px 12px;
-            border-radius: 7px;
-            font-size: 13px;
+            color: #8888aa;
+            padding: 6px 14px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
             transition: all 0.15s;
             white-space: nowrap;
             font-family: inherit;
+            position: relative;
         }
         .toolbar-btn:hover { background: #2a2a4a; color: #e0e0ff; border-color: #3a3a5a; }
         .toolbar-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
-        .toolbar-btn svg { width: 16px; height: 16px; }
+        .toolbar-btn svg, .toolbar-btn .toolbar-icon { width: 20px; height: 20px; font-size: 20px; line-height: 1; }
+        .toolbar-btn .toolbar-label { font-size: 10px; letter-spacing: 0.3px; }
+        .toolbar-sep {
+            width: 1px;
+            background: #2a2a4a;
+            margin: 6px 2px;
+            align-self: stretch;
+        }
 
-        /* Measurement dropdown */
-        .measure-dropdown {
+        /* Toolbar dropdown (shared) */
+        .toolbar-dropdown {
             position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
+            top: calc(100% + 8px);
+            right: 50%;
+            transform: translateX(50%);
             background: #16162e;
             border: 1px solid #2a2a4a;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 4px 0;
             min-width: 170px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             z-index: 1002;
         }
-        .measure-dropdown-item {
-            padding: 8px 14px;
+        .toolbar-dropdown-item {
+            padding: 9px 16px;
             color: #c0c0dd;
             font-size: 13px;
             cursor: pointer;
@@ -652,7 +661,104 @@
             text-align: right;
             direction: rtl;
         }
-        .measure-dropdown-item:hover { background: #2a2a4a; color: #fff; }
+        .toolbar-dropdown-item:hover { background: #2a2a4a; color: #fff; }
+
+        /* ── Comparison Table Modal ── */
+        .compare-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .compare-modal {
+            background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
+            width: 90vw; max-width: 900px; max-height: 85vh;
+            display: flex; flex-direction: column; direction: rtl;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+        }
+        .compare-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #2a2a4a;
+        }
+        .compare-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; }
+        .compare-close {
+            background: none; border: none; color: #8888aa; font-size: 22px;
+            cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .compare-close:hover { color: #e94560; background: #2a2a4a; }
+        .compare-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+        .compare-hint {
+            color: #8888aa; font-size: 13px; text-align: center;
+            padding: 30px 0;
+        }
+        .compare-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 13px;
+        }
+        .compare-table th {
+            background: #1a1a3a; color: #8ecae6; font-weight: 600;
+            padding: 10px 12px; position: sticky; top: 0;
+            border-bottom: 2px solid #e94560; text-align: right;
+        }
+        .compare-table td {
+            padding: 8px 12px; border-bottom: 1px solid #1e1e3e; color: #c0c0dd;
+        }
+        .compare-table tr:hover td { background: rgba(142,202,230,0.05); }
+        .compare-table .row-label {
+            color: #8888aa; font-weight: 600; background: #141430;
+            min-width: 100px;
+        }
+        .compare-actions {
+            padding: 12px 20px; border-top: 1px solid #2a2a4a;
+            display: flex; gap: 8px; justify-content: flex-start;
+        }
+        .compare-action-btn {
+            background: #2a2a4a; border: 1px solid #3a3a5a; color: #c0c0dd;
+            padding: 6px 16px; border-radius: 7px; cursor: pointer;
+            font-size: 12px; font-family: inherit; transition: all 0.15s;
+        }
+        .compare-action-btn:hover { background: #3a3a5a; color: #fff; }
+        .compare-action-btn.primary { background: #e94560; border-color: #e94560; color: #fff; }
+        .compare-action-btn.primary:hover { background: #d6375a; }
+
+        /* ── Print Modal ── */
+        .print-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .print-modal {
+            background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
+            width: 420px; max-width: 90vw; direction: rtl;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+        }
+        .print-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #2a2a4a;
+        }
+        .print-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; }
+        .print-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .print-field label {
+            display: block; color: #8888aa; font-size: 12px; margin-bottom: 4px;
+        }
+        .print-field input[type="text"] {
+            width: 100%; background: #1a1a3a; border: 1px solid #2a2a4a;
+            border-radius: 7px; padding: 8px 12px; color: #e0e0ff;
+            font-size: 13px; font-family: inherit; direction: rtl;
+        }
+        .print-field input[type="text"]:focus {
+            outline: none; border-color: #4a69d1;
+        }
+        .print-checkbox {
+            display: flex; align-items: center; gap: 8px;
+            color: #c0c0dd; font-size: 13px; cursor: pointer;
+        }
+        .print-checkbox input { cursor: pointer; accent-color: #e94560; }
+        .print-actions {
+            padding: 14px 20px; border-top: 1px solid #2a2a4a;
+            display: flex; gap: 8px; justify-content: flex-start;
+        }
 
         /* Measurement result panel */
         .measure-result {
@@ -1087,6 +1193,13 @@
             const [measureDropdown, setMeasureDropdown] = useState(false);
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
+            const [showCompare, setShowCompare] = useState(false);
+            const [compareFeatures, setCompareFeatures] = useState([]); // array of feature props
+            const [showPrint, setShowPrint] = useState(false);
+            const [printTitle, setPrintTitle] = useState('');
+            const [printShowLegend, setPrintShowLegend] = useState(true);
+            const [printShowTitle, setPrintShowTitle] = useState(true);
+            const [activeDropdown, setActiveDropdown] = useState(null); // 'measure' | null
 
             // Load plan search index
             useEffect(() => {
@@ -1511,6 +1624,98 @@
                 };
             }, [measureMode, stopMeasure]);
 
+            // ── Comparison table: add feature from popup ──
+            const addToCompare = useCallback((props) => {
+                setCompareFeatures(prev => {
+                    // Avoid duplicates by pl_number
+                    if (prev.some(f => f.pl_number === props.pl_number)) return prev;
+                    return [...prev, props];
+                });
+                setShowCompare(true);
+            }, []);
+
+            // Expose addToCompare globally so popup buttons can call it
+            window.__addToCompare = addToCompare;
+
+            // ── Print function ──
+            const handlePrint = useCallback(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+
+                // Build a print-friendly page
+                const mapContainer = map.getContainer();
+                const canvas = mapContainer.querySelector('canvas');
+
+                // Use leaflet-image alternative: screenshot via html2canvas-like approach
+                // For simplicity, use window.print() with a styled print view
+                const title = printShowTitle ? (printTitle || 'מפת אורנים - תכנון עירוני') : '';
+
+                // Build legend HTML
+                let legendHtml = '';
+                if (printShowLegend) {
+                    legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl">';
+                    legendHtml += '<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';
+                    legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+                    PLANS_LEGEND.forEach(item => {
+                        legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
+                            `<span style="width:14px;height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa"></span>` +
+                            `${item.label}</div>`;
+                    });
+                    legendHtml += '</div></div>';
+                }
+
+                const printWin = window.open('', '_blank');
+                if (!printWin) { alert('נא לאפשר חלונות קופצים להדפסה'); return; }
+
+                // Capture all tile/overlay images from the map
+                const imgs = mapContainer.querySelectorAll('img');
+                const mapRect = mapContainer.getBoundingClientRect();
+
+                let imgsHtml = '';
+                imgs.forEach(img => {
+                    if (!img.src || img.style.display === 'none' || !img.offsetParent) return;
+                    const r = img.getBoundingClientRect();
+                    const left = r.left - mapRect.left;
+                    const top = r.top - mapRect.top;
+                    imgsHtml += `<img src="${img.src}" style="position:absolute;left:${left}px;top:${top}px;width:${r.width}px;height:${r.height}px;opacity:${img.style.opacity || 1}" crossorigin="anonymous" />`;
+                });
+
+                // Also capture SVG overlays (polylines etc)
+                const svgs = mapContainer.querySelectorAll('svg.leaflet-zoom-animated');
+                let svgHtml = '';
+                svgs.forEach(svg => {
+                    const r = svg.getBoundingClientRect();
+                    const left = r.left - mapRect.left;
+                    const top = r.top - mapRect.top;
+                    svgHtml += `<div style="position:absolute;left:${left}px;top:${top}px;width:${r.width}px;height:${r.height}px">${svg.outerHTML}</div>`;
+                });
+
+                printWin.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head>
+                    <meta charset="UTF-8">
+                    <title>${title || 'הדפסת מפה'}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; }
+                        @media print { body { padding: 10px; } .no-print { display: none !important; } @page { margin: 10mm; } }
+                        .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 12px; color: #1a1a2e; }
+                        .print-date { font-size: 11px; color: #888; text-align: center; margin-bottom: 12px; }
+                        .map-frame { position: relative; width: 100%; aspect-ratio: ${mapRect.width}/${mapRect.height}; overflow: hidden; border: 2px solid #333; border-radius: 4px; background: #f0f0f0; }
+                        .print-actions { margin-top: 16px; text-align: center; }
+                        .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
+                    </style>
+                </head><body>
+                    ${title ? `<div class="print-title">${title}</div>` : ''}
+                    <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${mapScale}</div>
+                    <div class="map-frame">${imgsHtml}${svgHtml}</div>
+                    ${legendHtml}
+                    <div class="print-actions no-print">
+                        <button onclick="window.print()">🖨️ הדפס</button>
+                    </div>
+                </body></html>`);
+                printWin.document.close();
+                setShowPrint(false);
+            }, [printTitle, printShowLegend, printShowTitle, mapScale]);
+
             // WMS overlays split by priority:
             // 1. High priority: plans + always-on + non-buildings layers (loads first)
             // 2. Low priority: buildings layer (loads with 1s delay)
@@ -1828,6 +2033,7 @@
                 if (hasPermit) {
                     html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
+                html += `<button class="popup-btn-permit" data-action="add-compare" data-props='${JSON.stringify(props).replace(/'/g, "&#39;")}' style="background:#2a2a4a;border-color:#3a3a5a;color:#8ecae6;font-size:11px">📊 השוואה</button>`;
                 html += '</div>';
                 html += '</div>';
                 return html;
@@ -2047,6 +2253,15 @@
                                 return;
                             }
 
+                            // Compare button
+                            const compareBtn = ev.target.closest('[data-action="add-compare"]');
+                            if (compareBtn) {
+                                ev.stopPropagation();
+                                const p = JSON.parse(compareBtn.dataset.props);
+                                if (window.__addToCompare) window.__addToCompare(p);
+                                return;
+                            }
+
                             // Permit/back buttons
                             const permitBtn = ev.target.closest('.popup-btn-permit');
                             if (permitBtn) {
@@ -2145,6 +2360,13 @@
                                         currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
                                     }
                                     popup.setContent(buildForIndex(currentIdx));
+                                    return;
+                                }
+                                const compareBtn = ev.target.closest('[data-action="add-compare"]');
+                                if (compareBtn) {
+                                    ev.stopPropagation();
+                                    const p = JSON.parse(compareBtn.dataset.props);
+                                    if (window.__addToCompare) window.__addToCompare(p);
                                     return;
                                 }
                                 const permitBtn = ev.target.closest('.popup-btn-permit');
@@ -2366,48 +2588,86 @@
 
                         {/* ── Map Toolbar ── */}
                         <div className="map-toolbar">
-                            <div style={{ position: 'relative' }}>
-                                <button
-                                    className={`toolbar-btn ${measureMode ? 'active' : ''}`}
-                                    onClick={() => {
-                                        if (measureMode) {
-                                            stopMeasure();
-                                            setMeasureDropdown(false);
-                                        } else {
-                                            setMeasureDropdown(prev => !prev);
-                                        }
-                                    }}
-                                    title="מדידה"
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M2 20L20 2" />
-                                        <path d="M5.5 16.5L8 14" />
-                                        <path d="M9.5 12.5L12 10" />
-                                        <path d="M13.5 8.5L16 6" />
-                                        <path d="M2 20h4v-4" />
-                                        <path d="M20 2h-4v4" />
-                                    </svg>
-                                    <span>{measureMode === 'distance' ? 'מדידת מרחק' : measureMode === 'area' ? 'מדידת שטח' : 'מדידה'}</span>
-                                </button>
-                                {measureDropdown && !measureMode && (
-                                    <div className="measure-dropdown">
-                                        <button className="measure-dropdown-item" onClick={() => {
+                            {/* מדידה */}
+                            <button
+                                className={`toolbar-btn ${measureMode ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (measureMode) {
+                                        stopMeasure();
+                                        setActiveDropdown(null);
+                                    } else {
+                                        setActiveDropdown(prev => prev === 'measure' ? null : 'measure');
+                                    }
+                                }}
+                                title="מדידה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 20L20 2" />
+                                    <path d="M5.5 16.5L8 14" />
+                                    <path d="M9.5 12.5L12 10" />
+                                    <path d="M13.5 8.5L16 6" />
+                                    <path d="M2 20h4v-4" />
+                                    <path d="M20 2h-4v4" />
+                                </svg>
+                                <span className="toolbar-label">{measureMode === 'distance' ? 'מרחק' : measureMode === 'area' ? 'שטח' : 'מדידה'}</span>
+                                {activeDropdown === 'measure' && !measureMode && (
+                                    <div className="toolbar-dropdown" onClick={e => e.stopPropagation()}>
+                                        <button className="toolbar-dropdown-item" onClick={() => {
                                             clearMeasurement();
                                             setMeasureMode('distance');
-                                            setMeasureDropdown(false);
+                                            setActiveDropdown(null);
                                         }}>
                                             📏 מדידת מרחק
                                         </button>
-                                        <button className="measure-dropdown-item" onClick={() => {
+                                        <button className="toolbar-dropdown-item" onClick={() => {
                                             clearMeasurement();
                                             setMeasureMode('area');
-                                            setMeasureDropdown(false);
+                                            setActiveDropdown(null);
                                         }}>
                                             📐 מדידת שטח
                                         </button>
                                     </div>
                                 )}
-                            </div>
+                            </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* טבלת השוואה */}
+                            <button
+                                className={`toolbar-btn ${showCompare ? 'active' : ''}`}
+                                onClick={() => {
+                                    setShowCompare(true);
+                                    setActiveDropdown(null);
+                                }}
+                                title="טבלת השוואה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <line x1="3" y1="9" x2="21" y2="9" />
+                                    <line x1="3" y1="15" x2="21" y2="15" />
+                                    <line x1="12" y1="3" x2="12" y2="21" />
+                                </svg>
+                                <span className="toolbar-label">השוואה</span>
+                            </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* הדפסה */}
+                            <button
+                                className="toolbar-btn"
+                                onClick={() => {
+                                    setShowPrint(true);
+                                    setActiveDropdown(null);
+                                }}
+                                title="הדפסה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9" />
+                                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                    <rect x="6" y="14" width="12" height="8" />
+                                </svg>
+                                <span className="toolbar-label">הדפסה</span>
+                            </button>
                         </div>
 
                         {/* Measurement result panel */}
@@ -2454,6 +2714,113 @@
                             <div className="scale-display">{mapScale}</div>
                         )}
                     </div>
+
+                    {/* ── Comparison Table Modal ── */}
+                    {showCompare && (
+                        <div className="compare-overlay" onClick={() => setShowCompare(false)}>
+                            <div className="compare-modal" onClick={e => e.stopPropagation()}>
+                                <div className="compare-header">
+                                    <h2>📊 טבלת השוואת תוכניות</h2>
+                                    <button className="compare-close" onClick={() => setShowCompare(false)}>&times;</button>
+                                </div>
+                                <div className="compare-body">
+                                    {compareFeatures.length === 0 ? (
+                                        <div className="compare-hint">
+                                            <p style={{fontSize: '32px', marginBottom: '12px'}}>📋</p>
+                                            <p>לחצו על תוכנית במפה ובחרו "הוסף להשוואה" כדי להתחיל</p>
+                                            <p style={{marginTop: '8px', fontSize: '12px', color: '#666'}}>ניתן להשוות עד 5 תוכניות במקביל</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{overflowX: 'auto'}}>
+                                            <table className="compare-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="row-label"></th>
+                                                        {compareFeatures.map((f, i) => (
+                                                            <th key={i} style={{position: 'relative'}}>
+                                                                {f.pl_name || f.pl_number || `תוכנית ${i + 1}`}
+                                                                <button style={{
+                                                                    position: 'absolute', top: 4, left: 4,
+                                                                    background: 'none', border: 'none', color: '#e94560',
+                                                                    cursor: 'pointer', fontSize: '14px'
+                                                                }} onClick={() => {
+                                                                    setCompareFeatures(prev => prev.filter((_, j) => j !== i));
+                                                                }} title="הסר">&times;</button>
+                                                            </th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {[
+                                                        ['מספר תוכנית', 'pl_number'],
+                                                        ['סטטוס', 'status_mavat'],
+                                                        ['יח"ד נכנס', 'units_in'],
+                                                        ['יח"ד יוצא', 'units_total'],
+                                                        ['יח"ד תוספת', 'units_add'],
+                                                        ['שכונה', 'neighborho'],
+                                                        ['מנהל', 'minahak'],
+                                                    ].map(([label, key]) => (
+                                                        <tr key={key}>
+                                                            <td className="row-label">{label}</td>
+                                                            {compareFeatures.map((f, i) => (
+                                                                <td key={i}>{f[key] != null ? String(f[key]) : '-'}</td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="compare-actions">
+                                    {compareFeatures.length > 0 && (
+                                        <button className="compare-action-btn" onClick={() => setCompareFeatures([])}>
+                                            🗑️ נקה הכל
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Print Modal ── */}
+                    {showPrint && (
+                        <div className="print-overlay" onClick={() => setShowPrint(false)}>
+                            <div className="print-modal" onClick={e => e.stopPropagation()}>
+                                <div className="print-header">
+                                    <h2>🖨️ הדפסת מפה</h2>
+                                    <button className="compare-close" onClick={() => setShowPrint(false)}>&times;</button>
+                                </div>
+                                <div className="print-body">
+                                    <div className="print-field">
+                                        <label>כותרת המפה</label>
+                                        <input
+                                            type="text"
+                                            placeholder="מפת אורנים - תכנון עירוני"
+                                            value={printTitle}
+                                            onChange={e => setPrintTitle(e.target.value)}
+                                        />
+                                    </div>
+                                    <label className="print-checkbox">
+                                        <input type="checkbox" checked={printShowTitle} onChange={e => setPrintShowTitle(e.target.checked)} />
+                                        הצג כותרת
+                                    </label>
+                                    <label className="print-checkbox">
+                                        <input type="checkbox" checked={printShowLegend} onChange={e => setPrintShowLegend(e.target.checked)} />
+                                        הצג מקרא
+                                    </label>
+                                </div>
+                                <div className="print-actions">
+                                    <button className="compare-action-btn primary" onClick={handlePrint}>
+                                        🖨️ הדפס
+                                    </button>
+                                    <button className="compare-action-btn" onClick={() => setShowPrint(false)}>
+                                        ביטול
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {legendPopup && (
                         <div className="legend-popup-overlay" onClick={() => setLegendPopup(null)}>
