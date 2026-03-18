@@ -536,6 +536,34 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
+        /* Popup navigation for multiple features */
+        .popup-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: #0f0f1e;
+            border-bottom: 1px solid #2a2a4a;
+            font-size: 12px;
+            color: #8888aa;
+        }
+        .popup-nav-btn {
+            background: #2a2a4a;
+            border: none;
+            color: #e0e0e0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .popup-nav-btn:hover { background: #e94560; }
+
         /* Map cursor overrides */
         .leaflet-container { cursor: grab !important; }
         .leaflet-container:active { cursor: grabbing !important; }
@@ -1260,7 +1288,16 @@
                 return STATUS_COLORS[status] || '#5dade2';
             }
 
-            function buildPlanPopup(props, featureData) {
+            function buildNavBar(navInfo) {
+                if (!navInfo || navInfo.total <= 1) return '';
+                return `<div class="popup-nav">` +
+                    `<button class="popup-nav-btn" data-nav="prev">▶</button>` +
+                    `<span>${navInfo.current + 1} / ${navInfo.total}</span>` +
+                    `<button class="popup-nav-btn" data-nav="next">◀</button>` +
+                    `</div>`;
+            }
+
+            function buildPlanPopup(props, featureData, navInfo) {
                 const title = props.plan_name_he || props.plan_summary || 'תוכנית';
                 const subtitle = props.plan_name || props.taba || '';
                 const status = props.status_mavat || '';
@@ -1273,6 +1310,7 @@
                 const hasPermit = props.stage && props.stage.trim() !== '';
 
                 let html = '<div>';
+                html += buildNavBar(navInfo);
                 // Header
                 html += '<div class="popup-header">';
                 html += `<div class="popup-header-title">${title}</div>`;
@@ -1299,7 +1337,7 @@
             }
 
             // Build the permit details popup HTML
-            function buildPermitPopup(props, featureData) {
+            function buildPermitPopup(props, featureData, navInfo) {
                 const title = props.plan_name_he || props.plan_summary || 'תוכנית';
                 const planName = props.plan_name || props.taba || '';
                 const permitNum = props.building_permit || '-';
@@ -1312,6 +1350,7 @@
                 const permitAddDisplay = permitAddition !== '-' && permitAddition !== 0 ? '+' + permitAddition : permitAddition;
 
                 let html = '<div>';
+                html += buildNavBar(navInfo);
                 // Header
                 html += '<div class="permit-detail-header">';
                 html += `<div class="popup-header-title">${title}</div>`;
@@ -1333,7 +1372,7 @@
             }
 
             // Build the tama38 popup HTML
-            function buildTama38Popup(props) {
+            function buildTama38Popup(props, navInfo) {
                 const title = props.address || 'תמ"א 38';
                 const subtitle = props.neighborho ? `שכונה: ${props.neighborho}` : '';
                 const status = props.status || '';
@@ -1357,6 +1396,7 @@
                     '#5dade2';
 
                 let html = '<div>';
+                html += buildNavBar(navInfo);
                 html += '<div class="popup-header" style="border-right:4px solid #e94560">';
                 html += `<div class="popup-header-title">${title}</div>`;
                 if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
@@ -1434,37 +1474,52 @@
                         const plansFeatures = (plansResult && plansResult.data.features) || [];
                         const tama38Features = (tama38Result && tama38Result.data.features) || [];
 
-                        // Log for debugging
                         console.log('[GetFeatureInfo] plans:', plansFeatures.length, 'tama38:', tama38Features.length);
-                        if (tama38Features.length > 0) {
-                            console.log('[tama38 Feature 0] ALL FIELDS:', JSON.stringify(tama38Features[0].properties));
-                        }
 
-                        let html = null;
-                        let featureData = null;
+                        // Collect all displayable features into a unified list
+                        // Each entry: { type: 'plan'|'permit'|'tama38', props, featureData }
+                        const allFeatures = [];
 
-                        // Priority: permits > plans > tama38
-                        // Only show popup for layers that are ON
                         if (showPermits && plansFeatures.length > 0) {
-                            const feature = plansFeatures.find(f => f.properties.stage && f.properties.stage.trim()) || plansFeatures[0];
-                            const props = feature.properties;
-                            featureData = { properties: props };
-                            if (props.stage && props.stage.trim()) {
-                                html = buildPermitPopup(props, featureData);
-                            } else if (showPlans) {
-                                html = buildPlanPopup(props, featureData);
-                            }
+                            plansFeatures.forEach(f => {
+                                const props = f.properties;
+                                const fd = { properties: props };
+                                if (props.stage && props.stage.trim()) {
+                                    allFeatures.push({ type: 'permit', props, featureData: fd });
+                                } else if (showPlans) {
+                                    allFeatures.push({ type: 'plan', props, featureData: fd });
+                                }
+                            });
                         } else if (showPlans && plansFeatures.length > 0) {
-                            const feature = plansFeatures[0];
-                            const props = feature.properties;
-                            featureData = { properties: props };
-                            html = buildPlanPopup(props, featureData);
-                        } else if (showTama38 && tama38Features.length > 0) {
-                            const props = tama38Features[0].properties;
-                            html = buildTama38Popup(props);
+                            plansFeatures.forEach(f => {
+                                const props = f.properties;
+                                const fd = { properties: props };
+                                allFeatures.push({ type: 'plan', props, featureData: fd });
+                            });
                         }
 
-                        if (!html) return;
+                        if (showTama38 && tama38Features.length > 0) {
+                            tama38Features.forEach(f => {
+                                allFeatures.push({ type: 'tama38', props: f.properties, featureData: null });
+                            });
+                        }
+
+                        if (allFeatures.length === 0) return;
+
+                        // Build popup HTML for a given feature index
+                        let currentIdx = 0;
+
+                        function buildForIndex(idx) {
+                            const entry = allFeatures[idx];
+                            const navInfo = allFeatures.length > 1 ? { current: idx, total: allFeatures.length } : null;
+                            if (entry.type === 'permit') {
+                                return buildPermitPopup(entry.props, entry.featureData, navInfo);
+                            } else if (entry.type === 'plan') {
+                                return buildPlanPopup(entry.props, entry.featureData, navInfo);
+                            } else {
+                                return buildTama38Popup(entry.props, navInfo);
+                            }
+                        }
 
                         const popup = L.popup({
                             maxWidth: 320,
@@ -1473,20 +1528,36 @@
                             closeButton: true
                         })
                             .setLatLng(e.latlng)
-                            .setContent(html)
+                            .setContent(buildForIndex(0))
                             .openOn(map);
 
-                        // Bind click for permit/back buttons
+                        // Bind click for nav buttons and permit/back buttons
                         popup.getElement().addEventListener('click', function(ev) {
+                            // Nav buttons
+                            const navBtn = ev.target.closest('.popup-nav-btn');
+                            if (navBtn) {
+                                ev.stopPropagation();
+                                const dir = navBtn.dataset.nav;
+                                if (dir === 'next') {
+                                    currentIdx = (currentIdx + 1) % allFeatures.length;
+                                } else {
+                                    currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
+                                }
+                                popup.setContent(buildForIndex(currentIdx));
+                                return;
+                            }
+
+                            // Permit/back buttons
                             const permitBtn = ev.target.closest('.popup-btn-permit');
                             if (permitBtn) {
                                 ev.stopPropagation();
                                 const fd = JSON.parse(permitBtn.dataset.feature);
+                                const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                                 if (permitBtn.dataset.action === 'back-to-plan') {
-                                    popup.setContent(buildPlanPopup(fd.properties, fd));
+                                    popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
                                     setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
                                 } else {
-                                    popup.setContent(buildPermitPopup(fd.properties, fd));
+                                    popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                                     setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
                                 }
                             }
@@ -1551,24 +1622,41 @@
                         .then(res => res.json())
                         .then(data => {
                             if (!data.features || data.features.length === 0) return;
-                            const feature = data.features[0];
-                            const props = feature.properties;
-                            const featureData = { properties: props };
-                            const html = buildPlanPopup(props, featureData);
+                            const allFeatures = data.features.map(f => ({
+                                type: 'plan', props: f.properties, featureData: { properties: f.properties }
+                            }));
+                            let currentIdx = 0;
+                            function buildForIndex(idx) {
+                                const entry = allFeatures[idx];
+                                const navInfo = allFeatures.length > 1 ? { current: idx, total: allFeatures.length } : null;
+                                return buildPlanPopup(entry.props, entry.featureData, navInfo);
+                            }
                             const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
                                 .setLatLng(plan.c)
-                                .setContent(html)
+                                .setContent(buildForIndex(0))
                                 .openOn(map);
                             popup.getElement().addEventListener('click', function(ev) {
+                                const navBtn = ev.target.closest('.popup-nav-btn');
+                                if (navBtn) {
+                                    ev.stopPropagation();
+                                    if (navBtn.dataset.nav === 'next') {
+                                        currentIdx = (currentIdx + 1) % allFeatures.length;
+                                    } else {
+                                        currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
+                                    }
+                                    popup.setContent(buildForIndex(currentIdx));
+                                    return;
+                                }
                                 const permitBtn = ev.target.closest('.popup-btn-permit');
                                 if (permitBtn) {
                                     ev.stopPropagation();
                                     const fd = JSON.parse(permitBtn.dataset.feature);
+                                    const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                                     if (permitBtn.dataset.action === 'back-to-plan') {
-                                        popup.setContent(buildPlanPopup(fd.properties, fd));
+                                        popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
                                         setTimeout(() => setLayers(prev => ({ ...prev, permits: false })), 100);
                                     } else {
-                                        popup.setContent(buildPermitPopup(fd.properties, fd));
+                                        popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                                         setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
                                     }
                                 }
