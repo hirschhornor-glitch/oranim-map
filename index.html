@@ -2858,7 +2858,24 @@
 
                             {Object.entries(filteredConfig).map(([groupKey, group]) => (
                                 <div key={groupKey}>
-                                    <div className="layer-group-title">{group.title}</div>
+                                    <div className="layer-group-title">
+                                        {groupKey === 'admin' && (
+                                            <input type="checkbox"
+                                                checked={group.layers.every(l => layers[l.id])}
+                                                onChange={() => {
+                                                    const allOn = group.layers.every(l => layers[l.id]);
+                                                    setLayers(prev => {
+                                                        const next = { ...prev };
+                                                        group.layers.forEach(l => { next[l.id] = !allOn; });
+                                                        return next;
+                                                    });
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ marginLeft: 6 }}
+                                            />
+                                        )}
+                                        {group.title}
+                                    </div>
                                     {group.layers.map(layer => (
                                         <div className="layer-item" key={layer.id}
                                              title={layer.desc || ''}>
