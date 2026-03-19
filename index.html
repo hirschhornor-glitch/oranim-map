@@ -1990,8 +1990,24 @@
                     return selectedSubs.includes(n);
                 }
 
-                // --- District outline (always on) ---
+                // --- District outline + white mask outside (always on) ---
                 if (gd.district_oranim) {
+                    // Create an inverted polygon: world bounds with district as hole
+                    const districtFeature = gd.district_oranim.features[0];
+                    if (districtFeature) {
+                        // World outer ring (covers entire map)
+                        const worldRing = [[-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]];
+                        // District inner ring (hole) — reverse winding
+                        const distCoords = districtFeature.geometry.coordinates[0];
+                        const holeRing = distCoords.map(c => [c[1], c[0]]); // GeoJSON [lng,lat] → Leaflet [lat,lng]
+                        const maskPolygon = L.polygon([worldRing, holeRing], {
+                            pane: 'districtPane',
+                            color: 'transparent', weight: 0,
+                            fillColor: '#ffffff', fillOpacity: 0.7
+                        }).addTo(map);
+                        geoLayersRef.current.districtMask = maskPolygon;
+                    }
+                    // District border on top
                     geoLayersRef.current.district = L.geoJSON(gd.district_oranim, {
                         pane: 'districtPane',
                         style: { color: '#e94560', weight: 3, fillOpacity: 0, dashArray: '8,4' }
