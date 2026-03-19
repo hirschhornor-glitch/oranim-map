@@ -2011,6 +2011,10 @@
                     const byMinahak = {};
                     const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
                     const STATUS_GROUPS = [
+                        { key: 'ו-גמר בנייה', label: 'גמר בנייה', color: '#494CC2', match: [] },
+                        { key: 'ה-בבנייה', label: 'בבנייה', color: '#4a69d1', match: [] },
+                        { key: 'ד-היתר בנייה', label: 'היתר בנייה', color: '#4b85e0', match: [] },
+                        { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך', color: '#4ba1f0', match: [] },
                         { key: 'approved', label: 'אישור / מאושרת', color: '#4CAF50',
                           match: ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'] },
                         { key: 'in_approval', label: 'בהליך אישור', color: '#66BB6A',
@@ -2058,7 +2062,15 @@
                         // Per-status group breakdown
                         if (!isRejected && addVal > 0 && status) {
                             const grp = getStatusGroup(status);
-                            if (grp) byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
+                            const stageRaw = (p.stage || p.Stage || '').trim();
+                            // Normalize double-space variant
+                            const stageVal = stageRaw.replace(/\s+/g, ' ');
+                            // If approved and has a stage value, use stage instead of status
+                            if (grp === 'approved' && stageVal) {
+                                byMinahak[m].byStatus[stageVal] = (byMinahak[m].byStatus[stageVal] || 0) + addVal;
+                            } else if (grp) {
+                                byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
+                            }
                         }
 
                         // Per sub-neighborhood breakdown
