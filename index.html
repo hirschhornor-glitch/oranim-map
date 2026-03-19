@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>אורנים - תכנון עירוני</title>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -949,36 +950,61 @@
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            color: #333;
-            font-size: 8px;
-            font-weight: normal;
+            color: #323232;
+            font-size: 8pt;
+            font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
             white-space: pre-line;
-            line-height: 1.1;
+            line-height: 0.7;
             direction: rtl;
             pointer-events: none;
-            text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff;
+            text-shadow:
+                -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
+                -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
+                0 -1px 0 #fafafa, 0 1px 0 #fafafa,
+                -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
 
-        .sub-neighborhood-label,
-        .minahak-name-label {
+        .sub-neighborhood-label {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
             pointer-events: none;
         }
-        .sub-neighborhood-label::before,
+        .sub-neighborhood-label::before { display: none; }
+        .minahak-name-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            pointer-events: none;
+            text-shadow:
+                -1px -1px 0 rgba(17,199,64,1), 1px -1px 0 rgba(17,199,64,1),
+                -1px 1px 0 rgba(17,199,64,1), 1px 1px 0 rgba(17,199,64,1),
+                0 -1px 0 rgba(17,199,64,1), 0 1px 0 rgba(17,199,64,1),
+                -1px 0 0 rgba(17,199,64,1), 1px 0 0 rgba(17,199,64,1);
+        }
         .minahak-name-label::before { display: none; }
+        .tama38-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            pointer-events: none;
+            text-shadow: -1px -1px 0 #fafafa, 1px -1px 0 #fafafa, -1px 1px 0 #fafafa, 1px 1px 0 #fafafa;
+        }
+        .tama38-label::before { display: none; }
 
         .plan-number-label {
-            color: #4a69d1;
-            font-size: 7px;
+            color: rgb(50,50,255);
+            font-size: 7pt;
+            font-weight: normal;
             font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
             pointer-events: none;
-            text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff;
+            text-shadow:
+                -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
+                -1px 1px 0 #fafafa, 1px 1px 0 #fafafa;
         }
 
         .measure-tooltip {
@@ -2031,7 +2057,7 @@
                 if (gd.sub_neighborhoods) {
                     geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
                         pane: 'subNeighborhoodPane',
-                        style: { color: 'rgba(17,199,64,1)', weight: 1.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
+                        style: { color: 'rgba(17,199,64,1)', weight: 0.6, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel', dashArray: '5,2' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
                             if (name) layer.bindTooltip(
@@ -2076,7 +2102,7 @@
                         style: f => {
                             const status = f.properties.Status_Mavat || '';
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
-                            return { color: '#4a69d1', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '6,4' };
+                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '4,2' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
@@ -2213,9 +2239,17 @@
                     const tama38Layer = L.geoJSON(gd.tama38, {
                         pane: 'tama38Pane',
                         filter: f => tama38InMinahak(f.properties),
-                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 5, fillColor: '#e94560', color: '#fff', weight: 1, fillOpacity: 0.8
-                        }),
+                        pointToLayer: (f, latlng) => {
+                            const status = (f.properties.status || '').trim();
+                            let fillColor = '#e94560';
+                            if (status === 'תכנון - טרם כניסה לרישוי') fillColor = 'rgb(215,25,28)';
+                            else if (status === 'נפתח תיק היתר') fillColor = 'rgb(253,174,97)';
+                            else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
+                            else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
+                            return L.circleMarker(latlng, {
+                                radius: 5, fillColor: fillColor, color: 'rgb(40,10,255)', weight: 1.5, fillOpacity: 0.9
+                            });
+                        },
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
                                 const p = f.properties;
@@ -2224,6 +2258,14 @@
                                     .setContent(buildTama38Popup(p));
                                 popup.openOn(map);
                             });
+                            const addr = f.properties.address || '';
+                            const tose = parseFloat(f.properties.units_tose) || 0;
+                            if (addr && tose > 0) {
+                                layer.bindTooltip(
+                                    '<div style="color:#727272;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + addr + '<br>+' + tose + ' יח"ד</div>',
+                                    { permanent: false, direction: 'top', className: 'tama38-label', offset: [0, -5] }
+                                );
+                            }
                         }
                     }).addTo(map);
                     geoLayersRef.current.tama38 = tama38Layer;
