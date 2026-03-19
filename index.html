@@ -1,886 +1,2977 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
-        <link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="css/leaflet.photon.css">
-        <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אורנים - תכנון עירוני</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            direction: rtl;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #root { height: 100vh; display: flex; }
+
+        .sidebar {
+            width: 320px;
+            min-width: 320px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: margin-right 0.3s ease;
+            z-index: 1000;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            margin-right: -320px;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5em;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85em;
+            color: #a0a0b0;
+        }
+
+        .sidebar-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.9em;
+            color: #e94560;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .layer-group-title {
+            font-size: 0.8em;
+            color: #8888aa;
+            margin: 10px 0 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .layer-item:hover { background: #2a2a4a; }
+
+        .layer-item input[type="checkbox"] {
+            margin-left: 10px;
+            accent-color: #e94560;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #1a1a3a;
+            border: 2px solid #555;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .layer-item input[type="checkbox"]:checked {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        .layer-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .layer-item label {
+            cursor: pointer;
+            font-size: 0.9em;
+            flex: 1;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+        .leaflet-control-attribution {
+            font-size: 10px !important;
+            opacity: 0.5 !important;
+        }
+
+        .wms-overlay {
+            transition: opacity 0.3s ease;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #1a1a2e;
+            color: white;
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover { background: #e94560; }
+
+        .leaflet-popup-content {
+            direction: rtl;
+            text-align: right;
+            margin: 0 !important;
+            width: 300px !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
             padding: 0;
-            margin: 0;
+            overflow: hidden;
+            background: #1a1a2e;
+            color: #e0e0e0;
         }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
-        </div>
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.min.js"></script>
-        <script src="js/leaflet-svg-shape-markers.min.js"></script>
-        <script src="js/leaflet.rotatedMarker.js"></script>
-        <script src="js/leaflet.pattern.js"></script>
-        <script src="js/leaflet-hash.js"></script>
-        <script src="js/Autolinker.min.js"></script>
-        <script src="js/rbush.min.js"></script>
-        <script src="js/labelgun.min.js"></script>
-        <script src="js/labels.js"></script>
-        <script src="js/leaflet.photon.js"></script>
-        <script src="data/plans_0.js"></script>
-        <script src="data/stations_1.js"></script>
-        <script src="data/rakl_src_2.js"></script>
-        <script src="data/sub_neighborhoods_3.js"></script>
-        <script src="data/tama38_4.js"></script>
-        <script src="data/shem_talpiot_5.js"></script>
-        <script src="data/shem_malha_6.js"></script>
-        <script src="data/shem_ganot_hair_7.js"></script>
-        <script src="data/shem_beit_tzfafa_8.js"></script>
-        <script src="data/shem_gonen_9.js"></script>
-        <script src="data/shem_baka_10.js"></script>
-        <script>
-        var map = L.map('map', {
-            zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[31.753620307501965,35.18177478983245],[31.769001373256664,35.23399486328648]]);
-        var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
-        // remove popup's row if "visible-with-data"
-        function removeEmptyRowsFromPopupContent(content, feature) {
-         var tempDiv = document.createElement('div');
-         tempDiv.innerHTML = content;
-         var rows = tempDiv.querySelectorAll('tr');
-         for (var i = 0; i < rows.length; i++) {
-             var td = rows[i].querySelector('td.visible-with-data');
-             var key = td ? td.id : '';
-             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
-                 rows[i].parentNode.removeChild(rows[i]);
-             }
-         }
-         return tempDiv.innerHTML;
+
+        .leaflet-popup-tip { border-top-color: #1a1a2e; }
+
+        .popup-header {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 14px 16px 10px;
+            border-bottom: 2px solid #e94560;
         }
-        // modify popup if contains media
-        function addClassToPopupIfMedia(content, popup) {
-            var tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            var imgTd = tempDiv.querySelector('td img');
-            if (imgTd) {
-                var src = imgTd.getAttribute('src');
-                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
-                    popup._contentNode.classList.add('media');
-                    setTimeout(function() {
-                        popup.update();
-                    }, 10);
-                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
-                    var audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.src = src;
-                    imgTd.parentNode.replaceChild(audio, imgTd);
-                    popup._contentNode.classList.add('media');
-                    setTimeout(function() {
-                        popup.setContent(tempDiv.innerHTML);
-                        popup.update();
-                    }, 10);
-                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
-                    var video = document.createElement('video');
-                    video.controls = true;
-                    video.src = src;
-                    video.style.width = "400px";
-                    video.style.height = "300px";
-                    video.style.maxHeight = "60vh";
-                    video.style.maxWidth = "60vw";
-                    imgTd.parentNode.replaceChild(video, imgTd);
-                    popup._contentNode.classList.add('media');
-                    // Aggiorna il popup quando il video carica i metadati
-                    video.addEventListener('loadedmetadata', function() {
-                        popup.update();
+
+        .popup-header-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.4;
+            margin-bottom: 2px;
+        }
+
+        .popup-header-subtitle {
+            font-size: 12px;
+            color: #8899bb;
+            font-family: monospace;
+        }
+
+        .popup-body {
+            padding: 12px 16px;
+        }
+
+        .popup-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .popup-row:last-child { border-bottom: none; }
+
+        .popup-row-label {
+            font-size: 12px;
+            color: #8888aa;
+        }
+
+        .popup-row-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .popup-footer {
+            padding: 10px 16px;
+            border-top: 1px solid #2a2a4a;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .popup-link {
+            display: block;
+            text-align: center;
+            color: #5dade2;
+            font-size: 13px;
+            text-decoration: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-link:hover { background: #2a2a4a; }
+
+        .popup-btn-permit {
+            display: block;
+            text-align: center;
+            background: #e94560;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-btn-permit:hover { background: #c73650; }
+
+        .popup-btn-back {
+            display: block;
+            text-align: center;
+            background: transparent;
+            color: #5dade2;
+            font-size: 12px;
+            padding: 6px;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .popup-btn-back:hover { background: #2a2a4a; }
+
+        .popup-status-badge {
+            display: inline-block;
+            background: #0f3460;
+            color: #5dade2;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .permit-detail-header {
+            background: linear-gradient(135deg, #2d1a3e, #3d1a2e);
+            padding: 14px 16px 10px;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .leaflet-popup-close-button {
+            color: #8888aa !important;
+            font-size: 18px !important;
+            top: 6px !important;
+            right: auto !important;
+            left: 8px !important;
+        }
+
+        .leaflet-popup-close-button:hover { color: #e94560 !important; }
+
+        .layer-legend-btn {
+            background: none;
+            border: none;
+            color: #6a6a8a;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            margin-right: auto;
+        }
+        .layer-legend-btn:hover { color: #e94560; }
+
+        .legend-popup {
+            position: fixed;
+            top: 50%;
+            right: 330px;
+            transform: translateY(-50%);
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 12px;
+            padding: 16px 20px;
+            z-index: 2000;
+            min-width: 220px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            color: #fff;
+        }
+        .legend-popup-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e94560;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .legend-popup-close {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: none;
+            border: none;
+            color: #8888aa;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .legend-popup-close:hover { color: #e94560; }
+        .legend-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1999;
+        }
+
+        .scale-display {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            background: rgba(255,255,255,0.85);
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            z-index: 800;
+            pointer-events: none;
+        }
+
+        .plan-search-wrap {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .plan-search-input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.95em;
+            direction: rtl;
+        }
+
+        .plan-search-input::placeholder { color: #6a6a8a; }
+        .plan-search-input:focus { outline: none; border-color: #e94560; }
+
+        .plan-search-clear {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6a6a8a;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .plan-search-clear:hover { color: #e94560; }
+
+        .plan-search-results {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: 0;
+            background: #1e1e36;
+            border: 1px solid #3a3a5a;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1100;
+            direction: rtl;
+        }
+
+        .plan-search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #2a2a4a;
+            transition: background 0.15s;
+        }
+
+        .plan-search-item:hover { background: #2a2a4a; }
+
+        .plan-search-item-name {
+            font-size: 13px;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .plan-search-item-num {
+            font-size: 11px;
+            color: #6a6a8a;
+            font-family: monospace;
+        }
+
+        .plan-search-empty {
+            padding: 12px;
+            text-align: center;
+            color: #6a6a8a;
+            font-size: 13px;
+        }
+
+        .opacity-slider {
+            width: 100%;
+            margin-top: 8px;
+            accent-color: #e94560;
+            cursor: pointer;
+        }
+
+        .opacity-label {
+            font-size: 0.8em;
+            color: #8888aa;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .loading-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.9);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-indicator.visible { display: block; }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+            white-space: nowrap;
+            color: #fff;
+        }
+
+        .legend-color {
+            width: 16px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-left: 8px;
+            border: 1px solid #555;
+        }
+
+        .basemap-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            direction: rtl;
+            cursor: pointer;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            direction: rtl;
+            margin-bottom: 8px;
+        }
+
+        .search-input::placeholder { color: #6a6a8a; }
+        .search-input:focus { outline: none; border-color: #e94560; }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #0f0f1e;
+            font-size: 0.75em;
+            color: #6a6a8a;
+            border-top: 1px solid #2a2a4a;
+            margin-top: auto;
+        }
+
+        .btn-reset {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid #e94560;
+            color: #e94560;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-reset:hover {
+            background: #e94560;
+            color: white;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Popup navigation for multiple features */
+        .popup-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: #0f0f1e;
+            border-bottom: 1px solid #2a2a4a;
+            font-size: 12px;
+            color: #8888aa;
+        }
+        .popup-nav-btn {
+            background: #2a2a4a;
+            border: none;
+            color: #e0e0e0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .popup-nav-btn:hover { background: #e94560; }
+
+        /* GeoJSON layers get pointer cursor automatically via Leaflet */
+
+        #map.leaflet-dragging,
+        #map.leaflet-dragging *,
+        #map.leaflet-dragging .leaflet-grab { cursor: grabbing !important; }
+
+        /* Controls & popup elements */
+        .leaflet-control-zoom a, .leaflet-control a { cursor: pointer !important; }
+        .leaflet-popup-close-button { cursor: pointer !important; }
+        .popup-link, .popup-btn-permit, .popup-btn-back { cursor: pointer !important; }
+
+        /* Sidebar interactive elements */
+        .layer-item, .layer-item label, .layer-item input[type="checkbox"] { cursor: pointer; }
+        .layer-legend-btn { cursor: pointer; }
+        .plan-search-item { cursor: pointer; }
+        .plan-search-clear { cursor: pointer; }
+        .btn-reset { cursor: pointer; }
+        .basemap-select { cursor: pointer; }
+        .toggle-btn { cursor: pointer; }
+
+        /* ── Mobile sidebar close button (inside sidebar) ── */
+        .sidebar-close-mobile {
+            display: none;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.3em;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .sidebar-close-mobile:hover { background: #c73650; }
+
+        /* ── Mobile overlay when sidebar is open ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 85vw;
+                max-width: 320px;
+                min-width: unset;
+                z-index: 1100;
+                box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.collapsed {
+                margin-right: 0;
+                transform: translateX(100%);
+            }
+            .sidebar:not(.collapsed) {
+                transform: translateX(0);
+            }
+            .sidebar-close-mobile {
+                display: flex;
+            }
+            .sidebar-overlay.visible {
+                display: block;
+            }
+            .toggle-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.4em;
+            }
+            .map-toolbar {
+                top: 60px;
+                padding: 3px 4px;
+            }
+            .toolbar-btn {
+                padding: 6px 8px !important;
+            }
+            .toolbar-label {
+                font-size: 9px !important;
+            }
+        }
+
+        /* ── Map Toolbar ── */
+        .map-toolbar {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            display: flex;
+            gap: 0;
+            background: rgba(15, 15, 30, 0.94);
+            backdrop-filter: blur(10px);
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 4px 6px;
+            direction: rtl;
+        }
+        .toolbar-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #8888aa;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+            position: relative;
+        }
+        .toolbar-btn:hover { background: #2a2a4a; color: #e0e0ff; border-color: #3a3a5a; }
+        .toolbar-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
+        .toolbar-btn svg, .toolbar-btn .toolbar-icon { width: 20px; height: 20px; font-size: 20px; line-height: 1; }
+        .toolbar-btn .toolbar-label { font-size: 10px; letter-spacing: 0.3px; }
+        .toolbar-sep {
+            width: 1px;
+            background: #2a2a4a;
+            margin: 6px 2px;
+            align-self: stretch;
+        }
+
+        /* Toolbar dropdown (shared) */
+        .toolbar-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 50%;
+            transform: translateX(50%);
+            background: #16162e;
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 4px 0;
+            min-width: 170px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 1002;
+        }
+        .toolbar-dropdown-item {
+            padding: 9px 16px;
+            color: #c0c0dd;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: right;
+            direction: rtl;
+        }
+        .toolbar-dropdown-item:hover { background: #2a2a4a; color: #fff; }
+
+        /* ── Shared modal styles ── */
+        .modal-close {
+            background: none; border: none; color: #8888aa; font-size: 22px;
+            cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .modal-close:hover { color: #e94560; background: #2a2a4a; }
+        .modal-action-btn {
+            background: #2a2a4a; border: 1px solid #3a3a5a; color: #c0c0dd;
+            padding: 6px 16px; border-radius: 7px; cursor: pointer;
+            font-size: 12px; font-family: inherit; transition: all 0.15s;
+        }
+        .modal-action-btn:hover { background: #3a3a5a; color: #fff; }
+        .modal-action-btn.primary { background: #e94560; border-color: #e94560; color: #fff; }
+        .modal-action-btn.primary:hover { background: #d6375a; }
+
+        /* ── Print Modal ── */
+        .print-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .print-modal {
+            background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
+            width: 420px; max-width: 90vw; direction: rtl;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+        }
+        .print-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #2a2a4a;
+        }
+        .print-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; }
+        .print-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .print-field label {
+            display: block; color: #8888aa; font-size: 12px; margin-bottom: 4px;
+        }
+        .print-field input[type="text"] {
+            width: 100%; background: #1a1a3a; border: 1px solid #2a2a4a;
+            border-radius: 7px; padding: 8px 12px; color: #e0e0ff;
+            font-size: 13px; font-family: inherit; direction: rtl;
+        }
+        .print-field input[type="text"]:focus {
+            outline: none; border-color: #4a69d1;
+        }
+        .print-checkbox {
+            display: flex; align-items: center; gap: 8px;
+            color: #c0c0dd; font-size: 13px; cursor: pointer;
+        }
+        .print-checkbox input { cursor: pointer; accent-color: #e94560; }
+        .print-actions {
+            padding: 14px 20px; border-top: 1px solid #2a2a4a;
+            display: flex; gap: 8px; justify-content: flex-start;
+        }
+
+        /* ── Units Summary Modal ── */
+        .units-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .units-modal {
+            background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
+            width: 95vw; max-width: 1000px; max-height: 85vh;
+            display: flex; flex-direction: column; direction: rtl;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        .units-watermark {
+            position: absolute; inset: 0; z-index: 1;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .units-watermark span {
+            font-size: 48px; font-weight: 900; color: rgba(233,69,96,0.08);
+            transform: rotate(-25deg); white-space: nowrap;
+            letter-spacing: 6px;
+        }
+        .units-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #2a2a4a;
+            position: relative; z-index: 2;
+        }
+        .units-header h2 { margin: 0; font-size: 16px; color: #e0e0ff; flex: 1; }
+        .units-back-btn {
+            background: #2a2a4a; border: 1px solid #3a3a5a; color: #8ecae6;
+            padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            margin-left: 12px; white-space: nowrap; transition: background 0.2s;
+        }
+        .units-back-btn:hover { background: #3a3a5a; }
+        .units-minahak-clickable {
+            cursor: pointer; transition: color 0.2s, background 0.2s;
+            text-decoration: underline; text-decoration-style: dotted;
+            text-underline-offset: 3px;
+        }
+        .units-minahak-clickable:hover { background: #252550 !important; color: #e94560; }
+        .units-body { padding: 16px 20px; overflow: auto; flex: 1; position: relative; z-index: 2; }
+        .units-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 13px; table-layout: fixed;
+        }
+        .units-table th {
+            background: #1a1a3a; color: #8ecae6; font-weight: 600;
+            padding: 10px 8px; position: sticky; top: 0;
+            border-bottom: 2px solid #e94560; text-align: center;
+            font-size: 12px;
+        }
+        .units-table th:first-child { text-align: right; width: 140px; }
+        .units-table td {
+            padding: 10px 8px; border-bottom: 1px solid #1e1e3e;
+            color: #c0c0dd; text-align: center; font-weight: 500;
+        }
+        .units-table td:first-child { text-align: right; color: #8888aa; font-weight: 600; }
+        .units-table tr:hover td { background: rgba(142,202,230,0.05); }
+        .units-table .total-row td {
+            border-top: 2px solid #e94560; font-weight: 700;
+            color: #e0e0ff; font-size: 14px; background: #141430;
+        }
+        .units-row-expand {
+            cursor: pointer; user-select: none;
+        }
+        .units-row-expand td:first-child { display: flex; align-items: center; gap: 6px; }
+        .units-expand-arrow {
+            display: inline-block; transition: transform 0.2s;
+            font-size: 10px; color: #8ecae6;
+        }
+        .units-expand-arrow.open { transform: rotate(90deg); }
+        .units-sub-row td {
+            font-size: 12px; color: #8888aa; padding: 6px 8px;
+            background: #12122a;
+        }
+        .units-sub-row td:first-child { padding-right: 28px; font-style: italic; }
+        .units-toggle-row td { padding: 4px 8px !important; border-bottom: none !important; }
+        .units-toggle-btns {
+            display: flex; gap: 6px; justify-content: center;
+        }
+        .units-toggle-btn {
+            background: #1e1e3e; border: 1px solid #2a2a4a; color: #8888aa;
+            padding: 3px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; transition: all 0.2s;
+        }
+        .units-toggle-btn:hover { background: #2a2a4a; color: #c0c0dd; }
+        .units-toggle-btn.active {
+            background: #2a2a5a; border-color: #8ecae6; color: #8ecae6; font-weight: 600;
+        }
+        .units-loading {
+            text-align: center; padding: 40px; color: #8888aa; font-size: 14px;
+        }
+
+        /* Measurement result panel */
+        .measure-result {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: rgba(15, 15, 30, 0.94);
+            backdrop-filter: blur(8px);
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: #e0e0ff;
+            font-size: 14px;
+            direction: rtl;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            animation: fadeIn 0.25s ease;
+        }
+        .measure-result-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #8ecae6;
+        }
+        .measure-result-label { color: #8888aa; font-size: 12px; }
+        .measure-result-btn {
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            color: #e0e0e0;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        .measure-result-btn:hover { background: #e94560; border-color: #e94560; }
+
+        /* Measurement tooltip on map */
+        .measure-tooltip {
+            background: rgba(15, 15, 30, 0.9);
+            border: 1px solid #4a69d1;
+            border-radius: 6px;
+            padding: 4px 10px;
+            color: #8ecae6;
+            font-size: 12px;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            white-space: nowrap;
+            direction: rtl;
+            pointer-events: none;
+        }
+        .measure-tooltip::before { display: none; }
+        .leaflet-tooltip.measure-tooltip { background: rgba(15, 15, 30, 0.9); border: 1px solid #4a69d1; }
+
+        /* Crosshair cursor when measuring */
+        #map.measuring,
+        #map.measuring * { cursor: crosshair !important; }
+        #map.measuring.leaflet-dragging,
+        #map.measuring.leaflet-dragging * { cursor: grabbing !important; }
+
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // Layers that are always visible (no toggle)
+        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods'];
+
+        // GeoJSON data files
+        const GEOJSON_FILES = {
+            plans: 'data/plans.geojson',
+            tama38: 'data/tama38.geojson',
+            stations: 'data/stations.geojson',
+            sub_neighborhoods: 'data/sub_neighborhoods.geojson',
+            district_oranim: 'data/district_oranim.geojson',
+            minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
+            minahak_talpiot: 'data/minahak_talpiot.geojson',
+            minahak_malha: 'data/minahak_malha.geojson',
+            minahak_ganot: 'data/minahak_ganot.geojson',
+            minahak_gonen: 'data/minahak_gonen.geojson',
+            minahak_baka: 'data/minahak_baka.geojson',
+        };
+
+        // Map Hebrew property names to English aliases used by popup builders
+        function mapPlanProps(props) {
+            return {
+                ...props,
+                plan_name: props.PLAN_NAME || props.plan_name || '',
+                plan_name_he: props['שם התכנית'] || props.plan_name_he || '',
+                plan_name_short: props['תמצית שם התכנית'] || props.plan_name_short || '',
+                pl_number: props.PLAN_NAME || props.pl_number || '',
+                taba: props.TABA || props.taba || '',
+                status_mavat: props.Status_Mavat || props.status_mavat || '',
+                mavat_url: props.Mavat_url || props.mavat_url || '',
+                mavat_date: props.Mavat_Date || props.mavat_date || '',
+                units_add: parseFloat(props.Units_add) || parseInt(props.units_add) || 0,
+                units_in: parseInt(props.Units_in) || parseInt(props.units_in) || 0,
+                units_total: parseInt(props.Units_total) || parseInt(props.units_total) || 0,
+                minahak: props['מינה"ק'] || props.minahak || '',
+                plan_type: props['סוג תכנית'] || props.plan_type || '',
+                stage: props['שלב'] || props.stage || '',
+                sub_neighborhood: props['תתשכונה'] || props.sub_neighborhood || '',
+                neighborhood: props['שכונה'] || props.neighborhood || props['תתשכונה'] || '',
+                overlapping_plans: parseFloat(props['תבעותעלאותושטח']) || parseFloat(props.overlapping_plans) || 0,
+                architect: props['אדריכל'] || '',
+                developer: props['יזם'] || '',
+                multiplier: props['מכפיל'] || '',
+                permit_status: props['סטטוסהיתר'] || '',
+                permit_date: props['תאריךהיתר'] || '',
+                permit_request: props['מהותבקשה'] || '',
+                permit_addition: props['תוספתבהיתר'] || '',
+                permit_gap: props['פערביןהיתרלתבע'] || '',
+            };
+        }
+
+        // MINAHAK_ID → geojson file key mapping
+        const MINAHAK_LAYER_MAP = {
+            'ginot_hair': 'minahak_ganot',
+            'beit_tzfafa': 'minahak_beit_tzfafa',
+            'gonennim': 'minahak_gonen',
+            'baka': 'minahak_baka',
+            'malha': 'minahak_malha',
+            'talpiot': 'minahak_talpiot',
+        };
+
+        const LAYER_CONFIG = {
+            planning: {
+                title: 'תכנון',
+                layers: [
+                    { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true },
+                    { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
+                    { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
+                ]
+            },
+            infrastructure: {
+                title: 'תשתיות',
+                layers: [
+                    { id: 'stations', name: 'תחנות רק"ל', on: false },
+                ]
+            },
+            admin: {
+                title: 'מינהלים קהילתיים',
+                layers: [
+                    { id: 'shem_ganot_hair', name: 'גינות העיר', on: true, minahak: 'גינות העיר' },
+                    { id: 'shem_beit_tzfafa', name: 'בית צפאפא', on: true, minahak: 'בית צפאפא' },
+                    { id: 'shem_gonen', name: 'גוננים', on: true, minahak: 'גוננים' },
+                    { id: 'shem_baka', name: 'בקעה רבתי', on: true, minahak: 'בקעה רבתי' },
+                    { id: 'shem_malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
+                    { id: 'shem_talpiot', name: 'א.ת. תלפיות', on: true, minahak: 'א.ת. תלפיות' },
+                ]
+            }
+        };
+
+        const HEBREW_FIELD_NAMES = {
+            'id': 'מזהה', 'name': 'שם', 'type': 'סוג', 'status': 'סטטוס',
+            'area': 'שטח', 'address': 'כתובת', 'street': 'רחוב',
+            'number': 'מספר', 'plan_id': 'מס תוכנית', 'plan_name': 'שם תוכנית',
+            'description': 'תיאור', 'date': 'תאריך', 'units': 'יחידות',
+            'floors': 'קומות', 'height': 'גובה', 'population': 'אוכלוסייה',
+            'neighborhood': 'שכונה', 'sub_neighborhood': 'תת שכונה',
+            'OBJECTID': 'מזהה', 'SHAPE_Area': 'שטח', 'SHAPE_Length': 'היקף',
+            'SHEM_1': 'שם', 'SHEM': 'שם', 'SUG': 'סוג', 'MAHOZ': 'מחוז',
+            'TAVLA': 'תבלי"ת', 'MISPAR': 'מספר', 'SEMEL': 'סמל',
+            'SHEM_YESHU': 'שם ישוב', 'MS_TOCHNIT': 'מס תוכנית',
+            'SEM_TOCHNIT': 'שם תוכנית', 'MATARA': 'מטרה',
+            'TOCHNIT_MATAT': 'תוכנית מתאר', 'STATUS': 'סטטוס',
+            'MAVAT_CODE': 'קוד מבא"ת', 'gush': 'גוש', 'helka': 'חלקה',
+            'combinedke': 'מפתח משולב', 'created_da': 'תאריך יצירה',
+            'created_us': 'נוצר ע"י', 'descr_rova': 'תיאור רובע',
+            'fid': 'מזהה', 'last_edi_1': 'עריכה אחרונה',
+            'last_edite': 'נערך ע"י', 'name_rova': 'מספר רובע',
+            'qc_id': 'מזהה QC', 'supervis_1': 'טלפון פיקוח',
+            'supervis_2': 'דוא"ל פיקוח', 'supervisor': 'מפקח',
+            'shape_area': 'שטח', 'shape_leng': 'היקף',
+            'SHAPE_Area': 'שטח', 'SHAPE_Leng': 'היקף',
+            'layer': 'שכבה', 'path': 'נתיב',
+        };
+
+        const BASEMAPS = {
+            osm: {
+                name: 'OpenStreetMap',
+                desc: 'מפת רחובות ושמות',
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '&copy; OpenStreetMap contributors'
+            },
+            cartoDark: {
+                name: 'כהה',
+                desc: 'מפת רקע כהה',
+                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                attribution: '&copy; CartoDB'
+            },
+            cartoLight: {
+                name: 'בהיר',
+                desc: 'מפת רקע בהירה',
+                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                attribution: '&copy; CartoDB'
+            },
+            satellite: {
+                name: 'תצ"א',
+                desc: 'תצלום אוויר',
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+            },
+            none: {
+                name: 'ללא',
+                desc: 'ללא מפת רקע',
+                url: '',
+                attribution: ''
+            }
+        };
+
+        // Status colors matching QGIS Cloud WMS symbology
+        const STATUS_COLORS = {
+            'אישור': '#50d25a',
+            'מאושרת': '#50d25a',
+            'תבע מאושרת': '#50d25a',
+            'תבע - טרום אישור': '#50d25a',
+            'תחילת תוקף': '#50d25a',
+            'בהליך אישור': '#50d25a',
+            'דיון בהתנגדויות ותיקונים': '#fafa3c',
+            'הפקדה להתנגדויות/השגות': '#f56e05',
+            'במילוי תנאים להפקדה': '#f56e05',
+            'נפתח תיק למתכנן': '#eb0000',
+            'נפתח תיק תב"ע': '#eb0000',
+            'בבדיקה תכנונית': '#eb0000',
+            'תכנית עומדת בתנאי סף': '#eb0000',
+            'נקלטה מקובץ מבאת': '#eb0000',
+            'נגנזה': '#888888',
+            'נדחתה': '#888888',
+        };
+
+        const STAGE_COLORS = {
+            'ג-רישוי בתהליך': '#4ba1f0',
+            'ג-רישוי  בתהליך': '#4ba1f0',
+            'ד-היתר בנייה': '#4b85e0',
+            'ה-בבנייה': '#4a69d1',
+            'ו-גמר בנייה': '#494cc2',
+        };
+
+        const PLANS_LEGEND = [
+            { label: 'אישור / מאושרת', color: '#50d25a' },
+            { label: 'בהליך אישור', color: '#50d25a' },
+            { label: 'התנגדויות', color: '#fafa3c' },
+            { label: 'הפקדה', color: '#f56e05' },
+            { label: 'במילוי תנאים להפקדה', color: '#f56e05' },
+            { label: 'פתיחת תיק / בבדיקה', color: '#eb0000' },
+        ];
+
+        const PERMITS_LEGEND = [
+            { label: 'ג-רישוי בתהליך', color: '#4ba1f0' },
+            { label: 'ד-היתר בנייה', color: '#4b85e0' },
+            { label: 'ה-בבנייה', color: '#4a69d1' },
+            { label: 'ו-גמר בנייה', color: '#494cc2' },
+        ];
+
+        const TOPICS_LEGEND = [
+            { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
+            { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
+            { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
+        ];
+
+        // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
+        const MINAHAK_SUBS = {
+            'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
+            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
+            'בקעה רבתי': ['תלפיות ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות'],
+            // 'גבעת המטוס': ['גבעת המטוס'], // no WMS layer available
+            'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
+            'גינות העיר': ['המושבה הגרמנית', 'המושבה היוונית', 'ניות', 'טלביה', 'קטמון הישנה', 'קרית שמואל', 'רחביה'],
+            'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
+        };
+
+        // Merge duplicate sub-neighborhood names
+        const SUB_NORMALIZE = {
+            'קטמונים ח-ט': 'קטמונים',
+            'רסקו - גבעת הורדים': 'רסקו',
+            'ארנונה': 'תלפיות ארנונה',
+            'תלפיות': 'תלפיות ארנונה',
+            'עמק רפאים - המושבה הגרמנית': 'המושבה הגרמנית',
+            'קוממיות - טלביה': 'טלביה',
+        };
+
+        const CENTER = [31.7530, 35.2100];
+        const DEFAULT_ZOOM = 15;
+
+        function App() {
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [layers, setLayers] = useState(() => {
+                const initial = {};
+                Object.values(LAYER_CONFIG).forEach(group => {
+                    group.layers.forEach(l => { initial[l.id] = l.on; });
+                });
+                return initial;
+            });
+            const [opacity, setOpacity] = useState(0.85);
+            const [basemap, setBasemap] = useState('cartoLight');
+            const [loading, setLoading] = useState(true);
+            const [dataLoaded, setDataLoaded] = useState(false);
+            const [cursorPos, setCursorPos] = useState(null);
+            const [searchText, setSearchText] = useState('');
+            const [planSearch, setPlanSearch] = useState('');
+            const [planIndex, setPlanIndex] = useState([]);
+            const [showSearchResults, setShowSearchResults] = useState(false);
+            const [planningTopics, setPlanningTopics] = useState({
+                overlapping: false,   // תבעות כפולות על אותו מרחב
+                densification: false, // תכניות לעיבוי שטחים חומים
+                objections: false     // תכניות המופקדות להתנגדויות
+            });
+            const [legendPopup, setLegendPopup] = useState(null); // { title, items }
+            const [mapScale, setMapScale] = useState('');
+            const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
+            const [measureDropdown, setMeasureDropdown] = useState(false);
+            const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
+            const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
+            const [showPrint, setShowPrint] = useState(false);
+            const [printTitle, setPrintTitle] = useState('');
+            const [printShowLegend, setPrintShowLegend] = useState(true);
+            const [printShowTitle, setPrintShowTitle] = useState(true);
+            const [activeDropdown, setActiveDropdown] = useState(null); // 'measure' | null
+            const [showUnits, setShowUnits] = useState(false);
+            const [unitsData, setUnitsData] = useState(null); // { minahaks, byMinahak }
+            const [unitsLoading, setUnitsLoading] = useState(false);
+            const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
+            const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
+
+            // Load plan search index
+            useEffect(() => {
+                fetch('plans_index.json')
+                    .then(res => res.json())
+                    .then(data => setPlanIndex(data))
+                    .catch(err => console.error('Failed to load plan index:', err));
+            }, []);
+
+            const mapRef = useRef(null);
+            const mapInstanceRef = useRef(null);
+            const geoDataRef = useRef({});
+            const geoLayersRef = useRef({});
+            const baseTileRef = useRef(null);
+            const layersRef = useRef(layers);
+
+
+            // Initialize map
+            useEffect(() => {
+                if (mapInstanceRef.current) return;
+
+                const map = L.map('map', {
+                    center: CENTER,
+                    zoom: DEFAULT_ZOOM,
+                    zoomControl: false,
+                    maxZoom: 22,
+                    minZoom: 13
+                });
+
+                L.control.zoom({ position: 'topleft' }).addTo(map);
+                L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+
+                map.on('mousemove', (e) => {
+                    setCursorPos({ lat: e.latlng.lat.toFixed(5), lng: e.latlng.lng.toFixed(5) });
+                });
+
+                // Scale indicator
+                const updateScale = () => {
+                    const center = map.getCenter();
+                    const metersPerPixel = 40075016.686 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+                    const dpi = 96;
+                    const metersPerInch = metersPerPixel * dpi;
+                    const scale = Math.round(metersPerInch * 39.3701);
+                    setMapScale('1:' + scale.toLocaleString());
+                };
+                map.on('zoomend moveend', updateScale);
+                setTimeout(updateScale, 200);
+
+                mapInstanceRef.current = map;
+                window.__map = map;
+
+                // Ensure map fills container after initial render
+                setTimeout(() => map.invalidateSize(), 100);
+
+                // Create custom panes for z-ordering
+                map.createPane('districtPane').style.zIndex = 200;
+                map.createPane('minahakPane').style.zIndex = 250;
+                map.createPane('subNeighborhoodPane').style.zIndex = 260;
+                map.createPane('plansPane').style.zIndex = 300;
+                map.createPane('topicsPane').style.zIndex = 350;
+                map.createPane('permitsPane').style.zIndex = 400;
+                map.createPane('tama38Pane').style.zIndex = 450;
+                map.createPane('stationsPane').style.zIndex = 500;
+
+                // Load all GeoJSON data
+                const entries = Object.entries(GEOJSON_FILES);
+                Promise.all(entries.map(([key, url]) =>
+                    fetch(url).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
+                )).then(results => {
+                    const gd = {};
+                    results.forEach(([key, data]) => { if (data) gd[key] = data; });
+                    geoDataRef.current = gd;
+                    setDataLoaded(true);
+                    setLoading(false);
+                    console.log('[GeoJSON] Loaded:', Object.keys(gd).join(', '));
+                });
+
+                return () => { map.remove(); mapInstanceRef.current = null; };
+            }, []);
+
+            // Update basemap
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+
+                if (baseTileRef.current) {
+                    map.removeLayer(baseTileRef.current);
+                    baseTileRef.current = null;
+                }
+
+                const bm = BASEMAPS[basemap];
+                if (bm.url) {
+                    baseTileRef.current = L.tileLayer(bm.url, {
+                        attribution: bm.attribution,
+                        maxZoom: 22
+                    }).addTo(map);
+                    baseTileRef.current.bringToBack();
+                }
+            }, [basemap]);
+
+            // Keep refs in sync
+            useEffect(() => { layersRef.current = layers; }, [layers]);
+            // GeoJSON layers have built-in pointer cursor on hover — no probe needed
+
+            // ── Measurement tool logic ──
+            const clearMeasurement = useCallback(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const m = measureRef.current;
+                m.layers.forEach(l => map.removeLayer(l));
+                if (m.tooltip) map.removeLayer(m.tooltip);
+                if (m.guideLine) map.removeLayer(m.guideLine);
+                m.points = [];
+                m.layers = [];
+                m.tooltip = null;
+                m.guideLine = null;
+                setMeasureResult(null);
+            }, []);
+
+            const stopMeasure = useCallback(() => {
+                clearMeasurement();
+                setMeasureMode(null);
+                const map = mapInstanceRef.current;
+                if (map) map.getContainer().classList.remove('measuring');
+            }, [clearMeasurement]);
+
+            // Format distance in m/km
+            function fmtDist(m) {
+                if (m >= 1000) return (m / 1000).toFixed(2) + ' ק"מ';
+                return Math.round(m) + ' מ\'';
+            }
+            // Format area in dunam / sqm
+            function fmtArea(sqm) {
+                const dunam = sqm / 1000;
+                if (dunam >= 1) return dunam.toFixed(2) + ' דונם' + ' (' + Math.round(sqm).toLocaleString() + ' מ"ר)';
+                return Math.round(sqm).toLocaleString() + ' מ"ר';
+            }
+            // Compute total polyline distance
+            function polylineDist(pts) {
+                let d = 0;
+                for (let i = 1; i < pts.length; i++) d += pts[i - 1].distanceTo(pts[i]);
+                return d;
+            }
+            // Compute polygon area using Shoelace on projected coords
+            function polygonArea(pts) {
+                if (pts.length < 3) return 0;
+                // Use L.GeometryUtil if available, otherwise Gauss's formula on EPSG:4326
+                // Spherical excess method for better accuracy
+                const toRad = Math.PI / 180;
+                const R = 6378137;
+                let area = 0;
+                const n = pts.length;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    const k = (i + 2) % n;
+                    area += (pts[j].lng * toRad - pts[i].lng * toRad) *
+                        (2 + Math.sin(pts[i].lat * toRad) + Math.sin(pts[j].lat * toRad));
+                }
+                area = Math.abs(area * R * R / 2);
+                return area;
+            }
+
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const container = map.getContainer();
+
+                if (!measureMode) {
+                    container.classList.remove('measuring');
+                    return;
+                }
+
+                container.classList.add('measuring');
+                const m = measureRef.current;
+                // Clear any previous measurement
+                m.layers.forEach(l => map.removeLayer(l));
+                if (m.tooltip) map.removeLayer(m.tooltip);
+                if (m.guideLine) map.removeLayer(m.guideLine);
+                m.points = [];
+                m.layers = [];
+                m.tooltip = null;
+                m.guideLine = null;
+                setMeasureResult(null);
+
+                const lineStyle = { color: '#e94560', weight: 2, dashArray: '6 4' };
+                const fillStyle = { color: '#e94560', fillColor: 'rgba(233,69,96,0.15)', weight: 2, dashArray: '6 4' };
+                const vertexStyle = { radius: 5, color: '#e94560', fillColor: '#fff', fillOpacity: 1, weight: 2 };
+
+                function updateTooltip(latlng, text) {
+                    if (m.tooltip) {
+                        m.tooltip.setLatLng(latlng).setContent(text);
+                    } else {
+                        m.tooltip = L.tooltip({
+                            permanent: true,
+                            direction: 'top',
+                            offset: [0, -10],
+                            className: 'measure-tooltip'
+                        }).setLatLng(latlng).setContent(text).addTo(map);
+                    }
+                }
+
+                function onMapClick(e) {
+                    // Ignore clicks on controls/popups
+                    if (e.originalEvent && (
+                        e.originalEvent.target.closest('.leaflet-control') ||
+                        e.originalEvent.target.closest('.leaflet-popup') ||
+                        e.originalEvent.target.closest('.map-toolbar') ||
+                        e.originalEvent.target.closest('.measure-result')
+                    )) return;
+
+                    const pt = e.latlng;
+                    m.points.push(pt);
+
+                    // Add vertex marker
+                    const marker = L.circleMarker(pt, vertexStyle).addTo(map);
+                    m.layers.push(marker);
+
+                    if (measureMode === 'distance') {
+                        if (m.points.length > 1) {
+                            const line = L.polyline(m.points, lineStyle).addTo(map);
+                            // Remove old line if exists
+                            if (m.mainLine) map.removeLayer(m.mainLine);
+                            m.mainLine = line;
+                            m.layers.push(line);
+                        }
+                        const dist = polylineDist(m.points);
+                        if (dist > 0) {
+                            updateTooltip(pt, fmtDist(dist));
+                            setMeasureResult({ type: 'distance', value: fmtDist(dist) });
+                        }
+                    } else {
+                        // Area mode
+                        if (m.mainPoly) map.removeLayer(m.mainPoly);
+                        if (m.points.length >= 2) {
+                            const poly = L.polygon(m.points, fillStyle).addTo(map);
+                            m.mainPoly = poly;
+                            m.layers.push(poly);
+                        }
+                        if (m.points.length >= 3) {
+                            const area = polygonArea(m.points);
+                            updateTooltip(pt, fmtArea(area));
+                            setMeasureResult({ type: 'area', value: fmtArea(area) });
+                        } else {
+                            updateTooltip(pt, 'לחצו נקודות נוספות');
+                        }
+                    }
+                }
+
+                function onMouseMove(e) {
+                    if (m.points.length === 0) return;
+                    const lastPt = m.points[m.points.length - 1];
+                    // Draw guide line from last point to cursor
+                    if (m.guideLine) map.removeLayer(m.guideLine);
+                    m.guideLine = L.polyline([lastPt, e.latlng], {
+                        color: '#8888aa', weight: 1, dashArray: '4 4'
+                    }).addTo(map);
+
+                    // Show running measurement in tooltip
+                    if (measureMode === 'distance') {
+                        const totalDist = polylineDist(m.points) + lastPt.distanceTo(e.latlng);
+                        updateTooltip(e.latlng, fmtDist(totalDist));
+                    } else if (m.points.length >= 2) {
+                        const tempPts = [...m.points, e.latlng];
+                        const area = polygonArea(tempPts);
+                        updateTooltip(e.latlng, fmtArea(area));
+                    }
+                }
+
+                function onDblClick(e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    // Finish measurement
+                    if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
+
+                    if (measureMode === 'distance' && m.points.length >= 2) {
+                        // Finalize line — solid
+                        if (m.mainLine) map.removeLayer(m.mainLine);
+                        const finalLine = L.polyline(m.points, { color: '#e94560', weight: 3 }).addTo(map);
+                        m.layers.push(finalLine);
+                        const dist = polylineDist(m.points);
+                        setMeasureResult({ type: 'distance', value: fmtDist(dist) });
+                        updateTooltip(m.points[m.points.length - 1], fmtDist(dist));
+                    } else if (measureMode === 'area' && m.points.length >= 3) {
+                        if (m.mainPoly) map.removeLayer(m.mainPoly);
+                        const finalPoly = L.polygon(m.points, {
+                            color: '#e94560', fillColor: 'rgba(233,69,96,0.2)', weight: 3
+                        }).addTo(map);
+                        m.layers.push(finalPoly);
+                        const area = polygonArea(m.points);
+                        setMeasureResult({ type: 'area', value: fmtArea(area) });
+                        updateTooltip(m.points[m.points.length - 1], fmtArea(area));
+                    }
+
+                    // Stop listening but keep result visible
+                    map.off('click', onMapClick);
+                    map.off('mousemove', onMouseMove);
+                    map.off('dblclick', onDblClick);
+                    container.classList.remove('measuring');
+                }
+
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') {
+                        stopMeasure();
+                        document.removeEventListener('keydown', onKeyDown);
+                    }
+                }
+
+                // Disable double-click zoom while measuring
+                map.doubleClickZoom.disable();
+
+                map.on('click', onMapClick);
+                map.on('mousemove', onMouseMove);
+                map.on('dblclick', onDblClick);
+                document.addEventListener('keydown', onKeyDown);
+
+                return () => {
+                    map.off('click', onMapClick);
+                    map.off('mousemove', onMouseMove);
+                    map.off('dblclick', onDblClick);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.doubleClickZoom.enable();
+                    container.classList.remove('measuring');
+                    if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
+                };
+            }, [measureMode, stopMeasure]);
+
+            // ── Print function ──
+            const [printScale, setPrintScale] = useState('current'); // 'current' | '1:2500' | '1:5000' | ...
+            const PRINT_SCALES = [
+                { value: 'current', label: 'קנ"מ נוכחי' },
+                { value: '1:2500', label: '1:2,500', denom: 2500 },
+                { value: '1:5000', label: '1:5,000', denom: 5000 },
+                { value: '1:10000', label: '1:10,000', denom: 10000 },
+                { value: '1:15000', label: '1:15,000', denom: 15000 },
+                { value: '1:25000', label: '1:25,000', denom: 25000 },
+            ];
+
+            const handlePrint = useCallback(async () => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+
+                const title = printShowTitle ? (printTitle || 'מפת אורנים - תכנון עירוני') : '';
+
+                // Build legend HTML with print-safe colors
+                let legendHtml = '';
+                if (printShowLegend) {
+                    legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl;print-color-adjust:exact;-webkit-print-color-adjust:exact">';
+                    legendHtml += '<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';
+                    legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+                    PLANS_LEGEND.forEach(item => {
+                        legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
+                            `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` +
+                            `${item.label}</div>`;
                     });
-                    setTimeout(function() {
-                        popup.setContent(tempDiv.innerHTML);
-                        popup.update();
-                    }, 10);
+                    legendHtml += '</div></div>';
+                }
+
+                // Determine map bounds based on selected scale
+                const mapContainer = map.getContainer();
+                const mapRect = mapContainer.getBoundingClientRect();
+                const center = map.getCenter();
+
+                let printBounds, printScaleLabel;
+                const selectedScale = PRINT_SCALES.find(s => s.value === printScale);
+
+                if (printScale !== 'current' && selectedScale && selectedScale.denom) {
+                    // Calculate bounds for exact scale
+                    // At this scale, 1 cm on paper = denom cm in reality
+                    // Print area ~ A4 landscape = ~27cm x 17cm
+                    const paperWidthCm = 27;
+                    const paperHeightCm = 17;
+                    const metersWide = (selectedScale.denom * paperWidthCm) / 100;
+                    const metersHigh = (selectedScale.denom * paperHeightCm) / 100;
+
+                    // Convert meters to degrees (approximate at Jerusalem latitude ~31.75)
+                    const lat = center.lat;
+                    const mPerDegLat = 111320;
+                    const mPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
+                    const dLat = (metersHigh / 2) / mPerDegLat;
+                    const dLng = (metersWide / 2) / mPerDegLng;
+
+                    printBounds = L.latLngBounds(
+                        [center.lat - dLat, center.lng - dLng],
+                        [center.lat + dLat, center.lng + dLng]
+                    );
+                    printScaleLabel = selectedScale.label;
                 } else {
-                    popup._contentNode.classList.remove('media');
+                    printBounds = map.getBounds();
+                    // Calculate current scale
+                    const centerPx = map.latLngToContainerPoint(center);
+                    const rightPx = L.point(centerPx.x + 100, centerPx.y);
+                    const rightLL = map.containerPointToLatLng(rightPx);
+                    const distM = center.distanceTo(rightLL);
+                    const dpi = 96;
+                    const distCm = 100 / dpi * 2.54;
+                    const scaleDenom = Math.round((distM * 100) / distCm);
+                    printScaleLabel = '1:' + scaleDenom.toLocaleString('he-IL');
                 }
-            } else {
-                popup._contentNode.classList.remove('media');
+
+                // Capture map as canvas image for print
+                const bSw = printBounds.getSouthWest();
+                const bNe = printBounds.getNorthEast();
+                const mapContainer = map.getContainer();
+                const mapRect = mapContainer.getBoundingClientRect();
+                const printW = Math.round(mapRect.width);
+                const printH = Math.round(mapRect.height);
+
+                // Use leaflet-image or simple canvas capture
+                const mapCanvas = mapContainer.querySelector('canvas');
+                let mapImgUrl = '';
+                // Try to get tiles + SVG as data URL via html2canvas
+                if (window.html2canvas) {
+                    const canvas = await window.html2canvas(mapContainer, { useCORS: true, allowTaint: true, logging: false });
+                    mapImgUrl = canvas.toDataURL('image/png');
+                } else {
+                    // Fallback: just take a screenshot of current view
+                    const canvasEl = document.createElement('canvas');
+                    canvasEl.width = printW;
+                    canvasEl.height = printH;
+                    const ctx = canvasEl.getContext('2d');
+                    ctx.fillStyle = '#e8e8e8';
+                    ctx.fillRect(0, 0, printW, printH);
+                    ctx.font = '20px sans-serif';
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('נא לטעון html2canvas להדפסה', printW / 2, printH / 2);
+                    mapImgUrl = canvasEl.toDataURL('image/png');
+                }
+
+                // Scale bar: compute a nice round distance
+                function niceScaleBar(boundsWidthM, imgWidthPx) {
+                    const mPerPx = boundsWidthM / imgWidthPx;
+                    const targetPx = 150;
+                    const targetM = targetPx * mPerPx;
+                    const nice = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+                    let bestM = nice[0];
+                    for (const n of nice) { if (n <= targetM * 1.5) bestM = n; }
+                    const barPx = Math.round(bestM / mPerPx);
+                    const label = bestM >= 1000 ? (bestM / 1000) + ' ק"מ' : bestM + ' מ\'';
+                    return { barPx, label };
+                }
+                const boundsWidthM = bSw.distanceTo(L.latLng(bSw.lat, bNe.lng));
+                const scaleBar = niceScaleBar(boundsWidthM, printW);
+
+                const printWin = window.open('', '_blank');
+                if (!printWin) { alert('נא לאפשר חלונות קופצים להדפסה'); return; }
+
+                printWin.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head>
+                    <meta charset="UTF-8">
+                    <title>${title || 'הדפסת מפה'}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        @media print { body { padding: 5mm; } .no-print { display: none !important; } @page { size: landscape; margin: 8mm; } }
+                        .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 6px; color: #1a1a2e; }
+                        .print-date { font-size: 11px; color: #666; text-align: center; margin-bottom: 10px; }
+                        .map-container { position: relative; width: 100%; border: 2px solid #333; border-radius: 4px; overflow: hidden; background: #e8e8e8; }
+                        .map-container img { width: 100%; height: auto; display: block; }
+                        .scale-bar-box { position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #333; border: 1px solid #999; }
+                        .scale-bar-line { height: 4px; background: #333; margin-top: 3px; border-radius: 1px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        .scale-label { font-size: 12px; font-weight: bold; position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 4px; color: #333; border: 1px solid #999; }
+                        .print-actions { margin-top: 16px; text-align: center; }
+                        .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
+                    </style>
+                </head><body>
+                    ${title ? `<div class="print-title">${title}</div>` : ''}
+                    <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${printScaleLabel}</div>
+                    <div class="map-container">
+                        <img src="${mapImgUrl}" alt="מפה" />
+                        <div class="scale-bar-box">
+                            <div>${scaleBar.label}</div>
+                            <div class="scale-bar-line" style="width:${scaleBar.barPx * (100 / printW) * 100}%"></div>
+                        </div>
+                        <div class="scale-label">${printScaleLabel}</div>
+                    </div>
+                    ${legendHtml}
+                    <div class="print-actions no-print">
+                        <button onclick="window.print()">🖨️ הדפס</button>
+                    </div>
+                </body></html>`);
+                printWin.document.close();
+                setShowPrint(false);
+            }, [printTitle, printShowLegend, printShowTitle, printScale, layers]);
+
+            // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
+            // Map tama38 neighborho → minahak
+            const NEIGHBORHOOD_TO_MINAHAK = {
+                'טלביה': 'גינות העיר', 'רחביה': 'גינות העיר',
+                'קטמון הישנה': 'גינות העיר', 'גבעת הורדים': 'גוננים',
+                'גבעת הורדים - רסקו': 'גוננים',
+                'עמק רפאים': 'גינות העיר', 'עמק רפאים - המושבה הגרמנית': 'גינות העיר',
+                'עמק רפאים- המושבה הגרמנית': 'גינות העיר',
+                'ארנונה': 'בקעה רבתי',
+                'תלפיות': 'בקעה רבתי',
+                'בית צפאפא': 'בית צפאפא',
+                'מלחה': 'מינהל מוסדי מלחה',
+            };
+
+            const fetchUnitsData = useCallback(() => {
+                if (unitsData) { setShowUnits(true); return; } // cached
+                setUnitsLoading(true);
+                setShowUnits(true);
+
+                const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+
+                // Parse CSV (handles quoted fields with commas)
+                function parseCSV(text) {
+                    const rows = [];
+                    let row = []; let field = ''; let inQuotes = false;
+                    for (let i = 0; i < text.length; i++) {
+                        const ch = text[i];
+                        if (inQuotes) {
+                            if (ch === '"' && text[i+1] === '"') { field += '"'; i++; }
+                            else if (ch === '"') { inQuotes = false; }
+                            else { field += ch; }
+                        } else {
+                            if (ch === '"') { inQuotes = true; }
+                            else if (ch === ',') { row.push(field); field = ''; }
+                            else if (ch === '\n' || (ch === '\r' && text[i+1] === '\n')) {
+                                row.push(field); field = '';
+                                if (row.length > 1) rows.push(row);
+                                row = [];
+                                if (ch === '\r') i++;
+                            } else { field += ch; }
+                        }
+                    }
+                    if (field || row.length) { row.push(field); rows.push(row); }
+                    return rows;
+                }
+
+                // Fetch plans from Google Sheets + tama38 from WMS grid
+                const plansPromise = fetch(sheetUrl).then(r => r.text()).then(csv => {
+                    const rows = parseCSV(csv);
+                    const header = rows[0];
+                    return rows.slice(1).map(r => {
+                        const obj = {};
+                        header.forEach((h, i) => { obj[h] = r[i] || ''; });
+                        return obj;
+                    });
+                }).catch(() => []);
+
+                // Tama38: read directly from loaded GeoJSON
+                const gd = geoDataRef.current;
+                const tamaMap = new Map();
+                if (gd.tama38) {
+                    gd.tama38.features.forEach(f => {
+                        const id = f.properties.fid;
+                        if (id != null && !tamaMap.has(id)) tamaMap.set(id, f.properties);
+                    });
+                }
+
+                plansPromise.then(planRows => {
+                    // Aggregate
+                    const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const byMinahak = {};
+                    const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
+                    const STATUS_GROUPS = [
+                        { key: 'ו-גמר בנייה', label: 'גמר בנייה', color: '#494CC2', match: [] },
+                        { key: 'ה-בבנייה', label: 'בבנייה', color: '#4a69d1', match: [] },
+                        { key: 'ד-היתר בנייה', label: 'היתר בנייה', color: '#4b85e0', match: [] },
+                        { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך', color: '#4ba1f0', match: [] },
+                        { key: 'approved', label: 'אישור / מאושרת', color: '#4CAF50',
+                          match: ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'] },
+                        { key: 'in_approval', label: 'בהליך אישור', color: '#66BB6A',
+                          match: ['בהליך אישור','תבע - טרום אישור'] },
+                        { key: 'objections', label: 'התנגדויות', color: '#FDD835',
+                          match: ['דיון בהתנגדויות ותיקונים'] },
+                        { key: 'deposit', label: 'הפקדה', color: '#FDD835',
+                          match: ['הפקדה להתנגדויות/השגות'] },
+                        { key: 'conditions', label: 'במילוי תנאים להפקדה', color: '#FF9800',
+                          match: ['במילוי תנאים להפקדה','תכנית עומדת בתנאי סף'] },
+                        { key: 'open', label: 'פתיחת תיק / בדיקה', color: '#F44336',
+                          match: ['נפתח תיק למתכנן','נפתח תיק תבע','בבדיקה תכנונית','נקלטה מקובץ מבאת'] },
+                    ];
+                    function getStatusGroup(status) {
+                        for (const g of STATUS_GROUPS) {
+                            if (g.match.includes(status)) return g.key;
+                        }
+                        return null;
+                    }
+                    const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {} });
+                    minahakOrder.forEach(m => {
+                        byMinahak[m] = emptyRow();
+                        bySub[m] = {};
+                    });
+
+                    // Plans (from Google Sheets CSV)
+                    planRows.forEach(p => {
+                        const m = (p.minahak || '').trim();
+                        if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
+                        // Skip rejected/archived plans for units_add
+                        const status = (p.Status_Mavat || p.status_mavat || '').trim();
+                        const isRejected = status === 'נגנזה/נדחתה' || status === 'נגנזה' || status === 'נדחתה';
+                        const addVal = isRejected ? 0 : (parseInt(p.Units_add || p.units_add) || 0);
+                        const inVal = parseInt(p.Units_in || p.units_in) || 0;
+                        byMinahak[m].units_in += inVal;
+                        byMinahak[m].units_add += addVal;
+
+                        const pt = (p.plan_type || '').trim();
+                        if (pt.includes('התחדשות')) {
+                            byMinahak[m].renewal += addVal;
+                        } else if (pt.includes('עיבוי')) {
+                            byMinahak[m].densification += addVal;
+                        }
+
+                        // Per-status group breakdown
+                        if (!isRejected && addVal > 0 && status) {
+                            const grp = getStatusGroup(status);
+                            const stageRaw = (p.stage || p.Stage || '').trim();
+                            // Normalize double-space variant
+                            const stageVal = stageRaw.replace(/\s+/g, ' ');
+                            // If approved and has a stage value, use stage instead of status
+                            if (grp === 'approved' && stageVal) {
+                                byMinahak[m].byStatus[stageVal] = (byMinahak[m].byStatus[stageVal] || 0) + addVal;
+                            } else if (grp) {
+                                byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
+                            }
+                        }
+
+                        // Per sub-neighborhood breakdown
+                        const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                        if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
+                        bySub[m][sub].units_in += inVal;
+                        bySub[m][sub].units_add += addVal;
+                        if (pt.includes('התחדשות')) {
+                            bySub[m][sub].renewal += addVal;
+                        } else if (pt.includes('עיבוי')) {
+                            bySub[m][sub].densification += addVal;
+                        }
+                        if (!isRejected && addVal > 0 && status) {
+                            bySub[m][sub].byStatus[status] = (bySub[m][sub].byStatus[status] || 0) + addVal;
+                        }
+                    });
+
+                    // Tama38 — add to units_add and to renewal (התחדשות עירונית)
+                    tamaMap.forEach(p => {
+                        const neighborho = (p.neighborho || '').trim();
+                        const m = NEIGHBORHOOD_TO_MINAHAK[neighborho] || '';
+                        if (!m) return;
+                        if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
+                        const tose = parseInt(p.units_tose) || 0;
+                        byMinahak[m].units_add += tose;
+                        byMinahak[m].renewal += tose; // tama38 = התחדשות עירונית
+
+                        // Per sub-neighborhood: use neighborho as sub name
+                        const subRaw2 = neighborho || 'אחר';
+                        const sub = SUB_NORMALIZE[subRaw2] || subRaw2;
+                        if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
+                        bySub[m][sub].units_add += tose;
+                        bySub[m][sub].renewal += tose;
+                    });
+
+                    // Fixed units_in values provided by user (per minahak)
+                    const fixedUnitsIn = {
+                        'בית צפאפא': 4262,
+                        'גוננים': 9235,
+                        'בקעה רבתי': 11521,
+                        'גינות העיר': 16569,
+                        'מינהל מוסדי מלחה': 0,
+                        'א.ת. תלפיות': 643,
+                    };
+                    Object.entries(fixedUnitsIn).forEach(([m, val]) => {
+                        if (byMinahak[m]) byMinahak[m].units_in = val;
+                    });
+
+                    // Fixed units_in per sub-neighborhood
+                    const fixedSubUnitsIn = {
+                        'בקעה רבתי': {
+                            'מקור חיים': 1019, 'בקעה': 3614, 'גבעת חנניה - אבו תור': 1579,
+                            'צפון תלפיות': 873, 'תלפיות ארנונה': 3250, 'שיכוני תלפיות': 1186,
+                        },
+                        'גוננים': {
+                            'גוננים א-ו': 4253, 'פת': 700, 'קטמונים': 2208, 'רסקו': 2074,
+                        },
+                        'גינות העיר': {
+                            'המושבה הגרמנית': 1293, 'המושבה היוונית': 1055, 'ניות': 788, 'טלביה': 2511,
+                            'קטמון הישנה': 4343, 'קרית שמואל': 3423, 'רחביה': 3156,
+                        },
+                    };
+                    Object.entries(fixedSubUnitsIn).forEach(([m, subs]) => {
+                        if (!bySub[m]) bySub[m] = {};
+                        Object.entries(subs).forEach(([s, val]) => {
+                            if (!bySub[m][s]) bySub[m][s] = emptyRow();
+                            bySub[m][s].units_in = val;
+                        });
+                    });
+
+                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
+                    Object.keys(byMinahak).forEach(m => {
+                        if (!minahaks.includes(m) && m) minahaks.push(m);
+                    });
+
+                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS });
+                    setUnitsLoading(false);
+                });
+            }, [unitsData]);
+
+            // GeoJSON rendering: add/remove L.geoJSON layers based on state
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                const gd = geoDataRef.current;
+                if (!map || !dataLoaded) return;
+
+                // Remove all previous geo layers
+                Object.values(geoLayersRef.current).forEach(l => {
+                    if (Array.isArray(l)) l.forEach(ll => map.removeLayer(ll));
+                    else if (l) map.removeLayer(l);
+                });
+                geoLayersRef.current = {};
+
+                // Minahak filter
+                const adminLayers = LAYER_CONFIG.admin.layers;
+                const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
+                const allAdminOn = adminLayers.every(l => layers[l.id]);
+                const selectedSubs = selectedMinahaks.flatMap(m => MINAHAK_SUBS[m] || []);
+
+                function planInMinahak(props) {
+                    if (allAdminOn) return true;
+                    if (selectedMinahaks.length === 0) return false;
+                    const m = props['מינה"ק'] || props.minahak || '';
+                    return selectedMinahaks.includes(m);
+                }
+                function tama38InMinahak(props) {
+                    if (allAdminOn) return true;
+                    if (selectedSubs.length === 0) return false;
+                    const n = (props.neighborho || '').trim();
+                    return selectedSubs.includes(n);
+                }
+
+                // --- District outline (always on) ---
+                if (gd.district_oranim) {
+                    geoLayersRef.current.district = L.geoJSON(gd.district_oranim, {
+                        pane: 'districtPane',
+                        style: { color: '#e94560', weight: 3, fillOpacity: 0, dashArray: '8,4' }
+                    }).addTo(map);
+                }
+
+                // --- Sub-neighborhoods (always on) ---
+                if (gd.sub_neighborhoods) {
+                    geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
+                        pane: 'subNeighborhoodPane',
+                        style: { color: '#4a69d1', weight: 1.5, fillOpacity: 0, dashArray: '5,5' },
+                        onEachFeature: (f, layer) => {
+                            const name = f.properties.Name || f.properties.name || '';
+                            if (name) layer.bindTooltip(name, { permanent: true, direction: 'center', className: 'sub-label' });
+                        }
+                    }).addTo(map);
+                }
+
+                // --- Minahak boundaries ---
+                const minahakLayers = [];
+                adminLayers.forEach(l => {
+                    if (!layers[l.id]) return;
+                    const geoKey = MINAHAK_LAYER_MAP[l.id];
+                    if (geoKey && gd[geoKey]) {
+                        const ml = L.geoJSON(gd[geoKey], {
+                            pane: 'minahakPane',
+                            style: { color: '#2ecc71', weight: 2.5, fillOpacity: 0 },
+                            onEachFeature: (f, layer) => {
+                                const name = f.properties.SHEM_1 || f.properties.Name || l.name;
+                                if (name) layer.bindTooltip(name, { permanent: true, direction: 'center', className: 'minahak-label' });
+                            }
+                        }).addTo(map);
+                        minahakLayers.push(ml);
+                    }
+                });
+                geoLayersRef.current.minahak = minahakLayers;
+
+                // --- Plans layer ---
+                if (layers['plans'] && gd.plans) {
+                    const plansLayer = L.geoJSON(gd.plans, {
+                        pane: 'plansPane',
+                        filter: f => planInMinahak(f.properties),
+                        style: f => {
+                            const status = f.properties.Status_Mavat || '';
+                            const color = STATUS_COLORS[status] || '#5dade2';
+                            return { color: color, weight: 1.5, fillColor: color, fillOpacity: opacity * 0.25 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                            // Label
+                            const name = f.properties['תמצית שם התכנית'] || f.properties.PLAN_NAME || '';
+                            const add = parseFloat(f.properties.Units_add) || 0;
+                            let label = name;
+                            if (add > 0) label += (label ? '\n' : '') + '+' + add + " יח\"ד";
+                            if (label) layer.bindTooltip(label, { direction: 'center', className: 'plan-label', sticky: false });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.plans = plansLayer;
+                }
+
+                // --- Topics overlay ---
+                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections)) {
+                    const topicsLayer = L.geoJSON(gd.plans, {
+                        pane: 'topicsPane',
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const p = f.properties;
+                            if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) return true;
+                            if (planningTopics.densification && (p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
+                            if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות')) return true;
+                            return false;
+                        },
+                        style: f => {
+                            const p = f.properties;
+                            if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות'))
+                                return { color: '#dd0000', weight: 3, fillOpacity: 0 };
+                            if (planningTopics.densification && (p['סוג תכנית'] || '') === 'עיבוי שטחים חומים')
+                                return { color: '#ff8c00', weight: 2, fillColor: '#ff8c00', fillOpacity: 0.3 };
+                            if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0)
+                                return { color: '#3366ff', weight: 2, fillColor: '#3366ff', fillOpacity: 0.3 };
+                            return {};
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.topics = topicsLayer;
+                }
+
+                // --- Permits overlay ---
+                if (layers['permits'] && gd.plans) {
+                    const permitsLayer = L.geoJSON(gd.plans, {
+                        pane: 'permitsPane',
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const stage = (f.properties['שלב'] || '').trim();
+                            return stage !== '';
+                        },
+                        style: f => {
+                            const stage = (f.properties['שלב'] || '').trim().replace(/\s+/g, ' ');
+                            const color = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
+                            return { color, weight: 2, fillColor: color, fillOpacity: 0.5 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.permits = permitsLayer;
+                }
+
+                // --- Tama38 ---
+                if (layers['tama38'] && gd.tama38) {
+                    const tama38Layer = L.geoJSON(gd.tama38, {
+                        pane: 'tama38Pane',
+                        filter: f => tama38InMinahak(f.properties),
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 5, fillColor: '#e94560', color: '#fff', weight: 1, fillOpacity: 0.8
+                        }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', () => {
+                                const p = f.properties;
+                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                    .setLatLng(layer.getLatLng())
+                                    .setContent(buildTama38Popup(p));
+                                popup.openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.tama38 = tama38Layer;
+                }
+
+                // --- Stations ---
+                if (layers['stations'] && gd.stations) {
+                    const stationsLayer = L.geoJSON(gd.stations, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 6, fillColor: '#00b894', color: '#fff', weight: 2, fillOpacity: 0.9
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const name = f.properties.Name || f.properties.name || '';
+                            if (name) layer.bindTooltip(name, { permanent: true, direction: 'top', className: 'station-label' });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.stations = stationsLayer;
+                }
+
+                console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
+            }, [layers, opacity, planningTopics, dataLoaded]);
+
+            // Build the plan popup HTML
+            function getStatusColor(status) {
+                return STATUS_COLORS[status] || '#5dade2';
             }
-        }
-        var zoomControl = L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
-        var bounds_group = new L.featureGroup([]);
-        function setBounds() {
-        }
-        function pop_plans_0(feature, layer) {
-        }
-        function style_plans_0_0(feature) {
-            var context = {
-                feature: feature,
-                variables: {}
-            };
-            // Start of if blocks and style check logic
-            if (exp_plans_0rule0_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                opacity: 1,
-                color: 'rgba(243,35,22,1.0)',
-                dashArray: '6.0,3.0',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 3.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(232,23,14,0.3843137254901961)',
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule1_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                opacity: 1,
-                color: 'rgba(129,63,3,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(100,65,0,1.0)',
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule2_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                opacity: 1,
-                color: 'rgba(255,32,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 4.0, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule3_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                opacity: 1,
-                color: 'rgba(35,35,255,1.0)',
-                dashArray: '10.0,2.0',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule4_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                opacity: 1,
-                color: 'rgba(35,35,255,0.5019607843137255)',
-                dashArray: '10.0,2.0',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule5_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                stroke: false, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule6_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                stroke: false, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-                else if (exp_plans_0rule7_eval_expression(context)) {
-                  return {
-                pane: 'pane_plans_0',
-                stroke: false, 
-                fillOpacity: 0,
-                interactive: true,
-            };
-                }
-            else {
-                return {fill: false, stroke: false};
+
+            function buildNavBar(navInfo) {
+                if (!navInfo || navInfo.total <= 1) return '';
+                return `<div class="popup-nav">` +
+                    `<button class="popup-nav-btn" data-nav="prev">▶</button>` +
+                    `<span>${navInfo.current + 1} / ${navInfo.total}</span>` +
+                    `<button class="popup-nav-btn" data-nav="next">◀</button>` +
+                    `</div>`;
             }
-        }
-        map.createPane('pane_plans_0');
-        map.getPane('pane_plans_0').style.zIndex = 400;
-        map.getPane('pane_plans_0').style['mix-blend-mode'] = 'normal';
-        var layer_plans_0 = new L.geoJson(json_plans_0, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_plans_0',
-            layerName: 'layer_plans_0',
-            pane: 'pane_plans_0',
-            onEachFeature: pop_plans_0,
-            style: style_plans_0_0,
-        });
-        bounds_group.addLayer(layer_plans_0);
-        map.addLayer(layer_plans_0);
-        function pop_stations_1(feature, layer) {
+
+            function buildPlanPopup(props, featureData, navInfo) {
+                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const subtitle = props.plan_name || props.taba || '';
+                const status = props.status_mavat || '';
+                const statusColor = getStatusColor(status);
+                const unitsIn = props.units_in || '-';
+                const unitsTotal = props.units_total || '-';
+                const unitsAdd = props.units_add != null ? props.units_add : '-';
+                const unitsAddDisplay = unitsAdd !== '-' && unitsAdd !== 0 ? '+' + unitsAdd : unitsAdd;
+                const mavatUrl = props.mavat_url || '';
+                const hasPermit = props.stage && props.stage.trim() !== '';
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                // Header
+                html += '<div class="popup-header">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                html += '</div>';
+                // Body
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
+                html += '</div>';
+                // Footer
+                html += '<div class="popup-footer">';
+                if (mavatUrl) {
+                    html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
+                }
+                if (hasPermit) {
+                    html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
+                }
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            // Build the permit details popup HTML
+            function buildPermitPopup(props, featureData, navInfo) {
+                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const planName = props.plan_name || props.taba || '';
+                const permitNum = props.building_permit || '-';
+                const subtitle = [planName, permitNum !== '-' ? permitNum : null].filter(Boolean).join(' | ');
+                const stage = props.stage || '-';
+                const stageColor = STAGE_COLORS[stage] || '#5dade2';
+                const requestType = props.request_type || props.mahut_bakasha || '-';
+                const permitDate = props.permit_date || props.permit_date_data || '-';
+                const permitAddition = props.permit_addition || '-';
+                const permitAddDisplay = permitAddition !== '-' && permitAddition !== 0 ? '+' + permitAddition : permitAddition;
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                // Header
+                html += '<div class="permit-detail-header">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                html += '</div>';
+                // Body
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">מהות הבקשה</span><span class="popup-row-value" style="font-size:11px;max-width:180px;text-align:left">${requestType}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת בהיתר</span><span class="popup-row-value">${permitAddDisplay}</span></div>`;
+                html += '</div>';
+                // Footer - back button styled red with left arrow
+                html += '<div class="popup-footer">';
+                html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}' data-action="back-to-plan">\u2192 לתב"ע</button>`;
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            // Build the tama38 popup HTML
+            function buildTama38Popup(props, navInfo) {
+                const title = props.address || 'תמ"א 38';
+                const subtitle = props.neighborho ? `שכונה: ${props.neighborho}` : '';
+                const status = props.status || '';
+                const status1 = props.status_1 || '';
+                const displayStatus = status || status1 || '-';
+                const harisaa = props.harisaa || '-';
+                const unitsExist = props.units_exis != null ? props.units_exis : '-';
+                const unitsTose = props.units_tose != null ? props.units_tose : '-';
+                const tik = props.tik || '-';
+                const dateOpen = props.open_ || '-';
+                const dateApproval = props.date || '-';
+                const comment = props.comment || '';
+
+                // Status color for tama38
+                const statusColor = displayStatus.includes('היתר') ? '#50d25a' :
+                    displayStatus.includes('אושר') ? '#50d25a' :
+                    displayStatus.includes('הופק') ? '#50d25a' :
+                    displayStatus.includes('בנייה') ? '#4a69d1' :
+                    displayStatus.includes('נפתח') ? '#f56e05' :
+                    displayStatus.includes('בתהליך') ? '#4ba1f0' :
+                    '#5dade2';
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                html += '<div class="popup-header" style="border-right:4px solid #e94560">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                html += `<div class="popup-header-subtitle" style="font-size:10px;opacity:0.6">תמ"א 38</div>`;
+                html += '</div>';
+                html += '<div class="popup-body">';
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${displayStatus}</span></div>`;
+                if (status1 && status1 !== status && status1 !== '-') {
+                    html += `<div class="popup-row"><span class="popup-row-label">סטטוס משני</span><span class="popup-row-value">${status1}</span></div>`;
+                }
+                html += `<div class="popup-row"><span class="popup-row-label">הריסה</span><span class="popup-row-value">${harisaa}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד קיימות</span><span class="popup-row-value">${unitsExist}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsTose !== '-' ? '+' + unitsTose : '-'}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תיק</span><span class="popup-row-value">${tik}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך פתיחה</span><span class="popup-row-value">${dateOpen}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">תאריך אישור</span><span class="popup-row-value">${dateApproval}</span></div>`;
+                if (comment) {
+                    const shortComment = comment.length > 120 ? comment.substring(0, 120) + '...' : comment;
+                    html += `<div class="popup-row" style="flex-direction:column;align-items:flex-start"><span class="popup-row-label" style="margin-bottom:4px">הערות</span><span class="popup-row-value" style="font-size:11px;line-height:1.4;text-align:right;white-space:pre-wrap;max-width:100%">${shortComment}</span></div>`;
+                }
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            // Bind popup navigation and permit/back button events
+            function bindPopupEvents(popup, allFeatures, startIdx) {
+                let currentIdx = startIdx || 0;
+                function buildForIndex(idx) {
+                    const entry = allFeatures[idx];
+                    const navInfo = allFeatures.length > 1 ? { current: idx, total: allFeatures.length } : null;
+                    if (entry.type === 'permit') return buildPermitPopup(entry.properties, { properties: entry.properties }, navInfo);
+                    if (entry.type === 'tama38') return buildTama38Popup(entry.properties, navInfo);
+                    return buildPlanPopup(entry.properties, { properties: entry.properties }, navInfo);
+                }
+                const el = popup.getElement();
+                if (!el) return;
+                el.addEventListener('click', function(ev) {
+                    const navBtn = ev.target.closest('.popup-nav-btn');
+                    if (navBtn) {
+                        ev.stopPropagation();
+                        if (navBtn.dataset.nav === 'next') currentIdx = (currentIdx + 1) % allFeatures.length;
+                        else currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
+                        popup.setContent(buildForIndex(currentIdx));
+                        return;
+                    }
+                    const permitBtn = ev.target.closest('.popup-btn-permit');
+                    if (permitBtn) {
+                        ev.stopPropagation();
+                        const fd = JSON.parse(permitBtn.dataset.feature);
+                        const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
+                        if (permitBtn.dataset.action === 'back-to-plan') {
+                            popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
+                            setTimeout(() => setLayers(prev => ({ ...prev, plans: true, permits: false })), 100);
+                        } else {
+                            popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
+                            setTimeout(() => setLayers(prev => ({ ...prev, permits: true, plans: false })), 100);
+                        }
+                    }
+                });
+            }
+
+            const toggleLayer = (id) => {
+                setLayers(prev => ({ ...prev, [id]: !prev[id] }));
+            };
+
+            const resetView = () => {
+                mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM);
+            };
+
+            // Plan search results
+            const searchResults = planSearch.length >= 2
+                ? planIndex.filter(p =>
+                    p.h.includes(planSearch) || p.n.includes(planSearch)
+                ).slice(0, 15)
+                : [];
+
+            const handleSearchSelect = (plan) => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                setPlanSearch('');
+                setShowSearchResults(false);
+                // Zoom to plan location and query for popup
+                map.setView(plan.c, 18);
+                setTimeout(() => {
+                    const gd = geoDataRef.current;
+                    if (!gd.plans) return;
+                    const match = gd.plans.features.find(f =>
+                        f.properties.PLAN_NAME === plan.n || f.properties.TABA === plan.n
+                    );
+                    if (!match) return;
+                    const mapped = mapPlanProps(match.properties);
+                    const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
+                        .setLatLng(plan.c)
+                        .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                        .openOn(map);
+                    bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                }, 500);
+            };
+
+            const activeCount = Object.values(layers).filter(Boolean).length;
+
+            const filteredConfig = {};
+            Object.entries(LAYER_CONFIG).forEach(([key, group]) => {
+                const filtered = group.layers.filter(l =>
+                    !searchText || l.name.includes(searchText) || l.id.includes(searchText)
+                );
+                if (filtered.length > 0) {
+                    filteredConfig[key] = { ...group, layers: filtered };
+                }
+            });
+
+            return (
+                <>
+                    {/* Mobile overlay — click to close sidebar */}
+                    <div
+                        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+                        onClick={() => { setSidebarOpen(false); setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350); }}
+                    ></div>
+
+                    <div className={`sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
+                        {/* Mobile close button */}
+                        <button
+                            className="sidebar-close-mobile"
+                            onClick={() => { setSidebarOpen(false); setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350); }}
+                        >&times;</button>
+                        <div className="sidebar-header">
+                            <h1>אורנים</h1>
+                            <p>כלי תכנון עירוני - ירושלים</p>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>חיפוש תוכניות</h3>
+                            <div className="plan-search-wrap">
+                                <input
+                                    className="plan-search-input"
+                                    type="text"
+                                    placeholder='חיפוש תכנית או מספר...'
+                                    value={planSearch}
+                                    onChange={(e) => {
+                                        setPlanSearch(e.target.value);
+                                        setShowSearchResults(true);
+                                    }}
+                                    onFocus={() => planSearch.length >= 2 && setShowSearchResults(true)}
+                                />
+                                {planSearch && (
+                                    <button
+                                        className="plan-search-clear"
+                                        onClick={() => { setPlanSearch(''); setShowSearchResults(false); }}
+                                    >&times;</button>
+                                )}
+                                {showSearchResults && planSearch.length >= 2 && (
+                                    <div className="plan-search-results">
+                                        {searchResults.length > 0 ? searchResults.map((plan, i) => (
+                                            <div
+                                                key={i}
+                                                className="plan-search-item"
+                                                onClick={() => handleSearchSelect(plan)}
+                                            >
+                                                <div className="plan-search-item-name">{plan.h}</div>
+                                                <div className="plan-search-item-num">{plan.n}</div>
+                                            </div>
+                                        )) : (
+                                            <div className="plan-search-empty">לא נמצאו תוצאות</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>שכבות ({activeCount} פעילות)</h3>
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="חיפוש שכבה..."
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                            />
+
+                            {Object.entries(filteredConfig).map(([groupKey, group]) => (
+                                <div key={groupKey}>
+                                    <div className="layer-group-title">
+                                        {groupKey === 'admin' && (
+                                            <input type="checkbox"
+                                                checked={group.layers.every(l => layers[l.id])}
+                                                onChange={() => {
+                                                    const allOn = group.layers.every(l => layers[l.id]);
+                                                    setLayers(prev => {
+                                                        const next = { ...prev };
+                                                        group.layers.forEach(l => { next[l.id] = !allOn; });
+                                                        return next;
+                                                    });
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ marginLeft: 6 }}
+                                            />
+                                        )}
+                                        {group.title}
+                                    </div>
+                                    {group.layers.map(layer => (
+                                        <div className="layer-item" key={layer.id}
+                                             title={layer.desc || ''}>
+                                            <input
+                                                type="checkbox"
+                                                checked={layers[layer.id] || false}
+                                                onChange={() => toggleLayer(layer.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                            <label onClick={() => toggleLayer(layer.id)}>{layer.name}</label>
+                                            {layer.id === 'plans' && (
+                                                <button className="layer-legend-btn" title="מקרא סטטוס"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תב"ע - סטטוס תכנית', items: PLANS_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'permits' && (
+                                                <button className="layer-legend-btn" title="מקרא שלבים"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+
+                            <div className="layer-group-title" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <span>נושאים תכנוניים</span>
+                                <button className="layer-legend-btn" title="מקרא נושאים תכנוניים"
+                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND }); }}
+                                    style={{fontSize:'14px',margin:0}}>⋯</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
+                                <input type="checkbox" checked={planningTopics.overlapping} onChange={() => {}} />
+                                <label>תבעות כפולות על אותו מרחב</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תוכניות לעיבוי שטחים חומים - תוספת יח"ד בשטחים מאושרים'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, densification: !prev.densification}))}>
+                                <input type="checkbox" checked={planningTopics.densification} onChange={() => {}} />
+                                <label>תכניות לעיבוי שטחים חומים</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תוכניות בשלב הפקדה להתנגדויות'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, objections: !prev.objections}))}>
+                                <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
+                                <label>תכניות המופקדות להתנגדויות</label>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>שקיפות שכבות</h3>
+                            <input
+                                className="opacity-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={opacity}
+                                onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                            />
+                            <div className="opacity-label">
+                                <span>שקוף</span>
+                                <span>{Math.round(opacity * 100)}%</span>
+                                <span>אטום</span>
+                            </div>
+
+                            <div style={{marginTop: '12px'}}>
+                                <div className="opacity-label" style={{marginBottom: '6px'}}><span>מפת רקע</span></div>
+                                <select
+                                    className="basemap-select"
+                                    value={basemap}
+                                    onChange={(e) => setBasemap(e.target.value)}
+                                >
+                                    {Object.entries(BASEMAPS).map(([key, bm]) => (
+                                        <option key={key} value={key}>{bm.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <button className="btn-reset" onClick={resetView}>
+                                איפוס תצוגה
+                            </button>
+                            <button className="btn-reset" onClick={() => {
+                                const all = {};
+                                Object.values(LAYER_CONFIG).forEach(g =>
+                                    g.layers.forEach(l => { all[l.id] = true; })
+                                );
+                                setLayers(all);
+                            }} style={{marginTop: '4px'}}>
+                                הצג הכל
+                            </button>
+                            <button className="btn-reset" onClick={() => {
+                                const none = {};
+                                Object.values(LAYER_CONFIG).forEach(g =>
+                                    g.layers.forEach(l => { none[l.id] = false; })
+                                );
+                                setLayers(none);
+                            }} style={{marginTop: '4px'}}>
+                                הסתר הכל
+                            </button>
+                        </div>
+
+                        <div className="status-bar">
+                            {cursorPos && (
+                                <span>{cursorPos.lat}, {cursorPos.lng}</span>
+                            )}
+                            <br />
+                            <span>GeoJSON מקומי</span>
+                        </div>
+                    </div>
+
+                    <div className="map-container">
+                        <button
+                            className="toggle-btn"
+                            onClick={() => {
+                                setSidebarOpen(prev => !prev);
+                                setTimeout(() => mapInstanceRef.current?.invalidateSize(), 350);
+                            }}
+                            title={sidebarOpen ? 'הסתר תפריט' : 'הצג תפריט'}
+                        >
+                            {sidebarOpen ? '◀' : '▶'}
+                        </button>
+                        <div id="map" ref={mapRef}></div>
+
+                        {/* ── Map Toolbar ── */}
+                        <div className="map-toolbar">
+                            {/* מדידה */}
+                            <button
+                                className={`toolbar-btn ${measureMode ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (measureMode) {
+                                        stopMeasure();
+                                        setActiveDropdown(null);
+                                    } else {
+                                        setActiveDropdown(prev => prev === 'measure' ? null : 'measure');
+                                    }
+                                }}
+                                title="מדידה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 20L20 2" />
+                                    <path d="M5.5 16.5L8 14" />
+                                    <path d="M9.5 12.5L12 10" />
+                                    <path d="M13.5 8.5L16 6" />
+                                    <path d="M2 20h4v-4" />
+                                    <path d="M20 2h-4v4" />
+                                </svg>
+                                <span className="toolbar-label">{measureMode === 'distance' ? 'מרחק' : measureMode === 'area' ? 'שטח' : 'מדידה'}</span>
+                                {activeDropdown === 'measure' && !measureMode && (
+                                    <div className="toolbar-dropdown" onClick={e => e.stopPropagation()}>
+                                        <button className="toolbar-dropdown-item" onClick={() => {
+                                            clearMeasurement();
+                                            setMeasureMode('distance');
+                                            setActiveDropdown(null);
+                                        }}>
+                                            📏 מדידת מרחק
+                                        </button>
+                                        <button className="toolbar-dropdown-item" onClick={() => {
+                                            clearMeasurement();
+                                            setMeasureMode('area');
+                                            setActiveDropdown(null);
+                                        }}>
+                                            📐 מדידת שטח
+                                        </button>
+                                    </div>
+                                )}
+                            </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* הדפסה */}
+                            <button
+                                className="toolbar-btn"
+                                onClick={() => {
+                                    setShowPrint(true);
+                                    setActiveDropdown(null);
+                                }}
+                                title="הדפסה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9" />
+                                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                    <rect x="6" y="14" width="12" height="8" />
+                                </svg>
+                                <span className="toolbar-label">הדפסה</span>
+                            </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* תוספת יח"ד */}
+                            <button
+                                className={`toolbar-btn ${showUnits ? 'active' : ''}`}
+                                onClick={() => {
+                                    fetchUnitsData();
+                                    setActiveDropdown(null);
+                                }}
+                                title='תוספת יח"ד'
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 21h18" />
+                                    <path d="M5 21V7l5-4 5 4v14" />
+                                    <path d="M9 21v-4h2v4" />
+                                    <path d="M19 21V11l-4-3" />
+                                    <path d="M8 9h1" />
+                                    <path d="M11 9h1" />
+                                    <path d="M8 13h1" />
+                                    <path d="M11 13h1" />
+                                </svg>
+                                <span className="toolbar-label">יח"ד</span>
+                            </button>
+                        </div>
+
+                        {/* Measurement result panel */}
+                        {measureResult && (
+                            <div className="measure-result">
+                                <div>
+                                    <div className="measure-result-label">
+                                        {measureResult.type === 'distance' ? 'מרחק' : 'שטח'}
+                                    </div>
+                                    <div className="measure-result-value">{measureResult.value}</div>
+                                </div>
+                                <button className="measure-result-btn" onClick={() => {
+                                    clearMeasurement();
+                                    setMeasureMode(null);
+                                }}>
+                                    ✕ נקה
+                                </button>
+                            </div>
+                        )}
+
+                        <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
+                            טוען שכבות...
+                        </div>
+                        {mapScale && (
+                            <div className="scale-display">{mapScale}</div>
+                        )}
+
+                    </div>
+
+                    {/* ── Print Modal ── */}
+                    {showPrint && (
+                        <div className="print-overlay" onClick={() => setShowPrint(false)}>
+                            <div className="print-modal" onClick={e => e.stopPropagation()}>
+                                <div className="print-header">
+                                    <h2>🖨️ הדפסת מפה</h2>
+                                    <button className="modal-close" onClick={() => setShowPrint(false)}>&times;</button>
+                                </div>
+                                <div className="print-body">
+                                    <div className="print-field">
+                                        <label>כותרת המפה</label>
+                                        <input
+                                            type="text"
+                                            placeholder="מפת אורנים - תכנון עירוני"
+                                            value={printTitle}
+                                            onChange={e => setPrintTitle(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="print-field">
+                                        <label>קנה מידה</label>
+                                        <select
+                                            value={printScale}
+                                            onChange={e => setPrintScale(e.target.value)}
+                                            style={{width:'100%',background:'#1a1a3a',border:'1px solid #2a2a4a',borderRadius:'7px',padding:'8px 12px',color:'#e0e0ff',fontSize:'13px',fontFamily:'inherit',direction:'rtl'}}
+                                        >
+                                            {PRINT_SCALES.map(s => (
+                                                <option key={s.value} value={s.value}>{s.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <label className="print-checkbox">
+                                        <input type="checkbox" checked={printShowTitle} onChange={e => setPrintShowTitle(e.target.checked)} />
+                                        הצג כותרת
+                                    </label>
+                                    <label className="print-checkbox">
+                                        <input type="checkbox" checked={printShowLegend} onChange={e => setPrintShowLegend(e.target.checked)} />
+                                        הצג מקרא
+                                    </label>
+                                </div>
+                                <div className="print-actions">
+                                    <button className="modal-action-btn primary" onClick={handlePrint}>
+                                        🖨️ הדפס
+                                    </button>
+                                    <button className="modal-action-btn" onClick={() => setShowPrint(false)}>
+                                        ביטול
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Units Summary Modal ── */}
+                    {showUnits && (
+                        <div className="units-overlay" onClick={() => setShowUnits(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                <div className="units-watermark"><span>טבלה בעבודה</span></div>
+                                <div className="units-header">
+                                    {unitsDrilldown ? (
+                                        <>
+                                            <button className="units-back-btn" onClick={() => setUnitsDrilldown(null)}>
+                                                → חזרה
+                                            </button>
+                                            <h2>🏠 {unitsDrilldown} — פירוט לפי תת שכונה</h2>
+                                        </>
+                                    ) : (
+                                        <h2>🏠 תוספת יח"ד לפי מינהל קהילתי</h2>
+                                    )}
+                                    <button className="modal-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
+                                </div>
+                                <div className="units-body">
+                                    {unitsLoading || !unitsData ? (
+                                        <div className="units-loading">
+                                            <p style={{fontSize: '28px', marginBottom: '10px'}}>⏳</p>
+                                            <p>טוען נתוני תוכניות...</p>
+                                        </div>
+                                    ) : unitsDrilldown ? (() => {
+                                        const subData = unitsData.bySub[unitsDrilldown] || {};
+                                        const subs = Object.keys(subData).sort();
+                                        if (subs.length === 0) return <div className="units-loading"><p>אין נתוני תת-שכונות עבור {unitsDrilldown}</p></div>;
+                                        return (
+                                            <table className="units-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        {subs.map(s => <th key={s}>{s}</th>)}
+                                                        <th style={{background: '#141440', color: '#e94560'}}>סה"כ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>יח"ד תוספת</td>
+                                                        {subs.map(s => (
+                                                            <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
+                                                                {subData[s].units_add.toLocaleString()}
+                                                            </td>
+                                                        ))}
+                                                        <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
+                                                            {Object.values(subData).reduce((sum, d) => sum + d.units_add, 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                    <tr className="units-toggle-row">
+                                                        <td colSpan={subs.length + 2}>
+                                                            <div className="units-toggle-btns">
+                                                                <button className={`units-toggle-btn ${unitsExpanded === 'type' ? 'active' : ''}`}
+                                                                    onClick={() => setUnitsExpanded(prev => prev === 'type' ? null : 'type')}>
+                                                                    סוג
+                                                                </button>
+                                                                <button className={`units-toggle-btn ${unitsExpanded === 'status' ? 'active' : ''}`}
+                                                                    onClick={() => setUnitsExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                    סטטוס
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {unitsExpanded === 'type' && (
+                                                        <>
+                                                            <tr className="units-sub-row">
+                                                                <td>התחדשות עירונית</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].renewal.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.renewal, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                            <tr className="units-sub-row">
+                                                                <td>עיבוי ובניה חדשה</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].densification.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.densification, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    )}
+                                                    {unitsExpanded === 'status' && (
+                                                        <>
+                                                            <tr className="units-sub-row">
+                                                                <td>פתיחת תיק</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].status_open.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_open, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                            <tr className="units-sub-row">
+                                                                <td>מאושר</td>
+                                                                {subs.map(s => <td key={s}>{subData[s].status_approved.toLocaleString()}</td>)}
+                                                                <td style={{background: '#12122a'}}>
+                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_approved, 0).toLocaleString()}
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        );
+                                    })() : (
+                                        <table className="units-table">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    {unitsData.minahaks.map(m => (
+                                                        <th key={m}
+                                                            className="units-minahak-clickable"
+                                                            onClick={() => setUnitsDrilldown(m)}
+                                                            title={`לחץ לפירוט תת-שכונות ${m}`}
+                                                        >{m}</th>
+                                                    ))}
+                                                    <th style={{background: '#141440', color: '#e94560'}}>סה"כ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {/* יח"ד קיימות */}
+                                                <tr>
+                                                    <td>יח"ד קיימות</td>
+                                                    {unitsData.minahaks.map(m => (
+                                                        <td key={m}>{unitsData.byMinahak[m].units_in.toLocaleString()}</td>
+                                                    ))}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.units_in, 0).toLocaleString()}
+                                                    </td>
+                                                </tr>
+
+                                                {/* יח"ד תוספת row */}
+                                                <tr>
+                                                    <td style={{verticalAlign: 'top'}}>
+                                                        <div>יח"ד תוספת</div>
+                                                        <div className="units-toggle-btns" style={{marginTop: 4}}>
+                                                            <button className={`units-toggle-btn ${unitsExpanded === 'type' ? 'active' : ''}`}
+                                                                onClick={() => setUnitsExpanded(prev => prev === 'type' ? null : 'type')}>
+                                                                סוג
+                                                            </button>
+                                                            <button className={`units-toggle-btn ${unitsExpanded === 'status' ? 'active' : ''}`}
+                                                                onClick={() => setUnitsExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                סטטוס
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    {unitsData.minahaks.map(m => (
+                                                        <td key={m} style={{color: '#8ecae6', fontWeight: 600}}>
+                                                            {unitsData.byMinahak[m].units_add.toLocaleString()}
+                                                        </td>
+                                                    ))}
+                                                    <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
+                                                        {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.units_add, 0).toLocaleString()}
+                                                    </td>
+                                                </tr>
+
+                                                {/* Sub-rows by type */}
+                                                {unitsExpanded === 'type' && (
+                                                    <>
+                                                        <tr className="units-sub-row">
+                                                            <td>התחדשות עירונית</td>
+                                                            {unitsData.minahaks.map(m => (
+                                                                <td key={m}>{unitsData.byMinahak[m].renewal.toLocaleString()}</td>
+                                                            ))}
+                                                            <td style={{background: '#12122a'}}>
+                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.renewal, 0).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="units-sub-row">
+                                                            <td>עיבוי ובניה חדשה</td>
+                                                            {unitsData.minahaks.map(m => (
+                                                                <td key={m}>{unitsData.byMinahak[m].densification.toLocaleString()}</td>
+                                                            ))}
+                                                            <td style={{background: '#12122a'}}>
+                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.densification, 0).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    </>
+                                                )}
+
+                                                {/* Sub-rows by status group */}
+                                                {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => (
+                                                    <tr key={g.key} className="units-sub-row">
+                                                        <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                        {unitsData.minahaks.map(m => (
+                                                            <td key={m}>{(unitsData.byMinahak[m].byStatus[g.key] || 0).toLocaleString()}</td>
+                                                        ))}
+                                                        <td style={{background: '#12122a'}}>
+                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+
+                                                {/* סה"כ */}
+                                                <tr className="total-row">
+                                                    <td>סה"כ</td>
+                                                    {unitsData.minahaks.map(m => {
+                                                        const d = unitsData.byMinahak[m];
+                                                        return <td key={m}>{(d.units_in + d.units_add).toLocaleString()}</td>;
+                                                    })}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.units_in + d.units_add, 0).toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {legendPopup && (
+                        <div className="legend-popup-overlay" onClick={() => setLegendPopup(null)}>
+                            <div className="legend-popup" onClick={(e) => e.stopPropagation()}>
+                                <button className="legend-popup-close" onClick={() => setLegendPopup(null)}>&times;</button>
+                                <div className="legend-popup-title">{legendPopup.title}</div>
+                                {legendPopup.items.map((item, i) => (
+                                    <div className="legend-item" key={i}>
+                                        {item.style === 'hatch' ? (
+                                            <div className="legend-color" style={{
+                                                background: `repeating-linear-gradient(-45deg, transparent, transparent 3px, ${item.color} 3px, ${item.color} 4.5px)`,
+                                                border: `2px solid ${item.color}`
+                                            }}></div>
+                                        ) : item.style === 'outline' ? (
+                                            <div className="legend-color" style={{
+                                                background: 'transparent',
+                                                border: `3px solid ${item.color}`
+                                            }}></div>
+                                        ) : (
+                                            <div className="legend-color" style={{background: item.color}}></div>
+                                        )}
+                                        <span>{item.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
         }
 
-        function style_stations_1_0(feature) {
-            switch(String(feature.properties['Color_Main1'])) {
-                case 'אדום':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,0,0,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'חום':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(183,129,74,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'חום דרומי':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(181,128,74,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'ירוק':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(38,115,0,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'ירוק בהיר':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(152,230,0,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'כחול':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(0,112,255,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'סגול':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(169,0,230,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'צהוב':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,255,0,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'שלוחת ארמון הנציב':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,115,223,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'שלוחת רכס לבן':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,170,0,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'תכלת':
-                    return {
-                pane: 'pane_stations_1',
-                radius: 13.3,
-                opacity: 1,
-                color: 'rgba(255,255,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 6.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(0,197,255,1.0)',
-                interactive: true,
-            }
-                    break;
-            }
-        }
-        map.createPane('pane_stations_1');
-        map.getPane('pane_stations_1').style.zIndex = 401;
-        map.getPane('pane_stations_1').style['mix-blend-mode'] = 'normal';
-        var layer_stations_1 = new L.geoJson(json_stations_1, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_stations_1',
-            layerName: 'layer_stations_1',
-            pane: 'pane_stations_1',
-            onEachFeature: pop_stations_1,
-            pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.circleMarker(latlng, style_stations_1_0(feature));
-            },
-        });
-        bounds_group.addLayer(layer_stations_1);
-        map.addLayer(layer_stations_1);
-        function pop_rakl_src_2(feature, layer) {
-        }
-
-        function style_rakl_src_2_0() {
-            return {
-                pane: 'pane_rakl_src_2',
-                opacity: 1,
-                color: 'rgba(152,125,183,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 1.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_rakl_src_2');
-        map.getPane('pane_rakl_src_2').style.zIndex = 402;
-        map.getPane('pane_rakl_src_2').style['mix-blend-mode'] = 'normal';
-        var layer_rakl_src_2 = new L.geoJson(json_rakl_src_2, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_rakl_src_2',
-            layerName: 'layer_rakl_src_2',
-            pane: 'pane_rakl_src_2',
-            onEachFeature: pop_rakl_src_2,
-            style: style_rakl_src_2_0,
-        });
-        bounds_group.addLayer(layer_rakl_src_2);
-        map.addLayer(layer_rakl_src_2);
-        function pop_sub_neighborhoods_3(feature, layer) {
-        }
-
-        function style_sub_neighborhoods_3_0() {
-            return {
-                pane: 'pane_sub_neighborhoods_3',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 1.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_sub_neighborhoods_3');
-        map.getPane('pane_sub_neighborhoods_3').style.zIndex = 403;
-        map.getPane('pane_sub_neighborhoods_3').style['mix-blend-mode'] = 'normal';
-        var layer_sub_neighborhoods_3 = new L.geoJson(json_sub_neighborhoods_3, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_sub_neighborhoods_3',
-            layerName: 'layer_sub_neighborhoods_3',
-            pane: 'pane_sub_neighborhoods_3',
-            onEachFeature: pop_sub_neighborhoods_3,
-            style: style_sub_neighborhoods_3_0,
-        });
-        bounds_group.addLayer(layer_sub_neighborhoods_3);
-        map.addLayer(layer_sub_neighborhoods_3);
-        function pop_tama38_4(feature, layer) {
-        }
-        function style_tama38_4_0(feature) {
-            var context = {
-                feature: feature,
-                variables: {}
-            };
-            // Start of if blocks and style check logic
-            if (exp_tama38_4rule0_eval_expression(context)) {
-                  return {
-                pane: 'pane_tama38_4',
-                radius: 4.0,
-                opacity: 1,
-                color: 'rgba(40,10,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(215,25,28,1.0)',
-                interactive: true,
-            };
-                }
-                else if (exp_tama38_4rule1_eval_expression(context)) {
-                  return {
-                pane: 'pane_tama38_4',
-                radius: 4.0,
-                opacity: 1,
-                color: 'rgba(40,10,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(253,174,97,1.0)',
-                interactive: true,
-            };
-                }
-                else if (exp_tama38_4rule2_eval_expression(context)) {
-                  return {
-                pane: 'pane_tama38_4',
-                radius: 4.0,
-                opacity: 1,
-                color: 'rgba(40,10,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,255,192,1.0)',
-                interactive: true,
-            };
-                }
-                else if (exp_tama38_4rule3_eval_expression(context)) {
-                  return {
-                pane: 'pane_tama38_4',
-                radius: 4.0,
-                opacity: 1,
-                color: 'rgba(40,10,255,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(166,217,106,1.0)',
-                interactive: true,
-            };
-                }
-            else {
-                return {fill: false, stroke: false};
-            }
-        }
-        map.createPane('pane_tama38_4');
-        map.getPane('pane_tama38_4').style.zIndex = 404;
-        map.getPane('pane_tama38_4').style['mix-blend-mode'] = 'normal';
-        var layer_tama38_4 = new L.geoJson(json_tama38_4, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_tama38_4',
-            layerName: 'layer_tama38_4',
-            pane: 'pane_tama38_4',
-            onEachFeature: pop_tama38_4,
-            pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.shapeMarker(latlng, style_tama38_4_0(feature));
-            },
-        });
-        bounds_group.addLayer(layer_tama38_4);
-        map.addLayer(layer_tama38_4);
-        function pop_shem_talpiot_5(feature, layer) {
-        }
-
-        function style_shem_talpiot_5_0() {
-            return {
-                pane: 'pane_shem_talpiot_5',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_talpiot_5');
-        map.getPane('pane_shem_talpiot_5').style.zIndex = 405;
-        map.getPane('pane_shem_talpiot_5').style['mix-blend-mode'] = 'normal';
-        var layer_shem_talpiot_5 = new L.geoJson(json_shem_talpiot_5, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_talpiot_5',
-            layerName: 'layer_shem_talpiot_5',
-            pane: 'pane_shem_talpiot_5',
-            onEachFeature: pop_shem_talpiot_5,
-            style: style_shem_talpiot_5_0,
-        });
-        bounds_group.addLayer(layer_shem_talpiot_5);
-        map.addLayer(layer_shem_talpiot_5);
-        function pop_shem_malha_6(feature, layer) {
-        }
-
-        function style_shem_malha_6_0() {
-            return {
-                pane: 'pane_shem_malha_6',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_malha_6');
-        map.getPane('pane_shem_malha_6').style.zIndex = 406;
-        map.getPane('pane_shem_malha_6').style['mix-blend-mode'] = 'normal';
-        var layer_shem_malha_6 = new L.geoJson(json_shem_malha_6, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_malha_6',
-            layerName: 'layer_shem_malha_6',
-            pane: 'pane_shem_malha_6',
-            onEachFeature: pop_shem_malha_6,
-            style: style_shem_malha_6_0,
-        });
-        bounds_group.addLayer(layer_shem_malha_6);
-        map.addLayer(layer_shem_malha_6);
-        function pop_shem_ganot_hair_7(feature, layer) {
-        }
-
-        function style_shem_ganot_hair_7_0() {
-            return {
-                pane: 'pane_shem_ganot_hair_7',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_ganot_hair_7');
-        map.getPane('pane_shem_ganot_hair_7').style.zIndex = 407;
-        map.getPane('pane_shem_ganot_hair_7').style['mix-blend-mode'] = 'normal';
-        var layer_shem_ganot_hair_7 = new L.geoJson(json_shem_ganot_hair_7, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_ganot_hair_7',
-            layerName: 'layer_shem_ganot_hair_7',
-            pane: 'pane_shem_ganot_hair_7',
-            onEachFeature: pop_shem_ganot_hair_7,
-            style: style_shem_ganot_hair_7_0,
-        });
-        bounds_group.addLayer(layer_shem_ganot_hair_7);
-        map.addLayer(layer_shem_ganot_hair_7);
-        function pop_shem_beit_tzfafa_8(feature, layer) {
-        }
-
-        function style_shem_beit_tzfafa_8_0() {
-            return {
-                pane: 'pane_shem_beit_tzfafa_8',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_beit_tzfafa_8');
-        map.getPane('pane_shem_beit_tzfafa_8').style.zIndex = 408;
-        map.getPane('pane_shem_beit_tzfafa_8').style['mix-blend-mode'] = 'normal';
-        var layer_shem_beit_tzfafa_8 = new L.geoJson(json_shem_beit_tzfafa_8, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_beit_tzfafa_8',
-            layerName: 'layer_shem_beit_tzfafa_8',
-            pane: 'pane_shem_beit_tzfafa_8',
-            onEachFeature: pop_shem_beit_tzfafa_8,
-            style: style_shem_beit_tzfafa_8_0,
-        });
-        bounds_group.addLayer(layer_shem_beit_tzfafa_8);
-        map.addLayer(layer_shem_beit_tzfafa_8);
-        function pop_shem_gonen_9(feature, layer) {
-        }
-
-        function style_shem_gonen_9_0() {
-            return {
-                pane: 'pane_shem_gonen_9',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_gonen_9');
-        map.getPane('pane_shem_gonen_9').style.zIndex = 409;
-        map.getPane('pane_shem_gonen_9').style['mix-blend-mode'] = 'normal';
-        var layer_shem_gonen_9 = new L.geoJson(json_shem_gonen_9, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_gonen_9',
-            layerName: 'layer_shem_gonen_9',
-            pane: 'pane_shem_gonen_9',
-            onEachFeature: pop_shem_gonen_9,
-            style: style_shem_gonen_9_0,
-        });
-        bounds_group.addLayer(layer_shem_gonen_9);
-        map.addLayer(layer_shem_gonen_9);
-        function pop_shem_baka_10(feature, layer) {
-        }
-
-        function style_shem_baka_10_0() {
-            return {
-                pane: 'pane_shem_baka_10',
-                opacity: 1,
-                color: 'rgba(17,199,64,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 2.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
-        }
-        map.createPane('pane_shem_baka_10');
-        map.getPane('pane_shem_baka_10').style.zIndex = 410;
-        map.getPane('pane_shem_baka_10').style['mix-blend-mode'] = 'normal';
-        var layer_shem_baka_10 = new L.geoJson(json_shem_baka_10, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_shem_baka_10',
-            layerName: 'layer_shem_baka_10',
-            pane: 'pane_shem_baka_10',
-            onEachFeature: pop_shem_baka_10,
-            style: style_shem_baka_10_0,
-        });
-        bounds_group.addLayer(layer_shem_baka_10);
-        map.addLayer(layer_shem_baka_10);
-        setBounds();
-        var i = 0;
-        layer_sub_neighborhoods_3.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SCHN_NAMA'] !== null?String('<div style="color: #13c641; font-size: 7pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SCHN_NAMA']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_sub_neighborhoods_3'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_talpiot_5.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_talpiot_5'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_malha_6.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_malha_6'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_ganot_hair_7.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_ganot_hair_7'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_beit_tzfafa_8.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_beit_tzfafa_8'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_gonen_9.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_gonen_9'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        var i = 0;
-        layer_shem_baka_10.eachLayer(function(layer) {
-            var context = {
-                feature: layer.feature,
-                variables: {}
-            };
-            layer.bindTooltip((layer.feature.properties['SHEM_1'] !== null?String('<div style="color: #ffffff; font-size: 10pt; font-weight: bold; font-family: \'Assistant\', sans-serif;">' + layer.feature.properties['SHEM_1']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_shem_baka_10'});
-            labels.push(layer);
-            totalMarkers += 1;
-              layer.added = true;
-              addLabel(layer, i);
-              i++;
-        });
-        resetLabels([layer_sub_neighborhoods_3,layer_tama38_4,layer_shem_talpiot_5,layer_shem_malha_6,layer_shem_ganot_hair_7,layer_shem_beit_tzfafa_8,layer_shem_gonen_9,layer_shem_baka_10]);
-        map.on("zoomend", function(){
-            resetLabels([layer_sub_neighborhoods_3,layer_tama38_4,layer_shem_talpiot_5,layer_shem_malha_6,layer_shem_ganot_hair_7,layer_shem_beit_tzfafa_8,layer_shem_gonen_9,layer_shem_baka_10]);
-        });
-        map.on("layeradd", function(){
-            resetLabels([layer_sub_neighborhoods_3,layer_tama38_4,layer_shem_talpiot_5,layer_shem_malha_6,layer_shem_ganot_hair_7,layer_shem_beit_tzfafa_8,layer_shem_gonen_9,layer_shem_baka_10]);
-        });
-        map.on("layerremove", function(){
-            resetLabels([layer_sub_neighborhoods_3,layer_tama38_4,layer_shem_talpiot_5,layer_shem_malha_6,layer_shem_ganot_hair_7,layer_shem_beit_tzfafa_8,layer_shem_gonen_9,layer_shem_baka_10]);
-        });
-        </script>        
-    </body>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
