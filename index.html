@@ -1634,17 +1634,14 @@
                 // Capture map as canvas image for print
                 const bSw = printBounds.getSouthWest();
                 const bNe = printBounds.getNorthEast();
-                const printContainer = map.getContainer();
-                const mapRect = printContainer.getBoundingClientRect();
-                const printW = Math.round(mapRect.width);
-                const printH = Math.round(mapRect.height);
+                const printRect = mapContainer.getBoundingClientRect();
+                const printW = Math.round(printRect.width);
+                const printH = Math.round(printRect.height);
 
-                // Use leaflet-image or simple canvas capture
-                const mapCanvas = mapContainer.querySelector('canvas');
+                // Use html2canvas to capture the map
                 let mapImgUrl = '';
-                // Try to get tiles + SVG as data URL via html2canvas
                 if (window.html2canvas) {
-                    const canvas = await window.html2canvas(printContainer, { useCORS: true, allowTaint: true, logging: false });
+                    const canvas = await window.html2canvas(mapContainer, { useCORS: true, allowTaint: true, logging: false });
                     mapImgUrl = canvas.toDataURL('image/png');
                 } else {
                     // Fallback: just take a screenshot of current view
