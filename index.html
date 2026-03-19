@@ -968,6 +968,8 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
+        .plan-label-large { font-size: 9pt; }
+        .plan-label-small { font-size: 8pt; color: #888 !important; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -2148,8 +2150,9 @@
                                 }
                             }
                             if (centerLabel) {
+                                const labelClass = add >= 30 ? 'plan-label-center plan-label-large' : 'plan-label-center plan-label-small';
                                 layer.bindTooltip(centerLabel, {
-                                    direction: 'center', className: 'plan-label-center',
+                                    direction: 'center', className: labelClass,
                                     permanent: true, sticky: false
                                 });
                             }
