@@ -2087,16 +2087,17 @@
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
                             // Centered label: scale-dependent rules
-                            // zoom 15: only plans with 50+ units
-                            // zoom 16+: all plans with units
+                            // zoom <=15: no labels
+                            // zoom 16: only plans with 50+ units
+                            // zoom 17+: all plans with units
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             let centerLabel = '';
-                            if (zoom >= 16) {
+                            if (zoom >= 17) {
                                 centerLabel = shortName;
                                 if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
-                            } else if (zoom >= 15) {
+                            } else if (zoom >= 16) {
                                 if (add >= 50) {
                                     centerLabel = shortName;
                                     centerLabel += '\n+' + add + " יח\"ד";
@@ -2110,7 +2111,7 @@
                             }
                             // Plan number along longest edge, rotated to match edge angle
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && zoom >= 16 && f.geometry && f.geometry.coordinates) {
+                            if (planNum && zoom >= 17 && f.geometry && f.geometry.coordinates) {
                                 // Find the longest edge of the polygon
                                 const coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
