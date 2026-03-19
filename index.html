@@ -2717,7 +2717,7 @@
                                     setTimeout(() => setLayers(prev => ({ ...prev, plans: true, permits: false })), 100);
                                 } else {
                                     popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
-                                    setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
+                                    setTimeout(() => setLayers(prev => ({ ...prev, permits: true, plans: false })), 100);
                                 }
                             }
                         });
@@ -2816,7 +2816,7 @@
                                         setTimeout(() => setLayers(prev => ({ ...prev, plans: true, permits: false })), 100);
                                     } else {
                                         popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
-                                        setTimeout(() => setLayers(prev => ({ ...prev, permits: true })), 100);
+                                        setTimeout(() => setLayers(prev => ({ ...prev, permits: true, plans: false })), 100);
                                     }
                                 }
                             });
