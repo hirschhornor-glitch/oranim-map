@@ -950,15 +950,14 @@
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
             color: #323232;
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
-            white-space: pre-line;
-            line-height: 1.1;
-            max-width: none !important;
-            width: auto !important;
+            white-space: nowrap;
             direction: rtl;
             pointer-events: none;
             text-shadow:
@@ -968,8 +967,8 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
-        .plan-label-large { font-size: 9pt; }
-        .plan-label-small { font-size: 8pt; color: #888 !important; }
+        .plan-label-large { font-size: 8pt; }
+        .plan-label-small { font-size: 7pt; color: #999 !important; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -977,6 +976,11 @@
             box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
+            color: #13c641;
+            font-size: 7pt;
+            font-weight: 800;
+            font-family: 'Assistant', sans-serif;
+            white-space: nowrap;
             pointer-events: none;
             text-shadow:
                 -1px -1px 0 #fff, 1px -1px 0 #fff,
@@ -991,6 +995,11 @@
             box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
+            color: #fff;
+            font-size: 10pt;
+            font-weight: 800;
+            font-family: 'Assistant', sans-serif;
+            white-space: nowrap;
             pointer-events: none;
             text-shadow:
                 -1px -1px 0 rgba(17,199,64,1), 1px -1px 0 rgba(17,199,64,1),
@@ -2068,10 +2077,9 @@
                         style: { color: 'rgba(17,199,64,1)', weight: 0.6, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel', dashArray: '5,2' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
-                            if (name) layer.bindTooltip(
-                                '<div style="color:#13c641;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
-                                { permanent: true, direction: 'center', className: 'sub-neighborhood-label' }
-                            );
+                            if (name) layer.bindTooltip(name, {
+                                permanent: true, direction: 'center', className: 'sub-neighborhood-label'
+                            });
                         }
                     }).addTo(map);
                 }
@@ -2087,10 +2095,9 @@
                             style: { color: 'rgba(17,199,64,1)', weight: 3.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
-                                if (name) layer.bindTooltip(
-                                    '<div style="color:#ffffff;font-size:10pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
-                                    { permanent: true, direction: 'center', className: 'minahak-name-label' }
-                                );
+                                if (name) layer.bindTooltip(name, {
+                                    permanent: true, direction: 'center', className: 'minahak-name-label'
+                                });
                             }
                         }).addTo(map);
                         minahakLayers.push(ml);
@@ -2129,28 +2136,18 @@
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
-                            // Wrap text: max 3 words per line
-                            function wrapText(txt, maxWords) {
-                                const words = txt.split(/\s+/);
-                                const lines = [];
-                                for (let i = 0; i < words.length; i += maxWords) {
-                                    lines.push(words.slice(i, i + maxWords).join(' '));
-                                }
-                                return lines.join('\n');
-                            }
                             let centerLabel = '';
                             if (zoom >= 18) {
-                                centerLabel = wrapText(shortName, 3);
-                                if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                                centerLabel = shortName;
+                                if (add > 0) centerLabel += ' +' + add;
                             } else if (zoom >= 17) {
                                 if (add >= 20) {
-                                    centerLabel = wrapText(shortName, 3);
-                                    if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                                    centerLabel = shortName;
+                                    if (add > 0) centerLabel += ' +' + add;
                                 }
                             } else if (zoom >= 16) {
                                 if (add >= 200) {
-                                    centerLabel = wrapText(shortName, 3);
-                                    centerLabel += '\n+' + add + " יח\"ד";
+                                    centerLabel = shortName + ' +' + add;
                                 }
                             }
                             if (centerLabel) {
