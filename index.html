@@ -2136,7 +2136,13 @@
                 const toggledLayers = Object.entries(layers)
                     .filter(([id, on]) => on && id !== 'permits' && id !== 'buildings')
                     .flatMap(([id]) => combinedMap[id] || [id]);
-                const mainLayers = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])];
+                // Ensure plans + tama38 are last (drawn on top)
+                const allMain = [...new Set([...ALWAYS_ON_LAYERS, ...toggledLayers])];
+                const topLayers = ['plans', 'tama38'];
+                const mainLayers = [
+                    ...allMain.filter(l => !topLayers.includes(l)),
+                    ...allMain.filter(l => topLayers.includes(l))
+                ];
                 const showBuildings = layers['buildings'];
                 const showPermits = layers['permits'];
 
