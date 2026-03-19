@@ -961,6 +961,16 @@
         }
         .plan-label-center::before { display: none; }
 
+        .sub-neighborhood-label,
+        .minahak-name-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+        .sub-neighborhood-label::before,
+        .minahak-name-label::before { display: none; }
+
         .plan-number-label {
             color: #4a69d1;
             font-size: 9px;
@@ -2016,19 +2026,22 @@
                     }).addTo(map);
                 }
 
-                // --- Sub-neighborhoods (always on) ---
+                // --- Sub-neighborhoods (always on) — green outline, green label ---
                 if (gd.sub_neighborhoods) {
                     geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
                         pane: 'subNeighborhoodPane',
-                        style: { color: '#4a69d1', weight: 1.5, fillOpacity: 0, dashArray: '5,5' },
+                        style: { color: 'rgba(17,199,64,1)', weight: 1.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
                         onEachFeature: (f, layer) => {
-                            const name = f.properties.Name || f.properties.name || '';
-                            if (name) layer.bindTooltip(name, { permanent: true, direction: 'center', className: 'sub-label' });
+                            const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
+                            if (name) layer.bindTooltip(
+                                '<div style="color:#13c641;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
+                                { permanent: true, direction: 'center', className: 'sub-neighborhood-label', offset: [0, -16] }
+                            );
                         }
                     }).addTo(map);
                 }
 
-                // --- Minahak boundaries ---
+                // --- Minahak boundaries — green outline, white bold label ---
                 const minahakLayers = [];
                 adminLayers.forEach(l => {
                     if (!layers[l.id]) return;
@@ -2036,10 +2049,13 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: '#2ecc71', weight: 2.5, fillOpacity: 0 },
+                            style: { color: 'rgba(17,199,64,1)', weight: 2.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
-                                if (name) layer.bindTooltip(name, { permanent: true, direction: 'center', className: 'minahak-label' });
+                                if (name) layer.bindTooltip(
+                                    '<div style="color:#ffffff;font-size:10pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
+                                    { permanent: true, direction: 'center', className: 'minahak-name-label', offset: [0, -16] }
+                                );
                             }
                         }).addTo(map);
                         minahakLayers.push(ml);
@@ -2071,19 +2087,22 @@
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
                             // Centered label: scale-dependent rules
-                            // 1:8000–1:15000 (zoom 14-15): only if Units_add > 20, show plan_summary
-                            // 1:1000–1:8000 (zoom 15-18+): show plan_summary + Units_add (if >0)
+                            // zoom 15: only plans with 50+ units (plan_summary only)
+                            // zoom 16+: all plans (plan_summary + units)
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             let centerLabel = '';
                             if (zoom >= 16) {
-                                // Zoomed in (1:1000–1:8000): show all labels
+                                // Zoomed in: show all labels with units
                                 centerLabel = shortName;
                                 if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
-                            } else if (zoom >= 14) {
-                                // Medium zoom (1:8000–1:15000): only big plans
-                                if (add > 20) centerLabel = shortName;
+                            } else if (zoom >= 15) {
+                                // Medium zoom: only big plans (50+ units)
+                                if (add >= 50) {
+                                    centerLabel = shortName;
+                                    if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                                }
                             }
                             if (centerLabel) {
                                 layer.bindTooltip(centerLabel, {
@@ -2091,9 +2110,9 @@
                                     permanent: true, sticky: false
                                 });
                             }
-                            // Plan number along the border (only at zoom >= 15, ~1:8000)
+                            // Plan number along the border (only at zoom >= 16)
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && layer.getBounds && zoom >= 15) {
+                            if (planNum && layer.getBounds && zoom >= 16) {
                                 const bounds = layer.getBounds();
                                 const nw = bounds.getNorthWest();
                                 const ne = bounds.getNorthEast();
