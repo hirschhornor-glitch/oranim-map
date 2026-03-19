@@ -956,7 +956,10 @@
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
             white-space: pre-line;
-            line-height: 0.7;
+            line-height: 1.0;
+            max-width: 80px;
+            word-break: break-word;
+            overflow-wrap: break-word;
             direction: rtl;
             pointer-events: none;
             text-shadow:
@@ -2116,18 +2119,27 @@
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
+                            // Wrap text: max 3 words per line
+                            function wrapText(txt, maxWords) {
+                                const words = txt.split(/\s+/);
+                                const lines = [];
+                                for (let i = 0; i < words.length; i += maxWords) {
+                                    lines.push(words.slice(i, i + maxWords).join(' '));
+                                }
+                                return lines.join('\n');
+                            }
                             let centerLabel = '';
                             if (zoom >= 18) {
-                                centerLabel = shortName;
-                                if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                                centerLabel = wrapText(shortName, 3);
+                                if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
                             } else if (zoom >= 17) {
                                 if (add >= 20) {
-                                    centerLabel = shortName;
+                                    centerLabel = wrapText(shortName, 3);
                                     if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
                                 }
                             } else if (zoom >= 16) {
                                 if (add >= 200) {
-                                    centerLabel = shortName;
+                                    centerLabel = wrapText(shortName, 3);
                                     centerLabel += '\n+' + add + " יח\"ד";
                                 }
                             }
