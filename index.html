@@ -2002,11 +2002,15 @@
                 if (layers['plans'] && gd.plans) {
                     const plansLayer = L.geoJSON(gd.plans, {
                         pane: 'plansPane',
-                        filter: f => planInMinahak(f.properties),
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const s = (f.properties.Status_Mavat || '').trim();
+                            return s !== 'נגנזה' && s !== 'נדחתה' && s !== 'נגנזה/נדחתה';
+                        },
                         style: f => {
                             const status = f.properties.Status_Mavat || '';
                             const color = STATUS_COLORS[status] || '#5dade2';
-                            return { color: color, weight: 1.5, fillColor: color, fillOpacity: opacity * 0.25 };
+                            return { color: color, weight: 1.5, fillColor: color, fillOpacity: opacity * 0.25, dashArray: '6,4' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
@@ -2017,12 +2021,13 @@
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
-                            // Label
-                            const name = f.properties['תמצית שם התכנית'] || f.properties.PLAN_NAME || '';
+                            // Label: plan number + units
+                            const name = f.properties.PLAN_NAME || '';
+                            const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
-                            let label = name;
+                            let label = shortName || name;
                             if (add > 0) label += (label ? '\n' : '') + '+' + add + " יח\"ד";
-                            if (label) layer.bindTooltip(label, { direction: 'center', className: 'plan-label', sticky: false });
+                            if (label) layer.bindTooltip(label, { direction: 'center', className: 'plan-label', sticky: false, permanent: false });
                         }
                     }).addTo(map);
                     geoLayersRef.current.plans = plansLayer;
