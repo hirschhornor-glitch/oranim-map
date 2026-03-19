@@ -944,6 +944,32 @@
         .measure-result-btn:hover { background: #e94560; border-color: #e94560; }
 
         /* Measurement tooltip on map */
+        /* Plan labels */
+        .plan-label-center {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #333;
+            font-size: 11px;
+            font-weight: bold;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            text-align: center;
+            white-space: pre-line;
+            direction: rtl;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 1px -1px 2px #fff, -1px 1px 2px #fff;
+        }
+        .plan-label-center::before { display: none; }
+
+        .plan-number-label {
+            color: #4a69d1;
+            font-size: 9px;
+            font-family: 'Segoe UI', monospace;
+            white-space: nowrap;
+            pointer-events: none;
+            text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff;
+        }
+
         .measure-tooltip {
             background: rgba(15, 15, 30, 0.9);
             border: 1px solid #4a69d1;
@@ -1933,10 +1959,15 @@
                 const gd = geoDataRef.current;
                 if (!map || !dataLoaded) return;
 
-                // Remove all previous geo layers
+                // Remove all previous geo layers + plan number markers
                 Object.values(geoLayersRef.current).forEach(l => {
                     if (Array.isArray(l)) l.forEach(ll => map.removeLayer(ll));
-                    else if (l) map.removeLayer(l);
+                    else if (l) {
+                        if (l.eachLayer) l.eachLayer(sub => {
+                            if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
+                        });
+                        map.removeLayer(l);
+                    }
                 });
                 geoLayersRef.current = {};
 
@@ -2009,8 +2040,8 @@
                         },
                         style: f => {
                             const status = f.properties.Status_Mavat || '';
-                            const color = STATUS_COLORS[status] || '#5dade2';
-                            return { color: color, weight: 1.5, fillColor: color, fillOpacity: opacity * 0.25, dashArray: '6,4' };
+                            const fillColor = STATUS_COLORS[status] || '#f0e0d0';
+                            return { color: '#4a69d1', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '6,4' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
@@ -2021,13 +2052,35 @@
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
-                            // Label: plan number + units
-                            const name = f.properties.PLAN_NAME || '';
+                            // Centered label: short name + units
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
-                            let label = shortName || name;
-                            if (add > 0) label += (label ? '\n' : '') + '+' + add + " יח\"ד";
-                            if (label) layer.bindTooltip(label, { direction: 'center', className: 'plan-label', sticky: false, permanent: false });
+                            let centerLabel = shortName;
+                            if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                            if (centerLabel) {
+                                layer.bindTooltip(centerLabel, {
+                                    direction: 'center', className: 'plan-label-center',
+                                    permanent: true, sticky: false
+                                });
+                            }
+                            // Plan number along the border
+                            const planNum = f.properties.PLAN_NAME || '';
+                            if (planNum && layer.getBounds) {
+                                const bounds = layer.getBounds();
+                                const nw = bounds.getNorthWest();
+                                const ne = bounds.getNorthEast();
+                                const edgePt = L.latLng(nw.lat, (nw.lng + ne.lng) / 2);
+                                const numMarker = L.marker(edgePt, {
+                                    icon: L.divIcon({
+                                        className: 'plan-number-label',
+                                        html: planNum,
+                                        iconSize: null
+                                    }),
+                                    interactive: false,
+                                    pane: 'plansPane'
+                                }).addTo(map);
+                                layer._planNumMarker = numMarker;
+                            }
                         }
                     }).addTo(map);
                     geoLayersRef.current.plans = plansLayer;
