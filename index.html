@@ -1244,6 +1244,7 @@
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
+            const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
             const [measureDropdown, setMeasureDropdown] = useState(false);
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
@@ -1304,6 +1305,7 @@
                     setMapScale('1:' + scale.toLocaleString());
                 };
                 map.on('zoomend moveend', updateScale);
+                map.on('zoomend', () => setZoomLevel(map.getZoom()));
                 setTimeout(updateScale, 200);
 
                 mapInstanceRef.current = map;
@@ -2068,20 +2070,30 @@
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
-                            // Centered label: short name + units
+                            // Centered label: scale-dependent rules
+                            // 1:8000–1:15000 (zoom 14-15): only if Units_add > 20, show plan_summary
+                            // 1:1000–1:8000 (zoom 15-18+): show plan_summary + Units_add (if >0)
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
-                            let centerLabel = shortName;
-                            if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                            const zoom = map.getZoom();
+                            let centerLabel = '';
+                            if (zoom >= 16) {
+                                // Zoomed in (1:1000–1:8000): show all labels
+                                centerLabel = shortName;
+                                if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                            } else if (zoom >= 14) {
+                                // Medium zoom (1:8000–1:15000): only big plans
+                                if (add > 20) centerLabel = shortName;
+                            }
                             if (centerLabel) {
                                 layer.bindTooltip(centerLabel, {
                                     direction: 'center', className: 'plan-label-center',
                                     permanent: true, sticky: false
                                 });
                             }
-                            // Plan number along the border
+                            // Plan number along the border (only at zoom >= 15, ~1:8000)
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && layer.getBounds) {
+                            if (planNum && layer.getBounds && zoom >= 15) {
                                 const bounds = layer.getBounds();
                                 const nw = bounds.getNorthWest();
                                 const ne = bounds.getNorthEast();
@@ -2193,7 +2205,7 @@
                 }
 
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, planningTopics, dataLoaded]);
+            }, [layers, opacity, planningTopics, dataLoaded, zoomLevel]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
