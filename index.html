@@ -975,6 +975,11 @@
             border: none !important;
             box-shadow: none !important;
             pointer-events: none;
+            text-shadow:
+                -1px -1px 0 #fff, 1px -1px 0 #fff,
+                -1px 1px 0 #fff, 1px 1px 0 #fff,
+                0 -1px 0 #fff, 0 1px 0 #fff,
+                -1px 0 0 #fff, 1px 0 0 #fff;
         }
         .sub-neighborhood-label::before { display: none; }
         .minahak-name-label {
@@ -2060,7 +2065,7 @@
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
                             if (name) layer.bindTooltip(
                                 '<div style="color:#13c641;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
-                                { permanent: true, direction: 'center', className: 'sub-neighborhood-label', offset: [0, -16] }
+                                { permanent: true, direction: 'center', className: 'sub-neighborhood-label' }
                             );
                         }
                     }).addTo(map);
@@ -2074,12 +2079,12 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 2.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
+                            style: { color: 'rgba(17,199,64,1)', weight: 3.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name) layer.bindTooltip(
                                     '<div style="color:#ffffff;font-size:10pt;font-weight:bold;font-family:Assistant,sans-serif">' + name + '</div>',
-                                    { permanent: true, direction: 'center', className: 'minahak-name-label', offset: [0, -16] }
+                                    { permanent: true, direction: 'center', className: 'minahak-name-label' }
                                 );
                             }
                         }).addTo(map);
