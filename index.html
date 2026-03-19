@@ -2042,15 +2042,10 @@
                         const maskPolygon = L.polygon([worldRing, holeRing], {
                             pane: 'districtPane',
                             color: 'transparent', weight: 0,
-                            fillColor: '#ffffff', fillOpacity: 0.7
+                            fillColor: '#ffffff', fillOpacity: 0.2
                         }).addTo(map);
                         geoLayersRef.current.districtMask = maskPolygon;
                     }
-                    // District border on top
-                    geoLayersRef.current.district = L.geoJSON(gd.district_oranim, {
-                        pane: 'districtPane',
-                        style: { color: '#e94560', weight: 3, fillOpacity: 0, dashArray: '8,4' }
-                    }).addTo(map);
                 }
 
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
