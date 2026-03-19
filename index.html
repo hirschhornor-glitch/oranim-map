@@ -1222,11 +1222,19 @@
         const MINAHAK_SUBS = {
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
             'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
-            'בקעה רבתי': ['ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות', 'תלפיות', 'תלפיות ארנונה'],
+            'בקעה רבתי': ['ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'תלפיות'],
             // 'גבעת המטוס': ['גבעת המטוס'], // no WMS layer available
-            'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'קטמונים ח-ט', 'רסקו', 'רסקו - גבעת הורדים'],
+            'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
             'גינות העיר': ['המושבה היוונית', 'ניות', 'עמק רפאים - המושבה הגרמנית', 'קוממיות - טלביה', 'קטמון הישנה', 'רחביה'],
             'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
+        };
+
+        // Merge duplicate sub-neighborhood names
+        const SUB_NORMALIZE = {
+            'קטמונים ח-ט': 'קטמונים',
+            'רסקו - גבעת הורדים': 'רסקו',
+            'שיכוני תלפיות': 'תלפיות',
+            'תלפיות ארנונה': 'ארנונה',
         };
 
         const CENTER = [31.7530, 35.2100];
@@ -2054,7 +2062,8 @@
                         }
 
                         // Per sub-neighborhood breakdown
-                        const sub = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        const sub = SUB_NORMALIZE[subRaw] || subRaw;
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].units_in += inVal;
                         bySub[m][sub].units_add += addVal;
@@ -2079,7 +2088,8 @@
                         byMinahak[m].renewal += tose; // tama38 = התחדשות עירונית
 
                         // Per sub-neighborhood: use neighborho as sub name
-                        const sub = neighborho || 'אחר';
+                        const subRaw2 = neighborho || 'אחר';
+                        const sub = SUB_NORMALIZE[subRaw2] || subRaw2;
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].units_add += tose;
                         bySub[m][sub].renewal += tose;
