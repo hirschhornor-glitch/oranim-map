@@ -950,14 +950,15 @@
             border: none !important;
             box-shadow: none !important;
             color: #333;
-            font-size: 11px;
-            font-weight: bold;
-            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            font-size: 8px;
+            font-weight: normal;
+            font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
             white-space: pre-line;
+            line-height: 1.1;
             direction: rtl;
             pointer-events: none;
-            text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 1px -1px 2px #fff, -1px 1px 2px #fff;
+            text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff;
         }
         .plan-label-center::before { display: none; }
 
@@ -973,8 +974,8 @@
 
         .plan-number-label {
             color: #4a69d1;
-            font-size: 9px;
-            font-family: 'Segoe UI', monospace;
+            font-size: 7px;
+            font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
             pointer-events: none;
             text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff;
@@ -2088,17 +2089,23 @@
                             });
                             // Centered label: scale-dependent rules
                             // zoom <=15: no labels
-                            // zoom 16: only plans with 50+ units
-                            // zoom 17+: all plans with units
+                            // zoom 16: only plans with 200+ units (major plans only)
+                            // zoom 17: plans with 20+ units
+                            // zoom 18+: all plans
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             let centerLabel = '';
-                            if (zoom >= 17) {
+                            if (zoom >= 18) {
                                 centerLabel = shortName;
                                 if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                            } else if (zoom >= 17) {
+                                if (add >= 20) {
+                                    centerLabel = shortName;
+                                    if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                                }
                             } else if (zoom >= 16) {
-                                if (add >= 50) {
+                                if (add >= 200) {
                                     centerLabel = shortName;
                                     centerLabel += '\n+' + add + " יח\"ד";
                                 }
@@ -2111,7 +2118,7 @@
                             }
                             // Plan number along longest edge, rotated to match edge angle
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && zoom >= 17 && f.geometry && f.geometry.coordinates) {
+                            if (planNum && zoom >= 18 && f.geometry && f.geometry.coordinates) {
                                 // Find the longest edge of the polygon
                                 const coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
