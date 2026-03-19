@@ -2087,21 +2087,19 @@
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
                             // Centered label: scale-dependent rules
-                            // zoom 15: only plans with 50+ units (plan_summary only)
-                            // zoom 16+: all plans (plan_summary + units)
+                            // zoom 15: only plans with 50+ units
+                            // zoom 16+: all plans with units
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             let centerLabel = '';
                             if (zoom >= 16) {
-                                // Zoomed in: show all labels with units
                                 centerLabel = shortName;
                                 if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
                             } else if (zoom >= 15) {
-                                // Medium zoom: only big plans (50+ units)
                                 if (add >= 50) {
                                     centerLabel = shortName;
-                                    if (add > 0) centerLabel += (centerLabel ? '\n+' : '+') + add + " יח\"ד";
+                                    centerLabel += '\n+' + add + " יח\"ד";
                                 }
                             }
                             if (centerLabel) {
@@ -2110,22 +2108,36 @@
                                     permanent: true, sticky: false
                                 });
                             }
-                            // Plan number along the border (only at zoom >= 16)
+                            // Plan number along longest edge, rotated to match edge angle
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && layer.getBounds && zoom >= 16) {
-                                const bounds = layer.getBounds();
-                                const nw = bounds.getNorthWest();
-                                const ne = bounds.getNorthEast();
-                                const edgePt = L.latLng(nw.lat, (nw.lng + ne.lng) / 2);
-                                const numMarker = L.marker(edgePt, {
-                                    icon: L.divIcon({
-                                        className: 'plan-number-label',
-                                        html: planNum,
-                                        iconSize: null
-                                    }),
-                                    interactive: false,
-                                    pane: 'plansPane'
-                                }).addTo(map);
+                            if (planNum && zoom >= 16 && f.geometry && f.geometry.coordinates) {
+                                // Find the longest edge of the polygon
+                                const coords = f.geometry.type === 'MultiPolygon'
+                                    ? f.geometry.coordinates[0][0]
+                                    : f.geometry.coordinates[0];
+                                let maxLen = 0, bestMid = null, bestAngle = 0;
+                                for (let ei = 0; ei < coords.length - 1; ei++) {
+                                    const a = coords[ei], b = coords[ei + 1];
+                                    const dx = b[0] - a[0], dy = b[1] - a[1];
+                                    const len = Math.sqrt(dx * dx + dy * dy);
+                                    if (len > maxLen) {
+                                        maxLen = len;
+                                        bestMid = [(a[1] + b[1]) / 2, (a[0] + b[0]) / 2]; // [lat, lng]
+                                        // Angle in degrees (compensate for lat/lng distortion)
+                                        const cosLat = Math.cos(a[1] * Math.PI / 180);
+                                        bestAngle = -Math.atan2(dy, dx * cosLat) * 180 / Math.PI;
+                                    }
+                                }
+                                if (bestMid) {
+                                    const numMarker = L.marker(bestMid, {
+                                        icon: L.divIcon({
+                                            className: 'plan-number-label',
+                                            html: '<span style="transform:rotate(' + bestAngle + 'deg);display:inline-block">' + planNum + '</span>',
+                                            iconSize: null
+                                        }),
+                                        interactive: false,
+                                        pane: 'plansPane'
+                                    }).addTo(map);
                                 layer._planNumMarker = numMarker;
                             }
                         }
