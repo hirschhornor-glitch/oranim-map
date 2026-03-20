@@ -2285,10 +2285,15 @@
 
                             let centerLabel = '';
                             let labelClass = 'plan-label-center';
-                            // Only label if polygon is at least 60x30 px on screen
-                            if (pxArea >= 1800 && shortName) {
-                                centerLabel = autoWrap(shortName, 20);
-                                if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                            if (pxArea >= 1800) {
+                                if (zoom >= 17 && shortName) {
+                                    // Zoom 17+: show name + units
+                                    centerLabel = autoWrap(shortName, 20);
+                                    if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                                } else if (zoom >= 15 && add > 0) {
+                                    // Zoom 15-16: show only units count
+                                    centerLabel = '+' + add + "\nיח\"ד";
+                                }
                                 if (add >= 30) labelClass += ' plan-label-large';
                                 else labelClass += ' plan-label-small';
                             }
