@@ -1087,37 +1087,46 @@
         }
 
         function visualCenter(geometry) {
+            // Get outer ring of the first polygon
             const coords = geometry.type === 'MultiPolygon'
                 ? geometry.coordinates[0][0]
                 : geometry.coordinates[0];
-            // Try bounding box center first
+            // Compute centroid (average of vertices, weighted by edge length)
+            let cx = 0, cy = 0, totalLen = 0;
+            for (let i = 0; i < coords.length - 1; i++) {
+                const dx = coords[i+1][0] - coords[i][0], dy = coords[i+1][1] - coords[i][1];
+                const len = Math.sqrt(dx*dx + dy*dy);
+                cx += (coords[i][0] + coords[i+1][0]) / 2 * len;
+                cy += (coords[i][1] + coords[i+1][1]) / 2 * len;
+                totalLen += len;
+            }
+            if (totalLen > 0) { cx /= totalLen; cy /= totalLen; }
+            else { cx = coords[0][0]; cy = coords[0][1]; }
+            if (pointInPolygon([cx, cy], coords)) return [cy, cx];
+            // Bbox
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             for (const c of coords) {
-                if (c[0] < minX) minX = c[0];
-                if (c[1] < minY) minY = c[1];
-                if (c[0] > maxX) maxX = c[0];
-                if (c[1] > maxY) maxY = c[1];
+                if (c[0] < minX) minX = c[0]; if (c[1] < minY) minY = c[1];
+                if (c[0] > maxX) maxX = c[0]; if (c[1] > maxY) maxY = c[1];
             }
-            const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-            if (pointInPolygon([cx, cy], coords)) return [cy, cx]; // [lat, lng]
-            // If center is outside, scan a grid inside bbox to find best interior point
-            const stepX = (maxX - minX) / 8, stepY = (maxY - minY) / 8;
+            // Scan 16x16 grid, pick point farthest from edges (pole of inaccessibility)
+            const N = 16;
+            const stepX = (maxX - minX) / N, stepY = (maxY - minY) / N;
             let bestPt = [cy, cx], bestDist = -1;
-            for (let gx = minX + stepX / 2; gx < maxX; gx += stepX) {
-                for (let gy = minY + stepY / 2; gy < maxY; gy += stepY) {
+            for (let xi = 0; xi < N; xi++) {
+                const gx = minX + (xi + 0.5) * stepX;
+                for (let yi = 0; yi < N; yi++) {
+                    const gy = minY + (yi + 0.5) * stepY;
                     if (!pointInPolygon([gx, gy], coords)) continue;
-                    // Distance to nearest edge (approximate: distance to centroid of bbox)
-                    const dx = gx - cx, dy = gy - cy;
-                    // Prefer points near center
-                    const dist = -(dx * dx + dy * dy);
-                    // But must be inside - find distance to nearest edge
                     let minEdgeDist = Infinity;
                     for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
                         const ax = coords[j][0], ay = coords[j][1];
                         const bx = coords[i][0], by = coords[i][1];
-                        const t = Math.max(0, Math.min(1, ((gx-ax)*(bx-ax)+(gy-ay)*(by-ay))/((bx-ax)*(bx-ax)+(by-ay)*(by-ay))));
-                        const px = ax + t*(bx-ax), py = ay + t*(by-ay);
-                        const d = Math.sqrt((gx-px)*(gx-px)+(gy-py)*(gy-py));
+                        const abx = bx-ax, aby = by-ay;
+                        const ab2 = abx*abx + aby*aby;
+                        const t = ab2 > 0 ? Math.max(0, Math.min(1, ((gx-ax)*abx+(gy-ay)*aby)/ab2)) : 0;
+                        const px = ax + t*abx, py = ay + t*aby;
+                        const d = (gx-px)*(gx-px)+(gy-py)*(gy-py);
                         if (d < minEdgeDist) minEdgeDist = d;
                     }
                     if (minEdgeDist > bestDist) { bestDist = minEdgeDist; bestPt = [gy, gx]; }
