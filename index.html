@@ -2192,8 +2192,12 @@
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             const bounds = layer.getBounds();
-                            const sw = map.latLngToContainerPoint(bounds.getSouthWest());
-                            const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+                            if (!bounds.isValid()) return;
+                            let sw, ne;
+                            try {
+                                sw = map.latLngToContainerPoint(bounds.getSouthWest());
+                                ne = map.latLngToContainerPoint(bounds.getNorthEast());
+                            } catch(e) { return; }
                             const pxW = Math.abs(ne.x - sw.x);
                             const pxH = Math.abs(ne.y - sw.y);
                             const pxArea = pxW * pxH;
