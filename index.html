@@ -1088,49 +1088,55 @@
 
         function visualCenter(geometry) {
             // Get outer ring of the first polygon
-            const coords = geometry.type === 'MultiPolygon'
+            const ring = geometry.type === 'MultiPolygon'
                 ? geometry.coordinates[0][0]
                 : geometry.coordinates[0];
-            // Compute centroid (average of vertices, weighted by edge length)
-            let cx = 0, cy = 0, totalLen = 0;
-            for (let i = 0; i < coords.length - 1; i++) {
-                const dx = coords[i+1][0] - coords[i][0], dy = coords[i+1][1] - coords[i][1];
-                const len = Math.sqrt(dx*dx + dy*dy);
-                cx += (coords[i][0] + coords[i+1][0]) / 2 * len;
-                cy += (coords[i][1] + coords[i+1][1]) / 2 * len;
-                totalLen += len;
+            // Proper polygon centroid using signed area formula
+            let area = 0, cx = 0, cy = 0;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const a = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+                area += a;
+                cx += (ring[j][0] + ring[i][0]) * a;
+                cy += (ring[j][1] + ring[i][1]) * a;
             }
-            if (totalLen > 0) { cx /= totalLen; cy /= totalLen; }
-            else { cx = coords[0][0]; cy = coords[0][1]; }
-            if (pointInPolygon([cx, cy], coords)) return [cy, cx];
+            area *= 0.5;
+            if (Math.abs(area) > 1e-12) { cx /= (6 * area); cy /= (6 * area); }
+            else { cx = ring[0][0]; cy = ring[0][1]; }
+            if (pointInPolygon([cx, cy], ring)) return [cy, cx];
             // Bbox
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            for (const c of coords) {
+            for (const c of ring) {
                 if (c[0] < minX) minX = c[0]; if (c[1] < minY) minY = c[1];
                 if (c[0] > maxX) maxX = c[0]; if (c[1] > maxY) maxY = c[1];
             }
-            // Scan 16x16 grid, pick point farthest from edges (pole of inaccessibility)
-            const N = 16;
-            const stepX = (maxX - minX) / N, stepY = (maxY - minY) / N;
+            // Iterative grid search (polylabel-like): 3 rounds, each 8x8
             let bestPt = [cy, cx], bestDist = -1;
-            for (let xi = 0; xi < N; xi++) {
-                const gx = minX + (xi + 0.5) * stepX;
-                for (let yi = 0; yi < N; yi++) {
-                    const gy = minY + (yi + 0.5) * stepY;
-                    if (!pointInPolygon([gx, gy], coords)) continue;
-                    let minEdgeDist = Infinity;
-                    for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-                        const ax = coords[j][0], ay = coords[j][1];
-                        const bx = coords[i][0], by = coords[i][1];
-                        const abx = bx-ax, aby = by-ay;
-                        const ab2 = abx*abx + aby*aby;
-                        const t = ab2 > 0 ? Math.max(0, Math.min(1, ((gx-ax)*abx+(gy-ay)*aby)/ab2)) : 0;
-                        const px = ax + t*abx, py = ay + t*aby;
-                        const d = (gx-px)*(gx-px)+(gy-py)*(gy-py);
-                        if (d < minEdgeDist) minEdgeDist = d;
+            let sMinX = minX, sMinY = minY, sMaxX = maxX, sMaxY = maxY;
+            for (let round = 0; round < 3; round++) {
+                const N = 8;
+                const stepX = (sMaxX - sMinX) / N, stepY = (sMaxY - sMinY) / N;
+                for (let xi = 0; xi < N; xi++) {
+                    const gx = sMinX + (xi + 0.5) * stepX;
+                    for (let yi = 0; yi < N; yi++) {
+                        const gy = sMinY + (yi + 0.5) * stepY;
+                        if (!pointInPolygon([gx, gy], ring)) continue;
+                        let minEdgeDist = Infinity;
+                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                            const ax = ring[j][0], ay = ring[j][1];
+                            const bx = ring[i][0], by = ring[i][1];
+                            const abx = bx-ax, aby = by-ay;
+                            const ab2 = abx*abx + aby*aby;
+                            const t = ab2 > 0 ? Math.max(0, Math.min(1, ((gx-ax)*abx+(gy-ay)*aby)/ab2)) : 0;
+                            const d = (gx-ax-t*abx)*(gx-ax-t*abx)+(gy-ay-t*aby)*(gy-ay-t*aby);
+                            if (d < minEdgeDist) minEdgeDist = d;
+                        }
+                        if (minEdgeDist > bestDist) { bestDist = minEdgeDist; bestPt = [gy, gx]; }
                     }
-                    if (minEdgeDist > bestDist) { bestDist = minEdgeDist; bestPt = [gy, gx]; }
                 }
+                // Zoom into area around best point for next round
+                const r = Math.max(stepX, stepY);
+                sMinX = bestPt[1] - r; sMaxX = bestPt[1] + r;
+                sMinY = bestPt[0] - r; sMaxY = bestPt[0] + r;
             }
             return bestPt; // [lat, lng]
         }
@@ -2320,27 +2326,26 @@
                                 }).addTo(map);
                                 layer._labelMarker = labelMarker;
                             }
-                            // Plan number along longest edge, rotated to match edge angle
+                            // Plan number along longest edge (in pixels), rotated to match
                             const planNum = f.properties.PLAN_NAME || '';
                             if (planNum && pxArea >= 3000 && f.geometry && f.geometry.coordinates) {
-                                // Find the longest edge of the polygon
                                 const coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
                                     : f.geometry.coordinates[0];
-                                let maxLen = 0, bestMid = null, bestAngle = 0;
+                                let maxPxLen = 0, bestMid = null, bestAngle = 0;
                                 for (let ei = 0; ei < coords.length - 1; ei++) {
                                     const a = coords[ei], b = coords[ei + 1];
-                                    const dx = b[0] - a[0], dy = b[1] - a[1];
-                                    const len = Math.sqrt(dx * dx + dy * dy);
-                                    if (len > maxLen) {
-                                        maxLen = len;
-                                        bestMid = [(a[1] + b[1]) / 2, (a[0] + b[0]) / 2]; // [lat, lng]
-                                        // Angle in degrees (compensate for lat/lng distortion)
-                                        const cosLat = Math.cos(a[1] * Math.PI / 180);
-                                        bestAngle = -Math.atan2(dy, dx * cosLat) * 180 / Math.PI;
+                                    // Convert to pixel coordinates for accurate length
+                                    const pa = map.latLngToContainerPoint([a[1], a[0]]);
+                                    const pb = map.latLngToContainerPoint([b[1], b[0]]);
+                                    const pxLen = Math.sqrt((pb.x-pa.x)*(pb.x-pa.x) + (pb.y-pa.y)*(pb.y-pa.y));
+                                    if (pxLen > maxPxLen) {
+                                        maxPxLen = pxLen;
+                                        bestMid = [(a[1]+b[1])/2, (a[0]+b[0])/2]; // [lat, lng]
+                                        bestAngle = -Math.atan2(pb.y-pa.y, pb.x-pa.x) * 180 / Math.PI;
                                     }
                                 }
-                                if (bestMid) {
+                                if (bestMid && maxPxLen >= 40) {
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
