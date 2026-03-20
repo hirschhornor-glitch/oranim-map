@@ -961,7 +961,6 @@
             line-height: 1.0;
             direction: rtl;
             pointer-events: none;
-            transform: translate(-50%, -50%) !important;
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
@@ -2047,6 +2046,7 @@
                     else if (l) {
                         if (l.eachLayer) l.eachLayer(sub => {
                             if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
+                            if (sub._labelMarker) map.removeLayer(sub._labelMarker);
                         });
                         map.removeLayer(l);
                     }
@@ -2230,11 +2230,18 @@
                                 else labelClass += ' plan-label-small';
                             }
                             if (centerLabel) {
-                                layer.bindTooltip(centerLabel, {
-                                    direction: 'center', className: labelClass,
-                                    permanent: true, sticky: false,
-                                    offset: [0, 0]
-                                });
+                                const center = layer.getBounds().getCenter();
+                                const labelMarker = L.marker(center, {
+                                    icon: L.divIcon({
+                                        className: labelClass,
+                                        html: centerLabel.replace(/\n/g, '<br>'),
+                                        iconSize: [0, 0],
+                                        iconAnchor: [0, 0]
+                                    }),
+                                    interactive: false,
+                                    pane: 'plansPane'
+                                }).addTo(map);
+                                layer._labelMarker = labelMarker;
                             }
                             // Plan number along longest edge, rotated to match edge angle
                             const planNum = f.properties.PLAN_NAME || '';
