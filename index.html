@@ -957,8 +957,8 @@
             font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
-            white-space: pre-line;
-            line-height: 1.2;
+            white-space: pre;
+            line-height: 0.9;
             direction: rtl;
             pointer-events: none;
             text-shadow:
@@ -1078,6 +1078,25 @@
         };
 
         // Map Hebrew property names to English aliases used by popup builders
+        // Point-in-polygon: ray casting on a Leaflet polygon layer
+        function leafletPip(layer, latlng) {
+            const lng = latlng.lng, lat = latlng.lat;
+            let coords;
+            const geo = layer.feature.geometry;
+            if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+            else if (geo.type === 'Polygon') coords = geo.coordinates[0];
+            else return false;
+            let inside = false;
+            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                const xi = coords[i][0], yi = coords[i][1];
+                const xj = coords[j][0], yj = coords[j][1];
+                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+
         function mapPlanProps(props) {
             return {
                 ...props,
@@ -2121,13 +2140,52 @@
                             return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '4,2' };
                         },
                         onEachFeature: (f, layer) => {
-                            layer.on('click', () => {
-                                const mapped = mapPlanProps(f.properties);
+                            layer.on('click', (e) => {
+                                // Find all overlapping plans at click point
+                                const clickLatLng = e.latlng;
+                                const allFeatures = [];
+                                const plansLayer = geoLayersRef.current.plans;
+                                if (plansLayer) {
+                                    plansLayer.eachLayer(pl => {
+                                        if (pl.getBounds && pl.getBounds().contains(clickLatLng)) {
+                                            try {
+                                                // Point-in-polygon: check if click is inside this polygon
+                                                const contains = leafletPip(pl, clickLatLng);
+                                                if (contains) {
+                                                    const m = mapPlanProps(pl.feature.properties);
+                                                    allFeatures.push({ properties: m, type: 'plan' });
+                                                }
+                                            } catch(ex) {
+                                                // Fallback: if pip fails, just use bounds check
+                                                const m = mapPlanProps(pl.feature.properties);
+                                                allFeatures.push({ properties: m, type: 'plan' });
+                                            }
+                                        }
+                                    });
+                                }
+                                // Also check tama38 nearby
+                                const tama38Layer = geoLayersRef.current.tama38;
+                                if (tama38Layer) {
+                                    tama38Layer.eachLayer(tl => {
+                                        if (tl.getLatLng && clickLatLng.distanceTo(tl.getLatLng()) < 30) {
+                                            allFeatures.push({ properties: tl.feature.properties, type: 'tama38' });
+                                        }
+                                    });
+                                }
+                                if (allFeatures.length === 0) {
+                                    const mapped = mapPlanProps(f.properties);
+                                    allFeatures.push({ properties: mapped, type: 'plan' });
+                                }
+                                const navInfo = allFeatures.length > 1 ? { current: 0, total: allFeatures.length } : null;
+                                const first = allFeatures[0];
+                                const content = first.type === 'tama38'
+                                    ? buildTama38Popup(first.properties, navInfo)
+                                    : buildPlanPopup(first.properties, { properties: first.properties }, navInfo);
                                 const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
-                                    .setLatLng(layer.getBounds().getCenter())
-                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                    .setLatLng(clickLatLng)
+                                    .setContent(content);
                                 popup.openOn(map);
-                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                bindPopupEvents(popup, allFeatures, 0);
                             });
                             // Labels: only show if polygon is large enough on screen
                             const shortName = f.properties['תמצית שם התכנית'] || '';
