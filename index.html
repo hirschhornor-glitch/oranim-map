@@ -957,7 +957,8 @@
             font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
-            white-space: nowrap;
+            white-space: pre-line;
+            line-height: 1.2;
             direction: rtl;
             pointer-events: none;
             text-shadow:
@@ -968,7 +969,7 @@
         }
         .plan-label-center::before { display: none; }
         .plan-label-large { font-size: 8pt; }
-        .plan-label-small { font-size: 7pt; color: #999 !important; }
+        .plan-label-small { color: #999 !important; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -2137,21 +2138,26 @@
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
                             let centerLabel = '';
+                            let labelClass = 'plan-label-center';
                             if (zoom >= 18) {
                                 centerLabel = shortName;
-                                if (add > 0) centerLabel += ' +' + add;
+                                if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
+                                if (add >= 30) labelClass += ' plan-label-large';
+                                else labelClass += ' plan-label-small';
                             } else if (zoom >= 17) {
                                 if (add >= 20) {
                                     centerLabel = shortName;
-                                    if (add > 0) centerLabel += ' +' + add;
+                                    centerLabel += '\n+' + add + " יח\"ד";
+                                    if (add >= 30) labelClass += ' plan-label-large';
+                                    else labelClass += ' plan-label-small';
                                 }
                             } else if (zoom >= 16) {
                                 if (add >= 200) {
-                                    centerLabel = shortName + ' +' + add;
+                                    centerLabel = shortName + '\n+' + add + " יח\"ד";
+                                    labelClass += ' plan-label-large';
                                 }
                             }
                             if (centerLabel) {
-                                const labelClass = add >= 30 ? 'plan-label-center plan-label-large' : 'plan-label-center plan-label-small';
                                 layer.bindTooltip(centerLabel, {
                                     direction: 'center', className: labelClass,
                                     permanent: true, sticky: false
