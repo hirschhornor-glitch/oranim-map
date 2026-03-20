@@ -2129,33 +2129,25 @@
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                             });
-                            // Centered label: scale-dependent rules
-                            // zoom <=15: no labels
-                            // zoom 16: only plans with 200+ units (major plans only)
-                            // zoom 17: plans with 20+ units
-                            // zoom 18+: all plans
+                            // Labels: only show if polygon is large enough on screen
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
+                            const bounds = layer.getBounds();
+                            const sw = map.latLngToContainerPoint(bounds.getSouthWest());
+                            const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+                            const pxW = Math.abs(ne.x - sw.x);
+                            const pxH = Math.abs(ne.y - sw.y);
+                            const pxArea = pxW * pxH;
+
                             let centerLabel = '';
                             let labelClass = 'plan-label-center';
-                            if (zoom >= 18) {
+                            // Only label if polygon is at least 60x30 px on screen
+                            if (pxArea >= 1800 && shortName) {
                                 centerLabel = shortName;
                                 if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
                                 if (add >= 30) labelClass += ' plan-label-large';
                                 else labelClass += ' plan-label-small';
-                            } else if (zoom >= 17) {
-                                if (add >= 20) {
-                                    centerLabel = shortName;
-                                    centerLabel += '\n+' + add + " יח\"ד";
-                                    if (add >= 30) labelClass += ' plan-label-large';
-                                    else labelClass += ' plan-label-small';
-                                }
-                            } else if (zoom >= 16) {
-                                if (add >= 200) {
-                                    centerLabel = shortName + '\n+' + add + " יח\"ד";
-                                    labelClass += ' plan-label-large';
-                                }
                             }
                             if (centerLabel) {
                                 layer.bindTooltip(centerLabel, {
@@ -2165,7 +2157,7 @@
                             }
                             // Plan number along longest edge, rotated to match edge angle
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && zoom >= 18 && f.geometry && f.geometry.coordinates) {
+                            if (planNum && pxArea >= 3000 && f.geometry && f.geometry.coordinates) {
                                 // Find the longest edge of the polygon
                                 const coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
