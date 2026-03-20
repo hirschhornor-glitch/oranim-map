@@ -950,8 +950,6 @@
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
             color: #323232;
             font-size: 7pt;
             font-weight: bold;
@@ -961,6 +959,10 @@
             line-height: 1.0;
             direction: rtl;
             pointer-events: none;
+            /* Center the text block over the anchor point */
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
@@ -2235,8 +2237,8 @@
                                     icon: L.divIcon({
                                         className: labelClass,
                                         html: centerLabel.replace(/\n/g, '<br>'),
-                                        iconSize: [0, 0],
-                                        iconAnchor: [0, 0]
+                                        iconSize: [200, 40],
+                                        iconAnchor: [100, 20]
                                     }),
                                     interactive: false,
                                     pane: 'plansPane'
@@ -2268,7 +2270,8 @@
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
                                             html: '<span style="transform:rotate(' + bestAngle + 'deg);display:inline-block">' + planNum + '</span>',
-                                            iconSize: null
+                                            iconSize: [120, 20],
+                                            iconAnchor: [60, 10]
                                         }),
                                         interactive: false,
                                         pane: 'plansPane'
