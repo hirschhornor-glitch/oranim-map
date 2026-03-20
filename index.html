@@ -958,7 +958,7 @@
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
             white-space: pre;
-            line-height: 0.9;
+            line-height: 1.0;
             direction: rtl;
             pointer-events: none;
             text-shadow:
@@ -2198,11 +2198,28 @@
                             const pxH = Math.abs(ne.y - sw.y);
                             const pxArea = pxW * pxH;
 
+                            // Auto-wrap text at ~20 chars (QGIS autoWrapLength=20)
+                            function autoWrap(txt, maxLen) {
+                                if (!txt || txt.length <= maxLen) return txt;
+                                const words = txt.split(/\s+/);
+                                let line = '', lines = [];
+                                for (const w of words) {
+                                    if (line && (line + ' ' + w).length > maxLen) {
+                                        lines.push(line);
+                                        line = w;
+                                    } else {
+                                        line = line ? line + ' ' + w : w;
+                                    }
+                                }
+                                if (line) lines.push(line);
+                                return lines.join('\n');
+                            }
+
                             let centerLabel = '';
                             let labelClass = 'plan-label-center';
                             // Only label if polygon is at least 60x30 px on screen
                             if (pxArea >= 1800 && shortName) {
-                                centerLabel = shortName;
+                                centerLabel = autoWrap(shortName, 20);
                                 if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
                                 if (add >= 30) labelClass += ' plan-label-large';
                                 else labelClass += ' plan-label-small';
