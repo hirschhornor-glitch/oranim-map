@@ -1074,6 +1074,58 @@
         const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods'];
 
         // GeoJSON data files
+        // Find the best label point inside a polygon (visual center)
+        function pointInPolygon(pt, ring) {
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const xi = ring[i][0], yi = ring[i][1];
+                const xj = ring[j][0], yj = ring[j][1];
+                if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi)
+                    inside = !inside;
+            }
+            return inside;
+        }
+
+        function visualCenter(geometry) {
+            const coords = geometry.type === 'MultiPolygon'
+                ? geometry.coordinates[0][0]
+                : geometry.coordinates[0];
+            // Try bounding box center first
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const c of coords) {
+                if (c[0] < minX) minX = c[0];
+                if (c[1] < minY) minY = c[1];
+                if (c[0] > maxX) maxX = c[0];
+                if (c[1] > maxY) maxY = c[1];
+            }
+            const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+            if (pointInPolygon([cx, cy], coords)) return [cy, cx]; // [lat, lng]
+            // If center is outside, scan a grid inside bbox to find best interior point
+            const stepX = (maxX - minX) / 8, stepY = (maxY - minY) / 8;
+            let bestPt = [cy, cx], bestDist = -1;
+            for (let gx = minX + stepX / 2; gx < maxX; gx += stepX) {
+                for (let gy = minY + stepY / 2; gy < maxY; gy += stepY) {
+                    if (!pointInPolygon([gx, gy], coords)) continue;
+                    // Distance to nearest edge (approximate: distance to centroid of bbox)
+                    const dx = gx - cx, dy = gy - cy;
+                    // Prefer points near center
+                    const dist = -(dx * dx + dy * dy);
+                    // But must be inside - find distance to nearest edge
+                    let minEdgeDist = Infinity;
+                    for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                        const ax = coords[j][0], ay = coords[j][1];
+                        const bx = coords[i][0], by = coords[i][1];
+                        const t = Math.max(0, Math.min(1, ((gx-ax)*(bx-ax)+(gy-ay)*(by-ay))/((bx-ax)*(bx-ax)+(by-ay)*(by-ay))));
+                        const px = ax + t*(bx-ax), py = ay + t*(by-ay);
+                        const d = Math.sqrt((gx-px)*(gx-px)+(gy-py)*(gy-py));
+                        if (d < minEdgeDist) minEdgeDist = d;
+                    }
+                    if (minEdgeDist > bestDist) { bestDist = minEdgeDist; bestPt = [gy, gx]; }
+                }
+            }
+            return bestPt; // [lat, lng]
+        }
+
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
             tama38: 'data/tama38.geojson',
@@ -2241,7 +2293,7 @@
                                 else labelClass += ' plan-label-small';
                             }
                             if (centerLabel) {
-                                const center = layer.getBounds().getCenter();
+                                const center = f.geometry ? visualCenter(f.geometry) : layer.getBounds().getCenter();
                                 const labelMarker = L.marker(center, {
                                     icon: L.divIcon({
                                         className: labelClass,
