@@ -959,10 +959,11 @@
             line-height: 1.0;
             direction: rtl;
             pointer-events: none;
-            /* Center the text block over the anchor point */
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
+            width: auto !important;
+            height: auto !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
@@ -1021,12 +1022,20 @@
         .tama38-label::before { display: none; }
 
         .plan-number-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
             font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
             pointer-events: none;
+            width: auto !important;
+            height: auto !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa;
@@ -2237,8 +2246,8 @@
                                     icon: L.divIcon({
                                         className: labelClass,
                                         html: centerLabel.replace(/\n/g, '<br>'),
-                                        iconSize: [200, 40],
-                                        iconAnchor: [100, 20]
+                                        iconSize: [0, 0],
+                                        iconAnchor: [0, 0]
                                     }),
                                     interactive: false,
                                     pane: 'plansPane'
@@ -2270,8 +2279,8 @@
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
                                             html: '<span style="transform:rotate(' + bestAngle + 'deg);display:inline-block">' + planNum + '</span>',
-                                            iconSize: [120, 20],
-                                            iconAnchor: [60, 10]
+                                            iconSize: [0, 0],
+                                            iconAnchor: [0, 0]
                                         }),
                                         interactive: false,
                                         pane: 'plansPane'
