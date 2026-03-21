@@ -1005,18 +1005,18 @@
             padding: 0 !important;
             margin: 0 !important;
             color: #fff;
-            font-size: 13pt;
+            font-size: 20pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
             pointer-events: none;
             transform: translate(-50%, -50%);
             text-shadow:
-                -2px -2px 0 rgba(17,199,64,1), 2px -2px 0 rgba(17,199,64,1),
-                -2px 2px 0 rgba(17,199,64,1), 2px 2px 0 rgba(17,199,64,1),
-                0 -2px 0 rgba(17,199,64,1), 0 2px 0 rgba(17,199,64,1),
-                -2px 0 0 rgba(17,199,64,1), 2px 0 0 rgba(17,199,64,1),
-                3px 3px 6px rgba(0,0,0,0.5);
+                -3px -3px 0 rgba(17,199,64,1), 3px -3px 0 rgba(17,199,64,1),
+                -3px 3px 0 rgba(17,199,64,1), 3px 3px 0 rgba(17,199,64,1),
+                0 -3px 0 rgba(17,199,64,1), 0 3px 0 rgba(17,199,64,1),
+                -3px 0 0 rgba(17,199,64,1), 3px 0 0 rgba(17,199,64,1),
+                4px 4px 8px rgba(0,0,0,0.6);
         }
         .minahak-name-label::before { display: none; }
         .tama38-label {
@@ -2217,7 +2217,7 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 5, fillOpacity: 0 },
+                            style: { color: 'rgba(17,199,64,1)', weight: 8, fillOpacity: 0 },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name) layer.bindTooltip(name, {
