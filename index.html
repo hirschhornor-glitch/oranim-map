@@ -1186,7 +1186,7 @@
                 plan_name_short: props['תמצית שם התכנית'] || props.plan_name_short || '',
                 pl_number: props.PLAN_NAME || props.pl_number || '',
                 taba: props.TABA || props.taba || '',
-                status_mavat: props.Status_Mavat || props.status_mavat || '',
+                status_mavat: normalizeStatus(props.Status_Mavat || props.status_mavat || ''),
                 mavat_url: props.Mavat_url || props.mavat_url || '',
                 mavat_date: props.Mavat_Date || props.mavat_date || '',
                 units_add: parseFloat(props.Units_add) || parseInt(props.units_add) || 0,
@@ -1306,6 +1306,19 @@
         };
 
         // Status colors matching QGIS Cloud WMS symbology
+        // Normalize status: some GeoJSON entries have no spaces
+        const STATUS_NORMALIZE = {
+            'בבדיקהתכנונית': 'בבדיקה תכנונית',
+            'במילויתנאיםלהפקדה': 'במילוי תנאים להפקדה',
+            'דיוןבהתנגדויותותיקונים': 'דיון בהתנגדויות ותיקונים',
+            'הפקדהלהתנגדויות/השגות': 'הפקדה להתנגדויות/השגות',
+            'נקלטהמקובץמבאת': 'נקלטה מקובץ מבאת',
+            'תבע-טרוםאישור': 'תבע - טרום אישור',
+            'תבעמאושרת': 'תבע מאושרת',
+            'תחילתתוקף': 'תחילת תוקף',
+        };
+        function normalizeStatus(s) { return STATUS_NORMALIZE[s] || s; }
+
         const STATUS_COLORS = {
             'אישור': '#50d25a',
             'מאושרת': '#50d25a',
@@ -2216,11 +2229,11 @@
                         pane: 'plansPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
-                            const s = (f.properties.Status_Mavat || '').trim();
+                            const s = normalizeStatus((f.properties.Status_Mavat || '').trim());
                             return s !== 'נגנזה' && s !== 'נדחתה' && s !== 'נגנזה/נדחתה';
                         },
                         style: f => {
-                            const status = f.properties.Status_Mavat || '';
+                            const status = normalizeStatus(f.properties.Status_Mavat || '');
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                             return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '4,2' };
                         },
