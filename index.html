@@ -945,6 +945,9 @@
         .measure-result-btn:hover { background: #e94560; border-color: #e94560; }
 
         /* Measurement tooltip on map */
+        /* Labels pane must not block clicks */
+        .leaflet-labels-pane { pointer-events: none !important; }
+        .leaflet-labels-pane * { pointer-events: none !important; }
         /* Plan labels */
         .plan-label-center {
             background: transparent !important;
@@ -1480,8 +1483,9 @@
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
-                map.createPane('labelsPane').style.zIndex = 550;
-                map.createPane('labelsPane').style.pointerEvents = 'none';
+                const labelsP = map.createPane('labelsPane');
+                labelsP.style.zIndex = 550;
+                labelsP.style.pointerEvents = 'none';
 
                 // Load all GeoJSON data
                 const entries = Object.entries(GEOJSON_FILES);
