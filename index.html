@@ -1480,6 +1480,8 @@
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
+                map.createPane('labelsPane').style.zIndex = 550;
+                map.createPane('labelsPane').style.pointerEvents = 'none';
 
                 // Load all GeoJSON data
                 const entries = Object.entries(GEOJSON_FILES);
@@ -2322,7 +2324,7 @@
                                         iconAnchor: [0, 0]
                                     }),
                                     interactive: false,
-                                    pane: 'plansPane'
+                                    pane: 'labelsPane'
                                 }).addTo(map);
                                 layer._labelMarker = labelMarker;
                             }
@@ -2354,7 +2356,7 @@
                                             iconAnchor: [0, 0]
                                         }),
                                         interactive: false,
-                                        pane: 'plansPane'
+                                        pane: 'labelsPane'
                                     }).addTo(map);
                                     layer._planNumMarker = numMarker;
                                 }
