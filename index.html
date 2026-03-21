@@ -974,8 +974,8 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
-        .plan-label-large { font-size: 8pt; }
-        .plan-label-small { color: #999 !important; }
+        .plan-label-large { font-size: 8pt; color: #323232 !important; }
+        .plan-label-small { font-size: 7pt; color: #666 !important; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -996,6 +996,8 @@
                 -1px 0 0 #fff, 1px 0 0 #fff;
         }
         .sub-neighborhood-label::before { display: none; }
+        .sub-label-z17 { font-size: 9pt !important; }
+        .sub-label-z18 { font-size: 10pt !important; }
         .minahak-name-label {
             background: transparent !important;
             border: none !important;
@@ -1003,16 +1005,18 @@
             padding: 0 !important;
             margin: 0 !important;
             color: #fff;
-            font-size: 10pt;
+            font-size: 13pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
             pointer-events: none;
+            transform: translate(-50%, -50%);
             text-shadow:
-                -1px -1px 0 rgba(17,199,64,1), 1px -1px 0 rgba(17,199,64,1),
-                -1px 1px 0 rgba(17,199,64,1), 1px 1px 0 rgba(17,199,64,1),
-                0 -1px 0 rgba(17,199,64,1), 0 1px 0 rgba(17,199,64,1),
-                -1px 0 0 rgba(17,199,64,1), 1px 0 0 rgba(17,199,64,1);
+                -2px -2px 0 rgba(17,199,64,1), 2px -2px 0 rgba(17,199,64,1),
+                -2px 2px 0 rgba(17,199,64,1), 2px 2px 0 rgba(17,199,64,1),
+                0 -2px 0 rgba(17,199,64,1), 0 2px 0 rgba(17,199,64,1),
+                -2px 0 0 rgba(17,199,64,1), 2px 0 0 rgba(17,199,64,1),
+                3px 3px 6px rgba(0,0,0,0.5);
         }
         .minahak-name-label::before { display: none; }
         .tama38-label {
@@ -1413,7 +1417,8 @@
             const [planningTopics, setPlanningTopics] = useState({
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 densification: false, // תכניות לעיבוי שטחים חומים
-                objections: false     // תכניות המופקדות להתנגדויות
+                objections: false,     // תכניות המופקדות להתנגדויות
+                infrastructure: false
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -2190,13 +2195,15 @@
 
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
                 if (gd.sub_neighborhoods) {
+                    const zoom = map.getZoom();
                     geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
                         pane: 'subNeighborhoodPane',
-                        style: { color: 'rgba(17,199,64,1)', weight: 0.6, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel', dashArray: '5,2' },
+                        style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 1.5 : zoom >= 17 ? 1.0 : 0.6, fillOpacity: 0, dashArray: '5,2' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
                             if (name) layer.bindTooltip(name, {
-                                permanent: true, direction: 'center', className: 'sub-neighborhood-label'
+                                permanent: true, direction: 'center',
+                                className: 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : '')
                             });
                         }
                     }).addTo(map);
@@ -2210,7 +2217,7 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 3.0, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
+                            style: { color: 'rgba(17,199,64,1)', weight: 3.5, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name) layer.bindTooltip(name, {
@@ -2225,12 +2232,47 @@
 
                 // --- Plans layer ---
                 if (layers['plans'] && gd.plans) {
+                    const zoom = map.getZoom();
+                    // Auto-wrap text at ~20 chars (QGIS autoWrapLength=20)
+                    function autoWrap(txt, maxLen) {
+                        if (!txt || txt.length <= maxLen) return txt;
+                        const words = txt.split(/\s+/);
+                        let line = '', lines = [];
+                        for (const w of words) {
+                            if (line && (line + ' ' + w).length > maxLen) {
+                                lines.push(line);
+                                line = w;
+                            } else {
+                                line = line ? line + ' ' + w : w;
+                            }
+                        }
+                        if (line) lines.push(line);
+                        return lines.join('\n');
+                    }
+
+                    // Pre-calculate top 20 plans by units_add for zoom 16
+                    const top20Set = new Set();
+                    if (zoom === 16) {
+                        const sorted = gd.plans.features
+                            .filter(feat => {
+                                if (!planInMinahak(feat.properties)) return false;
+                                const st = normalizeStatus((feat.properties.Status_Mavat || '').trim());
+                                if (st === 'נגנזה' || st === 'נדחתה' || st === 'נגנזה/נדחתה') return false;
+                                if ((feat.properties['סוג תכנית'] || '') === 'תשתיות') return false;
+                                return true;
+                            })
+                            .sort((a, b) => (parseFloat(b.properties.Units_add)||0) - (parseFloat(a.properties.Units_add)||0));
+                        sorted.slice(0, 20).forEach(feat => top20Set.add(feat.properties.PLAN_NAME));
+                    }
+
                     const plansLayer = L.geoJSON(gd.plans, {
                         pane: 'plansPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             const s = normalizeStatus((f.properties.Status_Mavat || '').trim());
-                            return s !== 'נגנזה' && s !== 'נדחתה' && s !== 'נגנזה/נדחתה';
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                            if ((f.properties['סוג תכנית'] || '') === 'תשתיות') return false;
+                            return true;
                         },
                         style: f => {
                             const status = normalizeStatus(f.properties.Status_Mavat || '');
@@ -2282,69 +2324,73 @@
                                 popup.openOn(map);
                                 bindPopupEvents(popup, allFeatures, 0);
                             });
-                            // Labels: only show if polygon is large enough on screen
+                            layer.on('mouseover', () => {
+                                layer.setStyle({ weight: 3, fillOpacity: opacity * 0.5 });
+                            });
+                            layer.on('mouseout', () => {
+                                const status = normalizeStatus(f.properties.Status_Mavat || '');
+                                const fillColor = STATUS_COLORS[status] || '#f0e0d0';
+                                layer.setStyle({ weight: 1.5, fillOpacity: opacity * 0.3, fillColor: fillColor });
+                            });
+                            // Labels: zoom-dependent with fit-in-polygon check
                             const shortName = f.properties['תמצית שם התכנית'] || '';
                             const add = parseFloat(f.properties.Units_add) || 0;
                             const zoom = map.getZoom();
-                            const bounds = layer.getBounds();
-                            if (!bounds.isValid()) return;
-                            let sw, ne;
-                            try {
-                                sw = map.latLngToContainerPoint(bounds.getSouthWest());
-                                ne = map.latLngToContainerPoint(bounds.getNorthEast());
-                            } catch(e) { return; }
-                            const pxW = Math.abs(ne.x - sw.x);
-                            const pxH = Math.abs(ne.y - sw.y);
-                            const pxArea = pxW * pxH;
 
-                            // Auto-wrap text at ~20 chars (QGIS autoWrapLength=20)
-                            function autoWrap(txt, maxLen) {
-                                if (!txt || txt.length <= maxLen) return txt;
-                                const words = txt.split(/\s+/);
-                                let line = '', lines = [];
-                                for (const w of words) {
-                                    if (line && (line + ' ' + w).length > maxLen) {
-                                        lines.push(line);
-                                        line = w;
+                            // Zoom 15: no labels at all
+                            if (zoom >= 16) {
+                                // Zoom 16: only top 20 by units_add
+                                if (zoom === 16 && !top20Set.has(f.properties.PLAN_NAME)) {
+                                    // skip label
+                                } else if (shortName || add > 0) {
+                                    const bounds = layer.getBounds();
+                                    const sw = map.latLngToContainerPoint(bounds.getSouthWest());
+                                    const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+                                    const pxW = Math.abs(ne.x - sw.x);
+                                    const pxH = Math.abs(ne.y - sw.y);
+
+                                    let labelText = '';
+                                    if (zoom >= 17) {
+                                        labelText = autoWrap(shortName, 20);
+                                        if (add > 0) labelText += '\n+' + add + " יח\"ד";
                                     } else {
-                                        line = line ? line + ' ' + w : w;
+                                        // zoom 16: name + units for top 20
+                                        labelText = autoWrap(shortName, 20);
+                                        if (add > 0) labelText += '\n+' + add + " יח\"ד";
+                                    }
+
+                                    // Check if label fits inside polygon
+                                    const lines = labelText.split('\n');
+                                    const maxLineLen = Math.max(...lines.map(l => l.length));
+                                    const fontSize = zoom >= 18 ? 8 : zoom === 16 ? 8 : 7;
+                                    const charW = fontSize * 0.75; // approx px per char
+                                    const lineH = fontSize * 1.5;
+                                    const estLabelW = maxLineLen * charW;
+                                    const estLabelH = lines.length * lineH;
+
+                                    if (estLabelW <= pxW * 0.95 && estLabelH <= pxH * 0.95) {
+                                        let labelClass = 'plan-label-center';
+                                        if (add >= 30) labelClass += ' plan-label-large';
+                                        else labelClass += ' plan-label-small';
+
+                                        const center = f.geometry ? visualCenter(f.geometry) : layer.getBounds().getCenter();
+                                        const labelMarker = L.marker(center, {
+                                            icon: L.divIcon({
+                                                className: labelClass,
+                                                html: labelText.replace(/\n/g, '<br>'),
+                                                iconSize: [0, 0],
+                                                iconAnchor: [0, 0]
+                                            }),
+                                            interactive: false,
+                                            pane: 'labelsPane'
+                                        }).addTo(map);
+                                        layer._labelMarker = labelMarker;
                                     }
                                 }
-                                if (line) lines.push(line);
-                                return lines.join('\n');
-                            }
-
-                            let centerLabel = '';
-                            let labelClass = 'plan-label-center';
-                            if (pxArea >= 1800) {
-                                if (zoom >= 17 && shortName) {
-                                    // Zoom 17+: show name + units
-                                    centerLabel = autoWrap(shortName, 20);
-                                    if (add > 0) centerLabel += '\n+' + add + " יח\"ד";
-                                } else if (zoom >= 15 && add > 0) {
-                                    // Zoom 15-16: show only units count
-                                    centerLabel = '+' + add + "\nיח\"ד";
-                                }
-                                if (add >= 30) labelClass += ' plan-label-large';
-                                else labelClass += ' plan-label-small';
-                            }
-                            if (centerLabel) {
-                                const center = f.geometry ? visualCenter(f.geometry) : layer.getBounds().getCenter();
-                                const labelMarker = L.marker(center, {
-                                    icon: L.divIcon({
-                                        className: labelClass,
-                                        html: centerLabel.replace(/\n/g, '<br>'),
-                                        iconSize: [0, 0],
-                                        iconAnchor: [0, 0]
-                                    }),
-                                    interactive: false,
-                                    pane: 'labelsPane'
-                                }).addTo(map);
-                                layer._labelMarker = labelMarker;
                             }
                             // Plan number along longest edge (in pixels), rotated to match
                             const planNum = f.properties.PLAN_NAME || '';
-                            if (planNum && pxArea >= 3000 && f.geometry && f.geometry.coordinates) {
+                            if (zoom >= 17 && planNum && f.geometry && f.geometry.coordinates) {
                                 const coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
                                     : f.geometry.coordinates[0];
@@ -2361,7 +2407,9 @@
                                         bestAngle = -Math.atan2(pb.y-pa.y, pb.x-pa.x) * 180 / Math.PI;
                                     }
                                 }
-                                if (bestMid && maxPxLen >= 40) {
+                                const numCharW = (zoom >= 18 ? 8 : 7) * 0.75;
+                                const numTextLen = planNum.length * numCharW;
+                                if (bestMid && maxPxLen >= 40 && numTextLen <= maxPxLen * 0.9) {
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
@@ -2381,7 +2429,7 @@
                 }
 
                 // --- Topics overlay ---
-                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections)) {
+                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure)) {
                     const topicsLayer = L.geoJSON(gd.plans, {
                         pane: 'topicsPane',
                         filter: f => {
@@ -2390,6 +2438,7 @@
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) return true;
                             if (planningTopics.densification && (p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות')) return true;
+                            if (planningTopics.infrastructure && (p['סוג תכנית'] || '') === 'תשתיות') return true;
                             return false;
                         },
                         style: f => {
@@ -2400,6 +2449,8 @@
                                 return { color: '#ff8c00', weight: 2, fillColor: '#ff8c00', fillOpacity: 0.3 };
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0)
                                 return { color: '#3366ff', weight: 2, fillColor: '#3366ff', fillOpacity: 0.3 };
+                            if (planningTopics.infrastructure && (p['סוג תכנית'] || '') === 'תשתיות')
+                                return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
                             return {};
                         }
                     }).addTo(map);
@@ -2850,6 +2901,12 @@
                                 <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
                                 <label>תכניות המופקדות להתנגדויות</label>
                             </div>
+                                <div className="layer-item"
+                                     title='תכניות תשתיות'
+                                     onClick={() => setPlanningTopics(prev => ({...prev, infrastructure: !prev.infrastructure}))}>
+                                    <input type="checkbox" checked={planningTopics.infrastructure} onChange={() => {}} />
+                                    <label>תכניות תשתיות</label>
+                                </div>
                         </div>
 
                         <div className="sidebar-section">
