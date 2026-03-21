@@ -1129,11 +1129,11 @@
                 if (c[0] < minX) minX = c[0]; if (c[1] < minY) minY = c[1];
                 if (c[0] > maxX) maxX = c[0]; if (c[1] > maxY) maxY = c[1];
             }
-            // Iterative grid search (polylabel-like): 3 rounds, each 8x8
+            // Iterative grid search (polylabel-like): 4 rounds, each 12x12
             let bestPt = [cy, cx], bestDist = -1;
             let sMinX = minX, sMinY = minY, sMaxX = maxX, sMaxY = maxY;
-            for (let round = 0; round < 3; round++) {
-                const N = 8;
+            for (let round = 0; round < 4; round++) {
+                const N = 12;
                 const stepX = (sMaxX - sMinX) / N, stepY = (sMaxY - sMinY) / N;
                 for (let xi = 0; xi < N; xi++) {
                     const gx = sMinX + (xi + 0.5) * stepX;
@@ -1507,8 +1507,8 @@
 
                 // Create custom panes for z-ordering
                 map.createPane('districtPane').style.zIndex = 200;
-                map.createPane('minahakPane').style.zIndex = 250;
-                map.createPane('subNeighborhoodPane').style.zIndex = 260;
+                map.createPane('subNeighborhoodPane').style.zIndex = 250;
+                map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.zIndex = 350;
                 map.createPane('permitsPane').style.zIndex = 400;
