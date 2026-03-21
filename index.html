@@ -1005,7 +1005,7 @@
             padding: 0 !important;
             margin: 0 !important;
             color: #fff;
-            font-size: 20pt;
+            font-size: 14pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
@@ -1094,10 +1094,23 @@
         }
 
         function visualCenter(geometry) {
-            // Get outer ring of the first polygon
-            const ring = geometry.type === 'MultiPolygon'
-                ? geometry.coordinates[0][0]
-                : geometry.coordinates[0];
+            // For MultiPolygon, find the largest part by area
+            let ring;
+            if (geometry.type === 'MultiPolygon') {
+                let maxArea = 0;
+                ring = geometry.coordinates[0][0];
+                for (const poly of geometry.coordinates) {
+                    const r = poly[0];
+                    let a = 0;
+                    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+                        a += r[j][0] * r[i][1] - r[i][0] * r[j][1];
+                    }
+                    a = Math.abs(a);
+                    if (a > maxArea) { maxArea = a; ring = r; }
+                }
+            } else {
+                ring = geometry.coordinates[0];
+            }
             // Proper polygon centroid using signed area formula
             let area = 0, cx = 0, cy = 0;
             for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -2218,7 +2231,7 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 7, fillOpacity: 0 },
+                            style: { color: 'rgba(17,199,64,1)', weight: 3, fillOpacity: 0 },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name && f.geometry) {
