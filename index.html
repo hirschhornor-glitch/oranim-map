@@ -2455,7 +2455,11 @@
                                     if (pxLen > maxPxLen) {
                                         maxPxLen = pxLen;
                                         bestMid = [(a[1]+b[1])/2, (a[0]+b[0])/2]; // [lat, lng]
-                                        bestAngle = -Math.atan2(pb.y-pa.y, pb.x-pa.x) * 180 / Math.PI;
+                                        let ang = Math.atan2(pb.y-pa.y, pb.x-pa.x) * 180 / Math.PI;
+                                        // Keep text readable (not upside down)
+                                        if (ang > 90) ang -= 180;
+                                        if (ang < -90) ang += 180;
+                                        bestAngle = ang;
                                     }
                                 }
                                 const numCharW = (zoom >= 18 ? 8 : 7) * 0.75;
@@ -2464,7 +2468,7 @@
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
-                                            html: '<span style="transform:rotate(' + bestAngle + 'deg) translate(-50%,-50%)">' + planNum + '</span>',
+                                            html: '<span style="transform:rotate(' + bestAngle + 'deg) translate(-50%,-50%);direction:ltr">' + planNum + '</span>',
                                             iconSize: [0, 0],
                                             iconAnchor: [0, 0]
                                         }),
