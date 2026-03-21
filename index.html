@@ -1236,7 +1236,7 @@
                 units_in: parseInt(props.Units_in) || parseInt(props.units_in) || 0,
                 units_total: parseInt(props.Units_total) || parseInt(props.units_total) || 0,
                 minahak: props['מינה"ק'] || props.minahak || '',
-                plan_type: props['סוג תכנית'] || props.plan_type || '',
+                plan_type: normalizePlanType(props['סוג תכנית'] || props.plan_type || ''),
                 stage: props['שלב'] || props.stage || '',
                 sub_neighborhood: props['תתשכונה'] || props.sub_neighborhood || '',
                 neighborhood: props['שכונה'] || props.neighborhood || props['תתשכונה'] || '',
@@ -1361,6 +1361,14 @@
             'תחילתתוקף': 'תחילת תוקף',
         };
         function normalizeStatus(s) { return STATUS_NORMALIZE[s] || s; }
+
+        const PLAN_TYPE_NORMALIZE = {
+            'איחודוחלוקה': 'איחוד וחלוקה',
+            'התחדשותעירונית': 'התחדשות עירונית',
+            'עיבוישטחיםחומים': 'עיבוי שטחים חומים',
+            'תוספתזכויותתבעהתחדשותעירונית': 'תוספת זכויות תבע התחדשות עירונית',
+        };
+        function normalizePlanType(s) { return PLAN_TYPE_NORMALIZE[s] || s; }
 
         const STATUS_COLORS = {
             'אישור': '#50d25a',
@@ -1544,13 +1552,51 @@
                 labelsP.style.zIndex = 550;
                 labelsP.style.pointerEvents = 'none';
 
-                // Load all GeoJSON data
+                // Load all GeoJSON data + CSV for plan_type enrichment
                 const entries = Object.entries(GEOJSON_FILES);
-                Promise.all(entries.map(([key, url]) =>
-                    fetch(url).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
-                )).then(results => {
+                const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+                Promise.all([
+                    Promise.all(entries.map(([key, url]) =>
+                        fetch(url).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
+                    )),
+                    fetch(sheetUrl).then(r => r.text()).catch(() => '')
+                ]).then(([geoResults, csvText]) => {
                     const gd = {};
-                    results.forEach(([key, data]) => { if (data) gd[key] = data; });
+                    geoResults.forEach(([key, data]) => { if (data) gd[key] = data; });
+                    // Merge CSV plan_type into GeoJSON features
+                    if (csvText && gd.plans) {
+                        // CSV parser that handles quoted fields
+                        function parseCSVRow(row) {
+                            const cols = []; let cur = '', inQ = false;
+                            for (let i = 0; i < row.length; i++) {
+                                const c = row[i];
+                                if (c === '"') { inQ = !inQ; }
+                                else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+                                else { cur += c; }
+                            }
+                            cols.push(cur.trim());
+                            return cols;
+                        }
+                        const rows = csvText.split('\n');
+                        const headers = parseCSVRow(rows[0]);
+                        const ptIdx = headers.findIndex(h => h === 'plan_type');
+                        const nameIdx = headers.findIndex(h => h === 'plan_name');
+                        if (ptIdx >= 0 && nameIdx >= 0) {
+                            const csvMap = {};
+                            for (let i = 1; i < rows.length; i++) {
+                                if (!rows[i].trim()) continue;
+                                const cols = parseCSVRow(rows[i]);
+                                if (cols[nameIdx]) csvMap[cols[nameIdx]] = cols[ptIdx] || '';
+                            }
+                            gd.plans.features.forEach(f => {
+                                const pn = f.properties.PLAN_NAME;
+                                if (pn && csvMap[pn]) {
+                                    f.properties['סוג תכנית'] = csvMap[pn];
+                                }
+                            });
+                            console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
+                        }
+                    }
                     geoDataRef.current = gd;
                     setDataLoaded(true);
                     setLoading(false);
@@ -2323,7 +2369,7 @@
                             if (!planInMinahak(f.properties)) return false;
                             const s = normalizeStatus((f.properties.Status_Mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                            if ((f.properties['סוג תכנית'] || '') === 'תשתיות') return false;
+                            if (normalizePlanType(f.properties['סוג תכנית'] || '') === 'תשתיות') return false;
                             return true;
                         },
                         style: f => {
@@ -2494,20 +2540,20 @@
                             if (!planInMinahak(f.properties)) return false;
                             const p = f.properties;
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) return true;
-                            if (planningTopics.densification && (p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
+                            if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות')) return true;
-                            if (planningTopics.infrastructure && (p['סוג תכנית'] || '') === 'תשתיות') return true;
+                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות') return true;
                             return false;
                         },
                         style: f => {
                             const p = f.properties;
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
-                            if (planningTopics.densification && (p['סוג תכנית'] || '') === 'עיבוי שטחים חומים')
+                            if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים')
                                 return { color: '#ff8c00', weight: 2, fillColor: '#ff8c00', fillOpacity: 0.3 };
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0)
                                 return { color: '#3366ff', weight: 2, fillColor: '#3366ff', fillOpacity: 0.3 };
-                            if (planningTopics.infrastructure && (p['סוג תכנית'] || '') === 'תשתיות')
+                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות')
                                 return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
                             return {};
                         }
