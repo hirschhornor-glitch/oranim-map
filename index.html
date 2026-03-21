@@ -2290,20 +2290,8 @@
                         return lines.join('\n');
                     }
 
-                    // Pre-calculate top 30 plans by units_add for zoom 16
-                    const top30Set = new Set();
-                    if (zoom === 16) {
-                        const sorted = gd.plans.features
-                            .filter(feat => {
-                                if (!planInMinahak(feat.properties)) return false;
-                                const st = normalizeStatus((feat.properties.Status_Mavat || '').trim());
-                                if (st === 'נגנזה' || st === 'נדחתה' || st === 'נגנזה/נדחתה') return false;
-                                if ((feat.properties['סוג תכנית'] || '') === 'תשתיות') return false;
-                                return true;
-                            })
-                            .sort((a, b) => (parseFloat(b.properties.Units_add)||0) - (parseFloat(a.properties.Units_add)||0));
-                        sorted.slice(0, 30).forEach(feat => top30Set.add(feat.properties.PLAN_NAME));
-                    }
+                    // Zoom 16: show labels for all plans with 100+ units_add
+                    const z16MinUnits = 100;
 
                     const plansLayer = L.geoJSON(gd.plans, {
                         pane: 'plansPane',
@@ -2379,8 +2367,8 @@
 
                             // Zoom 15: no labels at all
                             if (zoom >= 16) {
-                                // Zoom 16: only top 30 by units_add
-                                if (zoom === 16 && !top30Set.has(f.properties.PLAN_NAME)) {
+                                // Zoom 16: only plans with 100+ units
+                                if (zoom === 16 && add < z16MinUnits) {
                                     // skip label
                                 } else if (shortName || add > 0) {
                                     const bounds = layer.getBounds();
@@ -2394,14 +2382,14 @@
                                         labelText = autoWrap(shortName, 20);
                                         if (add > 0) labelText += '\n+' + add + " יח\"ד";
                                     } else {
-                                        // zoom 16: only units count for top 30
-                                        if (add > 0) labelText = '+' + add + " יח\"ד";
+                                        // zoom 16: units on one line, יח"ד on next
+                                        if (add > 0) labelText = '+' + add + "\nיח\"ד";
                                     }
 
                                     // Check if label fits inside polygon
                                     const lines = labelText.split('\n');
                                     const maxLineLen = Math.max(...lines.map(l => l.length));
-                                    const fontSize = zoom >= 18 ? 8 : zoom === 16 ? 8 : 7;
+                                    const fontSize = zoom >= 18 ? 8 : zoom === 16 ? 9 : 7;
                                     const charW = fontSize * 0.75; // approx px per char
                                     const lineH = fontSize * 1.5;
                                     const estLabelW = maxLineLen * charW;
