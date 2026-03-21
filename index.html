@@ -964,7 +964,7 @@
             left: 0; top: 0;
             transform: translate(-50%, -50%);
             color: #323232;
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
@@ -979,8 +979,8 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
-        .plan-label-large .label-inner { font-size: 10pt; color: #323232; }
-        .plan-label-small .label-inner { font-size: 9pt; color: #555; }
+        .plan-label-large .label-inner { font-size: 9pt; color: #323232; }
+        .plan-label-small .label-inner { font-size: 7pt; color: #555; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -1060,7 +1060,7 @@
             display: block;
             text-align: center;
             color: rgb(50,50,255);
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: normal;
             font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
@@ -2410,7 +2410,7 @@
                                     // Check if label fits inside polygon
                                     const lines = labelText.split('\n');
                                     const maxLineLen = Math.max(...lines.map(l => l.length));
-                                    const fontSize = zoom >= 18 ? 10 : zoom === 16 ? 9 : 9;
+                                    const fontSize = zoom >= 18 ? 9 : zoom === 16 ? 9 : 8;
                                     const charW = fontSize * 0.75; // approx px per char
                                     const lineH = fontSize * 1.5;
                                     const estLabelW = maxLineLen * charW;
@@ -2460,7 +2460,7 @@
                                         bestAngle = ang;
                                     }
                                 }
-                                const numCharW = (zoom >= 18 ? 9 : 8) * 0.75;
+                                const numCharW = (zoom >= 18 ? 8 : 7) * 0.75;
                                 const numTextLen = planNum.length * numCharW;
                                 const numH = 12; // approx text height in px
                                 if (bestMid && maxPxLen >= 40 && numTextLen <= maxPxLen * 0.9) {
