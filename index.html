@@ -979,8 +979,8 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
-        .plan-label-large .label-inner { font-size: 8pt; color: #323232; }
-        .plan-label-small .label-inner { font-size: 7pt; color: #666; }
+        .plan-label-large .label-inner { font-size: 9pt; color: #323232; }
+        .plan-label-small .label-inner { font-size: 8pt; color: #555; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -1061,7 +1061,8 @@
         }
         .plan-number-label span {
             position: absolute;
-            transform-origin: center center;
+            left: 0; top: 0;
+            transform-origin: 0 0;
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
@@ -2412,7 +2413,7 @@
                                     // Check if label fits inside polygon
                                     const lines = labelText.split('\n');
                                     const maxLineLen = Math.max(...lines.map(l => l.length));
-                                    const fontSize = zoom >= 18 ? 8 : zoom === 16 ? 9 : 7;
+                                    const fontSize = zoom >= 18 ? 9 : zoom === 16 ? 9 : 8;
                                     const charW = fontSize * 0.75; // approx px per char
                                     const lineH = fontSize * 1.5;
                                     const estLabelW = maxLineLen * charW;
@@ -2464,7 +2465,7 @@
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
-                                            html: '<span style="transform:rotate(' + bestAngle + 'deg);display:inline-block">' + planNum + '</span>',
+                                            html: '<span style="transform:translate(-50%,-50%) rotate(' + bestAngle + 'deg)">' + planNum + '</span>',
                                             iconSize: [0, 0],
                                             iconAnchor: [0, 0]
                                         }),
