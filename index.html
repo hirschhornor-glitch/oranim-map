@@ -1054,23 +1054,11 @@
             border: none !important;
             box-shadow: none !important;
             overflow: visible !important;
-            width: 0 !important;
-            height: 0 !important;
             padding: 0 !important;
-            margin: 0 !important;
-        }
-        .plan-number-label .pn-wrap {
-            position: absolute;
-            left: 0; top: 0;
-            transform-origin: 0 0;
-            display: block;
-            width: 0; height: 0;
-            overflow: visible;
         }
         .plan-number-label .pn-text {
-            position: absolute;
-            left: 0; top: 0;
-            transform: translate(-50%, -50%);
+            display: block;
+            text-align: center;
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
@@ -2474,13 +2462,14 @@
                                 }
                                 const numCharW = (zoom >= 18 ? 8 : 7) * 0.75;
                                 const numTextLen = planNum.length * numCharW;
+                                const numH = 12; // approx text height in px
                                 if (bestMid && maxPxLen >= 40 && numTextLen <= maxPxLen * 0.9) {
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
-                                            html: '<span class="pn-wrap" style="transform:rotate(' + bestAngle + 'deg)"><span class="pn-text">' + planNum + '</span></span>',
-                                            iconSize: [0, 0],
-                                            iconAnchor: [0, 0]
+                                            html: '<span class="pn-text" style="transform:rotate(' + bestAngle + 'deg)">' + planNum + '</span>',
+                                            iconSize: [Math.ceil(numTextLen), numH],
+                                            iconAnchor: [Math.ceil(numTextLen/2), Math.ceil(numH/2)]
                                         }),
                                         interactive: false,
                                         pane: 'labelsPane'
