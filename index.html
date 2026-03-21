@@ -1215,12 +1215,12 @@
 
         // MINAHAK_ID → geojson file key mapping
         const MINAHAK_LAYER_MAP = {
-            'ginot_hair': 'minahak_ganot',
-            'beit_tzfafa': 'minahak_beit_tzfafa',
-            'gonennim': 'minahak_gonen',
-            'baka': 'minahak_baka',
-            'malha': 'minahak_malha',
-            'talpiot': 'minahak_talpiot',
+            'shem_ganot_hair': 'minahak_ganot',
+            'shem_beit_tzfafa': 'minahak_beit_tzfafa',
+            'shem_gonen': 'minahak_gonen',
+            'shem_baka': 'minahak_baka',
+            'shem_malha': 'minahak_malha',
+            'shem_talpiot': 'minahak_talpiot',
         };
 
         const LAYER_CONFIG = {
@@ -2217,7 +2217,7 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 3.5, fillOpacity: 0, lineCap: 'square', lineJoin: 'bevel' },
+                            style: { color: 'rgba(17,199,64,1)', weight: 5, fillOpacity: 0 },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name) layer.bindTooltip(name, {
