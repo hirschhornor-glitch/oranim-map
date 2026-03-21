@@ -2157,18 +2157,19 @@
                 const gd = geoDataRef.current;
                 if (!map || !dataLoaded) return;
 
-                // Remove all previous geo layers + plan number markers
+                // Remove all previous geo layers + label markers
+                function cleanupLayer(ll) {
+                    if (ll.eachLayer) ll.eachLayer(sub => {
+                        if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
+                        if (sub._labelMarker) map.removeLayer(sub._labelMarker);
+                        if (sub._minahakLabel) map.removeLayer(sub._minahakLabel);
+                        if (sub._subLabel) map.removeLayer(sub._subLabel);
+                    });
+                    map.removeLayer(ll);
+                }
                 Object.values(geoLayersRef.current).forEach(l => {
-                    if (Array.isArray(l)) l.forEach(ll => map.removeLayer(ll));
-                    else if (l) {
-                        if (l.eachLayer) l.eachLayer(sub => {
-                            if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
-                            if (sub._labelMarker) map.removeLayer(sub._labelMarker);
-                            if (sub._minahakLabel) map.removeLayer(sub._minahakLabel);
-                            if (sub._subLabel) map.removeLayer(sub._subLabel);
-                        });
-                        map.removeLayer(l);
-                    }
+                    if (Array.isArray(l)) l.forEach(ll => cleanupLayer(ll));
+                    else if (l) cleanupLayer(l);
                 });
                 geoLayersRef.current = {};
 
