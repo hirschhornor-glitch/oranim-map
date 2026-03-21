@@ -1062,7 +1062,6 @@
         .plan-number-label span {
             position: absolute;
             left: 0; top: 0;
-            transform-origin: 0 0;
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
@@ -2465,7 +2464,7 @@
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
-                                            html: '<span style="transform:translate(-50%,-50%) rotate(' + bestAngle + 'deg)">' + planNum + '</span>',
+                                            html: '<span style="transform:rotate(' + bestAngle + 'deg) translate(-50%,-50%)">' + planNum + '</span>',
                                             iconSize: [0, 0],
                                             iconAnchor: [0, 0]
                                         }),
