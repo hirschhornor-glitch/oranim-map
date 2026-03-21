@@ -1059,14 +1059,24 @@
             padding: 0 !important;
             margin: 0 !important;
         }
-        .plan-number-label span {
+        .plan-number-label .pn-wrap {
             position: absolute;
             left: 0; top: 0;
+            transform-origin: 0 0;
+            display: block;
+            width: 0; height: 0;
+            overflow: visible;
+        }
+        .plan-number-label .pn-text {
+            position: absolute;
+            left: 0; top: 0;
+            transform: translate(-50%, -100%);
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
             font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
+            direction: ltr;
             pointer-events: none;
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
@@ -2468,7 +2478,7 @@
                                     const numMarker = L.marker(bestMid, {
                                         icon: L.divIcon({
                                             className: 'plan-number-label',
-                                            html: '<span style="transform:rotate(' + bestAngle + 'deg) translate(-50%,-0.6em);direction:ltr">' + planNum + '</span>',
+                                            html: '<span class="pn-wrap" style="transform:rotate(' + bestAngle + 'deg)"><span class="pn-text">' + planNum + '</span></span>',
                                             iconSize: [0, 0],
                                             iconAnchor: [0, 0]
                                         }),
