@@ -981,6 +981,9 @@
         .plan-label-center::before { display: none; }
         .plan-label-large .label-inner { font-size: 9pt; color: #323232; }
         .plan-label-small .label-inner { font-size: 7pt; color: #555; }
+        .plan-label-z18 .label-inner { font-size: 9pt !important; }
+        .plan-label-z18.plan-label-large .label-inner { font-size: 11pt !important; }
+        .plan-label-z18.plan-label-small .label-inner { font-size: 9pt !important; }
 
         .sub-neighborhood-label {
             background: transparent !important;
@@ -1011,7 +1014,7 @@
         .sub-neighborhood-label::before { display: none; }
         .sub-label-z16 .label-inner { font-size: 9pt !important; }
         .sub-label-z17 .label-inner { font-size: 10pt !important; }
-        .sub-label-z18 .label-inner { font-size: 11pt !important; }
+        .sub-label-z18 .label-inner { font-size: 13pt !important; }
         .minahak-name-label {
             background: transparent !important;
             border: none !important;
@@ -2410,7 +2413,7 @@
                                     // Check if label fits inside polygon
                                     const lines = labelText.split('\n');
                                     const maxLineLen = Math.max(...lines.map(l => l.length));
-                                    const fontSize = zoom >= 18 ? 9 : zoom === 16 ? 9 : 8;
+                                    const fontSize = zoom >= 18 ? 11 : zoom === 16 ? 9 : 8;
                                     const charW = fontSize * 0.75; // approx px per char
                                     const lineH = fontSize * 1.5;
                                     const estLabelW = maxLineLen * charW;
@@ -2419,6 +2422,7 @@
                                     const fitRatio = zoom >= 18 ? 0.85 : zoom >= 17 ? 0.75 : 0.65;
                                     if (estLabelW <= pxW * fitRatio && estLabelH <= pxH * fitRatio) {
                                         let labelClass = 'plan-label-center';
+                                        if (zoom >= 18) labelClass += ' plan-label-z18';
                                         if (add >= 30) labelClass += ' plan-label-large';
                                         else labelClass += ' plan-label-small';
 
@@ -2460,7 +2464,7 @@
                                         bestAngle = ang;
                                     }
                                 }
-                                const numCharW = (zoom >= 18 ? 8 : 7) * 0.75;
+                                const numCharW = (zoom >= 18 ? 9 : 7) * 0.75;
                                 const numTextLen = planNum.length * numCharW;
                                 const numH = 12; // approx text height in px
                                 if (bestMid && maxPxLen >= 40 && numTextLen <= maxPxLen * 0.9) {
