@@ -1999,8 +1999,10 @@
                         <div class="scale-label">${printScaleLabel}</div>
                     </div>
                     ${legendHtml}
-                    <div class="print-actions no-print">
+                    <div class="print-actions no-print" style="display:flex;gap:10px;justify-content:center">
                         <button onclick="window.print()">🖨️ הדפס</button>
+                        <button onclick="window.print()" style="background:#2a6fb5">📄 שמור PDF</button>
+                        <button onclick="(function(){var img=document.querySelector('.map-container img');var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);var a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.92);a.download='map_oranim.jpg';a.click()})()">🖼️ שמור JPEG</button>
                     </div>
                 </body></html>`);
                 printWin.document.close();
