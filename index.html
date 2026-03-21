@@ -984,11 +984,12 @@
             padding: 0 !important;
             margin: 0 !important;
             color: #13c641;
-            font-size: 7pt;
+            font-size: 8pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
             pointer-events: none;
+            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fff, 1px -1px 0 #fff,
                 -1px 1px 0 #fff, 1px 1px 0 #fff,
@@ -996,8 +997,9 @@
                 -1px 0 0 #fff, 1px 0 0 #fff;
         }
         .sub-neighborhood-label::before { display: none; }
-        .sub-label-z17 { font-size: 9pt !important; }
-        .sub-label-z18 { font-size: 10pt !important; }
+        .sub-label-z16 { font-size: 9pt !important; }
+        .sub-label-z17 { font-size: 10pt !important; }
+        .sub-label-z18 { font-size: 11pt !important; }
         .minahak-name-label {
             background: transparent !important;
             border: none !important;
@@ -2213,11 +2215,11 @@
                     const zoom = map.getZoom();
                     geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
                         pane: 'subNeighborhoodPane',
-                        style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 1.5 : zoom >= 17 ? 1.0 : 0.6, fillOpacity: 0, dashArray: '5,2' },
+                        style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 2.5 : zoom >= 17 ? 2.0 : 1.0, fillOpacity: 0, dashArray: '5,2' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
                             if (name && f.geometry) {
-                                const subClass = 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : '');
+                                const subClass = 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : zoom >= 16 ? ' sub-label-z16' : '');
                                 const center = visualCenter(f.geometry);
                                 const marker = L.marker(center, {
                                     icon: L.divIcon({
@@ -2227,7 +2229,7 @@
                                         iconAnchor: [0, 0]
                                     }),
                                     interactive: false,
-                                    pane: 'subNeighborhoodPane'
+                                    pane: 'labelsPane'
                                 }).addTo(map);
                                 layer._subLabel = marker;
                             }
@@ -2287,8 +2289,8 @@
                         return lines.join('\n');
                     }
 
-                    // Pre-calculate top 20 plans by units_add for zoom 16
-                    const top20Set = new Set();
+                    // Pre-calculate top 30 plans by units_add for zoom 16
+                    const top30Set = new Set();
                     if (zoom === 16) {
                         const sorted = gd.plans.features
                             .filter(feat => {
@@ -2299,7 +2301,7 @@
                                 return true;
                             })
                             .sort((a, b) => (parseFloat(b.properties.Units_add)||0) - (parseFloat(a.properties.Units_add)||0));
-                        sorted.slice(0, 20).forEach(feat => top20Set.add(feat.properties.PLAN_NAME));
+                        sorted.slice(0, 30).forEach(feat => top30Set.add(feat.properties.PLAN_NAME));
                     }
 
                     const plansLayer = L.geoJSON(gd.plans, {
@@ -2376,8 +2378,8 @@
 
                             // Zoom 15: no labels at all
                             if (zoom >= 16) {
-                                // Zoom 16: only top 20 by units_add
-                                if (zoom === 16 && !top20Set.has(f.properties.PLAN_NAME)) {
+                                // Zoom 16: only top 30 by units_add
+                                if (zoom === 16 && !top30Set.has(f.properties.PLAN_NAME)) {
                                     // skip label
                                 } else if (shortName || add > 0) {
                                     const bounds = layer.getBounds();
@@ -2391,7 +2393,7 @@
                                         labelText = autoWrap(shortName, 20);
                                         if (add > 0) labelText += '\n+' + add + " יח\"ד";
                                     } else {
-                                        // zoom 16: name + units for top 20
+                                        // zoom 16: name + units for top 30
                                         labelText = autoWrap(shortName, 20);
                                         if (add > 0) labelText += '\n+' + add + " יח\"ד";
                                     }
