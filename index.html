@@ -953,20 +953,24 @@
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            overflow: visible !important;
+            width: 0 !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .plan-label-center .label-inner {
+            position: absolute;
+            transform: translate(-50%, -50%);
             color: #323232;
             font-size: 7pt;
             font-weight: bold;
             font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
             text-align: center;
             white-space: pre;
-            line-height: 1.0;
+            line-height: 1.1;
             direction: rtl;
             pointer-events: none;
-            width: auto !important;
-            height: auto !important;
-            margin-left: 0 !important;
-            margin-top: 0 !important;
-            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
@@ -974,22 +978,28 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
-        .plan-label-large { font-size: 8pt; color: #323232 !important; }
-        .plan-label-small { font-size: 7pt; color: #666 !important; }
+        .plan-label-large .label-inner { font-size: 8pt; color: #323232; }
+        .plan-label-small .label-inner { font-size: 7pt; color: #666; }
 
         .sub-neighborhood-label {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            overflow: visible !important;
+            width: 0 !important;
+            height: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
+        }
+        .sub-neighborhood-label .label-inner {
+            position: absolute;
+            transform: translate(-50%, -50%);
             color: #13c641;
             font-size: 8pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
             pointer-events: none;
-            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fff, 1px -1px 0 #fff,
                 -1px 1px 0 #fff, 1px 1px 0 #fff,
@@ -997,22 +1007,28 @@
                 -1px 0 0 #fff, 1px 0 0 #fff;
         }
         .sub-neighborhood-label::before { display: none; }
-        .sub-label-z16 { font-size: 9pt !important; }
-        .sub-label-z17 { font-size: 10pt !important; }
-        .sub-label-z18 { font-size: 11pt !important; }
+        .sub-label-z16 .label-inner { font-size: 9pt !important; }
+        .sub-label-z17 .label-inner { font-size: 10pt !important; }
+        .sub-label-z18 .label-inner { font-size: 11pt !important; }
         .minahak-name-label {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            overflow: visible !important;
+            width: 0 !important;
+            height: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
+        }
+        .minahak-name-label .label-inner {
+            position: absolute;
+            transform: translate(-50%, -50%);
             color: #fff;
             font-size: 12pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
             pointer-events: none;
-            transform: translate(-50%, -50%);
             text-shadow:
                 -3px -3px 0 rgba(17,199,64,1), 3px -3px 0 rgba(17,199,64,1),
                 -3px 3px 0 rgba(17,199,64,1), 3px 3px 0 rgba(17,199,64,1),
@@ -1034,17 +1050,21 @@
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            overflow: visible !important;
+            width: 0 !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .plan-number-label span {
+            position: absolute;
+            transform-origin: center center;
             color: rgb(50,50,255);
             font-size: 7pt;
             font-weight: normal;
             font-family: 'Assistant', 'Segoe UI', sans-serif;
             white-space: nowrap;
             pointer-events: none;
-            width: auto !important;
-            height: auto !important;
-            margin-left: 0 !important;
-            margin-top: 0 !important;
-            transform: translate(-50%, -50%);
             text-shadow:
                 -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
                 -1px 1px 0 #fafafa, 1px 1px 0 #fafafa;
@@ -2225,7 +2245,7 @@
                                 const marker = L.marker(center, {
                                     icon: L.divIcon({
                                         className: subClass,
-                                        html: name,
+                                        html: '<div class="label-inner">' + name + '</div>',
                                         iconSize: [0, 0],
                                         iconAnchor: [0, 0]
                                     }),
@@ -2254,7 +2274,7 @@
                                     const marker = L.marker(center, {
                                         icon: L.divIcon({
                                             className: 'minahak-name-label',
-                                            html: name,
+                                            html: '<div class="label-inner">' + name + '</div>',
                                             iconSize: [0, 0],
                                             iconAnchor: [0, 0]
                                         }),
@@ -2404,7 +2424,7 @@
                                         const labelMarker = L.marker(center, {
                                             icon: L.divIcon({
                                                 className: labelClass,
-                                                html: labelText.replace(/\n/g, '<br>'),
+                                                html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
                                                 iconSize: [0, 0],
                                                 iconAnchor: [0, 0]
                                             }),
