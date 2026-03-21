@@ -2415,7 +2415,8 @@
                                     const estLabelW = maxLineLen * charW;
                                     const estLabelH = lines.length * lineH;
 
-                                    if (estLabelW <= pxW * 0.95 && estLabelH <= pxH * 0.95) {
+                                    const fitRatio = zoom >= 18 ? 0.85 : zoom >= 17 ? 0.75 : 0.65;
+                                    if (estLabelW <= pxW * fitRatio && estLabelH <= pxH * fitRatio) {
                                         let labelClass = 'plan-label-center';
                                         if (add >= 30) labelClass += ' plan-label-large';
                                         else labelClass += ' plan-label-small';
