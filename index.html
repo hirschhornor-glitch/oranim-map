@@ -2149,6 +2149,7 @@
                         if (l.eachLayer) l.eachLayer(sub => {
                             if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
                             if (sub._labelMarker) map.removeLayer(sub._labelMarker);
+                            if (sub._minahakLabel) map.removeLayer(sub._minahakLabel);
                         });
                         map.removeLayer(l);
                     }
@@ -2217,12 +2218,23 @@
                     if (geoKey && gd[geoKey]) {
                         const ml = L.geoJSON(gd[geoKey], {
                             pane: 'minahakPane',
-                            style: { color: 'rgba(17,199,64,1)', weight: 8, fillOpacity: 0 },
+                            style: { color: 'rgba(17,199,64,1)', weight: 7, fillOpacity: 0 },
                             onEachFeature: (f, layer) => {
                                 const name = f.properties.SHEM_1 || f.properties.Name || l.name;
-                                if (name) layer.bindTooltip(name, {
-                                    permanent: true, direction: 'center', className: 'minahak-name-label'
-                                });
+                                if (name && f.geometry) {
+                                    const center = visualCenter(f.geometry);
+                                    const marker = L.marker(center, {
+                                        icon: L.divIcon({
+                                            className: 'minahak-name-label',
+                                            html: name,
+                                            iconSize: [0, 0],
+                                            iconAnchor: [0, 0]
+                                        }),
+                                        interactive: false,
+                                        pane: 'labelsPane'
+                                    }).addTo(map);
+                                    layer._minahakLabel = marker;
+                                }
                             }
                         }).addTo(map);
                         minahakLayers.push(ml);
