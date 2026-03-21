@@ -2393,9 +2393,8 @@
                                         labelText = autoWrap(shortName, 20);
                                         if (add > 0) labelText += '\n+' + add + " יח\"ד";
                                     } else {
-                                        // zoom 16: name + units for top 30
-                                        labelText = autoWrap(shortName, 20);
-                                        if (add > 0) labelText += '\n+' + add + " יח\"ד";
+                                        // zoom 16: only units count for top 30
+                                        if (add > 0) labelText = '+' + add + " יח\"ד";
                                     }
 
                                     // Check if label fits inside polygon
