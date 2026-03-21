@@ -2232,29 +2232,26 @@
                                 const plansLayer = geoLayersRef.current.plans;
                                 if (plansLayer) {
                                     plansLayer.eachLayer(pl => {
-                                        if (pl.getBounds && pl.getBounds().contains(clickLatLng)) {
-                                            try {
-                                                // Point-in-polygon: check if click is inside this polygon
-                                                const contains = leafletPip(pl, clickLatLng);
-                                                if (contains) {
-                                                    const m = mapPlanProps(pl.feature.properties);
-                                                    allFeatures.push({ properties: m, type: 'plan' });
-                                                }
-                                            } catch(ex) {
-                                                // Fallback: if pip fails, just use bounds check
+                                        if (!pl.feature || !pl.getBounds) return;
+                                        try {
+                                            if (!pl.getBounds().contains(clickLatLng)) return;
+                                            const contains = leafletPip(pl, clickLatLng);
+                                            if (contains) {
                                                 const m = mapPlanProps(pl.feature.properties);
                                                 allFeatures.push({ properties: m, type: 'plan' });
                                             }
-                                        }
+                                        } catch(ex) {}
                                     });
                                 }
                                 // Also check tama38 nearby
                                 const tama38Layer = geoLayersRef.current.tama38;
                                 if (tama38Layer) {
                                     tama38Layer.eachLayer(tl => {
-                                        if (tl.getLatLng && clickLatLng.distanceTo(tl.getLatLng()) < 30) {
-                                            allFeatures.push({ properties: tl.feature.properties, type: 'tama38' });
-                                        }
+                                        try {
+                                            if (tl.getLatLng && tl.feature && clickLatLng.distanceTo(tl.getLatLng()) < 30) {
+                                                allFeatures.push({ properties: tl.feature.properties, type: 'tama38' });
+                                            }
+                                        } catch(ex) {}
                                     });
                                 }
                                 if (allFeatures.length === 0) {
