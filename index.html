@@ -1005,7 +1005,7 @@
             padding: 0 !important;
             margin: 0 !important;
             color: #fff;
-            font-size: 14pt;
+            font-size: 12pt;
             font-weight: 800;
             font-family: 'Assistant', sans-serif;
             white-space: nowrap;
@@ -2163,6 +2163,7 @@
                             if (sub._planNumMarker) map.removeLayer(sub._planNumMarker);
                             if (sub._labelMarker) map.removeLayer(sub._labelMarker);
                             if (sub._minahakLabel) map.removeLayer(sub._minahakLabel);
+                            if (sub._subLabel) map.removeLayer(sub._subLabel);
                         });
                         map.removeLayer(l);
                     }
@@ -2215,10 +2216,21 @@
                         style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 1.5 : zoom >= 17 ? 1.0 : 0.6, fillOpacity: 0, dashArray: '5,2' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
-                            if (name) layer.bindTooltip(name, {
-                                permanent: true, direction: 'center',
-                                className: 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : '')
-                            });
+                            if (name && f.geometry) {
+                                const subClass = 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : '');
+                                const center = visualCenter(f.geometry);
+                                const marker = L.marker(center, {
+                                    icon: L.divIcon({
+                                        className: subClass,
+                                        html: name,
+                                        iconSize: [0, 0],
+                                        iconAnchor: [0, 0]
+                                    }),
+                                    interactive: false,
+                                    pane: 'subNeighborhoodPane'
+                                }).addTo(map);
+                                layer._subLabel = marker;
+                            }
                         }
                     }).addTo(map);
                 }
