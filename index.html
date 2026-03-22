@@ -4740,10 +4740,15 @@
                                     if (!gd.plans) return <p>טוען...</p>;
                                     const rejectedStatuses = ['נגנזה/נדחתה','נגנזה','נדחתה'];
                                     const approvedStatuses = ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'];
+                                    const seenPlans = new Set();
                                     const plans = gd.plans.features.filter(f => {
                                         const m = f.properties.minahak || '';
                                         const st = (f.properties.status_mavat || '').trim();
+                                        const planId = f.properties.plan_name || f.properties.fid;
                                         if (m !== minahakReport) return false;
+                                        // Deduplicate MultiPolygon features
+                                        if (seenPlans.has(planId)) return false;
+                                        seenPlans.add(planId);
                                         // Exclude rejected
                                         if (rejectedStatuses.includes(st)) return false;
                                         // Approved statuses: only from 2020+ (by mavat_date)
