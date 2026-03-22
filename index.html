@@ -3191,10 +3191,10 @@
 
                 // --- Rakal line colors ---
                 const RAKAL_COLORS = {
-                    '2': '#4363d8',  // כחול
+                    '2': '#1a3ccc',  // כחול רווי
                     '3': '#42d4f4',  // תכלת
                     '4': '#3cb44b',  // ירוק
-                    '5': '#4363d8',  // כחול
+                    '5': '#1a3ccc',  // כחול רווי
                     '8': '#911eb4',  // סגול
                 };
 
@@ -3216,13 +3216,7 @@
                             const line = f.properties.line || '2';
                             return { color: RAKAL_COLORS[line] || '#4363d8', weight: 7, opacity: 0.85 };
                         },
-                        onEachFeature: (f, layer) => {
-                            const line = f.properties.line || '';
-                            const origin = f.properties.origin || '';
-                            const dest = f.properties.destinatio || '';
-                            const tip = 'קו ' + line + (origin && dest ? ': ' + origin + ' ↔ ' + dest : '');
-                            layer.bindTooltip(tip, { sticky: true, className: 'station-label' });
-                        }
+                        interactive: false
                     }).addTo(map);
                     geoLayersRef.current.rakal = rakalLayer;
                 }
@@ -3239,17 +3233,16 @@
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            // Color station by its main line color
                             const colorMap = {
-                                'אדום': RAKAL_COLORS['1'], 'ירוק': RAKAL_COLORS['2'],
-                                'כחול': RAKAL_COLORS['3'], 'חום': RAKAL_COLORS['4'],
-                                'סגול': RAKAL_COLORS['5'], 'תכלת': RAKAL_COLORS['6'],
-                                'ורוד': RAKAL_COLORS['7'], 'צהוב': RAKAL_COLORS['8'],
+                                'ירוק': RAKAL_COLORS['4'],
+                                'כחול': RAKAL_COLORS['2'],
+                                'סגול': RAKAL_COLORS['8'],
+                                'תכלת': RAKAL_COLORS['3'],
                             };
                             const mainColor = (p.color_main1 || '').trim();
-                            const fillColor = colorMap[mainColor] || '#00b894';
+                            const fillColor = colorMap[mainColor] || '#1a3ccc';
                             return L.circleMarker(latlng, {
-                                radius: 6, fillColor: fillColor, color: '#fff', weight: 2, fillOpacity: 0.9
+                                radius: 5, fillColor: fillColor, color: '#000', weight: 1.5, fillOpacity: 0.95
                             });
                         },
                         onEachFeature: (f, layer) => {
