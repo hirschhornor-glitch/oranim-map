@@ -2545,6 +2545,23 @@
 
                 // --- Topics overlay ---
                 if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure)) {
+                    // Inject SVG hatch patterns into map's SVG defs
+                    const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
+                    if (svgEl) {
+                        let defs = svgEl.querySelector('defs');
+                        if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svgEl.insertBefore(defs, svgEl.firstChild); }
+                        // Blue hatch for overlapping
+                        if (!defs.querySelector('#hatch-blue')) {
+                            defs.innerHTML += `
+                                <pattern id="hatch-blue" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                                    <line x1="0" y1="0" x2="0" y2="8" stroke="#3366ff" stroke-width="2" stroke-opacity="0.6"/>
+                                </pattern>
+                                <pattern id="hatch-orange" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(-45)">
+                                    <line x1="0" y1="0" x2="0" y2="8" stroke="#ff8c00" stroke-width="2" stroke-opacity="0.6"/>
+                                </pattern>`;
+                        }
+                    }
+
                     const topicsLayer = L.geoJSON(gd.plans, {
                         pane: 'topicsPane',
                         filter: f => {
@@ -2561,14 +2578,44 @@
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים')
-                                return { color: '#ff8c00', weight: 2, fillColor: '#ff8c00', fillOpacity: 0.3 };
+                                return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0)
-                                return { color: '#3366ff', weight: 2, fillColor: '#3366ff', fillOpacity: 0.3 };
+                                return { color: '#3366ff', weight: 2, fillOpacity: 0 };
                             if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות')
                                 return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
                             return {};
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            // Apply SVG hatch pattern fill after rendering
+                            layer.on('add', () => {
+                                const el = layer.getElement();
+                                if (!el) return;
+                                if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) {
+                                    el.setAttribute('fill', 'url(#hatch-blue)');
+                                    el.setAttribute('fill-opacity', '1');
+                                } else if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') {
+                                    el.setAttribute('fill', 'url(#hatch-orange)');
+                                    el.setAttribute('fill-opacity', '1');
+                                }
+                            });
                         }
                     }).addTo(map);
+
+                    // Apply hatch to already-rendered paths
+                    topicsLayer.eachLayer(layer => {
+                        const el = layer.getElement();
+                        const p = layer.feature.properties;
+                        if (!el) return;
+                        if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) {
+                            el.setAttribute('fill', 'url(#hatch-blue)');
+                            el.setAttribute('fill-opacity', '1');
+                        } else if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') {
+                            el.setAttribute('fill', 'url(#hatch-orange)');
+                            el.setAttribute('fill-opacity', '1');
+                        }
+                    });
+
                     geoLayersRef.current.topics = topicsLayer;
                 }
 
