@@ -4494,14 +4494,16 @@
                         {/* Area select finish button */}
                         {areaSelectMode && areaPointCount >= 3 && (
                             <button
-                                onClick={() => finishAreaSelect()}
+                                onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); finishAreaSelect(); }}
+                                onMouseDown={(e) => e.stopPropagation()}
                                 style={{
                                     position:'absolute', bottom:60, left:'50%', transform:'translateX(-50%)',
                                     zIndex:2000, background:'#e94560', color:'#fff', border:'none',
                                     borderRadius:8, padding:'10px 28px', fontSize:15, fontWeight:'bold',
                                     cursor:'pointer', boxShadow:'0 4px 16px rgba(233,69,96,0.4)',
-                                    fontFamily:'Assistant, sans-serif'
+                                    fontFamily:'Assistant, sans-serif', pointerEvents:'auto'
                                 }}
+                                ref={(el) => { if (el) L.DomEvent.disableClickPropagation(el); }}
                             >
                                 ✓ סיום בחירת אזור ({areaPointCount} נקודות)
                             </button>
