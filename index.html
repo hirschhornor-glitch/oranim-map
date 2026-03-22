@@ -3416,6 +3416,8 @@
                 // Body
                 html += '<div class="popup-body">';
                 html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span></div>`;
+                const mavatDate = props.mavat_date || '';
+                if (mavatDate) html += `<div class="popup-row"><span class="popup-row-label">תאריך סטטוס</span><span class="popup-row-value">${mavatDate}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
