@@ -3191,23 +3191,21 @@
 
                 // --- Rakal line colors ---
                 const RAKAL_COLORS = {
-                    '1': '#e6194b',  // אדום
-                    '2': '#3cb44b',  // ירוק
-                    '3': '#4363d8',  // כחול
-                    '4': '#f58231',  // כתום
-                    '5': '#911eb4',  // סגול
-                    '6': '#42d4f4',  // תכלת
-                    '7': '#f032e6',  // ורוד
-                    '8': '#bfef45',  // ליים
+                    '2': '#4363d8',  // כחול
+                    '3': '#42d4f4',  // תכלת
+                    '4': '#3cb44b',  // ירוק
+                    '5': '#4363d8',  // כחול
+                    '8': '#911eb4',  // סגול
                 };
 
                 // --- Rakal (light rail lines) ---
                 if (layers['rakal'] && gd.rakal) {
                     const rakalLayer = L.geoJSON(gd.rakal, {
                         pane: 'roadsPane',
+                        filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: f => {
-                            const line = f.properties.line || '1';
-                            return { color: RAKAL_COLORS[line] || '#8e44ad', weight: 4, opacity: 0.85 };
+                            const line = f.properties.line || '2';
+                            return { color: RAKAL_COLORS[line] || '#4363d8', weight: 4, opacity: 0.85 };
                         },
                         onEachFeature: (f, layer) => {
                             const line = f.properties.line || '';
