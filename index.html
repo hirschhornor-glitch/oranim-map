@@ -1842,6 +1842,7 @@
                 map.createPane('topicsPane').style.zIndex = 350;
                 map.createPane('topicsPane').style.pointerEvents = 'none';
                 map.createPane('archivedPane').style.zIndex = 355;
+                map.createPane('archivedPane').style.pointerEvents = 'none';
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
@@ -2997,6 +2998,11 @@
                             const p = f.properties;
                             const st = (p.Status_Mavat || '').trim();
                             const isArchived = st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
+                            // Make individual path interactive (pane is pointer-events:none)
+                            layer.on('add', () => {
+                                const el = layer.getElement();
+                                if (el) el.style.pointerEvents = 'auto';
+                            });
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(p);
                                 const cls = isArchived ? 'plan-popup archived-popup' : 'plan-popup';
