@@ -1681,7 +1681,8 @@
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 densification: false, // תכניות לעיבוי שטחים חומים
                 objections: false,     // תכניות המופקדות להתנגדויות
-                infrastructure: false
+                infrastructure: false,
+                archived: false        // תכניות שנגנזו/נדחו
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -2892,7 +2893,7 @@
                 }
 
                 // --- Topics overlay ---
-                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure)) {
+                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure || planningTopics.archived)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
                     if (svgEl) {
@@ -2919,6 +2920,10 @@
                             if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות')) return true;
                             if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות') return true;
+                            if (planningTopics.archived) {
+                                const st = (p.Status_Mavat || '').trim();
+                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return true;
+                            }
                             return false;
                         },
                         style: f => {
@@ -2931,6 +2936,11 @@
                                 return { color: '#3366ff', weight: 2, fillOpacity: 0 };
                             if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות')
                                 return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
+                            if (planningTopics.archived) {
+                                const st = (p.Status_Mavat || '').trim();
+                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה')
+                                    return { color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' };
+                            }
                             return {};
                         },
                         onEachFeature: (f, layer) => {
@@ -3513,6 +3523,12 @@
                                      onClick={() => setPlanningTopics(prev => ({...prev, infrastructure: !prev.infrastructure}))}>
                                     <input type="checkbox" checked={planningTopics.infrastructure} onChange={() => {}} />
                                     <label>תכניות תשתיות</label>
+                                </div>
+                                <div className="layer-item"
+                                     title='תכניות שנגנזו/נדחו'
+                                     onClick={() => setPlanningTopics(prev => ({...prev, archived: !prev.archived}))}>
+                                    <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
+                                    <label>תכניות שנגנזו</label>
                                 </div>
                         </div>
 
