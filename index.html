@@ -590,6 +590,19 @@
         .popup-nav-btn:hover { background: #e94560; }
 
         /* GeoJSON layers get pointer cursor automatically via Leaflet */
+        /* Topics/archived panes: pass clicks through to layers below */
+        .leaflet-topics-pane,
+        .leaflet-topics-pane * {
+            pointer-events: none !important;
+        }
+        .leaflet-archived-pane,
+        .leaflet-archived-pane svg,
+        .leaflet-archived-pane canvas {
+            pointer-events: none !important;
+        }
+        .leaflet-archived-pane path {
+            pointer-events: auto !important;
+        }
 
         #map.leaflet-dragging,
         #map.leaflet-dragging *,
