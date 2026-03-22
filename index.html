@@ -2690,7 +2690,7 @@
                         pane: 'subNeighborhoodPane',
                         style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 2.5 : zoom >= 17 ? 2.0 : 1.0, fillOpacity: 0, dashArray: '6,6' },
                         onEachFeature: (f, layer) => {
-                            const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
+                            const name = f.properties.schn_nama || f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
                             if (name) {
                                 layer.bindTooltip(name, {
                                     permanent: true,
@@ -2713,7 +2713,7 @@
                             pane: 'minahakPane',
                             style: { color: 'rgba(17,199,64,1)', weight: 3, fillOpacity: 0 },
                             onEachFeature: (f, layer) => {
-                                const name = f.properties.SHEM_1 || f.properties.Name || l.name;
+                                const name = f.properties.shem_1 || f.properties.SHEM_1 || f.properties.Name || l.name;
                                 if (name && f.geometry) {
                                     const center = visualCenter(f.geometry);
                                     const marker = L.marker(center, {
