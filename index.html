@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1702,6 +1703,12 @@
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
+            const [showHeatMap, setShowHeatMap] = useState(false);
+
+            // Annotations (notes) for plans
+            if (!window.__annotations) {
+                window.__annotations = JSON.parse(localStorage.getItem('plan_annotations') || '{}');
+            }
             const [filters, setFilters] = useState({ minUnits: '', maxUnits: '', planTypes: [], statuses: [], freeText: '' });
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
@@ -3047,8 +3054,28 @@
                     geoLayersRef.current.stations = stationsLayer;
                 }
 
+                // Heat map layer
+                if (showHeatMap && gd.plans) {
+                    const heatPoints = [];
+                    gd.plans.features.forEach(f => {
+                        const add = parseFloat(f.properties.Units_add || f.properties.units_add) || 0;
+                        if (add <= 0 || !f.geometry) return;
+                        try {
+                            const bounds = L.geoJSON(f).getBounds();
+                            const center = bounds.getCenter();
+                            heatPoints.push([center.lat, center.lng, add]);
+                        } catch(e) {}
+                    });
+                    if (heatPoints.length > 0) {
+                        geoLayersRef.current.heatmap = L.heatLayer(heatPoints, {
+                            radius: 30, blur: 20, maxZoom: 17, max: 1500,
+                            gradient: { 0.2: '#2196F3', 0.4: '#4CAF50', 0.6: '#FFC107', 0.8: '#FF9800', 1: '#F44336' }
+                        }).addTo(map);
+                    }
+                }
+
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, planningTopics, dataLoaded, zoomLevel, filters]);
+            }, [layers, opacity, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -3099,6 +3126,11 @@
                     html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
                 html += '</div>';
+                // Annotations
+                const planId = props.PLAN_NAME || props.plan_name || '';
+                const note = window.__annotations[planId] || '';
+                if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">\ud83d\udcdd ' + note + '</div>';
+                html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="background:#2a2a4a;border-color:#3a3a5a;color:#ffeaa7;font-size:11px;margin-top:4px">\ud83d\udcdd \u05d4\u05e2\u05e8\u05d4</button>';
                 html += '</div>';
                 return html;
             }
@@ -3211,6 +3243,18 @@
                         return;
                     }
                     const permitBtn = ev.target.closest('.popup-btn-permit');
+                    if (permitBtn && permitBtn.dataset.action === 'add-note') {
+                        ev.stopPropagation();
+                        const planId = permitBtn.dataset.plan;
+                        const current = window.__annotations[planId] || '';
+                        const note = prompt('\u05d4\u05e2\u05e8\u05d4 \u05dc\u05ea\u05db\u05e0\u05d9\u05ea:', current);
+                        if (note !== null) {
+                            window.__annotations[planId] = note;
+                            localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                            popup.setContent(buildForIndex(currentIdx));
+                        }
+                        return;
+                    }
                     if (permitBtn) {
                         ev.stopPropagation();
                         const fd = JSON.parse(permitBtn.dataset.feature);
@@ -3668,6 +3712,21 @@
                                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                                 </svg>
                                 <span className="toolbar-label">סינון</span>
+                            </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* מפת חום */}
+                            <button
+                                className={`toolbar-btn ${showHeatMap ? 'active' : ''}`}
+                                onClick={() => {
+                                    setShowHeatMap(prev => !prev);
+                                    setActiveDropdown(null);
+                                }}
+                                title="מפת חום"
+                            >
+                                <span className="toolbar-icon" style={{fontSize:'20px',lineHeight:'1'}}>🔥</span>
+                                <span className="toolbar-label">חום</span>
                             </button>
 
                             <div className="toolbar-sep" />
