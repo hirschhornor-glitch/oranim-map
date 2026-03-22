@@ -590,18 +590,23 @@
         .popup-nav-btn:hover { background: #e94560; }
 
         /* GeoJSON layers get pointer cursor automatically via Leaflet */
-        /* Topics/archived panes: pass clicks through to layers below */
+        /* Overlay/topics/archived panes: pass clicks through to canvas layers below */
+        .leaflet-overlay-pane {
+            pointer-events: none !important;
+        }
         .leaflet-topics-pane,
         .leaflet-topics-pane * {
             pointer-events: none !important;
         }
-        .leaflet-archived-pane,
-        .leaflet-archived-pane svg,
-        .leaflet-archived-pane canvas {
+        .leaflet-archived-pane {
+            pointer-events: none !important;
+        }
+        .leaflet-archived-pane svg {
             pointer-events: none !important;
         }
         .leaflet-archived-pane path {
             pointer-events: auto !important;
+            cursor: pointer;
         }
 
         #map.leaflet-dragging,
