@@ -2161,7 +2161,8 @@
             const finishAreaSelect = useCallback(() => {
                 const map = mapInstanceRef.current;
                 const ref = areaSelectRef.current;
-                if (!map || ref.points.length < 3) return;
+                console.log('[AreaSelect] finishAreaSelect called, points:', ref.points.length);
+                if (!map || ref.points.length < 3) { console.log('[AreaSelect] ABORTED - not enough points'); return; }
 
                 const polyCoords = ref.points.map(p => [p.lng, p.lat]);
                 polyCoords.push(polyCoords[0]);
@@ -4489,6 +4490,22 @@
                         <div className={`share-toast ${showToast ? 'visible' : ''}`}>
                             הקישור הועתק!
                         </div>
+
+                        {/* Area select finish button */}
+                        {areaSelectMode && areaPointCount >= 3 && (
+                            <button
+                                onClick={() => finishAreaSelect()}
+                                style={{
+                                    position:'absolute', bottom:60, left:'50%', transform:'translateX(-50%)',
+                                    zIndex:2000, background:'#e94560', color:'#fff', border:'none',
+                                    borderRadius:8, padding:'10px 28px', fontSize:15, fontWeight:'bold',
+                                    cursor:'pointer', boxShadow:'0 4px 16px rgba(233,69,96,0.4)',
+                                    fontFamily:'Assistant, sans-serif'
+                                }}
+                            >
+                                ✓ סיום בחירת אזור ({areaPointCount} נקודות)
+                            </button>
+                        )}
 
                         {/* Area select result */}
                         {areaSelectResult && (
