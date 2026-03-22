@@ -1427,6 +1427,7 @@
             sub_neighborhoods: 'data/sub_neighborhoods.geojson',
             district_oranim: 'data/district_oranim.geojson',
             roads: 'data/roads.geojson',
+            rakal: 'data/rakal.geojson',
             minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
             minahak_talpiot: 'data/minahak_talpiot.geojson',
             minahak_malha: 'data/minahak_malha.geojson',
@@ -1510,6 +1511,7 @@
                 title: 'תשתיות',
                 layers: [
                     { id: 'roads', name: 'כבישים', on: true },
+                    { id: 'rakal', name: 'רק"ל', on: false },
                     { id: 'stations', name: 'תחנות רק"ל', on: false },
                 ]
             },
@@ -3185,6 +3187,23 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.tama38 = tama38Layer;
+                }
+
+                // --- Rakal (light rail lines) ---
+                if (layers['rakal'] && gd.rakal) {
+                    const rakalLayer = L.geoJSON(gd.rakal, {
+                        pane: 'roadsPane',
+                        style: f => ({
+                            color: f.properties.color || '#8e44ad',
+                            weight: 4,
+                            opacity: 0.8
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const name = f.properties.name || f.properties.Name || f.properties.line || '';
+                            if (name) layer.bindTooltip(name, { sticky: true, className: 'station-label' });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.rakal = rakalLayer;
                 }
 
                 // --- Stations ---
