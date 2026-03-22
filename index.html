@@ -1413,6 +1413,13 @@
             { label: 'ו-גמר בנייה', color: '#494cc2' },
         ];
 
+        const TAMA38_LEGEND = [
+            { label: 'תכנון - טרם כניסה לרישוי', color: 'rgb(215,25,28)' },
+            { label: 'נפתח תיק היתר', color: 'rgb(253,174,97)' },
+            { label: 'היתר אושר בועדת רישוי', color: 'rgb(255,255,192)' },
+            { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
+        ];
+
         const TOPICS_LEGEND = [
             { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
             { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
@@ -2987,6 +2994,10 @@
                                             {layer.id === 'permits' && (
                                                 <button className="layer-legend-btn" title="מקרא שלבים"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'tama38' && (
+                                                <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
                                             )}
                                         </div>
                                     ))}
