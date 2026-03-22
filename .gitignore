@@ -1,0 +1,5 @@
+# Ignore editor/IDE files
+.DS_Store
+*.swp
+*.swo
+*~
