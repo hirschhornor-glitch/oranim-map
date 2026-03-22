@@ -1785,13 +1785,28 @@
                 { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך' },
             ];
 
-            // Load plan search index
+            // Build plan search index from loaded GeoJSON data
             useEffect(() => {
-                fetch('plans_index.json')
-                    .then(res => res.json())
-                    .then(data => setPlanIndex(data))
-                    .catch(err => console.error('Failed to load plan index:', err));
-            }, []);
+                const gd = geoDataRef.current;
+                if (!dataLoaded || !gd.plans) return;
+                const index = [];
+                gd.plans.features.forEach(f => {
+                    if (!f.geometry || !f.geometry.coordinates) return;
+                    try {
+                        const p = f.properties;
+                        const bounds = L.geoJSON(f).getBounds();
+                        if (!bounds.isValid()) return;
+                        const center = bounds.getCenter();
+                        index.push({
+                            n: p.plan_name || '',
+                            t: (p.plan_name_he || '') + ' ' + (p.plan_summary || ''),
+                            c: [center.lat, center.lng]
+                        });
+                    } catch(e) {}
+                });
+                setPlanIndex(index);
+                console.log('[Search] Built plan index:', index.length, 'plans');
+            }, [dataLoaded]);
 
             const mapRef = useRef(null);
             const mapInstanceRef = useRef(null);
