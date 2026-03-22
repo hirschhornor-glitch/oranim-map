@@ -1919,6 +1919,8 @@
                 map.createPane('roadsPane').style.pointerEvents = 'none';
                 map.createPane('rakalPane').style.zIndex = 490;
                 map.createPane('rakalPane').style.pointerEvents = 'none';
+                // Separate SVG renderer for rakal so pane z-index works
+                window.__rakalRenderer = L.svg({ pane: 'rakalPane' });
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('infrastructurePane').style.zIndex = 280;
@@ -1931,6 +1933,7 @@
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
+                window.__stationsRenderer = L.svg({ pane: 'stationsPane' });
                 const labelsP = map.createPane('labelsPane');
                 labelsP.style.zIndex = 550;
                 labelsP.style.pointerEvents = 'none';
@@ -3205,6 +3208,7 @@
                     // Black outline layer (drawn first = behind)
                     const rakalOutline = L.geoJSON(gd.rakal, {
                         pane: 'rakalPane',
+                        renderer: window.__rakalRenderer,
                         filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: () => ({ color: '#000', weight: 9, opacity: 0.85 }),
                         interactive: false
@@ -3213,6 +3217,7 @@
                     // Colored inner layer (drawn second = on top)
                     const rakalLayer = L.geoJSON(gd.rakal, {
                         pane: 'rakalPane',
+                        renderer: window.__rakalRenderer,
                         filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: f => {
                             const line = f.properties.line || '2';
@@ -3233,6 +3238,7 @@
                     }
                     const stationsLayer = L.geoJSON(gd.stations, {
                         pane: 'stationsPane',
+                        renderer: window.__stationsRenderer,
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const colorMap = {
