@@ -1868,13 +1868,17 @@
                 // Apply layer state from hash
                 if (hashParams && hashParams.layers) {
                     const hashLayerIds = hashParams.layers.split(',');
-                    const newLayers = {};
-                    Object.values(LAYER_CONFIG).forEach(group => {
-                        group.layers.forEach(l => {
-                            newLayers[l.id] = hashLayerIds.includes(l.id);
+                    setLayers(prev => {
+                        const newLayers = { ...prev };
+                        Object.values(LAYER_CONFIG).forEach(group => {
+                            group.layers.forEach(l => {
+                                newLayers[l.id] = hashLayerIds.includes(l.id);
+                            });
                         });
+                        // Always keep ALWAYS_ON layers
+                        ALWAYS_ON_LAYERS.forEach(id => { newLayers[id] = true; });
+                        return newLayers;
                     });
-                    setLayers(newLayers);
                     hashAppliedRef.current = true;
                 }
 
