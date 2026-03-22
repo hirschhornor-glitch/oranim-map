@@ -1700,6 +1700,7 @@
             const [unitsLoading, setUnitsLoading] = useState(false);
             const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
             const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
+            const [minahakReport, setMinahakReport] = useState(null);
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
@@ -3117,6 +3118,40 @@
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
                 html += '</div>';
+                // Timeline section
+                const stages = [];
+                const mavatDate = props.mavat_date || props.Mavat_Date || '';
+                const permitDate = props['תאריךהיתר'] || props.permit_date || '';
+                const tlStatus = props.status_mavat || props.Status_Mavat || '';
+                const tlStage = props.stage || props['שלב'] || '';
+
+                if (mavatDate) stages.push({ label: 'פתיחת תיק', date: mavatDate, done: true });
+                if (tlStatus) {
+                    const statusOrder = ['נפתח תיק תבע', 'נפתח תיק למתכנן', 'בבדיקה תכנונית', 'במילוי תנאים להפקדה',
+                                         'הפקדה להתנגדויות/השגות', 'דיון בהתנגדויות ותיקונים', 'בהליך אישור', 'אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף'];
+                    const statusIdx = statusOrder.indexOf(tlStatus);
+                    stages.push({ label: 'סטטוס: ' + tlStatus, date: '', done: statusIdx >= 0, current: true });
+                }
+                if (tlStage && tlStage.trim()) stages.push({ label: 'שלב: ' + tlStage, date: permitDate || '', done: true });
+
+                if (stages.length > 0) {
+                    html += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #2a2a4a">';
+                    html += '<div style="font-size:10px;color:#8ecae6;margin-bottom:6px">ציר זמן</div>';
+                    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+                    stages.forEach((s, i) => {
+                        const dotColor = s.current ? '#e94560' : (s.done ? '#4CAF50' : '#555');
+                        const lineColor = i < stages.length - 1 ? '#4CAF50' : 'transparent';
+                        html += '<div style="display:flex;align-items:flex-start;gap:8px">';
+                        html += '<div style="display:flex;flex-direction:column;align-items:center;min-width:12px">';
+                        html += '<div style="width:10px;height:10px;border-radius:50%;background:' + dotColor + '"></div>';
+                        if (i < stages.length - 1) html += '<div style="width:2px;height:16px;background:' + lineColor + '"></div>';
+                        html += '</div>';
+                        html += '<div style="font-size:11px;color:#e0e0e0">' + s.label;
+                        if (s.date) html += ' <span style="color:#888;font-size:10px">(' + s.date + ')</span>';
+                        html += '</div></div>';
+                    });
+                    html += '</div></div>';
+                }
                 // Footer
                 html += '<div class="popup-footer">';
                 if (mavatUrl) {
@@ -3437,6 +3472,10 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.minahak && (
+                                                <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
+                                                    onClick={(e) => { e.stopPropagation(); setMinahakReport(layer.minahak); }}>⋯</button>
                                             )}
                                         </div>
                                     ))}
@@ -4200,6 +4239,73 @@
                                         </table>
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {minahakReport && (
+                        <div className="units-overlay" onClick={() => setMinahakReport(null)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 600}}>
+                                <button className="units-close" onClick={() => setMinahakReport(null)}>&times;</button>
+                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח מינהל — {minahakReport}</h2>
+                                {(() => {
+                                    const gd = geoDataRef.current;
+                                    if (!gd.plans) return <p>טוען...</p>;
+                                    const plans = gd.plans.features.filter(f => {
+                                        const m = f.properties['מינה"ק'] || '';
+                                        const st = f.properties.Status_Mavat || '';
+                                        return m === minahakReport && st !== 'נגנזה/נדחתה' && st !== 'נגנזה' && st !== 'נדחתה';
+                                    });
+                                    const totalAdd = plans.reduce((s, f) => s + (parseFloat(f.properties.Units_add) || 0), 0);
+                                    const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.Units_add) || 0) - (parseFloat(a.properties.Units_add) || 0)).slice(0, 10);
+                                    const statusCounts = {};
+                                    plans.forEach(f => {
+                                        const s = f.properties.Status_Mavat || 'לא ידוע';
+                                        statusCounts[s] = (statusCounts[s] || 0) + 1;
+                                    });
+                                    const maxCount = Math.max(...Object.values(statusCounts), 1);
+                                    return (
+                                        <>
+                                            <div style={{display:'flex',gap:30,margin:'16px 0'}}>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plans.length}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תכניות פעילות</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#4CAF50'}}>{totalAdd.toLocaleString()}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>יח"ד תוספת</div>
+                                                </div>
+                                            </div>
+                                            <h3 style={{color:'#e94560',fontSize:14,marginBottom:8}}>10 תכניות מובילות</h3>
+                                            <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
+                                                <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                    <th style={{textAlign:'right',padding:4}}>שם</th>
+                                                    <th style={{textAlign:'center',padding:4}}>יח"ד</th>
+                                                    <th style={{textAlign:'center',padding:4}}>סטטוס</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {top10.map((f, i) => (
+                                                        <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                            <td style={{padding:4,color:'#e0e0e0'}}>{f.properties['תמצית שם התכנית'] || f.properties.PLAN_NAME}</td>
+                                                            <td style={{textAlign:'center',padding:4,color:'#4CAF50'}}>{(parseFloat(f.properties.Units_add)||0).toLocaleString()}</td>
+                                                            <td style={{textAlign:'center',padding:4,color:'#aaa',fontSize:10}}>{f.properties.Status_Mavat}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 8px'}}>פילוח לפי סטטוס</h3>
+                                            {Object.entries(statusCounts).sort((a,b) => b[1]-a[1]).map(([s, c]) => (
+                                                <div key={s} style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                                                    <span style={{fontSize:10,color:'#aaa',minWidth:120,textAlign:'right'}}>{s}</span>
+                                                    <div style={{flex:1,height:14,background:'#1a1a2e',borderRadius:3}}>
+                                                        <div style={{width:(c/maxCount*100)+'%',height:'100%',background:'#e94560',borderRadius:3}}></div>
+                                                    </div>
+                                                    <span style={{fontSize:10,color:'#e0e0e0',minWidth:20}}>{c}</span>
+                                                </div>
+                                            ))}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}
