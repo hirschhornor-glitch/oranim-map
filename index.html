@@ -3200,12 +3200,21 @@
 
                 // --- Rakal (light rail lines) ---
                 if (layers['rakal'] && gd.rakal) {
+                    // Black outline layer (drawn first = behind)
+                    const rakalOutline = L.geoJSON(gd.rakal, {
+                        pane: 'roadsPane',
+                        filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
+                        style: () => ({ color: '#000', weight: 9, opacity: 0.85 }),
+                        interactive: false
+                    }).addTo(map);
+                    geoLayersRef.current.rakalOutline = rakalOutline;
+                    // Colored inner layer (drawn second = on top)
                     const rakalLayer = L.geoJSON(gd.rakal, {
                         pane: 'roadsPane',
                         filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: f => {
                             const line = f.properties.line || '2';
-                            return { color: RAKAL_COLORS[line] || '#4363d8', weight: 4, opacity: 0.85 };
+                            return { color: RAKAL_COLORS[line] || '#4363d8', weight: 7, opacity: 0.85 };
                         },
                         onEachFeature: (f, layer) => {
                             const line = f.properties.line || '';
