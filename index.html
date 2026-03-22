@@ -3189,30 +3189,62 @@
                     geoLayersRef.current.tama38 = tama38Layer;
                 }
 
+                // --- Rakal line colors ---
+                const RAKAL_COLORS = {
+                    '1': '#e6194b',  // אדום
+                    '2': '#3cb44b',  // ירוק
+                    '3': '#4363d8',  // כחול
+                    '4': '#f58231',  // כתום
+                    '5': '#911eb4',  // סגול
+                    '6': '#42d4f4',  // תכלת
+                    '7': '#f032e6',  // ורוד
+                    '8': '#bfef45',  // ליים
+                };
+
                 // --- Rakal (light rail lines) ---
                 if (layers['rakal'] && gd.rakal) {
                     const rakalLayer = L.geoJSON(gd.rakal, {
                         pane: 'roadsPane',
-                        style: f => ({
-                            color: f.properties.color || '#8e44ad',
-                            weight: 4,
-                            opacity: 0.8
-                        }),
+                        style: f => {
+                            const line = f.properties.line || '1';
+                            return { color: RAKAL_COLORS[line] || '#8e44ad', weight: 4, opacity: 0.85 };
+                        },
                         onEachFeature: (f, layer) => {
-                            const name = f.properties.name || f.properties.Name || f.properties.line || '';
-                            if (name) layer.bindTooltip(name, { sticky: true, className: 'station-label' });
+                            const line = f.properties.line || '';
+                            const origin = f.properties.origin || '';
+                            const dest = f.properties.destinatio || '';
+                            const tip = 'קו ' + line + (origin && dest ? ': ' + origin + ' ↔ ' + dest : '');
+                            layer.bindTooltip(tip, { sticky: true, className: 'station-label' });
                         }
                     }).addTo(map);
                     geoLayersRef.current.rakal = rakalLayer;
                 }
 
-                // --- Stations ---
+                // --- Stations (colored by rakal line) ---
                 if (layers['stations'] && gd.stations) {
+                    // Build line lookup from rakal data for station coloring
+                    const stationLineMap = {};
+                    if (gd.rakal) {
+                        // For each station, find nearest rakal line
+                        // Simple approach: check which line passes closest
+                    }
                     const stationsLayer = L.geoJSON(gd.stations, {
                         pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 6, fillColor: '#00b894', color: '#fff', weight: 2, fillOpacity: 0.9
-                        }),
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties;
+                            // Color station by its main line color
+                            const colorMap = {
+                                'אדום': RAKAL_COLORS['1'], 'ירוק': RAKAL_COLORS['2'],
+                                'כחול': RAKAL_COLORS['3'], 'חום': RAKAL_COLORS['4'],
+                                'סגול': RAKAL_COLORS['5'], 'תכלת': RAKAL_COLORS['6'],
+                                'ורוד': RAKAL_COLORS['7'], 'צהוב': RAKAL_COLORS['8'],
+                            };
+                            const mainColor = (p.color_main1 || '').trim();
+                            const fillColor = colorMap[mainColor] || '#00b894';
+                            return L.circleMarker(latlng, {
+                                radius: 6, fillColor: fillColor, color: '#fff', weight: 2, fillOpacity: 0.9
+                            });
+                        },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.Name || f.properties.name || '';
                             if (name) layer.bindTooltip(name, { permanent: true, direction: 'top', className: 'station-label' });
