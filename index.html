@@ -2213,6 +2213,30 @@
                 map.getContainer().classList.add('measuring');
                 const ref = areaSelectRef.current;
 
+                // Floating finish button as Leaflet control
+                const FinishControl = L.Control.extend({
+                    onAdd: function() {
+                        const btn = L.DomUtil.create('button', '');
+                        btn.innerHTML = '✓ סיום בחירת אזור';
+                        btn.style.cssText = 'display:none;background:#e94560;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:15px;font-weight:bold;cursor:pointer;font-family:Assistant,sans-serif;box-shadow:0 4px 16px rgba(233,69,96,0.4)';
+                        L.DomEvent.disableClickPropagation(btn);
+                        L.DomEvent.on(btn, 'click', function(e) {
+                            L.DomEvent.stop(e);
+                            finishAreaSelect();
+                        });
+                        this._btn = btn;
+                        return btn;
+                    },
+                    update: function(count) {
+                        if (this._btn) {
+                            this._btn.style.display = count >= 3 ? 'block' : 'none';
+                            this._btn.innerHTML = '✓ סיום בחירת אזור (' + count + ' נקודות)';
+                        }
+                    }
+                });
+                const finishCtrl = new FinishControl({ position: 'bottomleft' });
+                finishCtrl.addTo(map);
+
                 function onClick(e) {
                     ref.points.push(e.latlng);
                     setAreaPointCount(ref.points.length);
@@ -2222,6 +2246,7 @@
                         if (ref.polygon) map.removeLayer(ref.polygon);
                         ref.polygon = L.polygon(ref.points, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.15, dashArray: '6,4' }).addTo(map);
                     }
+                    finishCtrl.update(ref.points.length);
                 }
 
                 function onKeyDown(e) {
@@ -2233,6 +2258,7 @@
                 return () => {
                     map.off('click', onClick);
                     document.removeEventListener('keydown', onKeyDown);
+                    map.removeControl(finishCtrl);
                 };
             }, [areaSelectMode]);
 
@@ -4490,24 +4516,6 @@
                         <div className={`share-toast ${showToast ? 'visible' : ''}`}>
                             הקישור הועתק!
                         </div>
-
-                        {/* Area select finish button */}
-                        {areaSelectMode && areaPointCount >= 3 && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); finishAreaSelect(); }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                style={{
-                                    position:'absolute', bottom:60, left:'50%', transform:'translateX(-50%)',
-                                    zIndex:2000, background:'#e94560', color:'#fff', border:'none',
-                                    borderRadius:8, padding:'10px 28px', fontSize:15, fontWeight:'bold',
-                                    cursor:'pointer', boxShadow:'0 4px 16px rgba(233,69,96,0.4)',
-                                    fontFamily:'Assistant, sans-serif', pointerEvents:'auto'
-                                }}
-                                ref={(el) => { if (el) L.DomEvent.disableClickPropagation(el); }}
-                            >
-                                ✓ סיום בחירת אזור ({areaPointCount} נקודות)
-                            </button>
-                        )}
 
                         {/* Area select result */}
                         {areaSelectResult && (
