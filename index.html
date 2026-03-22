@@ -590,20 +590,24 @@
         .popup-nav-btn:hover { background: #e94560; }
 
         /* GeoJSON layers get pointer cursor automatically via Leaflet */
-        /* Overlay/topics/archived panes: pass clicks through to canvas layers below */
-        .leaflet-overlay-pane {
+        /* All panes pass clicks through by default; only interactive elements catch events */
+        .leaflet-pane {
             pointer-events: none !important;
         }
-        .leaflet-topics-pane,
-        .leaflet-topics-pane * {
+        /* Re-enable pointer events on actual interactive content */
+        .leaflet-pane canvas,
+        .leaflet-pane path,
+        .leaflet-popup-pane,
+        .leaflet-popup-pane *,
+        .leaflet-control-container,
+        .leaflet-control-container * {
+            pointer-events: auto !important;
+        }
+        /* Topics pane: never interactive (hatch overlays only) */
+        .leaflet-topics-pane path {
             pointer-events: none !important;
         }
-        .leaflet-archived-pane {
-            pointer-events: none !important;
-        }
-        .leaflet-archived-pane svg {
-            pointer-events: none !important;
-        }
+        /* Archived paths: interactive */
         .leaflet-archived-pane path {
             pointer-events: auto !important;
             cursor: pointer;
