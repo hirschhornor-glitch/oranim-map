@@ -3590,7 +3590,7 @@
             // Plan search results
             const searchResults = planSearch.length >= 2
                 ? planIndex.filter(p =>
-                    p.h.includes(planSearch) || p.n.includes(planSearch)
+                    (p.t && p.t.includes(planSearch)) || (p.n && p.n.includes(planSearch))
                 ).slice(0, 15)
                 : [];
 
