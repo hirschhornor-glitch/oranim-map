@@ -3153,8 +3153,8 @@
                     });
                     if (heatPoints.length > 0) {
                         geoLayersRef.current.heatmap = L.heatLayer(heatPoints, {
-                            radius: 30, blur: 20, maxZoom: 17, max: 1500,
-                            gradient: { 0.2: '#2196F3', 0.4: '#4CAF50', 0.6: '#FFC107', 0.8: '#FF9800', 1: '#F44336' }
+                            radius: 35, blur: 25, maxZoom: 17, max: 800,
+                            gradient: { 0.1: '#ffffb2', 0.3: '#fecc5c', 0.5: '#fd8d3c', 0.7: '#f03b20', 0.9: '#bd0026', 1: '#800026' }
                         }).addTo(map);
                     }
                 }
@@ -4034,7 +4034,7 @@
                                     <span style={{color:'#aaa',fontSize:10}}>נמוך</span>
                                     <div style={{
                                         flex:1, height:12, borderRadius:6,
-                                        background:'linear-gradient(to left, #F44336, #FF9800, #FFC107, #4CAF50, #2196F3)'
+                                        background:'linear-gradient(to left, #800026, #bd0026, #f03b20, #fd8d3c, #fecc5c, #ffffb2)'
                                     }}></div>
                                     <span style={{color:'#aaa',fontSize:10}}>גבוה</span>
                                 </div>
