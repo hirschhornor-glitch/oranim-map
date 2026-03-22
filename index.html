@@ -3237,8 +3237,6 @@
                         // Simple approach: check which line passes closest
                     }
                     const stationsLayer = L.geoJSON(gd.stations, {
-                        pane: 'stationsPane',
-                        renderer: window.__stationsRenderer,
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const colorMap = {
@@ -3249,8 +3247,13 @@
                             };
                             const mainColor = (p.color_main1 || '').trim();
                             const fillColor = colorMap[mainColor] || '#1a3ccc';
-                            return L.circleMarker(latlng, {
-                                radius: 5, fillColor: fillColor, color: '#000', weight: 1.5, fillOpacity: 0.95
+                            return L.marker(latlng, {
+                                icon: L.divIcon({
+                                    className: 'station-dot',
+                                    html: '<div style="width:10px;height:10px;border-radius:50%;background:' + fillColor + ';border:1.5px solid #000"></div>',
+                                    iconSize: [10, 10],
+                                    iconAnchor: [5, 5]
+                                })
                             });
                         },
                         onEachFeature: (f, layer) => {
