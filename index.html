@@ -1868,15 +1868,28 @@
                 // Apply layer state from hash
                 if (hashParams && hashParams.layers) {
                     const hashLayerIds = hashParams.layers.split(',');
+                    // Collect all layer IDs that existed when hash was created
+                    const allKnownIds = [];
+                    Object.values(LAYER_CONFIG).forEach(group => {
+                        group.layers.forEach(l => allKnownIds.push(l.id));
+                    });
                     setLayers(prev => {
                         const newLayers = { ...prev };
-                        Object.values(LAYER_CONFIG).forEach(group => {
-                            group.layers.forEach(l => {
-                                newLayers[l.id] = hashLayerIds.includes(l.id);
-                            });
+                        allKnownIds.forEach(id => {
+                            // Only toggle layers that appear in hash OR are planning/admin layers
+                            // Keep default for infrastructure layers not mentioned in hash
+                            if (hashLayerIds.includes(id)) {
+                                newLayers[id] = true;
+                            } else {
+                                // Check if this layer type was part of hash (any from same group)
+                                const group = Object.values(LAYER_CONFIG).find(g => g.layers.some(l => l.id === id));
+                                const groupHasAny = group && group.layers.some(l => hashLayerIds.includes(l.id));
+                                if (groupHasAny) {
+                                    newLayers[id] = false; // explicitly excluded
+                                }
+                                // else: keep default (layer added after hash was created)
+                            }
                         });
-                        // Always keep ALWAYS_ON layers
-                        ALWAYS_ON_LAYERS.forEach(id => { newLayers[id] = true; });
                         return newLayers;
                     });
                     hashAppliedRef.current = true;
