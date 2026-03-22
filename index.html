@@ -2239,7 +2239,25 @@
                 const finishCtrl = new FinishControl({ position: 'bottomleft' });
                 finishCtrl.addTo(map);
 
+                // Tooltip showing instructions
+                const infoTooltip = L.tooltip({ permanent: true, direction: 'top', className: 'area-select-info', offset: [0, -20] })
+                    .setLatLng(map.getCenter())
+                    .setContent('לחץ על המפה לציור אזור. לחץ כפול לסיום. Escape לביטול.')
+                    .addTo(map);
+
+                map.doubleClickZoom.disable();
+                let lastClickTime = 0;
+
                 function onClick(e) {
+                    const now = Date.now();
+                    // Detect double-click (< 400ms between clicks)
+                    if (now - lastClickTime < 400 && ref.points.length >= 3) {
+                        ref.finishing = true;
+                        finishAreaSelect();
+                        return;
+                    }
+                    lastClickTime = now;
+
                     ref.points.push(e.latlng);
                     setAreaPointCount(ref.points.length);
                     const marker = L.circleMarker(e.latlng, { radius: 4, color: '#e94560', fillColor: '#e94560', fillOpacity: 1 }).addTo(map);
@@ -2249,15 +2267,12 @@
                         ref.polygon = L.polygon(ref.points, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.15, dashArray: '6,4' }).addTo(map);
                     }
                     finishCtrl.update(ref.points.length);
-                    // After exactly 3 points, ask if done (only once)
-                    if (ref.points.length === 3) {
-                        setTimeout(() => {
-                            if (ref.finishing) return;
-                            if (window.confirm('סיום בחירת אזור? (3 נקודות)\n\nלחץ OK לסיום, Cancel להמשיך להוסיף נקודות')) {
-                                ref.finishing = true;
-                                finishAreaSelect();
-                            }
-                        }, 100);
+                    // Update tooltip
+                    infoTooltip.setLatLng(e.latlng);
+                    if (ref.points.length >= 3) {
+                        infoTooltip.setContent('לחץ כפול לסיום (' + ref.points.length + ' נקודות) | Escape לביטול');
+                    } else {
+                        infoTooltip.setContent('הוסף עוד ' + (3 - ref.points.length) + ' נקודות לפחות');
                     }
                 }
 
@@ -2271,6 +2286,8 @@
                     map.off('click', onClick);
                     document.removeEventListener('keydown', onKeyDown);
                     map.removeControl(finishCtrl);
+                    map.removeLayer(infoTooltip);
+                    map.doubleClickZoom.enable();
                 };
             }, [areaSelectMode]);
 
