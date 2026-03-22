@@ -179,6 +179,9 @@
             background: #1a1a2e;
             color: #e0e0e0;
         }
+        .archived-popup .leaflet-popup-content-wrapper {
+            background: #3a3a3a;
+        }
 
         .leaflet-popup-tip { border-top-color: #1a1a2e; }
 
@@ -2945,6 +2948,20 @@
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
+                            // Archived plans: clickable popup with gray background
+                            if (planningTopics.archived) {
+                                const st = (p.Status_Mavat || '').trim();
+                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') {
+                                    layer.on('click', () => {
+                                        const mapped = mapPlanProps(p);
+                                        const popup = L.popup({ maxWidth: 340, className: 'plan-popup archived-popup' })
+                                            .setLatLng(layer.getBounds ? layer.getBounds().getCenter() : layer.getLatLng())
+                                            .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                        popup.openOn(map);
+                                        bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                    });
+                                }
+                            }
                             // Apply SVG hatch pattern fill after rendering
                             layer.on('add', () => {
                                 const el = layer.getElement();
