@@ -1095,6 +1095,121 @@
         #map.measuring.leaflet-dragging,
         #map.measuring.leaflet-dragging * { cursor: grabbing !important; }
 
+        /* ── Share Toast ── */
+        .share-toast {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #16213e;
+            color: #e0e0ff;
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: 1px solid #e94560;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        }
+        .share-toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ── Dashboard / Statistics Panel ── */
+        .dashboard-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .dashboard-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            gap: 8px;
+        }
+        .dashboard-toggle h3 {
+            font-size: 0.9em;
+            color: #e94560;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        .dashboard-arrow {
+            display: inline-block;
+            font-size: 10px;
+            color: #e94560;
+            transition: transform 0.2s;
+        }
+        .dashboard-arrow.open {
+            transform: rotate(90deg);
+        }
+        .dashboard-content {
+            margin-top: 12px;
+        }
+        .dashboard-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .dashboard-stat:last-child { border-bottom: none; }
+        .dashboard-stat-label {
+            font-size: 0.85em;
+            color: #8888aa;
+        }
+        .dashboard-stat-value {
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #e0e0ff;
+        }
+        .dashboard-bar-section {
+            margin-top: 10px;
+        }
+        .dashboard-bar-title {
+            font-size: 0.8em;
+            color: #8888aa;
+            margin-bottom: 8px;
+        }
+        .dashboard-bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            gap: 8px;
+        }
+        .dashboard-bar-label {
+            font-size: 11px;
+            color: #c0c0dd;
+            min-width: 110px;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dashboard-bar-track {
+            flex: 1;
+            height: 14px;
+            background: #1a1a3a;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .dashboard-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .dashboard-bar-count {
+            font-size: 10px;
+            color: #8888aa;
+            min-width: 28px;
+            text-align: left;
+        }
+
     </style>
 </head>
 <body>
@@ -1492,6 +1607,8 @@
             const [unitsLoading, setUnitsLoading] = useState(false);
             const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
             const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
+            const [showToast, setShowToast] = useState(false);
+            const [dashboardOpen, setDashboardOpen] = useState(false);
 
             // Load plan search index
             useEffect(() => {
@@ -1508,19 +1625,68 @@
             const baseTileRef = useRef(null);
             const layersRef = useRef(layers);
 
+            // ── URL Hash helpers ──
+            function parseHash() {
+                const hash = window.location.hash.replace('#', '');
+                if (!hash) return null;
+                const params = {};
+                hash.split('&').forEach(p => {
+                    const [k, v] = p.split('=');
+                    if (k && v !== undefined) params[k] = decodeURIComponent(v);
+                });
+                return params;
+            }
+
+            function updateHash() {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const c = map.getCenter();
+                const z = map.getZoom();
+                const activeLayers = Object.entries(layersRef.current)
+                    .filter(([, v]) => v)
+                    .map(([k]) => k)
+                    .join(',');
+                const hash = `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}`;
+                window.history.replaceState(null, '', '#' + hash);
+            }
+
+            // Apply hash on first load
+            const hashAppliedRef = useRef(false);
 
             // Initialize map
             useEffect(() => {
                 if (mapInstanceRef.current) return;
 
+                // Read hash for initial view
+                const hashParams = parseHash();
+                const initCenter = (hashParams && hashParams.lat && hashParams.lng)
+                    ? [parseFloat(hashParams.lat), parseFloat(hashParams.lng)]
+                    : CENTER;
+                const initZoom = (hashParams && hashParams.z)
+                    ? parseInt(hashParams.z)
+                    : DEFAULT_ZOOM;
+
                 const map = L.map('map', {
-                    center: CENTER,
-                    zoom: DEFAULT_ZOOM,
+                    center: initCenter,
+                    zoom: initZoom,
                     zoomControl: false,
                     maxZoom: 22,
                     minZoom: 13,
                     preferCanvas: true
                 });
+
+                // Apply layer state from hash
+                if (hashParams && hashParams.layers) {
+                    const hashLayerIds = hashParams.layers.split(',');
+                    const newLayers = {};
+                    Object.values(LAYER_CONFIG).forEach(group => {
+                        group.layers.forEach(l => {
+                            newLayers[l.id] = hashLayerIds.includes(l.id);
+                        });
+                    });
+                    setLayers(newLayers);
+                    hashAppliedRef.current = true;
+                }
 
                 L.control.zoom({ position: 'topleft' }).addTo(map);
                 L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
@@ -1540,6 +1706,7 @@
                 };
                 map.on('zoomend moveend', updateScale);
                 map.on('zoomend', () => setZoomLevel(map.getZoom()));
+                map.on('zoomend moveend', updateHash);
                 setTimeout(updateScale, 200);
 
                 mapInstanceRef.current = map;
@@ -1636,7 +1803,7 @@
             }, [basemap]);
 
             // Keep refs in sync
-            useEffect(() => { layersRef.current = layers; }, [layers]);
+            useEffect(() => { layersRef.current = layers; updateHash(); }, [layers]);
             // GeoJSON layers have built-in pointer cursor on hover — no probe needed
 
             // ── Measurement tool logic ──
@@ -3091,6 +3258,64 @@
                                 </div>
                         </div>
 
+                        {/* ── Dashboard / Statistics ── */}
+                        <div className="dashboard-section">
+                            <div className="dashboard-toggle" onClick={() => setDashboardOpen(prev => !prev)}>
+                                <span className={`dashboard-arrow ${dashboardOpen ? 'open' : ''}`}>▶</span>
+                                <h3>סטטיסטיקה</h3>
+                            </div>
+                            {dashboardOpen && (() => {
+                                const plans = geoDataRef.current.plans;
+                                if (!plans || !plans.features) return React.createElement('div', {className:'dashboard-content', style:{color:'#6a6a8a', fontSize:'0.85em'}}, 'טוען נתונים...');
+                                const features = plans.features;
+                                const rejectedStatuses = ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'];
+                                const activeFeatures = features.filter(f => {
+                                    const s = normalizeStatus(f.properties.STATUS || '');
+                                    return !rejectedStatuses.includes(s);
+                                });
+                                const totalActive = activeFeatures.length;
+                                const totalUnitsAdd = activeFeatures.reduce((sum, f) => {
+                                    return sum + (parseFloat(f.properties.Units_add) || parseInt(f.properties.units_add) || 0);
+                                }, 0);
+                                // Group by status
+                                const statusCounts = {};
+                                features.forEach(f => {
+                                    const s = normalizeStatus(f.properties.STATUS || '') || 'לא ידוע';
+                                    statusCounts[s] = (statusCounts[s] || 0) + 1;
+                                });
+                                const statusEntries = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+                                const maxCount = statusEntries.length > 0 ? statusEntries[0][1] : 1;
+                                return React.createElement('div', {className: 'dashboard-content'},
+                                    React.createElement('div', {className: 'dashboard-stat'},
+                                        React.createElement('span', {className: 'dashboard-stat-label'}, 'סה"כ תכניות פעילות'),
+                                        React.createElement('span', {className: 'dashboard-stat-value'}, totalActive.toLocaleString())
+                                    ),
+                                    React.createElement('div', {className: 'dashboard-stat'},
+                                        React.createElement('span', {className: 'dashboard-stat-label'}, 'סה"כ יח"ד תוספת'),
+                                        React.createElement('span', {className: 'dashboard-stat-value'}, totalUnitsAdd.toLocaleString())
+                                    ),
+                                    React.createElement('div', {className: 'dashboard-bar-section'},
+                                        React.createElement('div', {className: 'dashboard-bar-title'}, 'פילוח לפי סטטוס'),
+                                        statusEntries.map(([status, count]) =>
+                                            React.createElement('div', {className: 'dashboard-bar-row', key: status},
+                                                React.createElement('span', {className: 'dashboard-bar-label', title: status}, status),
+                                                React.createElement('div', {className: 'dashboard-bar-track'},
+                                                    React.createElement('div', {
+                                                        className: 'dashboard-bar-fill',
+                                                        style: {
+                                                            width: Math.round((count / maxCount) * 100) + '%',
+                                                            background: STATUS_COLORS[status] || '#5dade2'
+                                                        }
+                                                    })
+                                                ),
+                                                React.createElement('span', {className: 'dashboard-bar-count'}, count)
+                                            )
+                                        )
+                                    )
+                                );
+                            })()}
+                        </div>
+
                         <div className="sidebar-section">
                             <h3>שקיפות שכבות</h3>
                             <input
@@ -3254,6 +3479,46 @@
                                 </svg>
                                 <span className="toolbar-label">יח"ד</span>
                             </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* שתף */}
+                            <button
+                                className="toolbar-btn"
+                                onClick={() => {
+                                    updateHash();
+                                    navigator.clipboard.writeText(window.location.href).then(() => {
+                                        setShowToast(true);
+                                        setTimeout(() => setShowToast(false), 2000);
+                                    }).catch(() => {
+                                        // Fallback for older browsers
+                                        const ta = document.createElement('textarea');
+                                        ta.value = window.location.href;
+                                        document.body.appendChild(ta);
+                                        ta.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(ta);
+                                        setShowToast(true);
+                                        setTimeout(() => setShowToast(false), 2000);
+                                    });
+                                    setActiveDropdown(null);
+                                }}
+                                title="שתף תצוגה"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="18" cy="5" r="3" />
+                                    <circle cx="6" cy="12" r="3" />
+                                    <circle cx="18" cy="19" r="3" />
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                                </svg>
+                                <span className="toolbar-label">שתף</span>
+                            </button>
+                        </div>
+
+                        {/* Toast notification */}
+                        <div className={`share-toast ${showToast ? 'visible' : ''}`}>
+                            הקישור הועתק!
                         </div>
 
                         {/* Measurement result panel */}
