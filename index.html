@@ -2012,7 +2012,7 @@
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('infrastructurePane').style.zIndex = 280;
                 map.createPane('infrastructurePane').style.pointerEvents = 'none';
-                map.createPane('archivedPane').style.zIndex = 290;
+                map.createPane('archivedPane').style.zIndex = 285;
                 map.createPane('archivedPane').style.pointerEvents = 'none';
                 map.createPane('topicsPane').style.zIndex = 290;
                 map.createPane('plansPane').style.zIndex = 300;
@@ -2883,6 +2883,7 @@
 
                     const plansLayer = L.geoJSON(gd.plans, {
                         pane: 'plansPane',
+                        renderer: L.svg({ pane: 'plansPane' }),
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             const s = normalizeStatus((f.properties.status_mavat || '').trim());
@@ -3099,6 +3100,7 @@
 
                     const topicsLayer = L.geoJSON(gd.plans, {
                         pane: 'topicsPane',
+                        renderer: L.svg({ pane: 'topicsPane' }),
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             const p = f.properties;
@@ -3155,6 +3157,7 @@
                 if (gd.plans && planningTopics.infrastructure) {
                     const infraLayer = L.geoJSON(gd.plans, {
                         pane: 'infrastructurePane',
+                        renderer: L.svg({ pane: 'infrastructurePane' }),
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             return normalizePlanType(f.properties.plan_type || '') === 'תשתיות';
@@ -3179,6 +3182,7 @@
                 if (gd.plans && planningTopics.archived) {
                     const archivedLayer = L.geoJSON(gd.plans, {
                         pane: 'archivedPane',
+                        renderer: L.svg({ pane: 'archivedPane' }),
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
