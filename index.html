@@ -1917,11 +1917,13 @@
                 map.createPane('roadsPane').style.pointerEvents = 'none';
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
+                map.createPane('infrastructurePane').style.zIndex = 280;
+                map.createPane('infrastructurePane').style.pointerEvents = 'none';
+                map.createPane('archivedPane').style.zIndex = 290;
+                map.createPane('archivedPane').style.pointerEvents = 'none';
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.zIndex = 350;
                 map.createPane('topicsPane').style.pointerEvents = 'none';
-                map.createPane('archivedPane').style.zIndex = 290;
-                map.createPane('archivedPane').style.pointerEvents = 'none';
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
@@ -3055,29 +3057,40 @@
                     geoLayersRef.current.topics = topicsLayer;
                 }
 
-                // --- Archived / Infrastructure layer (separate, interactive pane) ---
-                if (gd.plans && (planningTopics.archived || planningTopics.infrastructure)) {
+                // --- Infrastructure layer (below plans) ---
+                if (gd.plans && planningTopics.infrastructure) {
+                    const infraLayer = L.geoJSON(gd.plans, {
+                        pane: 'infrastructurePane',
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            return normalizePlanType(f.properties.plan_type || '') === 'תשתיות';
+                        },
+                        style: () => ({ color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: 340 })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.infrastructure = infraLayer;
+                }
+
+                // --- Archived layer (below plans) ---
+                if (gd.plans && planningTopics.archived) {
                     const archivedLayer = L.geoJSON(gd.plans, {
                         pane: 'archivedPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
-                            const p = f.properties;
-                            if (planningTopics.infrastructure && normalizePlanType(p.plan_type || '') === 'תשתיות') return true;
-                            if (planningTopics.archived) {
-                                const st = (p.status_mavat || '').trim();
-                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return true;
-                            }
-                            return false;
+                            const st = (f.properties.status_mavat || '').trim();
+                            return st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
                         },
-                        style: f => {
-                            const p = f.properties;
-                            if (planningTopics.infrastructure && normalizePlanType(p.plan_type || '') === 'תשתיות')
-                                return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
-                            const st = (p.status_mavat || '').trim();
-                            if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה')
-                                return { color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' };
-                            return {};
-                        },
+                        style: () => ({ color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' }),
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const st = (p.status_mavat || '').trim();
