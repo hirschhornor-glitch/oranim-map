@@ -2606,14 +2606,22 @@
                         pane: 'tama38Pane',
                         filter: f => tama38InMinahak(f.properties),
                         pointToLayer: (f, latlng) => {
-                            const status = (f.properties.status || '').trim();
+                            const rawStatus = (f.properties.status || '').trim();
+                            // Normalize spaceless variants
+                            const TAMA_STATUS_NORM = {
+                                'תכנון-טרםכניסהלרישוי': 'תכנון - טרם כניסה לרישוי',
+                                'נפתחתיקהיתר': 'נפתח תיק היתר',
+                                'היתראושרבועדתרישוי': 'היתר אושר בועדת רישוי',
+                                'הופקהוצאהיתר': 'הופק הוצא היתר',
+                            };
+                            const status = TAMA_STATUS_NORM[rawStatus] || rawStatus;
                             let fillColor = '#e94560';
                             if (status === 'תכנון - טרם כניסה לרישוי') fillColor = 'rgb(215,25,28)';
                             else if (status === 'נפתח תיק היתר') fillColor = 'rgb(253,174,97)';
                             else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             return L.circleMarker(latlng, {
-                                radius: 5, fillColor: fillColor, color: 'rgb(40,10,255)', weight: 1.5, fillOpacity: 0.9
+                                radius: 3, fillColor: fillColor, color: 'rgb(40,10,255)', weight: 1, fillOpacity: 0.9
                             });
                         },
                         onEachFeature: (f, layer) => {
