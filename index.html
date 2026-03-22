@@ -1924,7 +1924,8 @@
 
                 // Create custom panes for z-ordering
                 map.createPane('districtPane').style.zIndex = 200;
-                map.createPane('roadsPane').style.zIndex = 220;
+                map.createPane('roadsPane').style.zIndex = 320;
+                map.createPane('roadsPane').style.pointerEvents = 'none';
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('plansPane').style.zIndex = 300;
@@ -2683,12 +2684,14 @@
                 }
 
                 // --- Roads ---
+                console.log('[Roads] layers.roads:', layers['roads'], 'gd.roads:', !!gd.roads, gd.roads ? gd.roads.features?.length + ' features' : '');
                 if (layers['roads'] && gd.roads) {
                     geoLayersRef.current.roads = L.geoJSON(gd.roads, {
                         pane: 'roadsPane',
-                        style: { color: '#888', weight: 1.5, opacity: 0.6 },
+                        style: { color: '#666', weight: 1.2, opacity: 0.7 },
                         interactive: false
                     }).addTo(map);
+                    console.log('[Roads] Rendered!');
                 }
 
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
