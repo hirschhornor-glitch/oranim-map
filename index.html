@@ -4321,14 +4321,24 @@
                         <div className="units-overlay" onClick={() => setMinahakReport(null)}>
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 600}}>
                                 <button className="units-close" onClick={() => setMinahakReport(null)}>&times;</button>
-                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח מינהל — {minahakReport}</h2>
+                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח מינהל — {minahakReport} (מאושרות מ-2020)</h2>
                                 {(() => {
                                     const gd = geoDataRef.current;
                                     if (!gd.plans) return <p>טוען...</p>;
+                                    const approvedStatuses = ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'];
                                     const plans = gd.plans.features.filter(f => {
                                         const m = f.properties['מינה"ק'] || '';
-                                        const st = f.properties.Status_Mavat || '';
-                                        return m === minahakReport && st !== 'נגנזה/נדחתה' && st !== 'נגנזה' && st !== 'נדחתה';
+                                        const st = (f.properties.Status_Mavat || '').trim();
+                                        if (m !== minahakReport) return false;
+                                        if (!approvedStatuses.includes(st)) return false;
+                                        // Only from 2020 onwards
+                                        const dateStr = f.properties.Mavat_Date || '';
+                                        if (dateStr) {
+                                            const parts = dateStr.split('/');
+                                            const year = parseInt(parts[parts.length - 1]) || 0;
+                                            if (year < 2020) return false;
+                                        }
+                                        return true;
                                     });
                                     const totalAdd = plans.reduce((s, f) => s + (parseFloat(f.properties.Units_add) || 0), 0);
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.Units_add) || 0) - (parseFloat(a.properties.Units_add) || 0)).slice(0, 10);
