@@ -4408,13 +4408,13 @@
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.Units_add) || 0) - (parseFloat(a.properties.Units_add) || 0)).slice(0, 10);
                                     const statusCounts = {};
                                     plans.forEach(f => {
-                                        const s = f.properties.Status_Mavat || 'לא ידוע';
+                                        const s = (f.properties.Status_Mavat || 'לא ידוע').replace(/\s+/g, ' ').trim();
                                         statusCounts[s] = (statusCounts[s] || 0) + 1;
                                     });
                                     const maxCount = Math.max(...Object.values(statusCounts), 1);
                                     return (
                                         <>
-                                            <div style={{display:'flex',gap:30,margin:'16px 0'}}>
+                                            <div style={{display:'flex',gap:30,margin:'16px 0',justifyContent:'center'}}>
                                                 <div style={{textAlign:'center'}}>
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plans.length}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>תכניות פעילות</div>
@@ -4424,7 +4424,7 @@
                                                     <div style={{fontSize:12,color:'#aaa'}}>יח"ד תוספת</div>
                                                 </div>
                                             </div>
-                                            <h3 style={{color:'#e94560',fontSize:14,marginBottom:8}}>10 תכניות מובילות</h3>
+                                            <h3 style={{color:'#fff',fontSize:14,marginBottom:8}}>10 תכניות מובילות</h3>
                                             <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
                                                 <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
                                                     <th style={{textAlign:'right',padding:4}}>שם</th>
