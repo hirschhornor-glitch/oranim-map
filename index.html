@@ -590,27 +590,35 @@
         .popup-nav-btn:hover { background: #e94560; }
 
         /* GeoJSON layers get pointer cursor automatically via Leaflet */
-        /* All panes pass clicks through by default; only interactive elements catch events */
+        /* All panes pass clicks through; SVG containers too */
         .leaflet-pane {
             pointer-events: none !important;
         }
-        /* Re-enable pointer events on actual interactive content */
-        .leaflet-pane canvas,
-        .leaflet-pane path,
-        .leaflet-popup-pane,
-        .leaflet-popup-pane *,
-        .leaflet-control-container,
-        .leaflet-control-container * {
+        /* SVG containers inside panes must also be none */
+        .leaflet-pane svg {
+            pointer-events: none !important;
+        }
+        /* Re-enable on actual interactive SVG paths */
+        .leaflet-plans-pane path,
+        .leaflet-permits-pane path,
+        .leaflet-tama38-pane path,
+        .leaflet-stations-pane path,
+        .leaflet-archived-pane path {
             pointer-events: auto !important;
+            cursor: pointer;
         }
         /* Topics pane: never interactive (hatch overlays only) */
         .leaflet-topics-pane path {
             pointer-events: none !important;
         }
-        /* Archived paths: interactive */
-        .leaflet-archived-pane path {
+        /* Popups and controls must be interactive */
+        .leaflet-popup-pane,
+        .leaflet-popup-pane * {
             pointer-events: auto !important;
-            cursor: pointer;
+        }
+        .leaflet-control-container,
+        .leaflet-control-container * {
+            pointer-events: auto !important;
         }
 
         #map.leaflet-dragging,
