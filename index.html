@@ -1828,7 +1828,7 @@
             const [areaSelectMode, setAreaSelectMode] = useState(false);
             const [areaSelectResult, setAreaSelectResult] = useState(null);
             const [areaPointCount, setAreaPointCount] = useState(0);
-            const areaSelectRef = useRef({ points: [], layers: [], polygon: null });
+            const areaSelectRef = useRef({ points: [], layers: [], polygon: null, finishing: false });
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
             const [showPrint, setShowPrint] = useState(false);
@@ -2133,6 +2133,7 @@
                 ref.points = [];
                 ref.layers = [];
                 ref.polygon = null;
+                ref.finishing = false;
             }, []);
 
             const stopAreaSelect = useCallback(() => {
@@ -2248,10 +2249,12 @@
                         ref.polygon = L.polygon(ref.points, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.15, dashArray: '6,4' }).addTo(map);
                     }
                     finishCtrl.update(ref.points.length);
-                    // After 3+ points, ask if done
-                    if (ref.points.length >= 3) {
+                    // After exactly 3 points, ask if done (only once)
+                    if (ref.points.length === 3) {
                         setTimeout(() => {
-                            if (window.confirm('סיום בחירת אזור? (' + ref.points.length + ' נקודות)\n\nלחץ OK לסיום, Cancel להמשיך להוסיף נקודות')) {
+                            if (ref.finishing) return;
+                            if (window.confirm('סיום בחירת אזור? (3 נקודות)\n\nלחץ OK לסיום, Cancel להמשיך להוסיף נקודות')) {
+                                ref.finishing = true;
                                 finishAreaSelect();
                             }
                         }, 100);
