@@ -2250,15 +2250,16 @@
 
                 function onClick(e) {
                     const now = Date.now();
-                    // Detect double-click (< 400ms between clicks)
+                    // Add point first
+                    ref.points.push(e.latlng);
+
+                    // Detect double-click (< 400ms between clicks) — finish if 3+ points
                     if (now - lastClickTime < 400 && ref.points.length >= 3) {
                         ref.finishing = true;
                         finishAreaSelect();
                         return;
                     }
                     lastClickTime = now;
-
-                    ref.points.push(e.latlng);
                     setAreaPointCount(ref.points.length);
                     const marker = L.circleMarker(e.latlng, { radius: 4, color: '#e94560', fillColor: '#e94560', fillOpacity: 1 }).addTo(map);
                     ref.layers.push(marker);
