@@ -1349,7 +1349,7 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         // Layers that are always visible (no toggle)
-        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods', 'roads'];
+        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods'];
 
         // GeoJSON data files
         // Find the best label point inside a polygon (visual center)
@@ -1519,6 +1519,7 @@
             infrastructure: {
                 title: 'תשתיות',
                 layers: [
+                    { id: 'roads', name: 'כבישים', on: false },
                     { id: 'stations', name: 'תחנות רק"ל', on: false },
                 ]
             },
@@ -1605,7 +1606,27 @@
             'תבעמאושרת': 'תבע מאושרת',
             'תחילתתוקף': 'תחילת תוקף',
         };
-        function normalizeStatus(s) { return STATUS_NORMALIZE[s] || s; }
+        function normalizeStatus(s) {
+            if (!s) return s;
+            const trimmed = s.trim();
+            if (STATUS_NORMALIZE[trimmed]) return STATUS_NORMALIZE[trimmed];
+            // Try matching without spaces
+            const noSpaces = trimmed.replace(/\s+/g, '');
+            if (STATUS_NORMALIZE[noSpaces]) return STATUS_NORMALIZE[noSpaces];
+            // Check if a canonical value matches when spaces removed
+            for (const [k, v] of Object.entries(STATUS_NORMALIZE)) {
+                if (k.replace(/\s+/g, '') === noSpaces) return v;
+            }
+            // Also check against canonical values directly
+            const canonicals = ['אישור','מאושרת','תבע מאושרת','תחילת תוקף','בהליך אישור',
+                'תבע - טרום אישור','דיון בהתנגדויות ותיקונים','הפקדה להתנגדויות/השגות',
+                'במילוי תנאים להפקדה','תכנית עומדת בתנאי סף','נפתח תיק למתכנן',
+                'נפתח תיק תבע','בבדיקה תכנונית','נקלטה מקובץ מבאת','נגנזה/נדחתה'];
+            for (const c of canonicals) {
+                if (c.replace(/\s+/g, '') === noSpaces) return c;
+            }
+            return trimmed;
+        }
 
         const PLAN_TYPE_NORMALIZE = {
             'איחודוחלוקה': 'איחוד וחלוקה',
@@ -2628,8 +2649,8 @@
                     }
                 }
 
-                // --- Roads (always on if available) ---
-                if (gd.roads) {
+                // --- Roads ---
+                if (layers['roads'] && gd.roads) {
                     geoLayersRef.current.roads = L.geoJSON(gd.roads, {
                         pane: 'roadsPane',
                         style: { color: '#888', weight: 1.5, opacity: 0.6 },
@@ -3158,7 +3179,9 @@
                     gd.plans.features.forEach(f => {
                         const add = parseFloat(f.properties.Units_add || f.properties.units_add) || 0;
                         const st = (f.properties.Status_Mavat || '').trim();
+                        const minahak = (f.properties['מינה"ק'] || f.properties.minahak || '').trim();
                         if (add <= 0 || !f.geometry || st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return;
+                        if (minahak === 'גבעת המטוס') return; // exclude from heat map
                         try {
                             const bounds = L.geoJSON(f).getBounds();
                             const center = bounds.getCenter();
@@ -3608,7 +3631,7 @@
                                 // Group by status (active only)
                                 const statusCounts = {};
                                 activeFeatures.forEach(f => {
-                                    const s = (f.properties.Status_Mavat || '').trim() || 'לא ידוע';
+                                    const s = normalizeStatus((f.properties.Status_Mavat || '').trim()) || 'לא ידוע';
                                     statusCounts[s] = (statusCounts[s] || 0) + 1;
                                 });
                                 const statusEntries = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
@@ -4418,7 +4441,7 @@
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.Units_add) || 0) - (parseFloat(a.properties.Units_add) || 0)).slice(0, 10);
                                     const statusCounts = {};
                                     plans.forEach(f => {
-                                        const s = (f.properties.Status_Mavat || 'לא ידוע').replace(/\s+/g, ' ').trim();
+                                        const s = normalizeStatus((f.properties.Status_Mavat || '').trim()) || 'לא ידוע';
                                         statusCounts[s] = (statusCounts[s] || 0) + 1;
                                     });
                                     const maxCount = Math.max(...Object.values(statusCounts), 1);
