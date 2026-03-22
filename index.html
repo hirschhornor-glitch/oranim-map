@@ -1349,7 +1349,7 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         // Layers that are always visible (no toggle)
-        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods'];
+        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods', 'roads'];
 
         // GeoJSON data files
         // Find the best label point inside a polygon (visual center)
@@ -1437,11 +1437,11 @@
             tama38: 'data/tama38.geojson',
             stations: 'data/stations.geojson',
             sub_neighborhoods: 'data/sub_neighborhoods.geojson',
-            district_oranim: 'data/district_oranim.geojson',
+            roads: 'data/roads.geojson',
             minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
             minahak_talpiot: 'data/minahak_talpiot.geojson',
             minahak_malha: 'data/minahak_malha.geojson',
-            minahak_ganot: 'data/minahak_ganot.geojson',
+            minahak_ganot: 'data/minahak_ganot_hair.geojson',
             minahak_gonen: 'data/minahak_gonen.geojson',
             minahak_baka: 'data/minahak_baka.geojson',
         };
@@ -1870,6 +1870,7 @@
 
                 // Create custom panes for z-ordering
                 map.createPane('districtPane').style.zIndex = 200;
+                map.createPane('roadsPane').style.zIndex = 220;
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('plansPane').style.zIndex = 300;
@@ -2625,6 +2626,15 @@
                         }).addTo(map);
                         geoLayersRef.current.districtMask = maskPolygon;
                     }
+                }
+
+                // --- Roads (always on if available) ---
+                if (gd.roads) {
+                    geoLayersRef.current.roads = L.geoJSON(gd.roads, {
+                        pane: 'roadsPane',
+                        style: { color: '#888', weight: 1.5, opacity: 0.6 },
+                        interactive: false
+                    }).addTo(map);
                 }
 
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
