@@ -182,6 +182,9 @@
         .archived-popup .leaflet-popup-content-wrapper {
             background: #3a3a3a;
         }
+        .archived-popup .popup-header {
+            background: linear-gradient(135deg, #4a4a4a, #3a3a3a) !important;
+        }
 
         .leaflet-popup-tip { border-top-color: #1a1a2e; }
 
@@ -1871,7 +1874,7 @@
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.zIndex = 350;
                 map.createPane('topicsPane').style.pointerEvents = 'none';
-                map.createPane('archivedPane').style.zIndex = 355;
+                map.createPane('archivedPane').style.zIndex = 290;
                 map.createPane('archivedPane').style.pointerEvents = 'none';
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
