@@ -3243,23 +3243,36 @@
                                         <input type="checkbox" checked={printShowTitle} onChange={e => setPrintShowTitle(e.target.checked)} />
                                         הצג כותרת
                                     </label>
-                                    {printShowTitle && (
-                                        <input
-                                            type="text"
-                                            value={printTitle}
-                                            onChange={e => setPrintTitle(e.target.value)}
-                                            placeholder="מפת אורנים - תכנון עירוני"
-                                            style={{width:'100%',background:'#1a1a3a',border:'1px solid #2a2a4a',borderRadius:'7px',padding:'8px 12px',color:'#e0e0ff',fontSize:'13px',fontFamily:'inherit',direction:'rtl',marginTop:'4px'}}
-                                        />
-                                    )}
                                     <label className="print-checkbox">
                                         <input type="checkbox" checked={printShowLegend} onChange={e => setPrintShowLegend(e.target.checked)} />
                                         הצג מקרא
                                     </label>
                                 </div>
-                                <div className="print-actions">
+                                <div className="print-actions" style={{display:'flex',gap:'8px',flexWrap:'wrap',justifyContent:'center'}}>
                                     <button className="modal-action-btn primary" onClick={handlePrint}>
                                         🖨️ הדפס
+                                    </button>
+                                    <button className="modal-action-btn" style={{background:'#2a6fb5'}} onClick={async () => {
+                                        await handlePrint();
+                                    }}>
+                                        📄 שמור PDF
+                                    </button>
+                                    <button className="modal-action-btn" style={{background:'#27ae60'}} onClick={async () => {
+                                        const map = mapInstanceRef.current;
+                                        if (!map || !window.html2canvas) return;
+                                        const canvas = await window.html2canvas(map.getContainer(), { useCORS: true, allowTaint: true, logging: false });
+                                        const a = document.createElement('a');
+                                        const c2 = document.createElement('canvas');
+                                        c2.width = canvas.width; c2.height = canvas.height;
+                                        const ctx = c2.getContext('2d');
+                                        ctx.fillStyle = '#fff';
+                                        ctx.fillRect(0, 0, c2.width, c2.height);
+                                        ctx.drawImage(canvas, 0, 0);
+                                        a.href = c2.toDataURL('image/jpeg', 0.92);
+                                        a.download = 'map_oranim.jpg';
+                                        a.click();
+                                    }}>
+                                        🖼️ שמור JPEG
                                     </button>
                                     <button className="modal-action-btn" onClick={() => setShowPrint(false)}>
                                         ביטול
