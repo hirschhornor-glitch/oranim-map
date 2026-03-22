@@ -4482,15 +4482,47 @@
                                             </button>
                                         </div>
                                         <div className="action-group-left">
-                                            <button className="modal-action-btn primary" onClick={handleAnnotationPrint}>
-                                                &#128424; הדפסה
-                                            </button>
-                                            <button className="modal-action-btn" style={{background:'#2a6fb5'}} onClick={handleAnnotationPrint}>
-                                                &#128196; PDF
-                                            </button>
-                                            <button className="modal-action-btn" style={{background:'#27ae60'}} onClick={handleAnnotationEmail}>
-                                                &#9993; שליחה במייל
-                                            </button>
+                                            <div style={{position:'relative',display:'inline-block'}}>
+                                                <button className="modal-action-btn primary" onClick={() => {
+                                                    const el = document.getElementById('save-dropdown');
+                                                    if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+                                                }}>
+                                                    &#128190; שמירה &#9660;
+                                                </button>
+                                                <div id="save-dropdown" style={{display:'none',position:'absolute',bottom:'100%',left:0,background:'#1a1a2e',border:'1px solid #2a2a4a',borderRadius:8,overflow:'hidden',marginBottom:4,minWidth:140,zIndex:10}}>
+                                                    <button style={{display:'block',width:'100%',padding:'8px 16px',background:'none',border:'none',color:'#e0e0e0',cursor:'pointer',textAlign:'right',fontSize:13}}
+                                                        onMouseOver={e => e.target.style.background='#2a2a4a'}
+                                                        onMouseOut={e => e.target.style.background='none'}
+                                                        onClick={() => { document.getElementById('save-dropdown').style.display='none'; handleAnnotationPrint(); }}>
+                                                        📄 שמור כ-PDF
+                                                    </button>
+                                                    <button style={{display:'block',width:'100%',padding:'8px 16px',background:'none',border:'none',color:'#e0e0e0',cursor:'pointer',textAlign:'right',fontSize:13}}
+                                                        onMouseOver={e => e.target.style.background='#2a2a4a'}
+                                                        onMouseOut={e => e.target.style.background='none'}
+                                                        onClick={() => {
+                                                            document.getElementById('save-dropdown').style.display='none';
+                                                            // Export as XLS (CSV with BOM for Hebrew)
+                                                            const annots = window.__annotations || {};
+                                                            const gd = geoDataRef.current;
+                                                            if (!gd.plans) return;
+                                                            const rows = [['מס\' תכנית','שם','תוספת יח"ד','סטטוס','הערה']];
+                                                            gd.plans.features.forEach(f => {
+                                                                const id = f.properties.plan_name || '';
+                                                                const note = annots[id];
+                                                                if (!note) return;
+                                                                rows.push([id, f.properties.plan_summary||'', f.properties.units_add||0, f.properties.status_mavat||'', note]);
+                                                            });
+                                                            const csv = '\uFEFF' + rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+                                                            const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+                                                            const url = URL.createObjectURL(blob);
+                                                            const a = document.createElement('a');
+                                                            a.href = url; a.download = 'הערות_אורנים.csv'; a.click();
+                                                            URL.revokeObjectURL(url);
+                                                        }}>
+                                                        📊 שמור כ-Excel
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4792,7 +4824,7 @@
                                                 <tbody>
                                                     {top10.map((f, i) => (
                                                         <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
-                                                            <td style={{padding:4,color:'#e0e0e0'}}>{f.properties.plan_summary || f.properties.plan_name}</td>
+                                                            <td style={{padding:4,color:'#e0e0e0'}}>{f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name}</td>
                                                             <td style={{textAlign:'center',padding:4,color:'#4CAF50'}}>{(parseFloat(f.properties.units_add)||0).toLocaleString()}</td>
                                                             <td style={{textAlign:'center',padding:4,color:'#aaa',fontSize:10}}>{f.properties.status_mavat}</td>
                                                         </tr>
