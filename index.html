@@ -1809,6 +1809,9 @@
             const [planSearch, setPlanSearch] = useState('');
             const [planIndex, setPlanIndex] = useState([]);
             const [showSearchResults, setShowSearchResults] = useState(false);
+            const [addressSearch, setAddressSearch] = useState('');
+            const [addressResults, setAddressResults] = useState([]);
+            const [addressLoading, setAddressLoading] = useState(false);
             const [planningTopics, setPlanningTopics] = useState({
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 densification: false, // תכניות לעיבוי שטחים חומים
@@ -3688,6 +3691,76 @@
                                         )) : (
                                             <div className="plan-search-empty">לא נמצאו תוצאות</div>
                                         )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3>חיפוש כתובת</h3>
+                            <div className="plan-search-wrap">
+                                <input
+                                    className="plan-search-input"
+                                    type="text"
+                                    placeholder='הקלד כתובת...'
+                                    value={addressSearch}
+                                    onChange={(e) => setAddressSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && addressSearch.length >= 3) {
+                                            setAddressLoading(true);
+                                            setAddressResults([]);
+                                            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch + ' ירושלים')}&limit=5&countrycodes=il&accept-language=he`)
+                                                .then(r => r.json())
+                                                .then(data => {
+                                                    setAddressResults(data.map(d => ({
+                                                        name: d.display_name,
+                                                        lat: parseFloat(d.lat),
+                                                        lng: parseFloat(d.lon)
+                                                    })));
+                                                    setAddressLoading(false);
+                                                })
+                                                .catch(() => setAddressLoading(false));
+                                        }
+                                    }}
+                                />
+                                {addressSearch && (
+                                    <button
+                                        className="plan-search-clear"
+                                        onClick={() => { setAddressSearch(''); setAddressResults([]); }}
+                                    >&times;</button>
+                                )}
+                                {addressLoading && <div style={{color:'#888',fontSize:12,padding:4}}>מחפש...</div>}
+                                {addressResults.length > 0 && (
+                                    <div className="plan-search-results">
+                                        {addressResults.map((r, i) => (
+                                            <div
+                                                key={i}
+                                                className="plan-search-item"
+                                                onClick={() => {
+                                                    const map = mapInstanceRef.current;
+                                                    if (map) {
+                                                        map.setView([r.lat, r.lng], 17);
+                                                        // Drop a temporary marker
+                                                        if (window.__addressMarker) map.removeLayer(window.__addressMarker);
+                                                        window.__addressMarker = L.marker([r.lat, r.lng], {
+                                                            icon: L.divIcon({
+                                                                className: '',
+                                                                html: '<div style="background:#e94560;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>',
+                                                                iconSize: [12, 12],
+                                                                iconAnchor: [6, 6]
+                                                            })
+                                                        }).addTo(map);
+                                                        setTimeout(() => {
+                                                            if (window.__addressMarker) { map.removeLayer(window.__addressMarker); window.__addressMarker = null; }
+                                                        }, 10000);
+                                                    }
+                                                    setAddressResults([]);
+                                                    setAddressSearch('');
+                                                }}
+                                            >
+                                                <div className="plan-search-item-name" style={{fontSize:11}}>{r.name.split(',').slice(0, 3).join(', ')}</div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
