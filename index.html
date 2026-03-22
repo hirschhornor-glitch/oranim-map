@@ -1917,6 +1917,8 @@
                 map.createPane('districtPane').style.zIndex = 200;
                 map.createPane('roadsPane').style.zIndex = 320;
                 map.createPane('roadsPane').style.pointerEvents = 'none';
+                map.createPane('rakalPane').style.zIndex = 490;
+                map.createPane('rakalPane').style.pointerEvents = 'none';
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('infrastructurePane').style.zIndex = 280;
@@ -3202,7 +3204,7 @@
                 if (layers['rakal'] && gd.rakal) {
                     // Black outline layer (drawn first = behind)
                     const rakalOutline = L.geoJSON(gd.rakal, {
-                        pane: 'roadsPane',
+                        pane: 'rakalPane',
                         filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: () => ({ color: '#000', weight: 9, opacity: 0.85 }),
                         interactive: false
@@ -3210,7 +3212,7 @@
                     geoLayersRef.current.rakalOutline = rakalOutline;
                     // Colored inner layer (drawn second = on top)
                     const rakalLayer = L.geoJSON(gd.rakal, {
-                        pane: 'roadsPane',
+                        pane: 'rakalPane',
                         filter: f => RAKAL_COLORS.hasOwnProperty(f.properties.line),
                         style: f => {
                             const line = f.properties.line || '2';
