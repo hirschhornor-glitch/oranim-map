@@ -1840,6 +1840,8 @@
                 map.createPane('minahakPane').style.zIndex = 270;
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.zIndex = 350;
+                map.createPane('topicsPane').style.pointerEvents = 'none';
+                map.createPane('archivedPane').style.zIndex = 355;
                 map.createPane('permitsPane').style.zIndex = 400;
                 map.createPane('tama38Pane').style.zIndex = 450;
                 map.createPane('stationsPane').style.zIndex = 500;
@@ -2922,11 +2924,6 @@
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0) return true;
                             if (planningTopics.densification && normalizePlanType(p['סוג תכנית'] || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.Status_Mavat || '').includes('הפקדה להתנגדויות')) return true;
-                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות') return true;
-                            if (planningTopics.archived) {
-                                const st = (p.Status_Mavat || '').trim();
-                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return true;
-                            }
                             return false;
                         },
                         style: f => {
@@ -2937,38 +2934,10 @@
                                 return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
                             if (planningTopics.overlapping && (parseFloat(p['תבעותעלאותושטח']) || 0) > 0)
                                 return { color: '#3366ff', weight: 2, fillOpacity: 0 };
-                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות')
-                                return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
-                            if (planningTopics.archived) {
-                                const st = (p.Status_Mavat || '').trim();
-                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה')
-                                    return { color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' };
-                            }
                             return {};
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
-                            const st = (p.Status_Mavat || '').trim();
-                            const isArchived = st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
-                            const isInfra = normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות';
-                            // Archived/infrastructure: clickable popup
-                            if ((planningTopics.archived && isArchived) || (planningTopics.infrastructure && isInfra)) {
-                                layer.on('click', () => {
-                                    const mapped = mapPlanProps(p);
-                                    const cls = isArchived ? 'plan-popup archived-popup' : 'plan-popup';
-                                    const popup = L.popup({ maxWidth: 340, className: cls })
-                                        .setLatLng(layer.getBounds ? layer.getBounds().getCenter() : layer.getLatLng())
-                                        .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
-                                    popup.openOn(map);
-                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                                });
-                            } else {
-                                // Non-clickable topics (hatch overlays) — pass clicks through
-                                layer.on('add', () => {
-                                    const el = layer.getElement();
-                                    if (el) el.style.pointerEvents = 'none';
-                                });
-                            }
                             // Apply SVG hatch pattern fill after rendering
                             layer.on('add', () => {
                                 const el = layer.getElement();
@@ -2999,6 +2968,47 @@
                     });
 
                     geoLayersRef.current.topics = topicsLayer;
+                }
+
+                // --- Archived / Infrastructure layer (separate, interactive pane) ---
+                if (gd.plans && (planningTopics.archived || planningTopics.infrastructure)) {
+                    const archivedLayer = L.geoJSON(gd.plans, {
+                        pane: 'archivedPane',
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const p = f.properties;
+                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות') return true;
+                            if (planningTopics.archived) {
+                                const st = (p.Status_Mavat || '').trim();
+                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return true;
+                            }
+                            return false;
+                        },
+                        style: f => {
+                            const p = f.properties;
+                            if (planningTopics.infrastructure && normalizePlanType(p['סוג תכנית'] || '') === 'תשתיות')
+                                return { color: '#7b2d8e', weight: 2, fillColor: '#9b59b6', fillOpacity: 0.4 };
+                            const st = (p.Status_Mavat || '').trim();
+                            if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה')
+                                return { color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' };
+                            return {};
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const st = (p.Status_Mavat || '').trim();
+                            const isArchived = st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(p);
+                                const cls = isArchived ? 'plan-popup archived-popup' : 'plan-popup';
+                                const popup = L.popup({ maxWidth: 340, className: cls })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.archived = archivedLayer;
                 }
 
                 // --- Permits overlay ---
@@ -3147,7 +3157,7 @@
                 html += '<div class="popup-header" style="position:relative">';
                 html += `<div class="popup-header-title">${title}</div>`;
                 if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
-                html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;top:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
+                html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
