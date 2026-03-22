@@ -2004,6 +2004,7 @@
 
                 mapInstanceRef.current = map;
                 window.__map = map;
+                window.__geoDataRef = geoDataRef;
 
                 // Ensure map fills container after initial render
                 setTimeout(() => map.invalidateSize(), 100);
@@ -2198,12 +2199,14 @@
                     byStatus[st] = (byStatus[st] || 0) + 1;
                 });
 
-                setAreaSelectResult({
+                const result = {
                     count: plansInside.length,
                     totalUnits: Math.round(totalUnits),
                     byStatus,
                     plans: plansInside.sort((a, b) => (parseFloat(b.units_add) || 0) - (parseFloat(a.units_add) || 0)).slice(0, 10)
-                });
+                };
+                console.log('[AreaSelect] Setting result:', JSON.stringify(result).substring(0, 200));
+                setAreaSelectResult(result);
 
                 map.getContainer().classList.remove('measuring');
                 setAreaSelectMode(false);
@@ -2246,20 +2249,17 @@
                     .addTo(map);
 
                 map.doubleClickZoom.disable();
-                let lastClickTime = 0;
 
-                function onClick(e) {
-                    const now = Date.now();
-                    // Add point first
-                    ref.points.push(e.latlng);
-
-                    // Detect double-click (< 400ms between clicks) — finish if 3+ points
-                    if (now - lastClickTime < 400 && ref.points.length >= 3) {
+                function onDblClick(e) {
+                    if (ref.points.length >= 3 && !ref.finishing) {
                         ref.finishing = true;
                         finishAreaSelect();
-                        return;
                     }
-                    lastClickTime = now;
+                }
+
+                function onClick(e) {
+                    if (ref.finishing) return;
+                    ref.points.push(e.latlng);
                     setAreaPointCount(ref.points.length);
                     const marker = L.circleMarker(e.latlng, { radius: 4, color: '#e94560', fillColor: '#e94560', fillOpacity: 1 }).addTo(map);
                     ref.layers.push(marker);
@@ -2282,9 +2282,11 @@
                 }
 
                 map.on('click', onClick);
+                map.on('dblclick', onDblClick);
                 document.addEventListener('keydown', onKeyDown);
                 return () => {
                     map.off('click', onClick);
+                    map.off('dblclick', onDblClick);
                     document.removeEventListener('keydown', onKeyDown);
                     map.removeControl(finishCtrl);
                     map.removeLayer(infoTooltip);
