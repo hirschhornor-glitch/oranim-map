@@ -1115,20 +1115,11 @@
         .plan-label-z18.plan-label-large .label-inner { font-size: 11pt !important; }
         .plan-label-z18.plan-label-small .label-inner { font-size: 9pt !important; }
 
-        .sub-neighborhood-label {
+        .sub-tooltip {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            overflow: visible !important;
-            width: 0 !important;
-            height: 0 !important;
             padding: 0 !important;
-            margin: 0 !important;
-        }
-        .sub-neighborhood-label .label-inner {
-            position: absolute;
-            left: 0; top: 0;
-            transform: translate(-50%, 80%);
             color: #13c641;
             font-size: 10pt;
             font-weight: 800;
@@ -1141,10 +1132,7 @@
                 0 -2px 0 #fff, 0 2px 0 #fff,
                 -2px 0 0 #fff, 2px 0 0 #fff;
         }
-        .sub-neighborhood-label::before { display: none; }
-        .sub-label-z16 .label-inner { font-size: 9pt !important; }
-        .sub-label-z17 .label-inner { font-size: 10pt !important; }
-        .sub-label-z18 .label-inner { font-size: 13pt !important; }
+        .sub-tooltip::before { display: none !important; }
         .minahak-name-label {
             background: transparent !important;
             border: none !important;
@@ -2703,20 +2691,13 @@
                         style: { color: 'rgba(17,199,64,1)', weight: zoom >= 18 ? 2.5 : zoom >= 17 ? 2.0 : 1.0, fillOpacity: 0, dashArray: '6,6' },
                         onEachFeature: (f, layer) => {
                             const name = f.properties.SCHN_NAMA || f.properties.Name || f.properties.name || '';
-                            if (name && f.geometry) {
-                                const subClass = 'sub-neighborhood-label' + (zoom >= 18 ? ' sub-label-z18' : zoom >= 17 ? ' sub-label-z17' : zoom >= 16 ? ' sub-label-z16' : '');
-                                const center = visualCenter(f.geometry);
-                                const marker = L.marker(center, {
-                                    icon: L.divIcon({
-                                        className: subClass,
-                                        html: '<div class="label-inner">' + name + '</div>',
-                                        iconSize: [0, 0],
-                                        iconAnchor: [0, 0]
-                                    }),
-                                    interactive: false,
+                            if (name) {
+                                layer.bindTooltip(name, {
+                                    permanent: true,
+                                    direction: 'center',
+                                    className: 'sub-tooltip',
                                     pane: 'labelsPane'
-                                }).addTo(map);
-                                layer._subLabel = marker;
+                                });
                             }
                         }
                     }).addTo(map);
