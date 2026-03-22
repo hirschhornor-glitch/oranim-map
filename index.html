@@ -3060,7 +3060,8 @@
                     const heatPoints = [];
                     gd.plans.features.forEach(f => {
                         const add = parseFloat(f.properties.Units_add || f.properties.units_add) || 0;
-                        if (add <= 0 || !f.geometry) return;
+                        const st = (f.properties.Status_Mavat || '').trim();
+                        if (add <= 0 || !f.geometry || st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return;
                         try {
                             const bounds = L.geoJSON(f).getBounds();
                             const center = bounds.getCenter();
@@ -3527,17 +3528,17 @@
                                 const features = plans.features;
                                 const rejectedStatuses = ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'];
                                 const activeFeatures = features.filter(f => {
-                                    const s = normalizeStatus(f.properties.STATUS || '');
+                                    const s = (f.properties.Status_Mavat || '').trim();
                                     return !rejectedStatuses.includes(s);
                                 });
                                 const totalActive = activeFeatures.length;
                                 const totalUnitsAdd = activeFeatures.reduce((sum, f) => {
                                     return sum + (parseFloat(f.properties.Units_add) || parseInt(f.properties.units_add) || 0);
                                 }, 0);
-                                // Group by status
+                                // Group by status (active only)
                                 const statusCounts = {};
-                                features.forEach(f => {
-                                    const s = normalizeStatus(f.properties.STATUS || '') || 'לא ידוע';
+                                activeFeatures.forEach(f => {
+                                    const s = (f.properties.Status_Mavat || '').trim() || 'לא ידוע';
                                     statusCounts[s] = (statusCounts[s] || 0) + 1;
                                 });
                                 const statusEntries = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
