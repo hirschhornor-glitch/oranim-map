@@ -3804,6 +3804,57 @@
                                 </svg>
                                 <span className="toolbar-label">שתף</span>
                             </button>
+
+                            <div className="toolbar-sep" />
+
+                            {/* הדפסת הערות */}
+                            <button
+                                className="toolbar-btn"
+                                onClick={() => {
+                                    const annotations = window.__annotations || {};
+                                    const entries = Object.entries(annotations).filter(([k, v]) => v && v.trim());
+                                    if (entries.length === 0) {
+                                        alert('אין הערות להדפסה');
+                                        return;
+                                    }
+                                    const gd = geoDataRef.current;
+                                    const planMap = {};
+                                    if (gd.plans) gd.plans.features.forEach(f => {
+                                        const id = f.properties.PLAN_NAME || '';
+                                        if (id) planMap[id] = f.properties;
+                                    });
+                                    let rows = entries.map(([planId, note]) => {
+                                        const p = planMap[planId] || {};
+                                        const name = p['תמצית שם התכנית'] || p.PLAN_NAME || planId;
+                                        const add = parseFloat(p.Units_add) || 0;
+                                        const status = p.Status_Mavat || '';
+                                        return '<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold">' + planId + '</td>' +
+                                            '<td style="padding:8px;border:1px solid #ddd">' + name + '</td>' +
+                                            '<td style="padding:8px;border:1px solid #ddd">' + (add > 0 ? '+' + add : '-') + '</td>' +
+                                            '<td style="padding:8px;border:1px solid #ddd">' + status + '</td>' +
+                                            '<td style="padding:8px;border:1px solid #ddd;background:#ffeaa7;color:#2d3436">' + note + '</td></tr>';
+                                    }).join('');
+                                    const printWin = window.open('', '_blank');
+                                    const date = new Date().toLocaleDateString('he-IL');
+                                    printWin.document.write(
+                                        '<html dir="rtl"><head><title>הערות — אורנים</title>' +
+                                        '<style>body{font-family:Assistant,Segoe UI,sans-serif;padding:30px;direction:rtl}' +
+                                        'table{border-collapse:collapse;width:100%}th{background:#1a1a2e;color:#fff;padding:10px;border:1px solid #ddd}' +
+                                        'h1{color:#1a1a2e}h2{color:#666;font-weight:normal}</style>' +
+                                        '</head><body onload="(function(){window.print()})()">' +
+                                        '<h1>הערות לתכניות — רובע אורנים</h1>' +
+                                        '<h2>' + date + ' | סה"כ ' + entries.length + ' הערות</h2>' +
+                                        '<table><thead><tr><th>מס\' תכנית</th><th>שם</th><th>יח"ד</th><th>סטטוס</th><th>הערה</th></tr></thead>' +
+                                        '<tbody>' + rows + '</tbody></table></body></html>'
+                                    );
+                                    printWin.document.close();
+                                    setActiveDropdown(null);
+                                }}
+                                title="הדפסת כל ההערות"
+                            >
+                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+                                <span className="toolbar-label">הערות</span>
+                            </button>
                         </div>
 
                         {/* ── Filter Panel ── */}
