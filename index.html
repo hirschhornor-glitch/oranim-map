@@ -4743,10 +4743,10 @@
                                     const seenPlans = new Set();
                                     const plans = gd.plans.features.filter(f => {
                                         const m = f.properties.minahak || '';
-                                        const st = (f.properties.status_mavat || '').trim();
-                                        const planId = f.properties.plan_name || f.properties.fid;
                                         if (m !== minahakReport) return false;
-                                        // Deduplicate MultiPolygon features
+                                        const st = (f.properties.status_mavat || '').trim();
+                                        const planId = f.properties.plan_name || '';
+                                        // Deduplicate MultiPolygon features (after minahak check)
                                         if (seenPlans.has(planId)) return false;
                                         seenPlans.add(planId);
                                         // Exclude rejected
@@ -4786,7 +4786,7 @@
                                             <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
                                                 <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
                                                     <th style={{textAlign:'right',padding:4,color:'#fff'}}>שם</th>
-                                                    <th style={{textAlign:'center',padding:4,color:'#fff'}}>יח"ד</th>
+                                                    <th style={{textAlign:'center',padding:4,color:'#fff'}}>תוספת יח"ד</th>
                                                     <th style={{textAlign:'center',padding:4,color:'#fff'}}>סטטוס</th>
                                                 </tr></thead>
                                                 <tbody>
