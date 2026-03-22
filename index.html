@@ -3297,6 +3297,17 @@
                                                 </thead>
                                                 <tbody>
                                                     <tr>
+                                                        <td>יח"ד קיימות</td>
+                                                        {subs.map(s => (
+                                                            <td key={s}>
+                                                                {(subData[s].units_in || 0).toLocaleString()}
+                                                            </td>
+                                                        ))}
+                                                        <td style={{fontWeight: 700, background: '#141440'}}>
+                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_in || 0), 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
                                                         <td>יח"ד תוספת</td>
                                                         {subs.map(s => (
                                                             <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
@@ -3357,6 +3368,17 @@
                                                             </tr>
                                                         </>
                                                     )}
+                                                    <tr className="units-total-row">
+                                                        <td>סה"כ</td>
+                                                        {subs.map(s => (
+                                                            <td key={s} style={{color: '#e94560', fontWeight: 700}}>
+                                                                {((subData[s].units_in || 0) + subData[s].units_add).toLocaleString()}
+                                                            </td>
+                                                        ))}
+                                                        <td style={{color: '#e94560', fontWeight: 700, background: '#141440'}}>
+                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_in || 0) + d.units_add, 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
                                         );
