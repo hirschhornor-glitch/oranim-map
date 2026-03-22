@@ -1438,6 +1438,7 @@
             'תלפיות': 'תלפיות ארנונה',
             'עמק רפאים - המושבה הגרמנית': 'המושבה הגרמנית',
             'קוממיות - טלביה': 'טלביה',
+            'קריית שמואל': 'קרית שמואל',
         };
 
         const CENTER = [31.7530, 35.2100];
@@ -1510,7 +1511,8 @@
                     zoom: DEFAULT_ZOOM,
                     zoomControl: false,
                     maxZoom: 22,
-                    minZoom: 13
+                    minZoom: 13,
+                    preferCanvas: true
                 });
 
                 L.control.zoom({ position: 'topleft' }).addTo(map);
@@ -3241,6 +3243,15 @@
                                         <input type="checkbox" checked={printShowTitle} onChange={e => setPrintShowTitle(e.target.checked)} />
                                         הצג כותרת
                                     </label>
+                                    {printShowTitle && (
+                                        <input
+                                            type="text"
+                                            value={printTitle}
+                                            onChange={e => setPrintTitle(e.target.value)}
+                                            placeholder="מפת אורנים - תכנון עירוני"
+                                            style={{width:'100%',background:'#1a1a3a',border:'1px solid #2a2a4a',borderRadius:'7px',padding:'8px 12px',color:'#e0e0ff',fontSize:'13px',fontFamily:'inherit',direction:'rtl',marginTop:'4px'}}
+                                        />
+                                    )}
                                     <label className="print-checkbox">
                                         <input type="checkbox" checked={printShowLegend} onChange={e => setPrintShowLegend(e.target.checked)} />
                                         הצג מקרא
