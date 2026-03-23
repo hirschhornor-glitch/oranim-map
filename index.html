@@ -5372,9 +5372,9 @@
 
                     {cellReport && (
                         <div className="units-overlay" onClick={() => setCellReport(null)}>
-                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 700}}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 700, maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
                                 <button className="units-close" onClick={() => setCellReport(null)}>&times;</button>
-                                <div className="cell-report-content">
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128196; דוח תכניות — {cellReport.statusLabel}</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{cellReport.minahak} &bull; {cellReport.plans.length} תכניות &bull; {cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString()} יח"ד</p>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
@@ -5384,21 +5384,42 @@
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תוספת יח"ד</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>סטטוס</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff',width:30}}></th>
                                         </tr></thead>
                                         <tbody>
-                                            {[...cellReport.plans].sort((a,b) => b.units_add - a.units_add).map((p, i) => (
+                                            {[...cellReport.plans].sort((a,b) => b.units_add - a.units_add).map((p, i) => {
+                                                const noteKey = p.plan_name;
+                                                const hasNote = window.__annotations && window.__annotations[noteKey];
+                                                return (
                                                 <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
                                                     <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                     <td style={{padding:'4px',color:'#64b5f6'}}>{p.plan_name}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#4CAF50'}}>{p.units_add.toLocaleString()}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#aaa',fontSize:11}}>{p.stage || p.status_mavat}</td>
-                                                </tr>
-                                            ))}
+                                                    <td style={{textAlign:'center',padding:'2px'}}>
+                                                        <button onClick={() => {
+                                                            const current = (window.__annotations && window.__annotations[noteKey]) || '';
+                                                            const note = prompt('הערה לתכנית:', current);
+                                                            if (note !== null) {
+                                                                if (!window.__annotations) window.__annotations = {};
+                                                                if (note) window.__annotations[noteKey] = note;
+                                                                else delete window.__annotations[noteKey];
+                                                                localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                                                                setAnnotationsRefresh(prev => prev + 1);
+                                                            }
+                                                        }} title={hasNote ? window.__annotations[noteKey] : 'הוסף הערה'}
+                                                        style={{background:'transparent',border:'none',cursor:'pointer',fontSize:14,padding:'2px 4px',color: hasNote ? '#ffeaa7' : '#666'}}>
+                                                            &#128221;
+                                                        </button>
+                                                    </td>
+                                                </tr>);
+                                            })}
                                         </tbody>
                                         <tfoot><tr style={{borderTop:'2px solid #2a2a4a',fontWeight:700}}>
                                             <td colSpan={3} style={{padding:'6px 4px',color:'#e94560'}}>סה"כ</td>
                                             <td style={{textAlign:'center',padding:'6px 4px',color:'#4CAF50'}}>{cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString()}</td>
+                                            <td></td>
                                             <td></td>
                                         </tr></tfoot>
                                     </table>
