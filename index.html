@@ -2277,11 +2277,10 @@
                 }
 
                 function onContextMenu(e) {
-                    L.DomEvent.preventDefault(e);
+                    try { if (e.originalEvent) e.originalEvent.preventDefault(); } catch(ex) {}
                     if (ref.points.length < 3 || ref.finishing) return;
                     ref.finishing = true;
 
-                    // Inline area select logic (can't rely on useCallback stale closure)
                     const gd = geoDataRef.current;
                     if (!gd || !gd.plans) { ref.finishing = false; return; }
                     const polyCoords = ref.points.map(p => [p.lng, p.lat]);
@@ -2309,19 +2308,25 @@
                     plansInside.forEach(p => { const st = normalizeStatus(p.status_mavat || ''); byStatus[st] = (byStatus[st] || 0) + 1; });
 
                     // Show popup
+                    console.log('[AreaSelect] plansInside:', plansInside.length, 'totalUnits:', Math.round(totalUnits));
                     const center = ref.polygon ? ref.polygon.getBounds().getCenter() : ref.points[1];
+                    console.log('[AreaSelect] center:', center, 'polygon:', !!ref.polygon);
                     const statusHtml = Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
                         '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
                     ).join('');
-                    L.popup({ maxWidth: 350, className: 'plan-popup', autoClose: false, closeOnClick: false })
-                        .setLatLng(center)
-                        .setContent('<div style="direction:rtl;min-width:250px">' +
-                            '<h3 style="color:#e94560;margin:0 0 8px;font-size:14px">📍 סיכום אזור נבחר</h3>' +
-                            '<div style="display:flex;gap:20px;margin-bottom:10px">' +
-                            '<div style="text-align:center"><div style="font-size:22px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:10px;color:#aaa">תכניות</div></div>' +
-                            '<div style="text-align:center"><div style="font-size:22px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:10px;color:#aaa">יח"ד תוספת</div></div></div>' +
-                            statusHtml + '</div>')
-                        .openOn(map);
+                    // Show result as DOM element (bypasses React and Leaflet issues)
+                    var prev = document.getElementById('area-select-result');
+                    if (prev) prev.remove();
+                    var resultDiv = document.createElement('div');
+                    resultDiv.id = 'area-select-result';
+                    resultDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:300px;max-width:450px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                    resultDiv.innerHTML = '<button onclick="this.parentElement.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">📍 סיכום אזור נבחר</h3>' +
+                        '<div style="display:flex;gap:24px;margin-bottom:14px">' +
+                        '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
+                        (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '');
+                    document.body.appendChild(resultDiv);
 
                     map.getContainer().classList.remove('measuring');
                     setAreaSelectMode(false);
