@@ -1825,10 +1825,9 @@
             const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
             const [measureDropdown, setMeasureDropdown] = useState(false);
-            const [areaSelectMode, setAreaSelectMode] = useState(false);
-            const [areaSelectResult, setAreaSelectResult] = useState(null);
-            const [areaPointCount, setAreaPointCount] = useState(0);
-            const areaSelectRef = useRef({ points: [], layers: [], polygon: null, finishing: false });
+            const [areaMode, setAreaMode] = useState(false);
+            const [areaFinished, setAreaFinished] = useState(null); // array of LatLng points when finished
+            const areaRef = useRef({ points: [], markers: [], polygon: null });
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
             const [showPrint, setShowPrint] = useState(false);
@@ -2019,10 +2018,12 @@
                 window.__rakalRenderer = L.svg({ pane: 'rakalPane' });
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 map.createPane('minahakPane').style.zIndex = 270;
-                map.createPane('infrastructurePane').style.zIndex = 280;
-                map.createPane('infrastructurePane').style.pointerEvents = 'none';
-                map.createPane('archivedPane').style.zIndex = 285;
-                map.createPane('archivedPane').style.pointerEvents = 'none';
+                const infraPane = map.createPane('infrastructurePane');
+                infraPane.style.zIndex = 280;
+                infraPane.style.pointerEvents = 'none';
+                const archivedPane = map.createPane('archivedPane');
+                archivedPane.style.zIndex = 285;
+                archivedPane.style.pointerEvents = 'none';
                 map.createPane('topicsPane').style.zIndex = 290;
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.pointerEvents = 'none';
@@ -2124,53 +2125,75 @@
             useEffect(() => { layersRef.current = layers; updateHash(); }, [layers]);
             // GeoJSON layers have built-in pointer cursor on hover — no probe needed
 
-            // ── Area selection tool ──
-            const clearAreaSelect = useCallback(() => {
+            // ── Area select: drawing mode ──
+            useEffect(() => {
                 const map = mapInstanceRef.current;
-                if (!map) return;
-                const ref = areaSelectRef.current;
-                ref.layers.forEach(l => map.removeLayer(l));
-                if (ref.polygon) map.removeLayer(ref.polygon);
-                ref.points = [];
-                ref.layers = [];
-                ref.polygon = null;
-                ref.finishing = false;
-            }, []);
+                if (!map || !areaMode) return;
+                const r = areaRef.current;
+                r.points = []; r.markers = []; r.polygon = null;
+                map.getContainer().classList.add('measuring');
 
-            const stopAreaSelect = useCallback(() => {
-                clearAreaSelect();
-                setAreaSelectMode(false);
-                setAreaSelectResult(null);
-                const map = mapInstanceRef.current;
-                if (map) {
-                    map.getContainer().classList.remove('measuring');
-                    map.doubleClickZoom.enable();
-                }
-            }, []);
-
-            // Point-in-polygon ray casting
-            function pointInPoly(point, polygon) {
-                const [x, y] = point;
-                let inside = false;
-                for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                    const [xi, yi] = polygon[i], [xj, yj] = polygon[j];
-                    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-                        inside = !inside;
+                function onClick(e) {
+                    r.points.push(e.latlng);
+                    const m = L.circleMarker(e.latlng, { radius: 4, color: '#e94560', fillColor: '#e94560', fillOpacity: 1 }).addTo(map);
+                    r.markers.push(m);
+                    if (r.points.length > 1) {
+                        if (r.polygon) map.removeLayer(r.polygon);
+                        r.polygon = L.polygon(r.points, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.15, dashArray: '6,4' }).addTo(map);
                     }
                 }
-                return inside;
-            }
 
-            const finishAreaSelect = useCallback(() => {
-                const map = mapInstanceRef.current;
-                const ref = areaSelectRef.current;
-                console.log('[AreaSelect] finishAreaSelect called, points:', ref.points.length);
-                if (!map || ref.points.length < 3) { console.log('[AreaSelect] ABORTED - not enough points'); return; }
+                function onContextMenu(e) {
+                    try { if (e.originalEvent) e.originalEvent.preventDefault(); } catch(ex) {}
+                    if (r.points.length >= 3) {
+                        // Save points and exit mode - analysis happens in separate useEffect
+                        setAreaFinished([...r.points]);
+                        setAreaMode(false);
+                    }
+                }
 
-                const polyCoords = ref.points.map(p => [p.lng, p.lat]);
-                polyCoords.push(polyCoords[0]);
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') {
+                        // Clean up and exit
+                        r.markers.forEach(m => map.removeLayer(m));
+                        if (r.polygon) map.removeLayer(r.polygon);
+                        r.points = []; r.markers = []; r.polygon = null;
+                        map.getContainer().classList.remove('measuring');
+                        setAreaMode(false);
+                    }
+                }
+
+                map.on('click', onClick);
+                map.on('contextmenu', onContextMenu);
+                document.addEventListener('keydown', onKeyDown);
+                return () => {
+                    map.off('click', onClick);
+                    map.off('contextmenu', onContextMenu);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.getContainer().classList.remove('measuring');
+                };
+            }, [areaMode]);
+
+            // ── Area select: analyze results when drawing is finished ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3) return;
                 const gd = geoDataRef.current;
-                if (!gd.plans) return;
+                if (!gd || !gd.plans) return;
+
+                // point-in-polygon test
+                function pip(pt, ring) {
+                    const [x, y] = pt;
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                            inside = !inside;
+                    }
+                    return inside;
+                }
+
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
 
                 const plansInside = [];
                 gd.plans.features.forEach(f => {
@@ -2184,12 +2207,11 @@
                     if (geom.type === 'Polygon') coords = geom.coordinates[0];
                     else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
                     else return;
-                    let cx = 0, cy = 0;
-                    coords.forEach(c => { cx += c[0]; cy += c[1]; });
-                    cx /= coords.length; cy /= coords.length;
-                    if (pointInPoly([cx, cy], polyCoords.map(c => [c[0], c[1]]))) {
-                        plansInside.push(p);
-                    }
+                    let cx = 0, cy = 0, n = 0;
+                    for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                    if (n === 0) return;
+                    cx /= n; cy /= n;
+                    if (pip([cx, cy], polyCoords)) plansInside.push(p);
                 });
 
                 const totalUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
@@ -2199,178 +2221,38 @@
                     byStatus[st] = (byStatus[st] || 0) + 1;
                 });
 
-                const result = {
-                    count: plansInside.length,
-                    totalUnits: Math.round(totalUnits),
-                    byStatus,
-                    plans: plansInside.sort((a, b) => (parseFloat(b.units_add) || 0) - (parseFloat(a.units_add) || 0)).slice(0, 10)
-                };
-                // Show result as Leaflet popup
-                try {
-                    const center = ref.polygon ? ref.polygon.getBounds().getCenter() : ref.points[Math.floor(ref.points.length/2)];
-                    const popupHtml = '<div style="direction:rtl;min-width:250px">' +
-                        '<h3 style="color:#e94560;margin:0 0 8px;font-size:14px">📍 סיכום אזור נבחר</h3>' +
-                        '<div style="display:flex;gap:20px;margin-bottom:10px">' +
-                        '<div style="text-align:center"><div style="font-size:22px;font-weight:bold">' + result.count + '</div><div style="font-size:10px;color:#aaa">תכניות</div></div>' +
-                        '<div style="text-align:center"><div style="font-size:22px;font-weight:bold;color:#4CAF50">' + result.totalUnits.toLocaleString() + '</div><div style="font-size:10px;color:#aaa">יח"ד תוספת</div></div></div>' +
-                        Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
-                            '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
-                        ).join('') +
-                        '</div>';
-                    L.popup({ maxWidth: 350, className: 'plan-popup', autoClose: false, closeOnClick: false })
-                        .setLatLng(center)
-                        .setContent(popupHtml)
-                        .openOn(map);
-                } catch(err) {
-                    window.alert('שגיאה בתצוגת תוצאות: ' + err.message + '\n\nנמצאו ' + result.count + ' תכניות, ' + result.totalUnits + ' יח"ד');
-                }
+                // Show result as DOM element
+                const prev = document.getElementById('area-select-result');
+                if (prev) prev.remove();
+                const statusHtml = Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
+                    '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
+                ).join('');
+                const topPlans = plansInside.sort((a,b) => (parseFloat(b.units_add)||0) - (parseFloat(a.units_add)||0)).slice(0, 5);
+                const topHtml = topPlans.map(p =>
+                    '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px"><span>' + (p.plan_summary || p.plan_name || '') + '</span><span style="color:#4CAF50;font-weight:bold">+' + Math.round(parseFloat(p.units_add)||0) + '</span></div>'
+                ).join('');
 
-                setAreaSelectResult(result);
+                const div = document.createElement('div');
+                div.id = 'area-select-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:300px;max-width:450px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                div.innerHTML = '<button onclick="document.getElementById(\'area-select-result\').remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">\u{1F4CD} סיכום אזור נבחר</h3>' +
+                    '<div style="display:flex;gap:24px;margin-bottom:14px">' +
+                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
+                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
+                    (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') +
+                    (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '');
+                document.body.appendChild(div);
 
-                map.getContainer().classList.remove('measuring');
-                setAreaSelectMode(false);
-            }, []);
-
-            useEffect(() => {
+                // Clean up drawing layers
+                const r = areaRef.current;
                 const map = mapInstanceRef.current;
-                if (!map || !areaSelectMode) return;
-                map.getContainer().classList.add('measuring');
-                const ref = areaSelectRef.current;
-
-                // Floating finish button as Leaflet control
-                const FinishControl = L.Control.extend({
-                    onAdd: function() {
-                        const btn = L.DomUtil.create('button', '');
-                        btn.innerHTML = '✓ סיום בחירת אזור';
-                        btn.style.cssText = 'display:none;background:#e94560;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:15px;font-weight:bold;cursor:pointer;font-family:Assistant,sans-serif;box-shadow:0 4px 16px rgba(233,69,96,0.4)';
-                        L.DomEvent.disableClickPropagation(btn);
-                        L.DomEvent.on(btn, 'click', function(e) {
-                            L.DomEvent.stop(e);
-                            finishAreaSelect();
-                        });
-                        this._btn = btn;
-                        return btn;
-                    },
-                    update: function(count) {
-                        if (this._btn) {
-                            this._btn.style.display = count >= 3 ? 'block' : 'none';
-                            this._btn.innerHTML = '✓ סיום בחירת אזור (' + count + ' נקודות)';
-                        }
-                    }
-                });
-                const finishCtrl = new FinishControl({ position: 'bottomleft' });
-                finishCtrl.addTo(map);
-
-                // Tooltip showing instructions
-                const infoTooltip = L.tooltip({ permanent: true, direction: 'top', className: 'area-select-info', offset: [0, -20] })
-                    .setLatLng(map.getCenter())
-                    .setContent('לחץ על המפה לציור אזור. לחץ ימני או כפול לסיום. Escape לביטול.')
-                    .addTo(map);
-
-                map.doubleClickZoom.disable();
-
-                function onDblClick(e) {
-                    if (ref.points.length >= 3 && !ref.finishing) {
-                        ref.finishing = true;
-                        finishAreaSelect();
-                    }
+                if (map) {
+                    r.markers.forEach(m => map.removeLayer(m));
+                    if (r.polygon) map.removeLayer(r.polygon);
                 }
-
-                function onContextMenu(e) {
-                    try { if (e.originalEvent) e.originalEvent.preventDefault(); } catch(ex) {}
-                    window.alert('בחירת אזור: ' + ref.points.length + ' נקודות');
-                    if (ref.points.length < 3 || ref.finishing) return;
-                    ref.finishing = true;
-
-                    const gd = geoDataRef.current;
-                    if (!gd || !gd.plans) { ref.finishing = false; return; }
-                    const polyCoords = ref.points.map(p => [p.lng, p.lat]);
-                    polyCoords.push(polyCoords[0]);
-                    const plansInside = [];
-                    gd.plans.features.forEach(f => {
-                        const p = f.properties;
-                        const s = normalizeStatus((p.status_mavat || '').trim());
-                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
-                        if (normalizePlanType(p.plan_type || '') === 'תשתיות') return;
-                        const geom = f.geometry;
-                        if (!geom || !geom.coordinates) return;
-                        let coords;
-                        if (geom.type === 'Polygon') coords = geom.coordinates[0];
-                        else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
-                        else return;
-                        let cx = 0, cy = 0, n = 0;
-                        for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
-                        if (n === 0) return;
-                        cx /= n; cy /= n;
-                        if (pointInPoly([cx, cy], polyCoords)) plansInside.push(p);
-                    });
-                    const totalUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
-                    const byStatus = {};
-                    plansInside.forEach(p => { const st = normalizeStatus(p.status_mavat || ''); byStatus[st] = (byStatus[st] || 0) + 1; });
-
-                    // Show popup
-                    console.log('[AreaSelect] plansInside:', plansInside.length, 'totalUnits:', Math.round(totalUnits));
-                    const center = ref.polygon ? ref.polygon.getBounds().getCenter() : ref.points[1];
-                    console.log('[AreaSelect] center:', center, 'polygon:', !!ref.polygon);
-                    const statusHtml = Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
-                        '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
-                    ).join('');
-                    // Show result as DOM element (bypasses React and Leaflet issues)
-                    var prev = document.getElementById('area-select-result');
-                    if (prev) prev.remove();
-                    var resultDiv = document.createElement('div');
-                    resultDiv.id = 'area-select-result';
-                    resultDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:300px;max-width:450px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
-                    resultDiv.innerHTML = '<button onclick="this.parentElement.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
-                        '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">📍 סיכום אזור נבחר</h3>' +
-                        '<div style="display:flex;gap:24px;margin-bottom:14px">' +
-                        '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
-                        '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
-                        (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '');
-                    document.body.appendChild(resultDiv);
-
-                    map.getContainer().classList.remove('measuring');
-                    setAreaSelectMode(false);
-                }
-
-                function onClick(e) {
-                    if (ref.finishing) return;
-                    ref.points.push(e.latlng);
-                    setAreaPointCount(ref.points.length);
-                    const marker = L.circleMarker(e.latlng, { radius: 4, color: '#e94560', fillColor: '#e94560', fillOpacity: 1 }).addTo(map);
-                    ref.layers.push(marker);
-                    if (ref.points.length > 1) {
-                        if (ref.polygon) map.removeLayer(ref.polygon);
-                        ref.polygon = L.polygon(ref.points, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.15, dashArray: '6,4' }).addTo(map);
-                    }
-                    finishCtrl.update(ref.points.length);
-                    // Update tooltip
-                    infoTooltip.setLatLng(e.latlng);
-                    if (ref.points.length >= 3) {
-                        infoTooltip.setContent('לחץ ימני או כפול לסיום (' + ref.points.length + ' נקודות) | Escape לביטול');
-                    } else {
-                        infoTooltip.setContent('הוסף עוד ' + (3 - ref.points.length) + ' נקודות לפחות');
-                    }
-                }
-
-                function onKeyDown(e) {
-                    if (e.key === 'Escape') stopAreaSelect();
-                }
-
-                map.on('click', onClick);
-                map.on('dblclick', onDblClick);
-                map.on('contextmenu', onContextMenu);
-                document.addEventListener('keydown', onKeyDown);
-                return () => {
-                    map.off('click', onClick);
-                    map.off('dblclick', onDblClick);
-                    map.off('contextmenu', onContextMenu);
-                    document.removeEventListener('keydown', onKeyDown);
-                    map.removeControl(finishCtrl);
-                    map.removeLayer(infoTooltip);
-                    map.doubleClickZoom.enable();
-                };
-            }, [areaSelectMode]);
+                r.points = []; r.markers = []; r.polygon = null;
+            }, [areaFinished]);
 
             // ── Measurement tool logic ──
             const clearMeasurement = useCallback(() => {
@@ -4303,29 +4185,34 @@
 
                             {/* בחירת אזור */}
                             <button
-                                className={`toolbar-btn ${areaSelectMode ? 'active' : ''}`}
+                                className={`toolbar-btn ${areaMode ? 'active' : ''}`}
                                 onClick={() => {
-                                    if (areaSelectMode) {
-                                        if (areaPointCount >= 3) {
-                                            finishAreaSelect();
-                                        } else {
-                                            stopAreaSelect();
+                                    if (areaMode) {
+                                        // Cancel
+                                        const r = areaRef.current;
+                                        const map = mapInstanceRef.current;
+                                        if (map) {
+                                            r.markers.forEach(m => map.removeLayer(m));
+                                            if (r.polygon) map.removeLayer(r.polygon);
+                                            map.getContainer().classList.remove('measuring');
                                         }
+                                        r.points = []; r.markers = []; r.polygon = null;
+                                        setAreaMode(false);
                                     } else {
-                                        clearAreaSelect(); setAreaPointCount(0); setAreaSelectMode(true); setAreaSelectResult(null);
+                                        setAreaFinished(null);
+                                        const prev = document.getElementById('area-select-result');
+                                        if (prev) prev.remove();
+                                        setAreaMode(true);
                                     }
                                     setActiveDropdown(null);
                                 }}
-                                title={areaSelectMode ? (areaPointCount >= 3 ? 'סיים בחירת אזור' : 'לחץ על המפה לציור, Escape לביטול') : 'בחירת אזור'}
+                                title={areaMode ? 'לחץ ימני לסיום, Escape לביטול' : 'בחירת אזור'}
                             >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="4,3"/>
-                                    <circle cx="3" cy="3" r="1.5" fill="currentColor"/>
-                                    <circle cx="21" cy="3" r="1.5" fill="currentColor"/>
-                                    <circle cx="3" cy="21" r="1.5" fill="currentColor"/>
-                                    <circle cx="21" cy="21" r="1.5" fill="currentColor"/>
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <path d="M3 9h18M9 3v18" />
                                 </svg>
-                                <span className="toolbar-label">{areaSelectMode ? (areaPointCount >= 3 ? 'סיום ✓' : 'נק\' ' + areaPointCount) : 'אזור'}</span>
+                                <span className="toolbar-label">{areaMode ? 'ביטול' : 'אזור'}</span>
                             </button>
 
                             <div className="toolbar-sep" />
@@ -4627,59 +4514,7 @@
                             הקישור הועתק!
                         </div>
 
-                        {/* Area select result */}
-                        {areaSelectResult && (
-                            <div style={{
-                                position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-                                zIndex:2000, background:'rgba(15,15,30,0.96)', backdropFilter:'blur(12px)',
-                                borderRadius:14, padding:'24px 28px', direction:'rtl',
-                                border:'1px solid #2a2a4a', maxWidth:500, minWidth:350, maxHeight:'80vh', overflowY:'auto',
-                                boxShadow:'0 8px 32px rgba(0,0,0,0.5)'
-                            }}>
-                                <button onClick={() => { clearAreaSelect(); setAreaSelectResult(null); }}
-                                    style={{position:'absolute',top:10,left:10,background:'none',border:'none',color:'#888',fontSize:20,cursor:'pointer'}}>&times;</button>
-                                <h3 style={{color:'#e94560',margin:'0 0 12px',fontSize:16}}>📍 סיכום אזור נבחר</h3>
-                                <div style={{display:'flex',gap:24,marginBottom:16}}>
-                                    <div style={{textAlign:'center'}}>
-                                        <div style={{fontSize:28,fontWeight:'bold',color:'#fff'}}>{areaSelectResult.count}</div>
-                                        <div style={{fontSize:11,color:'#888'}}>תכניות</div>
-                                    </div>
-                                    <div style={{textAlign:'center'}}>
-                                        <div style={{fontSize:28,fontWeight:'bold',color:'#4CAF50'}}>{areaSelectResult.totalUnits.toLocaleString()}</div>
-                                        <div style={{fontSize:11,color:'#888'}}>יח"ד תוספת</div>
-                                    </div>
-                                </div>
-                                {Object.keys(areaSelectResult.byStatus).length > 0 && (
-                                    <div style={{marginBottom:16}}>
-                                        <div style={{color:'#aaa',fontSize:12,marginBottom:6}}>פילוח לפי סטטוס</div>
-                                        {Object.entries(areaSelectResult.byStatus).sort((a,b) => b[1]-a[1]).map(([st, cnt]) => (
-                                            <div key={st} style={{display:'flex',justifyContent:'space-between',padding:'3px 0',fontSize:12,color:'#ccc'}}>
-                                                <span>{st}</span><span>{cnt}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {areaSelectResult.plans.length > 0 && (
-                                    <div>
-                                        <div style={{color:'#aaa',fontSize:12,marginBottom:6}}>תכניות מובילות</div>
-                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-                                            <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
-                                                <th style={{textAlign:'right',padding:4,color:'#888'}}>שם</th>
-                                                <th style={{textAlign:'center',padding:4,color:'#888'}}>יח"ד</th>
-                                                <th style={{textAlign:'center',padding:4,color:'#888'}}>סטטוס</th>
-                                            </tr></thead>
-                                            <tbody>{areaSelectResult.plans.map((p, i) => (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
-                                                    <td style={{padding:4,color:'#ddd'}}>{p.plan_summary || p.plan_name_he || p.plan_name}</td>
-                                                    <td style={{padding:4,textAlign:'center',color:'#4CAF50'}}>{parseFloat(p.units_add) || 0}</td>
-                                                    <td style={{padding:4,textAlign:'center',color:'#aaa',fontSize:10}}>{p.status_mavat}</td>
-                                                </tr>
-                                            ))}</tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        {/* Area select result is rendered via DOM in the areaFinished useEffect */}
 
                         {/* Heat map legend */}
                         {showHeatMap && (
