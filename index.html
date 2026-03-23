@@ -1792,7 +1792,11 @@
             'גוננים א-ו': 'גוננים',
             'ארנונה': 'תלפיות ארנונה',
             'תלפיות': 'תלפיות ארנונה',
+            'עמק רפאים': 'המושבה הגרמנית',
             'עמק רפאים - המושבה הגרמנית': 'המושבה הגרמנית',
+            'עמק רפאים- המושבה הגרמנית': 'המושבה הגרמנית',
+            'עמק רפאים -המושבה הגרמנית': 'המושבה הגרמנית',
+            'עמק רפאים-המושבה הגרמנית': 'המושבה הגרמנית',
             'קוממיות - טלביה': 'טלביה',
             'קריית שמואל': 'קרית שמואל',
         };
@@ -2945,9 +2949,10 @@
                         });
                     });
 
-                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
+                    const EXCLUDE_MINAHAK = ['גבעת המטוס'];
+                    const minahaks = minahakOrder.filter(m => byMinahak[m] && !EXCLUDE_MINAHAK.includes(m));
                     Object.keys(byMinahak).forEach(m => {
-                        if (!minahaks.includes(m) && m) minahaks.push(m);
+                        if (!minahaks.includes(m) && m && !EXCLUDE_MINAHAK.includes(m)) minahaks.push(m);
                     });
 
                     setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, plansByCell, plansBySub });
