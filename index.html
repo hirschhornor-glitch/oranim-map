@@ -1832,6 +1832,7 @@
             const [areaFinished, setAreaFinished] = useState(null);
             const [areaPts, setAreaPts] = useState(0);
             const areaRef = useRef({ points: [], markers: [], polygon: null });
+            const areaModeRef = useRef(false);
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
             const [showPrint, setShowPrint] = useState(false);
@@ -2131,6 +2132,7 @@
 
             // ── Area select: drawing mode ──
             useEffect(() => {
+                areaModeRef.current = areaMode;
                 const map = mapInstanceRef.current;
                 if (!map || !areaMode) return;
                 const r = areaRef.current;
@@ -2189,6 +2191,13 @@
                 const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
                 polyCoords.push(polyCoords[0]);
 
+                // Approved statuses to merge
+                const APPROVED_STATUSES = ['אישור', 'תבע מאושרת', 'מאושרת', 'תחילת תוקף'];
+                function groupStatus(s) {
+                    return APPROVED_STATUSES.includes(s) ? 'תכניות מאושרות' : s;
+                }
+
+                // --- Plans (תב"ע) ---
                 const plansInside = [];
                 gd.plans.features.forEach(f => {
                     const p = f.properties;
@@ -2208,15 +2217,54 @@
                     for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
                     if (n === 0) return;
                     cx /= n; cy /= n;
-                    if (pip([cx, cy], polyCoords)) plansInside.push(p);
+                    if (pip([cx, cy], polyCoords)) plansInside.push({ ...p, _source: 'plan' });
                 });
 
-                const totalUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
+                // --- TAMA 38 ---
+                const tamaInside = [];
+                if (gd.tama38 && gd.tama38.features) {
+                    gd.tama38.features.forEach(f => {
+                        const p = f.properties;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let lng, lat;
+                        try {
+                            if (geom.type === 'Point') { lng = geom.coordinates[0]; lat = geom.coordinates[1]; }
+                            else if (geom.type === 'MultiPoint') { lng = geom.coordinates[0][0]; lat = geom.coordinates[0][1]; }
+                            else return;
+                        } catch(ex) { return; }
+                        if (pip([lng, lat], polyCoords)) tamaInside.push(p);
+                    });
+                }
+
+                const totalPlanUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
+                const totalTamaUnits = tamaInside.reduce((s, p) => s + (parseFloat(p.units_tose) || 0), 0);
+                const totalUnits = totalPlanUnits + totalTamaUnits;
+
+                // Status breakdown (plans only, with merged approved)
                 const byStatus = {};
                 plansInside.forEach(p => {
-                    const st = normalizeStatus(p.status_mavat || '');
+                    const st = groupStatus(normalizeStatus(p.status_mavat || ''));
                     byStatus[st] = (byStatus[st] || 0) + 1;
                 });
+
+                // Top plans by units_add
+                const topPlans = [...plansInside].sort((a,b) => (parseFloat(b.units_add)||0) - (parseFloat(a.units_add)||0)).slice(0, 5);
+
+                // Build all data rows for export
+                const allRows = plansInside.map(p => ({
+                    type: 'תב"ע',
+                    name: p.plan_summary || p.plan_name || '',
+                    status: normalizeStatus(p.status_mavat || ''),
+                    units_add: parseFloat(p.units_add) || 0,
+                    minahak: p.minahak || ''
+                })).concat(tamaInside.map(p => ({
+                    type: 'תמ"א 38',
+                    name: p.address || p.tik || '',
+                    status: p.status || '',
+                    units_add: parseFloat(p.units_tose) || 0,
+                    minahak: ''
+                })));
 
                 // Show result as DOM element
                 const prev = document.getElementById('area-select-result');
@@ -2224,22 +2272,60 @@
                 const statusHtml = Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
                     '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
                 ).join('');
-                const topPlans = plansInside.sort((a,b) => (parseFloat(b.units_add)||0) - (parseFloat(a.units_add)||0)).slice(0, 5);
                 const topHtml = topPlans.map(p =>
                     '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px"><span>' + (p.plan_summary || p.plan_name || '') + '</span><span style="color:#4CAF50;font-weight:bold">+' + Math.round(parseFloat(p.units_add)||0) + '</span></div>'
                 ).join('');
 
                 const div = document.createElement('div');
                 div.id = 'area-select-result';
-                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:300px;max-width:450px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:320px;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
                 div.innerHTML = '<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
-                    '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">סיכום אזור נבחר</h3>' +
+                    '<h3 id="area-result-title" contenteditable="true" style="color:#e94560;margin:0 0 12px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">סיכום אזור נבחר</h3>' +
                     '<div style="display:flex;gap:24px;margin-bottom:14px">' +
-                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
+                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות תב"ע</div></div>' +
+                    (tamaInside.length > 0 ? '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#FF9800">' + tamaInside.length + '</div><div style="font-size:11px;color:#aaa">תמ"א 38</div></div>' : '') +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
                     (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') +
-                    (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '');
+                    (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '') +
+                    '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
+                    '<button id="area-export-excel" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא Excel</button>' +
+                    '<button id="area-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
+                    '</div>';
                 document.body.appendChild(div);
+
+                // Store export data on the element for button handlers
+                window.__areaExportData = allRows;
+
+                // Excel export handler
+                document.getElementById('area-export-excel').addEventListener('click', () => {
+                    const rows = window.__areaExportData || [];
+                    const title = document.getElementById('area-result-title')?.textContent || 'סיכום אזור';
+                    const cols = ['סוג', 'שם', 'סטטוס', 'יח"ד תוספת', 'מינהק'];
+                    const header = cols.join(',');
+                    const csvRows = rows.map(r =>
+                        [r.type, r.name, r.status, r.units_add, r.minahak].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
+                    );
+                    const bom = '\uFEFF';
+                    const blob = new Blob([bom + header + '\n' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/\s+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+
+                // Print handler
+                document.getElementById('area-print').addEventListener('click', () => {
+                    const el = document.getElementById('area-select-result');
+                    if (!el) return;
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + (document.getElementById('area-result-title')?.textContent || 'סיכום אזור') + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#e94560}button{display:none!important}</style></head><body>');
+                    win.document.write(el.innerHTML);
+                    win.document.write('</body></html>');
+                    win.document.close();
+                    win.print();
+                });
 
                 // Clean up drawing layers
                 const r = areaRef.current;
@@ -3062,6 +3148,8 @@
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
+                                // Suppress popups during area/measure drawing
+                                if (areaModeRef.current) return;
                                 // Find all overlapping plans at click point
                                 const clickLatLng = e.latlng;
                                 const allFeatures = [];
