@@ -5007,11 +5007,11 @@
                                                         <td>יח"ד תוספת</td>
                                                         {subs.map(s => (
                                                             <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
-                                                                {subData[s].units_add.toLocaleString()}
+                                                                {(subData[s].units_add || 0).toLocaleString()}
                                                             </td>
                                                         ))}
                                                         <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
-                                                            {Object.values(subData).reduce((sum, d) => sum + d.units_add, 0).toLocaleString()}
+                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_add || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                     <tr className="units-toggle-row">
@@ -5032,47 +5032,49 @@
                                                         <>
                                                             <tr className="units-sub-row">
                                                                 <td>התחדשות עירונית</td>
-                                                                {subs.map(s => <td key={s}>{subData[s].renewal.toLocaleString()}</td>)}
+                                                                {subs.map(s => <td key={s}>{(subData[s].renewal || 0).toLocaleString()}</td>)}
                                                                 <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + d.renewal, 0).toLocaleString()}
+                                                                    {Object.values(subData).reduce((sum, d) => sum + (d.renewal || 0), 0).toLocaleString()}
                                                                 </td>
                                                             </tr>
                                                             <tr className="units-sub-row">
                                                                 <td>עיבוי ובניה חדשה</td>
-                                                                {subs.map(s => <td key={s}>{subData[s].densification.toLocaleString()}</td>)}
+                                                                {subs.map(s => <td key={s}>{(subData[s].densification || 0).toLocaleString()}</td>)}
                                                                 <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + d.densification, 0).toLocaleString()}
+                                                                    {Object.values(subData).reduce((sum, d) => sum + (d.densification || 0), 0).toLocaleString()}
                                                                 </td>
                                                             </tr>
                                                         </>
                                                     )}
-                                                    {unitsExpanded === 'status' && (
-                                                        <>
-                                                            <tr className="units-sub-row">
-                                                                <td>פתיחת תיק</td>
-                                                                {subs.map(s => <td key={s}>{subData[s].status_open.toLocaleString()}</td>)}
+                                                    {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => {
+                                                        const getSubVal = (sub) => {
+                                                            const bs = subData[sub].byStatus || {};
+                                                            if (g.match && g.match.length > 0) {
+                                                                return g.match.reduce((sum, st) => sum + (bs[st] || 0), 0);
+                                                            }
+                                                            return bs[g.key] || 0;
+                                                        };
+                                                        const total = subs.reduce((sum, s) => sum + getSubVal(s), 0);
+                                                        if (total === 0) return null;
+                                                        return (
+                                                            <tr key={g.key} className="units-sub-row">
+                                                                <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                                {subs.map(s => <td key={s}>{getSubVal(s).toLocaleString()}</td>)}
                                                                 <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_open, 0).toLocaleString()}
+                                                                    {total.toLocaleString()}
                                                                 </td>
                                                             </tr>
-                                                            <tr className="units-sub-row">
-                                                                <td>מאושר</td>
-                                                                {subs.map(s => <td key={s}>{subData[s].status_approved.toLocaleString()}</td>)}
-                                                                <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + d.status_approved, 0).toLocaleString()}
-                                                                </td>
-                                                            </tr>
-                                                        </>
-                                                    )}
+                                                        );
+                                                    })}
                                                     <tr className="units-total-row">
                                                         <td>סה"כ</td>
                                                         {subs.map(s => (
                                                             <td key={s} style={{color: '#e94560', fontWeight: 700}}>
-                                                                {((subData[s].units_in || 0) + subData[s].units_add).toLocaleString()}
+                                                                {((subData[s].units_in || 0) + (subData[s].units_add || 0)).toLocaleString()}
                                                             </td>
                                                         ))}
                                                         <td style={{color: '#e94560', fontWeight: 700, background: '#141440'}}>
-                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_in || 0) + d.units_add, 0).toLocaleString()}
+                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_in || 0) + (d.units_add || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                 </tbody>
