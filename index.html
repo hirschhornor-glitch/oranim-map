@@ -5014,19 +5014,9 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td>יח"ד תוספת</td>
-                                                        {subs.map(s => (
-                                                            <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
-                                                                {(subData[s].units_add || 0).toLocaleString()}
-                                                            </td>
-                                                        ))}
-                                                        <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
-                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_add || 0), 0).toLocaleString()}
-                                                        </td>
-                                                    </tr>
-                                                    <tr className="units-toggle-row">
-                                                        <td colSpan={subs.length + 2}>
-                                                            <div className="units-toggle-btns">
+                                                        <td style={{verticalAlign: 'top'}}>
+                                                            <div>יח"ד תוספת</div>
+                                                            <div className="units-toggle-btns" style={{marginTop: 4}}>
                                                                 <button className={`units-toggle-btn ${unitsExpanded === 'type' ? 'active' : ''}`}
                                                                     onClick={() => setUnitsExpanded(prev => prev === 'type' ? null : 'type')}>
                                                                     סוג
@@ -5036,6 +5026,14 @@
                                                                     סטטוס
                                                                 </button>
                                                             </div>
+                                                        </td>
+                                                        {subs.map(s => (
+                                                            <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
+                                                                {(subData[s].units_add || 0).toLocaleString()}
+                                                            </td>
+                                                        ))}
+                                                        <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
+                                                            {Object.values(subData).reduce((sum, d) => sum + (d.units_add || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                     {unitsExpanded === 'type' && (
