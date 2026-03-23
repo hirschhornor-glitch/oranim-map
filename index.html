@@ -4751,14 +4751,14 @@
                             }}>
                                 <div style={{color:'#e94560',fontWeight:'bold',fontSize:13,marginBottom:6}}>צפיפות — סה"כ יח"ד/דונם</div>
                                 <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על תכנית לפרטים</div>
-                                <div style={{color:'#aaa',fontSize:10,marginBottom:4,textAlign:'center'}}>יח"ד/דונם</div>
-                                <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
-                                    {[[0,'#fee5d9','0'],[5,'#fcbba1','5'],[15,'#fc9272','15'],[30,'#fb6a4a','30'],[50,'#ef3b2c','50'],[80,'#cb181d','80'],[120,'#99000d','120'],[200,'#67000d','200+']].map(([v,c,l]) =>
+                                <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'nowrap'}}>
+                                    {[[0,'#fee5d9','0'],[5,'#fcbba1','5'],[15,'#fc9272','15'],[30,'#fb6a4a','30'],[50,'#ef3b2c','50'],[80,'#cb181d','80'],[120,'#99000d','120'],[200,'#67000d','+200']].map(([v,c,l]) =>
                                         <div key={l} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-                                            <div style={{width:20,height:12,borderRadius:3,background:c}}></div>
-                                            <span style={{color:'#aaa',fontSize:9}}>{l}</span>
+                                            <div style={{width:18,height:10,borderRadius:3,background:c}}></div>
+                                            <span style={{color:'#aaa',fontSize:8}}>{l}</span>
                                         </div>
                                     )}
+                                    <span style={{color:'#aaa',fontSize:9,marginRight:4}}>יח"ד/דונם</span>
                                 </div>
                             </div>
                         )}
