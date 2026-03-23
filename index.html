@@ -4383,7 +4383,7 @@
                                 }}
                                 title="מפת חום"
                             >
-                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-4-4-6-4-10z"/><circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="10" r="6" opacity="0.5" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="5" opacity="0.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="5.5" opacity="0.45" fill="currentColor" stroke="none"/><circle cx="10" cy="11" r="2" opacity="0.9" fill="currentColor" stroke="none"/></svg></span>
                                 <span className="toolbar-label">חום</span>
                             </button>
 
@@ -5209,6 +5209,15 @@
                                         return true;
                                     });
                                     const totalAdd = plans.reduce((s, f) => s + (parseFloat(f.properties.units_add) || 0), 0);
+                                    // Count TAMA38 projects in this minahak
+                                    const subs = MINAHAK_SUBS[minahakReport] || [];
+                                    const tamaFeatures = (gd.tama38 && gd.tama38.features) ? gd.tama38.features.filter(f => {
+                                        const n = (f.properties.neighborho || '').trim();
+                                        const normalized = SUB_NORMALIZE[n] || n;
+                                        return subs.includes(n) || subs.includes(normalized);
+                                    }) : [];
+                                    const tamaCount = tamaFeatures.length;
+                                    const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.units_add) || 0) - (parseFloat(a.properties.units_add) || 0)).slice(0, 10);
                                     const statusCounts = {};
                                     plans.forEach(f => {
@@ -5218,7 +5227,7 @@
                                     const maxCount = Math.max(...Object.values(statusCounts), 1);
                                     return (
                                         <>
-                                            <div style={{display:'flex',gap:30,margin:'16px 0',justifyContent:'center'}}>
+                                            <div style={{display:'flex',gap:20,margin:'16px 0',justifyContent:'center',flexWrap:'wrap'}}>
                                                 <div style={{textAlign:'center'}}>
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plans.length}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>תכניות פעילות</div>
@@ -5226,6 +5235,14 @@
                                                 <div style={{textAlign:'center'}}>
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#4CAF50'}}>{totalAdd.toLocaleString()}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>יח"ד תוספת</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#FF9800'}}>{tamaCount}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תכניות תמ"א 38</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#2196F3'}}>{tamaUnitsAdd.toLocaleString()}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>יח"ד תמ"א תוספת</div>
                                                 </div>
                                             </div>
                                             <h3 style={{color:'#e94560',fontSize:14,marginBottom:8}}>10 תכניות מובילות</h3>
@@ -5238,7 +5255,25 @@
                                                 <tbody>
                                                     {top10.map((f, i) => (
                                                         <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
-                                                            <td style={{padding:4,color:'#e0e0e0'}}>{f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name}</td>
+                                                            <td style={{padding:4}}><a href="#" style={{color:'#64b5f6',textDecoration:'underline',cursor:'pointer'}} onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setMinahakReport(null);
+                                                                const map = mapInstanceRef.current;
+                                                                if (!map || !f.geometry) return;
+                                                                try {
+                                                                    const center = visualCenter(f.geometry) || L.geoJSON(f).getBounds().getCenter();
+                                                                    const latlng = center.lat ? [center.lat, center.lng] : center;
+                                                                    map.setView(latlng, 18);
+                                                                    setTimeout(() => {
+                                                                        const mapped = mapPlanProps(f.properties);
+                                                                        const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
+                                                                            .setLatLng(latlng)
+                                                                            .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                                                                            .openOn(map);
+                                                                        bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                                                                    }, 500);
+                                                                } catch(err) { console.warn('zoom to plan failed', err); }
+                                                            }}>{f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name}</a></td>
                                                             <td style={{textAlign:'center',padding:4,color:'#4CAF50'}}>{(parseFloat(f.properties.units_add)||0).toLocaleString()}</td>
                                                             <td style={{textAlign:'center',padding:4,color:'#aaa',fontSize:10}}>{f.properties.status_mavat}</td>
                                                         </tr>
