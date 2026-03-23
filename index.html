@@ -2165,14 +2165,14 @@
 
                 // Block browser context menu on map container
                 const container = map.getContainer();
-                function blockContextMenu(e) { e.preventDefault(); e.stopPropagation(); return false; }
-                container.addEventListener('contextmenu', blockContextMenu, true);
+                function blockContextMenu(e) { e.preventDefault(); }
+                container.addEventListener('contextmenu', blockContextMenu);
 
                 map.on('click', onClick);
                 map.on('contextmenu', onContextMenu);
                 document.addEventListener('keydown', onKeyDown);
                 return () => {
-                    container.removeEventListener('contextmenu', blockContextMenu, true);
+                    container.removeEventListener('contextmenu', blockContextMenu);
                     map.off('click', onClick);
                     map.off('contextmenu', onContextMenu);
                     document.removeEventListener('keydown', onKeyDown);
