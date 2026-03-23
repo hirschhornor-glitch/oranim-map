@@ -1439,7 +1439,8 @@
             let ring;
             if (geometry.type === 'MultiPolygon') {
                 let maxArea = 0;
-                ring = geometry.coordinates[0][0];
+                try { ring = geometry.coordinates[0][0]; } catch(e) { return null; }
+                if (!ring) return null;
                 for (const poly of geometry.coordinates) {
                     const r = poly[0];
                     let a = 0;
@@ -1524,7 +1525,7 @@
             const lng = latlng.lng, lat = latlng.lat;
             let coords;
             const geo = layer.feature.geometry;
-            if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+            try { if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0]; } catch(e) { return false; }
             else if (geo.type === 'Polygon') coords = geo.coordinates[0];
             else return false;
             let inside = false;
@@ -2195,9 +2196,12 @@
                     const geom = f.geometry;
                     if (!geom || !geom.coordinates) return;
                     let coords;
-                    if (geom.type === 'Polygon') coords = geom.coordinates[0];
-                    else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
-                    else return;
+                    try {
+                        if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                        else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                        else return;
+                    } catch(ex) { return; }
+                    if (!coords || !coords.length) return;
                     let cx = 0, cy = 0, n = 0;
                     for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
                     if (n === 0) return;
@@ -3167,9 +3171,11 @@
                             // Plan number along longest edge (in pixels), rotated to match
                             const planNum = f.properties.plan_name || '';
                             if (zoom >= 17 && planNum && f.geometry && f.geometry.coordinates) {
-                                const coords = f.geometry.type === 'MultiPolygon'
+                                let coords;
+                                try { coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
-                                    : f.geometry.coordinates[0];
+                                    : f.geometry.coordinates[0]; } catch(ex) { coords = null; }
+                                if (!coords || !coords.length) return;
                                 let maxPxLen = 0, bestMid = null, bestAngle = 0;
                                 for (let ei = 0; ei < coords.length - 1; ei++) {
                                     const a = coords[ei], b = coords[ei + 1];
