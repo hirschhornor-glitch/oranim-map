@@ -2267,12 +2267,20 @@
                 // Tooltip showing instructions
                 const infoTooltip = L.tooltip({ permanent: true, direction: 'top', className: 'area-select-info', offset: [0, -20] })
                     .setLatLng(map.getCenter())
-                    .setContent('לחץ על המפה לציור אזור. לחץ כפול לסיום. Escape לביטול.')
+                    .setContent('לחץ על המפה לציור אזור. לחץ ימני או כפול לסיום. Escape לביטול.')
                     .addTo(map);
 
                 map.doubleClickZoom.disable();
 
                 function onDblClick(e) {
+                    if (ref.points.length >= 3 && !ref.finishing) {
+                        ref.finishing = true;
+                        finishAreaSelect();
+                    }
+                }
+
+                function onContextMenu(e) {
+                    L.DomEvent.preventDefault(e);
                     if (ref.points.length >= 3 && !ref.finishing) {
                         ref.finishing = true;
                         finishAreaSelect();
@@ -2293,7 +2301,7 @@
                     // Update tooltip
                     infoTooltip.setLatLng(e.latlng);
                     if (ref.points.length >= 3) {
-                        infoTooltip.setContent('לחץ כפול לסיום (' + ref.points.length + ' נקודות) | Escape לביטול');
+                        infoTooltip.setContent('לחץ ימני או כפול לסיום (' + ref.points.length + ' נקודות) | Escape לביטול');
                     } else {
                         infoTooltip.setContent('הוסף עוד ' + (3 - ref.points.length) + ' נקודות לפחות');
                     }
@@ -2305,10 +2313,12 @@
 
                 map.on('click', onClick);
                 map.on('dblclick', onDblClick);
+                map.on('contextmenu', onContextMenu);
                 document.addEventListener('keydown', onKeyDown);
                 return () => {
                     map.off('click', onClick);
                     map.off('dblclick', onDblClick);
+                    map.off('contextmenu', onContextMenu);
                     document.removeEventListener('keydown', onKeyDown);
                     map.removeControl(finishCtrl);
                     map.removeLayer(infoTooltip);
