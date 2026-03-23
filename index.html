@@ -2852,12 +2852,12 @@
                                 byMinahak[m].byStatus[stageVal] = (byMinahak[m].byStatus[stageVal] || 0) + addVal;
                                 if (!plansByCell[m]) plansByCell[m] = {};
                                 if (!plansByCell[m][stageVal]) plansByCell[m][stageVal] = [];
-                                plansByCell[m][stageVal].push(planInfo);
+                                if (!plansByCell[m][stageVal].some(x => x.plan_name === planInfo.plan_name)) plansByCell[m][stageVal].push(planInfo);
                             } else if (grp) {
                                 byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
                                 if (!plansByCell[m]) plansByCell[m] = {};
                                 if (!plansByCell[m][grp]) plansByCell[m][grp] = [];
-                                plansByCell[m][grp].push(planInfo);
+                                if (!plansByCell[m][grp].some(x => x.plan_name === planInfo.plan_name)) plansByCell[m][grp].push(planInfo);
                             }
                         }
 
@@ -5156,17 +5156,11 @@
 
                                                 {/* Sub-rows by status group */}
                                                 {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => {
-                                                    const permitKeys = ['ו-גמר בנייה','ה-בבנייה','ד-היתר בנייה','ג-רישוי בתהליך'];
-                                                    const isApproved = g.key === 'approved';
                                                     return (
                                                     <tr key={g.key} className="units-sub-row">
                                                         <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
                                                         {unitsData.minahaks.map(m => {
-                                                            let val = unitsData.byMinahak[m].byStatus[g.key] || 0;
-                                                            if (isApproved) {
-                                                                const permitTotal = permitKeys.reduce((s, k) => s + (unitsData.byMinahak[m].byStatus[k] || 0), 0);
-                                                                val = val - permitTotal;
-                                                            }
+                                                            const val = unitsData.byMinahak[m].byStatus[g.key] || 0;
                                                             const plans = unitsData.plansByCell && unitsData.plansByCell[m] && unitsData.plansByCell[m][g.key];
                                                             return (
                                                             <td key={m}
@@ -5178,14 +5172,7 @@
                                                             >{val.toLocaleString()}</td>);
                                                         })}
                                                         <td style={{background: '#12122a'}}>
-                                                            {(() => {
-                                                                let total = Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0);
-                                                                if (isApproved) {
-                                                                    const permitTotal = Object.values(unitsData.byMinahak).reduce((s, d) => permitKeys.reduce((ps, k) => ps + (d.byStatus[k] || 0), 0) + s, 0);
-                                                                    total = total - permitTotal;
-                                                                }
-                                                                return total.toLocaleString();
-                                                            })()}
+                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>);
                                                 })}
@@ -5353,6 +5340,65 @@
                                         </>
                                     );
                                 })()}
+                            </div>
+                        </div>
+                    )}
+
+                    {cellReport && (
+                        <div className="units-overlay" onClick={() => setCellReport(null)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 700}}>
+                                <button className="units-close" onClick={() => setCellReport(null)}>&times;</button>
+                                <div className="cell-report-content">
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128196; דוח תכניות — {cellReport.statusLabel}</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{cellReport.minahak} &bull; {cellReport.plans.length} תכניות &bull; {cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString()} יח"ד</p>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תוספת יח"ד</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>סטטוס</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {[...cellReport.plans].sort((a,b) => b.units_add - a.units_add).map((p, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6'}}>{p.plan_name}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#4CAF50'}}>{p.units_add.toLocaleString()}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#aaa',fontSize:11}}>{p.stage || p.status_mavat}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot><tr style={{borderTop:'2px solid #2a2a4a',fontWeight:700}}>
+                                            <td colSpan={3} style={{padding:'6px 4px',color:'#e94560'}}>סה"כ</td>
+                                            <td style={{textAlign:'center',padding:'6px 4px',color:'#4CAF50'}}>{cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString()}</td>
+                                            <td></td>
+                                        </tr></tfoot>
+                                    </table>
+                                    <button onClick={() => {
+                                        const printContent = document.querySelector('.cell-report-content');
+                                        if (!printContent) return;
+                                        const printWin = window.open('', '_blank');
+                                        printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח תכניות</title>');
+                                        printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}tfoot td{border-top:2px solid #333;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}</style>');
+                                        printWin.document.write('</head><body>');
+                                        printWin.document.write('<div class="header"><h2>דוח תכניות — ' + cellReport.statusLabel + '</h2>');
+                                        printWin.document.write('<p>' + cellReport.minahak + ' | ' + cellReport.plans.length + ' תכניות | ' + cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString() + ' יח"ד</p></div>');
+                                        printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תוספת יח"ד</th><th>סטטוס</th></tr></thead><tbody>');
+                                        [...cellReport.plans].sort((a,b) => b.units_add - a.units_add).forEach((p, i) => {
+                                            printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + p.units_add.toLocaleString() + '</td><td>' + (p.stage||p.status_mavat) + '</td></tr>');
+                                        });
+                                        const total = cellReport.plans.reduce((s,p) => s + p.units_add, 0);
+                                        printWin.document.write('</tbody><tfoot><tr><td colspan="3">סה"כ</td><td>' + total.toLocaleString() + '</td><td></td></tr></tfoot></table>');
+                                        printWin.document.write('</body></html>');
+                                        printWin.document.close();
+                                        printWin.focus();
+                                        setTimeout(() => printWin.print(), 300);
+                                    }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                        &#128424; הדפסה / שמירה
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
