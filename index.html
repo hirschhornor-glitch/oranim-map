@@ -2205,29 +2205,26 @@
                     byStatus,
                     plans: plansInside.sort((a, b) => (parseFloat(b.units_add) || 0) - (parseFloat(a.units_add) || 0)).slice(0, 10)
                 };
-                // Show result as Leaflet popup (more reliable than React state)
-                const center = ref.polygon ? ref.polygon.getBounds().getCenter() : ref.points[0];
-                const statusHtml = Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
-                    '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
-                ).join('');
-                const topPlansHtml = result.plans.slice(0, 5).map(p =>
-                    '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px"><span>' + (p.plan_summary || p.plan_name) + '</span><span style="color:#4CAF50;font-weight:bold">+' + (parseFloat(p.units_add)||0) + '</span></div>'
-                ).join('');
-                const popupHtml = '<div style="direction:rtl;min-width:250px">' +
-                    '<h3 style="color:#e94560;margin:0 0 8px;font-size:14px">📍 סיכום אזור נבחר</h3>' +
-                    '<div style="display:flex;gap:20px;margin-bottom:10px">' +
-                    '<div style="text-align:center"><div style="font-size:22px;font-weight:bold">' + result.count + '</div><div style="font-size:10px;color:#aaa">תכניות</div></div>' +
-                    '<div style="text-align:center"><div style="font-size:22px;font-weight:bold;color:#4CAF50">' + result.totalUnits.toLocaleString() + '</div><div style="font-size:10px;color:#aaa">יח"ד תוספת</div></div>' +
-                    '</div>' +
-                    (statusHtml ? '<div style="border-top:1px solid #333;padding-top:6px;margin-bottom:6px"><div style="font-size:11px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') +
-                    (topPlansHtml ? '<div style="border-top:1px solid #333;padding-top:6px"><div style="font-size:11px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topPlansHtml + '</div>' : '') +
-                    '</div>';
-                L.popup({ maxWidth: 350, className: 'plan-popup' })
-                    .setLatLng(center)
-                    .setContent(popupHtml)
-                    .openOn(map);
+                // Show result as Leaflet popup
+                try {
+                    const center = ref.polygon ? ref.polygon.getBounds().getCenter() : ref.points[Math.floor(ref.points.length/2)];
+                    const popupHtml = '<div style="direction:rtl;min-width:250px">' +
+                        '<h3 style="color:#e94560;margin:0 0 8px;font-size:14px">📍 סיכום אזור נבחר</h3>' +
+                        '<div style="display:flex;gap:20px;margin-bottom:10px">' +
+                        '<div style="text-align:center"><div style="font-size:22px;font-weight:bold">' + result.count + '</div><div style="font-size:10px;color:#aaa">תכניות</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:22px;font-weight:bold;color:#4CAF50">' + result.totalUnits.toLocaleString() + '</div><div style="font-size:10px;color:#aaa">יח"ד תוספת</div></div></div>' +
+                        Object.entries(byStatus).sort((a,b) => b[1]-a[1]).map(([st,cnt]) =>
+                            '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>'
+                        ).join('') +
+                        '</div>';
+                    L.popup({ maxWidth: 350, className: 'plan-popup', autoClose: false, closeOnClick: false })
+                        .setLatLng(center)
+                        .setContent(popupHtml)
+                        .openOn(map);
+                } catch(err) {
+                    window.alert('שגיאה בתצוגת תוצאות: ' + err.message + '\n\nנמצאו ' + result.count + ' תכניות, ' + result.totalUnits + ' יח"ד');
+                }
 
-                // Also set React state as backup
                 setAreaSelectResult(result);
 
                 map.getContainer().classList.remove('measuring');
