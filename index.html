@@ -445,6 +445,14 @@
             text-overflow: ellipsis;
         }
 
+        .plan-search-item-summary {
+            font-size: 11px;
+            color: #a0a0c0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .plan-search-item-num {
             font-size: 11px;
             color: #6a6a8a;
@@ -1288,6 +1296,8 @@
         }
         .measure-tooltip::before { display: none; }
         .leaflet-tooltip.measure-tooltip { background: rgba(15, 15, 30, 0.9); border: 1px solid #4a69d1; }
+        .leaflet-tooltip.heatmap-tip { background: rgba(15, 15, 30, 0.93); border: 1px solid #e94560; color: #eee; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .leaflet-tooltip.heatmap-tip::before { border-top-color: #e94560; }
 
         /* Crosshair cursor when measuring */
         #map.measuring,
@@ -1814,6 +1824,7 @@
                 return initial;
             });
             const [opacity, setOpacity] = useState(0.85);
+            const [basemapOpacity, setBasemapOpacity] = useState(1);
             const [basemap, setBasemap] = useState('cartoLight');
             const [loading, setLoading] = useState(true);
             const [dataLoaded, setDataLoaded] = useState(false);
@@ -1899,6 +1910,8 @@
                         const center = bounds.getCenter();
                         index.push({
                             n: p.plan_name || '',
+                            h: p.plan_name_he || '',
+                            s: p.plan_summary || '',
                             t: (p.plan_name_he || '') + ' ' + (p.plan_summary || ''),
                             c: [center.lat, center.lng]
                         });
@@ -2130,11 +2143,19 @@
                 if (bm.url) {
                     baseTileRef.current = L.tileLayer(bm.url, {
                         attribution: bm.attribution,
-                        maxZoom: 22
+                        maxZoom: 22,
+                        opacity: basemapOpacity
                     }).addTo(map);
                     baseTileRef.current.bringToBack();
                 }
             }, [basemap]);
+
+            // Update basemap opacity without recreating layer
+            useEffect(() => {
+                if (baseTileRef.current) {
+                    baseTileRef.current.setOpacity(basemapOpacity);
+                }
+            }, [basemapOpacity]);
 
             // Keep refs in sync
             useEffect(() => { layersRef.current = layers; updateHash(); }, [layers]);
@@ -3084,7 +3105,7 @@
                 geoLayersRef.current.minahak = minahakLayers;
 
                 // --- Plans layer ---
-                if (layers['plans'] && gd.plans) {
+                if (layers['plans'] && gd.plans && !showHeatMap) {
                     const zoom = map.getZoom();
                     // Auto-wrap text at ~20 chars (QGIS autoWrapLength=20)
                     function autoWrap(txt, maxLen) {
@@ -3174,7 +3195,8 @@
                         style: f => {
                             const status = normalizeStatus(f.properties.status_mavat || '');
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
-                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: opacity * 0.3, dashArray: '4,2' };
+                            const isSatellite = basemap === 'satellite';
+                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * 0.3, dashArray: '4,2' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -3224,12 +3246,14 @@
                                 bindPopupEvents(popup, allFeatures, 0);
                             });
                             layer.on('mouseover', () => {
-                                layer.setStyle({ weight: 3, fillOpacity: opacity * 0.5 });
+                                const isSat = basemap === 'satellite';
+                                layer.setStyle({ weight: 3, fillOpacity: isSat ? 1 : opacity * 0.5 });
                             });
                             layer.on('mouseout', () => {
                                 const status = normalizeStatus(f.properties.status_mavat || '');
                                 const fillColor = STATUS_COLORS[status] || '#f0e0d0';
-                                layer.setStyle({ weight: 1.5, fillOpacity: opacity * 0.3, fillColor: fillColor });
+                                const isSat = basemap === 'satellite';
+                                layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * 0.3, fillColor: fillColor });
                             });
                             // Labels: zoom-dependent with fit-in-polygon check
                             const shortName = f.properties.plan_summary || '';
@@ -3611,31 +3635,87 @@
                     geoLayersRef.current.stations = stationsLayer;
                 }
 
-                // Heat map layer
+                // Heat map layer — colored polygons by density (total units / dunam)
                 if (showHeatMap && gd.plans) {
-                    const heatPoints = [];
-                    gd.plans.features.forEach(f => {
-                        const add = parseFloat(f.properties.units_add) || 0;
-                        const st = (f.properties.status_mavat || '').trim();
-                        const minahak = (f.properties.minahak || '').trim();
-                        if (add <= 0 || !f.geometry || st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return;
-                        if (minahak === 'גבעת המטוס') return; // exclude from heat map
-                        try {
-                            const bounds = L.geoJSON(f).getBounds();
-                            const center = bounds.getCenter();
-                            heatPoints.push([center.lat, center.lng, add]);
-                        } catch(e) {}
-                    });
-                    if (heatPoints.length > 0) {
-                        geoLayersRef.current.heatmap = L.heatLayer(heatPoints, {
-                            radius: 35, blur: 25, maxZoom: 17, max: 800,
-                            gradient: { 0.1: '#ffffb2', 0.3: '#fecc5c', 0.5: '#fd8d3c', 0.7: '#f03b20', 0.9: '#bd0026', 1: '#800026' }
-                        }).addTo(map);
+                    // Helper: compute polygon area in sq meters using geodesic formula
+                    function geojsonAreaSqm(geom) {
+                        const toRad = d => d * Math.PI / 180;
+                        function ringArea(coords) {
+                            let area = 0;
+                            for (let i = 0; i < coords.length - 1; i++) {
+                                const p1 = coords[i], p2 = coords[i + 1];
+                                area += toRad(p2[0] - p1[0]) * (2 + Math.sin(toRad(p1[1])) + Math.sin(toRad(p2[1])));
+                            }
+                            return Math.abs(area * 6378137 * 6378137 / 2);
+                        }
+                        if (geom.type === 'Polygon') return ringArea(geom.coordinates[0]);
+                        if (geom.type === 'MultiPolygon') return geom.coordinates.reduce((s, p) => s + ringArea(p[0]), 0);
+                        return 0;
                     }
+                    // Color scale: density → color
+                    const densityColors = [
+                        [0,   '#fee5d9'],
+                        [5,   '#fcbba1'],
+                        [15,  '#fc9272'],
+                        [30,  '#fb6a4a'],
+                        [50,  '#ef3b2c'],
+                        [80,  '#cb181d'],
+                        [120, '#99000d'],
+                        [200, '#67000d']
+                    ];
+                    function densityToColor(d) {
+                        for (let i = densityColors.length - 1; i >= 0; i--) {
+                            if (d >= densityColors[i][0]) return densityColors[i][1];
+                        }
+                        return densityColors[0][1];
+                    }
+                    const heatLayer = L.geoJSON(gd.plans, {
+                        pane: 'plansPane',
+                        filter: f => {
+                            const total = parseFloat(f.properties.units_total) || 0;
+                            const st = normalizeStatus((f.properties.status_mavat || '').trim());
+                            const minahak = (f.properties.minahak || '').trim();
+                            if (total <= 0 || !f.geometry) return false;
+                            if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
+                            if (minahak === 'גבעת המטוס') return false;
+                            return true;
+                        },
+                        style: f => {
+                            const total = parseFloat(f.properties.units_total) || 0;
+                            const areaSqm = geojsonAreaSqm(f.geometry);
+                            const areaDunam = areaSqm / 1000;
+                            const density = areaDunam > 0 ? total / areaDunam : 0;
+                            return {
+                                fillColor: densityToColor(density),
+                                fillOpacity: 0.7,
+                                color: '#333',
+                                weight: 0.5
+                            };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const total = parseFloat(f.properties.units_total) || 0;
+                            const areaSqm = geojsonAreaSqm(f.geometry);
+                            const areaDunam = areaSqm / 1000;
+                            const density = areaDunam > 0 ? (total / areaDunam).toFixed(1) : '—';
+                            const tip = `<b>${density}</b> יח"ד/דונם`;
+                            layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
+                            // Click opens plan popup
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current) return;
+                                const mapped = mapPlanProps(f.properties);
+                                const content = buildPlanPopup(mapped, { properties: mapped }, null);
+                                L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                    .setLatLng(e.latlng)
+                                    .setContent(content)
+                                    .openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.heatmap = heatLayer;
                 }
 
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap]);
+            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -3939,6 +4019,7 @@
                                                 onClick={() => handleSearchSelect(plan)}
                                             >
                                                 <div className="plan-search-item-name">{plan.h}</div>
+                                                {plan.s && <div className="plan-search-item-summary">{plan.s}</div>}
                                                 <div className="plan-search-item-num">{plan.n}</div>
                                             </div>
                                         )) : (
@@ -4205,6 +4286,23 @@
                                         <option key={key} value={key}>{bm.name}</option>
                                     ))}
                                 </select>
+                                <div style={{marginTop: '8px'}}>
+                                    <div className="opacity-label" style={{marginBottom: '4px'}}><span>שקיפות מפת רקע</span></div>
+                                    <input
+                                        className="opacity-slider"
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={basemapOpacity}
+                                        onChange={(e) => setBasemapOpacity(parseFloat(e.target.value))}
+                                    />
+                                    <div className="opacity-label">
+                                        <span>שקוף</span>
+                                        <span>{Math.round(basemapOpacity * 100)}%</span>
+                                        <span>אטום</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -4411,10 +4509,10 @@
                                     setShowHeatMap(prev => !prev);
                                     setActiveDropdown(null);
                                 }}
-                                title="מפת חום"
+                                title="צפיפות"
                             >
                                 <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="10" r="6" opacity="0.5" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="5" opacity="0.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="5.5" opacity="0.45" fill="currentColor" stroke="none"/><circle cx="10" cy="11" r="2" opacity="0.9" fill="currentColor" stroke="none"/></svg></span>
-                                <span className="toolbar-label">חום</span>
+                                <span className="toolbar-label">צפיפות</span>
                             </button>
 
                             <div className="toolbar-sep" />
@@ -4651,15 +4749,15 @@
                                 borderRadius:10, padding:'12px 16px', direction:'rtl',
                                 border:'1px solid #2a2a4a', maxWidth:220
                             }}>
-                                <div style={{color:'#e94560',fontWeight:'bold',fontSize:13,marginBottom:6}}>מפת חום — תוספת יח"ד</div>
-                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>צפיפות תוספת יחידות דיור לפי תכניות פעילות</div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <span style={{color:'#aaa',fontSize:10}}>נמוך</span>
-                                    <div style={{
-                                        flex:1, height:12, borderRadius:6,
-                                        background:'linear-gradient(to left, #800026, #bd0026, #f03b20, #fd8d3c, #fecc5c, #ffffb2)'
-                                    }}></div>
-                                    <span style={{color:'#aaa',fontSize:10}}>גבוה</span>
+                                <div style={{color:'#e94560',fontWeight:'bold',fontSize:13,marginBottom:6}}>צפיפות — סה"כ יח"ד/דונם</div>
+                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על תכנית לפרטים</div>
+                                <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
+                                    {[[0,'#fee5d9','0'],[5,'#fcbba1','5'],[15,'#fc9272','15'],[30,'#fb6a4a','30'],[50,'#ef3b2c','50'],[80,'#cb181d','80'],[120,'#99000d','120'],[200,'#67000d','200+']].map(([v,c,l]) =>
+                                        <div key={l} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                                            <div style={{width:20,height:12,borderRadius:3,background:c}}></div>
+                                            <span style={{color:'#aaa',fontSize:9}}>{l}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
