@@ -1846,6 +1846,7 @@
             const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
             const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
             const [minahakReport, setMinahakReport] = useState(null);
+            const [cellReport, setCellReport] = useState(null); // {minahak, statusKey, statusLabel, plans}
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
@@ -2813,9 +2814,11 @@
                         return null;
                     }
                     const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {} });
+                    const plansByCell = {}; // { minahak: { statusKey: [planInfo, ...] } }
                     minahakOrder.forEach(m => {
                         byMinahak[m] = emptyRow();
                         bySub[m] = {};
+                        plansByCell[m] = {};
                     });
 
                     // Plans (from Google Sheets CSV)
@@ -2843,11 +2846,18 @@
                             const stageRaw = (p.stage || p.Stage || '').trim();
                             // Normalize double-space variant
                             const stageVal = stageRaw.replace(/\s+/g, ' ');
+                            const planInfo = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: stageVal };
                             // If approved and has a stage value, use stage instead of status
                             if (grp === 'approved' && stageVal) {
                                 byMinahak[m].byStatus[stageVal] = (byMinahak[m].byStatus[stageVal] || 0) + addVal;
+                                if (!plansByCell[m]) plansByCell[m] = {};
+                                if (!plansByCell[m][stageVal]) plansByCell[m][stageVal] = [];
+                                plansByCell[m][stageVal].push(planInfo);
                             } else if (grp) {
                                 byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
+                                if (!plansByCell[m]) plansByCell[m] = {};
+                                if (!plansByCell[m][grp]) plansByCell[m][grp] = [];
+                                plansByCell[m][grp].push(planInfo);
                             }
                         }
 
@@ -2925,7 +2935,7 @@
                         if (!minahaks.includes(m) && m) minahaks.push(m);
                     });
 
-                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS });
+                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, plansByCell });
                     setUnitsLoading(false);
                 });
             }, [unitsData]);
@@ -5145,17 +5155,40 @@
                                                 )}
 
                                                 {/* Sub-rows by status group */}
-                                                {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => (
+                                                {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => {
+                                                    const permitKeys = ['ו-גמר בנייה','ה-בבנייה','ד-היתר בנייה','ג-רישוי בתהליך'];
+                                                    const isApproved = g.key === 'approved';
+                                                    return (
                                                     <tr key={g.key} className="units-sub-row">
                                                         <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
-                                                        {unitsData.minahaks.map(m => (
-                                                            <td key={m}>{(unitsData.byMinahak[m].byStatus[g.key] || 0).toLocaleString()}</td>
-                                                        ))}
+                                                        {unitsData.minahaks.map(m => {
+                                                            let val = unitsData.byMinahak[m].byStatus[g.key] || 0;
+                                                            if (isApproved) {
+                                                                const permitTotal = permitKeys.reduce((s, k) => s + (unitsData.byMinahak[m].byStatus[k] || 0), 0);
+                                                                val = val - permitTotal;
+                                                            }
+                                                            const plans = unitsData.plansByCell && unitsData.plansByCell[m] && unitsData.plansByCell[m][g.key];
+                                                            return (
+                                                            <td key={m}
+                                                                style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                onClick={() => {
+                                                                    if (plans && plans.length > 0) setCellReport({minahak: m, statusKey: g.key, statusLabel: g.label, plans});
+                                                                }}
+                                                                title={plans && plans.length > 0 ? `לחץ לצפייה ב-${plans.length} תכניות` : ''}
+                                                            >{val.toLocaleString()}</td>);
+                                                        })}
                                                         <td style={{background: '#12122a'}}>
-                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0).toLocaleString()}
+                                                            {(() => {
+                                                                let total = Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0);
+                                                                if (isApproved) {
+                                                                    const permitTotal = Object.values(unitsData.byMinahak).reduce((s, d) => permitKeys.reduce((ps, k) => ps + (d.byStatus[k] || 0), 0) + s, 0);
+                                                                    total = total - permitTotal;
+                                                                }
+                                                                return total.toLocaleString();
+                                                            })()}
                                                         </td>
-                                                    </tr>
-                                                ))}
+                                                    </tr>);
+                                                })}
 
                                                 {/* סה"כ */}
                                                 <tr className="total-row">
@@ -5219,9 +5252,36 @@
                                     const tamaCount = tamaFeatures.length;
                                     const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.units_add) || 0) - (parseFloat(a.properties.units_add) || 0)).slice(0, 10);
+                                    const STATUS_GROUPS = {
+                                        'אישור': 'אישור / מאושרת',
+                                        'מאושרת': 'אישור / מאושרת',
+                                        'תבע מאושרת': 'אישור / מאושרת',
+                                        'תבע - טרום אישור': 'אישור / מאושרת',
+                                        'תחילת תוקף': 'אישור / מאושרת',
+                                        'בהליך אישור': 'בהליך אישור',
+                                        'דיון בהתנגדויות ותיקונים': 'התנגדויות',
+                                        'הפקדה להתנגדויות/השגות': 'הפקדה',
+                                        'במילוי תנאים להפקדה': 'במילוי תנאים להפקדה',
+                                        'נפתח תיק למתכנן': 'פתיחת תיק / בבדיקה',
+                                        'נפתח תיק תב"ע': 'פתיחת תיק / בבדיקה',
+                                        'בבדיקה תכנונית': 'פתיחת תיק / בבדיקה',
+                                        'תכנית עומדת בתנאי סף': 'פתיחת תיק / בבדיקה',
+                                        'נקלטה מקובץ מבאת': 'פתיחת תיק / בבדיקה',
+                                        'בבדיקת תנאי סף': 'פתיחת תיק / בבדיקה',
+                                    };
+                                    const GROUP_COLORS = {
+                                        'אישור / מאושרת': '#50d25a',
+                                        'בהליך אישור': '#50d25a',
+                                        'התנגדויות': '#fafa3c',
+                                        'הפקדה': '#f56e05',
+                                        'במילוי תנאים להפקדה': '#f56e05',
+                                        'פתיחת תיק / בבדיקה': '#eb0000',
+                                    };
+                                    const GROUP_ORDER = ['אישור / מאושרת','בהליך אישור','התנגדויות','הפקדה','במילוי תנאים להפקדה','פתיחת תיק / בבדיקה'];
                                     const statusCounts = {};
                                     plans.forEach(f => {
-                                        const s = normalizeStatus((f.properties.status_mavat || '').trim()) || 'לא ידוע';
+                                        const raw = normalizeStatus((f.properties.status_mavat || '').trim()) || 'לא ידוע';
+                                        const s = STATUS_GROUPS[raw] || raw;
                                         statusCounts[s] = (statusCounts[s] || 0) + 1;
                                     });
                                     const maxCount = Math.max(...Object.values(statusCounts), 1);
@@ -5281,13 +5341,13 @@
                                                 </tbody>
                                             </table>
                                             <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 8px'}}>פילוח לפי סטטוס</h3>
-                                            {Object.entries(statusCounts).sort((a,b) => b[1]-a[1]).map(([s, c]) => (
+                                            {[...GROUP_ORDER.filter(g => statusCounts[g]), ...Object.keys(statusCounts).filter(s => !GROUP_ORDER.includes(s))].map(s => (
                                                 <div key={s} style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-                                                    <span style={{fontSize:10,color:'#aaa',minWidth:120,textAlign:'right'}}>{s}</span>
+                                                    <span style={{fontSize:10,color:'#aaa',minWidth:140,textAlign:'right'}}>{s}</span>
                                                     <div style={{flex:1,height:14,background:'#1a1a2e',borderRadius:3}}>
-                                                        <div style={{width:(c/maxCount*100)+'%',height:'100%',background:'#e94560',borderRadius:3}}></div>
+                                                        <div style={{width:(statusCounts[s]/maxCount*100)+'%',height:'100%',background:GROUP_COLORS[s]||'#e94560',borderRadius:3}}></div>
                                                     </div>
-                                                    <span style={{fontSize:10,color:'#e0e0e0',minWidth:20}}>{c}</span>
+                                                    <span style={{fontSize:10,color:'#e0e0e0',minWidth:20}}>{statusCounts[s]}</span>
                                                 </div>
                                             ))}
                                         </>
