@@ -2226,8 +2226,8 @@
                 const div = document.createElement('div');
                 div.id = 'area-select-result';
                 div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:300px;max-width:450px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
-                div.innerHTML = '<button onclick="document.getElementById(\'area-select-result\').remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
-                    '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">\u{1F4CD} סיכום אזור נבחר</h3>' +
+                div.innerHTML = '<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '<h3 style="color:#e94560;margin:0 0 12px;font-size:16px">סיכום אזור נבחר</h3>' +
                     '<div style="display:flex;gap:24px;margin-bottom:14px">' +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
