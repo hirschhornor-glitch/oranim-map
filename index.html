@@ -5433,28 +5433,41 @@
                                             <td></td>
                                         </tr></tfoot>
                                     </table>
-                                    <button onClick={() => {
-                                        const printContent = document.querySelector('.cell-report-content');
-                                        if (!printContent) return;
-                                        const printWin = window.open('', '_blank');
-                                        printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח תכניות</title>');
-                                        printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}tfoot td{border-top:2px solid #333;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}</style>');
-                                        printWin.document.write('</head><body>');
-                                        printWin.document.write('<div class="header"><h2>דוח תכניות — ' + cellReport.statusLabel + '</h2>');
-                                        printWin.document.write('<p>' + cellReport.minahak + ' | ' + cellReport.plans.length + ' תכניות | ' + cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString() + ' יח"ד</p></div>');
-                                        printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תוספת יח"ד</th><th>סטטוס</th></tr></thead><tbody>');
-                                        [...cellReport.plans].sort((a,b) => b.units_add - a.units_add).forEach((p, i) => {
-                                            printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + p.units_add.toLocaleString() + '</td><td>' + (p.stage||p.status_mavat) + '</td></tr>');
-                                        });
-                                        const total = cellReport.plans.reduce((s,p) => s + p.units_add, 0);
-                                        printWin.document.write('</tbody><tfoot><tr><td colspan="3">סה"כ</td><td>' + total.toLocaleString() + '</td><td></td></tr></tfoot></table>');
-                                        printWin.document.write('</body></html>');
-                                        printWin.document.close();
-                                        printWin.focus();
-                                        setTimeout(() => printWin.print(), 300);
-                                    }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
-                                        &#128424; הדפסה / שמירה
-                                    </button>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const printWin = window.open('', '_blank');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח תכניות</title>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}tfoot td{border-top:2px solid #333;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('</head><body>');
+                                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF (בחר יעד: שמור כ-PDF)</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('</div>');
+                                            printWin.document.write('<div class="header"><h2>דוח תכניות — ' + cellReport.statusLabel + '</h2>');
+                                            printWin.document.write('<p>' + cellReport.minahak + ' | ' + cellReport.plans.length + ' תכניות | ' + cellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString() + ' יח"ד</p></div>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תוספת יח"ד</th><th>סטטוס</th></tr></thead><tbody>');
+                                            const sorted = [...cellReport.plans].sort((a,b) => b.units_add - a.units_add);
+                                            sorted.forEach((p, i) => {
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + p.units_add.toLocaleString() + '</td><td>' + (p.stage||p.status_mavat) + '</td></tr>');
+                                            });
+                                            const total = cellReport.plans.reduce((s,p) => s + p.units_add, 0);
+                                            printWin.document.write('</tbody><tfoot><tr><td colspan="3">סה"כ</td><td>' + total.toLocaleString() + '</td><td></td></tr></tfoot></table>');
+                                            // CSV download script
+                                            const csvRows = ['"#","מספר תכנית","שם תכנית","תוספת יח\\"ד","סטטוס"'];
+                                            sorted.forEach((p, i) => {
+                                                csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + p.units_add + '","' + (p.stage||p.status_mavat||'').replace(/"/g,'""') + '"');
+                                            });
+                                            csvRows.push('"","סה\\"כ","","' + total + '",""');
+                                            const csvContent = csvRows.join('\\n');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="דוח_תכניות_' + (cellReport.statusLabel||'').replace(/[\s\/]/g,'_') + '.csv";a.click()});<\/script>');
+                                            printWin.document.write('</body></html>');
+                                            printWin.document.close();
+                                            printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
