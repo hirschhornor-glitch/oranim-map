@@ -2815,10 +2815,12 @@
                     }
                     const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {} });
                     const plansByCell = {}; // { minahak: { statusKey: [planInfo, ...] } }
+                    const plansBySub = {}; // { minahak: { sub: { status: [planInfo, ...] } } }
                     minahakOrder.forEach(m => {
                         byMinahak[m] = emptyRow();
                         bySub[m] = {};
                         plansByCell[m] = {};
+                        plansBySub[m] = {};
                     });
 
                     // Plans (from Google Sheets CSV)
@@ -2874,6 +2876,14 @@
                         }
                         if (!isRejected && addVal > 0 && status) {
                             bySub[m][sub].byStatus[status] = (bySub[m][sub].byStatus[status] || 0) + addVal;
+                            // Collect plan details per sub-neighborhood + status
+                            if (!plansBySub[m]) plansBySub[m] = {};
+                            if (!plansBySub[m][sub]) plansBySub[m][sub] = {};
+                            if (!plansBySub[m][sub][status]) plansBySub[m][sub][status] = [];
+                            const planKey = p.plan_name || '';
+                            if (!plansBySub[m][sub][status].some(x => x.plan_name === planKey)) {
+                                plansBySub[m][sub][status].push({ plan_name: planKey, plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: (p.stage || p.Stage || '').trim().replace(/\s+/g, ' ') });
+                            }
                         }
                     });
 
@@ -2935,7 +2945,7 @@
                         if (!minahaks.includes(m) && m) minahaks.push(m);
                     });
 
-                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, plansByCell });
+                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, plansByCell, plansBySub });
                     setUnitsLoading(false);
                 });
             }, [unitsData]);
@@ -5054,12 +5064,28 @@
                                                             }
                                                             return bs[g.key] || 0;
                                                         };
+                                                        const getSubPlans = (sub) => {
+                                                            const subPlans = unitsData.plansBySub && unitsData.plansBySub[unitsDrilldown] && unitsData.plansBySub[unitsDrilldown][sub];
+                                                            if (!subPlans) return [];
+                                                            if (g.match && g.match.length > 0) {
+                                                                return g.match.flatMap(st => subPlans[st] || []);
+                                                            }
+                                                            return subPlans[g.key] || [];
+                                                        };
                                                         const total = subs.reduce((sum, s) => sum + getSubVal(s), 0);
                                                         if (total === 0) return null;
                                                         return (
                                                             <tr key={g.key} className="units-sub-row">
                                                                 <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
-                                                                {subs.map(s => <td key={s}>{getSubVal(s).toLocaleString()}</td>)}
+                                                                {subs.map(s => {
+                                                                    const plans = getSubPlans(s);
+                                                                    return (
+                                                                    <td key={s}
+                                                                        style={plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                        onClick={() => { if (plans.length > 0) setCellReport({minahak: s, statusKey: g.key, statusLabel: g.label, plans}); }}
+                                                                        title={plans.length > 0 ? `לחץ לצפייה ב-${plans.length} תכניות` : ''}
+                                                                    >{getSubVal(s).toLocaleString()}</td>);
+                                                                })}
                                                                 <td style={{background: '#12122a'}}>
                                                                     {total.toLocaleString()}
                                                                 </td>
