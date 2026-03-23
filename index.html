@@ -2278,6 +2278,7 @@
 
                 function onContextMenu(e) {
                     try { if (e.originalEvent) e.originalEvent.preventDefault(); } catch(ex) {}
+                    window.alert('בחירת אזור: ' + ref.points.length + ' נקודות');
                     if (ref.points.length < 3 || ref.finishing) return;
                     ref.finishing = true;
 
