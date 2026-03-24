@@ -32,8 +32,9 @@ def get_github_file(path):
     r = requests.get(url, headers=HEADERS)
     if r.status_code == 200:
         data = r.json()
-        content = base64.b64decode(data["content"]).decode("utf-8")
+        content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8")
         return data["sha"], content
+    print(f"get_github_file failed: {r.status_code} {r.text[:100]}")
     return None, None
 
 def upload_github_file(path, content, sha, message):
