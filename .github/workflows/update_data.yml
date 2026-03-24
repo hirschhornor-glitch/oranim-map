@@ -22,6 +22,6 @@ jobs:
 
       - name: Run update script
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
         run: python scripts/update_plans.py
