@@ -53,6 +53,16 @@ def upload_github_file(path, content, sha, message):
     r = requests.put(url, headers=HEADERS, json=payload)
     return r.status_code in (200, 201)
 
+def get_israel_time():
+    """מחזיר את השעה הנוכחית בשעון ישראל (naive datetime)"""
+    try:
+        import zoneinfo
+        tz_il = zoneinfo.ZoneInfo("Asia/Jerusalem")
+    except ImportError:
+        import pytz
+        tz_il = pytz.timezone("Asia/Jerusalem")
+    return datetime.now(tz_il).replace(tzinfo=None)
+
 def load_last_update():
     _, content = get_github_file(TIMESTAMP_FILE)
     if content:
@@ -64,7 +74,7 @@ def load_last_update():
 
 def save_last_update():
     sha, _ = get_github_file(TIMESTAMP_FILE)
-    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
     upload_github_file(TIMESTAMP_FILE, now_str, sha,
                        f"update timestamp {now_str}")
 
@@ -126,7 +136,7 @@ def update_plans():
     geojson_str = json.dumps(geojson_data, ensure_ascii=False)
     success = upload_github_file(
         "data/plans.geojson", geojson_str, sha,
-        f"update plans {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
+        f"update plans {get_israel_time().strftime('%Y-%m-%d %H:%M')}"
     )
 
     if success:
