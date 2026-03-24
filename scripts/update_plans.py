@@ -130,4 +130,10 @@ def update_plans():
     )
 
     if success:
-        print("
+        print("✓ plans.geojson עודכן")
+        save_last_update()
+        write_summary(updated, changed_rows)
+    else:
+        print("✗ שגיאה בעדכון")
+
+update_plans()
