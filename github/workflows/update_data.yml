@@ -1,0 +1,27 @@
+name: Update Plans Data
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # כל יום בשעה 21:00 UTC (23:00 ישראל)
+  workflow_dispatch:        # הפעלה ידנית
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth requests
+
+      - name: Run update script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+        run: python scripts/update_plans.py
