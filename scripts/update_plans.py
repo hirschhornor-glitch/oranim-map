@@ -29,22 +29,17 @@ def get_sheet():
 
 def get_github_file(path):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
-    print(f"Fetching: {url}")
     r = requests.get(url, headers=HEADERS)
-    print(f"Status: {r.status_code}")
     if r.status_code == 200:
         data = r.json()
         if "content" in data and data["content"]:
             content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8")
         elif "download_url" in data:
-            print("קובץ גדול — משתמש ב-download_url")
             r2 = requests.get(data["download_url"])
             content = r2.text
         else:
-            print("לא נמצא content")
             return None, None
         return data["sha"], content
-    print(f"get_github_file failed: {r.status_code} {r.text[:100]}")
     return None, None
 
 def upload_github_file(path, content, sha, message):
@@ -73,6 +68,19 @@ def save_last_update():
     upload_github_file(TIMESTAMP_FILE, now_str, sha,
                        f"update timestamp {now_str}")
 
+def write_summary(updated, changed_rows):
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+    with open(summary_file, "w", encoding="utf-8") as f:
+        if updated > 0:
+            f.write(f"## ✅ עודכנו {updated} תכניות\n\n")
+            for plan_name, row in changed_rows.items():
+                plan_name_he = row.get("plan_name_he", "")
+                f.write(f"- **{plan_name}** {plan_name_he}\n")
+        else:
+            f.write("## ℹ️ אין שינויים מאז העדכון האחרון\n")
+
 def update_plans():
     last_update = load_last_update()
     print(f"עדכון אחרון: {last_update}")
@@ -94,6 +102,7 @@ def update_plans():
 
     if not changed_rows:
         print("אין שינויים מאז העדכון האחרון")
+        write_summary(0, {})
         return
 
     print(f"נמצאו {len(changed_rows)} שורות שהשתנו")
@@ -121,9 +130,4 @@ def update_plans():
     )
 
     if success:
-        print("✓ plans.geojson עודכן")
-        save_last_update()
-    else:
-        print("✗ שגיאה בעדכון")
-
-update_plans()
+        print("
