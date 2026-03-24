@@ -1723,6 +1723,25 @@
         };
         function normalizePlanType(s) { return PLAN_TYPE_NORMALIZE[s] || s; }
 
+        // Filter status group lookup (used by advanced filter)
+        const FILTER_STATUS_MAP = {
+            'אישור': 'approved', 'מאושרת': 'approved', 'תבע מאושרת': 'approved', 'תחילת תוקף': 'approved',
+            'בהליך אישור': 'in_approval', 'תבע - טרום אישור': 'in_approval',
+            'דיון בהתנגדויות ותיקונים': 'objections',
+            'הפקדה להתנגדויות/השגות': 'deposit',
+            'במילוי תנאים להפקדה': 'conditions', 'תכנית עומדת בתנאי סף': 'conditions',
+            'נפתח תיק למתכנן': 'open', 'נפתח תיק תבע': 'open', 'בבדיקה תכנונית': 'open', 'נקלטה מקובץ מבאת': 'open',
+        };
+        function getFilterStatusGroup(status) {
+            if (FILTER_STATUS_MAP[status]) return FILTER_STATUS_MAP[status];
+            const constructionKeys = ['ו-גמר בנייה','ה-בבנייה','ד-היתר בנייה','ג-רישוי בתהליך'];
+            if (constructionKeys.includes(status)) return status;
+            // Handle double-space variant
+            const normalized = status.replace(/\s+/g, ' ');
+            if (constructionKeys.includes(normalized)) return normalized;
+            return null;
+        }
+
         const STATUS_COLORS = {
             'אישור': '#50d25a',
             'מאושרת': '#50d25a',
@@ -1895,6 +1914,37 @@
                 { key: 'ד-היתר בנייה', label: 'היתר בנייה' },
                 { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך' },
             ];
+
+            // Auto-enable relevant status/type categories when free text search matches plans (debounced)
+            useEffect(() => {
+                const q = filters.freeText;
+                if (!q || q.length < 2) return;
+                const timer = setTimeout(() => {
+                    const gd = geoDataRef.current;
+                    if (!gd.plans) return;
+                    const ql = q.toLowerCase();
+                    const newStatuses = new Set(filters.statuses);
+                    const newTypes = new Set(filters.planTypes);
+                    let changed = false;
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties;
+                        const searchable = [p.plan_summary || '', p.plan_name || '', p.architect || '', p.developer || ''].join(' ').toLowerCase();
+                        if (!searchable.includes(ql)) return;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        const sg = getFilterStatusGroup(s);
+                        if (sg && !newStatuses.has(sg)) { newStatuses.add(sg); changed = true; }
+                        const stageVal = (p.stage || '').trim();
+                        const sgStage = getFilterStatusGroup(stageVal);
+                        if (sgStage && !newStatuses.has(sgStage)) { newStatuses.add(sgStage); changed = true; }
+                        const pt = normalizePlanType(p.plan_type || '');
+                        if (pt && pt !== 'תשתיות' && !newTypes.has(pt)) { newTypes.add(pt); changed = true; }
+                    });
+                    if (changed) {
+                        setFilters(prev => ({...prev, statuses: [...newStatuses], planTypes: [...newTypes]}));
+                    }
+                }, 500);
+                return () => clearTimeout(timer);
+            }, [filters.freeText]);
 
             // Build plan search index from loaded GeoJSON data
             useEffect(() => {
@@ -3127,23 +3177,6 @@
                     // Zoom 16: show labels for all plans with 100+ units_add
                     const z16MinUnits = 100;
 
-                    // Filter status group lookup
-                    const FILTER_STATUS_MAP = {
-                        'אישור': 'approved', 'מאושרת': 'approved', 'תבע מאושרת': 'approved', 'תחילת תוקף': 'approved',
-                        'בהליך אישור': 'in_approval', 'תבע - טרום אישור': 'in_approval',
-                        'דיון בהתנגדויות ותיקונים': 'objections',
-                        'הפקדה להתנגדויות/השגות': 'deposit',
-                        'במילוי תנאים להפקדה': 'conditions', 'תכנית עומדת בתנאי סף': 'conditions',
-                        'נפתח תיק למתכנן': 'open', 'נפתח תיק תבע': 'open', 'בבדיקה תכנונית': 'open', 'נקלטה מקובץ מבאת': 'open',
-                    };
-                    function getFilterStatusGroup(status) {
-                        if (FILTER_STATUS_MAP[status]) return FILTER_STATUS_MAP[status];
-                        // Check construction-phase statuses by key directly
-                        const constructionKeys = ['ו-גמר בנייה','ה-בבנייה','ד-היתר בנייה','ג-רישוי בתהליך'];
-                        if (constructionKeys.includes(status)) return status;
-                        return null;
-                    }
-
                     // Track filtered count
                     let filteredPlanCount = 0;
                     const totalPlanCount = gd.plans.features.filter(f => {
@@ -3173,10 +3206,12 @@
                                 const pt = normalizePlanType(f.properties.plan_type || '');
                                 if (!af.planTypes.includes(pt)) return false;
                             }
-                            // Status filter
+                            // Status filter (check both status_mavat and stage field)
                             if (af.statuses.length > 0) {
                                 const sg = getFilterStatusGroup(s);
-                                if (!sg || !af.statuses.includes(sg)) return false;
+                                const stageVal = (f.properties.stage || '').trim();
+                                const sgStage = getFilterStatusGroup(stageVal);
+                                if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
                             }
                             // Free text search
                             if (af.freeText) {
@@ -4646,8 +4681,32 @@
                                     if (!gd.plans) return '';
                                     const hasFilter = filters.minUnits !== '' || filters.maxUnits !== '' || filters.planTypes.length > 0 || filters.statuses.length > 0 || filters.freeText;
                                     if (!hasFilter) return `סה"כ ${gd.plans.features.length} תכניות`;
-                                    const layer = geoLayersRef.current.plans;
-                                    const shown = layer ? (() => { let c = 0; layer.eachLayer(() => c++); return c; })() : 0;
+                                    // Compute count from data directly (not from stale map layer)
+                                    const excluded = ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'];
+                                    let shown = 0;
+                                    gd.plans.features.forEach(f => {
+                                        const p = f.properties;
+                                        const s = normalizeStatus((p.status_mavat || '').trim());
+                                        if (excluded.includes(s)) return;
+                                        if (normalizePlanType(p.plan_type || '') === 'תשתיות') return;
+                                        const af = filters;
+                                        const units = parseFloat(p.units_add) || 0;
+                                        if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return;
+                                        if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return;
+                                        if (af.planTypes.length > 0 && !af.planTypes.includes(normalizePlanType(p.plan_type || ''))) return;
+                                        if (af.statuses.length > 0) {
+                                            const sg = getFilterStatusGroup(s);
+                                            const stageVal = (p.stage || '').trim();
+                                            const sgStage = getFilterStatusGroup(stageVal);
+                                            if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return;
+                                        }
+                                        if (af.freeText) {
+                                            const q = af.freeText.toLowerCase();
+                                            const searchable = [p.plan_summary || '', p.plan_name || '', p.architect || '', p.developer || ''].join(' ').toLowerCase();
+                                            if (!searchable.includes(q)) return;
+                                        }
+                                        shown++;
+                                    });
                                     return `מוצגות ${shown} תכניות מתוך ${gd.plans.features.length}`;
                                 })()}
                             </div>
