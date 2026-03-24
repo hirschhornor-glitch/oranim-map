@@ -1973,6 +1973,9 @@
 
             const mapRef = useRef(null);
             const mapInstanceRef = useRef(null);
+            const viewHistoryRef = useRef([]); // stack of {lat, lng, zoom}
+            const isGoingBackRef = useRef(false); // flag to skip recording during back nav
+            const [viewHistoryLen, setViewHistoryLen] = useState(0);
             const geoDataRef = useRef({});
             const geoLayersRef = useRef({});
             const baseTileRef = useRef(null);
@@ -2077,6 +2080,21 @@
                 map.on('zoomend moveend', updateScale);
                 map.on('zoomend', () => setZoomLevel(map.getZoom()));
                 map.on('zoomend moveend', updateHash);
+                // ── View history for back navigation ──
+                const recordView = () => {
+                    if (isGoingBackRef.current) { isGoingBackRef.current = false; return; }
+                    const c = map.getCenter();
+                    const z = map.getZoom();
+                    const hist = viewHistoryRef.current;
+                    const last = hist.length > 0 ? hist[hist.length - 1] : null;
+                    if (last && Math.abs(last.lat - c.lat) < 0.0001 && Math.abs(last.lng - c.lng) < 0.0001 && last.zoom === z) return;
+                    hist.push({ lat: c.lat, lng: c.lng, zoom: z });
+                    if (hist.length > 50) hist.shift();
+                    setViewHistoryLen(hist.length);
+                };
+                map.on('moveend', recordView);
+                // Record initial view
+                viewHistoryRef.current.push({ lat: map.getCenter().lat, lng: map.getCenter().lng, zoom: map.getZoom() });
                 setTimeout(updateScale, 200);
 
                 mapInstanceRef.current = map;
@@ -4016,6 +4034,20 @@
                 mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM);
             };
 
+            const goBackView = () => {
+                const hist = viewHistoryRef.current;
+                if (hist.length <= 1) return;
+                hist.pop(); // remove current view
+                const prev = hist[hist.length - 1];
+                isGoingBackRef.current = true;
+                mapInstanceRef.current.setView([prev.lat, prev.lng], prev.zoom, {animate: false});
+                setViewHistoryLen(hist.length);
+            };
+
+            // Keep goBackView ref for stable access
+            const goBackViewRef = useRef(goBackView);
+            goBackViewRef.current = goBackView;
+
             // Plan search results
             const searchResults = planSearch.length >= 2
                 ? planIndex.filter(p =>
@@ -4441,6 +4473,18 @@
 
                         {/* ── Map Toolbar ── */}
                         <div className="map-toolbar">
+                            {/* חזרה למבט קודם */}
+                            <button
+                                className="toolbar-btn"
+                                onClick={(e) => { e.stopPropagation(); if (viewHistoryRef.current.length > 1) goBackViewRef.current(); }}
+                                title="חזרה למבט קודם"
+                                style={{ opacity: viewHistoryLen > 1 ? 1 : 0.35, cursor: viewHistoryLen > 1 ? 'pointer' : 'default' }}
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                <span className="toolbar-label">מבט קודם</span>
+                            </button>
                             {/* מדידה */}
                             <button
                                 className={`toolbar-btn ${measureMode ? 'active' : ''}`}
