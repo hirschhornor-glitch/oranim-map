@@ -34,7 +34,15 @@ def get_github_file(path):
     print(f"Status: {r.status_code}")
     if r.status_code == 200:
         data = r.json()
-        content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8")
+        if "content" in data and data["content"]:
+            content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8")
+        elif "download_url" in data:
+            print("קובץ גדול — משתמש ב-download_url")
+            r2 = requests.get(data["download_url"])
+            content = r2.text
+        else:
+            print("לא נמצא content")
+            return None, None
         return data["sha"], content
     print(f"get_github_file failed: {r.status_code} {r.text[:100]}")
     return None, None
