@@ -2893,14 +2893,29 @@
                         }
                         return null;
                     }
-                    const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {} });
+                    const TYPE_GROUPS = [
+                        { key: 'התחדשות עירונית', label: 'התחדשות עירונית', color: '#4CAF50' },
+                        { key: 'עיבוי ובניה חדשה', label: 'עיבוי ובניה חדשה', color: '#2196F3' },
+                    ];
+                    function getTypeGroup(planType) {
+                        const pt = normalizePlanType(planType || '');
+                        if (pt.includes('התחדשות')) return 'התחדשות עירונית';
+                        if (pt.includes('עיבוי')) return 'עיבוי ובניה חדשה';
+                        if (pt && pt !== 'תשתיות') return pt; // keep other types as-is
+                        return null;
+                    }
+                    const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {}, byType: {} });
                     const plansByCell = {}; // { minahak: { statusKey: [planInfo, ...] } }
                     const plansBySub = {}; // { minahak: { sub: { status: [planInfo, ...] } } }
+                    const plansByType = {}; // { minahak: { typeKey: [planInfo, ...] } }
+                    const plansBySubType = {}; // { minahak: { sub: { typeKey: [planInfo, ...] } } }
                     minahakOrder.forEach(m => {
                         byMinahak[m] = emptyRow();
                         bySub[m] = {};
                         plansByCell[m] = {};
                         plansBySub[m] = {};
+                        plansByType[m] = {};
+                        plansBySubType[m] = {};
                     });
 
                     // Plans (from Google Sheets CSV)
@@ -2943,6 +2958,18 @@
                             }
                         }
 
+                        // Per-type group breakdown
+                        if (!isRejected && addVal > 0) {
+                            const typeGrp = getTypeGroup(pt);
+                            if (typeGrp) {
+                                byMinahak[m].byType[typeGrp] = (byMinahak[m].byType[typeGrp] || 0) + addVal;
+                                if (!plansByType[m]) plansByType[m] = {};
+                                if (!plansByType[m][typeGrp]) plansByType[m][typeGrp] = [];
+                                const planInfoT = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: (p.stage || p.Stage || '').trim().replace(/\s+/g, ' ') };
+                                if (!plansByType[m][typeGrp].some(x => x.plan_name === planInfoT.plan_name)) plansByType[m][typeGrp].push(planInfoT);
+                            }
+                        }
+
                         // Per sub-neighborhood breakdown
                         const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
                         const sub = SUB_NORMALIZE[subRaw] || subRaw;
@@ -2963,6 +2990,20 @@
                             const planKey = p.plan_name || '';
                             if (!plansBySub[m][sub][status].some(x => x.plan_name === planKey)) {
                                 plansBySub[m][sub][status].push({ plan_name: planKey, plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: (p.stage || p.Stage || '').trim().replace(/\s+/g, ' ') });
+                            }
+                        }
+                        // Per sub-neighborhood + type breakdown
+                        if (!isRejected && addVal > 0) {
+                            const typeGrp2 = getTypeGroup(pt);
+                            if (typeGrp2) {
+                                bySub[m][sub].byType[typeGrp2] = (bySub[m][sub].byType[typeGrp2] || 0) + addVal;
+                                if (!plansBySubType[m]) plansBySubType[m] = {};
+                                if (!plansBySubType[m][sub]) plansBySubType[m][sub] = {};
+                                if (!plansBySubType[m][sub][typeGrp2]) plansBySubType[m][sub][typeGrp2] = [];
+                                const planKey2 = p.plan_name || '';
+                                if (!plansBySubType[m][sub][typeGrp2].some(x => x.plan_name === planKey2)) {
+                                    plansBySubType[m][sub][typeGrp2].push({ plan_name: planKey2, plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: (p.stage || p.Stage || '').trim().replace(/\s+/g, ' ') });
+                                }
                             }
                         }
                     });
@@ -3026,7 +3067,18 @@
                         if (!minahaks.includes(m) && m && !EXCLUDE_MINAHAK.includes(m)) minahaks.push(m);
                     });
 
-                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, plansByCell, plansBySub });
+                    // Collect all type groups that have data
+                    const allTypeKeys = new Set();
+                    Object.values(byMinahak).forEach(d => Object.keys(d.byType).forEach(k => allTypeKeys.add(k)));
+                    // Build final type groups: known ones first, then any additional
+                    const knownTypeKeys = TYPE_GROUPS.map(g => g.key);
+                    const extraTypeKeys = [...allTypeKeys].filter(k => !knownTypeKeys.includes(k)).sort();
+                    const typeColors = ['#FF9800', '#9C27B0', '#00BCD4', '#795548', '#607D8B'];
+                    const finalTypeGroups = [
+                        ...TYPE_GROUPS.filter(g => allTypeKeys.has(g.key)),
+                        ...extraTypeKeys.map((k, i) => ({ key: k, label: k, color: typeColors[i % typeColors.length] }))
+                    ];
+                    setUnitsData({ minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, typeGroups: finalTypeGroups, plansByCell, plansBySub, plansByType, plansBySubType });
                     setUnitsLoading(false);
                 });
             }, [unitsData]);
@@ -5204,24 +5256,28 @@
                                                             {Object.values(subData).reduce((sum, d) => sum + (d.units_add || 0), 0).toLocaleString()}
                                                         </td>
                                                     </tr>
-                                                    {unitsExpanded === 'type' && (
-                                                        <>
-                                                            <tr className="units-sub-row">
-                                                                <td>התחדשות עירונית</td>
-                                                                {subs.map(s => <td key={s}>{(subData[s].renewal || 0).toLocaleString()}</td>)}
+                                                    {unitsExpanded === 'type' && unitsData.typeGroups && unitsData.typeGroups.map(tg => {
+                                                        const total = subs.reduce((sum, s) => sum + (subData[s].byType[tg.key] || 0), 0);
+                                                        if (total === 0) return null;
+                                                        return (
+                                                            <tr key={tg.key} className="units-sub-row">
+                                                                <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:tg.color,marginLeft:6,verticalAlign:'middle'}}></span> {tg.label}</td>
+                                                                {subs.map(s => {
+                                                                    const val = subData[s].byType[tg.key] || 0;
+                                                                    const plans = unitsData.plansBySubType && unitsData.plansBySubType[unitsDrilldown] && unitsData.plansBySubType[unitsDrilldown][s] && unitsData.plansBySubType[unitsDrilldown][s][tg.key];
+                                                                    return (
+                                                                    <td key={s}
+                                                                        style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                        onClick={() => { if (plans && plans.length > 0) setCellReport({minahak: s, statusKey: tg.key, statusLabel: tg.label, plans}); }}
+                                                                        title={plans && plans.length > 0 ? `לחץ לצפייה ב-${plans.length} תכניות` : ''}
+                                                                    >{val.toLocaleString()}</td>);
+                                                                })}
                                                                 <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + (d.renewal || 0), 0).toLocaleString()}
+                                                                    {total.toLocaleString()}
                                                                 </td>
                                                             </tr>
-                                                            <tr className="units-sub-row">
-                                                                <td>עיבוי ובניה חדשה</td>
-                                                                {subs.map(s => <td key={s}>{(subData[s].densification || 0).toLocaleString()}</td>)}
-                                                                <td style={{background: '#12122a'}}>
-                                                                    {Object.values(subData).reduce((sum, d) => sum + (d.densification || 0), 0).toLocaleString()}
-                                                                </td>
-                                                            </tr>
-                                                        </>
-                                                    )}
+                                                        );
+                                                    })}
                                                     {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => {
                                                         const getSubVal = (sub) => {
                                                             const bs = subData[sub].byStatus || {};
@@ -5325,28 +5381,26 @@
                                                 </tr>
 
                                                 {/* Sub-rows by type */}
-                                                {unitsExpanded === 'type' && (
-                                                    <>
-                                                        <tr className="units-sub-row">
-                                                            <td>התחדשות עירונית</td>
-                                                            {unitsData.minahaks.map(m => (
-                                                                <td key={m}>{unitsData.byMinahak[m].renewal.toLocaleString()}</td>
-                                                            ))}
-                                                            <td style={{background: '#12122a'}}>
-                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.renewal, 0).toLocaleString()}
-                                                            </td>
-                                                        </tr>
-                                                        <tr className="units-sub-row">
-                                                            <td>עיבוי ובניה חדשה</td>
-                                                            {unitsData.minahaks.map(m => (
-                                                                <td key={m}>{unitsData.byMinahak[m].densification.toLocaleString()}</td>
-                                                            ))}
-                                                            <td style={{background: '#12122a'}}>
-                                                                {Object.values(unitsData.byMinahak).reduce((s, d) => s + d.densification, 0).toLocaleString()}
-                                                            </td>
-                                                        </tr>
-                                                    </>
-                                                )}
+                                                {unitsExpanded === 'type' && unitsData.typeGroups && unitsData.typeGroups.map(tg => (
+                                                    <tr key={tg.key} className="units-sub-row">
+                                                        <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:tg.color,marginLeft:6,verticalAlign:'middle'}}></span> {tg.label}</td>
+                                                        {unitsData.minahaks.map(m => {
+                                                            const val = unitsData.byMinahak[m].byType[tg.key] || 0;
+                                                            const plans = unitsData.plansByType && unitsData.plansByType[m] && unitsData.plansByType[m][tg.key];
+                                                            return (
+                                                            <td key={m}
+                                                                style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                onClick={() => {
+                                                                    if (plans && plans.length > 0) setCellReport({minahak: m, statusKey: tg.key, statusLabel: tg.label, plans});
+                                                                }}
+                                                                title={plans && plans.length > 0 ? `לחץ לצפייה ב-${plans.length} תכניות` : ''}
+                                                            >{val.toLocaleString()}</td>);
+                                                        })}
+                                                        <td style={{background: '#12122a'}}>
+                                                            {Object.values(unitsData.byMinahak).reduce((s, d) => s + (d.byType[tg.key] || 0), 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
 
                                                 {/* Sub-rows by status group */}
                                                 {unitsExpanded === 'status' && unitsData.statusGroups && unitsData.statusGroups.map(g => {
