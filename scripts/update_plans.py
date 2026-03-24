@@ -29,7 +29,9 @@ def get_sheet():
 
 def get_github_file(path):
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
+    print(f"Fetching: {url}")
     r = requests.get(url, headers=HEADERS)
+    print(f"Status: {r.status_code}")
     if r.status_code == 200:
         data = r.json()
         content = base64.b64decode(data["content"].replace("\n", "")).decode("utf-8")
