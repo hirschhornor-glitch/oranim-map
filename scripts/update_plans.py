@@ -13,6 +13,7 @@ SHEET_NAME     = "Oranim_Taba"
 KEY_FIELD      = "plan_name"
 TS_FIELD       = "last_modified"
 TIMESTAMP_FILE = "data/last_update.txt"
+SUMMARY_FILE   = "data/last_run_summary.txt"
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -54,7 +55,6 @@ def upload_github_file(path, content, sha, message):
     return r.status_code in (200, 201)
 
 def get_israel_time():
-    """מחזיר את השעה הנוכחית בשעון ישראל (naive datetime)"""
     try:
         import zoneinfo
         tz_il = zoneinfo.ZoneInfo("Asia/Jerusalem")
@@ -78,18 +78,33 @@ def save_last_update():
     upload_github_file(TIMESTAMP_FILE, now_str, sha,
                        f"update timestamp {now_str}")
 
-def write_summary(updated, changed_rows):
-    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
-    if not summary_file:
-        return
-    with open(summary_file, "w", encoding="utf-8") as f:
-        if updated > 0:
-            f.write(f"## ✅ עודכנו {updated} תכניות\n\n")
-            for plan_name, row in changed_rows.items():
-                plan_name_he = row.get("plan_name_he", "")
-                f.write(f"- **{plan_name}** {plan_name_he}\n")
-        else:
-            f.write("## ℹ️ אין שינויים מאז העדכון האחרון\n")
+def write_summary(updated, changed_rows, last_update):
+    now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
+    lines = [
+        f"הרצה: {now_str}",
+        f"עדכון קודם: {last_update.strftime('%Y-%m-%d %H:%M:%S')}",
+    ]
+
+    if updated > 0:
+        lines.append(f"✅ עודכנו {updated} תכניות:")
+        for plan_name, row in changed_rows.items():
+            plan_name_he = row.get("plan_name_he", "")
+            lines.append(f"  - {plan_name} {plan_name_he}")
+    else:
+        lines.append("ℹ️ אין שינויים מאז העדכון האחרון")
+
+    summary = "\n".join(lines)
+    print(summary)
+
+    # כתוב לקובץ ב-repo כדי שניתן יהיה לשלוף דרך API
+    sha, _ = get_github_file(SUMMARY_FILE)
+    upload_github_file(SUMMARY_FILE, summary, sha, f"summary {now_str}")
+
+    # כתוב גם ל-GitHub Step Summary אם קיים
+    step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step_summary:
+        with open(step_summary, "w", encoding="utf-8") as f:
+            f.write("## " + "\n\n".join(lines))
 
 def update_plans():
     last_update = load_last_update()
@@ -112,7 +127,7 @@ def update_plans():
 
     if not changed_rows:
         print("אין שינויים מאז העדכון האחרון")
-        write_summary(0, {})
+        write_summary(0, {}, last_update)
         return
 
     print(f"נמצאו {len(changed_rows)} שורות שהשתנו")
@@ -142,8 +157,9 @@ def update_plans():
     if success:
         print("✓ plans.geojson עודכן")
         save_last_update()
-        write_summary(updated, changed_rows)
+        write_summary(updated, changed_rows, last_update)
     else:
         print("✗ שגיאה בעדכון")
+        write_summary(0, {}, last_update)
 
 update_plans()
