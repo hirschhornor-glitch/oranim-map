@@ -2370,24 +2370,27 @@
                         printWin.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">
                             <title>${title}</title>
                             <style>
-                                body { font-family: Assistant, Arial, sans-serif; padding: 20px; color: #222; direction: rtl; }
-                                h1 { color: #c0392b; font-size: 20px; margin-bottom: 4px; }
-                                .subtitle { color: #666; font-size: 13px; margin-bottom: 16px; }
-                                .maps { display: flex; gap: 12px; margin-bottom: 16px; }
+                                @page { size: A4 portrait; margin: 15mm; }
+                                body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 700px; margin: 0 auto; }
+                                h1 { color: #c0392b; font-size: 18px; margin-bottom: 2px; text-align: center; }
+                                .subtitle { color: #666; font-size: 12px; margin-bottom: 12px; text-align: center; }
+                                .maps { display: flex; gap: 8px; margin-bottom: 14px; }
                                 .map-box { flex: 1; text-align: center; }
-                                .map-box img { width: 100%; border: 1px solid #ccc; border-radius: 6px; }
-                                .map-label { font-size: 12px; color: #555; margin-top: 4px; font-weight: bold; }
-                                table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                                th { padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 11px; color: #555; }
+                                .map-box img { width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
+                                .map-label { font-size: 11px; color: #555; margin-top: 2px; font-weight: bold; }
+                                table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                                th { padding: 6px; border-bottom: 2px solid #333; text-align: center; font-size: 10px; color: #555; }
                                 th:first-child { text-align: right; }
-                                td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; font-family: monospace; }
-                                td:first-child { text-align: right; font-family: Assistant, Arial, sans-serif; }
+                                td { padding: 4px 6px; border-bottom: 1px solid #ddd; text-align: center; font-family: monospace; font-size: 11px; }
+                                td:first-child { text-align: right; font-family: Assistant, Arial, sans-serif; font-size: 12px; }
                                 tfoot td { font-weight: bold; border-top: 2px solid #333; }
-                                .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-left: 6px; vertical-align: middle; }
-                                .positive { color: #27ae60; } .negative { color: #c0392b; }
-                                @media print { body { padding: 0; } }
+                                .no-print { margin-bottom: 12px; text-align: center; }
+                                @media print { .no-print { display: none !important; } body { padding: 0; } }
                             </style>
                         </head><body>
+                            <div class="no-print">
+                                <button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px">🖨️ הדפסה / שמירת PDF</button>
+                            </div>
                             <h1>${title}</h1>
                             <div class="subtitle">${planLabel} · ${(refArea / 1000).toFixed(1)} דונם</div>
                             <div class="maps">
