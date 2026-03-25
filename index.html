@@ -1230,6 +1230,7 @@
         .plan-label-z18.plan-label-large .label-inner { font-size: 11pt !important; }
         .plan-label-z18.plan-label-small .label-inner { font-size: 9pt !important; }
 
+        .landuse-shadow { filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4)); }
         .sub-tooltip {
             background: transparent !important;
             border: none !important;
@@ -1454,7 +1455,7 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         // Layers that are always visible (no toggle)
-        const ALWAYS_ON_LAYERS = ['district_oranim', 'sub_neighborhoods'];
+        const ALWAYS_ON_LAYERS = ['district_oranim'];
 
         // GeoJSON data files
         // Find the best label point inside a polygon (visual center)
@@ -1554,6 +1555,8 @@
             minahak_baka: 'data/minahak_baka.geojson',
             future_shavaz: 'data/future_shavaz.geojson',
             shavaz_kayam: 'data/shavaz_kayam.geojson',
+            yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
+            landuse_xplan: 'data/landuse_xplan.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -1625,6 +1628,7 @@
                 title: 'תכנון',
                 layers: [
                     { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true },
+                    { id: 'landuse_xplan', name: 'ייעודי קרקע', desc: 'ייעודי קרקע לפי תכניות', on: false },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                 ]
@@ -1640,6 +1644,7 @@
             admin: {
                 title: 'מינהלים קהילתיים',
                 layers: [
+                    { id: 'sub_neighborhoods', name: 'שמות שכונות', on: true },
                     { id: 'shem_ganot_hair', name: 'גינות העיר', on: true, minahak: 'גינות העיר' },
                     { id: 'shem_beit_tzfafa', name: 'בית צפאפא', on: true, minahak: 'בית צפאפא' },
                     { id: 'shem_gonen', name: 'גוננים', on: true, minahak: 'גוננים' },
@@ -1648,12 +1653,10 @@
                     { id: 'shem_talpiot', name: 'א.ת. תלפיות', on: true, minahak: 'א.ת. תלפיות' },
                 ]
             },
-            public_buildings: {
-                title: 'מבני ציבור',
+            landuse_kayam: {
+                title: 'ייעודי קרקע מצב קיים',
                 layers: [
-                    { id: 'shavaz_kayam', name: 'שב"צ קיים', on: false },
-                    { id: 'future_shavaz', name: 'שב"צ עתידי', on: false },
-                    { id: 'hafrashah_future', name: 'הפרשה מבונה עתידית', on: false },
+                    { id: 'yiud_karka_kayam', name: 'ייעודי קרקע קיימים', on: false },
                 ]
             }
         };
@@ -1797,6 +1800,589 @@
             'נדחתה': '#888888',
         };
 
+        // Landuse colors - from XPLAN/MAVAT and Jerusalem municipality GIS
+        const LANDUSE_COLORS = {
+            'מגורים': '#ffdf7f', 'מגורים א': '#ffff00',
+            'מגורים ב': '#ffbf00', 'מגורים ג': '#ff7f00',
+            'מגורים ד': '#ff7f00',
+            'מגורים ה': '#ff7f00', 'דיור מיוחד': '#ffdf7f',
+            '1 מגורים': '#ffdf7f', '2 מגורים': '#ffdf7f', '4 מגורים': '#ffdf7f',
+            '5 מגורים': '#ffdf7f', 'מגורים 3': '#ffdf7f',
+            'מגורים מיוחד': '#ffdf7f', 'מגורים 1 מיוחד': '#ffdf7f',
+            'מגורים 2 מיוחד': '#ffdf7f', 'מגורים 3 מיוחד': '#ffdf7f',
+            'מגורים 4 מיוחד': '#ffdf7f', 'מגורים 5 מיוחד': '#ffdf7f',
+            'מגורים מיוחד ב': '#ffdf7f', 'מגורים מיוחד לשימור': '#ffdf7f',
+            'מגורים כללי': '#ffdf7f', 'מגורים להשלמה': '#ffffc8',
+            'מגורים צפון תלפיות': '#ffe68c', 'מגורים 3-4 קומות': '#ffdf7f',
+            'אזור מגורים לשמור': '#ffdcd2', 'מגרש מיוחד': '#ffc878',
+            'מגורים ומסחר': '#ffdf7f', 'מסחר עם מגורים': '#ffdf7f',
+            'מגורים, מסחר ומבנים': '#ffdf7f', 'מגורים,מסחר ותעסוקה': '#9c9c9c',
+            'מגורים, מסחר ותעסוקה': '#9c9c9c', 'מגורים ומבנים ומוסדו': '#ffdf7f',
+            'מגורים ומבנים ומוסדות ציבור': '#ffdf7f',
+            'מגורים ותיירות': '#ffdf7f', 'מגורים ותירות': '#ffdf7f',
+            'מגורים, מסחר ותיירות': '#ffdf7f', 'מגורים, תיירות ומבני': '#ffdf7f',
+            'מגורים, תעסוקה ומבני': '#ffdf7f',
+            'תעסוקה': '#ff00c5', 'מסחר': '#adadad', 'אזור מסחרי': '#adadad',
+            'מסחרי מיוחד': '#d2be8c', 'משרדים': '#bf7fff',
+            'תעשיה': '#cc66cc', 'אזור תעשיה': '#cc66cc',
+            'תעשיה עתירת ידע': '#cc66cc', 'תעשיה קלה ומלאכה': '#cc66cc',
+            'אחסנה': '#d69dbc', 'מסחר ותעסוקה': '#adadad',
+            'מסחר ותעשיה': '#adadad', 'תעשיה ומסחר משולב': '#adadad',
+            'מסחר ומשרדים': '#adadad', 'מסחר, תעסוקה ומבנים': '#adadad',
+            'מסחר ומבנים ומוסדות': '#adadad',
+            'מתקנים הנדסיים': '#7f7fff', 'שטח למתקנים הנדסיים': '#7f7fff',
+            'תחנת טרנספורמציה': '#7f7fff', 'שטח מתקני נפט': '#7f7fff',
+            'תחנת תדלוק': '#7f7fff', 'שטח לתחנת דלק': '#7f7fff',
+            'מבנים ומוסדות ציבור': '#cc9966', 'שטח לבנין ציבורי': '#cc9966',
+            'מוסד': '#cc9966', 'מבנים ומוסדות לחינוך': '#cc9966',
+            'מבנים ומוסדות לתרבות': '#cc9966', 'מבנים ומוסדות לדת': '#cc9966',
+            'מבנים ומוסדות לחרום': '#cc9966',
+            'בנין ציבורי מיוחד': '#f0aa50', 'בנין ציבורי עם הגבלות': '#cc9966',
+            'שטח צבורי מיוחד': '#b4ffe6',
+            'תיירות': '#ff7f9f', 'מלונאות (אכסון מלונא': '#ff7e9f',
+            'שטח למלונות': '#ff7e9f', 'מלונאות ואו מסחר': '#d2d2d2',
+            'שטחים פתוחים': '#7fff7f', 'שטח ציבורי פתוח': '#bfff00',
+            'שטח צבורי פתוח': '#bfff00', 'שטח פרטי פתוח': '#bfff00',
+            'פרטי פתוח': '#bfff00', 'נוף פתוח': '#ffff00',
+            'ספורט ונופש': '#bfff00', 'יער': '#00cc33',
+            'גן לאומי': '#72994c', 'שטח לגן לאומי': '#72994c',
+            'שמורת טבע': '#72994c', 'שטח חקלאי': '#7fff7f',
+            'תחבורה': '#ff003f', 'דרך מאושרת': '#ccb266',
+            'דרך מאושרת/קיימת': '#ccb266', 'דרך מוצעת': '#ff003f',
+            'דרך חדשה/הרחבה': '#ff003f', 'דרך חדשה/קיימת+עיצוב': '#ff003f',
+            'דרך משולבת': '#bfff00', 'דרך נופית': '#ff003f',
+            'דרך ו/או טיפול נופי': '#ff003f', 'מעבר ציבורי': '#ff5050',
+            'מסילת ברזל': '#5b5b5b', 'מסילת ברזל מאושרת': '#5b5b5b',
+            'מפגש דרך-מסילה': '#ff003e', 'תחנת תחבורה ציבורית': '#ff003f',
+            'מרכז תחבורה': '#ff003f', 'שביל': '#009972', 'שבילים': '#009972',
+            'חניון': '#ff003f', 'חניה ציבורית': '#ff003f', 'חניה פרטית': '#ff003f',
+            'טיילת': '#ff003f', 'עירוני מעורב': '#bababa',
+            'גלעין הכפר': '#ffffbe', 'ככר עירונית': '#dca56d',
+            'שטח לתכנון בעתיד': '#848484', 'שטח להשלמה': '#848484',
+            'בית קברות': '#ffff00', 'שטח לבית קברות': '#ffff00',
+            'בית קברות עירוני': '#ffff00',
+            'שטח שהתכנית אינה חלה': '#c8c8c8',
+            'הדרכה לבטיחות בדרכים': '#ffa500',
+            'שטח ציבורי פתוח ליעור': '#bfff00',
+            'שטח פתוח+בנין ציבורי': '#008c00',
+            'פיתוח גנני מיוחד': '#c8ff96',
+            'שטח לגן חיות': '#00b400',
+            'שטח לעיצוב נוף': '#96ff96',
+            'שטח לשימור ושיקום': '#8ce68c',
+            'מגורים מיוחד להשלמה וגינון בלבד': '#ffdf7f',
+
+            // xplan compound variants
+            'מגורים מסחר ותעסוקה': '#9c9c9c', 'מגורים מסחר ומבנים ומוסדות ציבור': '#ffdf7f',
+            'מגורים מסחר ותיירות': '#ffdf7f', 'מגורים תעסוקה ומבנים ומוסדות ציבור': '#ffdf7f',
+            'מגורים תעסוקה ותיירות': '#ffdf7f', 'מגורים תיירות ומבנים ומוסדות ציבור': '#ffdf7f',
+            'מגורים ותחבורה': '#ffdf7f',
+            'דיור מיוחד מסחר ותעסוקה': '#ffdf7f', 'דיור מיוחד ומבנים ומוסדות ציבור': '#ffdf7f',
+            'מסחר תעסוקה ומבנים ומוסדות ציבור': '#adadad', 'מסחר תיירות ומבנים ומוסדות ציבור': '#adadad',
+            'מסחר ומבנים ומוסדות ציבור': '#adadad', 'מסחר ותעשיה עתירת ידע': '#cc66cc',
+            'מסחר ותעשיה עתירת יד': '#cc66cc',
+            'שטחים פתוחים ומבנים ומוסדות ציבור': '#7eff7e', 'שטחים פתוחים ומבנים': '#7eff7e',
+            'מבנים ומוסדות ציבור לחינוך': '#cc9966', 'מבנים ומוסדות ציבור לדת': '#cc9966',
+            'מבנים ומוסדות ציבור לחרום והצלה': '#cc9966', 'מבנים ומוסדות ציבור ותחבורה': '#cc9966',
+            'מבנים מוסדות ציבור ותחבורה': '#cc9966',
+            'מלונאות (אכסון מלונאי)': '#ff7e9f', 'מסילה מאושרת': '#5b5b5b',
+            'שטח שהתוכנית אינה חלה עליו': '#c8c8c8',
+            // kayam extras
+            'חניה ציבורית מגוננת': '#ff003f', 'מקוםחניה צבורי': '#ff003f',
+            'פס ירק': '#bfff00',
+            'שטח ירק פרטי': '#bfff00', 'שטח עיצוב נופי מיוחד': '#bfff00',
+            'פתוח ציבורי מיוחד מעל לדרך ציבורית': '#bfff00',
+            'רצועת מסילה / דרך ציבורית': '#5b5b5b',
+            'בנין ציבורי בשטח פתוח פרטי': '#cc9966',
+            'מסחרי מיוחד עם מלאכה': '#d2be8c',
+            'מגורים מיוחד,מסחר ות': '#ffdf7f',
+            'שביל הולכי רגל+רכב שירות': '#bfff00',
+            'מעבר הולכי רגל במפלס עליון': '#ff5050',
+            'גשר להולכי רגל': '#ff5050', 'גשר להולכי רגל במגורים': '#ff5050',
+            'יער נטע אדם מתמא 22': '#38a800', 'יער נטע אדם מיוחד': '#38a800',
+            'קרקע חלקאית': '#7fff7f',
+        };
+
+        // Add geresh variants programmatically (apostrophe in keys causes JS quoting issues)
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D0'"] = '#ffff00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D1'"] = '#ffbf00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D2'"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D3'"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D4'"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D2'1"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D2'2"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D2'3"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D1'2"] = '#ffbf00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D1'3"] = '#ffbf00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D3'1"] = '#ff7f00';
+        LANDUSE_COLORS["\u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05D3'2"] = '#ff7f00';
+        // Other problematic quote entries
+        LANDUSE_COLORS['\u05D9\u05E2\u05D5\u05D3 \u05E2\u05E4"\u05D9 \u05EA\u05DB\u05E0\u05D9\u05EA \u05DE\u05D0\u05D5\u05E9\u05E8\u05EA \u05D0\u05D7\u05E8\u05EA'] = '#0099cc';
+        LANDUSE_COLORS['\u05D9\u05E2\u05D5\u05D3 \u05E2\u05E4"\u05D9 \u05EA\u05DB\u05E0\u05D9\u05EA \u05DE\u05D0\u05D5\u05E9'] = '#0099cc';
+        LANDUSE_COLORS['\u05E9\u05E4"\u05E4 \u05DC\u05D2\u05D9\u05E0\u05D5\u05DF \u05D5\u05E0\u05D8\u05D9\u05E2\u05D5\u05EA'] = '#bfff00';
+        LANDUSE_COLORS['\u05E9\u05E4"\u05E6 + \u05DE\u05D2\u05D5\u05E8\u05D9\u05DD \u05DE\u05E2\u05DC\u05D9\u05D5'] = '#006400';
+        LANDUSE_COLORS["\u05EA\u05E2' \u05E2\u05EA\u05D9\u05E8\u05EA \u05D9\u05D3\u05E2"] = '#cc66cc';
+
+        function getLanduseColor(name) {
+            return LANDUSE_COLORS[name] || '#c0c0c0';
+        }
+
+        // Hatch pattern mapping: landuse name -> SVG pattern id (null = no hatch)
+        // Built from QML SYMBOL_DEFS: style != 'solid' entries
+        const LANDUSE_HATCH = {};
+        // Blue diagonal hatch (#003fff) - most compound designations
+        ['דיור מיוחד','משק עזר','עירוני מעורב','מגורים ומסחר','מגורים, מסחר ותעסוקה',
+         'מגורים,מסחר ותעסוקה','מגורים מסחר ותעסוקה','מגורים ומבנים ומוסדות ציבור',
+         'מגורים ותיירות','מגורים ותירות','מגורים, מסחר ותיירות','מגורים מסחר ותיירות',
+         'מגורים, תיירות ומבנים','מגורים, תעסוקה ומבנים','מגורים ותחבורה',
+         'מגורים מסחר ומבנים ומוסדות ציבור','מגורים תעסוקה ומבנים ומוסדות ציבור',
+         'דיור מיוחד ומבנים ומוסדות ציבור','דיור מיוחד מסחר ותעסוקה',
+         'מסחר ותעסוקה','מסחר ותעשיה','תעשיה ומסחר משולב','מסחר ומשרדים',
+         'מסחר, תעסוקה ומבנים','מסחר ומבנים ומוסדות','מסחר תעסוקה ומבנים ומוסדות ציבור',
+         'מסחר ומבנים ומוסדות ציבור','מסחר תיירות ומבנים ומוסדות ציבור',
+         'דרך משולבת','דרך ו/או טיפול נופי','דרך נופית','מסילה מוצעת','מפגש דרך-מסילה',
+         'מרכז תחבורה','חניון','גן לאומי','שמורת טבע',
+         'שטח לתכנון בעתיד','שטח להשלמה','בית קברות','שטח לבית קברות',
+         'מבנים ומוסדות ציבור ותחבורה','מבנים מוסדות ציבור ותחבורה',
+         'שטחים פתוחים ומבנים ומוסדות ציבור','שטחים פתוחים ומבנים',
+         'מגורים מיוחד לשימור'
+        ].forEach(n => LANDUSE_HATCH[n] = 'hatch-blue');
+        // Green hatch
+        ['שטח ציבורי פתוח ליעור','נוף פתוח'].forEach(n => LANDUSE_HATCH[n] = 'hatch-green');
+        // Pink hatch
+        ['גלעין הכפר','אזור מגורים לשמור'].forEach(n => LANDUSE_HATCH[n] = 'hatch-pink');
+        // Yellow hatch
+        ['מלונאות ואו מסחר','הדרכה לבטיחות בדרכים'].forEach(n => LANDUSE_HATCH[n] = 'hatch-yellow');
+        // Teal hatch
+        ['שטח צבורי מיוחד','שטח עיצוב נופי מיוחד'].forEach(n => LANDUSE_HATCH[n] = 'hatch-teal');
+        // Brown hatch
+        ['מסחרי מיוחד','מגרש מיוחד'].forEach(n => LANDUSE_HATCH[n] = 'hatch-brown');
+        // Grey hatch
+        ['בנין ציבורי בשטח פתוח פרטי'].forEach(n => LANDUSE_HATCH[n] = 'hatch-grey');
+        // Orange hatch
+        ['בנין ציבורי מיוחד'].forEach(n => LANDUSE_HATCH[n] = 'hatch-orange');
+        // Dark red hatch
+        ['מעבר ציבורי'].forEach(n => LANDUSE_HATCH[n] = 'hatch-darkred');
+        // Cyan cross hatch
+        ['פיתוח גנני מיוחד','מגורים להשלמה'].forEach(n => LANDUSE_HATCH[n] = 'hatch-cyan');
+        // Red cross hatch
+        ['שטח פתוח+בנין ציבורי'].forEach(n => LANDUSE_HATCH[n] = 'hatch-red-cross');
+        // Grey cross hatch
+        ['שטח לגן חיות','מסחרי מיוחד עם מלאכה'].forEach(n => LANDUSE_HATCH[n] = 'hatch-grey-cross');
+        // Green hatch for nature
+        ['שטח לעיצוב נוף','שטח לשימור ושיקום'].forEach(n => LANDUSE_HATCH[n] = 'hatch-green');
+
+        function applyHatchToLayer(geoJsonLayer) {
+            if (!geoJsonLayer) return;
+            geoJsonLayer.eachLayer(layer => {
+                const name = (layer.feature.properties.mavat_name || layer.feature.properties.Descr || '').trim();
+                const hatchId = LANDUSE_HATCH[name];
+                if (hatchId && layer._path) {
+                    // Apply hatch pattern as a second fill using a clone
+                    const path = layer._path;
+                    const clone = path.cloneNode(false);
+                    clone.setAttribute('fill', 'url(#' + hatchId + ')');
+                    clone.setAttribute('fill-opacity', '0.7');
+                    clone.setAttribute('stroke', 'none');
+                    clone.setAttribute('pointer-events', 'none');
+                    clone.classList.add('hatch-overlay');
+                    path.parentNode.appendChild(clone);
+                }
+            });
+        }
+
+        // Landuse grouping by keyword for comparison feature
+        const LANDUSE_GROUPS = {
+            'מגורים': ['מגורים', 'דיור מיוחד', 'גלעין הכפר', 'משק עזר', 'מגרש מיוחד'],
+            'מסחר': ['מסחר', 'מסחרי'],
+            'תעשיה/תעסוקה': ['תעשיה', 'תעסוקה', 'אזור תעשיה', 'מרכז לוגיסטי', 'אחסנה', 'משרדים'],
+            'מוסדות ציבור': ['מבנים ומוסדות', 'מוסד', 'בנין ציבורי', 'שטח לבנין', 'שטח צבורי מיוחד', 'מבני ציבור', 'בית קברות', 'שטח לבית קברות', 'אתר הנצחה', 'מחנה צבאי', 'בית סוהר'],
+            'שטחים פתוחים': ['שטח פתוח', 'שטחים פתוחים', 'שטח ציבורי פתוח', 'שטח צבורי פתוח', 'נוף פתוח', 'פרטי פתוח', 'ספורט ונופש', 'פארק', 'גן לאומי', 'שמורת טבע', 'שטח לגן', 'פיתוח גנני', 'שטח עיצוב', 'שטח לעיצוב', 'שטח לשימור', 'פס ירק', 'שטח ירק', 'שביל', 'טיילת', 'ככר עירונית'],
+            'דרכים/תחבורה': ['דרך', 'מסילה', 'תחבורה', 'חניון', 'חניה', 'מעבר ציבורי', 'מרכז תחבורה', 'נמל', 'שדה תעופה', 'גשר', 'מפגש דרך', 'הדרכה לבטיחות'],
+            'מתקנים הנדסיים': ['מתקנים הנדסיים', 'שטח למתקנים', 'תחנת טרנספורמציה', 'תחנת תדלוק', 'שטח לתחנת', 'שטח מתקני', 'רצועת תשתיות'],
+            'יער/חקלאי': ['יער', 'חקלאי', 'קרקע חקלאית', 'שטח חקלאי', 'חקלאי פתוח', 'חקלאי משומר'],
+            'תיירות/מלונאות': ['תיירות', 'מלונאות', 'שטח למלונות', 'אירוח כפרי', 'חוף'],
+        };
+
+        function getLanduseGroup(name) {
+            if (!name || !name.trim()) return null;
+            const n = name.trim();
+            for (const [group, keywords] of Object.entries(LANDUSE_GROUPS)) {
+                for (const kw of keywords) {
+                    if (n.startsWith(kw) || n.includes(kw)) return group;
+                }
+            }
+            // No group matched - return the original name as-is
+            return n;
+        }
+
+        // Calculate polygon area in sq meters from lng/lat coordinates (Shoelace with cosine correction)
+        function calcPolygonAreaSqm(coords) {
+            if (!coords || coords.length < 3) return 0;
+            const toRad = Math.PI / 180;
+            const R = 6371000; // Earth radius in meters
+            let area = 0;
+            const n = coords.length;
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                const [lng1, lat1] = coords[i];
+                const [lng2, lat2] = coords[j];
+                area += (lng2 - lng1) * toRad * (2 + Math.sin(lat1 * toRad) + Math.sin(lat2 * toRad));
+            }
+            area = Math.abs(area) * R * R / 2;
+            return area;
+        }
+
+        function getFeatureArea(f) {
+            // Try legal_area/shape_area first
+            const la = parseFloat(f.properties.legal_area || f.properties.shape_area || 0);
+            if (la > 0) return la;
+            // Calculate from geometry
+            try {
+                const g = f.geometry;
+                let coords;
+                if (g.type === 'Polygon') coords = g.coordinates[0];
+                else if (g.type === 'MultiPolygon') coords = g.coordinates[0][0];
+                else return 0;
+                return calcPolygonAreaSqm(coords);
+            } catch(e) { return 0; }
+        }
+
+        function analyzeLanduseComparison(polyCoords, planNames) {
+            window.__landuseComparePolyCoords = polyCoords;
+            const gd = window.__geoDataForLanduse || {};
+            if (!gd.yiud_karka_kayam && !gd.landuse_xplan) return null;
+
+            function pip(pt, ring) {
+                const [x, y] = pt;
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+
+            function centroid(f) {
+                try {
+                    const g = f.geometry;
+                    let coords;
+                    if (g.type === 'Polygon') coords = g.coordinates[0];
+                    else if (g.type === 'MultiPolygon') coords = g.coordinates[0][0];
+                    else return null;
+                    let cx = 0, cy = 0, n = 0;
+                    for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                    return n > 0 ? [cx / n, cy / n] : null;
+                } catch(e) { return null; }
+            }
+
+            const existing = {}; // group -> total sqm
+            const futureXplan = {}; // group -> total sqm (from xplan only)
+            let totalExisting = 0, totalFutureXplan = 0;
+
+            // Collect existing kayam features inside area
+            const kayamInside = [];
+            if (gd.yiud_karka_kayam && gd.yiud_karka_kayam.features) {
+                gd.yiud_karka_kayam.features.forEach(f => {
+                    const c = centroid(f);
+                    if (!c || !pip(c, polyCoords)) return;
+                    const name = (f.properties.Descr || '').trim();
+                    const group = getLanduseGroup(name);
+                    if (!group) return;
+                    const area = getFeatureArea(f);
+                    existing[group] = (existing[group] || 0) + area;
+                    totalExisting += area;
+                    kayamInside.push({ centroid: c, name, group, area });
+                });
+            }
+
+            // Collect xplan future features inside area
+            if (gd.landuse_xplan && gd.landuse_xplan.features) {
+                gd.landuse_xplan.features.forEach(f => {
+                    const c = centroid(f);
+                    if (!c || !pip(c, polyCoords)) return;
+                    const name = (f.properties.mavat_name || '').trim();
+                    const group = getLanduseGroup(name);
+                    if (!group) return;
+                    const area = getFeatureArea(f);
+                    futureXplan[group] = (futureXplan[group] || 0) + area;
+                    totalFutureXplan += area;
+                });
+            }
+
+            // Collect plan boundaries that have xplan coverage
+            // A kayam feature is "covered" if its centroid falls inside a plan that has xplan data
+            const plansWithXplan = [];
+            if (gd.plans && gd.landuse_xplan) {
+                const xplanPlanNumbers = new Set();
+                gd.landuse_xplan.features.forEach(f => {
+                    const c = centroid(f);
+                    if (!c || !pip(c, polyCoords)) return;
+                    const pn = (f.properties.pl_number || '').trim();
+                    if (pn) xplanPlanNumbers.add(pn);
+                });
+                // Get polygon boundaries of plans that have xplan data
+                gd.plans.features.forEach(f => {
+                    const pn = (f.properties.plan_name || f.properties.TABA || '').trim();
+                    if (!xplanPlanNumbers.has(pn)) return;
+                    try {
+                        const g = f.geometry;
+                        let coords;
+                        if (g.type === 'Polygon') coords = g.coordinates[0];
+                        else if (g.type === 'MultiPolygon') coords = g.coordinates[0][0];
+                        if (coords) plansWithXplan.push(coords);
+                    } catch(e) {}
+                });
+            }
+
+            // Build "future" column: xplan where plan has coverage, kayam where not
+            const future = { ...futureXplan };
+            let totalFuture = totalFutureXplan;
+
+            kayamInside.forEach(k => {
+                let coveredByPlan = false;
+                for (const planCoords of plansWithXplan) {
+                    if (pip(k.centroid, planCoords)) { coveredByPlan = true; break; }
+                }
+                if (!coveredByPlan) {
+                    // This kayam area is outside any plan with xplan data - keep as-is in future
+                    future[k.group] = (future[k.group] || 0) + k.area;
+                    totalFuture += k.area;
+                }
+            });
+
+            // Normalize future to same total as existing (same land area)
+            // The xplan and kayam data may not perfectly align geometrically,
+            // so we scale future proportionally to match existing total
+            if (totalFuture > 0 && totalExisting > 0 && totalFuture !== totalExisting) {
+                const scale = totalExisting / totalFuture;
+                for (const g of Object.keys(future)) {
+                    future[g] = future[g] * scale;
+                }
+                totalFuture = totalExisting;
+            }
+
+            // Merge all groups
+            const allGroups = new Set([...Object.keys(existing), ...Object.keys(future)]);
+            const rows = [];
+            allGroups.forEach(g => {
+                const ex = existing[g] || 0;
+                const fu = future[g] || 0;
+                if (ex > 0 || fu > 0) rows.push({ group: g, existing: ex, future: fu, diff: fu - ex });
+            });
+            rows.sort((a, b) => Math.max(b.existing, b.future) - Math.max(a.existing, a.future));
+
+            return { rows, totalExisting, totalFuture, planNames: planNames || [] };
+        }
+
+        function showLanduseComparePanel(result) {
+            const prev = document.getElementById('landuse-compare-result');
+            if (prev) prev.remove();
+            if (!result || result.rows.length === 0) return;
+
+            const planLabel = result.planNames.length > 0
+                ? result.planNames.join(', ')
+                : 'אזור נבחר';
+            // Use the larger total as the reference area for both columns
+            const refArea = Math.max(result.totalExisting, result.totalFuture);
+
+            // Store data on window for toggle
+            window.__landuseCompareData = result;
+            window.__landuseCompareUnit = 'sqm'; // 'sqm' | 'pct'
+
+            function renderTable(unit) {
+                const rows = result.rows;
+                return rows.map(r => {
+                    let exStr, fuStr, diffStr;
+                    if (unit === 'pct') {
+                        const exPct = refArea > 0 ? (r.existing / refArea * 100) : 0;
+                        const fuPct = refArea > 0 ? (r.future / refArea * 100) : 0;
+                        const diffPct = fuPct - exPct;
+                        exStr = r.existing > 0 ? exPct.toFixed(1) + '%' : '-';
+                        fuStr = r.future > 0 ? fuPct.toFixed(1) + '%' : '-';
+                        diffStr = (exPct === 0 && fuPct === 0) ? '-' : (diffPct > 0 ? '+' : '') + diffPct.toFixed(1) + '%';
+                    } else {
+                        exStr = r.existing > 0 ? Math.round(r.existing).toLocaleString() : '-';
+                        fuStr = r.future > 0 ? Math.round(r.future).toLocaleString() : '-';
+                        const diffVal = r.diff;
+                        diffStr = (r.existing === 0 && r.future === 0) ? '-' : (diffVal > 0 ? '+' : '') + Math.round(diffVal).toLocaleString();
+                    }
+                    const diffVal = r.diff;
+                    const diffColor = diffVal > 0 ? '#4CAF50' : diffVal < 0 ? '#e94560' : '#888';
+                    const GROUP_COLORS = {
+                        'מגורים': '#ffdf7f', 'מסחר': '#adadad', 'תעשיה/תעסוקה': '#cc66cc',
+                        'מוסדות ציבור': '#cc9966', 'שטחים פתוחים': '#7fff7f',
+                        'דרכים/תחבורה': '#ff003f', 'מתקנים הנדסיים': '#7f7fff',
+                        'יער/חקלאי': '#00cc33', 'תיירות/מלונאות': '#ff7f9f'
+                    };
+                    const groupColor = GROUP_COLORS[r.group] || '#888';
+                    return '<tr>' +
+                        '<td style="padding:6px 8px;border-bottom:1px solid #333;text-align:right">' +
+                        '<span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:' + groupColor + ';margin-left:6px;vertical-align:middle"></span>' + r.group +
+                        '</td>' +
+                        '<td style="padding:6px 8px;border-bottom:1px solid #333;text-align:center;font-family:monospace">' + exStr + '</td>' +
+                        '<td style="padding:6px 8px;border-bottom:1px solid #333;text-align:center;font-family:monospace">' + fuStr + '</td>' +
+                        '<td style="padding:6px 8px;border-bottom:1px solid #333;text-align:center;font-family:monospace;color:' + diffColor + ';font-weight:bold">' + diffStr + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            const unitLabel = 'מ"ר';
+            const totalStr = Math.round(refArea).toLocaleString();
+
+            const div = document.createElement('div');
+            div.id = 'landuse-compare-result';
+            div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:400px;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+            div.innerHTML =
+                '<button onclick="var el=document.getElementById(\'landuse-compare-result\');if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                '<h3 style="color:#e94560;margin:0 0 6px;font-size:16px">ייעודי קרקע נכנס-יוצא</h3>' +
+                '<div style="font-size:12px;color:#aaa;margin-bottom:8px">' + planLabel + ' · ' + (refArea / 1000).toFixed(1) + ' דונם</div>' +
+                '<div style="margin-bottom:10px;text-align:left">' +
+                '<button id="landuse-unit-toggle" style="background:#2a2a5a;color:#aaa;border:1px solid #555;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">מ"ר ⇄ %</button>' +
+                '</div>' +
+                '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+                '<thead><tr style="color:#aaa;font-size:11px">' +
+                '<th style="padding:6px 8px;text-align:right;border-bottom:2px solid #555">ייעוד</th>' +
+                '<th id="landuse-col-ex" style="padding:6px 8px;text-align:center;border-bottom:2px solid #555">קיים (' + unitLabel + ')</th>' +
+                '<th id="landuse-col-fu" style="padding:6px 8px;text-align:center;border-bottom:2px solid #555">עתידי (' + unitLabel + ')</th>' +
+                '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #555">שינוי</th>' +
+                '</tr></thead>' +
+                '<tbody id="landuse-tbody">' + renderTable('sqm') + '</tbody>' +
+                '<tfoot><tr style="font-weight:bold;border-top:2px solid #555">' +
+                '<td style="padding:8px">סה"כ</td>' +
+                '<td id="landuse-total-ex" style="padding:8px;text-align:center;font-family:monospace">' + totalStr + '</td>' +
+                '<td id="landuse-total-fu" style="padding:8px;text-align:center;font-family:monospace">' + totalStr + '</td>' +
+                '<td style="padding:8px;text-align:center">-</td>' +
+                '</tr></tfoot></table>' +
+                '<div style="border-top:1px solid #333;padding-top:10px;margin-top:10px;display:flex;gap:8px;justify-content:center">' +
+                '<button id="landuse-print-btn" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
+                '<button id="landuse-area-summary-btn" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 סיכום יח"ד</button>' +
+                '</div>';
+
+            document.body.appendChild(div);
+
+            // Toggle unit button
+            document.getElementById('landuse-unit-toggle').addEventListener('click', function() {
+                const cur = window.__landuseCompareUnit;
+                const next = cur === 'sqm' ? 'pct' : 'sqm';
+                window.__landuseCompareUnit = next;
+                const tbody = document.getElementById('landuse-tbody');
+                if (tbody) tbody.innerHTML = renderTable(next);
+                const colEx = document.getElementById('landuse-col-ex');
+                const colFu = document.getElementById('landuse-col-fu');
+                const totEx = document.getElementById('landuse-total-ex');
+                const totFu = document.getElementById('landuse-total-fu');
+                if (next === 'pct') {
+                    if (colEx) colEx.textContent = 'קיים (%)';
+                    if (colFu) colFu.textContent = 'עתידי (%)';
+                    if (totEx) totEx.textContent = '100%';
+                    if (totFu) totFu.textContent = '100%';
+                } else {
+                    if (colEx) colEx.textContent = 'קיים (מ"ר)';
+                    if (colFu) colFu.textContent = 'עתידי (מ"ר)';
+                    if (totEx) totEx.textContent = totalStr;
+                    if (totFu) totFu.textContent = totalStr;
+                }
+                this.textContent = next === 'sqm' ? 'מ"ר ⇄ %' : '% ⇄ מ"ר';
+            });
+
+            // Area summary button - trigger regular area analysis
+            document.getElementById('landuse-area-summary-btn').addEventListener('click', function() {
+                if (window.__landuseComparePolyCoords) {
+                    // Simulate areaFinished with the same polygon to trigger area analysis
+                    const coords = window.__landuseComparePolyCoords;
+                    const points = coords.slice(0, -1).map(c => ({ lat: c[1], lng: c[0] }));
+                    // Remove landuse panel, set mode to null so area analysis runs
+                    const el = document.getElementById('landuse-compare-result');
+                    if (el) el.remove();
+                    window.__triggerAreaAnalysis && window.__triggerAreaAnalysis(points);
+                }
+            });
+
+            // Print button
+            document.getElementById('landuse-print-btn').addEventListener('click', function() {
+                const title = prompt('כותרת הדו"ח:', 'ייעודי קרקע נכנס-יוצא - ' + planLabel);
+                if (title === null) return;
+
+                const map = window.__mapInstanceForPrint;
+                const polyCoords = window.__landuseComparePolyCoords;
+                if (!map || !polyCoords) { window.print(); return; }
+
+                // Calculate bounds from polygon
+                let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                polyCoords.forEach(c => {
+                    if (c[1] < minLat) minLat = c[1];
+                    if (c[1] > maxLat) maxLat = c[1];
+                    if (c[0] < minLng) minLng = c[0];
+                    if (c[0] > maxLng) maxLng = c[0];
+                });
+                const pad = 0.001;
+                const bounds = [[minLat - pad, minLng - pad], [maxLat + pad, maxLng + pad]];
+
+                // Capture current map state
+                const origCenter = map.getCenter();
+                const origZoom = map.getZoom();
+
+                // Fit to polygon bounds for screenshot
+                map.fitBounds(bounds);
+
+                setTimeout(() => {
+                    html2canvas(map.getContainer(), { useCORS: true, scale: 1.5 }).then(canvas1 => {
+                        const imgExisting = canvas1.toDataURL('image/png');
+
+                        // Now enable xplan layer temporarily for future view
+                        // For now just use same image (user can manually toggle)
+                        const imgFuture = imgExisting;
+
+                        // Restore map
+                        map.setView(origCenter, origZoom);
+
+                        // Build print HTML
+                        const currentUnit = window.__landuseCompareUnit || 'sqm';
+                        const tableHtml = renderTable(currentUnit);
+                        const unitSuffix = currentUnit === 'pct' ? '%' : 'מ"ר';
+
+                        const printWin = window.open('', '_blank');
+                        printWin.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">
+                            <title>${title}</title>
+                            <style>
+                                body { font-family: Assistant, Arial, sans-serif; padding: 20px; color: #222; direction: rtl; }
+                                h1 { color: #c0392b; font-size: 20px; margin-bottom: 4px; }
+                                .subtitle { color: #666; font-size: 13px; margin-bottom: 16px; }
+                                .maps { display: flex; gap: 12px; margin-bottom: 16px; }
+                                .map-box { flex: 1; text-align: center; }
+                                .map-box img { width: 100%; border: 1px solid #ccc; border-radius: 6px; }
+                                .map-label { font-size: 12px; color: #555; margin-top: 4px; font-weight: bold; }
+                                table { width: 100%; border-collapse: collapse; font-size: 13px; }
+                                th { padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 11px; color: #555; }
+                                th:first-child { text-align: right; }
+                                td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; font-family: monospace; }
+                                td:first-child { text-align: right; font-family: Assistant, Arial, sans-serif; }
+                                tfoot td { font-weight: bold; border-top: 2px solid #333; }
+                                .color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-left: 6px; vertical-align: middle; }
+                                .positive { color: #27ae60; } .negative { color: #c0392b; }
+                                @media print { body { padding: 0; } }
+                            </style>
+                        </head><body>
+                            <h1>${title}</h1>
+                            <div class="subtitle">${planLabel} · ${(refArea / 1000).toFixed(1)} דונם</div>
+                            <div class="maps">
+                                <div class="map-box"><img src="${imgExisting}"><div class="map-label">מצב קיים</div></div>
+                                <div class="map-box"><img src="${imgFuture}"><div class="map-label">מצב עתידי</div></div>
+                            </div>
+                            <table>
+                                <thead><tr><th>ייעוד</th><th>קיים (${unitSuffix})</th><th>עתידי (${unitSuffix})</th><th>שינוי</th></tr></thead>
+                                <tbody>${tableHtml.replace(/color:#4CAF50/g, 'color:#27ae60').replace(/color:#e94560/g, 'color:#c0392b')}</tbody>
+                                <tfoot><tr><td>סה"כ</td><td>${currentUnit === 'pct' ? '100%' : totalStr}</td><td>${currentUnit === 'pct' ? '100%' : totalStr}</td><td>-</td></tr></tfoot>
+                            </table>
+                        </body></html>`);
+                        printWin.document.close();
+                        setTimeout(() => printWin.print(), 500);
+                    });
+                }, 800);
+            });
+        }
+
         const STAGE_COLORS = {
             'ג-רישוי בתהליך': '#4ba1f0',
             'ג-רישוי  בתהליך': '#4ba1f0',
@@ -1832,6 +2418,7 @@
             { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
             { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
             { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
+            { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
         ];
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -1884,6 +2471,7 @@
             const [dataLoaded, setDataLoaded] = useState(false);
             const [cursorPos, setCursorPos] = useState(null);
             const [searchText, setSearchText] = useState('');
+            const [collapsedGroups, setCollapsedGroups] = useState({});
             const [planSearch, setPlanSearch] = useState('');
             const [planIndex, setPlanIndex] = useState([]);
             const [showSearchResults, setShowSearchResults] = useState(false);
@@ -1895,7 +2483,8 @@
                 densification: false, // תכניות לעיבוי שטחים חומים
                 objections: false,     // תכניות המופקדות להתנגדויות
                 infrastructure: false,
-                archived: false        // תכניות שנגנזו/נדחו
+                archived: false,        // תכניות שנגנזו/נדחו
+                shavaz_demolition: false // מבני ציבור להריסה במסגרת התחדשות עירונית
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -1907,6 +2496,14 @@
             const [areaPts, setAreaPts] = useState(0);
             const areaRef = useRef({ points: [], markers: [], polygon: null });
             const areaModeRef = useRef(false);
+            const [landuseCompareMode, setLanduseCompareMode] = useState(null); // null | 'plan' | 'area'
+            const landuseCompareModeRef = useRef(null);
+            // Expose function to trigger area analysis from landuse panel
+            window.__triggerAreaAnalysis = (points) => {
+                landuseCompareModeRef.current = null;
+                setLanduseCompareMode(null);
+                setAreaFinished(points);
+            };
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
             const [showPrint, setShowPrint] = useState(false);
@@ -2065,6 +2662,53 @@
                     minZoom: 13,
                     preferCanvas: false
                 });
+                window.__mapInstanceForPrint = map;
+
+                // Inject SVG hatch patterns into map
+                setTimeout(() => {
+                    const svgEl = map.getContainer().querySelector('svg') || map.getContainer().querySelector('.leaflet-overlay-pane svg');
+                    if (!svgEl) return;
+                    let defs = svgEl.querySelector('defs');
+                    if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svgEl.insertBefore(defs, svgEl.firstChild); }
+                    // Diagonal hatch patterns - unique per hatch color
+                    const hatchDefs = [
+                        { id: 'hatch-blue', color: '#003fff', angle: -45 },
+                        { id: 'hatch-green', color: '#009900', angle: -45 },
+                        { id: 'hatch-pink', color: '#ff7f9f', angle: -45 },
+                        { id: 'hatch-brown', color: '#b4643c', angle: -45 },
+                        { id: 'hatch-yellow', color: '#ffff00', angle: -45 },
+                        { id: 'hatch-teal', color: '#00c8b4', angle: -45 },
+                        { id: 'hatch-grey', color: '#505050', angle: -45 },
+                        { id: 'hatch-orange', color: '#ff9640', angle: -45 },
+                        { id: 'hatch-darkred', color: '#b4002d', angle: -45 },
+                        { id: 'hatch-cyan', color: '#00b4dc', angle: -45 },
+                        { id: 'hatch-red-cross', color: '#c80000', angle: 0, cross: true },
+                        { id: 'hatch-teal-cross', color: '#00d2c8', angle: 0, cross: true },
+                        { id: 'hatch-grey-cross', color: '#646464', angle: 0, cross: true },
+                    ];
+                    hatchDefs.forEach(h => {
+                        const pat = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                        pat.setAttribute('id', h.id);
+                        pat.setAttribute('patternUnits', 'userSpaceOnUse');
+                        pat.setAttribute('width', '8');
+                        pat.setAttribute('height', '8');
+                        pat.setAttribute('patternTransform', 'rotate(' + (h.angle || -45) + ')');
+                        const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line1.setAttribute('x1', '0'); line1.setAttribute('y1', '0');
+                        line1.setAttribute('x2', '0'); line1.setAttribute('y2', '8');
+                        line1.setAttribute('stroke', h.color); line1.setAttribute('stroke-width', '2.5');
+                        pat.appendChild(line1);
+                        if (h.cross) {
+                            const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line2.setAttribute('x1', '0'); line2.setAttribute('y1', '0');
+                            line2.setAttribute('x2', '8'); line2.setAttribute('y2', '0');
+                            line2.setAttribute('stroke', h.color); line2.setAttribute('stroke-width', '2.5');
+                            pat.appendChild(line2);
+                        }
+                        defs.appendChild(pat);
+                    });
+                    window.__hatchPatternsReady = true;
+                }, 2000);
 
                 // Apply layer state from hash
                 if (hashParams && hashParams.layers) {
@@ -2170,6 +2814,8 @@
                 minahakLabelsP.style.pointerEvents = 'none';
                 const shavazP = map.createPane('shavazPane');
                 shavazP.style.zIndex = 440;
+                const landuseP = map.createPane('landusePane');
+                landuseP.style.zIndex = 295;
 
                 // Load all GeoJSON data + CSV for plan_type enrichment
                 const entries = Object.entries(GEOJSON_FILES);
@@ -2217,6 +2863,7 @@
                         }
                     }
                     geoDataRef.current = gd;
+                    window.__geoDataForLanduse = gd; // expose for landuse comparison
                     setDataLoaded(true);
                     setLoading(false);
                     // Extract unique plan types for filter
@@ -2266,6 +2913,109 @@
             useEffect(() => { layersRef.current = layers; updateHash(); }, [layers]);
             // GeoJSON layers have built-in pointer cursor on hover — no probe needed
 
+            // ── Landuse compare: plan selection mode ──
+            useEffect(() => {
+                landuseCompareModeRef.current = landuseCompareMode;
+                const map = mapInstanceRef.current;
+                if (!map || landuseCompareMode !== 'plan') return;
+                map.getContainer().classList.add('measuring');
+
+                function onPlanClick(e) {
+                    // Find clicked plan polygon
+                    const plansLayer = geoLayersRef.current.plans;
+                    if (!plansLayer) return;
+                    const latlng = e.latlng;
+                    let clickedFeature = null;
+                    plansLayer.eachLayer(layer => {
+                        if (clickedFeature) return;
+                        try {
+                            const geo = layer.feature.geometry;
+                            let coords;
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                            else return;
+                            // pip test
+                            const lng = latlng.lng, lat = latlng.lat;
+                            let inside = false;
+                            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                                const [xi, yi] = coords[i], [xj, yj] = coords[j];
+                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) clickedFeature = layer.feature;
+                        } catch(ex) {}
+                    });
+
+                    if (clickedFeature) {
+                        const geo = clickedFeature.geometry;
+                        let coords;
+                        try {
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                        } catch(ex) { return; }
+                        if (!coords) return;
+                        const polyCoords = [...coords];
+                        if (polyCoords[0][0] !== polyCoords[polyCoords.length-1][0]) polyCoords.push(polyCoords[0]);
+                        const planName = clickedFeature.properties.plan_name || clickedFeature.properties.pl_number || clickedFeature.properties.TABA || '';
+                        const result = analyzeLanduseComparison(polyCoords, [planName]);
+                        showLanduseComparePanel(result);
+                        setLanduseCompareMode(null);
+                    }
+                }
+
+                map.on('click', onPlanClick);
+                function onKeyDown(e) { if (e.key === 'Escape') { setLanduseCompareMode(null); } }
+                document.addEventListener('keydown', onKeyDown);
+
+                return () => {
+                    map.off('click', onPlanClick);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.getContainer().classList.remove('measuring');
+                };
+            }, [landuseCompareMode]);
+
+            // ── Landuse compare: area mode finished → run analysis ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3 || landuseCompareModeRef.current !== 'area') return;
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
+
+                // Find which plans overlap
+                const gd = window.__geoDataForLanduse;
+                const planNames = [];
+                if (gd && gd.plans) {
+                    gd.plans.features.forEach(f => {
+                        const geo = f.geometry;
+                        if (!geo || !geo.coordinates) return;
+                        let coords;
+                        try {
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                            else return;
+                        } catch(e) { return; }
+                        let cx = 0, cy = 0, n = 0;
+                        for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                        if (n === 0) return;
+                        cx /= n; cy /= n;
+                        // pip check
+                        let inside = false;
+                        for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+                            const [xi, yi] = polyCoords[i], [xj, yj] = polyCoords[j];
+                            if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                inside = !inside;
+                        }
+                        if (inside) planNames.push(f.properties.plan_name || f.properties.TABA || '');
+                    });
+                }
+
+                const result = analyzeLanduseComparison(polyCoords, planNames);
+                showLanduseComparePanel(result);
+                // Mark that landuse handled this areaFinished - so regular area analysis skips it
+                window.__landuseHandledArea = true;
+                landuseCompareModeRef.current = null;
+                setLanduseCompareMode(null);
+            }, [areaFinished]);
+
             // ── Area select: drawing mode ──
             useEffect(() => {
                 areaModeRef.current = areaMode;
@@ -2309,6 +3059,9 @@
             // ── Area select: analyze results when drawing is finished ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3) return;
+                // Skip regular area analysis if landuse compare handled this
+                if (landuseCompareModeRef.current === 'area') return;
+                if (window.__landuseHandledArea) { window.__landuseHandledArea = false; return; }
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return;
 
@@ -3210,7 +3963,7 @@
                 }
 
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
-                if (gd.sub_neighborhoods) {
+                if (gd.sub_neighborhoods && layers['sub_neighborhoods']) {
                     const zoom = map.getZoom();
                     geoLayersRef.current.sub_neighborhoods = L.geoJSON(gd.sub_neighborhoods, {
                         pane: 'subNeighborhoodPane',
@@ -3337,10 +4090,15 @@
                         style: f => {
                             const status = normalizeStatus(f.properties.status_mavat || '');
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
+                            const statusColor = STATUS_COLORS[status] || '#888';
                             const isSatellite = basemap === 'satellite';
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
+                            const landuseActive = layers['landuse_xplan'];
+                            if (landuseActive) {
+                                return { color: statusColor, weight: 2.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                            }
                             if (shavazActive) {
-                                return { color: STATUS_COLORS[status] || '#888', weight: 1.5, fillColor: fillColor, fillOpacity: 0.07, dashArray: '4,2' };
+                                return { color: statusColor, weight: 1.5, fillColor: fillColor, fillOpacity: 0.07, dashArray: '4,2' };
                             }
                             return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * 0.3, dashArray: '4,2' };
                         },
@@ -3417,7 +4175,10 @@
                             layer.on('mouseover', () => {
                                 const isSat = basemap === 'satellite';
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
-                                if (shavazOn) {
+                                const landuseOn = layersRef.current['landuse_xplan'];
+                                if (landuseOn) {
+                                    layer.setStyle({ weight: 4, fillOpacity: 0 });
+                                } else if (shavazOn) {
                                     layer.setStyle({ weight: 3, fillOpacity: 0.12 });
                                 } else {
                                     layer.setStyle({ weight: 3, fillOpacity: isSat ? 1 : opacity * 0.5 });
@@ -3426,10 +4187,14 @@
                             layer.on('mouseout', () => {
                                 const status = normalizeStatus(f.properties.status_mavat || '');
                                 const fillColor = STATUS_COLORS[status] || '#f0e0d0';
+                                const statusColor = STATUS_COLORS[status] || '#888';
                                 const isSat = basemap === 'satellite';
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
-                                if (shavazOn) {
-                                    layer.setStyle({ weight: 1.5, fillOpacity: 0.07, fillColor: fillColor, color: STATUS_COLORS[status] || '#888' });
+                                const landuseOn = layersRef.current['landuse_xplan'];
+                                if (landuseOn) {
+                                    layer.setStyle({ weight: 2.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
+                                } else if (shavazOn) {
+                                    layer.setStyle({ weight: 1.5, fillOpacity: 0.07, fillColor: fillColor, color: statusColor });
                                 } else {
                                     layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * 0.3, fillColor: fillColor });
                                 }
@@ -3539,7 +4304,7 @@
                 }
 
                 // --- Topics overlay ---
-                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure || planningTopics.archived)) {
+                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
                     if (svgEl) {
@@ -3553,6 +4318,9 @@
                                 </pattern>
                                 <pattern id="hatch-orange" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(-45)">
                                     <line x1="0" y1="0" x2="0" y2="8" stroke="#ff8c00" stroke-width="2" stroke-opacity="0.6"/>
+                                </pattern>
+                                <pattern id="hatch-red" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                                    <line x1="0" y1="0" x2="0" y2="8" stroke="#ff4444" stroke-width="2" stroke-opacity="0.7"/>
                                 </pattern>`;
                         }
                     }
@@ -3671,6 +4439,70 @@
                     geoLayersRef.current.archived = archivedLayer;
                 }
 
+                // --- Shavaz demolition overlay (public buildings overlapping active plans) ---
+                if (planningTopics.shavaz_demolition && gd.shavaz_kayam && gd.plans) {
+                    const activePlans = gd.plans.features.filter(f => {
+                        const s = normalizeStatus((f.properties.status_mavat || '').trim());
+                        return s !== 'נגנזה' && s !== 'נדחתה' && s !== 'נגנזה/נדחתה';
+                    });
+                    function pipCheck(coords, lng, lat) {
+                        let inside = false;
+                        for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                            const xi = coords[i][0], yi = coords[i][1];
+                            const xj = coords[j][0], yj = coords[j][1];
+                            if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+                        }
+                        return inside;
+                    }
+                    function getOuterRing(geo) {
+                        if (geo.type === 'MultiPolygon') return geo.coordinates[0][0];
+                        if (geo.type === 'Polygon') return geo.coordinates[0];
+                        return null;
+                    }
+                    function shavazOverlapsPlan(sf) {
+                        const sb = L.geoJSON(sf).getBounds();
+                        const sCoords = getOuterRing(sf.geometry);
+                        if (!sCoords) return false;
+                        const sc = sb.getCenter();
+                        for (const plan of activePlans) {
+                            try {
+                                const pb = L.geoJSON(plan).getBounds();
+                                if (!sb.intersects(pb)) continue;
+                                const pCoords = getOuterRing(plan.geometry);
+                                if (!pCoords) continue;
+                                const pc = pb.getCenter();
+                                if (pipCheck(sCoords, pc.lng, pc.lat)) return true;
+                                if (pipCheck(pCoords, sc.lng, sc.lat)) return true;
+                            } catch(ex) {}
+                        }
+                        return false;
+                    }
+                    const overlapping = { type: 'FeatureCollection', features: gd.shavaz_kayam.features.filter(shavazOverlapsPlan) };
+                    const demolitionLayer = L.geoJSON(overlapping, {
+                        pane: 'topicsPane',
+                        renderer: L.svg({ pane: 'topicsPane' }),
+                        style: () => ({ color: '#ff4444', weight: 2, fillOpacity: 0 }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('add', () => {
+                                const el = layer.getElement();
+                                if (el) { el.setAttribute('fill', 'url(#hatch-red)'); el.setAttribute('fill-opacity', '1'); el.style.pointerEvents = 'auto'; }
+                            });
+                            layer.on('click', () => {
+                                const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(false) })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildShavazPopup(f.properties, false));
+                                popup.openOn(map);
+                                bindShavazPopupEvents(popup, f.properties, layer.getBounds().getCenter());
+                            });
+                        }
+                    }).addTo(map);
+                    demolitionLayer.eachLayer(layer => {
+                        const el = layer.getElement();
+                        if (el) { el.setAttribute('fill', 'url(#hatch-red)'); el.setAttribute('fill-opacity', '1'); }
+                    });
+                    geoLayersRef.current.shavaz_demolition = demolitionLayer;
+                }
+
                 // Helper: find all overlapping shavaz features at a click point
                 function findOverlappingShavaz(clickLatLng) {
                     const allShavaz = [];
@@ -3779,6 +4611,48 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
+                }
+
+                // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
+                if (layers['yiud_karka_kayam'] && gd.yiud_karka_kayam) {
+                    const xplanAlsoOn = layers['landuse_xplan'];
+                    const yiudKayamLayer = L.geoJSON(gd.yiud_karka_kayam, {
+                        pane: 'landusePane',
+                        style: f => {
+                            const name = (f.properties.Descr || '').trim();
+                            const c = getLanduseColor(name);
+                            return { fillColor: c, fillOpacity: xplanAlsoOn ? 0.35 : 0.65, color: xplanAlsoOn ? '#999' : '#333', weight: 0.15 };
+                        },
+                        interactive: !layers['plans'],
+                        onEachFeature: !layers['plans'] ? (f, layer) => {
+                            layer.bindTooltip(f.properties.Descr || '', { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                        } : undefined
+                    }).addTo(map);
+                    geoLayersRef.current.yiud_karka_kayam = yiudKayamLayer;
+                    setTimeout(() => applyHatchToLayer(yiudKayamLayer), 500);
+                }
+
+                // --- Landuse XPLAN (land use from MAVAT/XPLAN) ---
+                if (layers['landuse_xplan'] && gd.landuse_xplan) {
+                    const bothLanduseOn = layers['yiud_karka_kayam'];
+                    const xplanLayer = L.geoJSON(gd.landuse_xplan, {
+                        pane: 'landusePane',
+                        filter: f => {
+                            const n = (f.properties.mavat_name || '').trim();
+                            return n !== '' && n !== 'NULL' && n !== 'null' && n !== 'None';
+                        },
+                        style: f => {
+                            const name = (f.properties.mavat_name || '').trim();
+                            const c = getLanduseColor(name);
+                            return { fillColor: c, fillOpacity: 0.75, color: bothLanduseOn ? '#000' : '#333', weight: bothLanduseOn ? 1 : 0.25, className: bothLanduseOn ? 'landuse-shadow' : '' };
+                        },
+                        interactive: !layers['plans'],
+                        onEachFeature: !layers['plans'] ? (f, layer) => {
+                            layer.bindTooltip(f.properties.mavat_name || '', { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                        } : undefined
+                    }).addTo(map);
+                    geoLayersRef.current.landuse_xplan = xplanLayer;
+                    setTimeout(() => applyHatchToLayer(xplanLayer), 500);
                 }
 
                 // --- Permits overlay ---
@@ -4066,12 +4940,21 @@
                 }
                 html += '</div>';
                 const tabaForJump = props.taba || props.TABA || '';
-                html += '<div class="popup-footer" style="flex-direction:row;border-top:none;padding-top:0">';
-                html += `<button class="popup-icon-btn" data-action="jump-to-shavaz" data-taba="${tabaForJump}" title="מבני ציבור">🏛️</button>`;
-                if (originShavazProps) {
-                    html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
+                // Check if any shavaz feature matches this TABA
+                const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
+                const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
+                    ds && ds.features && ds.features.some(f => (f.properties.TABA || f.properties.taba || '') === tabaForJump)
+                );
+                if (hasShavaz || originShavazProps) {
+                    html += '<div class="popup-footer" style="flex-direction:row;border-top:none;padding-top:0">';
+                    if (hasShavaz) {
+                        html += `<button class="popup-icon-btn" data-action="jump-to-shavaz" data-taba="${tabaForJump}" title="מבני ציבור">🏛️</button>`;
+                    }
+                    if (originShavazProps) {
+                        html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
+                    }
+                    html += '</div>';
                 }
-                html += '</div>';
                 // Annotation display (if exists)
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
                 html += '</div>';
@@ -4632,7 +5515,8 @@
 
                             {Object.entries(filteredConfig).map(([groupKey, group]) => (
                                 <div key={groupKey}>
-                                    <div className="layer-group-title">
+                                    <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, [groupKey]: !prev[groupKey]}))} style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',gap:4}}>
+                                        <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups[groupKey]?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
                                         {groupKey === 'admin' && (
                                             <input type="checkbox"
                                                 checked={group.layers.every(l => layers[l.id])}
@@ -4650,7 +5534,7 @@
                                         )}
                                         {group.title}
                                     </div>
-                                    {group.layers.map(layer => (
+                                    {!collapsedGroups[groupKey] && group.layers.map(layer => (
                                         <div className="layer-item" key={layer.id}
                                              title={layer.desc || ''}>
                                             <input
@@ -4718,65 +5602,15 @@
                                     <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
                                     <label>תכניות שנגנזו</label>
                                 </div>
+                                <div className="layer-item"
+                                     style={{cursor:'pointer'}}
+                                     title='מבני ציבור להריסה במסגרת התחדשות עירונית'
+                                     onClick={() => setPlanningTopics(prev => ({...prev, shavaz_demolition: !prev.shavaz_demolition}))}>
+                                    <input type="checkbox" checked={planningTopics.shavaz_demolition} onChange={() => {}} />
+                                    <label>מבני ציבור להריסה במסגרת התחדשות עירונית</label>
+                                </div>
                         </div>
 
-                        {/* ── Dashboard / Statistics ── */}
-                        <div className="dashboard-section">
-                            <div className="dashboard-toggle" onClick={() => setDashboardOpen(prev => !prev)}>
-                                <span className={`dashboard-arrow ${dashboardOpen ? 'open' : ''}`}>▶</span>
-                                <h3>סטטיסטיקה</h3>
-                            </div>
-                            {dashboardOpen && (() => {
-                                const plans = geoDataRef.current.plans;
-                                if (!plans || !plans.features) return React.createElement('div', {className:'dashboard-content', style:{color:'#6a6a8a', fontSize:'0.85em'}}, 'טוען נתונים...');
-                                const features = plans.features;
-                                const rejectedStatuses = ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'];
-                                const activeFeatures = features.filter(f => {
-                                    const s = (f.properties.status_mavat || '').trim();
-                                    return !rejectedStatuses.includes(s);
-                                });
-                                const totalActive = activeFeatures.length;
-                                const totalUnitsAdd = activeFeatures.reduce((sum, f) => {
-                                    return sum + (parseFloat(f.properties.units_add) || 0);
-                                }, 0);
-                                // Group by status (active only)
-                                const statusCounts = {};
-                                activeFeatures.forEach(f => {
-                                    const s = normalizeStatus((f.properties.status_mavat || '').trim()) || 'לא ידוע';
-                                    statusCounts[s] = (statusCounts[s] || 0) + 1;
-                                });
-                                const statusEntries = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
-                                const maxCount = statusEntries.length > 0 ? statusEntries[0][1] : 1;
-                                return React.createElement('div', {className: 'dashboard-content'},
-                                    React.createElement('div', {className: 'dashboard-stat'},
-                                        React.createElement('span', {className: 'dashboard-stat-label'}, 'סה"כ תכניות פעילות'),
-                                        React.createElement('span', {className: 'dashboard-stat-value'}, totalActive.toLocaleString())
-                                    ),
-                                    React.createElement('div', {className: 'dashboard-stat'},
-                                        React.createElement('span', {className: 'dashboard-stat-label'}, 'סה"כ יח"ד תוספת'),
-                                        React.createElement('span', {className: 'dashboard-stat-value'}, totalUnitsAdd.toLocaleString())
-                                    ),
-                                    React.createElement('div', {className: 'dashboard-bar-section'},
-                                        React.createElement('div', {className: 'dashboard-bar-title'}, 'פילוח לפי סטטוס'),
-                                        statusEntries.map(([status, count]) =>
-                                            React.createElement('div', {className: 'dashboard-bar-row', key: status},
-                                                React.createElement('span', {className: 'dashboard-bar-label', title: status}, status),
-                                                React.createElement('div', {className: 'dashboard-bar-track'},
-                                                    React.createElement('div', {
-                                                        className: 'dashboard-bar-fill',
-                                                        style: {
-                                                            width: Math.round((count / maxCount) * 100) + '%',
-                                                            background: STATUS_COLORS[status] || '#5dade2'
-                                                        }
-                                                    })
-                                                ),
-                                                React.createElement('span', {className: 'dashboard-bar-count'}, count)
-                                            )
-                                        )
-                                    )
-                                );
-                            })()}
-                        </div>
 
                         <div className="sidebar-section">
                             <h3>שקיפות שכבות</h3>
@@ -4971,6 +5805,39 @@
                                 </svg>
                                 <span className="toolbar-label">{areaMode ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : 'אזור'}</span>
                             </button>
+
+                            {/* ייעודי קרקע נכנס-יוצא */}
+                            <button
+                                className={`toolbar-btn ${landuseCompareMode ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (landuseCompareMode) {
+                                        setLanduseCompareMode(null);
+                                        setActiveDropdown(null);
+                                    } else {
+                                        setActiveDropdown(activeDropdown === 'landuse-compare' ? null : 'landuse-compare');
+                                    }
+                                }}
+                                title="ייעודי קרקע נכנס-יוצא"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                                    <path d="M10 7h4M7 10v4M14 17h-4M17 14v-4" />
+                                </svg>
+                                <span className="toolbar-label">{landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'נכנס-יוצא'}</span>
+                            </button>
+                            {activeDropdown === 'landuse-compare' && (
+                                <div style={{position:'absolute',top:'100%',background:'rgba(26,26,46,0.97)',border:'1px solid #444',borderRadius:'8px',padding:'4px',zIndex:9999,minWidth:'160px',boxShadow:'0 4px 20px rgba(0,0,0,0.5)'}}>
+                                    <button onClick={() => { setLanduseCompareMode('plan'); setActiveDropdown(null); }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
+                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
+                                        📋 בחירת תכנית
+                                    </button>
+                                    <button onClick={() => { setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
+                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
+                                        ✏️ בחירת אזור
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="toolbar-sep" />
 
