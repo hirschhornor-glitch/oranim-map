@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2370,7 +2371,6 @@
                 if (sidebarOverlay) sidebarOverlay.style.display = 'none';
                 if (toolbar) toolbar.style.display = 'none';
                 if (comparePanel) comparePanel.style.visibility = 'hidden';
-                if (loaderEl) loaderEl.style.display = 'none';
 
                 // Hide plan labels and other overlays for clean capture
                 const labelsPane = document.querySelector('.leaflet-labelsPane-pane, [class*="labels"]');
@@ -2402,17 +2402,16 @@
                 map.fitBounds(bounds);
 
                 setTimeout(() => {
-                    // Screenshot 1: existing (kayam only)
-                    html2canvas(map.getContainer(), { useCORS: true, scale: 1, width: map.getContainer().offsetWidth, height: map.getContainer().offsetHeight, logging: false, imageTimeout: 5000 }).then(canvas1 => {
-                        const imgExisting = canvas1.toDataURL('image/png');
+                    const mapEl = map.getContainer();
+                    // Screenshot 1: existing (kayam only) using dom-to-image
+                    domtoimage.toPng(mapEl, { quality: 0.9 }).then(imgExisting => {
 
                         // Add xplan layer for future view
                         if (xplanLayer) xplanLayer.addTo(map);
 
                         setTimeout(() => {
                             // Screenshot 2: future (kayam + xplan)
-                            html2canvas(map.getContainer(), { useCORS: true, scale: 1, width: map.getContainer().offsetWidth, height: map.getContainer().offsetHeight, logging: false, imageTimeout: 5000 }).then(canvas2 => {
-                                const imgFuture = canvas2.toDataURL('image/png');
+                            domtoimage.toPng(mapEl, { quality: 0.9 }).then(imgFuture => {
 
                                 // Cleanup: remove selection polygon, restore layers
                                 map.removeLayer(selectionPoly);
