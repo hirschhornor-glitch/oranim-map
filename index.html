@@ -2345,7 +2345,7 @@
                 const polyCoords = window.__landuseComparePolyCoords;
                 if (!map || !polyCoords) { loader.style.display = 'none'; window.print(); return; }
 
-                // Calculate bounds from polygon
+                // Generate SVG maps directly from GeoJSON data (no screenshot needed)
                 let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
                 polyCoords.forEach(c => {
                     if (c[1] < minLat) minLat = c[1];
@@ -2353,149 +2353,122 @@
                     if (c[0] < minLng) minLng = c[0];
                     if (c[0] > maxLng) maxLng = c[0];
                 });
-                const pad = 0.001;
-                const bounds = [[minLat - pad, minLng - pad], [maxLat + pad, maxLng + pad]];
+                const pad = (maxLat - minLat) * 0.1;
+                const padLng = (maxLng - minLng) * 0.1;
+                const bMinLat = minLat - pad, bMaxLat = maxLat + pad;
+                const bMinLng = minLng - padLng, bMaxLng = maxLng + padLng;
+                const svgW = 320, svgH = 240;
+                const scaleX = svgW / (bMaxLng - bMinLng);
+                const scaleY = svgH / (bMaxLat - bMinLat);
 
-                // Capture current map state
-                const origCenter = map.getCenter();
-                const origZoom = map.getZoom();
-                const geoLayers = window.__geoLayersForPrint || {};
+                function toSvgPt(lng, lat) {
+                    return [(lng - bMinLng) * scaleX, (bMaxLat - lat) * scaleY];
+                }
+                function featureToPath(f) {
+                    try {
+                        const g = f.geometry;
+                        let rings;
+                        if (g.type === 'Polygon') rings = g.coordinates;
+                        else if (g.type === 'MultiPolygon') rings = g.coordinates[0];
+                        else return '';
+                        return rings.map(ring =>
+                            'M' + ring.map(c => { const p = toSvgPt(c[0], c[1]); return p[0].toFixed(1)+','+p[1].toFixed(1); }).join('L') + 'Z'
+                        ).join(' ');
+                    } catch(e) { return ''; }
+                }
+                function centroidInBounds(f) {
+                    try {
+                        const g = f.geometry;
+                        let coords;
+                        if (g.type === 'Polygon') coords = g.coordinates[0];
+                        else if (g.type === 'MultiPolygon') coords = g.coordinates[0][0];
+                        else return false;
+                        let cx=0,cy=0,n=0;
+                        for (const c of coords) { cx+=c[0]; cy+=c[1]; n++; }
+                        cx/=n; cy/=n;
+                        return cx >= bMinLng && cx <= bMaxLng && cy >= bMinLat && cy <= bMaxLat;
+                    } catch(e) { return false; }
+                }
 
-                // Hide UI elements for clean screenshot
-                const sidebar = document.querySelector('.sidebar');
-                const sidebarOverlay = document.querySelector('.sidebar-overlay');
-                const toolbar = document.querySelector('.map-toolbar');
-                const comparePanel = document.getElementById('landuse-compare-result');
-                const loaderEl = document.getElementById('landuse-print-loader');
-                if (sidebar) sidebar.style.display = 'none';
-                if (sidebarOverlay) sidebarOverlay.style.display = 'none';
-                if (toolbar) toolbar.style.display = 'none';
-                if (comparePanel) comparePanel.style.visibility = 'hidden';
-
-                // Hide plan labels and other overlays for clean capture
-                const labelsPane = document.querySelector('.leaflet-labelsPane-pane, [class*="labels"]');
-                const allLabels = document.querySelectorAll('.plan-label-center');
-                allLabels.forEach(l => l.style.display = 'none');
-
-                // Also hide plans layer outlines to make landuse clearer
-                const plansLayer = geoLayers.plans;
-                const plansWasVisible = plansLayer && map.hasLayer(plansLayer);
-                if (plansWasVisible) map.removeLayer(plansLayer);
-
-                // Draw selection polygon in blue
-                const selectionPoly = L.polygon(
-                    polyCoords.map(c => [c[1], c[0]]),
-                    { color: '#0066ff', weight: 4, fillOpacity: 0.05, fillColor: '#0066ff', dashArray: '' }
-                ).addTo(map);
-
-                // Hide xplan layer if visible, keep kayam
-                const xplanLayer = geoLayers.landuse_xplan;
-                const xplanWasVisible = xplanLayer && map.hasLayer(xplanLayer);
-                if (xplanWasVisible) map.removeLayer(xplanLayer);
-
-                // Make sure kayam is visible
-                const kayamLayer = geoLayers.yiud_karka_kayam;
-                const kayamWasHidden = kayamLayer && !map.hasLayer(kayamLayer);
-                if (kayamWasHidden) kayamLayer.addTo(map);
-
-                // Fit to polygon bounds
-                map.fitBounds(bounds);
-
-                setTimeout(() => {
-                    const mapEl = map.getContainer();
-                    // Screenshot 1: existing (kayam only) using dom-to-image
-                    domtoimage.toPng(mapEl, { quality: 0.9 }).then(imgExisting => {
-
-                        // Add xplan layer for future view
-                        if (xplanLayer) xplanLayer.addTo(map);
-
-                        setTimeout(() => {
-                            // Screenshot 2: future (kayam + xplan)
-                            domtoimage.toPng(mapEl, { quality: 0.9 }).then(imgFuture => {
-
-                                // Cleanup: remove selection polygon, restore layers
-                                map.removeLayer(selectionPoly);
-                                if (xplanWasVisible) { /* keep */ } else if (xplanLayer) map.removeLayer(xplanLayer);
-                                if (kayamWasHidden && kayamLayer) map.removeLayer(kayamLayer);
-                                if (plansWasVisible && plansLayer) plansLayer.addTo(map);
-                                allLabels.forEach(l => l.style.display = '');
-
-                                // Restore UI
-                                if (sidebar) sidebar.style.display = '';
-                                if (sidebarOverlay) sidebarOverlay.style.display = '';
-                                if (toolbar) toolbar.style.display = '';
-                                if (comparePanel) comparePanel.style.visibility = '';
-                                map.setView(origCenter, origZoom);
-
-                        // Build print HTML
-                        const currentUnit = window.__landuseCompareUnit || 'sqm';
-                        const tableHtml = renderTable(currentUnit);
-                        const unitSuffix = currentUnit === 'pct' ? '%' : 'מ"ר';
-
-                        const printWin = window.open('', '_blank');
-                        printWin.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">
-                            <title>${title}</title>
-                            <style>
-                                @page { size: A4 portrait; margin: 15mm; }
-                                body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 700px; margin: 0 auto; }
-                                h1 { color: #c0392b; font-size: 18px; margin-bottom: 2px; text-align: center; }
-                                .subtitle { color: #666; font-size: 12px; margin-bottom: 12px; text-align: center; }
-                                .maps { display: flex; gap: 8px; margin-bottom: 14px; }
-                                .map-box { flex: 1; text-align: center; }
-                                .map-box img { width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
-                                .map-label { font-size: 11px; color: #555; margin-top: 2px; font-weight: bold; }
-                                table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                                th { padding: 6px; border-bottom: 2px solid #333; text-align: center; font-size: 10px; color: #555; }
-                                th:first-child { text-align: right; }
-                                td { padding: 4px 6px; border-bottom: 1px solid #ddd; text-align: center; font-family: monospace; font-size: 11px; }
-                                td:first-child { text-align: right; font-family: Assistant, Arial, sans-serif; font-size: 12px; }
-                                tfoot td { font-weight: bold; border-top: 2px solid #333; }
-                                .no-print { margin-bottom: 12px; text-align: center; }
-                                @media print { .no-print { display: none !important; } body { padding: 0; } }
-                            </style>
-                        </head><body>
-                            <div class="no-print">
-                                <button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px">🖨️ הדפסה / שמירת PDF</button>
-                            </div>
-                            <h1>${title}</h1>
-                            <div class="subtitle">${planLabel} · ${(refArea / 1000).toFixed(1)} דונם</div>
-                            <div class="maps">
-                                <div class="map-box"><img src="${imgExisting}"><div class="map-label">מצב קיים</div></div>
-                                <div class="map-box"><img src="${imgFuture}"><div class="map-label">מצב עתידי</div></div>
-                            </div>
-                            <table>
-                                <thead><tr><th>ייעוד</th><th>קיים (${unitSuffix})</th><th>עתידי (${unitSuffix})</th><th>שינוי</th></tr></thead>
-                                <tbody>${tableHtml.replace(/color:#4CAF50/g, 'color:#27ae60').replace(/color:#e94560/g, 'color:#c0392b')}</tbody>
-                                <tfoot><tr><td>סה"כ</td><td>${currentUnit === 'pct' ? '100%' : totalStr}</td><td>${currentUnit === 'pct' ? '100%' : totalStr}</td><td>-</td></tr></tfoot>
-                            </table>
-                        </body></html>`);
-                        printWin.document.close();
-                        const ldr2 = document.getElementById('landuse-print-loader');
-                        if (ldr2) ldr2.style.display = 'none';
-                        setTimeout(() => printWin.print(), 500);
-                            }).catch(() => {
-                                // Cleanup on error
-                                try { map.removeLayer(selectionPoly); } catch(e){}
-                                if (plansWasVisible && plansLayer) plansLayer.addTo(map);
-                                allLabels.forEach(l => l.style.display = '');
-                                if (sidebar) sidebar.style.display = '';
-                                if (sidebarOverlay) sidebarOverlay.style.display = '';
-                                if (toolbar) toolbar.style.display = '';
-                                if (comparePanel) comparePanel.style.visibility = '';
-                                map.setView(origCenter, origZoom);
-                                const ldr3 = document.getElementById('landuse-print-loader');
-                                if (ldr3) ldr3.style.display = 'none';
-                            });
-                        }, 300); // wait for xplan to render
-                    }).catch(() => {
-                        if (sidebar) sidebar.style.display = '';
-                        if (sidebarOverlay) sidebarOverlay.style.display = '';
-                        if (toolbar) toolbar.style.display = '';
-                        if (comparePanel) comparePanel.style.visibility = '';
-                        const ldr4 = document.getElementById('landuse-print-loader');
-                        if (ldr4) ldr4.style.display = 'none';
+                const gd = window.__geoDataForLanduse || {};
+                // Build SVG paths for kayam
+                let kayamPaths = '';
+                if (gd.yiud_karka_kayam) {
+                    gd.yiud_karka_kayam.features.forEach(f => {
+                        if (!centroidInBounds(f)) return;
+                        const d = featureToPath(f);
+                        if (!d) return;
+                        const name = (f.properties.Descr || '').trim();
+                        const color = getLanduseColor(name);
+                        kayamPaths += '<path d="'+d+'" fill="'+color+'" fill-opacity="0.7" stroke="#666" stroke-width="0.3"/>';
                     });
-                }, 400);
+                }
+                // Build SVG paths for xplan
+                let xplanPaths = '';
+                if (gd.landuse_xplan) {
+                    gd.landuse_xplan.features.forEach(f => {
+                        const n = (f.properties.mavat_name || '').trim();
+                        if (!n || n === 'NULL') return;
+                        if (!centroidInBounds(f)) return;
+                        const d = featureToPath(f);
+                        if (!d) return;
+                        const color = getLanduseColor(n);
+                        xplanPaths += '<path d="'+d+'" fill="'+color+'" fill-opacity="0.75" stroke="#333" stroke-width="0.3"/>';
+                    });
+                }
+                // Selection outline
+                const selPath = 'M' + polyCoords.map(c => { const p = toSvgPt(c[0], c[1]); return p[0].toFixed(1)+','+p[1].toFixed(1); }).join('L') + 'Z';
+                const selSvg = '<path d="'+selPath+'" fill="none" stroke="#0066ff" stroke-width="2.5"/>';
+
+                const bgRect = '<rect width="'+svgW+'" height="'+svgH+'" fill="#f2f2f2"/>';
+                const svgExisting = '<svg xmlns="http://www.w3.org/2000/svg" width="'+svgW+'" height="'+svgH+'" viewBox="0 0 '+svgW+' '+svgH+'">' + bgRect + kayamPaths + selSvg + '</svg>';
+                const svgFuture = '<svg xmlns="http://www.w3.org/2000/svg" width="'+svgW+'" height="'+svgH+'" viewBox="0 0 '+svgW+' '+svgH+'">' + bgRect + kayamPaths + xplanPaths + selSvg + '</svg>';
+
+                const imgExisting = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgExisting)));
+                const imgFuture = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgFuture)));
+
+                // Build print HTML
+                const currentUnit = window.__landuseCompareUnit || 'sqm';
+                const tableHtml = renderTable(currentUnit);
+                const unitSuffix = currentUnit === 'pct' ? '%' : 'מ"ר';
+
+                const ldr2 = document.getElementById('landuse-print-loader');
+                if (ldr2) ldr2.style.display = 'none';
+
+                const printWin = window.open('', '_blank');
+                printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">' +
+                    '<title>' + title + '</title>' +
+                    '<style>' +
+                    '@page { size: A4 portrait; margin: 15mm; }' +
+                    'body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 700px; margin: 0 auto; }' +
+                    'h1 { color: #c0392b; font-size: 18px; margin-bottom: 2px; text-align: center; }' +
+                    '.subtitle { color: #666; font-size: 12px; margin-bottom: 12px; text-align: center; }' +
+                    '.maps { display: flex; gap: 8px; margin-bottom: 14px; }' +
+                    '.map-box { flex: 1; text-align: center; }' +
+                    '.map-box img { width: 100%; border: 1px solid #ccc; border-radius: 4px; }' +
+                    '.map-label { font-size: 11px; color: #555; margin-top: 2px; font-weight: bold; }' +
+                    'table { width: 100%; border-collapse: collapse; font-size: 12px; }' +
+                    'th { padding: 6px; border-bottom: 2px solid #333; text-align: center; font-size: 10px; color: #555; }' +
+                    'th:first-child { text-align: right; }' +
+                    'td { padding: 4px 6px; border-bottom: 1px solid #ddd; text-align: center; font-family: monospace; font-size: 11px; }' +
+                    'td:first-child { text-align: right; font-family: Assistant, Arial, sans-serif; font-size: 12px; }' +
+                    'tfoot td { font-weight: bold; border-top: 2px solid #333; }' +
+                    '.no-print { margin-bottom: 12px; text-align: center; }' +
+                    '@media print { .no-print { display: none !important; } body { padding: 0; } }' +
+                    '</style></head><body>' +
+                    '<div class="no-print"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px">🖨️ הדפסה / שמירת PDF</button></div>' +
+                    '<h1>' + title + '</h1>' +
+                    '<div class="subtitle">' + planLabel + ' · ' + (refArea / 1000).toFixed(1) + ' דונם</div>' +
+                    '<div class="maps">' +
+                    '<div class="map-box"><img src="' + imgExisting + '"><div class="map-label">מצב קיים</div></div>' +
+                    '<div class="map-box"><img src="' + imgFuture + '"><div class="map-label">מצב עתידי</div></div>' +
+                    '</div>' +
+                    '<table><thead><tr><th>ייעוד</th><th>קיים (' + unitSuffix + ')</th><th>עתידי (' + unitSuffix + ')</th><th>שינוי</th></tr></thead>' +
+                    '<tbody>' + tableHtml.replace(/color:#4CAF50/g, 'color:#27ae60').replace(/color:#e94560/g, 'color:#c0392b') + '</tbody>' +
+                    '<tfoot><tr><td>סה"כ</td><td>' + (currentUnit === 'pct' ? '100%' : totalStr) + '</td><td>' + (currentUnit === 'pct' ? '100%' : totalStr) + '</td><td>-</td></tr></tfoot></table>' +
+                    '</body></html>');
+                printWin.document.close();
+                setTimeout(function() { printWin.print(); }, 300);
             });
         }
 
