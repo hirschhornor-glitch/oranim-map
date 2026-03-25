@@ -4079,9 +4079,11 @@
             }
 
             // Build shavaz (public buildings) popup HTML
+            function cleanNull(v) { return (v == null || v === 'NULL' || v === 'null' || v === 'None') ? '' : v; }
+
             function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
-                const buildingName = props.building_name || '';
-                const buildingTypeRaw = props.building_type || props.Descriptio || '';
+                const buildingName = cleanNull(props.building_name);
+                const buildingTypeRaw = cleanNull(props.building_type) || cleanNull(props.Descriptio) || '';
                 // Aggregate duplicate uses: "בית כנסת; בית כנסת" → "2 בתי כנסת"
                 const buildingType = (function(raw) {
                     if (!raw) return '';
@@ -4093,10 +4095,10 @@
                         return count + ' ' + name;
                     }).join('; ');
                 })(buildingTypeRaw);
-                const title = buildingName || props.plan_name_he || props.Descriptio || props.MAVAT_NAME || 'שב"צ';
-                const taba = props.TABA || props.taba || '';
-                const lotNum = props.MIGRASH || props.migrash || '';
-                const planNameHe = props.plan_name_he || '';
+                const title = buildingName || cleanNull(props.plan_name_he) || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ';
+                const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
+                const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
+                const planNameHe = cleanNull(props.plan_name_he) || '';
                 const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
                 const statusColor = getStatusColor(status);
                 const boldStyle = !isFuture ? 'font-weight:700' : '';
@@ -4104,10 +4106,10 @@
                 const tabaLot = [taba, lotNum].filter(Boolean).join(' / ');
                 const lotArea = props.LEGAL_AREA || props.area || null;
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
-                const builtSqm = props.BUILD_AREA || null;
-                const builtDisplay = builtSqm != null ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
-                const allowedUses = props.uses || props.YEUD || '-';
-                const actualUses = props['Actual uses'] || '-';
+                const builtSqm = cleanNull(props.BUILD_AREA) || null;
+                const builtDisplay = builtSqm ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
+                const allowedUses = cleanNull(props.uses) || cleanNull(props.YEUD) || '-';
+                const actualUses = cleanNull(props['Actual uses']) || '-';
                 const planId = taba || '';
                 const note = window.__annotations ? (window.__annotations['shavaz_' + planId + '_' + lotNum] || '') : '';
 
@@ -4150,10 +4152,18 @@
                 html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
                 html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value">-</span></div>`;
                 html += '</div>';
-                // Footer
-                html += `<div class="popup-footer" style="flex-direction:row;background:${bodyBg};border-top-color:${rowBorder}">`;
-                html += `<button class="popup-icon-btn" data-action="jump-to-plan" data-taba="${taba}" title="לתב״ע">🏠</button>`;
-                html += '</div>';
+                // Footer — only show jump-to-plan if matching plan exists
+                const tabaNum = taba.replace(/[^\d]/g, '');
+                const gd = geoDataRef.current;
+                const hasPlan = taba && gd && gd.plans && gd.plans.features.some(f => {
+                    const pt = (f.properties.taba || '').toString();
+                    return pt === taba || pt === tabaNum || pt.startsWith(tabaNum);
+                });
+                if (hasPlan) {
+                    html += `<div class="popup-footer" style="flex-direction:row;background:${bodyBg};border-top-color:${rowBorder}">`;
+                    html += `<button class="popup-icon-btn" data-action="jump-to-plan" data-taba="${taba}" title="לתב״ע">🏠</button>`;
+                    html += '</div>';
+                }
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
                 html += '</div>';
                 return html;
@@ -4292,7 +4302,12 @@
                         if (!taba) return;
                         const gd = geoDataRef.current;
                         if (!gd.plans) return;
-                        const matching = gd.plans.features.filter(f => (f.properties.taba || f.properties.TABA || '') === taba);
+                        // Strip Hebrew letters for matching (e.g. "1013א" → "1013")
+                        const tabaNum = taba.replace(/[^\d]/g, '');
+                        const matching = gd.plans.features.filter(f => {
+                            const pt = (f.properties.taba || f.properties.TABA || '').toString();
+                            return pt === taba || pt === tabaNum || pt.startsWith(tabaNum);
+                        });
                         if (matching.length > 0) {
                             const mapped = mapPlanProps(matching[0].properties);
                             const allFeatures = matching.map(f => ({ properties: mapPlanProps(f.properties), type: 'plan' }));
