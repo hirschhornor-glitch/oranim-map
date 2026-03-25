@@ -2362,10 +2362,12 @@
 
                 // Hide UI elements for clean screenshot
                 const sidebar = document.querySelector('.sidebar');
-                const toolbar = document.querySelector('.toolbar');
+                const sidebarOverlay = document.querySelector('.sidebar-overlay');
+                const toolbar = document.querySelector('.map-toolbar');
                 const comparePanel = document.getElementById('landuse-compare-result');
                 const loaderEl = document.getElementById('landuse-print-loader');
                 if (sidebar) sidebar.style.display = 'none';
+                if (sidebarOverlay) sidebarOverlay.style.display = 'none';
                 if (toolbar) toolbar.style.display = 'none';
                 if (comparePanel) comparePanel.style.visibility = 'hidden';
                 if (loaderEl) loaderEl.style.display = 'none';
@@ -2409,6 +2411,7 @@
 
                                 // Restore UI
                                 if (sidebar) sidebar.style.display = '';
+                                if (sidebarOverlay) sidebarOverlay.style.display = '';
                                 if (toolbar) toolbar.style.display = '';
                                 if (comparePanel) comparePanel.style.visibility = '';
                                 map.setView(origCenter, origZoom);
@@ -2463,6 +2466,7 @@
                                 // Cleanup on error
                                 map.removeLayer(selectionPoly);
                                 if (sidebar) sidebar.style.display = '';
+                                if (sidebarOverlay) sidebarOverlay.style.display = '';
                                 if (toolbar) toolbar.style.display = '';
                                 if (comparePanel) comparePanel.style.visibility = '';
                                 map.setView(origCenter, origZoom);
@@ -2472,6 +2476,7 @@
                         }, 600); // wait for xplan to render
                     }).catch(() => {
                         if (sidebar) sidebar.style.display = '';
+                        if (sidebarOverlay) sidebarOverlay.style.display = '';
                         if (toolbar) toolbar.style.display = '';
                         if (comparePanel) comparePanel.style.visibility = '';
                         const ldr4 = document.getElementById('landuse-print-loader');
@@ -2761,7 +2766,6 @@
                     preferCanvas: false
                 });
                 window.__mapInstanceForPrint = map;
-                window.__geoLayersForPrint = geoLayersRef.current;
 
                 // Inject SVG hatch patterns into map
                 setTimeout(() => {
@@ -4210,8 +4214,9 @@
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                // Suppress popups during area/measure drawing
+                                // Suppress popups during area/measure drawing or landuse compare
                                 if (areaModeRef.current) return;
+                                if (landuseCompareModeRef.current) return;
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
@@ -4987,6 +4992,7 @@
                     geoLayersRef.current.heatmap = heatLayer;
                 }
 
+                window.__geoLayersForPrint = geoLayersRef.current;
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap]);
 
