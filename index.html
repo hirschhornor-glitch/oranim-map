@@ -2372,10 +2372,20 @@
                 if (comparePanel) comparePanel.style.visibility = 'hidden';
                 if (loaderEl) loaderEl.style.display = 'none';
 
+                // Hide plan labels and other overlays for clean capture
+                const labelsPane = document.querySelector('.leaflet-labelsPane-pane, [class*="labels"]');
+                const allLabels = document.querySelectorAll('.plan-label-center');
+                allLabels.forEach(l => l.style.display = 'none');
+
+                // Also hide plans layer outlines to make landuse clearer
+                const plansLayer = geoLayers.plans;
+                const plansWasVisible = plansLayer && map.hasLayer(plansLayer);
+                if (plansWasVisible) map.removeLayer(plansLayer);
+
                 // Draw selection polygon in blue
                 const selectionPoly = L.polygon(
                     polyCoords.map(c => [c[1], c[0]]),
-                    { color: '#0066ff', weight: 3, fillOpacity: 0, dashArray: '' }
+                    { color: '#0066ff', weight: 4, fillOpacity: 0.05, fillColor: '#0066ff', dashArray: '' }
                 ).addTo(map);
 
                 // Hide xplan layer if visible, keep kayam
@@ -2393,7 +2403,7 @@
 
                 setTimeout(() => {
                     // Screenshot 1: existing (kayam only)
-                    html2canvas(map.getContainer(), { useCORS: true, scale: 1.5 }).then(canvas1 => {
+                    html2canvas(map.getContainer(), { useCORS: true, scale: 1, width: map.getContainer().offsetWidth, height: map.getContainer().offsetHeight, logging: false, imageTimeout: 5000 }).then(canvas1 => {
                         const imgExisting = canvas1.toDataURL('image/png');
 
                         // Add xplan layer for future view
@@ -2401,13 +2411,15 @@
 
                         setTimeout(() => {
                             // Screenshot 2: future (kayam + xplan)
-                            html2canvas(map.getContainer(), { useCORS: true, scale: 1.5 }).then(canvas2 => {
+                            html2canvas(map.getContainer(), { useCORS: true, scale: 1, width: map.getContainer().offsetWidth, height: map.getContainer().offsetHeight, logging: false, imageTimeout: 5000 }).then(canvas2 => {
                                 const imgFuture = canvas2.toDataURL('image/png');
 
                                 // Cleanup: remove selection polygon, restore layers
                                 map.removeLayer(selectionPoly);
                                 if (xplanWasVisible) { /* keep */ } else if (xplanLayer) map.removeLayer(xplanLayer);
                                 if (kayamWasHidden && kayamLayer) map.removeLayer(kayamLayer);
+                                if (plansWasVisible && plansLayer) plansLayer.addTo(map);
+                                allLabels.forEach(l => l.style.display = '');
 
                                 // Restore UI
                                 if (sidebar) sidebar.style.display = '';
@@ -2464,7 +2476,9 @@
                         setTimeout(() => printWin.print(), 500);
                             }).catch(() => {
                                 // Cleanup on error
-                                map.removeLayer(selectionPoly);
+                                try { map.removeLayer(selectionPoly); } catch(e){}
+                                if (plansWasVisible && plansLayer) plansLayer.addTo(map);
+                                allLabels.forEach(l => l.style.display = '');
                                 if (sidebar) sidebar.style.display = '';
                                 if (sidebarOverlay) sidebarOverlay.style.display = '';
                                 if (toolbar) toolbar.style.display = '';
@@ -2473,7 +2487,7 @@
                                 const ldr3 = document.getElementById('landuse-print-loader');
                                 if (ldr3) ldr3.style.display = 'none';
                             });
-                        }, 600); // wait for xplan to render
+                        }, 300); // wait for xplan to render
                     }).catch(() => {
                         if (sidebar) sidebar.style.display = '';
                         if (sidebarOverlay) sidebarOverlay.style.display = '';
@@ -2482,7 +2496,7 @@
                         const ldr4 = document.getElementById('landuse-print-loader');
                         if (ldr4) ldr4.style.display = 'none';
                     });
-                }, 800);
+                }, 400);
             });
         }
 
