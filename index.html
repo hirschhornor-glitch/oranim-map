@@ -1971,22 +1971,46 @@
         // Green hatch for nature
         ['שטח לעיצוב נוף','שטח לשימור ושיקום'].forEach(n => LANDUSE_HATCH[n] = 'hatch-green');
 
-        function applyHatchToLayer(geoJsonLayer) {
-            if (!geoJsonLayer) return;
+        function applyHatchToLayer(geoJsonLayer, map) {
+            if (!geoJsonLayer || !map) return;
+            // Instead of cloning paths, we modify the original path's fill
+            // to use the pattern, and set the base color as the pattern background
             geoJsonLayer.eachLayer(layer => {
                 const name = (layer.feature.properties.mavat_name || layer.feature.properties.Descr || '').trim();
                 const hatchId = LANDUSE_HATCH[name];
-                if (hatchId && layer._path) {
-                    // Apply hatch pattern as a second fill using a clone
-                    const path = layer._path;
-                    const clone = path.cloneNode(false);
+                if (!hatchId || !layer._path) return;
+                // Store original fill for reference
+                const origFill = layer._path.getAttribute('fill');
+                const origOpacity = layer._path.getAttribute('fill-opacity');
+                // We'll use a layered approach: keep the base fill, add a second SVG path for the hatch
+                // But instead, use the Leaflet update hook
+                const origSetStyle = layer.setStyle.bind(layer);
+                layer._origPath = layer._path;
+                layer._hatchId = hatchId;
+
+                // Use MutationObserver to keep clone in sync with path changes
+                const observer = new MutationObserver(() => {
+                    if (layer._hatchClone && layer._path) {
+                        layer._hatchClone.setAttribute('d', layer._path.getAttribute('d'));
+                    }
+                });
+
+                // Create initial clone
+                function createClone() {
+                    if (layer._hatchClone) layer._hatchClone.remove();
+                    if (!layer._path || !layer._path.parentNode) return;
+                    const clone = layer._path.cloneNode(false);
                     clone.setAttribute('fill', 'url(#' + hatchId + ')');
                     clone.setAttribute('fill-opacity', '0.7');
                     clone.setAttribute('stroke', 'none');
                     clone.setAttribute('pointer-events', 'none');
                     clone.classList.add('hatch-overlay');
-                    path.parentNode.appendChild(clone);
+                    layer._path.parentNode.appendChild(clone);
+                    layer._hatchClone = clone;
+                    // Watch for path 'd' attribute changes
+                    observer.observe(layer._path, { attributes: true, attributeFilter: ['d'] });
                 }
+                createClone();
             });
         }
 
@@ -4629,7 +4653,7 @@
                         } : undefined
                     }).addTo(map);
                     geoLayersRef.current.yiud_karka_kayam = yiudKayamLayer;
-                    setTimeout(() => applyHatchToLayer(yiudKayamLayer), 500);
+                    setTimeout(() => applyHatchToLayer(yiudKayamLayer, map), 500);
                 }
 
                 // --- Landuse XPLAN (land use from MAVAT/XPLAN) ---
@@ -4652,7 +4676,7 @@
                         } : undefined
                     }).addTo(map);
                     geoLayersRef.current.landuse_xplan = xplanLayer;
-                    setTimeout(() => applyHatchToLayer(xplanLayer), 500);
+                    setTimeout(() => applyHatchToLayer(xplanLayer, map), 500);
                 }
 
                 // --- Permits overlay ---
