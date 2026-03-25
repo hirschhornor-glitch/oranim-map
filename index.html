@@ -2326,12 +2326,22 @@
             // Print button
             document.getElementById('landuse-print-btn').addEventListener('click', function() {
                 const editedTitle = (document.getElementById('landuse-report-title') || {}).textContent || 'ייעודי קרקע נכנס-יוצא';
-                const title = prompt('כותרת הדו"ח:', editedTitle + ' - ' + planLabel);
-                if (title === null) return;
+                const title = editedTitle;
+
+                // Show loading overlay
+                let loader = document.getElementById('landuse-print-loader');
+                if (!loader) {
+                    loader = document.createElement('div');
+                    loader.id = 'landuse-print-loader';
+                    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px';
+                    loader.innerHTML = '<div style="width:48px;height:48px;border:4px solid #333;border-top:4px solid #e94560;border-radius:50%;animation:spin 1s linear infinite"></div><div style="color:#e0e0e0;font-size:15px;font-family:Assistant,sans-serif">מכין דו"ח להדפסה...</div><style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
+                    document.body.appendChild(loader);
+                }
+                loader.style.display = 'flex';
 
                 const map = window.__mapInstanceForPrint;
                 const polyCoords = window.__landuseComparePolyCoords;
-                if (!map || !polyCoords) { window.print(); return; }
+                if (!map || !polyCoords) { loader.style.display = 'none'; window.print(); return; }
 
                 // Calculate bounds from polygon
                 let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
@@ -2405,7 +2415,12 @@
                             </table>
                         </body></html>`);
                         printWin.document.close();
+                        const ldr = document.getElementById('landuse-print-loader');
+                        if (ldr) ldr.style.display = 'none';
                         setTimeout(() => printWin.print(), 500);
+                    }).catch(() => {
+                        const ldr = document.getElementById('landuse-print-loader');
+                        if (ldr) ldr.style.display = 'none';
                     });
                 }, 800);
             });
