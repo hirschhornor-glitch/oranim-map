@@ -2259,8 +2259,8 @@
             div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:400px;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
             div.innerHTML =
                 '<button onclick="var el=document.getElementById(\'landuse-compare-result\');if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
-                '<h3 style="color:#e94560;margin:0 0 6px;font-size:16px">ייעודי קרקע נכנס-יוצא</h3>' +
-                '<div style="font-size:12px;color:#aaa;margin-bottom:8px">' + planLabel + ' · ' + (refArea / 1000).toFixed(1) + ' דונם</div>' +
+                '<h3 id="landuse-report-title" contenteditable="true" style="color:#e94560;margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">ייעודי קרקע נכנס-יוצא</h3>' +
+                '<div style="font-size:11px;color:#aaa;margin-bottom:8px;max-height:60px;overflow-y:auto">' + planLabel + ' · ' + (refArea / 1000).toFixed(1) + ' דונם</div>' +
                 '<div style="margin-bottom:10px;text-align:left">' +
                 '<button id="landuse-unit-toggle" style="background:#2a2a5a;color:#aaa;border:1px solid #555;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">מ"ר ⇄ %</button>' +
                 '</div>' +
@@ -2325,7 +2325,8 @@
 
             // Print button
             document.getElementById('landuse-print-btn').addEventListener('click', function() {
-                const title = prompt('כותרת הדו"ח:', 'ייעודי קרקע נכנס-יוצא - ' + planLabel);
+                const editedTitle = (document.getElementById('landuse-report-title') || {}).textContent || 'ייעודי קרקע נכנס-יוצא';
+                const title = prompt('כותרת הדו"ח:', editedTitle + ' - ' + planLabel);
                 if (title === null) return;
 
                 const map = window.__mapInstanceForPrint;
@@ -2983,8 +2984,11 @@
                         if (!coords) return;
                         const polyCoords = [...coords];
                         if (polyCoords[0][0] !== polyCoords[polyCoords.length-1][0]) polyCoords.push(polyCoords[0]);
-                        const planName = clickedFeature.properties.plan_name || clickedFeature.properties.pl_number || clickedFeature.properties.TABA || '';
-                        const result = analyzeLanduseComparison(polyCoords, [planName]);
+                        const p = clickedFeature.properties;
+                        const planId = p.plan_name || p.pl_number || p.TABA || '';
+                        const planSummary = p.plan_summary || p.plan_name_he || '';
+                        const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
+                        const result = analyzeLanduseComparison(polyCoords, [planDisplay]);
                         showLanduseComparePanel(result);
                         setLanduseCompareMode(null);
                     }
@@ -3031,7 +3035,11 @@
                             if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
                                 inside = !inside;
                         }
-                        if (inside) planNames.push(f.properties.plan_name || f.properties.TABA || '');
+                        if (inside) {
+                            const pid = f.properties.plan_name || f.properties.TABA || '';
+                            const psum = f.properties.plan_summary || f.properties.plan_name_he || '';
+                            planNames.push(psum ? pid + ' - ' + psum : pid);
+                        }
                     });
                 }
 
