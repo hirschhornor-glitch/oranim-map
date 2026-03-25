@@ -186,6 +186,13 @@
             background: linear-gradient(135deg, #4a4a4a, #3a3a3a) !important;
         }
 
+        /* shavaz-popup: header/body colors set inline per kayam/future + status */
+        .shavaz-kayam-popup .leaflet-popup-content-wrapper { background: #2e1a0e !important; }
+        .shavaz-kayam-popup .leaflet-popup-tip { background: #2e1a0e !important; }
+        .shavaz-future-popup .leaflet-popup-content-wrapper { background: #3d2a1a !important; }
+        .shavaz-future-popup .leaflet-popup-tip { background: #3d2a1a !important; }
+        /* shavaz body/footer colors set via inline style per kayam/future */
+
         .leaflet-popup-tip { border-top-color: #1a1a2e; }
 
         .popup-header {
@@ -237,7 +244,7 @@
             padding: 10px 16px;
             border-top: 1px solid #2a2a4a;
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             gap: 6px;
         }
 
@@ -270,6 +277,24 @@
         }
 
         .popup-btn-permit:hover { background: #c73650; }
+
+        .popup-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            font-size: 13px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: auto;
+        }
+        .popup-icon-btn:hover { border-color: #aaa; color: #fff; }
+        .shavaz-popup .popup-icon-btn { border-color: #6b4226; color: #c4956a; }
+        .shavaz-popup .popup-icon-btn:hover { border-color: #c4956a; color: #fff; }
 
         .popup-btn-back {
             display: block;
@@ -1527,6 +1552,8 @@
             minahak_ganot: 'data/minahak_ganot.geojson',
             minahak_gonen: 'data/minahak_gonen.geojson',
             minahak_baka: 'data/minahak_baka.geojson',
+            future_shavaz: 'data/future_shavaz.geojson',
+            shavaz_kayam: 'data/shavaz_kayam.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -1619,6 +1646,14 @@
                     { id: 'shem_baka', name: 'בקעה רבתי', on: true, minahak: 'בקעה רבתי' },
                     { id: 'shem_malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
                     { id: 'shem_talpiot', name: 'א.ת. תלפיות', on: true, minahak: 'א.ת. תלפיות' },
+                ]
+            },
+            public_buildings: {
+                title: 'מבני ציבור',
+                layers: [
+                    { id: 'shavaz_kayam', name: 'שב"צ קיים', on: false },
+                    { id: 'future_shavaz', name: 'שב"צ עתידי', on: false },
+                    { id: 'hafrashah_future', name: 'הפרשה מבונה עתידית', on: false },
                 ]
             }
         };
@@ -2133,6 +2168,8 @@
                 const minahakLabelsP = map.createPane('minahakLabelsPane');
                 minahakLabelsP.style.zIndex = 560;
                 minahakLabelsP.style.pointerEvents = 'none';
+                const shavazP = map.createPane('shavazPane');
+                shavazP.style.zIndex = 440;
 
                 // Load all GeoJSON data + CSV for plan_type enrichment
                 const entries = Object.entries(GEOJSON_FILES);
@@ -3301,12 +3338,39 @@
                             const status = normalizeStatus(f.properties.status_mavat || '');
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                             const isSatellite = basemap === 'satellite';
+                            const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
+                            if (shavazActive) {
+                                return { color: STATUS_COLORS[status] || '#888', weight: 1.5, fillColor: fillColor, fillOpacity: 0.07, dashArray: '4,2' };
+                            }
                             return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * 0.3, dashArray: '4,2' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing
                                 if (areaModeRef.current) return;
+                                // When shavaz is active, try to open shavaz popup first
+                                const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
+                                if (shavazOn) {
+                                    const clickLatLng = e.latlng;
+                                    const allShavaz = [];
+                                    ['shavaz_kayam', 'future_shavaz'].forEach(key => {
+                                        const sl = geoLayersRef.current[key];
+                                        if (!sl) return;
+                                        sl.eachLayer(slayer => {
+                                            if (!slayer.feature || !slayer.getBounds) return;
+                                            try {
+                                                if (!slayer.getBounds().contains(clickLatLng)) return;
+                                                if (leafletPip(slayer, clickLatLng)) {
+                                                    allShavaz.push({ properties: slayer.feature.properties, isFuture: key === 'future_shavaz' });
+                                                }
+                                            } catch(ex) {}
+                                        });
+                                    });
+                                    if (allShavaz.length > 0) {
+                                        openShavazPopup(allShavaz, clickLatLng, 0);
+                                        return;
+                                    }
+                                }
                                 // Find all overlapping plans at click point
                                 const clickLatLng = e.latlng;
                                 const allFeatures = [];
@@ -3352,13 +3416,23 @@
                             });
                             layer.on('mouseover', () => {
                                 const isSat = basemap === 'satellite';
-                                layer.setStyle({ weight: 3, fillOpacity: isSat ? 1 : opacity * 0.5 });
+                                const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
+                                if (shavazOn) {
+                                    layer.setStyle({ weight: 3, fillOpacity: 0.12 });
+                                } else {
+                                    layer.setStyle({ weight: 3, fillOpacity: isSat ? 1 : opacity * 0.5 });
+                                }
                             });
                             layer.on('mouseout', () => {
                                 const status = normalizeStatus(f.properties.status_mavat || '');
                                 const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                                 const isSat = basemap === 'satellite';
-                                layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * 0.3, fillColor: fillColor });
+                                const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
+                                if (shavazOn) {
+                                    layer.setStyle({ weight: 1.5, fillOpacity: 0.07, fillColor: fillColor, color: STATUS_COLORS[status] || '#888' });
+                                } else {
+                                    layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * 0.3, fillColor: fillColor });
+                                }
                             });
                             // Labels: zoom-dependent with fit-in-polygon check
                             const shortName = f.properties.plan_summary || '';
@@ -3597,6 +3671,116 @@
                     geoLayersRef.current.archived = archivedLayer;
                 }
 
+                // Helper: find all overlapping shavaz features at a click point
+                function findOverlappingShavaz(clickLatLng) {
+                    const allShavaz = [];
+                    const checkLayer = (layerGroup, isFut) => {
+                        if (!layerGroup) return;
+                        layerGroup.eachLayer(sl => {
+                            if (!sl.feature || !sl.getBounds) return;
+                            try {
+                                if (!sl.getBounds().contains(clickLatLng)) return;
+                                const contains = leafletPip(sl, clickLatLng);
+                                if (contains) allShavaz.push({ properties: sl.feature.properties, isFuture: isFut });
+                            } catch(ex) {}
+                        });
+                    };
+                    checkLayer(geoLayersRef.current.shavaz_kayam, false);
+                    checkLayer(geoLayersRef.current.future_shavaz, true);
+                    return allShavaz;
+                }
+
+                function shavazPopupClass(isFuture) {
+                    return 'plan-popup shavaz-popup ' + (isFuture ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
+                }
+
+                function openShavazPopup(allShavaz, latlng, startIdx) {
+                    const idx = startIdx || 0;
+                    const entry = allShavaz[idx];
+                    const navInfo = allShavaz.length > 1 ? { current: idx, total: allShavaz.length } : null;
+                    const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(entry.isFuture) })
+                        .setLatLng(latlng)
+                        .setContent(buildShavazPopup(entry.properties, entry.isFuture, false, navInfo));
+                    popup.openOn(map);
+                    bindShavazPopupEvents(popup, entry.properties, latlng, null, allShavaz, idx);
+                }
+
+                // --- Shavaz Kayam (existing public buildings) ---
+                if (layers['shavaz_kayam'] && gd.shavaz_kayam) {
+                    const shavazKayamLayer = L.geoJSON(gd.shavaz_kayam, {
+                        pane: 'shavazPane',
+                        style: () => ({ fillColor: '#8B4513', fillOpacity: 0.8, color: '#8B4513', weight: 1 }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current) return;
+                                const allShavaz = findOverlappingShavaz(e.latlng);
+                                if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: false });
+                                openShavazPopup(allShavaz, e.latlng, 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
+                }
+
+                // --- Future Shavaz (planned public buildings) ---
+                if (layers['future_shavaz'] && gd.future_shavaz) {
+                    const futureShavazLayer = L.geoJSON(gd.future_shavaz, {
+                        pane: 'shavazPane',
+                        filter: f => {
+                            const s = normalizeStatus((f.properties.Mavat_Status || f.properties.status_mavat || '').trim());
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                            const name = f.properties.MAVAT_NAME || '';
+                            if (name.includes('מגורים')) return false;
+                            return true;
+                        },
+                        style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current) return;
+                                const allShavaz = findOverlappingShavaz(e.latlng);
+                                if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: true });
+                                openShavazPopup(allShavaz, e.latlng, 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.future_shavaz = futureShavazLayer;
+                }
+
+                // --- Hafrashah from future_shavaz (מגורים features as points) ---
+                if (layers['hafrashah_future'] && gd.future_shavaz) {
+                    const hafrashah = gd.future_shavaz.features.filter(f => {
+                        const s = normalizeStatus((f.properties.Mavat_Status || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                        return (f.properties.MAVAT_NAME || '').includes('מגורים');
+                    });
+                    // Convert polygons to centroid points
+                    const pointFeatures = hafrashah.map(f => {
+                        const coords = f.geometry.coordinates[0][0]; // MultiPolygon outer ring
+                        let sumLat = 0, sumLng = 0;
+                        coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+                        const centroid = [sumLng / coords.length, sumLat / coords.length];
+                        return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: centroid } };
+                    });
+                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
+                    const hafrashaLayer = L.geoJSON(pointCollection, {
+                        pane: 'shavazPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 5, fillColor: '#D2B48C', fillOpacity: 0.8, color: '#8B4513', weight: 1
+                        }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', () => {
+                                if (areaModeRef.current) return;
+                                const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(true) })
+                                    .setLatLng(layer.getLatLng())
+                                    .setContent(buildShavazPopup(f.properties, true, false, null, true));
+                                popup.openOn(map);
+                                bindShavazPopupEvents(popup, f.properties, layer.getLatLng());
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.hafrashah_future = hafrashaLayer;
+                }
+
                 // --- Permits overlay ---
                 if (layers['permits'] && gd.plans) {
                     const permitsLayer = L.geoJSON(gd.plans, {
@@ -3609,6 +3793,10 @@
                         style: f => {
                             const stage = (f.properties.stage || '').trim().replace(/\s+/g, ' ');
                             const color = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
+                            const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
+                            if (shavazActive) {
+                                return { color, weight: 2, fillColor: color, fillOpacity: 0.07 };
+                            }
                             return { color, weight: 2, fillColor: color, fillOpacity: 0.5 };
                         },
                         onEachFeature: (f, layer) => {
@@ -3836,7 +4024,7 @@
                     `</div>`;
             }
 
-            function buildPlanPopup(props, featureData, navInfo) {
+            function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
                 const title = props.plan_name_he || props.plan_summary || 'תוכנית';
                 const subtitle = props.plan_name || props.taba || '';
                 const status = props.status_mavat || '';
@@ -3877,7 +4065,95 @@
                     html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
                 html += '</div>';
+                const tabaForJump = props.taba || props.TABA || '';
+                html += '<div class="popup-footer" style="flex-direction:row;border-top:none;padding-top:0">';
+                html += `<button class="popup-icon-btn" data-action="jump-to-shavaz" data-taba="${tabaForJump}" title="מבני ציבור">🏛️</button>`;
+                if (originShavazProps) {
+                    html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
+                }
+                html += '</div>';
                 // Annotation display (if exists)
+                if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
+                html += '</div>';
+                return html;
+            }
+
+            // Build shavaz (public buildings) popup HTML
+            function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
+                const buildingName = props.building_name || '';
+                const buildingTypeRaw = props.building_type || props.Descriptio || '';
+                // Aggregate duplicate uses: "בית כנסת; בית כנסת" → "2 בתי כנסת"
+                const buildingType = (function(raw) {
+                    if (!raw) return '';
+                    const items = raw.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+                    const counts = {};
+                    items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
+                    return Object.entries(counts).map(([name, count]) => {
+                        if (count === 1) return name;
+                        return count + ' ' + name;
+                    }).join('; ');
+                })(buildingTypeRaw);
+                const title = buildingName || props.plan_name_he || props.Descriptio || props.MAVAT_NAME || 'שב"צ';
+                const taba = props.TABA || props.taba || '';
+                const lotNum = props.MIGRASH || props.migrash || '';
+                const planNameHe = props.plan_name_he || '';
+                const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
+                const statusColor = getStatusColor(status);
+                const boldStyle = !isFuture ? 'font-weight:700' : '';
+                const subtitle = planNameHe || '';
+                const tabaLot = [taba, lotNum].filter(Boolean).join(' / ');
+                const lotArea = props.LEGAL_AREA || props.area || null;
+                const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
+                const builtSqm = props.BUILD_AREA || null;
+                const builtDisplay = builtSqm != null ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
+                const allowedUses = props.uses || props.YEUD || '-';
+                const actualUses = props['Actual uses'] || '-';
+                const planId = taba || '';
+                const note = window.__annotations ? (window.__annotations['shavaz_' + planId + '_' + lotNum] || '') : '';
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                // Color scheme: kayam = dark brown, future = light brown
+                const bodyBg = isFuture ? '#3d2a1a' : '#2e1a0e';
+                const rowBorder = isFuture ? '#5a3d2a' : '#4a2e1a';
+                const labelColor = isFuture ? '#d4a87a' : '#c4956a';
+                const headerBg = isFuture
+                    ? 'linear-gradient(135deg, #C4956A, #D2B48C)'
+                    : 'linear-gradient(135deg, #5C2E0A, #8B4513)';
+                const headerBorder = status ? statusColor : '#D2691E';
+                const titleColor = isFuture ? '#2e1a0e' : '#fff';
+                const subtitleColor = isFuture ? '#4a2e1a' : '#c4956a';
+                html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:3px solid ${headerBorder}">`;
+                html += `<div class="popup-header-title" style="color:${titleColor}">${title}</div>`;
+                if (subtitle) {
+                    html += `<div class="popup-header-subtitle" style="color:${subtitleColor};${boldStyle}">${subtitle}</div>`;
+                }
+                // Note button
+                html += '<button class="popup-btn-permit" data-action="add-note" data-plan="shavaz_' + planId + '_' + lotNum + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : (isFuture ? '#5a3d2a' : '#886')) + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
+                html += '</div>';
+                // Status badge row
+                if (status) {
+                    html += `<div style="padding:6px 16px;background:${bodyBg};border-bottom:1px solid ${rowBorder}">`;
+                    html += `<span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor};font-size:11px">${status}</span>`;
+                    html += '</div>';
+                }
+                html += `<div class="popup-body" style="background:${bodyBg}">`;
+                if (tabaLot) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder};${boldStyle}"><span class="popup-row-label" style="color:${labelColor}">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
+                }
+                if (buildingType) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים בפועל</span><span class="popup-row-value">${buildingType}</span></div>`;
+                }
+                if (!isHafrashah) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
+                }
+                html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
+                html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value">-</span></div>`;
+                html += '</div>';
+                // Footer
+                html += `<div class="popup-footer" style="flex-direction:row;background:${bodyBg};border-top-color:${rowBorder}">`;
+                html += `<button class="popup-icon-btn" data-action="jump-to-plan" data-taba="${taba}" title="לתב״ע">🏠</button>`;
+                html += '</div>';
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
                 html += '</div>';
                 return html;
@@ -3970,7 +4246,82 @@
             }
 
             // Bind popup navigation and permit/back button events
-            function bindPopupEvents(popup, allFeatures, startIdx) {
+            // Bind shavaz popup events (notes + jump to plan)
+            function shavazPopupClassOuter(isFuture) {
+                return 'plan-popup shavaz-popup ' + (isFuture ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
+            }
+
+            function bindShavazPopupEvents(popup, shavazProps, latlng, originPlanProps, allShavaz, currentShavazIdx) {
+                let shavazIdx = currentShavazIdx || 0;
+                const el = popup.getElement();
+                if (!el) return;
+                // Remove any previous handler
+                if (el._popupHandler) el.removeEventListener('click', el._popupHandler);
+                el._popupHandler = function handler(ev) {
+                    // Nav buttons for paging between overlapping shavaz
+                    const navBtn = ev.target.closest('.popup-nav-btn');
+                    if (navBtn && allShavaz && allShavaz.length > 1) {
+                        ev.stopPropagation();
+                        if (navBtn.dataset.nav === 'next') shavazIdx = (shavazIdx + 1) % allShavaz.length;
+                        else shavazIdx = (shavazIdx - 1 + allShavaz.length) % allShavaz.length;
+                        const entry = allShavaz[shavazIdx];
+                        const navInfo = { current: shavazIdx, total: allShavaz.length };
+                        popup.options.className = shavazPopupClassOuter(entry.isFuture);
+                        popup.setContent(buildShavazPopup(entry.properties, entry.isFuture, !!originPlanProps, navInfo));
+                        shavazProps = entry.properties;
+                        return;
+                    }
+                    const btn = ev.target.closest('.popup-btn-permit') || ev.target.closest('.popup-icon-btn');
+                    if (!btn) return;
+                    ev.stopPropagation();
+                    if (btn.dataset.action === 'add-note') {
+                        const planId = btn.dataset.plan;
+                        const current = window.__annotations[planId] || '';
+                        const note = prompt('הערה:', current);
+                        if (note !== null) {
+                            window.__annotations[planId] = note;
+                            localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                            const isFuture = !!(shavazProps.Mavat_Status || shavazProps.MAVAT_NAME);
+                            const navInfo = allShavaz && allShavaz.length > 1 ? { current: shavazIdx, total: allShavaz.length } : null;
+                            popup.setContent(buildShavazPopup(shavazProps, isFuture, !!originPlanProps, navInfo));
+                        }
+                        return;
+                    }
+                    if (btn.dataset.action === 'jump-to-plan') {
+                        const taba = btn.dataset.taba;
+                        if (!taba) return;
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return;
+                        const matching = gd.plans.features.filter(f => (f.properties.taba || f.properties.TABA || '') === taba);
+                        if (matching.length > 0) {
+                            const mapped = mapPlanProps(matching[0].properties);
+                            const allFeatures = matching.map(f => ({ properties: mapPlanProps(f.properties), type: 'plan' }));
+                            const navInfo = allFeatures.length > 1 ? { current: 0, total: allFeatures.length } : null;
+                            popup.setContent(buildPlanPopup(mapped, { properties: mapped }, navInfo, shavazProps));
+                            popup.options.className = 'plan-popup';
+                            bindPopupEvents(popup, allFeatures, 0, shavazProps);
+                        }
+                        return;
+                    }
+                    if (btn.dataset.action === 'back-to-plan' && originPlanProps) {
+                        const gd = geoDataRef.current;
+                        const taba = originPlanProps.taba || originPlanProps.TABA || '';
+                        const matching = gd.plans ? gd.plans.features.filter(f => (f.properties.taba || f.properties.TABA || '') === taba) : [];
+                        if (matching.length > 0) {
+                            const mapped = mapPlanProps(matching[0].properties);
+                            const allFeatures = matching.map(f => ({ properties: mapPlanProps(f.properties), type: 'plan' }));
+                            const navInfo = allFeatures.length > 1 ? { current: 0, total: allFeatures.length } : null;
+                            popup.setContent(buildPlanPopup(mapped, { properties: mapped }, navInfo));
+                            popup.options.className = 'plan-popup';
+                            bindPopupEvents(popup, allFeatures, 0);
+                        }
+                        return;
+                    }
+                };
+                el.addEventListener('click', el._popupHandler);
+            }
+
+            function bindPopupEvents(popup, allFeatures, startIdx, originShavazProps) {
                 let currentIdx = startIdx || 0;
                 function buildForIndex(idx) {
                     const entry = allFeatures[idx];
@@ -3981,7 +4332,8 @@
                 }
                 const el = popup.getElement();
                 if (!el) return;
-                el.addEventListener('click', function(ev) {
+                if (el._popupHandler) el.removeEventListener('click', el._popupHandler);
+                el._popupHandler = function(ev) {
                     const navBtn = ev.target.closest('.popup-nav-btn');
                     if (navBtn) {
                         ev.stopPropagation();
@@ -3990,7 +4342,7 @@
                         popup.setContent(buildForIndex(currentIdx));
                         return;
                     }
-                    const permitBtn = ev.target.closest('.popup-btn-permit');
+                    const permitBtn = ev.target.closest('.popup-btn-permit') || ev.target.closest('.popup-icon-btn');
                     if (permitBtn && permitBtn.dataset.action === 'add-note') {
                         ev.stopPropagation();
                         const planId = permitBtn.dataset.plan;
@@ -4001,6 +4353,39 @@
                             localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
                             popup.setContent(buildForIndex(currentIdx));
                         }
+                        return;
+                    }
+                    if (permitBtn && permitBtn.dataset.action === 'jump-to-shavaz') {
+                        ev.stopPropagation();
+                        const taba = permitBtn.dataset.taba;
+                        if (!taba) return;
+                        const gd = geoDataRef.current;
+                        const shavazFeatures = [];
+                        [gd.shavaz_kayam, gd.future_shavaz].forEach((dataset, di) => {
+                            if (!dataset) return;
+                            dataset.features.forEach(f => {
+                                const ft = f.properties.TABA || f.properties.taba || '';
+                                if (ft === taba) shavazFeatures.push({ properties: f.properties, isFuture: di === 1 });
+                            });
+                        });
+                        if (shavazFeatures.length > 0) {
+                            const sf = shavazFeatures[0];
+                            // Store current plan props for back navigation
+                            const currentPlanProps = allFeatures[currentIdx] ? allFeatures[currentIdx].properties : null;
+                            const navInfo = shavazFeatures.length > 1 ? { current: 0, total: shavazFeatures.length } : null;
+                            popup.options.className = shavazPopupClassOuter(sf.isFuture != null ? sf.isFuture : !!(originShavazProps && (originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME)));
+                            popup.setContent(buildShavazPopup(sf.properties, sf.isFuture, true, navInfo));
+                            bindShavazPopupEvents(popup, sf.properties, popup.getLatLng(), currentPlanProps, shavazFeatures, 0);
+                            setLayers(prev => ({ ...prev, shavaz_kayam: true, future_shavaz: true }));
+                        }
+                        return;
+                    }
+                    if (permitBtn && permitBtn.dataset.action === 'back-to-shavaz' && originShavazProps) {
+                        ev.stopPropagation();
+                        const fut = !!(originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME);
+                        popup.options.className = shavazPopupClassOuter(fut);
+                        popup.setContent(buildShavazPopup(originShavazProps, fut, false));
+                        bindShavazPopupEvents(popup, originShavazProps, popup.getLatLng(), null, null, 0);
                         return;
                     }
                     if (permitBtn) {
@@ -4023,7 +4408,8 @@
                             })), 100);
                         }
                     }
-                });
+                };
+                el.addEventListener('click', el._popupHandler);
             }
 
             const toggleLayer = (id) => {
