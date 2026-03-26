@@ -2591,10 +2591,8 @@
             const areaModeRef = useRef(false);
             const [landuseCompareMode, setLanduseCompareMode] = useState(null); // null | 'plan' | 'area'
             const landuseCompareModeRef = useRef(null);
-            const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode
+            const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode - UI only
             const shatzafModeRef = useRef(false);
-            // Keep ref always in sync (before useEffect runs)
-            shatzafModeRef.current = shatzafMode;
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -3074,14 +3072,13 @@
                 };
             }, [landuseCompareMode]);
 
-            // ── שצ"פ לנפש mode ──
+            // ── שצ"פ לנפש: one-time setup (always listening, controlled by ref) ──
             useEffect(() => {
-                shatzafModeRef.current = shatzafMode;
                 const map = mapInstanceRef.current;
-                if (!map || !shatzafMode) return;
-                map.getContainer().classList.add('measuring');
+                if (!map) return;
 
                 function onShatzafClick(e) {
+                    if (!shatzafModeRef.current) return;
                     // Find clicked plan by PIP (same as landuse compare)
                     const plansLayer = geoLayersRef.current.plans;
                     if (!plansLayer) return;
@@ -3188,7 +3185,9 @@
                         });
                     }
 
+                    shatzafModeRef.current = false;
                     setShatzafMode(false);
+                    mapInstanceRef.current?.getContainer().classList.remove('measuring');
 
                     // Show dialog for household size
                     const panel = document.createElement('div');
@@ -3236,7 +3235,7 @@
                 // Use DOM click on map container (plan layer swallows Leaflet click events)
                 const container = map.getContainer();
                 function onShatzafDomClick(e) {
-                    // Stop event from reaching plan layer click handler
+                    if (!shatzafModeRef.current) return;
                     e.stopPropagation();
                     e.stopImmediatePropagation();
                     const rect = container.getBoundingClientRect();
@@ -3245,18 +3244,12 @@
                     const pt = map.containerPointToLatLng([x, y]);
                     onShatzafClick({ latlng: pt });
                 }
-                setTimeout(() => container.addEventListener('click', onShatzafDomClick, true), 100);
-                function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
-                document.addEventListener('keydown', onKeyDown);
+                container.addEventListener('click', onShatzafDomClick, true);
 
                 return () => {
                     container.removeEventListener('click', onShatzafDomClick, true);
-                    document.removeEventListener('keydown', onKeyDown);
-                    map.getContainer().classList.remove('measuring');
-                    const old = document.getElementById('shatzaf-panel');
-                    if (old) old.remove();
                 };
-            }, [shatzafMode]);
+            }, [dataLoaded]); // Run once when data loaded
 
             // ── Landuse compare: area mode finished → run analysis ──
             useEffect(() => {
@@ -4396,7 +4389,6 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf
-                                console.log('PLAN HANDLER: shatzaf=', shatzafModeRef.current);
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
@@ -6164,8 +6156,15 @@
                             <button
                                 className={`toolbar-btn ${shatzafMode ? 'active' : ''}`}
                                 onClick={() => {
-                                    setShatzafMode(!shatzafMode);
+                                    const next = !shatzafMode;
+                                    shatzafModeRef.current = next;
+                                    setShatzafMode(next);
                                     setActiveDropdown(null);
+                                    const mc = mapInstanceRef.current;
+                                    if (mc) {
+                                        if (next) mc.getContainer().classList.add('measuring');
+                                        else mc.getContainer().classList.remove('measuring');
+                                    }
                                 }}
                                 title='שצ"פ לנפש - שטח ציבורי פתוח לנפש בתכנית'
                             >
