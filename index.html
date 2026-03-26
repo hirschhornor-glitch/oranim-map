@@ -3236,11 +3236,13 @@
                 // Use DOM click on map container (plan layer swallows Leaflet click events)
                 const container = map.getContainer();
                 function onShatzafDomClick(e) {
+                    // Stop event from reaching plan layer click handler
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
                     const rect = container.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
                     const pt = map.containerPointToLatLng([x, y]);
-                    console.log('SHATZAF DOM CLICK at', pt.lat, pt.lng);
                     onShatzafClick({ latlng: pt });
                 }
                 setTimeout(() => container.addEventListener('click', onShatzafDomClick, true), 100);
