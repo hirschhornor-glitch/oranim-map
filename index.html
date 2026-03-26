@@ -3189,15 +3189,39 @@
                     setShatzafMode(false);
                     mapInstanceRef.current?.getContainer().classList.remove('measuring');
 
+                    // Find which sub-neighborhood this plan is in
+                    let planCx = 0, planCy = 0, pn = 0;
+                    for (const c of planCoords) { planCx += c[0]; planCy += c[1]; pn++; }
+                    planCx /= pn; planCy /= pn;
+                    let subNeighName = null;
+                    if (gd.sub_neighborhoods) {
+                        gd.sub_neighborhoods.features.forEach(sf => {
+                            if (subNeighName) return;
+                            try {
+                                const sg = sf.geometry;
+                                const rings = sg.type === 'Polygon' ? [sg.coordinates[0]] : sg.type === 'MultiPolygon' ? sg.coordinates.map(c => c[0]) : [];
+                                for (const ring of rings) {
+                                    let inside = false;
+                                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                                        if ((yi > planCy) !== (yj > planCy) && planCx < (xj - xi) * (planCy - yi) / (yj - yi) + xi)
+                                            inside = !inside;
+                                    }
+                                    if (inside) { subNeighName = sf.properties.schn_nama; break; }
+                                }
+                            } catch(ex) {}
+                        });
+                    }
+
                     // Show dialog for household size
                     const panel = document.createElement('div');
                     panel.id = 'shatzaf-panel';
                     panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:340px;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש</h3>' +
+                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + planDisplay + '</h3>' +
                         '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
-                        '<div style="font-size:13px;margin-bottom:6px;color:#aaa">' + planDisplay + '</div>' +
+                        (subNeighName ? '<div style="font-size:11px;margin-bottom:6px;color:#888">שכונה: ' + subNeighName + '</div>' : '') +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
@@ -3208,6 +3232,50 @@
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
 
+                    // Pre-calculate sub-neighborhood ratio for comparison
+                    let subRatioText = '';
+                    if (subNeighName) {
+                        // Find sub polygon coords
+                        const subF = gd.sub_neighborhoods.features.find(f => f.properties.schn_nama === subNeighName);
+                        if (subF) {
+                            let sCoords;
+                            try {
+                                if (subF.geometry.type === 'Polygon') sCoords = subF.geometry.coordinates[0];
+                                else if (subF.geometry.type === 'MultiPolygon') sCoords = subF.geometry.coordinates[0][0];
+                            } catch(ex) {}
+                            if (sCoords) {
+                                let subOpenSpace = 0;
+                                // Scan xplan + kayam fallback for sub-neighborhood open space
+                                const scanLanduse = (features, nameField) => {
+                                    features.forEach(f => {
+                                        const nm = (f.properties[nameField] || '').trim();
+                                        if (!nm) return;
+                                        const grp = getLanduseGroup(nm);
+                                        if (grp !== 'שטחים פתוחים' && grp !== 'יער/חקלאי') return;
+                                        try {
+                                            let fc;
+                                            if (f.geometry.type === 'Polygon') fc = f.geometry.coordinates[0];
+                                            else if (f.geometry.type === 'MultiPolygon') fc = f.geometry.coordinates[0][0];
+                                            else return;
+                                            let cx2=0,cy2=0,nn=0;
+                                            for (const c of fc) { cx2+=c[0]; cy2+=c[1]; nn++; }
+                                            cx2/=nn; cy2/=nn;
+                                            let ins = false;
+                                            for (let i=0,j=sCoords.length-1;i<sCoords.length;j=i++) {
+                                                const [xi,yi]=sCoords[i],[xj,yj]=sCoords[j];
+                                                if ((yi>cy2)!==(yj>cy2) && cx2<(xj-xi)*(cy2-yi)/(yj-yi)+xi) ins=!ins;
+                                            }
+                                            if (ins) subOpenSpace += getFeatureArea(f);
+                                        } catch(ex) {}
+                                    });
+                                };
+                                if (gd.landuse_xplan) scanLanduse(gd.landuse_xplan.features, 'mavat_name');
+                                if (gd.yiud_karka_kayam) scanLanduse(gd.yiud_karka_kayam.features, 'Descr');
+                                window.__subShatzafData = { subName: subNeighName, openSpace: subOpenSpace };
+                            }
+                        }
+                    }
+
                     document.getElementById('shatzaf-close').onclick = () => panel.remove();
                     document.getElementById('shatzaf-calc').onclick = () => {
                         const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
@@ -3216,6 +3284,26 @@
                         const resultDiv = document.getElementById('shatzaf-result');
                         resultDiv.style.display = 'block';
 
+                        // Calculate sub-neighborhood ratio
+                        let subCompareHtml = '';
+                        const sd = window.__subShatzafData;
+                        if (sd && sd.subName) {
+                            const ud = window.__unitsData;
+                            let subUnits = 0;
+                            if (ud && ud.bySub) {
+                                Object.keys(ud.bySub).forEach(m => {
+                                    if (ud.bySub[m][sd.subName]) {
+                                        subUnits += (ud.bySub[m][sd.subName].units_in || 0) + (ud.bySub[m][sd.subName].units_add || 0);
+                                    }
+                                });
+                            }
+                            const subPeople = subUnits * hh;
+                            const subRatio = subPeople > 0 ? (sd.openSpace / subPeople) : 0;
+                            if (subUnits > 0) {
+                                subCompareHtml = '<div style="font-size:11px;color:#888;margin-top:6px;text-align:center">יחס בשכונת ' + sd.subName + ': <b style="color:#aaa">' + subRatio.toFixed(1) + ' מ"ר/נפש</b></div>';
+                            }
+                        }
+
                         resultDiv.innerHTML =
                             '<div style="border-top:1px solid #333;padding-top:12px">' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
@@ -3223,6 +3311,7 @@
                             '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' +
                             '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' +
                             '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
+                            subCompareHtml +
                             '</div>' +
                             (unitsTotal === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>' : '') +
                             (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>' : '') +
