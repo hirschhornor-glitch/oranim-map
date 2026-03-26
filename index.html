@@ -3079,31 +3079,7 @@
                 if (!map || !shatzafMode) return;
                 map.getContainer().classList.add('measuring');
 
-                function onPlanClickShatzaf(e) {
-                    const plansLayer = geoLayersRef.current.plans;
-                    if (!plansLayer) return;
-                    const latlng = e.latlng;
-                    let clickedFeature = null;
-                    plansLayer.eachLayer(layer => {
-                        if (clickedFeature) return;
-                        try {
-                            const geo = layer.feature.geometry;
-                            let coords;
-                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
-                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
-                            else return;
-                            const lng = latlng.lng, lat = latlng.lat;
-                            let inside = false;
-                            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-                                const [xi, yi] = coords[i], [xj, yj] = coords[j];
-                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
-                                    inside = !inside;
-                            }
-                            if (inside) clickedFeature = layer.feature;
-                        } catch(ex) {}
-                    });
-
-                    if (!clickedFeature) return;
+                function processShatzafFeature(clickedFeature) {
                     const p = clickedFeature.properties;
                     const planId = p.plan_name || p.pl_number || p.TABA || '';
                     const planSummary = p.plan_summary || p.plan_name_he || '';
@@ -3227,12 +3203,16 @@
                     document.getElementById('shatzaf-calc').click();
                 }
 
-                map.on('click', onPlanClickShatzaf);
+                // Expose for direct call from plan layer click handler
+                window.__shatzafPlanClick = (feature) => {
+                    processShatzafFeature(feature);
+                };
+
                 function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
                 document.addEventListener('keydown', onKeyDown);
 
                 return () => {
-                    map.off('click', onPlanClickShatzaf);
+                    window.__shatzafPlanClick = null;
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     const old = document.getElementById('shatzaf-panel');
@@ -4381,8 +4361,8 @@
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) {
-                                    // Re-emit as map click so shatzaf handler catches it
-                                    map.fire('click', e);
+                                    // Trigger shatzaf handler directly with the clicked feature
+                                    if (window.__shatzafPlanClick) window.__shatzafPlanClick(f);
                                     return;
                                 }
                                 // When shavaz is active, try to open shavaz popup first
