@@ -1628,8 +1628,11 @@
             planning: {
                 title: 'תכנון',
                 layers: [
-                    { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true },
-                    { id: 'landuse_xplan', name: 'ייעודי קרקע', desc: 'ייעודי קרקע לפי תכניות', on: false },
+                    { id: 'plans', name: 'תב"ע', desc: 'תוכניות בניין עיר', on: true,
+                      subLayers: [
+                          { id: 'landuse_xplan', name: 'ייעודי קרקע', desc: 'ייעודי קרקע לפי תכניות', on: false }
+                      ]
+                    },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                 ]
@@ -1656,8 +1659,9 @@
             },
             landuse_kayam: {
                 title: 'ייעודי קרקע מצב קיים',
+                titleToggle: true,
                 layers: [
-                    { id: 'yiud_karka_kayam', name: 'ייעודי קרקע קיימים', on: false },
+                    { id: 'yiud_karka_kayam', name: 'ייעודי קרקע מצב קיים', on: false },
                 ]
             }
         };
@@ -5613,6 +5617,18 @@
 
                             {Object.entries(filteredConfig).map(([groupKey, group]) => (
                                 <div key={groupKey}>
+                                    {group.titleToggle ? (
+                                        <div className="layer-group-title" style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',gap:4}}
+                                             onClick={() => toggleLayer(group.layers[0].id)}>
+                                            <input type="checkbox"
+                                                checked={layers[group.layers[0].id] || false}
+                                                onChange={() => toggleLayer(group.layers[0].id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ marginLeft: 2 }}
+                                            />
+                                            {group.title}
+                                        </div>
+                                    ) : (
                                     <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, [groupKey]: !prev[groupKey]}))} style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',gap:4}}>
                                         <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups[groupKey]?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
                                         {groupKey === 'admin' && (
@@ -5632,8 +5648,10 @@
                                         )}
                                         {group.title}
                                     </div>
-                                    {!collapsedGroups[groupKey] && group.layers.map(layer => (
-                                        <div className="layer-item" key={layer.id}
+                                    )}
+                                    {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.map(layer => (
+                                        <React.Fragment key={layer.id}>
+                                        <div className="layer-item"
                                              title={layer.desc || ''}>
                                             <input
                                                 type="checkbox"
@@ -5660,17 +5678,34 @@
                                                     style={{fontSize:'11px'}}>📊</button>
                                             )}
                                         </div>
+                                        {layer.subLayers && layers[layer.id] && layer.subLayers.map(sub => (
+                                            <div className="layer-item" key={sub.id} style={{paddingRight:24}}
+                                                 title={sub.desc || ''}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={layers[sub.id] || false}
+                                                    onChange={() => toggleLayer(sub.id)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                                <label onClick={() => toggleLayer(sub.id)} style={{fontSize:'11px'}}>{sub.name}</label>
+                                            </div>
+                                        ))}
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             ))}
 
-                            <div className="layer-group-title" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                                <span>נושאים תכנוניים</span>
+                            <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, topics: !prev.topics}))}
+                                 style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                    <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.topics?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
+                                    <span>נושאים תכנוניים</span>
+                                </div>
                                 <button className="layer-legend-btn" title="מקרא נושאים תכנוניים"
                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND }); }}
                                     style={{fontSize:'14px',margin:0}}>⋯</button>
                             </div>
-                            <div className="layer-item"
+                            {!collapsedGroups.topics && <div className="layer-item"
                                  title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
                                  onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
                                 <input type="checkbox" checked={planningTopics.overlapping} onChange={() => {}} />
@@ -5700,13 +5735,7 @@
                                     <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
                                     <label>תכניות שנגנזו</label>
                                 </div>
-                                <div className="layer-item"
-                                     style={{cursor:'pointer'}}
-                                     title='מבני ציבור להריסה במסגרת התחדשות עירונית'
-                                     onClick={() => setPlanningTopics(prev => ({...prev, shavaz_demolition: !prev.shavaz_demolition}))}>
-                                    <input type="checkbox" checked={planningTopics.shavaz_demolition} onChange={() => {}} />
-                                    <label>מבני ציבור להריסה במסגרת התחדשות עירונית</label>
-                                </div>
+                            }
                         </div>
 
 
