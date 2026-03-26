@@ -2593,6 +2593,8 @@
             const landuseCompareModeRef = useRef(null);
             const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode
             const shatzafModeRef = useRef(false);
+            // Keep ref always in sync (before useEffect runs)
+            shatzafModeRef.current = shatzafMode;
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -3080,6 +3082,7 @@
                 map.getContainer().classList.add('measuring');
 
                 function processShatzafFeature(clickedFeature) {
+                    console.log('SHATZAF processFeature called', clickedFeature.properties.plan_name);
                     const p = clickedFeature.properties;
                     const planId = p.plan_name || p.pl_number || p.TABA || '';
                     const planSummary = p.plan_summary || p.plan_name_he || '';
@@ -4362,6 +4365,7 @@
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) {
                                     // Trigger shatzaf handler directly with the clicked feature
+                                    console.log('SHATZAF: plan clicked, handler=', !!window.__shatzafPlanClick, 'feature=', f.properties.plan_name);
                                     if (window.__shatzafPlanClick) window.__shatzafPlanClick(f);
                                     return;
                                 }
