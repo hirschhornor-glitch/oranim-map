@@ -4380,7 +4380,11 @@
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
-                                if (shatzafModeRef.current) return;
+                                if (shatzafModeRef.current) {
+                                    // Re-emit as map click so shatzaf handler catches it
+                                    map.fire('click', e);
+                                    return;
+                                }
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
