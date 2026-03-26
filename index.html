@@ -3081,8 +3081,35 @@
                 if (!map || !shatzafMode) return;
                 map.getContainer().classList.add('measuring');
 
+                function onShatzafClick(e) {
+                    // Find clicked plan by PIP (same as landuse compare)
+                    const plansLayer = geoLayersRef.current.plans;
+                    if (!plansLayer) return;
+                    const latlng = e.latlng;
+                    let clickedFeature = null;
+                    plansLayer.eachLayer(layer => {
+                        if (clickedFeature) return;
+                        try {
+                            const geo = layer.feature.geometry;
+                            let coords;
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                            else return;
+                            const lng = latlng.lng, lat = latlng.lat;
+                            let inside = false;
+                            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                                const [xi, yi] = coords[i], [xj, yj] = coords[j];
+                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) clickedFeature = layer.feature;
+                        } catch(ex) {}
+                    });
+                    if (!clickedFeature) return;
+                    processShatzafFeature(clickedFeature);
+                }
+
                 function processShatzafFeature(clickedFeature) {
-                    console.log('SHATZAF processFeature called', clickedFeature.properties.plan_name);
                     const p = clickedFeature.properties;
                     const planId = p.plan_name || p.pl_number || p.TABA || '';
                     const planSummary = p.plan_summary || p.plan_name_he || '';
@@ -3206,16 +3233,12 @@
                     document.getElementById('shatzaf-calc').click();
                 }
 
-                // Expose for direct call from plan layer click handler
-                window.__shatzafPlanClick = (feature) => {
-                    processShatzafFeature(feature);
-                };
-
+                map.on('click', onShatzafClick);
                 function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
                 document.addEventListener('keydown', onKeyDown);
 
                 return () => {
-                    window.__shatzafPlanClick = null;
+                    map.off('click', onShatzafClick);
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     const old = document.getElementById('shatzaf-panel');
@@ -4361,14 +4384,9 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf
-                                console.log('PLAN CLICK: areaMode=', areaModeRef.current, 'landuse=', landuseCompareModeRef.current, 'shatzaf=', shatzafModeRef.current, window.__shatzafPlanClick);
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
-                                if (shatzafModeRef.current) {
-                                    // Trigger shatzaf handler directly with the clicked feature
-                                    if (window.__shatzafPlanClick) window.__shatzafPlanClick(f);
-                                    return;
-                                }
+                                if (shatzafModeRef.current) return;
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
