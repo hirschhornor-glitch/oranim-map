@@ -5705,7 +5705,8 @@
                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND }); }}
                                     style={{fontSize:'14px',margin:0}}>⋯</button>
                             </div>
-                            {!collapsedGroups.topics && <div className="layer-item"
+                            {!collapsedGroups.topics && (<div>
+                            <div className="layer-item"
                                  title='הצגת תוכניות שחופפות מרחבית לתוכניות אחרות'
                                  onClick={() => setPlanningTopics(prev => ({...prev, overlapping: !prev.overlapping}))}>
                                 <input type="checkbox" checked={planningTopics.overlapping} onChange={() => {}} />
@@ -5723,19 +5724,19 @@
                                 <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
                                 <label>תכניות המופקדות להתנגדויות</label>
                             </div>
-                                <div className="layer-item"
-                                     title='תכניות תשתיות'
-                                     onClick={() => setPlanningTopics(prev => ({...prev, infrastructure: !prev.infrastructure}))}>
-                                    <input type="checkbox" checked={planningTopics.infrastructure} onChange={() => {}} />
-                                    <label>תכניות תשתיות</label>
-                                </div>
-                                <div className="layer-item"
-                                     title='תכניות שנגנזו/נדחו'
-                                     onClick={() => setPlanningTopics(prev => ({...prev, archived: !prev.archived}))}>
-                                    <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
-                                    <label>תכניות שנגנזו</label>
-                                </div>
-                            }
+                            <div className="layer-item"
+                                 title='תכניות תשתיות'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, infrastructure: !prev.infrastructure}))}>
+                                <input type="checkbox" checked={planningTopics.infrastructure} onChange={() => {}} />
+                                <label>תכניות תשתיות</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תכניות שנגנזו/נדחו'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, archived: !prev.archived}))}>
+                                <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
+                                <label>תכניות שנגנזו</label>
+                            </div>
+                            </div>)}
                         </div>
 
 
