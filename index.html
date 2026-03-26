@@ -2591,6 +2591,8 @@
             const areaModeRef = useRef(false);
             const [landuseCompareMode, setLanduseCompareMode] = useState(null); // null | 'plan' | 'area'
             const landuseCompareModeRef = useRef(null);
+            const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode
+            const shatzafModeRef = useRef(false);
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -3069,6 +3071,180 @@
                     map.getContainer().classList.remove('measuring');
                 };
             }, [landuseCompareMode]);
+
+            // ── שצ"פ לנפש mode ──
+            useEffect(() => {
+                shatzafModeRef.current = shatzafMode;
+                const map = mapInstanceRef.current;
+                if (!map || !shatzafMode) return;
+                map.getContainer().classList.add('measuring');
+
+                function onPlanClickShatzaf(e) {
+                    const plansLayer = geoLayersRef.current.plans;
+                    if (!plansLayer) return;
+                    const latlng = e.latlng;
+                    let clickedFeature = null;
+                    plansLayer.eachLayer(layer => {
+                        if (clickedFeature) return;
+                        try {
+                            const geo = layer.feature.geometry;
+                            let coords;
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                            else return;
+                            const lng = latlng.lng, lat = latlng.lat;
+                            let inside = false;
+                            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                                const [xi, yi] = coords[i], [xj, yj] = coords[j];
+                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) clickedFeature = layer.feature;
+                        } catch(ex) {}
+                    });
+
+                    if (!clickedFeature) return;
+                    const p = clickedFeature.properties;
+                    const planId = p.plan_name || p.pl_number || p.TABA || '';
+                    const planSummary = p.plan_summary || p.plan_name_he || '';
+                    const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
+                    const unitsTotal = parseInt(p.units_total) || 0;
+
+                    // Calculate open space from xplan within plan boundary
+                    const geo = clickedFeature.geometry;
+                    let planCoords;
+                    try {
+                        if (geo.type === 'Polygon') planCoords = geo.coordinates[0];
+                        else if (geo.type === 'MultiPolygon') planCoords = geo.coordinates[0][0];
+                    } catch(ex) { return; }
+                    if (!planCoords) return;
+
+                    // Find xplan features inside this plan that are שטחים פתוחים
+                    const gd = window.__geoDataForLanduse || {};
+                    let openSpaceArea = 0;
+                    const openSpaceNames = [];
+                    if (gd.landuse_xplan) {
+                        gd.landuse_xplan.features.forEach(f => {
+                            const name = (f.properties.mavat_name || '').trim();
+                            if (!name) return;
+                            const group = getLanduseGroup(name);
+                            if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+                            // Check if centroid is inside plan polygon
+                            try {
+                                let fCoords;
+                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
+                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
+                                else return;
+                                let cx = 0, cy = 0, n = 0;
+                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
+                                cx /= n; cy /= n;
+                                // PIP test against plan boundary
+                                let inside = false;
+                                for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+                                    const [xi, yi] = planCoords[i], [xj, yj] = planCoords[j];
+                                    if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                        inside = !inside;
+                                }
+                                if (inside) {
+                                    openSpaceArea += getFeatureArea(f);
+                                    if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+                                }
+                            } catch(ex) {}
+                        });
+                    }
+
+                    // Also check kayam if no xplan open space found
+                    if (openSpaceArea === 0 && gd.yiud_karka_kayam) {
+                        gd.yiud_karka_kayam.features.forEach(f => {
+                            const name = (f.properties.Descr || '').trim();
+                            if (!name) return;
+                            const group = getLanduseGroup(name);
+                            if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+                            try {
+                                let fCoords;
+                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
+                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
+                                else return;
+                                let cx = 0, cy = 0, n = 0;
+                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
+                                cx /= n; cy /= n;
+                                let inside = false;
+                                for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+                                    const [xi, yi] = planCoords[i], [xj, yj] = planCoords[j];
+                                    if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                        inside = !inside;
+                                }
+                                if (inside) {
+                                    openSpaceArea += getFeatureArea(f);
+                                    if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+                                }
+                            } catch(ex) {}
+                        });
+                    }
+
+                    setShatzafMode(false);
+
+                    // Show dialog for household size
+                    const panel = document.createElement('div');
+                    panel.id = 'shatzaf-panel';
+                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:340px;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+                    panel.innerHTML =
+                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש</h3>' +
+                        '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
+                        '<div style="font-size:13px;margin-bottom:6px;color:#aaa">' + planDisplay + '</div>' +
+                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
+                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
+                        (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
+                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):</div>' +
+                        '<div style="display:flex;gap:8px;align-items:center">' +
+                        '<input id="shatzaf-household" type="number" value="3.5" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
+                        '<button id="shatzaf-calc" style="flex:1;padding:8px;background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
+                        '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
+                    document.body.appendChild(panel);
+
+                    document.getElementById('shatzaf-close').onclick = () => panel.remove();
+                    document.getElementById('shatzaf-calc').onclick = () => {
+                        const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
+                        const totalPeople = unitsTotal * hh;
+                        const sqmPerPerson = totalPeople > 0 ? (openSpaceArea / totalPeople) : 0;
+                        const resultDiv = document.getElementById('shatzaf-result');
+                        resultDiv.style.display = 'block';
+
+                        let qualityColor, qualityText;
+                        if (sqmPerPerson >= 9) { qualityColor = '#4CAF50'; qualityText = 'תקין (≥9 מ"ר/נפש)'; }
+                        else if (sqmPerPerson >= 5) { qualityColor = '#ff9800'; qualityText = 'נמוך (5-9 מ"ר/נפש)'; }
+                        else { qualityColor = '#e94560'; qualityText = 'קריטי (<5 מ"ר/נפש)'; }
+
+                        resultDiv.innerHTML =
+                            '<div style="border-top:1px solid #333;padding-top:12px">' +
+                            '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
+                            '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>(' + unitsTotal.toLocaleString() + ' יח"ד × ' + hh + ' נפשות)</span></div>' +
+                            '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' +
+                            '<div style="font-size:32px;font-weight:bold;color:' + qualityColor + '">' + sqmPerPerson.toFixed(1) + '</div>' +
+                            '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
+                            '<div style="font-size:11px;color:' + qualityColor + ';margin-top:4px">' + qualityText + '</div>' +
+                            '</div>' +
+                            (unitsTotal === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>' : '') +
+                            (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>' : '') +
+                            '</div>';
+                    };
+                    // Auto-calculate
+                    document.getElementById('shatzaf-calc').click();
+                }
+
+                map.on('click', onPlanClickShatzaf);
+                function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
+                document.addEventListener('keydown', onKeyDown);
+
+                return () => {
+                    map.off('click', onPlanClickShatzaf);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.getContainer().classList.remove('measuring');
+                    const old = document.getElementById('shatzaf-panel');
+                    if (old) old.remove();
+                };
+            }, [shatzafMode]);
 
             // ── Landuse compare: area mode finished → run analysis ──
             useEffect(() => {
@@ -4207,9 +4383,10 @@
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                // Suppress popups during area/measure drawing or landuse compare
+                                // Suppress popups during area/measure drawing or landuse compare or shatzaf
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
+                                if (shatzafModeRef.current) return;
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
@@ -5969,6 +6146,23 @@
                                     </button>
                                 </div>
                             )}
+
+                            {/* שצ"פ לנפש */}
+                            <button
+                                className={`toolbar-btn ${shatzafMode ? 'active' : ''}`}
+                                onClick={() => {
+                                    setShatzafMode(!shatzafMode);
+                                    setActiveDropdown(null);
+                                }}
+                                title='שצ"פ לנפש - שטח ציבורי פתוח לנפש בתכנית'
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 6v3M8 9c0 0 1 3 4 3s4-3 4-3M9 16c0-1.5 1.3-3 3-3s3 1.5 3 3" />
+                                    <line x1="7" y1="19" x2="17" y2="19" strokeWidth="1.5" />
+                                </svg>
+                                <span className="toolbar-label">{shatzafMode ? 'בחר תכנית...' : 'שצ"פ לנפש'}</span>
+                            </button>
 
                             <div className="toolbar-sep" />
 
