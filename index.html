@@ -3236,15 +3236,19 @@
                 // Use DOM click on map container (plan layer swallows Leaflet click events)
                 const container = map.getContainer();
                 function onShatzafDomClick(e) {
-                    const pt = map.containerPointToLatLng([e.offsetX || e.layerX, e.offsetY || e.layerY]);
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const pt = map.containerPointToLatLng([x, y]);
+                    console.log('SHATZAF DOM CLICK at', pt.lat, pt.lng);
                     onShatzafClick({ latlng: pt });
                 }
-                container.addEventListener('click', onShatzafDomClick);
+                setTimeout(() => container.addEventListener('click', onShatzafDomClick, true), 100);
                 function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
                 document.addEventListener('keydown', onKeyDown);
 
                 return () => {
-                    container.removeEventListener('click', onShatzafDomClick);
+                    container.removeEventListener('click', onShatzafDomClick, true);
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     const old = document.getElementById('shatzaf-panel');
