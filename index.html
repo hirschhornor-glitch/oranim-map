@@ -4004,9 +4004,12 @@
                         if (sub._labelMarker) map.removeLayer(sub._labelMarker);
                         if (sub._minahakLabel) map.removeLayer(sub._minahakLabel);
                         if (sub._subLabel) map.removeLayer(sub._subLabel);
+                        if (sub._hatchClone) { sub._hatchClone.remove(); sub._hatchClone = null; }
                     });
                     map.removeLayer(ll);
                 }
+                // Also remove any orphaned hatch overlays from SVG
+                document.querySelectorAll('.hatch-overlay').forEach(el => el.remove());
                 Object.values(geoLayersRef.current).forEach(l => {
                     if (Array.isArray(l)) l.forEach(ll => cleanupLayer(ll));
                     else if (l) cleanupLayer(l);
