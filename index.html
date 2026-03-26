@@ -3335,21 +3335,16 @@
                 }
                 container.addEventListener('click', onShatzafDomClick, true);
 
-                // Sub-neighborhood shatzaf - click on sub_neighborhoods polygon
-                function onShatzafSubDomClick(e) {
-                    if (shatzafModeRef.current !== 'sub') return;
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    const rect = container.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const pt = map.containerPointToLatLng([x, y]);
+                // Sub-neighborhood shatzaf - hover highlight + click
+                let subHoverLayer = null;
+                let subSelectedLayer = null;
+
+                function findSubAtPoint(pt) {
                     const gd = window.__geoDataForLanduse || {};
-                    if (!gd.sub_neighborhoods) return;
-                    // Find which sub-neighborhood polygon contains the click
-                    let foundName = null;
+                    if (!gd.sub_neighborhoods) return null;
+                    let found = null;
                     gd.sub_neighborhoods.features.forEach(f => {
-                        if (foundName) return;
+                        if (found) return;
                         try {
                             const g = f.geometry;
                             const rings = g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map(c => c[0]) : [];
@@ -3361,15 +3356,47 @@
                                     if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
                                         inside = !inside;
                                 }
-                                if (inside) { foundName = f.properties.schn_nama; break; }
+                                if (inside) { found = f; break; }
                             }
                         } catch(ex) {}
                     });
-                    if (foundName) {
+                    return found;
+                }
+
+                function onShatzafSubMouseMove(e) {
+                    if (shatzafModeRef.current !== 'sub') {
+                        if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
+                        return;
+                    }
+                    const pt = map.containerPointToLatLng([e.clientX - container.getBoundingClientRect().left, e.clientY - container.getBoundingClientRect().top]);
+                    const found = findSubAtPoint(pt);
+                    if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
+                    if (found) {
+                        subHoverLayer = L.geoJSON(found, {
+                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.1, dashArray: '' }
+                        }).addTo(map);
+                        // Show tooltip with name
+                        subHoverLayer.bindTooltip(found.properties.schn_nama, { sticky: true, direction: 'top', className: 'landuse-tooltip' }).openTooltip();
+                    }
+                }
+                container.addEventListener('mousemove', onShatzafSubMouseMove);
+
+                function onShatzafSubDomClick(e) {
+                    if (shatzafModeRef.current !== 'sub') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const pt = map.containerPointToLatLng([e.clientX - container.getBoundingClientRect().left, e.clientY - container.getBoundingClientRect().top]);
+                    const found = findSubAtPoint(pt);
+                    if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
+                    if (found) {
                         shatzafModeRef.current = null;
                         setShatzafMode(false);
                         map.getContainer().classList.remove('measuring');
-                        calculateSubNeighborhoodShatzaf(foundName);
+                        // Draw selected polygon
+                        subSelectedLayer = L.geoJSON(found, {
+                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.15, dashArray: '' }
+                        }).addTo(map);
+                        calculateSubNeighborhoodShatzaf(found.properties.schn_nama);
                     }
                 }
                 container.addEventListener('click', onShatzafSubDomClick, true);
@@ -3511,7 +3538,10 @@
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
 
-                    document.getElementById('shatzaf-close').onclick = () => panel.remove();
+                    document.getElementById('shatzaf-close').onclick = () => {
+                        panel.remove();
+                        if (subSelectedLayer) { map.removeLayer(subSelectedLayer); subSelectedLayer = null; }
+                    };
                     document.getElementById('shatzaf-calc').onclick = () => {
                         const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
                         const totalPeople = grandTotalUnits * hh;
@@ -3537,6 +3567,9 @@
                 return () => {
                     container.removeEventListener('click', onShatzafDomClick, true);
                     container.removeEventListener('click', onShatzafSubDomClick, true);
+                    container.removeEventListener('mousemove', onShatzafSubMouseMove);
+                    if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
+                    if (subSelectedLayer) { map.removeLayer(subSelectedLayer); subSelectedLayer = null; }
                 };
             }, [dataLoaded]); // Run once when data loaded
 
