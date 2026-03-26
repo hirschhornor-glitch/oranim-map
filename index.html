@@ -5650,7 +5650,7 @@
                                     </div>
                                     )}
                                     {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.map(layer => (
-                                        <React.Fragment key={layer.id}>
+                                        <div key={layer.id}>
                                         <div className="layer-item"
                                              title={layer.desc || ''}>
                                             <input
@@ -5690,7 +5690,7 @@
                                                 <label onClick={() => toggleLayer(sub.id)} style={{fontSize:'11px'}}>{sub.name}</label>
                                             </div>
                                         ))}
-                                        </React.Fragment>
+                                        </div>
                                     ))}
                                 </div>
                             ))}
