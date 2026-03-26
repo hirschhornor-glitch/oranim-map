@@ -4396,6 +4396,7 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf
+                                console.log('PLAN HANDLER: shatzaf=', shatzafModeRef.current);
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
