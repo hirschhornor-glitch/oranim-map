@@ -3233,12 +3233,18 @@
                     document.getElementById('shatzaf-calc').click();
                 }
 
-                map.on('click', onShatzafClick);
+                // Use DOM click on map container (plan layer swallows Leaflet click events)
+                const container = map.getContainer();
+                function onShatzafDomClick(e) {
+                    const pt = map.containerPointToLatLng([e.offsetX || e.layerX, e.offsetY || e.layerY]);
+                    onShatzafClick({ latlng: pt });
+                }
+                container.addEventListener('click', onShatzafDomClick);
                 function onKeyDown(e) { if (e.key === 'Escape') setShatzafMode(false); }
                 document.addEventListener('keydown', onKeyDown);
 
                 return () => {
-                    map.off('click', onShatzafClick);
+                    container.removeEventListener('click', onShatzafDomClick);
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     const old = document.getElementById('shatzaf-panel');
