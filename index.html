@@ -3211,19 +3211,13 @@
                         const resultDiv = document.getElementById('shatzaf-result');
                         resultDiv.style.display = 'block';
 
-                        let qualityColor, qualityText;
-                        if (sqmPerPerson >= 9) { qualityColor = '#4CAF50'; qualityText = 'תקין (≥9 מ"ר/נפש)'; }
-                        else if (sqmPerPerson >= 5) { qualityColor = '#ff9800'; qualityText = 'נמוך (5-9 מ"ר/נפש)'; }
-                        else { qualityColor = '#e94560'; qualityText = 'קריטי (<5 מ"ר/נפש)'; }
-
                         resultDiv.innerHTML =
                             '<div style="border-top:1px solid #333;padding-top:12px">' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>(' + unitsTotal.toLocaleString() + ' יח"ד × ' + hh + ' נפשות)</span></div>' +
                             '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' +
-                            '<div style="font-size:32px;font-weight:bold;color:' + qualityColor + '">' + sqmPerPerson.toFixed(1) + '</div>' +
+                            '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' +
                             '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
-                            '<div style="font-size:11px;color:' + qualityColor + ';margin-top:4px">' + qualityText + '</div>' +
                             '</div>' +
                             (unitsTotal === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>' : '') +
                             (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>' : '') +
