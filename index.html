@@ -3297,12 +3297,18 @@
                     } catch(ex) { return; }
                     if (!subCoords) return;
 
-                    // Get units from unitsData table (not from scanning plans)
+                    // Ensure units data is loaded, then proceed
+                    (window.__unitsData ? Promise.resolve(window.__unitsData) : new Promise(resolve => {
+                        window.__unitsDataCallbacks = window.__unitsDataCallbacks || [];
+                        window.__unitsDataCallbacks.push(resolve);
+                        if (!window.__unitsFetching) {
+                            window.__unitsFetching = true;
+                            fetchUnitsDataInternal();
+                        }
+                    })).then(ud => {
                     let totalUnitsIn = 0;
                     let totalUnitsAdd = 0;
-                    const ud = window.__unitsData;
                     if (ud && ud.bySub) {
-                        // Search all minahaks for this sub-neighborhood name
                         Object.keys(ud.bySub).forEach(minahak => {
                             const subs = ud.bySub[minahak];
                             if (subs[subName]) {
@@ -3436,6 +3442,7 @@
                             '</div>';
                     };
                     document.getElementById('shatzaf-calc').click();
+                    }); // end .then(ud =>
                 }
 
                 return () => {
@@ -4093,10 +4100,26 @@
                 'מלחה': 'מינהל מוסדי מלחה',
             };
 
+            // Fetch units data silently (for shatzaf etc.) - returns promise
+            const ensureUnitsData = useCallback(() => {
+                if (window.__unitsData) return Promise.resolve(window.__unitsData);
+                return new Promise(resolve => {
+                    window.__unitsDataCallbacks = window.__unitsDataCallbacks || [];
+                    window.__unitsDataCallbacks.push(resolve);
+                    if (window.__unitsFetching) return;
+                    window.__unitsFetching = true;
+                    fetchUnitsDataInternal();
+                });
+            }, []);
+
             const fetchUnitsData = useCallback(() => {
                 if (unitsData) { setShowUnits(true); return; } // cached
                 setUnitsLoading(true);
                 setShowUnits(true);
+                fetchUnitsDataInternal();
+            }, [unitsData]);
+
+            const fetchUnitsDataInternal = useCallback(() => {
 
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
 
@@ -4363,9 +4386,14 @@
                     const ud = { minahaks, byMinahak, bySub, statusGroups: STATUS_GROUPS, typeGroups: finalTypeGroups, plansByCell, plansBySub, plansByType, plansBySubType };
                     setUnitsData(ud);
                     window.__unitsData = ud;
+                    window.__unitsFetching = false;
+                    if (window.__unitsDataCallbacks) {
+                        window.__unitsDataCallbacks.forEach(cb => cb(ud));
+                        window.__unitsDataCallbacks = [];
+                    }
                     setUnitsLoading(false);
                 });
-            }, [unitsData]);
+            }, []);
 
             // GeoJSON rendering: add/remove L.geoJSON layers based on state
             useEffect(() => {
