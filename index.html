@@ -2610,6 +2610,7 @@
             const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
             const [minahakReport, setMinahakReport] = useState(null);
             const [cellReport, setCellReport] = useState(null); // {minahak, statusKey, statusLabel, plans}
+            const [objectionsReport, setObjectionsReport] = useState(false);
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
@@ -5574,14 +5575,9 @@
                 const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
                     ds && ds.features && ds.features.some(f => (f.properties.TABA || f.properties.taba || '') === tabaForJump)
                 );
-                if (hasShavaz || originShavazProps) {
+                if (originShavazProps) {
                     html += '<div class="popup-footer" style="flex-direction:row;border-top:none;padding-top:0">';
-                    if (hasShavaz) {
-                        html += `<button class="popup-icon-btn" data-action="jump-to-shavaz" data-taba="${tabaForJump}" title="מבני ציבור">🏛️</button>`;
-                    }
-                    if (originShavazProps) {
-                        html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
-                    }
+                    html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
                     html += '</div>';
                 }
                 // Annotation display (if exists)
@@ -6247,9 +6243,13 @@
                             </div>
                             <div className="layer-item"
                                  title='תוכניות בשלב הפקדה להתנגדויות'
+                                 style={{display:'flex',alignItems:'center'}}
                                  onClick={() => setPlanningTopics(prev => ({...prev, objections: !prev.objections}))}>
                                 <input type="checkbox" checked={planningTopics.objections} onChange={() => {}} />
-                                <label>תכניות המופקדות להתנגדויות</label>
+                                <label style={{flex:1}}>תכניות המופקדות להתנגדויות</label>
+                                <button className="layer-legend-btn" title="דוח סיכום הפקדות"
+                                    onClick={(e) => { e.stopPropagation(); setObjectionsReport(true); }}
+                                    style={{marginRight:4,fontSize:13}}>📋</button>
                             </div>
                             <div className="layer-item"
                                  title='תכניות תשתיות'
@@ -7696,6 +7696,88 @@
                             </div>
                         </div>
                     )}
+
+                    {objectionsReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const seenPlans = new Set();
+                        const plans = gd.plans.features.filter(f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const st = (f.properties.status_mavat || '').trim();
+                            if (!st.includes('הפקדה להתנגדויות')) return false;
+                            const planId = f.properties.plan_name || '';
+                            if (seenPlans.has(planId)) return false;
+                            seenPlans.add(planId);
+                            return true;
+                        }).map(f => f.properties).sort((a, b) => {
+                            const dA = (a.mavat_date || ''), dB = (b.mavat_date || '');
+                            const pA = dA.split('/'), pB = dB.split('/');
+                            const tA = pA.length === 3 ? (pA[2] + pA[1] + pA[0]) : '';
+                            const tB = pB.length === 3 ? (pB[2] + pB[1] + pB[0]) : '';
+                            return tB.localeCompare(tA);
+                        });
+                        return (
+                        <div className="units-overlay" onClick={() => setObjectionsReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 750, maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                                <button className="units-close" onClick={() => setObjectionsReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128203; תכניות המופקדות להתנגדויות</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} תכניות</p>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תאריך סטטוס</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {plans.map((p, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{p.mavat_date || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const printWin = window.open('', '_blank');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח הפקדות להתנגדויות</title>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}tfoot td{border-top:2px solid #333;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('</head><body>');
+                                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('</div>');
+                                            printWin.document.write('<div class="header"><h2>תכניות המופקדות להתנגדויות</h2>');
+                                            printWin.document.write('<p>' + plans.length + ' תכניות</p></div>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תאריך סטטוס</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            plans.forEach((p, i) => {
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (p.mavat_date||'-') + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
+                                            });
+                                            printWin.document.write('</tbody></table>');
+                                            const csvRows = ['"#","מספר תכנית","שם תכנית","תאריך סטטוס","מינה\\"ק"'];
+                                            plans.forEach((p, i) => {
+                                                csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (p.mavat_date||'-') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
+                                            });
+                                            const csvContent = csvRows.join('\\n');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="הפקדות_להתנגדויות.csv";a.click()});<\/script>');
+                                            printWin.document.write('</body></html>');
+                                            printWin.document.close();
+                                            printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
 
                     {legendPopup && (
                         <div className="legend-popup-overlay" onClick={() => setLegendPopup(null)}>
