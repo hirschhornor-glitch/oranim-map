@@ -2915,7 +2915,7 @@
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
                 Promise.all([
                     Promise.all(entries.map(([key, url]) =>
-                        fetch(url).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
+                        fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )),
                     fetch(sheetUrl).then(r => r.text()).catch(() => '')
                 ]).then(([geoResults, csvText]) => {
