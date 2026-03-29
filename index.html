@@ -3289,10 +3289,33 @@
                             const ud = window.__unitsData;
                             let subUnits = 0;
                             if (ud && ud.bySub) {
-                                Object.keys(ud.bySub).forEach(m => {
-                                    if (ud.bySub[m][sd.subName]) {
-                                        subUnits += (ud.bySub[m][sd.subName].units_in || 0) + (ud.bySub[m][sd.subName].units_add || 0);
+                                // Collect all sub names that map to this sub polygon
+                                const allNames = new Set([sd.subName]);
+                                let parentM = null;
+                                Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
+                                    if (ss.includes(sd.subName)) parentM = m;
+                                });
+                                if (parentM) {
+                                    const gd3 = window.__geoDataForLanduse || {};
+                                    const geojsonN = new Set();
+                                    if (gd3.sub_neighborhoods) {
+                                        gd3.sub_neighborhoods.features.forEach(f2 => {
+                                            const nm2 = f2.properties.schn_nama || '';
+                                            const norm2 = SUB_NORMALIZE[nm2] || nm2;
+                                            if ((MINAHAK_SUBS[parentM]||[]).some(s2 => s2 === nm2 || s2 === norm2 || (SUB_NORMALIZE[s2]||s2) === norm2)) geojsonN.add(nm2);
+                                        });
                                     }
+                                    if (geojsonN.size <= 1) {
+                                        (MINAHAK_SUBS[parentM]||[]).forEach(s2 => { allNames.add(s2); allNames.add(SUB_NORMALIZE[s2]||s2); });
+                                        allNames.add(parentM);
+                                    }
+                                }
+                                Object.keys(ud.bySub).forEach(m => {
+                                    Object.keys(ud.bySub[m]).forEach(s => {
+                                        if (allNames.has(s)) {
+                                            subUnits += (ud.bySub[m][s].units_in || 0) + (ud.bySub[m][s].units_add || 0);
+                                        }
+                                    });
                                 });
                             }
                             const subPeople = subUnits * hh;
@@ -3423,12 +3446,42 @@
                     let totalUnitsIn = 0;
                     let totalUnitsAdd = 0;
                     if (ud && ud.bySub) {
+                        // Find which minahak this sub belongs to
+                        let parentMinahak = null;
+                        Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
+                            if (subs.includes(subName)) parentMinahak = m;
+                        });
+                        // Collect all sub names that map to the same geojson polygon via SUB_NORMALIZE
+                        const allSubNames = new Set([subName]);
+                        if (parentMinahak) {
+                            // If this sub covers the whole minahak (single sub or main sub), sum all subs of that minahak
+                            const minahakSubs = MINAHAK_SUBS[parentMinahak] || [];
+                            // Check how many distinct geojson polygons this minahak has
+                            const gd2 = window.__geoDataForLanduse || {};
+                            const geojsonNames = new Set();
+                            if (gd2.sub_neighborhoods) {
+                                gd2.sub_neighborhoods.features.forEach(f => {
+                                    const nm = f.properties.schn_nama || '';
+                                    const normalized = SUB_NORMALIZE[nm] || nm;
+                                    if (minahakSubs.some(s => s === nm || s === normalized || (SUB_NORMALIZE[s] || s) === normalized)) {
+                                        geojsonNames.add(nm);
+                                    }
+                                });
+                            }
+                            // If only one geojson polygon for this minahak, sum all CSV sub names
+                            if (geojsonNames.size <= 1) {
+                                minahakSubs.forEach(s => { allSubNames.add(s); allSubNames.add(SUB_NORMALIZE[s] || s); });
+                                allSubNames.add(parentMinahak);
+                            }
+                        }
                         Object.keys(ud.bySub).forEach(minahak => {
                             const subs = ud.bySub[minahak];
-                            if (subs[subName]) {
-                                totalUnitsIn += subs[subName].units_in || 0;
-                                totalUnitsAdd += subs[subName].units_add || 0;
-                            }
+                            Object.keys(subs).forEach(s => {
+                                if (allSubNames.has(s)) {
+                                    totalUnitsIn += subs[s].units_in || 0;
+                                    totalUnitsAdd += subs[s].units_add || 0;
+                                }
+                            });
                         });
                     }
                     const grandTotalUnits = totalUnitsIn + totalUnitsAdd;
