@@ -7753,9 +7753,14 @@
                     {objectionsReport && (() => {
                         const gd = geoDataRef.current;
                         if (!gd.plans) return null;
+                        // Determine selected minahaks for filtering
+                        const adminLayers2 = Object.values(LAYER_CONFIG).flatMap(g => g.layers).filter(l => l.minahak);
+                        const selectedMinahaks2 = adminLayers2.filter(l => layers[l.id]).map(l => l.minahak);
+                        const allAdminOn2 = adminLayers2.every(l => layers[l.id]);
+                        const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
                         const seenPlans = new Set();
                         const plans = gd.plans.features.filter(f => {
-                            if (!planInMinahak(f.properties)) return false;
+                            if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
                             const planId = f.properties.plan_name || '';
