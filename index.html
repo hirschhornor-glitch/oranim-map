@@ -743,7 +743,10 @@
                 padding: 3px 4px;
             }
             .toolbar-btn {
-                padding: 4px 5px !important;
+                padding: 6px 8px !important;
+            }
+            .toolbar-label {
+                font-size: 9px !important;
             }
         }
 
@@ -767,13 +770,13 @@
             background: transparent;
             border: 1px solid transparent;
             color: #8888aa;
-            padding: 5px 7px;
-            border-radius: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0;
+            gap: 3px;
             transition: all 0.15s;
             white-space: nowrap;
             font-family: inherit;
@@ -781,12 +784,12 @@
         }
         .toolbar-btn:hover { background: #2a2a4a; color: #e0e0ff; border-color: #3a3a5a; }
         .toolbar-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
-        .toolbar-btn svg, .toolbar-btn .toolbar-icon { width: 18px; height: 18px; font-size: 18px; line-height: 1; }
-        .toolbar-btn .toolbar-label { display: none; }
+        .toolbar-btn svg, .toolbar-btn .toolbar-icon { width: 20px; height: 20px; font-size: 20px; line-height: 1; }
+        .toolbar-btn .toolbar-label { font-size: 10px; letter-spacing: 0.3px; }
         .toolbar-sep {
             width: 1px;
             background: #2a2a4a;
-            margin: 4px 1px;
+            margin: 6px 2px;
             align-self: stretch;
         }
 
@@ -1659,6 +1662,14 @@
                 titleToggle: true,
                 layers: [
                     { id: 'yiud_karka_kayam', name: 'ייעודי קרקע מצב קיים', on: false },
+                ]
+            },
+            shavaz: {
+                title: 'מבני ציבור',
+                layers: [
+                    { id: 'shavaz_kayam', name: 'מבני ציבור קיים', desc: 'מבני ציבור קיימים', on: false },
+                    { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור מתוכננים', on: false },
+                    { id: 'hafrashah_future', name: 'הפרשות מבונות עתידי', desc: 'הפרשות מבונות לציבור', on: false },
                 ]
             }
         };
@@ -5098,25 +5109,7 @@
                             return st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
                         },
                         style: () => ({ color: '#888', weight: 2, fillColor: '#999', fillOpacity: 0.5, dashArray: '4,4' }),
-                        onEachFeature: (f, layer) => {
-                            const p = f.properties;
-                            const st = (p.status_mavat || '').trim();
-                            const isArchived = st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה';
-                            // Make individual path interactive (pane is pointer-events:none)
-                            layer.on('add', () => {
-                                const el = layer.getElement();
-                                if (el) el.style.pointerEvents = 'auto';
-                            });
-                            layer.on('click', () => {
-                                const mapped = mapPlanProps(p);
-                                const cls = isArchived ? 'plan-popup archived-popup' : 'plan-popup';
-                                const popup = L.popup({ maxWidth: 340, className: cls })
-                                    .setLatLng(layer.getBounds().getCenter())
-                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
-                                popup.openOn(map);
-                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                            });
-                        }
+                        interactive: false
                     }).addTo(map);
                     geoLayersRef.current.archived = archivedLayer;
                 }
@@ -5639,6 +5632,32 @@
                 return html;
             }
 
+            // Fix reversed Hebrew text (chars reversed within each word by PDF extraction)
+            function fixHebrewText(text) {
+                if (!text) return text;
+                if (!/[\u0590-\u05FF]/.test(text)) return text;
+                const REVERSED = ['חטש','יחטש','ירוגמ','רחסמ','הקוסעת','ןוינח','תויונח','ךוניח','תוברת','הליהק','תואירב','ס"נתמ','ןועמ','תותיכ','ירפס','תדסומ','ןודעומ','םינבמ','רוביצ','תלצה','ןועמ'];
+                const charsRev = REVERSED.some(m => text.includes(m));
+                let result = text;
+                if (charsRev) {
+                    result = text.split(';').map(seg =>
+                        seg.split(' ').map(w => w.split('').reverse().join('')).join(' ')
+                    ).join('; ');
+                    result = result.replace(/ס"נתמ/g, 'מתנ"ס').replace(/ד"חי/g, 'יח"ד');
+                }
+                const FINAL = new Set('םןףךץ');
+                const words = result.trim().split(/\s+/);
+                if (words.length >= 2) {
+                    const fc = words[0].replace(/^[.,;:()\-]+/, '');
+                    if ('.,;:'.includes(result.trim()[0])) {
+                        result = [...words].reverse().join(' ');
+                    } else if (fc && FINAL.has(fc[0])) {
+                        result = [...words].reverse().join(' ');
+                    }
+                }
+                return result;
+            }
+
             // Build shavaz (public buildings) popup HTML
             function cleanNull(v) { return (v == null || v === 'NULL' || v === 'null' || v === 'None') ? '' : v; }
 
@@ -5656,10 +5675,10 @@
                         return count + ' ' + name;
                     }).join('; ');
                 })(buildingTypeRaw);
-                const title = buildingName || cleanNull(props.plan_name_he) || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ';
+                const title = fixHebrewText(buildingName || cleanNull(props.plan_name_he) || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
                 const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
                 const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
-                const planNameHe = cleanNull(props.plan_name_he) || '';
+                const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
                 const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
                 const statusColor = getStatusColor(status);
                 const boldStyle = !isFuture ? 'font-weight:700' : '';
@@ -5668,7 +5687,29 @@
                 const lotArea = props.LEGAL_AREA || props.area || null;
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
                 const builtSqm = cleanNull(props.BUILD_AREA) || null;
-                const builtDisplay = builtSqm ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
+                // Generic land-use designations — zoning types, not specific uses
+                // Uses starts-with matching to catch all variants (לחינוך, לבריאות, לחרום, etc.)
+                const DESIG_PREFIXES = /^(מבנים|מוסדות|שטחים|שטח ציבורי|מגורים|חניון|מסחר|תעסוקה|משרדים|מדורים|תעשיי?ה|תחבורה|דרך|חינוך, תרבות|חינוך,תרבות)/;
+                function isGenericDesig(s) {
+                    const clean = s.replace(/\s*\(\d+\)\s*$/, '').trim();
+                    return DESIG_PREFIXES.test(clean);
+                }
+                const rawUsesParts = (cleanNull(props.uses) || '').split(';').map(s => s.trim()).filter(Boolean);
+                // Separate generic entries (designation only) from specific uses
+                const genericParts = rawUsesParts.filter(s => isGenericDesig(s));
+                const specificParts = rawUsesParts.filter(s => !isGenericDesig(s));
+                // Derive built area from generic parts if BUILD_AREA is missing
+                let derivedBuilt = null;
+                if (!builtSqm && genericParts.length > 0) {
+                    const total = genericParts.reduce((sum, s) => {
+                        const m = s.match(/\((\d+)\)/);
+                        return sum + (m ? parseInt(m[1]) : 0);
+                    }, 0);
+                    if (total > 0) derivedBuilt = total;
+                }
+                const builtDisplay = builtSqm
+                    ? Math.round(parseFloat(builtSqm)).toLocaleString()
+                    : (derivedBuilt ? derivedBuilt.toLocaleString() : '-');
                 const allowedUses = cleanNull(props.uses) || cleanNull(props.YEUD) || '-';
                 const actualUses = cleanNull(props['Actual uses']) || '-';
                 const planId = taba || '';
@@ -5711,7 +5752,22 @@
                     html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
                 }
                 html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
-                html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value">-</span></div>`;
+                // Show only specific uses (not generic designation types like מסחר/מבנים ומוסדות ציבור)
+                // Format: "גן ילדים - 200 מ״ר" — suppress sqm if it equals the total built area
+                const builtNum = derivedBuilt || (builtSqm ? Math.round(parseFloat(builtSqm)) : 0);
+                const formattedUses = specificParts.map(part => {
+                    const m = part.match(/^(.*?)\s*\((\d+)\)\s*$/);
+                    if (m) {
+                        const name = m[1].trim();
+                        const sqm = parseInt(m[2]);
+                        if (builtNum && Math.abs(sqm - builtNum) < 2) return name;
+                        return `${name} - ${sqm.toLocaleString()} מ"ר`;
+                    }
+                    return part;
+                }).filter(Boolean);
+                if (formattedUses.length) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
+                }
                 html += '</div>';
                 // Footer — only show jump-to-plan if matching plan exists
                 const tabaNum = taba.replace(/[^\d]/g, '');
