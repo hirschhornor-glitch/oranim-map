@@ -1668,6 +1668,8 @@
                 title: 'מבני ציבור',
                 layers: [
                     { id: 'shavaz_kayam', name: 'מבני ציבור קיים', desc: 'מבני ציבור קיימים', on: false },
+                    { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
+                    { id: 'hafrashah_future', name: 'הפרשה מבונה', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                 ]
             }
         };
@@ -5673,16 +5675,22 @@
                         return count + ' ' + name;
                     }).join('; ');
                 })(buildingTypeRaw);
-                const title = fixHebrewText(buildingName || cleanNull(props.plan_name_he) || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
+                const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
+                const title = isFuture
+                    ? (planNameHe || fixHebrewText(cleanNull(props.MAVAT_NAME) || 'שב"צ עתידי'))
+                    : fixHebrewText(buildingName || planNameHe || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
                 const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
                 const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
-                const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
                 const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
                 const statusColor = getStatusColor(status);
                 const boldStyle = !isFuture ? 'font-weight:700' : '';
-                const subtitle = planNameHe || '';
+                const subtitle = !isFuture ? (planNameHe || '') : '';
                 const tabaLot = [taba, lotNum].filter(Boolean).join(' / ');
-                const lotArea = props.LEGAL_AREA || props.area || null;
+                // For future_shavaz use POLY_AREA (always sqm, freshly computed from geometry).
+                // LEGAL_AREA is inconsistent — sometimes sqm, sometimes dunams.
+                const lotArea = isFuture
+                    ? (props.POLY_AREA || props.LEGAL_AREA || props.area || null)
+                    : (props.LEGAL_AREA || props.area || null);
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
                 const builtSqm = cleanNull(props.BUILD_AREA) || null;
                 // Generic land-use designations — zoning types, not specific uses
@@ -5753,7 +5761,15 @@
                 // Show only specific uses (not generic designation types like מסחר/מבנים ומוסדות ציבור)
                 // Format: "גן ילדים - 200 מ״ר" — suppress sqm if it equals the total built area
                 const builtNum = derivedBuilt || (builtSqm ? Math.round(parseFloat(builtSqm)) : 0);
-                const formattedUses = specificParts.map(part => {
+                // For isFuture: if specificParts is empty, fall back to genericParts
+                // (prefer public-related parts; if none, show all genericParts)
+                let usesPartsForDisplay = specificParts;
+                if (isFuture && usesPartsForDisplay.length === 0 && genericParts.length > 0) {
+                    const PUBLIC_KW = /ציבור|חינוך|דת|בריאות|רווחה|תרבות|קהילה|ספורט|חרום|הצלה/;
+                    const publicGeneric = genericParts.filter(s => PUBLIC_KW.test(s));
+                    usesPartsForDisplay = publicGeneric.length > 0 ? publicGeneric : genericParts;
+                }
+                const formattedUses = usesPartsForDisplay.map(part => {
                     const m = part.match(/^(.*?)\s*\((\d+)\)\s*$/);
                     if (m) {
                         const name = m[1].trim();
