@@ -5238,6 +5238,7 @@
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             const name = f.properties.MAVAT_NAME || '';
                             if (name.includes('מגורים')) return false;
+                            if (f.properties.MAVAT_CODE === 1576) return false;
                             return true;
                         },
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
@@ -5258,7 +5259,7 @@
                     const hafrashah = gd.future_shavaz.features.filter(f => {
                         const s = normalizeStatus((f.properties.Mavat_Status || '').trim());
                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                        return (f.properties.MAVAT_NAME || '').includes('מגורים');
+                        return (f.properties.MAVAT_NAME || '').includes('מגורים') || f.properties.MAVAT_CODE === 1576;
                     });
                     // Convert polygons to centroid points
                     const pointFeatures = hafrashah.map(f => {
