@@ -2584,6 +2584,7 @@
                 densification: false, // תכניות לעיבוי שטחים חומים
                 objections: false,     // תכניות המופקדות להתנגדויות
                 infrastructure: false,
+                plan7778: false,         // תכניות בהודעה 77/78
                 archived: false,        // תכניות שנגנזו/נדחו
                 shavaz_demolition: false // מבני ציבור להריסה במסגרת התחדשות עירונית
             });
@@ -2900,6 +2901,9 @@
                 const infraPane = map.createPane('infrastructurePane');
                 infraPane.style.zIndex = 280;
                 infraPane.style.pointerEvents = 'none';
+                const plan7778Pane = map.createPane('plan7778Pane');
+                plan7778Pane.style.zIndex = 282;
+                plan7778Pane.style.pointerEvents = 'none';
                 const archivedPane = map.createPane('archivedPane');
                 archivedPane.style.zIndex = 285;
                 archivedPane.style.pointerEvents = 'none';
@@ -3757,7 +3761,7 @@
                     const p = f.properties;
                     const s = normalizeStatus((p.status_mavat || '').trim());
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
-                    if (normalizePlanType(p.plan_type || '') === 'תשתיות') return;
+                    if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
                     const geom = f.geometry;
                     if (!geom || !geom.coordinates) return;
                     let coords;
@@ -4390,7 +4394,7 @@
                         const pt = normalizePlanType(planType || '');
                         if (pt.includes('התחדשות')) return 'התחדשות עירונית';
                         if (pt.includes('עיבוי')) return 'עיבוי ובניה חדשה';
-                        if (pt && pt !== 'תשתיות') return pt; // keep other types as-is
+                        if (pt && pt !== 'תשתיות' && pt !== 'מוסתר') return pt; // keep other types as-is
                         return null;
                     }
                     const emptyRow = () => ({ units_in: 0, units_add: 0, renewal: 0, densification: 0, byStatus: {}, byType: {} });
@@ -4734,7 +4738,7 @@
                         if (!planInMinahak(f.properties)) return false;
                         const s = normalizeStatus((f.properties.status_mavat || '').trim());
                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                        if (normalizePlanType(f.properties.plan_type || '') === 'תשתיות') return false;
+                        if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
                         return true;
                     }).length;
 
@@ -4745,7 +4749,7 @@
                             if (!planInMinahak(f.properties)) return false;
                             const s = normalizeStatus((f.properties.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                            if (normalizePlanType(f.properties.plan_type || '') === 'תשתיות') return false;
+                            if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
                             // Advanced filters
                             const af = filters;
                             // Units range
@@ -5096,6 +5100,32 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.infrastructure = infraLayer;
+                }
+
+                // --- Plan 77/78 layer (below plans) ---
+                if (gd.plans && planningTopics.plan7778) {
+                    const plan7778Layer = L.geoJSON(gd.plans, {
+                        pane: 'plan7778Pane',
+                        renderer: L.svg({ pane: 'plan7778Pane' }),
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const st = normalizeStatus(f.properties.status_mavat || '');
+                            return st === 'הכנת הודעה 77/78';
+                        },
+                        style: () => ({ color: '#c0392b', weight: 2, fillColor: '#e74c3c', fillOpacity: 0.4, dashArray: '6 4' }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: 340 })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.plan7778 = plan7778Layer;
                 }
 
                 // --- Archived layer (below plans) ---
@@ -6388,6 +6418,12 @@
                                 <label>תכניות תשתיות</label>
                             </div>
                             <div className="layer-item"
+                                 title='תכניות בהכנת הודעה 77/78'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, plan7778: !prev.plan7778}))}>
+                                <input type="checkbox" checked={planningTopics.plan7778} onChange={() => {}} />
+                                <label>תכניות 77/78</label>
+                            </div>
+                            <div className="layer-item"
                                  title='תכניות שנגנזו/נדחו'
                                  onClick={() => setPlanningTopics(prev => ({...prev, archived: !prev.archived}))}>
                                 <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
@@ -6797,7 +6833,7 @@
                                         if (!allAdminOn && !selectedMinahaks.includes(p.minahak || '')) return false;
                                         const s = normalizeStatus((p.status_mavat || '').trim());
                                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                                        if (normalizePlanType(p.plan_type || '') === 'תשתיות') return false;
+                                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
                                         // Apply filters
                                         if (filters.minUnits && (parseFloat(p.units_add) || 0) < filters.minUnits) return false;
                                         if (filters.maxUnits && (parseFloat(p.units_add) || 0) > filters.maxUnits) return false;
@@ -6882,7 +6918,7 @@
                                         const p = f.properties;
                                         const s = normalizeStatus((p.status_mavat || '').trim());
                                         if (excluded.includes(s)) return;
-                                        if (normalizePlanType(p.plan_type || '') === 'תשתיות') return;
+                                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
                                         const af = filters;
                                         const units = parseFloat(p.units_add) || 0;
                                         if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return;
