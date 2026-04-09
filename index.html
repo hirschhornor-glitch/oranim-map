@@ -5266,9 +5266,13 @@
                         const ring = f.geometry.type === 'MultiPolygon'
                             ? f.geometry.coordinates[0][0]
                             : f.geometry.coordinates[0];
-                        let sumLat = 0, sumLng = 0;
-                        ring.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-                        const centroid = [sumLng / ring.length, sumLat / ring.length];
+                        // Use bbox center — more likely inside polygon than coordinate average
+                        let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+                        ring.forEach(c => {
+                            if (c[0] < minLng) minLng = c[0]; if (c[0] > maxLng) maxLng = c[0];
+                            if (c[1] < minLat) minLat = c[1]; if (c[1] > maxLat) maxLat = c[1];
+                        });
+                        const centroid = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
                         return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: centroid } };
                     });
                     const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
