@@ -5263,10 +5263,12 @@
                     });
                     // Convert polygons to centroid points
                     const pointFeatures = hafrashah.map(f => {
-                        const coords = f.geometry.coordinates[0][0]; // MultiPolygon outer ring
+                        const ring = f.geometry.type === 'MultiPolygon'
+                            ? f.geometry.coordinates[0][0]
+                            : f.geometry.coordinates[0];
                         let sumLat = 0, sumLng = 0;
-                        coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-                        const centroid = [sumLng / coords.length, sumLat / coords.length];
+                        ring.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+                        const centroid = [sumLng / ring.length, sumLat / ring.length];
                         return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: centroid } };
                     });
                     const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
