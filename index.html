@@ -5453,15 +5453,13 @@
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (e.originalEvent) e.originalEvent.stopPropagation();
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
-                                try {
-                                    const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
-                                        .setLatLng(layer.getLatLng())
-                                        .setContent(buildTama38Popup(p));
-                                    popup.openOn(m);
-                                } catch(err) { console.error('tama38 popup error:', err); }
+                                const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
+                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                    .setLatLng(latlng)
+                                    .setContent(buildTama38Popup(p));
+                                popup.openOn(m);
                             });
                             const addr = f.properties.address || '';
                             const tose = parseFloat(f.properties.units_tose) || 0;
