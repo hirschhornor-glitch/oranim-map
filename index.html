@@ -5959,8 +5959,7 @@
                 html += buildNavBar(navInfo);
                 html += '<div class="popup-header" style="border-right:4px solid #e94560">';
                 html += `<div class="popup-header-title">${title}</div>`;
-                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
-                html += `<div class="popup-header-subtitle" style="font-size:10px;opacity:0.6">תמ"א 38</div>`;
+                html += `<div class="popup-header-subtitle" style="font-size:11px;opacity:0.7">${tik}</div>`;
                 html += '</div>';
                 html += '<div class="popup-body">';
                 html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${displayStatus}</span></div>`;
@@ -5970,7 +5969,6 @@
                 html += `<div class="popup-row"><span class="popup-row-label">הריסה</span><span class="popup-row-value">${harisaa}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד קיימות</span><span class="popup-row-value">${unitsExist}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsTose !== '-' ? '+' + unitsTose : '-'}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">תיק</span><span class="popup-row-value">${tik}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך פתיחה</span><span class="popup-row-value">${dateOpen}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך אישור</span><span class="popup-row-value">${dateApproval}</span></div>`;
                 if (comment) {
