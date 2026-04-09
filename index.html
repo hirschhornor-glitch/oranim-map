@@ -5448,18 +5448,20 @@
                             else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             return L.circleMarker(latlng, {
-                                radius: 5, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
+                                radius: 3, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
                             });
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                L.DomEvent.stopPropagation(e);
+                                if (e.originalEvent) e.originalEvent.stopPropagation();
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
-                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
-                                    .setLatLng(layer.getLatLng())
-                                    .setContent(buildTama38Popup(p));
-                                popup.openOn(m);
+                                try {
+                                    const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                        .setLatLng(layer.getLatLng())
+                                        .setContent(buildTama38Popup(p));
+                                    popup.openOn(m);
+                                } catch(err) { console.error('tama38 popup error:', err); }
                             });
                             const addr = f.properties.address || '';
                             const tose = parseFloat(f.properties.units_tose) || 0;
