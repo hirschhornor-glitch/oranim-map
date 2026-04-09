@@ -5040,12 +5040,16 @@
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 const endDate = p.objection_end_date || '';
-                                if (!endDate) return true; // no date = show (assume open)
-                                const parts = endDate.split('/');
-                                if (parts.length === 3) {
-                                    const end = new Date(parts[2], parts[1]-1, parts[0]);
-                                    if (end >= new Date()) return true; // still open
-                                } else return true;
+                                if (endDate) {
+                                    const parts = endDate.split('/');
+                                    if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) >= new Date()) return true;
+                                } else {
+                                    const md = (p.mavat_date || '').split('/');
+                                    if (md.length === 3) {
+                                        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
+                                        if (new Date(md[2], md[1]-1, md[0]) >= cutoff) return true;
+                                    }
+                                }
                             }
                             return false;
                         },
@@ -5650,14 +5654,26 @@
                 html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
                 html += '</div>';
                 // Objection banner
-                const isObjectionOpen = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
+                const isObjectionStatus = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
                 const objEndDate = props.objection_end_date || '';
-                let objectionStillOpen = isObjectionOpen;
-                if (isObjectionOpen && objEndDate) {
-                    const parts = objEndDate.split('/');
-                    if (parts.length === 3) {
-                        const end = new Date(parts[2], parts[1]-1, parts[0]);
-                        objectionStillOpen = end >= new Date();
+                let objectionStillOpen = false;
+                if (isObjectionStatus) {
+                    if (objEndDate) {
+                        // Explicit end date — check if still valid
+                        const parts = objEndDate.split('/');
+                        if (parts.length === 3) {
+                            const end = new Date(parts[2], parts[1]-1, parts[0]);
+                            objectionStillOpen = end >= new Date();
+                        }
+                    } else {
+                        // No end date — use mavat_date + 90 days heuristic
+                        const md = (props.mavat_date || '').split('/');
+                        if (md.length === 3) {
+                            const statusDate = new Date(md[2], md[1]-1, md[0]);
+                            const cutoff = new Date();
+                            cutoff.setDate(cutoff.getDate() - 90);
+                            objectionStillOpen = statusDate >= cutoff;
+                        }
                     }
                 }
                 if (objectionStillOpen) {
@@ -7936,9 +7952,29 @@
                                         </tr></thead>
                                         <tbody>
                                             {plans.map((p, i) => (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} onClick={() => {
+                                                    const gd = geoDataRef.current;
+                                                    if (!gd.plans) return;
+                                                    const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
+                                                    if (!feat || !feat.geometry) return;
+                                                    setObjectionsReport(false);
+                                                    const coords = [];
+                                                    const g = feat.geometry;
+                                                    if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                                                    else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                                                    if (!coords.length) return;
+                                                    const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                                                    mapRef.current.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]], {padding:[50,50], maxZoom:17});
+                                                    setTimeout(() => {
+                                                        const center = L.latLng((Math.min(...lats)+Math.max(...lats))/2, (Math.min(...lons)+Math.max(...lons))/2);
+                                                        const mapped = mapPlanProps(feat.properties);
+                                                        const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                                        popup.openOn(mapRef.current);
+                                                        bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                                    }, 500);
+                                                }}>
                                                     <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
-                                                    <td style={{padding:'4px',color:'#64b5f6'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{p.mavat_date || '-'}</td>
                                                     <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
