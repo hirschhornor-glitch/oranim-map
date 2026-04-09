@@ -1611,6 +1611,7 @@
                 permit_request: props.permit_request || props['מהותבקשה'] || '',
                 permit_addition: props.permit_addition || props['תוספתבהיתר'] || '',
                 permit_gap: props.permit_gap || props['פערביןהיתרלתבע'] || '',
+                objection_end_date: props.objection_end_date || '',
             };
         }
 
@@ -5030,13 +5031,21 @@
                             const p = f.properties;
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
-                            if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) return true;
+                            if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
+                                const endDate = p.objection_end_date || '';
+                                if (!endDate) return true; // no date = show (assume open)
+                                const parts = endDate.split('/');
+                                if (parts.length === 3) {
+                                    const end = new Date(parts[2], parts[1]-1, parts[0]);
+                                    if (end >= new Date()) return true; // still open
+                                } else return true;
+                            }
                             return false;
                         },
                         style: f => {
                             const p = f.properties;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
-                                return { color: '#dd0000', weight: 3, fillOpacity: 0 };
+                                return { color: '#1976d2', weight: 3, fillColor: '#1976d2', fillOpacity: 0.15 };
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים')
                                 return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0)
@@ -5633,11 +5642,29 @@
                 if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
                 html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
                 html += '</div>';
+                // Objection banner
+                const isObjectionOpen = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
+                const objEndDate = props.objection_end_date || '';
+                let objectionStillOpen = isObjectionOpen;
+                if (isObjectionOpen && objEndDate) {
+                    const parts = objEndDate.split('/');
+                    if (parts.length === 3) {
+                        const end = new Date(parts[2], parts[1]-1, parts[0]);
+                        objectionStillOpen = end >= new Date();
+                    }
+                }
+                if (objectionStillOpen) {
+                    html += '<div style="background:#1976d2;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:8px;font-size:12px">';
+                    html += '<div style="font-weight:bold;margin-bottom:4px">פתוחה להגשת התנגדויות' + (objEndDate ? ' עד ' + objEndDate : '') + '</div>';
+                    if (mavatUrl) html += '<a href="' + mavatUrl + '" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;font-size:11px">הגש התנגדות באתר מבא"ת \u2192</a>';
+                    html += '</div>';
+                }
                 // Body
                 html += '<div class="popup-body">';
                 html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span></div>`;
                 const mavatDate = props.mavat_date || '';
                 if (mavatDate) html += `<div class="popup-row"><span class="popup-row-label">תאריך סטטוס</span><span class="popup-row-value">${mavatDate}</span></div>`;
+                if (objEndDate) html += `<div class="popup-row"><span class="popup-row-label">סיום הפקדה</span><span class="popup-row-value" style="${objectionStillOpen ? 'color:#1976d2;font-weight:bold' : 'color:#999'}">${objEndDate}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
