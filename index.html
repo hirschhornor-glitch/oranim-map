@@ -5051,12 +5051,6 @@
                                 if (endDate) {
                                     const parts = endDate.split('/');
                                     if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) >= new Date()) return true;
-                                } else {
-                                    const md = (p.mavat_date || '').split('/');
-                                    if (md.length === 3) {
-                                        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
-                                        if (new Date(md[2], md[1]-1, md[0]) >= cutoff) return true;
-                                    }
                                 }
                             }
                             return false;
@@ -7932,18 +7926,11 @@
                             if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
-                            // Filter: only show if objection is still open
+                            // Filter: only show if objection_end_date exists and is still in the future
                             const endDate = f.properties.objection_end_date || '';
-                            if (endDate) {
-                                const parts = endDate.split('/');
-                                if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
-                            } else {
-                                const md = (f.properties.mavat_date || '').split('/');
-                                if (md.length === 3) {
-                                    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
-                                    if (new Date(md[2], md[1]-1, md[0]) < cutoff) return false;
-                                }
-                            }
+                            if (!endDate) return false;
+                            const parts = endDate.split('/');
+                            if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
                             const planId = f.properties.plan_name || '';
                             if (seenPlans.has(planId)) return false;
                             seenPlans.add(planId);
