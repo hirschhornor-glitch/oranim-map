@@ -1564,22 +1564,29 @@
         // Point-in-polygon: ray casting on a Leaflet polygon layer
         function leafletPip(layer, latlng) {
             const lng = latlng.lng, lat = latlng.lat;
-            let coords;
             const geo = layer.feature.geometry;
-            try {
-                if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
-                else if (geo.type === 'Polygon') coords = geo.coordinates[0];
-                else return false;
-            } catch(e) { return false; }
-            let inside = false;
-            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-                const xi = coords[i][0], yi = coords[i][1];
-                const xj = coords[j][0], yj = coords[j][1];
-                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
-                    inside = !inside;
+            function pipRing(coords) {
+                let inside = false;
+                for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                    const xi = coords[i][0], yi = coords[i][1];
+                    const xj = coords[j][0], yj = coords[j][1];
+                    if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
+                        inside = !inside;
+                    }
                 }
+                return inside;
             }
-            return inside;
+            try {
+                if (geo.type === 'MultiPolygon') {
+                    for (const poly of geo.coordinates) {
+                        if (pipRing(poly[0])) return true;
+                    }
+                    return false;
+                } else if (geo.type === 'Polygon') {
+                    return pipRing(geo.coordinates[0]);
+                }
+                return false;
+            } catch(e) { return false; }
         }
 
         function mapPlanProps(props) {
