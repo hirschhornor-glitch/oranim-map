@@ -7966,24 +7966,29 @@
                                             {plans.map((p, i) => (
                                                 <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} onClick={() => {
                                                     const gd = geoDataRef.current;
-                                                    if (!gd.plans) return;
+                                                    if (!gd.plans || !mapRef.current) return;
                                                     const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
                                                     if (!feat || !feat.geometry) return;
-                                                    setObjectionsReport(false);
+                                                    // Save data before closing modal
                                                     const coords = [];
                                                     const g = feat.geometry;
                                                     if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
                                                     else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
                                                     if (!coords.length) return;
                                                     const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
-                                                    mapRef.current.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]], {padding:[50,50], maxZoom:17});
+                                                    const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                                                    const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                                                    const props = JSON.parse(JSON.stringify(feat.properties));
+                                                    setObjectionsReport(false);
                                                     setTimeout(() => {
-                                                        const center = L.latLng((Math.min(...lats)+Math.max(...lats))/2, (Math.min(...lons)+Math.max(...lons))/2);
-                                                        const mapped = mapPlanProps(feat.properties);
-                                                        const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
-                                                        popup.openOn(mapRef.current);
-                                                        bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
-                                                    }, 500);
+                                                        mapRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                                        setTimeout(() => {
+                                                            const mapped = mapPlanProps(props);
+                                                            const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                                            popup.openOn(mapRef.current);
+                                                            bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                                        }, 600);
+                                                    }, 100);
                                                 }}>
                                                     <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                     <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
