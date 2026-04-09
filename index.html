@@ -5052,7 +5052,7 @@
                         style: f => {
                             const p = f.properties;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
-                                return { color: '#1976d2', weight: 3, fillColor: '#1976d2', fillOpacity: 0.15 };
+                                return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים')
                                 return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0)
