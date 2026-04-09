@@ -6120,8 +6120,7 @@
                             popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                             setTimeout(() => setLayers(prev => ({
                                 ...prev,
-                                permits: !prev.permits,
-                                plans: prev.permits ? true : false
+                                permits: true
                             })), 100);
                         }
                     }
