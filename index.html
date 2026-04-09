@@ -2962,17 +2962,22 @@
                         const headers = parseCSVRow(rows[0]);
                         const ptIdx = headers.findIndex(h => h === 'plan_type');
                         const nameIdx = headers.findIndex(h => h === 'plan_name');
+                        const objEndIdx = headers.findIndex(h => h === 'objection_end_date');
                         if (ptIdx >= 0 && nameIdx >= 0) {
                             const csvMap = {};
                             for (let i = 1; i < rows.length; i++) {
                                 if (!rows[i].trim()) continue;
                                 const cols = parseCSVRow(rows[i]);
-                                if (cols[nameIdx]) csvMap[cols[nameIdx]] = cols[ptIdx] || '';
+                                if (cols[nameIdx]) csvMap[cols[nameIdx]] = {
+                                    plan_type: cols[ptIdx] || '',
+                                    objection_end_date: objEndIdx >= 0 ? (cols[objEndIdx] || '') : '',
+                                };
                             }
                             gd.plans.features.forEach(f => {
                                 const pn = f.properties.plan_name;
                                 if (pn && csvMap[pn]) {
-                                    f.properties.plan_type = csvMap[pn];
+                                    if (csvMap[pn].plan_type) f.properties.plan_type = csvMap[pn].plan_type;
+                                    if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
                                 }
                             });
                             console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
@@ -5050,8 +5055,9 @@
                                 const endDate = p.objection_end_date || '';
                                 if (endDate) {
                                     const parts = endDate.split('/');
-                                    if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) >= new Date()) return true;
+                                    if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
                                 }
+                                return true;
                             }
                             return false;
                         },
@@ -7926,11 +7932,12 @@
                             if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
-                            // Filter: only show if objection_end_date exists and is still in the future
+                            // Hide if objection_end_date exists and is in the past
                             const endDate = f.properties.objection_end_date || '';
-                            if (!endDate) return false;
-                            const parts = endDate.split('/');
-                            if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                            if (endDate) {
+                                const parts = endDate.split('/');
+                                if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                            }
                             const planId = f.properties.plan_name || '';
                             if (seenPlans.has(planId)) return false;
                             seenPlans.add(planId);
@@ -7955,6 +7962,7 @@
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תאריך סטטוס</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תום הפקדה</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
                                         </tr></thead>
                                         <tbody>
@@ -7989,6 +7997,7 @@
                                                     <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{p.mavat_date || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ef5350'}}>{p.objection_end_date || '-'}</td>
                                                     <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
                                                 </tr>
                                             ))}
@@ -8007,14 +8016,14 @@
                                             printWin.document.write('</div>');
                                             printWin.document.write('<div class="header"><h2>תכניות המופקדות להתנגדויות</h2>');
                                             printWin.document.write('<p>' + plans.length + ' תכניות</p></div>');
-                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תאריך סטטוס</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תאריך סטטוס</th><th>תום הפקדה</th><th>מינה"ק</th></tr></thead><tbody>');
                                             plans.forEach((p, i) => {
-                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (p.mavat_date||'-') + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (p.mavat_date||'-') + '</td><td>' + (p.objection_end_date||'-') + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
                                             });
                                             printWin.document.write('</tbody></table>');
-                                            const csvRows = ['"#","מספר תכנית","שם תכנית","תאריך סטטוס","מינה\\"ק"'];
+                                            const csvRows = ['"#","מספר תכנית","שם תכנית","תאריך סטטוס","תום הפקדה","מינה\\"ק"'];
                                             plans.forEach((p, i) => {
-                                                csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (p.mavat_date||'-') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
+                                                csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (p.mavat_date||'-') + '","' + (p.objection_end_date||'-') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
                                             });
                                             const csvContent = csvRows.join('\\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="הפקדות_להתנגדויות.csv";a.click()});<\/script>');
