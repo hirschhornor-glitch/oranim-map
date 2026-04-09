@@ -4866,6 +4866,14 @@
                                     const mapped = mapPlanProps(f.properties);
                                     allFeatures.push({ properties: mapped, type: 'plan' });
                                 }
+                                // Sort: newest plan first (by mavat_date descending)
+                                allFeatures.sort((a, b) => {
+                                    const dA = (a.properties.mavat_date || '').split('/');
+                                    const dB = (b.properties.mavat_date || '').split('/');
+                                    const tA = dA.length === 3 ? (dA[2] + dA[1] + dA[0]) : '00000000';
+                                    const tB = dB.length === 3 ? (dB[2] + dB[1] + dB[0]) : '00000000';
+                                    return tB.localeCompare(tA);
+                                });
                                 const navInfo = allFeatures.length > 1 ? { current: 0, total: allFeatures.length } : null;
                                 const first = allFeatures[0];
                                 const content = first.type === 'tama38'
