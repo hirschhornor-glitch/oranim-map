@@ -208,12 +208,14 @@
             color: #fff;
             line-height: 1.4;
             margin-bottom: 2px;
+            text-align: center;
         }
 
         .popup-header-subtitle {
             font-size: 12px;
             color: #8899bb;
             font-family: monospace;
+            text-align: center;
         }
 
         .popup-body {
@@ -246,6 +248,7 @@
             border-top: 1px solid #2a2a4a;
             display: flex;
             flex-wrap: wrap;
+            justify-content: center;
             gap: 6px;
         }
 
@@ -319,6 +322,69 @@
             font-size: 12px;
             padding: 2px 8px;
             border-radius: 10px;
+        }
+
+        .popup-section-title {
+            font-size: 11px;
+            color: #fff;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.5px;
+            padding: 8px 0 4px;
+            border-top: 1px solid #2a2a4a;
+            margin-top: 4px;
+        }
+
+        .popup-pair {
+            display: flex;
+            gap: 8px;
+        }
+
+        .popup-pair-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .popup-pair-label {
+            font-size: 10px;
+            color: #6a6a8a;
+        }
+
+        .popup-pair-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .popup-pair-value .multiplier {
+            font-size: 11px;
+            color: #5dade2;
+            font-weight: 400;
+            margin-right: 4px;
+        }
+
+        .popup-sub-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 2px 0 4px;
+            font-size: 10px;
+            color: #6a6a8a;
+        }
+
+        .popup-sub-row span {
+            color: #8888aa;
+        }
+
+        .popup-prog-text {
+            font-size: 11px;
+            color: #7a7a9a;
+            padding: 2px 0;
+            line-height: 1.3;
+            word-break: break-word;
         }
 
         .permit-detail-header {
@@ -734,6 +800,10 @@
                 display: block;
             }
             .toggle-btn {
+                position: fixed;
+                top: 60px;
+                right: 10px;
+                z-index: 1200;
                 width: 44px;
                 height: 44px;
                 font-size: 1.4em;
@@ -5642,41 +5712,63 @@
             }
 
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
-                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const subtitle = props.plan_name || props.taba || '';
                 const status = props.status_mavat || '';
                 const statusColor = getStatusColor(status);
-                const unitsIn = props.units_in || '-';
-                const unitsTotal = props.units_total || '-';
-                const unitsAdd = props.units_add != null ? props.units_add : '-';
-                const unitsAddDisplay = unitsAdd !== '-' && unitsAdd !== 0 ? '+' + unitsAdd : unitsAdd;
                 const mavatUrl = props.mavat_url || '';
                 const hasPermit = props.stage && props.stage.trim() !== '';
+                const v = (x) => (x != null && x !== '' && x !== 0 && x !== '0') ? x : null;
+                const fmt = (x) => x != null ? Number(x).toLocaleString('he-IL') : '-';
 
                 let html = '<div>';
                 html += buildNavBar(navInfo);
-                // Header
+
+                // ── Header ──
                 const planId = props.plan_name || '';
                 const note = window.__annotations ? (window.__annotations[planId] || '') : '';
-                html += '<div class="popup-header" style="position:relative">';
+                // Header gradient based on status color
+                const headerGradients = {
+                    '#50d25a': 'linear-gradient(135deg, #1a3320, #0f3460)', // green - approved
+                    '#fafa3c': 'linear-gradient(135deg, #3d3510, #0f3460)', // yellow - objections
+                    '#f56e05': 'linear-gradient(135deg, #3d2510, #0f3460)', // orange - conditions
+                    '#eb0000': 'linear-gradient(135deg, #3d1515, #0f3460)', // red - review
+                    '#888888': 'linear-gradient(135deg, #2a2a2a, #1a1a2e)', // gray - rejected
+                };
+                const headerBg = headerGradients[statusColor] || 'linear-gradient(135deg, #16213e, #0f3460)';
+                html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:2px solid ${statusColor}">`;
                 html += `<div class="popup-header-title">${title}</div>`;
                 if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
                 html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
+                // Status + date in header
+                const mavatDate = props.mavat_date || '';
+                html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
+                html += `<span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span>`;
+                if (mavatDate) html += `<span style="font-size:11px;color:#8899bb">${mavatDate}</span>`;
                 html += '</div>';
-                // Objection banner
+                // Developer / Architect row
+                const dev = (props.developer || '').trim();
+                const arch = (props.architect || '').trim();
+                if (dev || arch) {
+                    html += '<div style="display:flex;justify-content:center;gap:12px;margin-top:5px;font-size:10px;color:#8899bb">';
+                    if (dev) html += `<span>יזם: ${dev.length > 25 ? dev.substring(0,25) + '...' : dev}</span>`;
+                    if (arch) html += `<span>אדריכל: ${arch.length > 20 ? arch.substring(0,20) + '...' : arch}</span>`;
+                    html += '</div>';
+                }
+                html += '</div>';
+
+                // ── Objection Banner ──
                 const isObjectionStatus = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
                 const objEndDate = props.objection_end_date || '';
                 let objectionStillOpen = false;
                 if (isObjectionStatus) {
                     if (objEndDate) {
-                        // Explicit end date — check if still valid
                         const parts = objEndDate.split('/');
                         if (parts.length === 3) {
                             const end = new Date(parts[2], parts[1]-1, parts[0]);
                             objectionStillOpen = end >= new Date();
                         }
                     } else {
-                        // No end date — use mavat_date + 90 days heuristic
                         const md = (props.mavat_date || '').split('/');
                         if (md.length === 3) {
                             const statusDate = new Date(md[2], md[1]-1, md[0]);
@@ -5687,22 +5779,101 @@
                     }
                 }
                 if (objectionStillOpen) {
-                    html += '<div style="background:#1976d2;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:8px;font-size:12px">';
+                    html += '<div style="background:#1976d2;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
                     html += '<div style="font-weight:bold">פתוחה להגשת התנגדויות' + (objEndDate ? ' עד ' + objEndDate : '') + '</div>';
                     html += '</div>';
                 }
-                // Body
-                html += '<div class="popup-body">';
-                html += `<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span></div>`;
-                const mavatDate = props.mavat_date || '';
-                if (mavatDate) html += `<div class="popup-row"><span class="popup-row-label">תאריך סטטוס</span><span class="popup-row-value">${mavatDate}</span></div>`;
-                if (objEndDate) html += `<div class="popup-row"><span class="popup-row-label">סיום הפקדה</span><span class="popup-row-value" style="${objectionStillOpen ? 'color:#1976d2;font-weight:bold' : 'color:#999'}">${objEndDate}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">יח"ד נכנס</span><span class="popup-row-value">${unitsIn}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">יח"ד יוצא</span><span class="popup-row-value">${unitsTotal}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת</span><span class="popup-row-value">${unitsAddDisplay}</span></div>`;
-                html += '</div>';
-                // Timeline removed — not enough data fields
-                // Footer
+
+                // ── Body ──
+                html += '<div class="popup-body" style="padding:8px 16px">';
+
+                // Section: יח"ד
+                const uIn = v(props.units_in);
+                const uOut = v(props.units_total);
+                if (uIn != null || uOut != null) {
+                    html += '<div class="popup-section-title" style="border-top:none;margin-top:0">יח"ד</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${uIn != null ? fmt(uIn) : '-'}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${uOut != null ? fmt(uOut) : '-'}</span></div>`;
+                    if (uIn && uOut && Number(uIn) > 0) {
+                        const mult = (Number(uOut) / Number(uIn)).toFixed(1);
+                        html += `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">×${mult}</span></div>`;
+                    }
+                    html += '</div>';
+                    // Sub-row: special housing types
+                    const cond = v(props.conditional_housing);
+                    const rent = v(props.rental);
+                    const htl = v(props.hotels);
+                    if (cond || rent || htl) {
+                        html += '<div class="popup-sub-row">';
+                        if (cond) html += `מותנה: <span>${cond}</span>`;
+                        if (rent) html += `${cond ? ' | ' : ''}שכירות: <span>${rent}</span>`;
+                        if (htl) html += `${(cond || rent) ? ' | ' : ''}מלונאות: <span>${htl}</span>`;
+                        html += '</div>';
+                    }
+                }
+
+                // Section: שב"צ
+                const szIn = v(props.shavatz_in_sqm);
+                const szOut = v(props.shavatz_out_sqm);
+                const szProgIn = v(props.shavatz_in_prog);
+                const szProgOut = v(props.shavatz_out_prog);
+                const hfSqm = v(props.hafrash_sqm);
+                const hfPrg = v(props.hafrash_prg);
+                if (szIn || szOut || szProgIn || szProgOut || hfSqm || hfPrg) {
+                    html += '<div class="popup-section-title">שב"צ (מ"ר)</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${szIn ? fmt(szIn) : '-'}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${szOut ? fmt(szOut) : '-'}</span></div>`;
+                    html += '</div>';
+                    if (szProgIn) html += `<div class="popup-prog-text">פרוגרמה נכנס: ${szProgIn}</div>`;
+                    if (szProgOut) html += `<div class="popup-prog-text">פרוגרמה יוצא: ${szProgOut}</div>`;
+                    if (hfSqm || hfPrg) {
+                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:4px">הפרשה מבונה</div>';
+                        html += '<div class="popup-pair">';
+                        html += `<div class="popup-pair-item"><span class="popup-pair-label">מ"ר</span><span class="popup-pair-value" style="font-size:13px">${hfSqm ? fmt(hfSqm) : '-'}</span></div>`;
+                        if (hfPrg) html += `<div class="popup-pair-item"><span class="popup-prog-text">${hfPrg}</span></div>`;
+                        html += '</div>';
+                    }
+                }
+
+                // Section: שצ"פ
+                const spIn = v(props.shatzap_in);
+                const spOut = v(props.shatzap_out);
+                if (spIn || spOut) {
+                    html += '<div class="popup-section-title">שצ"פ</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${spIn ? fmt(spIn) : '-'}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${spOut ? fmt(spOut) : '-'}</span></div>`;
+                    html += '</div>';
+                }
+
+                // Section: מסחר ותעסוקה
+                const cmIn = v(props.commerce_in);
+                const cmOut = v(props.commerce_out);
+                const emp = v(props.employment);
+                if (cmIn || cmOut || emp) {
+                    const cmOutNum = Number(cmOut) || 0;
+                    const empNum = Number(emp) || 0;
+                    const totalOut = cmOutNum + empNum;
+                    html += '<div class="popup-section-title">מסחר ותעסוקה</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${cmIn ? fmt(cmIn) : '-'}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${totalOut > 0 ? fmt(totalOut) : '-'}</span></div>`;
+                    html += '</div>';
+                    if (cmOut && emp) {
+                        html += `<div class="popup-sub-row">פירוט יוצא: מסחר <span>${fmt(cmOut)}</span> | תעסוקה <span>${fmt(emp)}</span></div>`;
+                    }
+                }
+
+                // Objection end date row (if applicable, outside banner)
+                if (objEndDate && !objectionStillOpen) {
+                    html += `<div class="popup-row"><span class="popup-row-label">סיום הפקדה</span><span class="popup-row-value" style="color:#999">${objEndDate}</span></div>`;
+                }
+
+                html += '</div>'; // end popup-body
+
+                // ── Footer ──
                 html += '<div class="popup-footer">';
                 if (mavatUrl) {
                     html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
@@ -5711,8 +5882,8 @@
                     html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
                 html += '</div>';
+
                 const tabaForJump = props.taba || props.TABA || '';
-                // Check if any shavaz feature matches this TABA
                 const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
                 const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
                     ds && ds.features && ds.features.some(f => (f.properties.TABA || f.properties.taba || '') === tabaForJump)
@@ -5722,7 +5893,8 @@
                     html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
                     html += '</div>';
                 }
-                // Annotation display (if exists)
+
+                // Annotation display
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
                 html += '</div>';
                 return html;
@@ -5898,7 +6070,7 @@
 
             // Build the permit details popup HTML
             function buildPermitPopup(props, featureData, navInfo) {
-                const title = props.plan_name_he || props.plan_summary || 'תוכנית';
+                const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const planName = props.plan_name || props.taba || '';
                 const permitNum = props.building_permit || '-';
                 const subtitle = [planName, permitNum !== '-' ? permitNum : null].filter(Boolean).join(' | ');

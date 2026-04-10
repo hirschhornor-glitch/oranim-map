@@ -1,0 +1,47 @@
+name: Check Bdika Tichnonit (XPLAN parcels + Table 5)
+
+on:
+  schedule:
+    - cron: '0 5 * * 3'  # Every Wednesday at 05:00 UTC (08:00 Israel)
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth google-auth-oauthlib google-api-python-client requests pdfplumber
+
+      - name: Create credentials file
+        env:
+          GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+        run: echo "$GOOGLE_CREDS" > /tmp/gcloud_creds.json
+
+      - name: Copy script and data
+        run: |
+          cp scripts/check_bdika_tichnonit.py check_bdika_tichnonit.py 2>/dev/null || true
+          # Script needs plans.geojson and future_shavaz.geojson
+          mkdir -p oranim-app/data temp_pdfs
+
+      - name: Run check (XPLAN only, no PDF download)
+        env:
+          GOOGLE_CREDS_FILE: /tmp/gcloud_creds.json
+        run: python check_bdika_tichnonit.py --no-pdf
+
+      - name: Commit updated data
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add -A data/
+          git diff --cached --quiet || git commit -m "auto: update bdika tichnonit parcels"
+          git push || true

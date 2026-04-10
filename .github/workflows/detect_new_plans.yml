@@ -1,0 +1,49 @@
+name: Detect New Plans (XPLAN)
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # Every Sunday at 04:00 UTC (07:00 Israel)
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth google-auth-oauthlib google-api-python-client requests
+
+      - name: Copy detect script
+        run: |
+          # The script lives in the root ORANIM dir locally;
+          # for CI, we include it in the repo under scripts/
+          cp scripts/detect_new_plans.py detect_new_plans.py || true
+
+      - name: Run detection
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+        run: |
+          # Create credentials file from secret
+          echo "$GOOGLE_CREDS" > /tmp/gcloud_creds.json
+
+          # Run with --no-mavat (no browser available in CI)
+          python detect_new_plans.py --update --no-mavat
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: new-plans-report
+          path: |
+            new_plans_report.json
+            last_detection_summary.txt
