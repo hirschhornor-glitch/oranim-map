@@ -1,0 +1,119 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.778018759999995,
+          31.75663976
+        ]
+      },
+      "properties": {
+        "name": "מתחם אילנות מגרש משולב - אילנות",
+        "address": "מתחם אילנות",
+        "type": "מגרש ספורט לשימוש קהילתי",
+        "status": "עתידי",
+        "plan": "עדיין אין",
+        "area_change": 1400,
+        "source": "geocoded from address"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.77348386,
+          31.75473388
+        ]
+      },
+      "properties": {
+        "name": "עתידי -  הרחבת בית הכנסת הקיים - מתחם השומר 8",
+        "address": "השומר 8",
+        "type": "בית כנסת",
+        "status": "עתידי",
+        "plan": "מידע מהעירייה",
+        "area_change": 250,
+        "source": "geocoded from address"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.7803805,
+          31.762761949999998
+        ]
+      },
+      "properties": {
+        "name": "מתחם לוריא מגרש משולב - לוריא",
+        "address": "הפלמ\"ח 79",
+        "type": "מגרש ספורט לשימוש קהילתי",
+        "status": "עתידי",
+        "plan": "עדיין אין",
+        "area_change": 600,
+        "source": "geocoded from address"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.77738118,
+          31.76022677
+        ]
+      },
+      "properties": {
+        "name": "מתחם בית הנוער 2 מגרש כדורסל תקני מקורה",
+        "address": "הרב הרצוג 105",
+        "type": "מגרש ספורט לשימוש קהילתי",
+        "status": "עתידי",
+        "plan": "עדיין אין",
+        "area_change": 1080,
+        "source": "geocoded from address"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.77738118,
+          31.76022677
+        ]
+      },
+      "properties": {
+        "name": "מתחם בית הנוער 3 מגרש כדורסל קטן",
+        "address": "הרב הרצוג 105",
+        "type": "מגרש ספורט לשימוש קהילתי",
+        "status": "עתידי",
+        "plan": "עדיין אין",
+        "area_change": 1400,
+        "source": "geocoded from address"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          34.77348386,
+          31.75473388
+        ]
+      },
+      "properties": {
+        "name": "הרחבת בית הכנסת הקיים - מתחם השומר 8",
+        "address": "השומר 8",
+        "type": "בית כנסת",
+        "status": "עתידי",
+        "plan": "מידע מהעירייה",
+        "area_change": 250,
+        "source": "היצע שירותי ציבור - גוננים"
+      }
+    }
+  ]
+}
