@@ -5605,11 +5605,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            if (zoomLevel >= 16) {
-                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
-                            } else {
-                                layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
-                            }
+                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5654,11 +5650,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            if (zoomLevel >= 16) {
-                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
-                            } else {
-                                layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
-                            }
+                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
