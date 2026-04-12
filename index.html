@@ -5501,7 +5501,7 @@
                 const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#27ae60', 'ערבי': '#e67e22', 'חרדי': '#8e44ad' };
                 function eduMarkerStyle(sugMosad, pikuach, fill) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
-                    const r = zoomLevel >= 17 ? 9 : 7;
+                    const r = zoomLevel >= 17 ? 12 : 10;
                     return { radius: r, fillColor: fill, fillOpacity: 0.9, color: stroke, weight: 2.5 };
                 }
                 function getSugMosad(p) {
@@ -5594,8 +5594,8 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            if (zoomLevel >= 17) {
-                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-label' });
+                            if (zoomLevel >= 16) {
+                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
                             } else {
                                 layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
                             }
@@ -5643,8 +5643,8 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            if (zoomLevel >= 17) {
-                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-label' });
+                            if (zoomLevel >= 16) {
+                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
                             } else {
                                 layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
                             }
