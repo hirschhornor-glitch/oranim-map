@@ -3112,6 +3112,44 @@
                             console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
                         }
                     }
+
+                    // --- Filter already-implemented plans from future layers ---
+                    const kayamTabaSet = new Set();
+                    if (gd.yiud_karka_kayam && gd.yiud_karka_kayam.features) {
+                        gd.yiud_karka_kayam.features.forEach(f => {
+                            const t = String(f.properties.TABA || '').trim();
+                            if (t) kayamTabaSet.add(t);
+                        });
+                    }
+                    window.__kayamTabaSet = kayamTabaSet;
+
+                    if (gd.landuse_xplan && gd.landuse_xplan.features && kayamTabaSet.size > 0) {
+                        const beforeCount = gd.landuse_xplan.features.length;
+                        gd.landuse_xplan = {
+                            ...gd.landuse_xplan,
+                            features: gd.landuse_xplan.features.filter(f => {
+                                const pn = (f.properties.pl_number || '');
+                                if (!pn || !pn.includes('-')) return true;
+                                const taba = String(parseInt(pn.split('-')[1]));
+                                return !kayamTabaSet.has(taba);
+                            })
+                        };
+                        console.log('[Filter] landuse_xplan:', beforeCount, '->', gd.landuse_xplan.features.length, 'features (removed', beforeCount - gd.landuse_xplan.features.length, 'already-implemented)');
+                    }
+
+                    if (gd.future_shavaz && gd.future_shavaz.features && kayamTabaSet.size > 0) {
+                        const beforeCount = gd.future_shavaz.features.length;
+                        gd.future_shavaz = {
+                            ...gd.future_shavaz,
+                            features: gd.future_shavaz.features.filter(f => {
+                                const t = String(f.properties.TABA || '').trim();
+                                return !t || !kayamTabaSet.has(t);
+                            })
+                        };
+                        console.log('[Filter] future_shavaz:', beforeCount, '->', gd.future_shavaz.features.length, 'features (removed', beforeCount - gd.future_shavaz.features.length, 'already-implemented)');
+                    }
+                    // --- End filter ---
+
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
                     setDataLoaded(true);
@@ -4553,6 +4591,19 @@
                         plansBySubType[m] = {};
                     });
 
+                    // Filter out plans already implemented in kayam
+                    const kayamSet = window.__kayamTabaSet;
+                    if (kayamSet && kayamSet.size > 0) {
+                        const beforeLen = planRows.length;
+                        planRows = planRows.filter(p => {
+                            const pn = (p.plan_name || '').trim();
+                            if (!pn || !pn.includes('-')) return true;
+                            const taba = String(parseInt(pn.split('-')[1]));
+                            return !kayamSet.has(taba);
+                        });
+                        console.log('[Filter] planRows:', beforeLen, '->', planRows.length, '(removed', beforeLen - planRows.length, 'already-implemented plans)');
+                    }
+
                     // Plans (from Google Sheets CSV)
                     planRows.forEach(p => {
                         const m = (p.minahak || '').trim();
@@ -4881,6 +4932,12 @@
                         const s = normalizeStatus((f.properties.status_mavat || '').trim());
                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                         if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
+                        // Filter already-implemented plans
+                        const kt = window.__kayamTabaSet;
+                        if (kt && kt.size > 0) {
+                            const t = String(f.properties.taba || '').trim();
+                            if (t && kt.has(t)) return false;
+                        }
                         return true;
                     }).length;
 
@@ -4892,6 +4949,12 @@
                             const s = normalizeStatus((f.properties.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
+                            // Filter already-implemented plans
+                            const kt = window.__kayamTabaSet;
+                            if (kt && kt.size > 0) {
+                                const t = String(f.properties.taba || '').trim();
+                                if (t && kt.has(t)) return false;
+                            }
                             // Advanced filters
                             const af = filters;
                             // Units range
@@ -5197,6 +5260,11 @@
                         renderer: L.svg({ pane: 'topicsPane' }),
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
+                            const kt = window.__kayamTabaSet;
+                            if (kt && kt.size > 0) {
+                                const t = String(f.properties.taba || '').trim();
+                                if (t && kt.has(t)) return false;
+                            }
                             const p = f.properties;
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
