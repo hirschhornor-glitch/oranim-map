@@ -4424,7 +4424,7 @@
                 // Use html2canvas to capture the map
                 let mapImgUrl = '';
                 if (window.html2canvas) {
-                    const canvas = await window.html2canvas(mapContainer, { useCORS: true, allowTaint: true, logging: false });
+                    const canvas = await window.html2canvas(mapContainer, { useCORS: true, allowTaint: true, logging: false, scale: 2, removeContainer: false });
                     mapImgUrl = canvas.toDataURL('image/png');
                 } else {
                     // Fallback: just take a screenshot of current view
