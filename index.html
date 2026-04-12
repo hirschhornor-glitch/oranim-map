@@ -5516,7 +5516,7 @@
                     } else {
                         shape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     }
-                    const showLabel = zoomLevel >= 16 && label;
+                    const showLabel = zoomLevel >= 17 && label;
                     const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-family:Assistant,Arial,sans-serif;color:#333;background:rgba(255,255,255,0.85);padding:0 3px;border-radius:2px;pointer-events:none;text-align:center">${label}</div>` : '';
                     const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
