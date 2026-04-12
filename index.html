@@ -1395,6 +1395,8 @@
         .leaflet-tooltip.measure-tooltip { background: rgba(15, 15, 30, 0.9); border: 1px solid #4a69d1; }
         .leaflet-tooltip.heatmap-tip { background: rgba(15, 15, 30, 0.93); border: 1px solid #e94560; color: #eee; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .leaflet-tooltip.heatmap-tip::before { border-top-color: #e94560; }
+        .leaflet-tooltip.edu-label { background: rgba(255,255,255,0.85); border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.3); color: #222; font-size: 10px; font-weight: bold; padding: 1px 4px; border-radius: 3px; white-space: nowrap; }
+        .leaflet-tooltip.edu-label::before { display: none; }
 
         /* Crosshair cursor when measuring */
         #map.measuring,
@@ -5592,6 +5594,7 @@
 
                 // --- Mosadot Shchuna (existing education institutions) ---
                 if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
+                    const eduLabelZoom = zoomLevel >= 15;
                     const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
                         pane: 'stationsPane',
                         filter: f => passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
@@ -5602,7 +5605,9 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
+                            layer.bindTooltip(name, eduLabelZoom
+                                ? { permanent: true, direction: 'right', offset: [10, 0], className: 'edu-label' }
+                                : { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5646,7 +5651,9 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
+                            layer.bindTooltip(name, eduLabelZoom
+                                ? { permanent: true, direction: 'right', offset: [10, 0], className: 'edu-label' }
+                                : { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
