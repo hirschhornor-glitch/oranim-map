@@ -7696,45 +7696,64 @@
                                                                 }
 
                                                                 const optionsHtml = GS_FIELDS.map(f => '<option value="'+f.key+'">'+f.label+'</option>').join('');
-                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:24px;min-width:380px;max-width:500px;color:#e0e0e0;font-family:Arial,sans-serif">'
-                                                                    + '<div style="font-size:11px;color:#888;margin-bottom:8px">הערה ' + (idx+1) + ' מתוך ' + entries.length + '</div>'
-                                                                    + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div>'
-                                                                    + '<div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
-                                                                    + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:16px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
-                                                                    + '<div style="margin-bottom:10px"><label style="font-size:12px;color:#aaa">שדה לעדכון:</label><br/>'
-                                                                    + '<select id="gs-upd-field" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:13px;margin-top:4px">'
-                                                                    + '<option value="">-- בחר שדה --</option>' + optionsHtml + '</select></div>'
-                                                                    + '<div style="margin-bottom:16px"><label style="font-size:12px;color:#aaa">ערך חדש:</label><br/>'
-                                                                    + '<input id="gs-upd-value" type="text" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:13px;margin-top:4px;box-sizing:border-box" /></div>'
-                                                                    + '<div style="display:flex;gap:8px;justify-content:flex-start">'
-                                                                    + '<button id="gs-upd-ok" style="padding:8px 20px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px">אישור</button>'
-                                                                    + '<button id="gs-upd-skip" style="padding:8px 20px;border-radius:6px;border:none;background:#555;color:#fff;cursor:pointer;font-size:13px">דלג</button>'
-                                                                    + '<button id="gs-upd-cancel" style="padding:8px 20px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px">ביטול</button>'
-                                                                    + '</div></div>';
+                                                                let pendingRows = []; // rows added for this annotation
 
-                                                                document.getElementById('gs-upd-ok').onclick = () => {
-                                                                    const field = document.getElementById('gs-upd-field').value;
-                                                                    const value = document.getElementById('gs-upd-value').value.trim();
-                                                                    if (!field) { alert('יש לבחור שדה'); return; }
-                                                                    if (!value) { alert('יש להזין ערך'); return; }
-                                                                    collected.push({ plan_name: planId, field, value, note });
-                                                                    idx++;
-                                                                    showNext();
-                                                                };
-                                                                document.getElementById('gs-upd-skip').onclick = () => { idx++; showNext(); };
-                                                                document.getElementById('gs-upd-cancel').onclick = () => {
-                                                                    overlay.remove();
-                                                                    if (collected.length) {
-                                                                        if (confirm('יש ' + collected.length + ' עדכונים שנאספו. להוריד אותם?')) {
+                                                                function renderDialog() {
+                                                                    const addedHtml = pendingRows.length ? '<div style="margin-bottom:12px;border:1px solid #2a2a4a;border-radius:6px;padding:8px;background:#252540">'
+                                                                        + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:4px">שדות שנוספו:</div>'
+                                                                        + pendingRows.map((r,i) => '<div style="font-size:12px;color:#aaa;padding:2px 0">'
+                                                                            + GS_FIELDS.find(f=>f.key===r.field)?.label + ' = ' + r.value
+                                                                            + '</div>').join('')
+                                                                        + '</div>' : '';
+
+                                                                    overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                        + '<div style="font-size:11px;color:#888;margin-bottom:8px">הערה ' + (idx+1) + ' מתוך ' + entries.length + '</div>'
+                                                                        + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div>'
+                                                                        + '<div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
+                                                                        + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
+                                                                        + addedHtml
+                                                                        + '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">'
+                                                                        + '<div style="flex:1"><label style="font-size:11px;color:#aaa">שדה:</label>'
+                                                                        + '<select id="gs-upd-field" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px">'
+                                                                        + '<option value="">-- בחר --</option>' + optionsHtml + '</select></div>'
+                                                                        + '<div style="flex:1"><label style="font-size:11px;color:#aaa">ערך:</label>'
+                                                                        + '<input id="gs-upd-value" type="text" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px;box-sizing:border-box" /></div>'
+                                                                        + '<button id="gs-upd-add" style="padding:6px 12px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;white-space:nowrap">+ הוסף</button>'
+                                                                        + '</div>'
+                                                                        + '<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:12px">'
+                                                                        + '<button id="gs-upd-next" style="padding:8px 20px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px">' + (pendingRows.length ? 'הבא ←' : 'דלג') + '</button>'
+                                                                        + '<button id="gs-upd-cancel" style="padding:8px 20px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px">סיום</button>'
+                                                                        + '</div></div>';
+
+                                                                    document.getElementById('gs-upd-add').onclick = () => {
+                                                                        const field = document.getElementById('gs-upd-field').value;
+                                                                        const value = document.getElementById('gs-upd-value').value.trim();
+                                                                        if (!field) { alert('יש לבחור שדה'); return; }
+                                                                        if (!value) { alert('יש להזין ערך'); return; }
+                                                                        pendingRows.push({ plan_name: planId, field, value, note });
+                                                                        renderDialog(); // re-render to show added row
+                                                                    };
+                                                                    document.getElementById('gs-upd-next').onclick = () => {
+                                                                        collected.push(...pendingRows);
+                                                                        pendingRows = [];
+                                                                        idx++;
+                                                                        showNext();
+                                                                    };
+                                                                    document.getElementById('gs-upd-cancel').onclick = () => {
+                                                                        collected.push(...pendingRows);
+                                                                        overlay.remove();
+                                                                        if (collected.length) {
                                                                             const json = JSON.stringify(collected, null, 2);
                                                                             const blob = new Blob([json], {type:'application/json;charset=utf-8'});
                                                                             const url = URL.createObjectURL(blob);
                                                                             const a = document.createElement('a');
                                                                             a.href = url; a.download = 'gs_updates.json'; a.click();
                                                                             URL.revokeObjectURL(url);
+                                                                            alert('נוצר gs_updates.json עם ' + collected.length + ' עדכונים.\nהרץ: python apply_annotations.py gs_updates.json');
                                                                         }
-                                                                    }
-                                                                };
+                                                                    };
+                                                                }
+                                                                renderDialog();
                                                             }
                                                             showNext();
                                                         }}>
