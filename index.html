@@ -4424,22 +4424,27 @@
                 // Use html2canvas to capture the map
                 let mapImgUrl = '';
                 if (window.html2canvas) {
+                    // Convert SVG panes to inline data URIs so html2canvas can render them
+                    const svgPanes = mapContainer.querySelectorAll('.leaflet-overlay-pane svg, .leaflet-pane svg');
+                    const origStyles = [];
+                    svgPanes.forEach((svg, i) => {
+                        origStyles[i] = svg.style.cssText;
+                        // Force SVG dimensions
+                        if (!svg.getAttribute('width')) svg.setAttribute('width', svg.getBoundingClientRect().width);
+                        if (!svg.getAttribute('height')) svg.setAttribute('height', svg.getBoundingClientRect().height);
+                    });
                     const canvas = await window.html2canvas(mapContainer, {
                         useCORS: true, allowTaint: true, logging: false, scale: 2,
+                        foreignObjectRendering: true,
                         onclone: (clonedDoc) => {
-                            // Ensure all Leaflet panes are visible in the cloned document
                             clonedDoc.querySelectorAll('.leaflet-pane').forEach(pane => {
                                 pane.style.opacity = '1';
                                 pane.style.visibility = 'visible';
-                                pane.style.display = 'block';
-                            });
-                            // Ensure SVG elements are visible
-                            clonedDoc.querySelectorAll('.leaflet-pane svg').forEach(svg => {
-                                svg.style.display = 'block';
-                                svg.style.visibility = 'visible';
                             });
                         }
                     });
+                    // Restore original styles
+                    svgPanes.forEach((svg, i) => { svg.style.cssText = origStyles[i] || ''; });
                     mapImgUrl = canvas.toDataURL('image/png');
                 } else {
                     // Fallback: just take a screenshot of current view
