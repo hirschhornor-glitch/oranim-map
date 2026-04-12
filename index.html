@@ -5475,19 +5475,43 @@
                 }
 
                 // --- Mosadot Shchuna (existing education institutions) ---
+                // Color by שלב חינוך: יסודי=blue, על יסודי=orange
+                // Shape by פיקוח: ממלכתי=circle, ממלכתי דתי=square, ערבי=triangle
                 if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
+                    const mosadotColors = { 'יסודי': '#2980b9', 'על יסודי': '#e67e22' };
+                    const mosadotBorders = { 'יסודי': '#1a5276', 'על יסודי': '#a04000' };
+                    function mosadotIcon(pikuach, shalav) {
+                        const fill = mosadotColors[shalav] || '#888';
+                        const stroke = mosadotBorders[shalav] || '#555';
+                        const sz = 22;
+                        let shape;
+                        if (pikuach === 'ממלכתי דתי') {
+                            // Square
+                            shape = `<rect x="3" y="3" width="16" height="16" fill="${fill}" stroke="${stroke}" stroke-width="2" rx="2"/>`;
+                        } else if (pikuach === 'ערבי') {
+                            // Triangle
+                            shape = `<polygon points="11,2 2,20 20,20" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                        } else {
+                            // Circle (ממלכתי or default)
+                            shape = `<circle cx="11" cy="11" r="8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                        }
+                        const svg = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
+                        return L.divIcon({ html: svg, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2] });
+                    }
                     const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
                         pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 7, fillColor: '#e74c3c', fillOpacity: 0.9,
-                            color: '#922b21', weight: 2
-                        }),
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties;
+                            return L.marker(latlng, { icon: mosadotIcon(p['פיקוח'], p['שלב חינוך']) });
+                        },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
                             layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
+                                const shalav = p['שלב חינוך'] || '';
+                                const headerColor = mosadotColors[shalav] || '#888';
                                 const rows = [
                                     ['שם מוסד', p['שם מוסד']],
                                     ['כתובת', p['כתובת']],
@@ -5503,7 +5527,7 @@
                                     ['סמל עירייה', p['סמל עירייה']],
                                 ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan');
                                 const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:300px">
-                                    <div style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <div style="background:${headerColor};color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
                                     <table style="width:100%;border-collapse:collapse;font-size:12px">
                                     ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
                                     </table></div>`;
