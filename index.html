@@ -4424,7 +4424,22 @@
                 // Use html2canvas to capture the map
                 let mapImgUrl = '';
                 if (window.html2canvas) {
-                    const canvas = await window.html2canvas(mapContainer, { useCORS: true, allowTaint: true, logging: false, scale: 2, removeContainer: false });
+                    const canvas = await window.html2canvas(mapContainer, {
+                        useCORS: true, allowTaint: true, logging: false, scale: 2,
+                        onclone: (clonedDoc) => {
+                            // Ensure all Leaflet panes are visible in the cloned document
+                            clonedDoc.querySelectorAll('.leaflet-pane').forEach(pane => {
+                                pane.style.opacity = '1';
+                                pane.style.visibility = 'visible';
+                                pane.style.display = 'block';
+                            });
+                            // Ensure SVG elements are visible
+                            clonedDoc.querySelectorAll('.leaflet-pane svg').forEach(svg => {
+                                svg.style.display = 'block';
+                                svg.style.visibility = 'visible';
+                            });
+                        }
+                    });
                     mapImgUrl = canvas.toDataURL('image/png');
                 } else {
                     // Fallback: just take a screenshot of current view
