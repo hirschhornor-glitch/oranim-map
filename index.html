@@ -5659,8 +5659,15 @@
                         shape = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><circle cx="${cx}" cy="${cy}" r="${r-sw}" fill="none" stroke="white" stroke-width="1"/>`;
                     }
                     const showLabel = zoomLevel >= 16 && label;
-                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:bold;font-family:Assistant,Arial,sans-serif;color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;pointer-events:none;text-align:center">${label}</div>` : '';
-                    const html = `<div style="position:relative;width:${sz}px;height:${sz}px;overflow:visible">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
+                    if (showLabel) {
+                        const labelH = 16;
+                        const totalH = sz + labelH;
+                        const labelDiv = `<div style="text-align:center;white-space:nowrap;font-size:11px;font-weight:bold;font-family:Assistant,Arial,sans-serif;color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;line-height:${labelH}px;pointer-events:none">${label}</div>`;
+                        const svgDiv = `<div style="display:flex;justify-content:center"><svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
+                        const html = labelDiv + svgDiv;
+                        return L.divIcon({ html, className: '', iconSize: [200, totalH], iconAnchor: [100, totalH - cy] });
+                    }
+                    const html = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
                 function getSugMosad(p) {
