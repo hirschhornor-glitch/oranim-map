@@ -2610,17 +2610,18 @@
 
         const MOSADOT_LEGEND = [
             { label: 'צורה: סוג מוסד', style: 'header' },
-            { label: 'יסודי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
-            { label: 'על יסודי / חט"ב / תיכון', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#f1c40f" stroke="#888" stroke-width="2" rx="1"/></svg>' },
-            { label: 'גני ילדים', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
-            { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'יסודי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#ccc" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'על יסודי / חט"ב / תיכון', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#ccc" stroke="#888" stroke-width="2" rx="1"/></svg>' },
+            { label: 'גני ילדים', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#ccc" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#ccc" stroke="#888" stroke-width="2"/></svg>' },
             { label: 'קו מיתאר: פיקוח', style: 'header' },
             { label: 'ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#2980b9" stroke-width="3"/></svg>' },
             { label: 'ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#27ae60" stroke-width="3"/></svg>' },
             { label: 'ערבי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#e67e22" stroke-width="3"/></svg>' },
             { label: 'חרדי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#8e44ad" stroke-width="3"/></svg>' },
             { label: 'מילוי: סטטוס', style: 'header' },
-            { label: 'קיים / הרשאה', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#f1c40f" stroke="#888" stroke-width="1" rx="3"/></svg>' },
+            { label: 'קיים', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#2ecc71" stroke="#888" stroke-width="1" rx="3"/></svg>' },
+            { label: 'הרשאה מלאה/חלקית', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#f1c40f" stroke="#888" stroke-width="1" rx="3"/></svg>' },
             { label: 'אין הרשאה', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#e74c3c" stroke="#888" stroke-width="1" rx="3"/></svg>' },
         ];
 
@@ -5544,7 +5545,7 @@
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#f1c40f') });
+                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#2ecc71') });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
@@ -5567,7 +5568,7 @@
                                     ['סמל עירייה', p['סמל עירייה']],
                                 ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan');
                                 const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:300px">
-                                    <div style="background:#d4ac0d;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <div style="background:#27ae60;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
                                     <table style="width:100%;border-collapse:collapse;font-size:12px">
                                     ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
                                     </table></div>`;
