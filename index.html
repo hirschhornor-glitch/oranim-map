@@ -2748,6 +2748,7 @@
                 window.__annotations = JSON.parse(localStorage.getItem('plan_annotations') || '{}');
             }
             const [filters, setFilters] = useState({ minUnits: '', maxUnits: '', planTypes: [], statuses: [], freeText: '' });
+            const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
                 { key: 'approved', label: 'אישור / מאושרת' },
@@ -5539,10 +5540,61 @@
                     return 'ממלכתי';
                 }
 
+                // --- Education declutter: offset overlapping markers ---
+                function declutterPoints(geojsonData) {
+                    if (!geojsonData || !geojsonData.features) return;
+                    const seen = {};
+                    const offset = 0.00025; // ~25m
+                    geojsonData.features.forEach(f => {
+                        if (!f.geometry || f.geometry.type !== 'Point') return;
+                        const key = f.geometry.coordinates[0].toFixed(5) + ',' + f.geometry.coordinates[1].toFixed(5);
+                        if (!seen[key]) { seen[key] = 0; }
+                        else {
+                            seen[key]++;
+                            const angle = (seen[key] * 2.094); // ~120° apart then spiral
+                            f.geometry.coordinates = [
+                                f.geometry.coordinates[0] + offset * Math.cos(angle),
+                                f.geometry.coordinates[1] + offset * Math.sin(angle)
+                            ];
+                        }
+                    });
+                }
+                // Declutter both layers
+                if (gd.mosadot_shchuna) declutterPoints(gd.mosadot_shchuna);
+                if (gd.sara_march_2026) declutterPoints(gd.sara_march_2026);
+                // Also declutter across both layers
+                if (gd.mosadot_shchuna && gd.sara_march_2026) {
+                    const seen = {};
+                    const offset = 0.00025;
+                    const allFeatures = [...(gd.mosadot_shchuna.features || []), ...(gd.sara_march_2026.features || [])];
+                    allFeatures.forEach(f => {
+                        if (!f.geometry || f.geometry.type !== 'Point') return;
+                        const key = f.geometry.coordinates[0].toFixed(4) + ',' + f.geometry.coordinates[1].toFixed(4);
+                        if (!seen[key]) { seen[key] = 0; }
+                        else {
+                            seen[key]++;
+                            const angle = (seen[key] * 1.047); // 60° steps
+                            f.geometry.coordinates = [
+                                f.geometry.coordinates[0] + offset * Math.cos(angle),
+                                f.geometry.coordinates[1] + offset * Math.sin(angle)
+                            ];
+                        }
+                    });
+                }
+
+                // --- Education filter helper ---
+                function passesEduFilter(sugMosad, pikuach) {
+                    const ef = eduFilters;
+                    if (ef.sugMosad.length > 0 && !ef.sugMosad.includes(sugMosad)) return false;
+                    if (ef.pikuach.length > 0 && !ef.pikuach.includes(pikuach)) return false;
+                    return true;
+                }
+
                 // --- Mosadot Shchuna (existing education institutions) ---
                 if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
                     const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
                         pane: 'stationsPane',
+                        filter: f => passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#2ecc71') });
@@ -5583,6 +5635,7 @@
                 if (layers['sara_march_2026'] && gd.sara_march_2026) {
                     const saraLayer = L.geoJSON(gd.sara_march_2026, {
                         pane: 'stationsPane',
+                        filter: f => passesEduFilter(getSugMosadSara(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
@@ -5898,7 +5951,7 @@
 
                 window.__geoLayersForPrint = geoLayersRef.current;
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap]);
+            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, eduFilters]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -6823,6 +6876,55 @@
                                         ))}
                                         </div>
                                     ))}
+                                    {groupKey === 'education' && !collapsedGroups[groupKey] && (layers['mosadot_shchuna'] || layers['sara_march_2026']) && (
+                                        <div style={{padding:'4px 8px 8px 8px',fontSize:11,direction:'rtl'}}>
+                                            <div style={{fontWeight:'bold',marginBottom:4,color:'#aaa'}}>סינון:</div>
+                                            <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px',marginBottom:4}}>
+                                                <span style={{color:'#888',fontSize:10,width:'100%'}}>סוג מוסד:</span>
+                                                {['יסודי','על יסודי','גני','מעון'].map(v => (
+                                                    <label key={v} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
+                                                        <input type="checkbox"
+                                                            checked={eduFilters.sugMosad.length === 0 || eduFilters.sugMosad.includes(v)}
+                                                            onChange={e => {
+                                                                setEduFilters(prev => {
+                                                                    const all = ['יסודי','על יסודי','גני','מעון'];
+                                                                    let next = prev.sugMosad.length === 0 ? [...all] : [...prev.sugMosad];
+                                                                    if (e.target.checked) { if (!next.includes(v)) next.push(v); }
+                                                                    else { next = next.filter(x => x !== v); }
+                                                                    if (next.length === all.length) next = [];
+                                                                    return {...prev, sugMosad: next};
+                                                                });
+                                                            }}
+                                                            style={{margin:0}}
+                                                        />
+                                                        <span>{v}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
+                                                <span style={{color:'#888',fontSize:10,width:'100%'}}>פיקוח:</span>
+                                                {['ממלכתי','ממלכתי דתי','ערבי','חרדי'].map(v => (
+                                                    <label key={v} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
+                                                        <input type="checkbox"
+                                                            checked={eduFilters.pikuach.length === 0 || eduFilters.pikuach.includes(v)}
+                                                            onChange={e => {
+                                                                setEduFilters(prev => {
+                                                                    const all = ['ממלכתי','ממלכתי דתי','ערבי','חרדי'];
+                                                                    let next = prev.pikuach.length === 0 ? [...all] : [...prev.pikuach];
+                                                                    if (e.target.checked) { if (!next.includes(v)) next.push(v); }
+                                                                    else { next = next.filter(x => x !== v); }
+                                                                    if (next.length === all.length) next = [];
+                                                                    return {...prev, pikuach: next};
+                                                                });
+                                                            }}
+                                                            style={{margin:0}}
+                                                        />
+                                                        <span>{v}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
 
