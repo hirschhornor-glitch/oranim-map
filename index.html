@@ -4328,50 +4328,40 @@
                 if (printShowLegend) {
                     legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl;print-color-adjust:exact;-webkit-print-color-adjust:exact">';
                     legendHtml += '<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';
-                    // Plans legend section
-                    legendHtml += '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">תב"עות - סטטוס</div>';
-                    legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-                    PLANS_LEGEND.forEach(item => {
-                        legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
-                            `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` +
-                            `${item.label}</div>`;
-                    });
-                    legendHtml += '</div>';
-
-                    // Education legend section (when layers are on)
-                    if (layers['mosadot_shchuna'] || layers['sara_march_2026']) {
-                        legendHtml += '<div style="margin-top:10px;border-top:1px solid #ddd;padding-top:8px">';
-                        legendHtml += '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">מוסדות חינוך</div>';
-                        let eduFlexOpen = false;
-                        MOSADOT_LEGEND.forEach(item => {
-                            if (item.style === 'header') {
-                                if (eduFlexOpen) legendHtml += '</div>';
-                                legendHtml += `<div style="font-weight:bold;font-size:11px;margin-top:6px;margin-bottom:2px;color:#666">${item.label}</div>`;
-                                legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-                                eduFlexOpen = true;
-                            } else if (item.style === 'svg') {
-                                legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
-                                    `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px">${item.svg}</span>` +
-                                    `${item.label}</div>`;
-                            } else {
-                                legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
-                                    `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` +
-                                    `${item.label}</div>`;
-                            }
-                        });
-                        if (eduFlexOpen) legendHtml += '</div>';
-                        legendHtml += '</div>';
-                    }
-
-                    // Shavaz legend section (when layers are on)
-                    if (layers['shavaz_kayam'] || layers['future_shavaz'] || layers['sport_kayam']) {
-                        legendHtml += '<div style="margin-top:10px;border-top:1px solid #ddd;padding-top:8px">';
-                        legendHtml += '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">מבני ציבור</div>';
+                    // Plans legend section (only when plans layer is on)
+                    if (layers['plans']) {
+                        legendHtml += '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">תב"עות - סטטוס</div>';
                         legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-                        SHAVAZ_LEGEND.forEach(item => {
+                        PLANS_LEGEND.forEach(item => {
                             legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` +
                                 `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` +
                                 `${item.label}</div>`;
+                        });
+                        legendHtml += '</div>';
+                    }
+
+                    // Education legend section (compact, when layers are on)
+                    if (layers['mosadot_shchuna'] || layers['sara_march_2026']) {
+                        legendHtml += '<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';
+                        legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';
+                        legendHtml += '<span style="font-weight:bold;color:#555">חינוך:</span>';
+                        legendHtml += '<span>●יסודי</span> <span>■על-יסודי</span> <span>▲גני</span> <span>◆מעון</span>';
+                        legendHtml += '<span style="margin-right:6px">|</span>';
+                        legendHtml += '<span style="color:#0d47a1">■</span>ממלכתי <span style="color:#d63384">■</span>דתי <span style="color:#7b1fa2">■</span>ערבי <span style="color:#1a1a2e">■</span>חרדי';
+                        legendHtml += '<span style="margin-right:6px">|</span>';
+                        legendHtml += `<span style="width:10px;height:10px;background:#4CAF50;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>קיים `;
+                        legendHtml += `<span style="width:10px;height:10px;background:#f1c40f;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>הרשאה `;
+                        legendHtml += `<span style="width:10px;height:10px;background:#e74c3c;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>אין הרשאה`;
+                        legendHtml += '</div></div>';
+                    }
+
+                    // Shavaz legend section (compact, when layers are on)
+                    if (layers['shavaz_kayam'] || layers['future_shavaz'] || layers['sport_kayam']) {
+                        legendHtml += '<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';
+                        legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';
+                        legendHtml += '<span style="font-weight:bold;color:#555">שב"צ:</span>';
+                        SHAVAZ_LEGEND.forEach(item => {
+                            legendHtml += `<span style="width:10px;height:10px;background:${item.color};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>${item.label} `;
                         });
                         legendHtml += '</div></div>';
                     }
