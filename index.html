@@ -2618,9 +2618,9 @@
             { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
             { label: 'היקף: פיקוח', style: 'header' },
             { label: 'ממלכתי', color: '#2980b9' },
-            { label: 'ממלכתי דתי', color: '#27ae60' },
+            { label: 'ממלכתי דתי', color: '#9b59b6' },
             { label: 'ערבי', color: '#e67e22' },
-            { label: 'חרדי', color: '#8e44ad' },
+            { label: 'חרדי', color: '#1a1a2e' },
             { label: 'מילוי: סטטוס', style: 'header' },
             { label: 'קיים', color: '#4CAF50' },
             { label: 'הרשאה מלאה/חלקית', color: '#f1c40f' },
@@ -5498,7 +5498,7 @@
                 // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
                 // Fill = status: yellow=existing/authorized, red=no authorization
-                const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#27ae60', 'ערבי': '#e67e22', 'חרדי': '#8e44ad' };
+                const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#9b59b6', 'ערבי': '#e67e22', 'חרדי': '#1a1a2e' };
                 const eduSz = zoomLevel >= 17 ? 18 : 12;
                 function eduIcon(sugMosad, pikuach, fill) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
