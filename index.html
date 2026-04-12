@@ -5499,10 +5499,10 @@
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
                 // Fill = status: yellow=existing/authorized, red=no authorization
                 const pikuachStrokes = { 'ממלכתי': '#0d47a1', 'ממלכתי דתי': '#d63384', 'ערבי': '#7b1fa2', 'חרדי': '#1a1a2e' };
-                const eduSz = zoomLevel >= 17 ? 18 : 12;
+                const eduSz = zoomLevel >= 17 ? 18 : 14;
                 function eduIcon(sugMosad, pikuach, fill, label) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
-                    const sz = eduSz, cx = sz/2, cy = sz/2, sw = 2;
+                    const sz = eduSz, cx = sz/2, cy = sz/2, sw = zoomLevel >= 17 ? 2 : 1.5;
                     let shape;
                     if (sugMosad === 'גני' || sugMosad === 'גנים') {
                         const m = sw/2+1;
