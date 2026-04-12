@@ -1929,6 +1929,7 @@
             'בבדיקת תנאי סף': '#eb0000',
             'נגנזה': '#888888',
             'נדחתה': '#888888',
+            'נגנזה/נדחתה': '#888888',
         };
 
         // Landuse colors - from XPLAN/MAVAT and Jerusalem municipality GIS
@@ -5515,7 +5516,8 @@
                                     .setLatLng(layer.getLatLng())
                                     .setContent(buildShavazPopup(f.properties, true, false, null, true));
                                 popup.openOn(map);
-                                bindShavazPopupEvents(popup, f.properties, layer.getLatLng());
+                                const singleShavaz = [{ properties: f.properties, isFuture: true }];
+                                bindShavazPopupEvents(popup, f.properties, layer.getLatLng(), null, singleShavaz, 0);
                             });
                         }
                     }).addTo(map);
@@ -5548,7 +5550,7 @@
                         shape = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><circle cx="${cx}" cy="${cy}" r="${r-sw}" fill="none" stroke="white" stroke-width="1"/>`;
                     }
                     const showLabel = zoomLevel >= 16 && label;
-                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-family:Assistant,Arial,sans-serif;color:#333;background:rgba(255,255,255,0.85);padding:0 3px;border-radius:2px;pointer-events:none;text-align:center">${label}</div>` : '';
+                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-family:Assistant,Arial,sans-serif;color:#222;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;pointer-events:none;text-align:center">${label}</div>` : '';
                     const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
@@ -6231,146 +6233,96 @@
             function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
                 const buildingName = cleanNull(props.building_name);
                 const buildingTypeRaw = cleanNull(props.building_type) || cleanNull(props.Descriptio) || '';
-                // Filter out sport entries and aggregate duplicate uses
                 const SPORT_RE = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
                 const buildingType = (function(raw) {
                     if (!raw) return '';
                     const items = raw.split(/[;,]/).map(s => s.trim()).filter(s => s && !SPORT_RE.test(s));
                     const counts = {};
                     items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
-                    return Object.entries(counts).map(([name, count]) => {
-                        if (count === 1) return name;
-                        return count + ' ' + name;
-                    }).join('; ');
+                    return Object.entries(counts).map(([name, count]) => count === 1 ? name : count + ' ' + name).join('; ');
                 })(buildingTypeRaw);
                 const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
-                // For kayam: strip sport-related segments from title
-                // Title format: 'type "name" type "name"' — remove segments matching sport
-                const cleanTitle = !isFuture && buildingName
-                    ? buildingName.replace(/(?:מגרש ספורט|אולם ספורט|בריכת שחי\S*|מגרש כדור\S*|מגרש כטר\S*)[^"]*(?:"[^"]*")?\s*/g, '').trim()
-                    : buildingName;
-                const title = isFuture
-                    ? (planNameHe || fixHebrewText(cleanNull(props.MAVAT_NAME) || 'שב"צ עתידי'))
-                    : fixHebrewText(cleanTitle || planNameHe || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
+                const mavatName = fixHebrewText(cleanNull(props.MAVAT_NAME) || '');
+
+                // Title: future = plan name (subtitle = zoning type), kayam = building name (subtitle = plan name)
+                let title, subtitle;
+                if (isFuture) {
+                    title = planNameHe || mavatName || 'שב"צ עתידי';
+                    subtitle = planNameHe && mavatName ? mavatName : '';
+                } else {
+                    const cleanTitle = buildingName
+                        ? buildingName.replace(/(?:מגרש ספורט|אולם ספורט|בריכת שחי\S*|מגרש כדור\S*|מגרש כטר\S*)[^"]*(?:"[^"]*")?\s*/g, '').trim()
+                        : '';
+                    title = fixHebrewText(cleanTitle || planNameHe || cleanNull(props.Descriptio) || mavatName || 'שב"צ');
+                    subtitle = planNameHe || '';
+                }
+
                 const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
                 const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
                 const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
                 const statusColor = getStatusColor(status);
-                const boldStyle = !isFuture ? 'font-weight:700' : '';
-                const subtitle = !isFuture ? (planNameHe || '') : '';
                 const tabaLot = [taba, lotNum].filter(Boolean).join(' / ');
-                // For future_shavaz use POLY_AREA (always sqm, freshly computed from geometry).
-                // LEGAL_AREA is inconsistent — sometimes sqm, sometimes dunams.
-                const lotArea = isFuture
-                    ? (props.POLY_AREA || props.LEGAL_AREA || props.area || null)
-                    : (props.POLY_AREA || props.LEGAL_AREA || props.area || null);
+                const lotArea = props.POLY_AREA || props.LEGAL_AREA || props.area || null;
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
                 const builtSqm = cleanNull(props.BUILD_AREA) || null;
-                // Generic land-use designations — zoning types, not specific uses
-                // Uses starts-with matching to catch all variants (לחינוך, לבריאות, לחרום, etc.)
-                const DESIG_PREFIXES = /^(מבנים|מוסדות|שטחים|שטח ציבורי|מגורים|חניון|מסחר|תעסוקה|משרדים|מדורים|תעשיי?ה|תחבורה|דרך|חינוך, תרבות|חינוך,תרבות)/;
-                function isGenericDesig(s) {
-                    const clean = s.replace(/\s*\(\d+\)\s*$/, '').trim();
-                    return DESIG_PREFIXES.test(clean);
-                }
-                const rawUsesParts = (cleanNull(props.uses) || '').split(';').map(s => s.trim()).filter(Boolean);
-                // Separate generic entries (designation only) from specific uses
-                const genericParts = rawUsesParts.filter(s => isGenericDesig(s));
-                const specificParts = rawUsesParts.filter(s => !isGenericDesig(s));
-                // Derive built area from generic parts if BUILD_AREA is missing
-                let derivedBuilt = null;
-                if (!builtSqm && genericParts.length > 0) {
-                    const total = genericParts.reduce((sum, s) => {
-                        const m = s.match(/\((\d+)\)/);
-                        return sum + (m ? parseInt(m[1]) : 0);
-                    }, 0);
-                    if (total > 0) derivedBuilt = total;
-                }
-                const builtDisplay = builtSqm
-                    ? Math.round(parseFloat(builtSqm)).toLocaleString()
-                    : (derivedBuilt ? derivedBuilt.toLocaleString() : '-');
-                const allowedUses = cleanNull(props.uses) || cleanNull(props.YEUD) || '-';
-                const actualUses = cleanNull(props['Actual uses']) || '-';
+                const builtDisplay = builtSqm ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
                 const planId = taba || '';
                 const note = window.__annotations ? (window.__annotations['shavaz_' + planId + '_' + lotNum] || '') : '';
 
+                // Format uses list: "שם (123)" → "שם - 123 מ"ר"
+                const rawUses = (cleanNull(props.uses) || '').split(';').map(s => s.trim()).filter(Boolean);
+                const formattedUses = rawUses.map(part => {
+                    const m = part.match(/^(.*?)\s*\((\d+)\)\s*$/);
+                    if (m) return `${m[1].trim()} - ${parseInt(m[2]).toLocaleString()} מ"ר`;
+                    return part;
+                });
+
+                // Build HTML — colors come from CSS variables, no inline color styles needed
+                const headerBorder = status ? statusColor : '#D2691E';
+                const noteColor = note ? '#ffeaa7' : (isFuture ? '#5a3d2a' : '#886');
                 let html = '<div>';
                 html += buildNavBar(navInfo);
-                // Color scheme: kayam = dark brown, future = light brown
-                const bodyBg = isFuture ? '#3d2a1a' : '#2e1a0e';
-                const rowBorder = isFuture ? '#5a3d2a' : '#4a2e1a';
-                const labelColor = isFuture ? '#d4a87a' : '#c4956a';
-                const headerBg = isFuture
-                    ? 'linear-gradient(135deg, #C4956A, #D2B48C)'
-                    : 'linear-gradient(135deg, #5C2E0A, #8B4513)';
-                const headerBorder = status ? statusColor : '#D2691E';
-                const titleColor = isFuture ? '#2e1a0e' : '#fff';
-                const subtitleColor = isFuture ? '#4a2e1a' : '#c4956a';
-                html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:3px solid ${headerBorder}">`;
-                html += `<div class="popup-header-title" style="color:${titleColor}">${title}</div>`;
+                html += `<div class="popup-header" style="position:relative;border-bottom:3px solid ${headerBorder}">`;
+                html += `<div class="popup-header-title">${title}</div>`;
                 if (subtitle) {
-                    html += `<div class="popup-header-subtitle" style="color:${subtitleColor};${boldStyle}">${subtitle}</div>`;
+                    html += `<div class="popup-header-subtitle"${!isFuture ? ' style="font-weight:700"' : ''}>${subtitle}</div>`;
                 }
-                // Note button
-                html += '<button class="popup-btn-permit" data-action="add-note" data-plan="shavaz_' + planId + '_' + lotNum + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : (isFuture ? '#5a3d2a' : '#886')) + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
+                html += `<button class="popup-btn-permit" data-action="add-note" data-plan="shavaz_${planId}_${lotNum}" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:${noteColor};font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="${note || 'הוסף הערה'}">📝</button>`;
                 html += '</div>';
-                // Status badge row
                 if (status) {
-                    html += `<div style="padding:6px 16px;background:${bodyBg};border-bottom:1px solid ${rowBorder}">`;
+                    html += '<div class="popup-status-row">';
                     html += `<span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor};font-size:11px">${status}</span>`;
                     html += '</div>';
                 }
-                html += `<div class="popup-body" style="background:${bodyBg}">`;
+                html += '<div class="popup-body">';
                 if (tabaLot) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder};${boldStyle}"><span class="popup-row-label" style="color:${labelColor}">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
+                    html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
                 }
                 if (buildingType) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים בפועל</span><span class="popup-row-value">${buildingType}</span></div>`;
+                    html += `<div class="popup-row"><span class="popup-row-label">סוג מבנה</span><span class="popup-row-value">${buildingType}</span></div>`;
                 }
                 const serviceType = cleanNull(props.service_type) || '';
                 if (serviceType) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">סוג שירות</span><span class="popup-row-value">${serviceType}</span></div>`;
+                    html += `<div class="popup-row"><span class="popup-row-label">סוג שירות</span><span class="popup-row-value">${serviceType}</span></div>`;
                 }
                 if (!isHafrashah) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
+                    html += `<div class="popup-row"><span class="popup-row-label">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
                 }
                 if (isFuture) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
+                    html += `<div class="popup-row"><span class="popup-row-label">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
                 }
-                // Show only specific uses (not generic designation types like מסחר/מבנים ומוסדות ציבור)
-                // Format: "גן ילדים - 200 מ״ר" — suppress sqm if it equals the total built area
-                const builtNum = derivedBuilt || (builtSqm ? Math.round(parseFloat(builtSqm)) : 0);
-                // For isFuture: if specificParts is empty, fall back to genericParts
-                // (prefer public-related parts; if none, show all genericParts)
-                let usesPartsForDisplay = specificParts;
-                if (isFuture && usesPartsForDisplay.length === 0 && genericParts.length > 0) {
-                    const PUBLIC_KW = /ציבור|חינוך|דת|בריאות|רווחה|תרבות|קהילה|ספורט|חרום|הצלה/;
-                    const publicGeneric = genericParts.filter(s => PUBLIC_KW.test(s));
-                    usesPartsForDisplay = publicGeneric.length > 0 ? publicGeneric : genericParts;
-                }
-                const formattedUses = usesPartsForDisplay.map(part => {
-                    const m = part.match(/^(.*?)\s*\((\d+)\)\s*$/);
-                    if (m) {
-                        const name = m[1].trim();
-                        const sqm = parseInt(m[2]);
-                        if (builtNum && Math.abs(sqm - builtNum) < 2) return name;
-                        return `${name} - ${sqm.toLocaleString()} מ"ר`;
-                    }
-                    return part;
-                }).filter(Boolean);
                 if (isFuture && formattedUses.length) {
-                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
+                    html += `<div class="popup-row"><span class="popup-row-label">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
                 html += '</div>';
-                // Footer — only show jump-to-plan if matching plan exists
+                // Footer — jump-to-plan with exact taba matching
                 const tabaNum = taba.replace(/[^\d]/g, '');
-                const gd = geoDataRef.current;
-                const hasPlan = taba && gd && gd.plans && gd.plans.features.some(f => {
+                const hasPlan = taba && geoDataRef.current && geoDataRef.current.plans && geoDataRef.current.plans.features.some(f => {
                     const pt = (f.properties.taba || '').toString();
-                    return pt === taba || pt === tabaNum || pt.startsWith(tabaNum);
+                    return pt === taba || pt === tabaNum;
                 });
                 if (hasPlan) {
-                    html += `<div class="popup-footer" style="flex-direction:row;background:${bodyBg};border-top-color:${rowBorder}">`;
+                    html += '<div class="popup-footer" style="flex-direction:row">';
                     html += `<button class="popup-icon-btn" data-action="jump-to-plan" data-taba="${taba}" title="לתב״ע">🏠</button>`;
                     html += '</div>';
                 }
@@ -6496,7 +6448,7 @@
                         if (note !== null) {
                             window.__annotations[planId] = note;
                             localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
-                            const isFuture = !!(shavazProps.Mavat_Status || shavazProps.MAVAT_NAME);
+                            const isFuture = allShavaz && allShavaz[shavazIdx] ? allShavaz[shavazIdx].isFuture : false;
                             const navInfo = allShavaz && allShavaz.length > 1 ? { current: shavazIdx, total: allShavaz.length } : null;
                             popup.setContent(buildShavazPopup(shavazProps, isFuture, !!originPlanProps, navInfo));
                         }
@@ -6511,7 +6463,7 @@
                         const tabaNum = taba.replace(/[^\d]/g, '');
                         const matching = gd.plans.features.filter(f => {
                             const pt = (f.properties.taba || f.properties.TABA || '').toString();
-                            return pt === taba || pt === tabaNum || pt.startsWith(tabaNum);
+                            return pt === taba || pt === tabaNum;
                         });
                         if (matching.length > 0) {
                             const mapped = mapPlanProps(matching[0].properties);
