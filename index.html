@@ -1420,6 +1420,7 @@
         .leaflet-tooltip.heatmap-tip::before { border-top-color: #e94560; }
         .leaflet-tooltip-top.edu-label { background: rgba(255,255,255,0.9); border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); color: #333; font-size: 9px; font-family: Assistant, Arial, sans-serif; padding: 1px 4px; border-radius: 2px; white-space: nowrap; direction: rtl; }
         .leaflet-tooltip-top.edu-label::before { display: none; }
+        .leaflet-marker-icon { overflow: visible !important; }
 
         /* Crosshair cursor when measuring */
         #map.measuring,
@@ -5669,7 +5670,7 @@
                     }
                     const showLabel = zoomLevel >= 16 && label;
                     const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:bold;font-family:Assistant,Arial,sans-serif;color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;pointer-events:none;text-align:center">${label}</div>` : '';
-                    const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
+                    const html = `<div style="position:relative;width:${sz}px;height:${sz}px;overflow:visible">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
                 function getSugMosad(p) {
