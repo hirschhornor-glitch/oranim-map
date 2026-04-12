@@ -5605,7 +5605,12 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            if (zoomLevel >= 15) layer.bindTooltip(name, { permanent: true, direction: 'right', offset: [10, 0], className: 'edu-label' });
+                            if (zoomLevel >= 17) {
+                                const dirs = ['right','left','top','bottom'];
+                                const dir = dirs[layer._leaflet_id % 4];
+                                const offsets = { right: [10,0], left: [-10,0], top: [0,-10], bottom: [0,10] };
+                                layer.bindTooltip(name, { permanent: true, direction: dir, offset: offsets[dir], className: 'edu-label' });
+                            }
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5649,7 +5654,12 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            if (zoomLevel >= 15) layer.bindTooltip(name, { permanent: true, direction: 'right', offset: [10, 0], className: 'edu-label' });
+                            if (zoomLevel >= 17) {
+                                const dirs = ['right','left','top','bottom'];
+                                const dir = dirs[layer._leaflet_id % 4];
+                                const offsets = { right: [10,0], left: [-10,0], top: [0,-10], bottom: [0,10] };
+                                layer.bindTooltip(name, { permanent: true, direction: dir, offset: offsets[dir], className: 'edu-label' });
+                            }
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
