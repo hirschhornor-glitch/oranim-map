@@ -5594,8 +5594,9 @@
 
                 // --- Mosadot Shchuna (existing education institutions) ---
                 if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
-                    const eduLabelZoom = zoomLevel >= 15;
-                    const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
+                    // Strip null geometries before passing to Leaflet
+                    const mosadotClean = { ...gd.mosadot_shchuna, features: gd.mosadot_shchuna.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const mosadotLayer = L.geoJSON(mosadotClean, {
                         pane: 'stationsPane',
                         filter: f => f.geometry && passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
@@ -5641,7 +5642,8 @@
 
                 // --- Sara March 2026 (education construction projects) ---
                 if (layers['sara_march_2026'] && gd.sara_march_2026) {
-                    const saraLayer = L.geoJSON(gd.sara_march_2026, {
+                    const saraClean = { ...gd.sara_march_2026, features: gd.sara_march_2026.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const saraLayer = L.geoJSON(saraClean, {
                         pane: 'stationsPane',
                         filter: f => f.geometry && passesEduFilter(getSugMosadSara(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
