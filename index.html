@@ -1633,6 +1633,8 @@
             sport_kayam: 'data/sport_kayam.geojson',
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
             landuse_xplan: 'data/landuse_xplan.geojson',
+            mosadot_shchuna: 'data/mosadot_shchuna.geojson',
+            sara_march_2026: 'data/sara_march_2026.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -1754,6 +1756,13 @@
                     { id: 'sport_kayam', name: 'מגרשי ספורט', desc: 'מגרשי ספורט קיימים', on: false },
                     { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
+                ]
+            },
+            education: {
+                title: 'מוסדות חינוך',
+                layers: [
+                    { id: 'mosadot_shchuna', name: 'מוסדות בשכונה', desc: 'פרטי המוסדות בשכונה - מצב קיים', on: false },
+                    { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
                 ]
             }
         };
@@ -5463,6 +5472,86 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
+                }
+
+                // --- Mosadot Shchuna (existing education institutions) ---
+                if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
+                    const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 7, fillColor: '#e74c3c', fillOpacity: 0.9,
+                            color: '#922b21', weight: 2
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const name = p['שם מוסד'] || '';
+                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
+                            layer.on('click', () => {
+                                if (areaModeRef.current) return;
+                                const rows = [
+                                    ['שם מוסד', p['שם מוסד']],
+                                    ['כתובת', p['כתובת']],
+                                    ['שלב חינוך', p['שלב חינוך']],
+                                    ['סוג חינוך', p['סוג חינוך']],
+                                    ['פיקוח', p['פיקוח']],
+                                    ['מעמד משפטי', p['מעמד משפטי']],
+                                    ['הרכב מינים', p['הרכב מינים']],
+                                    ['כיתות רגילות', p['כיתות רגילות']],
+                                    ['כיתות מקדמות', p['כיתות מקדמות']],
+                                    ['מספר תלמידים', p['מספר תלמידים']],
+                                    ['סמל חינוך', p['סמל חינוך']],
+                                    ['סמל עירייה', p['סמל עירייה']],
+                                ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan');
+                                const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:300px">
+                                    <div style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <table style="width:100%;border-collapse:collapse;font-size:12px">
+                                    ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
+                                    </table></div>`;
+                                L.popup({ maxWidth: 340 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.mosadot_shchuna = mosadotLayer;
+                }
+
+                // --- Sara March 2026 (education construction projects) ---
+                if (layers['sara_march_2026'] && gd.sara_march_2026) {
+                    const saraLayer = L.geoJSON(gd.sara_march_2026, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 7, fillColor: '#3498db', fillOpacity: 0.9,
+                            color: '#1a5276', weight: 2
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const name = p['שם הפרויקט'] || '';
+                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
+                            layer.on('click', () => {
+                                if (areaModeRef.current) return;
+                                const rows = [
+                                    ['שם הפרויקט', p['שם הפרויקט']],
+                                    ['שכונה', p['שכונה']],
+                                    ['כתובת', p['כתובת']],
+                                    ['סוג מוסד', p['סוג מוסד']],
+                                    ['מס כיתות', p['מס כיתות בפרויקט']],
+                                    ['סטטוס פרויקט', p['סטטוס פרויקט']],
+                                    ['סטטוס רישוי', p['סטטוס רישוי']],
+                                    ['גורם מבצע', p['גורם מבצע']],
+                                    ['תב"ע', p['תב"ע']],
+                                    ['מגרש', p['מגרש']],
+                                    ['מטרת הפרויקט', p['מטרת הפרויקט ']],
+                                    ['משך ביצוע - גנרי', p['משך ביצוע - גנרי']],
+                                ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan' && r[1] !== '');
+                                const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:320px">
+                                    <div style="background:#3498db;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <table style="width:100%;border-collapse:collapse;font-size:12px">
+                                    ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
+                                    </table></div>`;
+                                L.popup({ maxWidth: 360 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.sara_march_2026 = saraLayer;
                 }
 
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
