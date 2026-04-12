@@ -187,12 +187,35 @@
             background: linear-gradient(135deg, #4a4a4a, #3a3a3a) !important;
         }
 
-        /* shavaz-popup: header/body colors set inline per kayam/future + status */
-        .shavaz-kayam-popup .leaflet-popup-content-wrapper { background: #2e1a0e !important; }
+        /* shavaz-popup: theme via CSS variables per kayam/future */
+        .shavaz-kayam-popup .leaflet-popup-content-wrapper {
+            background: #2e1a0e !important;
+            --shavaz-body-bg: #2e1a0e;
+            --shavaz-row-border: #4a2e1a;
+            --shavaz-label-color: #c4956a;
+            --shavaz-header-bg: linear-gradient(135deg, #5C2E0A, #8B4513);
+            --shavaz-title-color: #fff;
+            --shavaz-subtitle-color: #c4956a;
+        }
         .shavaz-kayam-popup .leaflet-popup-tip { background: #2e1a0e !important; }
-        .shavaz-future-popup .leaflet-popup-content-wrapper { background: #3d2a1a !important; }
+        .shavaz-future-popup .leaflet-popup-content-wrapper {
+            background: #3d2a1a !important;
+            --shavaz-body-bg: #3d2a1a;
+            --shavaz-row-border: #5a3d2a;
+            --shavaz-label-color: #d4a87a;
+            --shavaz-header-bg: linear-gradient(135deg, #C4956A, #D2B48C);
+            --shavaz-title-color: #2e1a0e;
+            --shavaz-subtitle-color: #4a2e1a;
+        }
         .shavaz-future-popup .leaflet-popup-tip { background: #3d2a1a !important; }
-        /* shavaz body/footer colors set via inline style per kayam/future */
+        .shavaz-popup .popup-header { background: var(--shavaz-header-bg); }
+        .shavaz-popup .popup-header-title { color: var(--shavaz-title-color); }
+        .shavaz-popup .popup-header-subtitle { color: var(--shavaz-subtitle-color); }
+        .shavaz-popup .popup-body { background: var(--shavaz-body-bg); }
+        .shavaz-popup .popup-row { border-bottom-color: var(--shavaz-row-border); }
+        .shavaz-popup .popup-row-label { color: var(--shavaz-label-color); }
+        .shavaz-popup .popup-footer { background: var(--shavaz-body-bg); border-top-color: var(--shavaz-row-border); }
+        .shavaz-popup .popup-status-row { padding: 6px 16px; background: var(--shavaz-body-bg); border-bottom: 1px solid var(--shavaz-row-border); }
 
         .leaflet-popup-tip { border-top-color: #1a1a2e; }
 
@@ -5435,9 +5458,6 @@
                         filter: f => {
                             const s = normalizeStatus((f.properties.Mavat_Status || f.properties.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                            const name = f.properties.MAVAT_NAME || '';
-                            if (name.includes('מגורים')) return false;
-                            if (f.properties.MAVAT_CODE === 1576) return false;
                             return true;
                         },
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
@@ -5465,13 +5485,21 @@
                         const ring = f.geometry.type === 'MultiPolygon'
                             ? f.geometry.coordinates[0][0]
                             : f.geometry.coordinates[0];
-                        // Use bbox center — more likely inside polygon than coordinate average
-                        let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
-                        ring.forEach(c => {
-                            if (c[0] < minLng) minLng = c[0]; if (c[0] > maxLng) maxLng = c[0];
-                            if (c[1] < minLat) minLat = c[1]; if (c[1] > maxLat) maxLat = c[1];
-                        });
-                        const centroid = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+                        // Signed-area centroid — more accurate than bbox center for concave polygons
+                        let cx = 0, cy = 0, signedArea = 0;
+                        for (let i = 0; i < ring.length - 1; i++) {
+                            const a = ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
+                            signedArea += a;
+                            cx += (ring[i][0] + ring[i+1][0]) * a;
+                            cy += (ring[i][1] + ring[i+1][1]) * a;
+                        }
+                        signedArea *= 0.5;
+                        let centroid;
+                        if (Math.abs(signedArea) < 1e-10) {
+                            centroid = [ring[0][0], ring[0][1]];
+                        } else {
+                            centroid = [cx / (6 * signedArea), cy / (6 * signedArea)];
+                        }
                         return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: centroid } };
                     });
                     const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
@@ -5503,25 +5531,22 @@
                 function eduIcon(sugMosad, pikuach, fill, label) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
                     const sz = eduSz, cx = sz/2, cy = sz/2, sw = zoomLevel >= 17 ? 2 : 1.5;
-                    const wsw = sw + 2; // white outline is 1px wider on each side
-                    let whiteShape, shape;
+                    let shape;
                     if (sugMosad === 'גני' || sugMosad === 'גנים') {
                         const m = sw/2+1;
-                        whiteShape = `<polygon points="${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
-                        shape = `<polygon points="${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+                        const pts = `${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}`;
+                        shape = `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><polygon points="${pts}" fill="none" stroke="white" stroke-width="1" transform="scale(0.75) translate(${sz*0.167},${sz*0.167})"/>`;
                     } else if (sugMosad === 'על יסודי') {
                         const m = sw/2+1;
-                        whiteShape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="none" stroke="white" stroke-width="${wsw}" rx="1"/>`;
-                        shape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="1"/>`;
+                        shape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="1"/><rect x="${m+sw}" y="${m+sw}" width="${sz-2*m-2*sw}" height="${sz-2*m-2*sw}" fill="none" stroke="white" stroke-width="1" rx="0"/>`;
                     } else if (sugMosad === 'מעון') {
                         const m = sw/2+1;
-                        whiteShape = `<polygon points="${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
-                        shape = `<polygon points="${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+                        const pts = `${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}`;
+                        shape = `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><polygon points="${cx},${m+sw+1} ${sz-m-sw-1},${cy} ${cx},${sz-m-sw-1} ${m+sw+1},${cy}" fill="none" stroke="white" stroke-width="1"/>`;
                     } else {
-                        whiteShape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
-                        shape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+                        const r = cx-sw;
+                        shape = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><circle cx="${cx}" cy="${cy}" r="${r-sw}" fill="none" stroke="white" stroke-width="1"/>`;
                     }
-                    shape = whiteShape + shape;
                     const showLabel = zoomLevel >= 16 && label;
                     const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-family:Assistant,Arial,sans-serif;color:#333;background:rgba(255,255,255,0.85);padding:0 3px;border-radius:2px;pointer-events:none;text-align:center">${label}</div>` : '';
                     const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
@@ -6440,9 +6465,6 @@
 
             // Bind popup navigation and permit/back button events
             // Bind shavaz popup events (notes + jump to plan)
-            function shavazPopupClassOuter(isFuture) {
-                return 'plan-popup shavaz-popup ' + (isFuture ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
-            }
 
             function bindShavazPopupEvents(popup, shavazProps, latlng, originPlanProps, allShavaz, currentShavazIdx) {
                 let shavazIdx = currentShavazIdx || 0;
@@ -6459,7 +6481,7 @@
                         else shavazIdx = (shavazIdx - 1 + allShavaz.length) % allShavaz.length;
                         const entry = allShavaz[shavazIdx];
                         const navInfo = { current: shavazIdx, total: allShavaz.length };
-                        popup.options.className = shavazPopupClassOuter(entry.isFuture);
+                        popup.options.className = shavazPopupClass(entry.isFuture);
                         popup.setContent(buildShavazPopup(entry.properties, entry.isFuture, !!originPlanProps, navInfo));
                         shavazProps = entry.properties;
                         return;
@@ -6571,7 +6593,7 @@
                             // Store current plan props for back navigation
                             const currentPlanProps = allFeatures[currentIdx] ? allFeatures[currentIdx].properties : null;
                             const navInfo = shavazFeatures.length > 1 ? { current: 0, total: shavazFeatures.length } : null;
-                            popup.options.className = shavazPopupClassOuter(sf.isFuture != null ? sf.isFuture : !!(originShavazProps && (originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME)));
+                            popup.options.className = shavazPopupClass(sf.isFuture != null ? sf.isFuture : !!(originShavazProps && (originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME)));
                             popup.setContent(buildShavazPopup(sf.properties, sf.isFuture, true, navInfo));
                             bindShavazPopupEvents(popup, sf.properties, popup.getLatLng(), currentPlanProps, shavazFeatures, 0);
                             setLayers(prev => ({ ...prev, shavaz_kayam: true, future_shavaz: true }));
@@ -6581,7 +6603,7 @@
                     if (permitBtn && permitBtn.dataset.action === 'back-to-shavaz' && originShavazProps) {
                         ev.stopPropagation();
                         const fut = !!(originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME);
-                        popup.options.className = shavazPopupClassOuter(fut);
+                        popup.options.className = shavazPopupClass(fut);
                         popup.setContent(buildShavazPopup(originShavazProps, fut, false));
                         bindShavazPopupEvents(popup, originShavazProps, popup.getLatLng(), null, null, 0);
                         return;
