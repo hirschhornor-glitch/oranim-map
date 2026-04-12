@@ -5605,7 +5605,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
+                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -2], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5650,7 +5650,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -10], className: 'edu-label' });
+                            layer.bindTooltip(name, { sticky: true, direction: 'top', offset: [0, -2], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
