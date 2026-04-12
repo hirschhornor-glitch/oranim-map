@@ -5459,6 +5459,8 @@
                         filter: f => {
                             const s = normalizeStatus((f.properties.Mavat_Status || f.properties.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                            const code = f.properties.MAVAT_CODE;
+                            if (code !== 400 && code !== 410 && code !== 450 && code !== 460) return false;
                             return true;
                         },
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
@@ -5644,28 +5646,47 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            layer.on('click', () => {
+                            layer.on('click', (e) => {
                                 if (areaModeRef.current) return;
-                                const rows = [
-                                    ['שם מוסד', p['שם מוסד']],
-                                    ['כתובת', p['כתובת']],
-                                    ['שלב חינוך', p['שלב חינוך']],
-                                    ['סוג חינוך', p['סוג חינוך']],
-                                    ['פיקוח', p['פיקוח']],
-                                    ['מעמד משפטי', p['מעמד משפטי']],
-                                    ['הרכב מינים', p['הרכב מינים']],
-                                    ['כיתות רגילות', p['כיתות רגילות']],
-                                    ['כיתות מקדמות', p['כיתות מקדמות']],
-                                    ['מספר תלמידים', p['מספר תלמידים']],
-                                    ['סמל חינוך', p['סמל חינוך']],
-                                    ['סמל עירייה', p['סמל עירייה']],
-                                ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan');
-                                const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:300px">
-                                    <div style="background:#27ae60;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
-                                    <table style="width:100%;border-collapse:collapse;font-size:12px">
-                                    ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
-                                    </table></div>`;
-                                L.popup({ maxWidth: 340 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
+                                // Build mosad card
+                                let html = `<div style="direction:rtl;font-family:Assistant,Arial,sans-serif;max-width:320px">`;
+                                html += `<div style="background:#27ae60;color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:bold;font-size:14px">🏫 ${name}</div>`;
+                                html += `<div style="padding:8px 12px;background:#1e1e2e;color:#ddd;font-size:12px">`;
+                                if (p['כתובת'] && p['כתובת'] !== 'None') html += `<div style="margin-bottom:4px">📍 ${p['כתובת']}</div>`;
+                                const info = [p['שלב חינוך'], p['פיקוח'], p['סוג חינוך']].filter(v => v && v !== 'None').join(' · ');
+                                if (info) html += `<div style="margin-bottom:4px">📚 ${info}</div>`;
+                                const nums = [];
+                                if (p['מספר תלמידים'] && p['מספר תלמידים'] !== 'None') nums.push(p['מספר תלמידים'] + ' תלמידים');
+                                if (p['כיתות רגילות'] && p['כיתות רגילות'] !== 'None') nums.push(p['כיתות רגילות'] + ' כיתות');
+                                if (nums.length) html += `<div style="margin-bottom:4px">👥 ${nums.join(' · ')}</div>`;
+                                if (p['סמל חינוך'] && p['סמל חינוך'] !== 'None') html += `<div style="color:#999;font-size:11px">סמל: ${p['סמל חינוך']}</div>`;
+                                html += `</div>`;
+                                // Check for matching sara projects nearby
+                                if (gd.sara_march_2026) {
+                                    const latlng = e.latlng;
+                                    const nearby = gd.sara_march_2026.features.filter(sf => {
+                                        if (!sf.geometry) return false;
+                                        const c = sf.geometry.coordinates;
+                                        return Math.abs(c[1] - latlng.lat) < 0.001 && Math.abs(c[0] - latlng.lng) < 0.001;
+                                    });
+                                    nearby.forEach(sf => {
+                                        const sp = sf.properties;
+                                        const sStatus = (sp['סטטוס פרויקט'] || '').trim();
+                                        const sHarsha = (sp['סטטוס הרשאה'] || '').trim();
+                                        const isN = sStatus.includes('נמסר');
+                                        const hasA = sHarsha.includes('מלאה') || sHarsha.includes('חלקית');
+                                        const hdrColor = isN ? '#388E3C' : hasA ? '#d4ac0d' : '#c0392b';
+                                        html += `<div style="border-top:2px solid ${hdrColor};margin-top:0">`;
+                                        html += `<div style="background:${hdrColor};color:#fff;padding:6px 12px;font-weight:bold;font-size:13px">🏗️ ${sp['שם הפרויקט'] || ''}</div>`;
+                                        html += `<div style="padding:6px 12px;background:#1e1e2e;color:#ddd;font-size:11px">`;
+                                        if (sStatus) html += `<div>סטטוס: ${sStatus}</div>`;
+                                        if (sHarsha) html += `<div>הרשאה: ${sHarsha}</div>`;
+                                        if (sp['מס כיתות בפרויקט']) html += `<div>${sp['מס כיתות בפרויקט']} כיתות</div>`;
+                                        html += `</div></div>`;
+                                    });
+                                }
+                                html += `</div>`;
+                                L.popup({ maxWidth: 360 }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
@@ -5690,34 +5711,48 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            layer.on('click', () => {
+                            layer.on('click', (e) => {
                                 if (areaModeRef.current) return;
                                 const status = (p['סטטוס פרויקט'] || '').trim();
                                 const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
                                 const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
                                 const headerColor = isNimsar ? '#388E3C' : hasAuth ? '#d4ac0d' : '#c0392b';
-                                const rows = [
-                                    ['שם הפרויקט', p['שם הפרויקט']],
-                                    ['שכונה', p['שכונה']],
-                                    ['כתובת', p['כתובת']],
-                                    ['סוג מוסד', p['סוג מוסד']],
-                                    ['מס כיתות', p['מס כיתות בפרויקט']],
-                                    ['סטטוס פרויקט', p['סטטוס פרויקט']],
-                                    ['סטטוס הרשאה', p['סטטוס הרשאה']],
-                                    ['סטטוס רישוי', p['סטטוס רישוי']],
-                                    ['גורם מבצע', p['גורם מבצע']],
-                                    ['תב"ע', p['תב"ע']],
-                                    ['מגרש', p['מגרש']],
-                                    ['מטרת הפרויקט', p['מטרת הפרויקט ']],
-                                    ['משך ביצוע - גנרי', p['משך ביצוע - גנרי']],
-                                ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan' && r[1] !== '');
-                                const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:320px">
-                                    <div style="background:${headerColor};color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
-                                    <table style="width:100%;border-collapse:collapse;font-size:12px">
-                                    ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
-                                    </table></div>`;
-                                L.popup({ maxWidth: 360 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
+                                let html = `<div style="direction:rtl;font-family:Assistant,Arial,sans-serif;max-width:340px">`;
+                                html += `<div style="background:${headerColor};color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:bold;font-size:14px">🏗️ ${name}</div>`;
+                                html += `<div style="padding:8px 12px;background:#1e1e2e;color:#ddd;font-size:12px">`;
+                                const summary = [p['שכונה'], p['סוג מוסד'], p['מס כיתות בפרויקט'] ? p['מס כיתות בפרויקט'] + ' כיתות' : ''].filter(v => v && v !== 'None').join(' · ');
+                                if (summary) html += `<div style="margin-bottom:6px;color:#aaa">${summary}</div>`;
+                                if (status) html += `<div style="margin-bottom:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${headerColor};margin-left:4px"></span> סטטוס: ${status}</div>`;
+                                if (harsha && harsha !== 'None') html += `<div style="margin-bottom:3px">📋 הרשאה: ${harsha}</div>`;
+                                const rish = (p['סטטוס רישוי'] || '').trim();
+                                if (rish && rish !== 'None') html += `<div style="margin-bottom:3px">📝 רישוי: ${rish}</div>`;
+                                if (p['כתובת'] && p['כתובת'] !== 'None' && p['כתובת'] !== '0') html += `<div style="margin-bottom:3px">📍 ${p['כתובת']}</div>`;
+                                const taba = p['תב"ע'], migrash = p['מגרש'];
+                                if (taba && taba !== 'None') html += `<div style="margin-bottom:3px">📐 תב"ע: ${taba}${migrash && migrash !== 'None' ? ' / מגרש: ' + migrash : ''}</div>`;
+                                if (p['גורם מבצע'] && p['גורם מבצע'] !== 'None') html += `<div style="color:#999;font-size:11px">🏢 ${p['גורם מבצע']}</div>`;
+                                html += `</div>`;
+                                // Check for matching mosadot nearby
+                                if (gd.mosadot_shchuna) {
+                                    const latlng = e.latlng;
+                                    const nearbyM = gd.mosadot_shchuna.features.filter(mf => {
+                                        if (!mf.geometry) return false;
+                                        const c = mf.geometry.coordinates;
+                                        return Math.abs(c[1] - latlng.lat) < 0.001 && Math.abs(c[0] - latlng.lng) < 0.001;
+                                    });
+                                    nearbyM.forEach(mf => {
+                                        const mp = mf.properties;
+                                        html += `<div style="border-top:2px solid #27ae60;margin-top:0">`;
+                                        html += `<div style="background:#27ae60;color:#fff;padding:6px 12px;font-weight:bold;font-size:13px">🏫 ${mp['שם מוסד'] || ''}</div>`;
+                                        html += `<div style="padding:6px 12px;background:#1e1e2e;color:#ddd;font-size:11px">`;
+                                        const mInfo = [mp['שלב חינוך'], mp['פיקוח']].filter(v => v && v !== 'None').join(' · ');
+                                        if (mInfo) html += `<div>${mInfo}</div>`;
+                                        if (mp['מספר תלמידים'] && mp['מספר תלמידים'] !== 'None') html += `<div>${mp['מספר תלמידים']} תלמידים</div>`;
+                                        html += `</div></div>`;
+                                    });
+                                }
+                                html += `</div>`;
+                                L.popup({ maxWidth: 360 }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
