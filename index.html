@@ -2609,12 +2609,19 @@
         ];
 
         const MOSADOT_LEGEND = [
-            { label: 'יסודי - ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#2980b9" stroke="#1a5276" stroke-width="2"/></svg>' },
-            { label: 'יסודי - ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#2980b9" stroke="#1a5276" stroke-width="2" rx="2"/></svg>' },
-            { label: 'יסודי - ערבי', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#2980b9" stroke="#1a5276" stroke-width="2"/></svg>' },
-            { label: 'על יסודי - ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#e67e22" stroke="#a04000" stroke-width="2"/></svg>' },
-            { label: 'על יסודי - ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#e67e22" stroke="#a04000" stroke-width="2" rx="2"/></svg>' },
-            { label: 'על יסודי - ערבי', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#e67e22" stroke="#a04000" stroke-width="2"/></svg>' },
+            { label: 'צורה: סוג מוסד', style: 'header' },
+            { label: 'יסודי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'על יסודי / חט"ב / תיכון', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#f1c40f" stroke="#888" stroke-width="2" rx="1"/></svg>' },
+            { label: 'גני ילדים', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#f1c40f" stroke="#888" stroke-width="2"/></svg>' },
+            { label: 'קו מיתאר: פיקוח', style: 'header' },
+            { label: 'ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#2980b9" stroke-width="3"/></svg>' },
+            { label: 'ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#27ae60" stroke-width="3"/></svg>' },
+            { label: 'ערבי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#e67e22" stroke-width="3"/></svg>' },
+            { label: 'חרדי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="transparent" stroke="#8e44ad" stroke-width="3"/></svg>' },
+            { label: 'מילוי: סטטוס', style: 'header' },
+            { label: 'קיים / הרשאה', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#f1c40f" stroke="#888" stroke-width="1" rx="3"/></svg>' },
+            { label: 'אין הרשאה', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#e74c3c" stroke="#888" stroke-width="1" rx="3"/></svg>' },
         ];
 
         const TOPICS_LEGEND = [
@@ -5483,35 +5490,61 @@
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
                 }
 
-                // --- Mosadot Shchuna (existing education institutions) ---
-                // Color by שלב חינוך: יסודי=blue, על יסודי=orange
-                // Shape by פיקוח: ממלכתי=circle, ממלכתי דתי=square, ערבי=triangle
-                if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
-                    const mosadotColors = { 'יסודי': '#2980b9', 'על יסודי': '#e67e22' };
-                    const mosadotBorders = { 'יסודי': '#1a5276', 'על יסודי': '#a04000' };
-                    function mosadotIcon(pikuach, shalav) {
-                        const fill = mosadotColors[shalav] || '#888';
-                        const stroke = mosadotBorders[shalav] || '#555';
-                        const sz = 16;
-                        let shape;
-                        if (pikuach === 'ממלכתי דתי') {
-                            // Square
-                            shape = `<rect x="2" y="2" width="12" height="12" fill="${fill}" stroke="${stroke}" stroke-width="1.5" rx="2"/>`;
-                        } else if (pikuach === 'ערבי') {
-                            // Triangle
-                            shape = `<polygon points="8,1 1,15 15,15" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
-                        } else {
-                            // Circle (ממלכתי or default)
-                            shape = `<circle cx="8" cy="8" r="6" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
-                        }
-                        const svg = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
-                        return L.divIcon({ html: svg, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2] });
+                // --- Shared education icon builder ---
+                // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
+                // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
+                // Fill = status: yellow=existing/authorized, red=no authorization
+                const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#27ae60', 'ערבי': '#e67e22', 'חרדי': '#8e44ad' };
+                function eduIcon(sugMosad, pikuach, fill) {
+                    const stroke = pikuachStrokes[pikuach] || '#555';
+                    const sz = 16;
+                    let shape;
+                    if (sugMosad === 'גני' || sugMosad === 'גנים') {
+                        shape = `<polygon points="8,1 1,15 15,15" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                    } else if (sugMosad === 'על יסודי') {
+                        shape = `<rect x="2" y="2" width="12" height="12" fill="${fill}" stroke="${stroke}" stroke-width="2" rx="1"/>`;
+                    } else if (sugMosad === 'מעון') {
+                        shape = `<polygon points="8,1 15,8 8,15 1,8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                    } else {
+                        // יסודי / default = circle
+                        shape = `<circle cx="8" cy="8" r="6" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
                     }
+                    const svg = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
+                    return L.divIcon({ html: svg, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2] });
+                }
+                function getSugMosad(p) {
+                    // From mosadot_shchuna
+                    const shalav = (p['שלב חינוך'] || '').trim();
+                    const sug = (p['סוג חינוך'] || '').trim();
+                    if (sug === 'גני' || sug === 'גנים') return 'גני';
+                    if (shalav === 'על יסודי') return 'על יסודי';
+                    return 'יסודי';
+                }
+                function getSugMosadSara(p) {
+                    const sug = (p['סוג מוסד'] || '').trim();
+                    if (sug === 'גני') return 'גני';
+                    if (sug === 'מעון') return 'מעון';
+                    const sugGil = (p['סוג מוסד + שכבת גיל'] || '').trim();
+                    if (sugGil.includes('על יסודי') || sugGil.includes('חט"ב') || sugGil.includes('חטיבת') || sugGil.includes('תיכון')) return 'על יסודי';
+                    return 'יסודי';
+                }
+                function getPikuach(p) {
+                    const pik = (p['פיקוח'] || '').trim();
+                    if (pik) return pik;
+                    const zrem = (p['זרם'] || '').trim();
+                    if (zrem.includes('ערב')) return 'ערבי';
+                    if (zrem.includes('חרד')) return 'חרדי';
+                    if (zrem === 'ממ"ד' || zrem.includes('דתי')) return 'ממלכתי דתי';
+                    return 'ממלכתי';
+                }
+
+                // --- Mosadot Shchuna (existing education institutions) ---
+                if (layers['mosadot_shchuna'] && gd.mosadot_shchuna) {
                     const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            return L.marker(latlng, { icon: mosadotIcon(p['פיקוח'], p['שלב חינוך']) });
+                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#f1c40f') });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
@@ -5519,8 +5552,6 @@
                             layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
-                                const shalav = p['שלב חינוך'] || '';
-                                const headerColor = mosadotColors[shalav] || '#888';
                                 const rows = [
                                     ['שם מוסד', p['שם מוסד']],
                                     ['כתובת', p['כתובת']],
@@ -5536,7 +5567,7 @@
                                     ['סמל עירייה', p['סמל עירייה']],
                                 ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan');
                                 const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:300px">
-                                    <div style="background:${headerColor};color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <div style="background:#d4ac0d;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
                                     <table style="width:100%;border-collapse:collapse;font-size:12px">
                                     ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
                                     </table></div>`;
@@ -5551,16 +5582,22 @@
                 if (layers['sara_march_2026'] && gd.sara_march_2026) {
                     const saraLayer = L.geoJSON(gd.sara_march_2026, {
                         pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 7, fillColor: '#3498db', fillOpacity: 0.9,
-                            color: '#1a5276', weight: 2
-                        }),
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties;
+                            const harsha = (p['סטטוס הרשאה'] || '').trim();
+                            const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
+                            const fill = hasAuth ? '#f1c40f' : '#e74c3c';
+                            return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill) });
+                        },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
                             layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
+                                const harsha = (p['סטטוס הרשאה'] || '').trim();
+                                const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
+                                const headerColor = hasAuth ? '#d4ac0d' : '#c0392b';
                                 const rows = [
                                     ['שם הפרויקט', p['שם הפרויקט']],
                                     ['שכונה', p['שכונה']],
@@ -5568,6 +5605,7 @@
                                     ['סוג מוסד', p['סוג מוסד']],
                                     ['מס כיתות', p['מס כיתות בפרויקט']],
                                     ['סטטוס פרויקט', p['סטטוס פרויקט']],
+                                    ['סטטוס הרשאה', p['סטטוס הרשאה']],
                                     ['סטטוס רישוי', p['סטטוס רישוי']],
                                     ['גורם מבצע', p['גורם מבצע']],
                                     ['תב"ע', p['תב"ע']],
@@ -5576,7 +5614,7 @@
                                     ['משך ביצוע - גנרי', p['משך ביצוע - גנרי']],
                                 ].filter(r => r[1] && r[1] !== 'None' && r[1] !== 'nan' && r[1] !== '');
                                 const html = `<div style="direction:rtl;font-family:Arial,sans-serif;max-width:320px">
-                                    <div style="background:#3498db;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
+                                    <div style="background:${headerColor};color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:bold;font-size:14px">${name}</div>
                                     <table style="width:100%;border-collapse:collapse;font-size:12px">
                                     ${rows.map(r => `<tr><td style="padding:3px 6px;font-weight:bold;white-space:nowrap;border-bottom:1px solid #eee">${r[0]}</td><td style="padding:3px 6px;border-bottom:1px solid #eee">${r[1]}</td></tr>`).join('')}
                                     </table></div>`;
@@ -6733,7 +6771,12 @@
                                                 style={{ marginLeft: 6 }}
                                             />
                                         )}
-                                        {group.title}
+                                        <span style={{flex:1}}>{group.title}</span>
+                                        {groupKey === 'education' && (
+                                            <button className="layer-legend-btn" title="מקרא מוסדות חינוך"
+                                                onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מוסדות חינוך', items: MOSADOT_LEGEND }); }}
+                                                style={{fontSize:'14px',margin:0}}>⋯</button>
+                                        )}
                                     </div>
                                     )}
                                     {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.map(layer => (
@@ -6758,10 +6801,6 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
-                                            )}
-                                            {layer.id === 'mosadot_shchuna' && (
-                                                <button className="layer-legend-btn" title="מקרא מוסדות חינוך"
-                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מוסדות חינוך', items: MOSADOT_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
@@ -8524,7 +8563,9 @@
                                 <div className="legend-popup-title">{legendPopup.title}</div>
                                 {legendPopup.items.map((item, i) => (
                                     <div className="legend-item" key={i}>
-                                        {item.style === 'svg' ? (
+                                        {item.style === 'header' ? (
+                                            <div style={{width:'100%',fontWeight:'bold',fontSize:12,marginTop:i>0?8:0,borderBottom:'1px solid #555',paddingBottom:2,color:'#ccc'}}>{item.label}</div>
+                                        ) : item.style === 'svg' ? (
                                             <div className="legend-color" style={{display:'flex',alignItems:'center',justifyContent:'center',background:'transparent',border:'none'}}
                                                 dangerouslySetInnerHTML={{__html: item.svg}}></div>
                                         ) : item.style === 'hatch' ? (
