@@ -1395,7 +1395,7 @@
         .leaflet-tooltip.measure-tooltip { background: rgba(15, 15, 30, 0.9); border: 1px solid #4a69d1; }
         .leaflet-tooltip.heatmap-tip { background: rgba(15, 15, 30, 0.93); border: 1px solid #e94560; color: #eee; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .leaflet-tooltip.heatmap-tip::before { border-top-color: #e94560; }
-        .leaflet-tooltip.edu-label { background: rgba(255,255,255,0.85); border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); color: #222; font-size: 9px; font-family: Assistant, Arial, sans-serif; padding: 1px 3px; border-radius: 2px; white-space: nowrap; }
+        .leaflet-tooltip.edu-label { background: rgba(255,255,255,0.85); border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); color: #222; font-size: 9px; font-family: Assistant, Arial, sans-serif; padding: 1px 3px; border-radius: 2px; white-space: nowrap; text-align: center; margin-left: 0 !important; left: 50% !important; transform: translateX(-50%) !important; }
         .leaflet-tooltip.edu-label::before { display: none; }
 
         /* Crosshair cursor when measuring */
@@ -2617,9 +2617,9 @@
             { label: 'גני ילדים', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
             { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
             { label: 'היקף: פיקוח', style: 'header' },
-            { label: 'ממלכתי', color: '#2980b9' },
+            { label: 'ממלכתי', color: '#0d47a1' },
             { label: 'ממלכתי דתי', color: '#d63384' },
-            { label: 'ערבי', color: '#e67e22' },
+            { label: 'ערבי', color: '#7b1fa2' },
             { label: 'חרדי', color: '#1a1a2e' },
             { label: 'מילוי: סטטוס', style: 'header' },
             { label: 'קיים', color: '#4CAF50' },
@@ -5498,20 +5498,23 @@
                 // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
                 // Fill = status: yellow=existing/authorized, red=no authorization
-                const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#d63384', 'ערבי': '#e67e22', 'חרדי': '#1a1a2e' };
+                const pikuachStrokes = { 'ממלכתי': '#0d47a1', 'ממלכתי דתי': '#d63384', 'ערבי': '#7b1fa2', 'חרדי': '#1a1a2e' };
                 const eduSz = zoomLevel >= 17 ? 18 : 12;
                 function eduIcon(sugMosad, pikuach, fill) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
-                    const sz = eduSz, cx = sz/2, cy = sz/2;
+                    const sz = eduSz, cx = sz/2, cy = sz/2, sw = 3;
                     let shape;
                     if (sugMosad === 'גני' || sugMosad === 'גנים') {
-                        shape = `<polygon points="${cx},2 2,${sz-2} ${sz-2},${sz-2}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                        const m = sw/2+1;
+                        shape = `<polygon points="${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     } else if (sugMosad === 'על יסודי') {
-                        shape = `<rect x="3" y="3" width="${sz-6}" height="${sz-6}" fill="${fill}" stroke="${stroke}" stroke-width="2" rx="1"/>`;
+                        const m = sw/2+1;
+                        shape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="1"/>`;
                     } else if (sugMosad === 'מעון') {
-                        shape = `<polygon points="${cx},2 ${sz-2},${cy} ${cx},${sz-2} 2,${cy}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                        const m = sw/2+1;
+                        shape = `<polygon points="${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     } else {
-                        shape = `<circle cx="${cx}" cy="${cy}" r="${cx-2}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                        shape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     }
                     return L.divIcon({ html: `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
@@ -5606,8 +5609,8 @@
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
                             layer.bindTooltip(name, zoomLevel >= 16
-                                ? { permanent: true, direction: 'right', offset: [2, 0], className: 'edu-label' }
-                                : { sticky: true, direction: 'right', offset: [2, 0], className: 'edu-label' });
+                                ? { permanent: true, direction: 'top', offset: [0, 0], className: 'edu-label' }
+                                : { sticky: true, direction: 'top', offset: [0, 0], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5653,8 +5656,8 @@
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
                             layer.bindTooltip(name, zoomLevel >= 16
-                                ? { permanent: true, direction: 'right', offset: [2, 0], className: 'edu-label' }
-                                : { sticky: true, direction: 'right', offset: [2, 0], className: 'edu-label' });
+                                ? { permanent: true, direction: 'top', offset: [0, 0], className: 'edu-label' }
+                                : { sticky: true, direction: 'top', offset: [0, 0], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
