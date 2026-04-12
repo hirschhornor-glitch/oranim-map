@@ -5452,17 +5452,12 @@
                     geoLayersRef.current.sport_kayam = sportKayamLayer;
                 }
 
-                // --- Future Shavaz (planned public buildings) ---
-                if (layers['future_shavaz'] && gd.future_shavaz) {
-                    const futureShavazLayer = L.geoJSON(gd.future_shavaz, {
+                // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
+                if (layers['future_shavaz'] && gd.landuse_xplan) {
+                    const SHAVAZ_CODES = new Set([400, 410, 450, 460]);
+                    const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => {
-                            const s = normalizeStatus((f.properties.Mavat_Status || f.properties.status_mavat || '').trim());
-                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                            const code = f.properties.MAVAT_CODE;
-                            if (code !== 400 && code !== 410 && code !== 450 && code !== 460) return false;
-                            return true;
-                        },
+                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code),
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -6266,38 +6261,53 @@
             function cleanNull(v) { return (v == null || v === 'NULL' || v === 'null' || v === 'None') ? '' : v; }
 
             function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
-                const buildingName = cleanNull(props.building_name);
-                const buildingTypeRaw = cleanNull(props.building_type) || cleanNull(props.Descriptio) || '';
-                const SPORT_RE = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
-                const buildingType = (function(raw) {
-                    if (!raw) return '';
-                    const items = raw.split(/[;,]/).map(s => s.trim()).filter(s => s && !SPORT_RE.test(s));
-                    const counts = {};
-                    items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
-                    return Object.entries(counts).map(([name, count]) => count === 1 ? name : count + ' ' + name).join('; ');
-                })(buildingTypeRaw);
-                const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
-                const mavatName = fixHebrewText(cleanNull(props.MAVAT_NAME) || '');
+                // Support both landuse_xplan properties (future) and shavaz_kayam properties (existing)
+                const isXplan = !!props.pl_number;
 
-                // Title: future = plan name (subtitle = zoning type), kayam = building name (subtitle = plan name)
-                let title, subtitle;
-                if (isFuture) {
-                    title = planNameHe || mavatName || 'שב"צ עתידי';
-                    subtitle = planNameHe && mavatName ? mavatName : '';
+                let title, subtitle, taba, lotNum, status, lotArea, buildingType = '';
+                if (isXplan) {
+                    // landuse_xplan source
+                    title = cleanNull(props.pl_name) || cleanNull(props.mavat_name) || 'שב"צ עתידי';
+                    subtitle = cleanNull(props.mavat_name) || '';
+                    // Extract taba from pl_number: "101-0095612" → "95612"
+                    const plNum = cleanNull(props.pl_number);
+                    taba = plNum && plNum.includes('-') ? String(parseInt(plNum.split('-')[1])) : plNum;
+                    lotNum = cleanNull(props.num) || '';
+                    status = normalizeStatus(cleanNull(props.station_desc) || '');
+                    lotArea = props.shape_area || props.legal_area || null;
                 } else {
-                    const cleanTitle = buildingName
-                        ? buildingName.replace(/(?:מגרש ספורט|אולם ספורט|בריכת שחי\S*|מגרש כדור\S*|מגרש כטר\S*)[^"]*(?:"[^"]*")?\s*/g, '').trim()
-                        : '';
-                    title = fixHebrewText(cleanTitle || planNameHe || cleanNull(props.Descriptio) || mavatName || 'שב"צ');
-                    subtitle = planNameHe || '';
+                    // shavaz_kayam / legacy future_shavaz source
+                    const buildingName = cleanNull(props.building_name);
+                    const buildingTypeRaw = cleanNull(props.building_type) || cleanNull(props.Descriptio) || '';
+                    const SPORT_RE2 = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
+                    buildingType = (function(raw) {
+                        if (!raw) return '';
+                        const items = raw.split(/[;,]/).map(s => s.trim()).filter(s => s && !SPORT_RE2.test(s));
+                        const counts = {};
+                        items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
+                        return Object.entries(counts).map(([name, count]) => count === 1 ? name : count + ' ' + name).join('; ');
+                    })(buildingTypeRaw);
+                    const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
+                    const mavatName = fixHebrewText(cleanNull(props.MAVAT_NAME) || '');
+                    if (isFuture) {
+                        title = planNameHe || mavatName || 'שב"צ עתידי';
+                        subtitle = planNameHe && mavatName ? mavatName : '';
+                    } else {
+                        const SPORT_RE = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
+                        const cleanTitle = buildingName
+                            ? buildingName.replace(/(?:מגרש ספורט|אולם ספורט|בריכת שחי\S*|מגרש כדור\S*|מגרש כטר\S*)[^"]*(?:"[^"]*")?\s*/g, '').trim()
+                            : '';
+                        title = fixHebrewText(cleanTitle || planNameHe || cleanNull(props.Descriptio) || mavatName || 'שב"צ');
+                        subtitle = planNameHe || '';
+                    }
+                    taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
+                    lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
+                    status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
+                    lotArea = props.POLY_AREA || props.LEGAL_AREA || props.area || null;
                 }
 
-                const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
-                const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
-                const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
                 const statusColor = getStatusColor(status);
                 const tabaLot = [taba, lotNum].filter(Boolean).join(' / ');
-                const lotArea = props.POLY_AREA || props.LEGAL_AREA || props.area || null;
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
                 const builtSqm = cleanNull(props.BUILD_AREA) || null;
                 const builtDisplay = builtSqm ? Math.round(parseFloat(builtSqm)).toLocaleString() : '-';
