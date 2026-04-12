@@ -5647,9 +5647,11 @@
                         filter: f => f.geometry && passesEduFilter(getSugMosadSara(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
+                            const status = (p['סטטוס פרויקט'] || '').trim();
+                            const isNimsar = status.includes('נמסר');
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
                             const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
-                            const fill = hasAuth ? '#f1c40f' : '#e74c3c';
+                            const fill = isNimsar ? '#4CAF50' : hasAuth ? '#f1c40f' : '#e74c3c';
                             return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill, p['שם הפרויקט']) });
                         },
                         onEachFeature: (f, layer) => {
@@ -5657,9 +5659,11 @@
                             const name = p['שם הפרויקט'] || '';
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
+                                const status = (p['סטטוס פרויקט'] || '').trim();
+                                const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
                                 const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
-                                const headerColor = hasAuth ? '#d4ac0d' : '#c0392b';
+                                const headerColor = isNimsar ? '#388E3C' : hasAuth ? '#d4ac0d' : '#c0392b';
                                 const rows = [
                                     ['שם הפרויקט', p['שם הפרויקט']],
                                     ['שכונה', p['שכונה']],
