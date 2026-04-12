@@ -5503,20 +5503,26 @@
                 function eduIcon(sugMosad, pikuach, fill, label) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
                     const sz = eduSz, cx = sz/2, cy = sz/2, sw = zoomLevel >= 17 ? 2 : 1.5;
-                    let shape;
+                    const wsw = sw + 2; // white outline is 1px wider on each side
+                    let whiteShape, shape;
                     if (sugMosad === 'גני' || sugMosad === 'גנים') {
                         const m = sw/2+1;
+                        whiteShape = `<polygon points="${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
                         shape = `<polygon points="${cx},${m} ${m},${sz-m} ${sz-m},${sz-m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     } else if (sugMosad === 'על יסודי') {
                         const m = sw/2+1;
+                        whiteShape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="none" stroke="white" stroke-width="${wsw}" rx="1"/>`;
                         shape = `<rect x="${m}" y="${m}" width="${sz-2*m}" height="${sz-2*m}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="1"/>`;
                     } else if (sugMosad === 'מעון') {
                         const m = sw/2+1;
+                        whiteShape = `<polygon points="${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
                         shape = `<polygon points="${cx},${m} ${sz-m},${cy} ${cx},${sz-m} ${m},${cy}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     } else {
+                        whiteShape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="none" stroke="white" stroke-width="${wsw}"/>`;
                         shape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     }
-                    const showLabel = zoomLevel >= 17 && label;
+                    shape = whiteShape + shape;
+                    const showLabel = zoomLevel >= 16 && label;
                     const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-family:Assistant,Arial,sans-serif;color:#333;background:rgba(255,255,255,0.85);padding:0 3px;border-radius:2px;pointer-events:none;text-align:center">${label}</div>` : '';
                     const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
