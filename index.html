@@ -5547,7 +5547,7 @@
                         shape = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/><circle cx="${cx}" cy="${cy}" r="${r-sw}" fill="none" stroke="white" stroke-width="1"/>`;
                     }
                     const showLabel = zoomLevel >= 16 && label;
-                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-family:Assistant,Arial,sans-serif;color:#222;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;pointer-events:none;text-align:center">${label}</div>` : '';
+                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:bold;font-family:Assistant,Arial,sans-serif;color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff;pointer-events:none;text-align:center">${label}</div>` : '';
                     const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
                     return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
@@ -5643,26 +5643,25 @@
                             const name = p['שם מוסד'] || '';
                             layer.on('click', (e) => {
                                 if (areaModeRef.current) return;
-                                // Build mosad card
-                                let html = `<div style="direction:rtl;font-family:Assistant,Arial,sans-serif;max-width:320px">`;
-                                html += `<div style="background:#27ae60;color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:bold;font-size:14px">🏫 ${name}</div>`;
-                                html += `<div style="padding:8px 12px;background:#1e1e2e;color:#ddd;font-size:12px">`;
-                                if (p['כתובת'] && p['כתובת'] !== 'None') html += `<div style="margin-bottom:4px">📍 ${p['כתובת']}</div>`;
+                                // Build mosad popup (styled like plans popup)
+                                let html = '<div>';
+                                html += `<div class="popup-header" style="border-bottom:3px solid #27ae60"><div class="popup-header-title">${name}</div>`;
+                                if (p['כתובת'] && p['כתובת'] !== 'None') html += `<div class="popup-header-subtitle">${p['כתובת']}</div>`;
+                                html += '</div>';
+                                html += '<div class="popup-body" style="padding:8px 16px">';
                                 const info = [p['שלב חינוך'], p['פיקוח'], p['סוג חינוך']].filter(v => v && v !== 'None').join(' · ');
-                                if (info) html += `<div style="margin-bottom:4px">📚 ${info}</div>`;
-                                const nums = [];
-                                if (p['מספר תלמידים'] && p['מספר תלמידים'] !== 'None') nums.push(p['מספר תלמידים'] + ' תלמידים');
-                                if (p['כיתות רגילות'] && p['כיתות רגילות'] !== 'None') nums.push(p['כיתות רגילות'] + ' כיתות');
-                                if (nums.length) html += `<div style="margin-bottom:4px">👥 ${nums.join(' · ')}</div>`;
-                                if (p['סמל חינוך'] && p['סמל חינוך'] !== 'None') html += `<div style="color:#999;font-size:11px">סמל: ${p['סמל חינוך']}</div>`;
-                                html += `</div>`;
+                                if (info) html += `<div class="popup-row"><span class="popup-label">סוג</span><span class="popup-value">${info}</span></div>`;
+                                if (p['מספר תלמידים'] && p['מספר תלמידים'] !== 'None') html += `<div class="popup-row"><span class="popup-label">תלמידים</span><span class="popup-value">${p['מספר תלמידים']}</span></div>`;
+                                if (p['כיתות רגילות'] && p['כיתות רגילות'] !== 'None') html += `<div class="popup-row"><span class="popup-label">כיתות</span><span class="popup-value">${p['כיתות רגילות']}</span></div>`;
+                                if (p['סמל חינוך'] && p['סמל חינוך'] !== 'None') html += `<div class="popup-row"><span class="popup-label">סמל</span><span class="popup-value">${p['סמל חינוך']}</span></div>`;
+                                html += '</div>';
                                 // Check for matching sara projects nearby
                                 if (gd.sara_march_2026) {
                                     const latlng = e.latlng;
                                     const nearby = gd.sara_march_2026.features.filter(sf => {
                                         if (!sf.geometry) return false;
                                         const c = sf.geometry.coordinates;
-                                        return Math.abs(c[1] - latlng.lat) < 0.001 && Math.abs(c[0] - latlng.lng) < 0.001;
+                                        return Math.abs(c[1] - latlng.lat) < 0.0003 && Math.abs(c[0] - latlng.lng) < 0.0003;
                                     });
                                     nearby.forEach(sf => {
                                         const sp = sf.properties;
@@ -5671,17 +5670,16 @@
                                         const isN = sStatus.includes('נמסר');
                                         const hasA = sHarsha.includes('מלאה') || sHarsha.includes('חלקית');
                                         const hdrColor = isN ? '#388E3C' : hasA ? '#d4ac0d' : '#c0392b';
-                                        html += `<div style="border-top:2px solid ${hdrColor};margin-top:0">`;
-                                        html += `<div style="background:${hdrColor};color:#fff;padding:6px 12px;font-weight:bold;font-size:13px">🏗️ ${sp['שם הפרויקט'] || ''}</div>`;
-                                        html += `<div style="padding:6px 12px;background:#1e1e2e;color:#ddd;font-size:11px">`;
-                                        if (sStatus) html += `<div>סטטוס: ${sStatus}</div>`;
-                                        if (sHarsha) html += `<div>הרשאה: ${sHarsha}</div>`;
-                                        if (sp['מס כיתות בפרויקט']) html += `<div>${sp['מס כיתות בפרויקט']} כיתות</div>`;
-                                        html += `</div></div>`;
+                                        html += `<div class="popup-header" style="border-bottom:3px solid ${hdrColor}"><div class="popup-header-title" style="font-size:13px">${sp['שם הפרויקט'] || ''}</div></div>`;
+                                        html += '<div class="popup-body" style="padding:6px 16px">';
+                                        if (sStatus) html += `<div class="popup-row"><span class="popup-label">סטטוס</span><span class="popup-value">${sStatus}</span></div>`;
+                                        if (sHarsha && sHarsha !== 'None') html += `<div class="popup-row"><span class="popup-label">הרשאה</span><span class="popup-value">${sHarsha}</span></div>`;
+                                        if (sp['מס כיתות בפרויקט']) html += `<div class="popup-row"><span class="popup-label">כיתות</span><span class="popup-value">${sp['מס כיתות בפרויקט']}</span></div>`;
+                                        html += '</div>';
                                     });
                                 }
-                                html += `</div>`;
-                                L.popup({ maxWidth: 360 }).setLatLng(e.latlng).setContent(html).openOn(map);
+                                html += '</div>';
+                                L.popup({ maxWidth: 340, className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
@@ -5713,41 +5711,41 @@
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
                                 const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
                                 const headerColor = isNimsar ? '#388E3C' : hasAuth ? '#d4ac0d' : '#c0392b';
-                                let html = `<div style="direction:rtl;font-family:Assistant,Arial,sans-serif;max-width:340px">`;
-                                html += `<div style="background:${headerColor};color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:bold;font-size:14px">🏗️ ${name}</div>`;
-                                html += `<div style="padding:8px 12px;background:#1e1e2e;color:#ddd;font-size:12px">`;
+                                let html = '<div>';
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${headerColor}"><div class="popup-header-title">${name}</div>`;
                                 const summary = [p['שכונה'], p['סוג מוסד'], p['מס כיתות בפרויקט'] ? p['מס כיתות בפרויקט'] + ' כיתות' : ''].filter(v => v && v !== 'None').join(' · ');
-                                if (summary) html += `<div style="margin-bottom:6px;color:#aaa">${summary}</div>`;
-                                if (status) html += `<div style="margin-bottom:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${headerColor};margin-left:4px"></span> סטטוס: ${status}</div>`;
-                                if (harsha && harsha !== 'None') html += `<div style="margin-bottom:3px">📋 הרשאה: ${harsha}</div>`;
+                                if (summary) html += `<div class="popup-header-subtitle">${summary}</div>`;
+                                html += '</div>';
+                                html += '<div class="popup-body" style="padding:8px 16px">';
+                                if (status) html += `<div class="popup-row"><span class="popup-label">סטטוס</span><span class="popup-value" style="color:${headerColor}">${status}</span></div>`;
+                                if (harsha && harsha !== 'None') html += `<div class="popup-row"><span class="popup-label">הרשאה</span><span class="popup-value">${harsha}</span></div>`;
                                 const rish = (p['סטטוס רישוי'] || '').trim();
-                                if (rish && rish !== 'None') html += `<div style="margin-bottom:3px">📝 רישוי: ${rish}</div>`;
-                                if (p['כתובת'] && p['כתובת'] !== 'None' && p['כתובת'] !== '0') html += `<div style="margin-bottom:3px">📍 ${p['כתובת']}</div>`;
+                                if (rish && rish !== 'None') html += `<div class="popup-row"><span class="popup-label">רישוי</span><span class="popup-value">${rish}</span></div>`;
+                                if (p['כתובת'] && p['כתובת'] !== 'None' && p['כתובת'] !== '0') html += `<div class="popup-row"><span class="popup-label">כתובת</span><span class="popup-value">${p['כתובת']}</span></div>`;
                                 const taba = p['תב"ע'], migrash = p['מגרש'];
-                                if (taba && taba !== 'None') html += `<div style="margin-bottom:3px">📐 תב"ע: ${taba}${migrash && migrash !== 'None' ? ' / מגרש: ' + migrash : ''}</div>`;
-                                if (p['גורם מבצע'] && p['גורם מבצע'] !== 'None') html += `<div style="color:#999;font-size:11px">🏢 ${p['גורם מבצע']}</div>`;
-                                html += `</div>`;
+                                if (taba && taba !== 'None') html += `<div class="popup-row"><span class="popup-label">תב"ע</span><span class="popup-value">${taba}${migrash && migrash !== 'None' ? ' / ' + migrash : ''}</span></div>`;
+                                if (p['גורם מבצע'] && p['גורם מבצע'] !== 'None') html += `<div class="popup-row"><span class="popup-label">מבצע</span><span class="popup-value">${p['גורם מבצע']}</span></div>`;
+                                html += '</div>';
                                 // Check for matching mosadot nearby
                                 if (gd.mosadot_shchuna) {
                                     const latlng = e.latlng;
                                     const nearbyM = gd.mosadot_shchuna.features.filter(mf => {
                                         if (!mf.geometry) return false;
                                         const c = mf.geometry.coordinates;
-                                        return Math.abs(c[1] - latlng.lat) < 0.001 && Math.abs(c[0] - latlng.lng) < 0.001;
+                                        return Math.abs(c[1] - latlng.lat) < 0.0003 && Math.abs(c[0] - latlng.lng) < 0.0003;
                                     });
                                     nearbyM.forEach(mf => {
                                         const mp = mf.properties;
-                                        html += `<div style="border-top:2px solid #27ae60;margin-top:0">`;
-                                        html += `<div style="background:#27ae60;color:#fff;padding:6px 12px;font-weight:bold;font-size:13px">🏫 ${mp['שם מוסד'] || ''}</div>`;
-                                        html += `<div style="padding:6px 12px;background:#1e1e2e;color:#ddd;font-size:11px">`;
+                                        html += `<div class="popup-header" style="border-bottom:3px solid #27ae60"><div class="popup-header-title" style="font-size:13px">${mp['שם מוסד'] || ''}</div></div>`;
+                                        html += '<div class="popup-body" style="padding:6px 16px">';
                                         const mInfo = [mp['שלב חינוך'], mp['פיקוח']].filter(v => v && v !== 'None').join(' · ');
-                                        if (mInfo) html += `<div>${mInfo}</div>`;
-                                        if (mp['מספר תלמידים'] && mp['מספר תלמידים'] !== 'None') html += `<div>${mp['מספר תלמידים']} תלמידים</div>`;
-                                        html += `</div></div>`;
+                                        if (mInfo) html += `<div class="popup-row"><span class="popup-label">סוג</span><span class="popup-value">${mInfo}</span></div>`;
+                                        if (mp['מספר תלמידים'] && mp['מספר תלמידים'] !== 'None') html += `<div class="popup-row"><span class="popup-label">תלמידים</span><span class="popup-value">${mp['מספר תלמידים']}</span></div>`;
+                                        html += '</div>';
                                     });
                                 }
-                                html += `</div>`;
-                                L.popup({ maxWidth: 360 }).setLatLng(e.latlng).setContent(html).openOn(map);
+                                html += '</div>';
+                                L.popup({ maxWidth: 340, className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
