@@ -2608,6 +2608,15 @@
             { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
         ];
 
+        const MOSADOT_LEGEND = [
+            { label: 'יסודי - ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#2980b9" stroke="#1a5276" stroke-width="2"/></svg>' },
+            { label: 'יסודי - ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#2980b9" stroke="#1a5276" stroke-width="2" rx="2"/></svg>' },
+            { label: 'יסודי - ערבי', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#2980b9" stroke="#1a5276" stroke-width="2"/></svg>' },
+            { label: 'על יסודי - ממלכתי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#e67e22" stroke="#a04000" stroke-width="2"/></svg>' },
+            { label: 'על יסודי - ממלכתי דתי', style: 'svg', svg: '<svg width="18" height="18"><rect x="2" y="2" width="14" height="14" fill="#e67e22" stroke="#a04000" stroke-width="2" rx="2"/></svg>' },
+            { label: 'על יסודי - ערבי', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#e67e22" stroke="#a04000" stroke-width="2"/></svg>' },
+        ];
+
         const TOPICS_LEGEND = [
             { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
             { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
@@ -5483,17 +5492,17 @@
                     function mosadotIcon(pikuach, shalav) {
                         const fill = mosadotColors[shalav] || '#888';
                         const stroke = mosadotBorders[shalav] || '#555';
-                        const sz = 22;
+                        const sz = 16;
                         let shape;
                         if (pikuach === 'ממלכתי דתי') {
                             // Square
-                            shape = `<rect x="3" y="3" width="16" height="16" fill="${fill}" stroke="${stroke}" stroke-width="2" rx="2"/>`;
+                            shape = `<rect x="2" y="2" width="12" height="12" fill="${fill}" stroke="${stroke}" stroke-width="1.5" rx="2"/>`;
                         } else if (pikuach === 'ערבי') {
                             // Triangle
-                            shape = `<polygon points="11,2 2,20 20,20" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                            shape = `<polygon points="8,1 1,15 15,15" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
                         } else {
                             // Circle (ממלכתי or default)
-                            shape = `<circle cx="11" cy="11" r="8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+                            shape = `<circle cx="8" cy="8" r="6" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
                         }
                         const svg = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
                         return L.divIcon({ html: svg, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2] });
@@ -6749,6 +6758,10 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'mosadot_shchuna' && (
+                                                <button className="layer-legend-btn" title="מקרא מוסדות חינוך"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מוסדות חינוך', items: MOSADOT_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
@@ -8511,7 +8524,10 @@
                                 <div className="legend-popup-title">{legendPopup.title}</div>
                                 {legendPopup.items.map((item, i) => (
                                     <div className="legend-item" key={i}>
-                                        {item.style === 'hatch' ? (
+                                        {item.style === 'svg' ? (
+                                            <div className="legend-color" style={{display:'flex',alignItems:'center',justifyContent:'center',background:'transparent',border:'none'}}
+                                                dangerouslySetInnerHTML={{__html: item.svg}}></div>
+                                        ) : item.style === 'hatch' ? (
                                             <div className="legend-color" style={{
                                                 background: `repeating-linear-gradient(-45deg, transparent, transparent 3px, ${item.color} 3px, ${item.color} 4.5px)`,
                                                 border: `2px solid ${item.color}`
