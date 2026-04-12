@@ -5597,7 +5597,7 @@
                     const eduLabelZoom = zoomLevel >= 15;
                     const mosadotLayer = L.geoJSON(gd.mosadot_shchuna, {
                         pane: 'stationsPane',
-                        filter: f => passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
+                        filter: f => f.geometry && passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#2ecc71') });
@@ -5643,7 +5643,7 @@
                 if (layers['sara_march_2026'] && gd.sara_march_2026) {
                     const saraLayer = L.geoJSON(gd.sara_march_2026, {
                         pane: 'stationsPane',
-                        filter: f => passesEduFilter(getSugMosadSara(f.properties), getPikuach(f.properties)),
+                        filter: f => f.geometry && passesEduFilter(getSugMosadSara(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
