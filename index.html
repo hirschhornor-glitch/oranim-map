@@ -5499,22 +5499,10 @@
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
                 // Fill = status: yellow=existing/authorized, red=no authorization
                 const pikuachStrokes = { 'ממלכתי': '#2980b9', 'ממלכתי דתי': '#27ae60', 'ערבי': '#e67e22', 'חרדי': '#8e44ad' };
-                function eduIcon(sugMosad, pikuach, fill) {
+                function eduMarkerStyle(sugMosad, pikuach, fill) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
-                    const sz = zoomLevel >= 17 ? 18 : 14;
-                    const h = sz, cx = sz/2, cy = sz/2, r = sz/2 - 3;
-                    let shape;
-                    if (sugMosad === 'גני' || sugMosad === 'גנים') {
-                        shape = `<polygon points="${cx},2 2,${h-2} ${sz-2},${h-2}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
-                    } else if (sugMosad === 'על יסודי') {
-                        shape = `<rect x="3" y="3" width="${sz-6}" height="${sz-6}" fill="${fill}" stroke="${stroke}" stroke-width="2" rx="1"/>`;
-                    } else if (sugMosad === 'מעון') {
-                        shape = `<polygon points="${cx},2 ${sz-2},${cy} ${cx},${h-2} 2,${cy}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
-                    } else {
-                        shape = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
-                    }
-                    const svg = `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`;
-                    return L.divIcon({ html: svg, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2] });
+                    const r = zoomLevel >= 17 ? 9 : 7;
+                    return { radius: r, fillColor: fill, fillOpacity: 0.9, color: stroke, weight: 2.5 };
                 }
                 function getSugMosad(p) {
                     // From mosadot_shchuna
@@ -5601,12 +5589,16 @@
                         filter: f => f.geometry && passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#4CAF50') });
+                            return L.circleMarker(latlng, eduMarkerStyle(getSugMosad(p), getPikuach(p), '#4CAF50'));
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0], className: 'edu-label' });
+                            if (zoomLevel >= 17) {
+                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-label' });
+                            } else {
+                                layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
+                            }
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5646,12 +5638,16 @@
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
                             const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
                             const fill = hasAuth ? '#f1c40f' : '#e74c3c';
-                            return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill) });
+                            return L.circleMarker(latlng, eduMarkerStyle(getSugMosadSara(p), getPikuach(p), fill));
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0], className: 'edu-label' });
+                            if (zoomLevel >= 17) {
+                                layer.bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-label' });
+                            } else {
+                                layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [10, 0] });
+                            }
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
