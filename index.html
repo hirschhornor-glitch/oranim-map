@@ -135,6 +135,10 @@
 
         #map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
+        .leaflet-tile-pane {
+            background: #f2efe9;
+        }
+
         .leaflet-control-attribution {
             font-size: 10px !important;
             opacity: 0.5 !important;
@@ -2757,6 +2761,7 @@
             const [printTitle, setPrintTitle] = useState('');
             const [printShowLegend, setPrintShowLegend] = useState(true);
             const [printShowTitle, setPrintShowTitle] = useState(true);
+            const [printShowBasemap, setPrintShowBasemap] = useState(true);
             const [activeDropdown, setActiveDropdown] = useState(null); // 'measure' | null
             const [showUnits, setShowUnits] = useState(false);
             const [unitsData, setUnitsData] = useState(null); // { minahaks, byMinahak }
@@ -3191,7 +3196,8 @@
                     baseTileRef.current = L.tileLayer(bm.url, {
                         attribution: bm.attribution,
                         maxZoom: 22,
-                        opacity: basemapOpacity
+                        opacity: basemapOpacity,
+                        crossOrigin: 'anonymous'
                     }).addTo(map);
                     baseTileRef.current.bringToBack();
                 }
@@ -4421,43 +4427,86 @@
                 const printW = Math.round(printRect.width);
                 const printH = Math.round(printRect.height);
 
-                // Use html2canvas to capture the map
+                // Capture map by manually composing tiles + SVG overlays onto a canvas
                 let mapImgUrl = '';
-                if (window.html2canvas) {
-                    // Convert SVG panes to inline data URIs so html2canvas can render them
-                    const svgPanes = mapContainer.querySelectorAll('.leaflet-overlay-pane svg, .leaflet-pane svg');
-                    const origStyles = [];
-                    svgPanes.forEach((svg, i) => {
-                        origStyles[i] = svg.style.cssText;
-                        // Force SVG dimensions
-                        if (!svg.getAttribute('width')) svg.setAttribute('width', svg.getBoundingClientRect().width);
-                        if (!svg.getAttribute('height')) svg.setAttribute('height', svg.getBoundingClientRect().height);
-                    });
-                    const canvas = await window.html2canvas(mapContainer, {
-                        useCORS: true, allowTaint: true, logging: false, scale: 2,
-                        foreignObjectRendering: true,
-                        onclone: (clonedDoc) => {
-                            clonedDoc.querySelectorAll('.leaflet-pane').forEach(pane => {
-                                pane.style.opacity = '1';
-                                pane.style.visibility = 'visible';
-                            });
-                        }
-                    });
-                    // Restore original styles
-                    svgPanes.forEach((svg, i) => { svg.style.cssText = origStyles[i] || ''; });
-                    mapImgUrl = canvas.toDataURL('image/png');
-                } else {
-                    // Fallback: just take a screenshot of current view
+                {
+                    const scale = 2;
                     const canvasEl = document.createElement('canvas');
-                    canvasEl.width = printW;
-                    canvasEl.height = printH;
+                    canvasEl.width = printW * scale;
+                    canvasEl.height = printH * scale;
                     const ctx = canvasEl.getContext('2d');
-                    ctx.fillStyle = '#e8e8e8';
+                    ctx.scale(scale, scale);
+                    ctx.fillStyle = printShowBasemap ? '#f2efe9' : '#ffffff';
                     ctx.fillRect(0, 0, printW, printH);
-                    ctx.font = '20px sans-serif';
-                    ctx.fillStyle = '#333';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('נא לטעון html2canvas להדפסה', printW / 2, printH / 2);
+
+                    // Draw tile images at their exact positions via fetch to bypass CORS
+                    const mapRect = mapContainer.getBoundingClientRect();
+                    const tileImgs = mapContainer.querySelectorAll('.leaflet-tile-pane img');
+                    if (printShowBasemap) {
+                        const tilePromises = Array.from(tileImgs).map(async (img) => {
+                            if (!img.complete || !img.naturalWidth || !img.src) return;
+                            const r = img.getBoundingClientRect();
+                            // Expand each tile by 1px on each side to cover seams
+                            const x = r.left - mapRect.left - 0.5;
+                            const y = r.top - mapRect.top - 0.5;
+                            const w = r.width + 1;
+                            const h = r.height + 1;
+                            try {
+                                const resp = await fetch(img.src, { mode: 'cors' });
+                                const blob = await resp.blob();
+                                const blobUrl = URL.createObjectURL(blob);
+                                const tileImg = new Image();
+                                await new Promise((res) => { tileImg.onload = res; tileImg.onerror = res; tileImg.src = blobUrl; });
+                                ctx.drawImage(tileImg, x, y, w, h);
+                                URL.revokeObjectURL(blobUrl);
+                            } catch(e) {
+                                try { ctx.drawImage(img, x, y, w, h); } catch(e2) {}
+                            }
+                        });
+                        await Promise.all(tilePromises);
+                    }
+
+                    // Draw SVG overlays (vector layers, markers, etc.)
+                    const svgs = mapContainer.querySelectorAll('.leaflet-overlay-pane svg, .leaflet-pane svg');
+                    for (const svg of svgs) {
+                        try {
+                            const r = svg.getBoundingClientRect();
+                            if (r.width === 0 || r.height === 0) continue;
+                            const clone = svg.cloneNode(true);
+                            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                            if (!clone.getAttribute('width')) clone.setAttribute('width', r.width);
+                            if (!clone.getAttribute('height')) clone.setAttribute('height', r.height);
+                            const svgData = new XMLSerializer().serializeToString(clone);
+                            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                            const url = URL.createObjectURL(svgBlob);
+                            const svgImg = new Image();
+                            await new Promise((resolve) => {
+                                svgImg.onload = resolve;
+                                svgImg.onerror = resolve;
+                                svgImg.src = url;
+                            });
+                            const x = r.left - mapRect.left;
+                            const y = r.top - mapRect.top;
+                            ctx.drawImage(svgImg, x, y, r.width, r.height);
+                            URL.revokeObjectURL(url);
+                        } catch(e) {}
+                    }
+
+                    // Draw non-SVG marker panes (HTML markers, labels, divIcons)
+                    try {
+                        const markerPanes = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-popup-pane, .leaflet-tooltip-pane');
+                        for (const pane of markerPanes) {
+                            if (!pane.children.length) continue;
+                            const paneCanvas = await window.html2canvas(pane, {
+                                useCORS: true, allowTaint: true, logging: false,
+                                backgroundColor: null, scale: 1,
+                                x: mapRect.left, y: mapRect.top,
+                                width: printW, height: printH
+                            });
+                            ctx.drawImage(paneCanvas, 0, 0, printW, printH);
+                        }
+                    } catch(e) {}
+
                     mapImgUrl = canvasEl.toDataURL('image/png');
                 }
 
@@ -4516,7 +4565,7 @@
                 </body></html>`);
                 printWin.document.close();
                 setShowPrint(false);
-            }, [printTitle, printShowLegend, printShowTitle, printScale, printPageSize, printOrientation, layers]);
+            }, [printTitle, printShowLegend, printShowTitle, printShowBasemap, printScale, printPageSize, printOrientation, layers]);
 
             // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
             // Map tama38 neighborho → minahak
@@ -7880,6 +7929,10 @@
                                     <label className="print-checkbox">
                                         <input type="checkbox" checked={printShowLegend} onChange={e => setPrintShowLegend(e.target.checked)} />
                                         הצג מקרא
+                                    </label>
+                                    <label className="print-checkbox">
+                                        <input type="checkbox" checked={printShowBasemap} onChange={e => setPrintShowBasemap(e.target.checked)} />
+                                        הצג מפת רקע
                                     </label>
                                 </div>
                                 <div className="print-actions" style={{display:'flex',gap:'8px',flexWrap:'wrap',justifyContent:'center'}}>
