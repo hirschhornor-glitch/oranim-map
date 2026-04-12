@@ -5500,7 +5500,7 @@
                 // Fill = status: yellow=existing/authorized, red=no authorization
                 const pikuachStrokes = { 'ממלכתי': '#0d47a1', 'ממלכתי דתי': '#d63384', 'ערבי': '#7b1fa2', 'חרדי': '#1a1a2e' };
                 const eduSz = zoomLevel >= 17 ? 18 : 12;
-                function eduIcon(sugMosad, pikuach, fill) {
+                function eduIcon(sugMosad, pikuach, fill, label) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
                     const sz = eduSz, cx = sz/2, cy = sz/2, sw = 3;
                     let shape;
@@ -5516,7 +5516,10 @@
                     } else {
                         shape = `<circle cx="${cx}" cy="${cy}" r="${cx-sw}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
                     }
-                    return L.divIcon({ html: `<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg>`, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
+                    const showLabel = zoomLevel >= 16 && label;
+                    const labelHtml = showLabel ? `<div style="position:absolute;bottom:${sz+1}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-family:Assistant,Arial,sans-serif;color:#333;background:rgba(255,255,255,0.85);padding:0 3px;border-radius:2px;pointer-events:none;text-align:center">${label}</div>` : '';
+                    const html = `<div style="position:relative;width:${sz}px;height:${sz}px">${labelHtml}<svg width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shape}</svg></div>`;
+                    return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [cx, cy] });
                 }
                 function getSugMosad(p) {
                     // From mosadot_shchuna
@@ -5603,14 +5606,11 @@
                         filter: f => f.geometry && passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#4CAF50') });
+                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#4CAF50', p['שם מוסד']) });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
-                            layer.bindTooltip(name, zoomLevel >= 16
-                                ? { permanent: true, direction: 'top', offset: [0, -eduSz/2 - 2], className: 'edu-label' }
-                                : { sticky: true, direction: 'top', offset: [0, -eduSz/2 - 2], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const rows = [
@@ -5650,14 +5650,11 @@
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
                             const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
                             const fill = hasAuth ? '#f1c40f' : '#e74c3c';
-                            return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill) });
+                            return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill, p['שם הפרויקט']) });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
-                            layer.bindTooltip(name, zoomLevel >= 16
-                                ? { permanent: true, direction: 'top', offset: [0, -eduSz/2 - 2], className: 'edu-label' }
-                                : { sticky: true, direction: 'top', offset: [0, -eduSz/2 - 2], className: 'edu-label' });
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
