@@ -4493,19 +4493,21 @@
                     }
 
                     // Draw non-SVG marker panes (HTML markers, labels, divIcons)
-                    try {
-                        const markerPanes = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-popup-pane, .leaflet-tooltip-pane');
-                        for (const pane of markerPanes) {
-                            if (!pane.children.length) continue;
-                            const paneCanvas = await window.html2canvas(pane, {
-                                useCORS: true, allowTaint: true, logging: false,
-                                backgroundColor: null, scale: 1,
-                                x: mapRect.left, y: mapRect.top,
-                                width: printW, height: printH
-                            });
-                            ctx.drawImage(paneCanvas, 0, 0, printW, printH);
-                        }
-                    } catch(e) {}
+                    if (window.html2canvas) {
+                        try {
+                            const markerPanes = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-popup-pane, .leaflet-tooltip-pane');
+                            for (const pane of markerPanes) {
+                                if (!pane.children.length) continue;
+                                const paneCanvas = await window.html2canvas(pane, {
+                                    useCORS: true, allowTaint: true, logging: false,
+                                    backgroundColor: null, scale: 1,
+                                    x: mapRect.left, y: mapRect.top,
+                                    width: printW, height: printH
+                                });
+                                ctx.drawImage(paneCanvas, 0, 0, printW, printH);
+                            }
+                        } catch(e) {}
+                    }
 
                     mapImgUrl = canvasEl.toDataURL('image/png');
                 }
