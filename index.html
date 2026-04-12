@@ -1541,7 +1541,7 @@
             return inside;
         }
 
-        function visualCenter(geometry) {
+        function visualCenter(geometry, excludeRings) {
             // For MultiPolygon, find the largest part by area
             let ring;
             if (geometry.type === 'MultiPolygon') {
@@ -1571,7 +1571,10 @@
             area *= 0.5;
             if (Math.abs(area) > 1e-12) { cx /= (6 * area); cy /= (6 * area); }
             else { cx = ring[0][0]; cy = ring[0][1]; }
-            if (pointInPolygon([cx, cy], ring)) return [cy, cx];
+            if (pointInPolygon([cx, cy], ring)) {
+                const inExclude = excludeRings && excludeRings.some(er => pointInPolygon([cx, cy], er));
+                if (!inExclude) return [cy, cx];
+            }
             // Bbox
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             for (const c of ring) {
@@ -1589,6 +1592,7 @@
                     for (let yi = 0; yi < N; yi++) {
                         const gy = sMinY + (yi + 0.5) * stepY;
                         if (!pointInPolygon([gx, gy], ring)) continue;
+                        if (excludeRings && excludeRings.some(er => pointInPolygon([gx, gy], er))) continue;
                         let minEdgeDist = Infinity;
                         for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
                             const ax = ring[j][0], ay = ring[j][1];
@@ -1626,6 +1630,7 @@
             minahak_baka: 'data/minahak_baka.geojson',
             future_shavaz: 'data/future_shavaz.geojson',
             shavaz_kayam: 'data/shavaz_kayam.geojson',
+            sport_kayam: 'data/sport_kayam.geojson',
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
             landuse_xplan: 'data/landuse_xplan.geojson',
         };
@@ -1746,6 +1751,7 @@
                 title: 'מבני ציבור',
                 layers: [
                     { id: 'shavaz_kayam', name: 'מבני ציבור קיים', desc: 'מבני ציבור קיימים', on: false },
+                    { id: 'sport_kayam', name: 'מגרשי ספורט', desc: 'מגרשי ספורט קיימים', on: false },
                     { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                 ]
@@ -5029,7 +5035,27 @@
                                         if (add >= 30) labelClass += ' plan-label-large';
                                         else labelClass += ' plan-label-small';
 
-                                        const center = f.geometry ? visualCenter(f.geometry) : layer.getBounds().getCenter();
+                                        // For overlapping plans, place label in non-overlapping area
+                                        let excludeRings = null;
+                                        if ((parseFloat(f.properties.overlapping_plans) || 0) > 0 && f.geometry) {
+                                            excludeRings = [];
+                                            const myRing = f.geometry.type === 'MultiPolygon'
+                                                ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                                            const myBounds = layer.getBounds();
+                                            const myCenterPt = [myBounds.getCenter().lng, myBounds.getCenter().lat];
+                                            const gd = geoDataRef.current;
+                                            if (gd.plans) gd.plans.features.forEach(other => {
+                                                if (other === f || !other.geometry) return;
+                                                const otherRing = other.geometry.type === 'MultiPolygon'
+                                                    ? other.geometry.coordinates[0][0] : other.geometry.coordinates[0];
+                                                if (pointInPolygon(myCenterPt, otherRing)
+                                                    || pointInPolygon([otherRing[0][0], otherRing[0][1]], myRing)) {
+                                                    excludeRings.push(otherRing);
+                                                }
+                                            });
+                                            if (!excludeRings.length) excludeRings = null;
+                                        }
+                                        const center = f.geometry ? visualCenter(f.geometry, excludeRings) : layer.getBounds().getCenter();
                                         const labelMarker = L.marker(center, {
                                             icon: L.divIcon({
                                                 className: labelClass,
@@ -5355,6 +5381,22 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
+                }
+
+                // --- Sport Kayam (existing sport facilities as points) ---
+                if (layers['sport_kayam'] && gd.sport_kayam) {
+                    const sportKayamLayer = L.geoJSON(gd.sport_kayam, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 6, fillColor: '#2ecc71', fillOpacity: 0.9,
+                            color: '#1a7a3a', weight: 2
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const name = f.properties.name || f.properties.type || 'מגרש ספורט';
+                            layer.bindTooltip(name, { sticky: true, direction: 'right', offset: [8, 0] });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.sport_kayam = sportKayamLayer;
                 }
 
                 // --- Future Shavaz (planned public buildings) ---
@@ -5932,10 +5974,11 @@
             function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
                 const buildingName = cleanNull(props.building_name);
                 const buildingTypeRaw = cleanNull(props.building_type) || cleanNull(props.Descriptio) || '';
-                // Aggregate duplicate uses: "בית כנסת; בית כנסת" → "2 בתי כנסת"
+                // Filter out sport entries and aggregate duplicate uses
+                const SPORT_RE = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
                 const buildingType = (function(raw) {
                     if (!raw) return '';
-                    const items = raw.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+                    const items = raw.split(/[;,]/).map(s => s.trim()).filter(s => s && !SPORT_RE.test(s));
                     const counts = {};
                     items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
                     return Object.entries(counts).map(([name, count]) => {
@@ -5944,9 +5987,14 @@
                     }).join('; ');
                 })(buildingTypeRaw);
                 const planNameHe = fixHebrewText(cleanNull(props.plan_name_he) || '');
+                // For kayam: strip sport-related segments from title
+                // Title format: 'type "name" type "name"' — remove segments matching sport
+                const cleanTitle = !isFuture && buildingName
+                    ? buildingName.replace(/(?:מגרש ספורט|אולם ספורט|בריכת שחי\S*|מגרש כדור\S*|מגרש כטר\S*)[^"]*(?:"[^"]*")?\s*/g, '').trim()
+                    : buildingName;
                 const title = isFuture
                     ? (planNameHe || fixHebrewText(cleanNull(props.MAVAT_NAME) || 'שב"צ עתידי'))
-                    : fixHebrewText(buildingName || planNameHe || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
+                    : fixHebrewText(cleanTitle || planNameHe || cleanNull(props.Descriptio) || cleanNull(props.MAVAT_NAME) || 'שב"צ');
                 const taba = cleanNull(props.TABA) || cleanNull(props.taba) || '';
                 const lotNum = cleanNull(props.MIGRASH) || cleanNull(props.migrash) || '';
                 const status = normalizeStatus(props.Mavat_Status || props.status_mavat || '');
@@ -5958,7 +6006,7 @@
                 // LEGAL_AREA is inconsistent — sometimes sqm, sometimes dunams.
                 const lotArea = isFuture
                     ? (props.POLY_AREA || props.LEGAL_AREA || props.area || null)
-                    : (props.LEGAL_AREA || props.area || null);
+                    : (props.POLY_AREA || props.LEGAL_AREA || props.area || null);
                 const lotAreaDunam = lotArea ? (parseFloat(lotArea) / 1000).toFixed(2) : '-';
                 const builtSqm = cleanNull(props.BUILD_AREA) || null;
                 // Generic land-use designations — zoning types, not specific uses
@@ -6022,10 +6070,16 @@
                 if (buildingType) {
                     html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים בפועל</span><span class="popup-row-value">${buildingType}</span></div>`;
                 }
+                const serviceType = cleanNull(props.service_type) || '';
+                if (serviceType) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">סוג שירות</span><span class="popup-row-value">${serviceType}</span></div>`;
+                }
                 if (!isHafrashah) {
                     html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
                 }
-                html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
+                if (isFuture) {
+                    html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
+                }
                 // Show only specific uses (not generic designation types like מסחר/מבנים ומוסדות ציבור)
                 // Format: "גן ילדים - 200 מ״ר" — suppress sqm if it equals the total built area
                 const builtNum = derivedBuilt || (builtSqm ? Math.round(parseFloat(builtSqm)) : 0);
@@ -6047,7 +6101,7 @@
                     }
                     return part;
                 }).filter(Boolean);
-                if (formattedUses.length) {
+                if (isFuture && formattedUses.length) {
                     html += `<div class="popup-row" style="border-bottom-color:${rowBorder}"><span class="popup-row-label" style="color:${labelColor}">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
                 html += '</div>';
@@ -7583,6 +7637,109 @@
                                                     </button>
                                                 </div>
                                             </div>
+                                            <button className="modal-action-btn" style={{background:'#1976d2', borderColor:'#1976d2', color:'#fff'}} onClick={() => {
+                                                            // ── Update GS: step through annotations ──
+                                                            const annots = window.__annotations || {};
+                                                            const entries = Object.entries(annots).filter(([k, v]) => v && v.trim() && !k.startsWith('shavaz_'));
+                                                            if (!entries.length) { alert('אין הערות לעדכון'); return; }
+
+                                                            const GS_FIELDS = [
+                                                                { key: 'units_add', label: 'תוספת יח"ד' },
+                                                                { key: 'units_total', label: 'סה"כ יח"ד' },
+                                                                { key: 'units_in', label: 'יח"ד קיימות' },
+                                                                { key: 'status_mavat', label: 'סטטוס' },
+                                                                { key: 'plan_summary', label: 'תמצית שם' },
+                                                                { key: 'plan_name_he', label: 'שם התכנית' },
+                                                                { key: 'shavatz_in_sqm', label: 'שב"צ מ"ר' },
+                                                                { key: 'mavat_date', label: 'תאריך סטטוס' },
+                                                                { key: 'rental_units', label: 'יח"ד להשכרה' },
+                                                                { key: 'commerce_sqm', label: 'מסחר מ"ר' },
+                                                                { key: 'employment_sqm', label: 'תעסוקה מ"ר' },
+                                                                { key: 'hotel_rooms', label: 'חדרי מלון' },
+                                                            ];
+
+                                                            const gd = geoDataRef.current;
+                                                            const planMap = {};
+                                                            if (gd.plans) gd.plans.features.forEach(f => {
+                                                                const id = f.properties.plan_name || '';
+                                                                if (id) planMap[id] = f.properties;
+                                                            });
+
+                                                            const collected = [];
+                                                            let idx = 0;
+
+                                                            function showNext() {
+                                                                if (idx >= entries.length) {
+                                                                    // Done — download JSON
+                                                                    const old = document.getElementById('gs-update-overlay');
+                                                                    if (old) old.remove();
+                                                                    if (!collected.length) { alert('לא נבחרו עדכונים'); return; }
+                                                                    const json = JSON.stringify(collected, null, 2);
+                                                                    const blob = new Blob([json], {type:'application/json;charset=utf-8'});
+                                                                    const url = URL.createObjectURL(blob);
+                                                                    const a = document.createElement('a');
+                                                                    a.href = url; a.download = 'gs_updates.json'; a.click();
+                                                                    URL.revokeObjectURL(url);
+                                                                    alert('נוצר gs_updates.json עם ' + collected.length + ' עדכונים.\nהרץ: python apply_annotations.py gs_updates.json');
+                                                                    return;
+                                                                }
+                                                                const [planId, note] = entries[idx];
+                                                                const p = planMap[planId] || {};
+                                                                const planLabel = p.plan_summary || p.plan_name_he || planId;
+
+                                                                let overlay = document.getElementById('gs-update-overlay');
+                                                                if (!overlay) {
+                                                                    overlay = document.createElement('div');
+                                                                    overlay.id = 'gs-update-overlay';
+                                                                    Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'});
+                                                                    document.body.appendChild(overlay);
+                                                                }
+
+                                                                const optionsHtml = GS_FIELDS.map(f => '<option value="'+f.key+'">'+f.label+'</option>').join('');
+                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:24px;min-width:380px;max-width:500px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                    + '<div style="font-size:11px;color:#888;margin-bottom:8px">הערה ' + (idx+1) + ' מתוך ' + entries.length + '</div>'
+                                                                    + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div>'
+                                                                    + '<div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
+                                                                    + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:16px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
+                                                                    + '<div style="margin-bottom:10px"><label style="font-size:12px;color:#aaa">שדה לעדכון:</label><br/>'
+                                                                    + '<select id="gs-upd-field" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:13px;margin-top:4px">'
+                                                                    + '<option value="">-- בחר שדה --</option>' + optionsHtml + '</select></div>'
+                                                                    + '<div style="margin-bottom:16px"><label style="font-size:12px;color:#aaa">ערך חדש:</label><br/>'
+                                                                    + '<input id="gs-upd-value" type="text" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:13px;margin-top:4px;box-sizing:border-box" /></div>'
+                                                                    + '<div style="display:flex;gap:8px;justify-content:flex-start">'
+                                                                    + '<button id="gs-upd-ok" style="padding:8px 20px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px">אישור</button>'
+                                                                    + '<button id="gs-upd-skip" style="padding:8px 20px;border-radius:6px;border:none;background:#555;color:#fff;cursor:pointer;font-size:13px">דלג</button>'
+                                                                    + '<button id="gs-upd-cancel" style="padding:8px 20px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px">ביטול</button>'
+                                                                    + '</div></div>';
+
+                                                                document.getElementById('gs-upd-ok').onclick = () => {
+                                                                    const field = document.getElementById('gs-upd-field').value;
+                                                                    const value = document.getElementById('gs-upd-value').value.trim();
+                                                                    if (!field) { alert('יש לבחור שדה'); return; }
+                                                                    if (!value) { alert('יש להזין ערך'); return; }
+                                                                    collected.push({ plan_name: planId, field, value, note });
+                                                                    idx++;
+                                                                    showNext();
+                                                                };
+                                                                document.getElementById('gs-upd-skip').onclick = () => { idx++; showNext(); };
+                                                                document.getElementById('gs-upd-cancel').onclick = () => {
+                                                                    overlay.remove();
+                                                                    if (collected.length) {
+                                                                        if (confirm('יש ' + collected.length + ' עדכונים שנאספו. להוריד אותם?')) {
+                                                                            const json = JSON.stringify(collected, null, 2);
+                                                                            const blob = new Blob([json], {type:'application/json;charset=utf-8'});
+                                                                            const url = URL.createObjectURL(blob);
+                                                                            const a = document.createElement('a');
+                                                                            a.href = url; a.download = 'gs_updates.json'; a.click();
+                                                                            URL.revokeObjectURL(url);
+                                                                        }
+                                                                    }
+                                                                };
+                                                            }
+                                                            showNext();
+                                                        }}>
+                                                        &#128259; עדכן GS
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
