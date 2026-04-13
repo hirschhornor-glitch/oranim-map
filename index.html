@@ -1803,6 +1803,7 @@
                     { id: 'shem_baka', name: 'בקעה רבתי', on: true, minahak: 'בקעה רבתי' },
                     { id: 'shem_malha', name: 'מלחה', on: true, minahak: 'מינהל מוסדי מלחה' },
                     { id: 'shem_talpiot', name: 'א.ת. תלפיות', on: true, minahak: 'א.ת. תלפיות' },
+                    { id: 'shem_givat_hamatos', name: 'גבעת המטוס', on: true, minahak: 'גבעת המטוס' },
                 ]
             },
             landuse_kayam: {
@@ -2707,7 +2708,7 @@
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
             'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
             'בקעה רבתי': ['תלפיות ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות'],
-            // 'גבעת המטוס': ['גבעת המטוס'], // no WMS layer available
+            'גבעת המטוס': ['גבעת המטוס'],
             'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
             'גינות העיר': ['המושבה הגרמנית', 'המושבה היוונית', 'ניות', 'טלביה', 'קטמון הישנה', 'קרית שמואל', 'רחביה'],
             'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
@@ -4840,10 +4841,9 @@
                         });
                     });
 
-                    const EXCLUDE_MINAHAK = ['גבעת המטוס'];
-                    const minahaks = minahakOrder.filter(m => byMinahak[m] && !EXCLUDE_MINAHAK.includes(m));
+                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
                     Object.keys(byMinahak).forEach(m => {
-                        if (!minahaks.includes(m) && m && !EXCLUDE_MINAHAK.includes(m)) minahaks.push(m);
+                        if (!minahaks.includes(m) && m) minahaks.push(m);
                     });
 
                     // Collect all type groups that have data
@@ -6164,7 +6164,7 @@
                             const minahak = (f.properties.minahak || '').trim();
                             if (total <= 0 || !f.geometry) return false;
                             if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
-                            if (minahak === 'גבעת המטוס') return false;
+                            if (!planInMinahak(f.properties)) return false;
                             return true;
                         },
                         style: f => {
