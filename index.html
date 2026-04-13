@@ -5317,11 +5317,12 @@
                             const p = f.properties;
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
-                            if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
-                                const endDate = p.objection_end_date || '';
-                                if (endDate) {
-                                    const parts = endDate.split('/');
-                                    if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                            if (planningTopics.objections && p.has_objection_btn && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
+                                const md = (p.mavat_date || '').split('/');
+                                if (md.length === 3) {
+                                    const statusDate = new Date(md[2], md[1]-1, md[0]);
+                                    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
+                                    if (statusDate < cutoff) return false;
                                 }
                                 return true;
                             }
@@ -5329,7 +5330,7 @@
                         },
                         style: f => {
                             const p = f.properties;
-                            if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
+                            if (planningTopics.objections && p.has_objection_btn && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים')
                                 return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
@@ -6226,21 +6227,13 @@
                 const isObjectionStatus = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
                 const objEndDate = props.objection_end_date || '';
                 let objectionStillOpen = false;
-                if (isObjectionStatus) {
-                    if (objEndDate) {
-                        const parts = objEndDate.split('/');
-                        if (parts.length === 3) {
-                            const end = new Date(parts[2], parts[1]-1, parts[0]);
-                            objectionStillOpen = end >= new Date();
-                        }
-                    } else {
-                        const md = (props.mavat_date || '').split('/');
-                        if (md.length === 3) {
-                            const statusDate = new Date(md[2], md[1]-1, md[0]);
-                            const cutoff = new Date();
-                            cutoff.setDate(cutoff.getDate() - 90);
-                            objectionStillOpen = statusDate >= cutoff;
-                        }
+                if (isObjectionStatus && props.has_objection_btn) {
+                    const md = (props.mavat_date || '').split('/');
+                    if (md.length === 3) {
+                        const statusDate = new Date(md[2], md[1]-1, md[0]);
+                        const cutoff = new Date();
+                        cutoff.setDate(cutoff.getDate() - 60);
+                        objectionStillOpen = statusDate >= cutoff;
                     }
                 }
                 if (objectionStillOpen) {
@@ -8918,11 +8911,13 @@
                             if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
-                            // Hide if objection_end_date exists and is in the past
-                            const endDate = f.properties.objection_end_date || '';
-                            if (endDate) {
-                                const parts = endDate.split('/');
-                                if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                            if (!f.properties.has_objection_btn) return false;
+                            // Hide if mavat_date is older than 60 days
+                            const md = (f.properties.mavat_date || '').split('/');
+                            if (md.length === 3) {
+                                const statusDate = new Date(md[2], md[1]-1, md[0]);
+                                const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
+                                if (statusDate < cutoff) return false;
                             }
                             const planId = f.properties.plan_name || '';
                             if (seenPlans.has(planId)) return false;
