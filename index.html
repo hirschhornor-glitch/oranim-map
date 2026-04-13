@@ -938,6 +938,39 @@
         .modal-action-btn.primary { background: #e94560; border-color: #e94560; color: #fff; }
         .modal-action-btn.primary:hover { background: #d6375a; }
 
+        /* ── Note Input Modal ── */
+        .note-overlay {
+            position: fixed; inset: 0; z-index: 10001;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .note-modal {
+            background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
+            width: 90vw; max-width: 380px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            direction: rtl; font-family: Assistant, sans-serif;
+            animation: fadeIn 0.2s ease;
+        }
+        .note-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; border-bottom: 1px solid #2a2a4a;
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-radius: 14px 14px 0 0;
+        }
+        .note-modal-header h3 { margin: 0; font-size: 15px; color: #e0e0ff; }
+        .note-modal-body { padding: 16px 18px; }
+        .note-modal-body textarea {
+            width: 100%; min-height: 80px; background: #1a1a3a; border: 1px solid #2a2a4a;
+            border-radius: 8px; padding: 10px 12px; color: #e0e0ff; font-size: 14px;
+            font-family: inherit; direction: rtl; resize: vertical; box-sizing: border-box;
+        }
+        .note-modal-body textarea:focus { outline: none; border-color: #4a69d1; }
+        .note-modal-footer {
+            display: flex; gap: 8px; justify-content: flex-start;
+            padding: 0 18px 16px;
+        }
+
         /* ── Print Modal ── */
         .print-overlay {
             position: fixed; inset: 0; z-index: 2000;
@@ -2784,6 +2817,30 @@
             // Annotations (notes) for plans
             if (!window.__annotations) {
                 window.__annotations = JSON.parse(localStorage.getItem('plan_annotations') || '{}');
+            }
+            if (!window.showNoteModal) {
+                window.showNoteModal = function(currentNote) {
+                    return new Promise(function(resolve) {
+                        var overlay = document.createElement('div');
+                        overlay.className = 'note-overlay';
+                        overlay.innerHTML = '<div class="note-modal">' +
+                            '<div class="note-modal-header"><h3>\u05d4\u05e2\u05e8\u05d4 \u05dc\u05ea\u05db\u05e0\u05d9\u05ea</h3><button class="modal-close note-cancel">&times;</button></div>' +
+                            '<div class="note-modal-body"><textarea class="note-textarea" dir="rtl"></textarea></div>' +
+                            '<div class="note-modal-footer">' +
+                            '<button class="modal-action-btn primary note-confirm">\u05d0\u05d9\u05e9\u05d5\u05e8</button>' +
+                            '<button class="modal-action-btn note-cancel">\u05d1\u05d9\u05d8\u05d5\u05dc</button>' +
+                            '</div></div>';
+                        document.body.appendChild(overlay);
+                        var ta = overlay.querySelector('.note-textarea');
+                        ta.value = currentNote || '';
+                        setTimeout(function() { ta.focus(); }, 50);
+                        function close(val) { document.body.removeChild(overlay); resolve(val); }
+                        overlay.querySelector('.note-confirm').onclick = function() { close(ta.value); };
+                        overlay.querySelectorAll('.note-cancel').forEach(function(b) { b.onclick = function() { close(null); }; });
+                        overlay.addEventListener('click', function(e) { if (e.target === overlay) close(null); });
+                        ta.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(null); });
+                    });
+                };
             }
             const [filters, setFilters] = useState({ minUnits: '', maxUnits: '', planTypes: [], statuses: [], freeText: '' });
             const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
@@ -6616,14 +6673,15 @@
                     if (btn.dataset.action === 'add-note') {
                         const planId = btn.dataset.plan;
                         const current = window.__annotations[planId] || '';
-                        const note = prompt('הערה:', current);
-                        if (note !== null) {
-                            window.__annotations[planId] = note;
-                            localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
-                            const isFuture = allShavaz && allShavaz[shavazIdx] ? allShavaz[shavazIdx].isFuture : false;
-                            const navInfo = allShavaz && allShavaz.length > 1 ? { current: shavazIdx, total: allShavaz.length } : null;
-                            popup.setContent(buildShavazPopup(shavazProps, isFuture, !!originPlanProps, navInfo));
-                        }
+                        window.showNoteModal(current).then(function(note) {
+                            if (note !== null) {
+                                window.__annotations[planId] = note;
+                                localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                                const isFuture = allShavaz && allShavaz[shavazIdx] ? allShavaz[shavazIdx].isFuture : false;
+                                const navInfo = allShavaz && allShavaz.length > 1 ? { current: shavazIdx, total: allShavaz.length } : null;
+                                popup.setContent(buildShavazPopup(shavazProps, isFuture, !!originPlanProps, navInfo));
+                            }
+                        });
                         return;
                     }
                     if (btn.dataset.action === 'jump-to-plan') {
@@ -8835,14 +8893,15 @@
                                                     <td style={{textAlign:'center',padding:'2px'}}>
                                                         <button onClick={() => {
                                                             const current = (window.__annotations && window.__annotations[noteKey]) || '';
-                                                            const note = prompt('הערה לתכנית:', current);
-                                                            if (note !== null) {
-                                                                if (!window.__annotations) window.__annotations = {};
-                                                                if (note) window.__annotations[noteKey] = note;
-                                                                else delete window.__annotations[noteKey];
-                                                                localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
-                                                                setAnnotationsRefresh(prev => prev + 1);
-                                                            }
+                                                            window.showNoteModal(current).then(note => {
+                                                                if (note !== null) {
+                                                                    if (!window.__annotations) window.__annotations = {};
+                                                                    if (note) window.__annotations[noteKey] = note;
+                                                                    else delete window.__annotations[noteKey];
+                                                                    localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                                                                    setAnnotationsRefresh(prev => prev + 1);
+                                                                }
+                                                            });
                                                         }} title={hasNote ? window.__annotations[noteKey] : 'הוסף הערה'}
                                                         style={{background:'transparent',border:'none',cursor:'pointer',fontSize:14,padding:'2px 4px',color: hasNote ? '#ffeaa7' : '#666'}}>
                                                             &#128221;
