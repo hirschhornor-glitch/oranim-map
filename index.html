@@ -8156,128 +8156,138 @@
                                                 </div>
                                             </div>
                                             <button className="modal-action-btn" style={{background:'#1976d2', borderColor:'#1976d2', color:'#fff'}} onClick={() => {
-                                                            // ── Update GS: step through annotations ──
+                                                            // ── Update GS: auto-detect + manual fallback + direct GS update ──
                                                             const annots = window.__annotations || {};
                                                             const entries = Object.entries(annots).filter(([k, v]) => v && v.trim() && !k.startsWith('shavaz_'));
                                                             if (!entries.length) { alert('אין הערות לעדכון'); return; }
-
                                                             const GS_FIELDS = [
                                                                 { key: 'units_add', label: 'תוספת יח"ד' },
                                                                 { key: 'units_total', label: 'סה"כ יח"ד' },
                                                                 { key: 'units_in', label: 'יח"ד קיימות' },
-                                                                { key: 'status_mavat', label: 'סטטוס' },
                                                                 { key: 'plan_summary', label: 'תמצית שם' },
-                                                                { key: 'plan_name_he', label: 'שם התכנית' },
                                                                 { key: 'shavatz_out_prog', label: 'שב"צ יוצא פרוגרמה' },
                                                                 { key: 'shavatz_out_sqm', label: 'שב"צ יוצא מ"ר' },
-                                                                { key: 'shavatz_in_prog', label: 'הפרשה מבונה פרוגרמה' },
-                                                                { key: 'shavatz_in_sqm', label: 'הפרשה מבונה מ"ר' },
-                                                                { key: 'mavat_date', label: 'תאריך סטטוס' },
+                                                                { key: 'shavatz_in_sqm', label: 'שב"צ נכנס מ"ר' },
+                                                                { key: 'hafrash_sqm', label: 'הפרשה מבונה מ"ר' },
+                                                                { key: 'hafrash_prg', label: 'הפרשה מבונה פרוגרמה' },
+                                                                { key: 'shatzap_out', label: 'שצ"פ יוצא' },
+                                                                { key: 'shatzap_in', label: 'שצ"פ נכנס' },
                                                                 { key: 'rental_units', label: 'יח"ד להשכרה' },
                                                                 { key: 'commerce_sqm', label: 'מסחר מ"ר' },
                                                                 { key: 'employment_sqm', label: 'תעסוקה מ"ר' },
                                                                 { key: 'hotel_rooms', label: 'חדרי מלון' },
                                                                 { key: 'plan_type', label: 'סוג תכנית' },
                                                             ];
-
-                                                            const gd = geoDataRef.current;
-                                                            const planMap = {};
-                                                            if (gd.plans) gd.plans.features.forEach(f => {
-                                                                const id = f.properties.plan_name || '';
-                                                                if (id) planMap[id] = f.properties;
-                                                            });
-
-                                                            const collected = [];
-                                                            let idx = 0;
-
-                                                            function showNext() {
-                                                                if (idx >= entries.length) {
-                                                                    // Done — download JSON
-                                                                    const old = document.getElementById('gs-update-overlay');
-                                                                    if (old) old.remove();
-                                                                    if (!collected.length) { alert('לא נבחרו עדכונים'); return; }
-                                                                    const json = JSON.stringify(collected, null, 2);
-                                                                    const blob = new Blob([json], {type:'application/json;charset=utf-8'});
-                                                                    const url = URL.createObjectURL(blob);
-                                                                    const a = document.createElement('a');
-                                                                    a.href = url; a.download = 'gs_updates.json'; a.click();
-                                                                    URL.revokeObjectURL(url);
-                                                                    alert('נוצר gs_updates.json עם ' + collected.length + ' עדכונים.\nהרץ: python apply_annotations.py gs_updates.json');
-                                                                    return;
+                                                            const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzg9f_Mj9PliFsXqzUklRQvcSw7mjFtVmQszTCp65ClP3qko-BO13KLjw7nxxMgsp3LMg/exec';
+                                                            function autoDetect(note) {
+                                                                const detected = []; const n = note.replace(/,/g, ''); const seen = new Set();
+                                                                const fieldAliases = {'שב"צ':'shavatz_out_sqm','שבצ':'shavatz_out_sqm','מבני ציבור':'shavatz_out_sqm','שב"צ נכנס':'shavatz_in_sqm','שבצ נכנס':'shavatz_in_sqm','שב"צ קיים':'shavatz_in_sqm','שב"צ יוצא':'shavatz_out_sqm','הפרשה מבונה':'hafrash_sqm','שצ"פ':'shatzap_out','שצפ':'shatzap_out','שצ"פ נכנס':'shatzap_in','שצ"פ קיים':'shatzap_in','שצ"פ יוצא':'shatzap_out','מסחר':'commerce_sqm','תעסוקה':'employment_sqm','משרדים':'employment_sqm','יח"ד':'units_total','תוספת יח"ד':'units_add','תוספת':'units_add','יח"ד קיימות':'units_in','קיימות':'units_in','סה"כ יח"ד':'units_total','סה"כ':'units_total','השכרה':'rental_units','להשכרה':'rental_units','יח"ד להשכרה':'rental_units','מלון':'hotel_rooms','חדרי מלון':'hotel_rooms','תמצית שם':'plan_summary','תמצית':'plan_summary','שם תכנית':'plan_summary'};
+                                                                // Parse structured lines: "שב"צ = 0" or "הפרשה מבונה = 441 מ"ר"
+                                                                for (const line of note.split(/\n/)) {
+                                                                    const m = line.match(/^\s*\d*\.?\s*(.+?)\s*[=:\-–]\s*(.+?)\s*$/);
+                                                                    if (!m) continue;
+                                                                    let key = m[1].replace(/\u201c|\u201d/g, '"').trim(); let val = m[2].replace(/מ"ר|מר/g, '').trim();
+                                                                    let field = fieldAliases[key];
+                                                                    if (!field) { for (const [alias, f] of Object.entries(fieldAliases)) { if (key.includes(alias)) { field = f; break; } } }
+                                                                    if (!field) { const gsf = GS_FIELDS.find(f => key.includes(f.label)); if (gsf) field = gsf.key; }
+                                                                    // Handle prog fields: "בלי מלל בשב"צ פרוגרמה" or "הפרשה מבונה פרוגרמה = 3 כיתות מעון"
+                                                                    if (!field && (key.includes('פרוגרמה') || key.includes('פרוג'))) {
+                                                                        if (key.includes('הפרשה')) field = 'hafrash_prg';
+                                                                        else if (key.includes('שב"צ') || key.includes('שבצ')) field = 'shavatz_out_prog';
+                                                                    }
+                                                                    if (field && !seen.has(field)) { seen.add(field); detected.push({ field, value: val }); }
                                                                 }
-                                                                const [planId, note] = entries[idx];
-                                                                const p = planMap[planId] || {};
-                                                                const planLabel = p.plan_summary || p.plan_name_he || planId;
-
+                                                                // Fallback regex patterns for free-text
+                                                                const patterns = [
+                                                                    { re: /(?:סה"כ|סהכ)\s*[:\-–=]?\s*(\d+)\s*(?:יח"ד|יחד|דירות)/i, field: 'units_total' },
+                                                                    { re: /(?:תוספת)\s*[:\-–=]?\s*(\d+)\s*(?:יח"ד|יחד)/i, field: 'units_add' },
+                                                                    { re: /(?:קיימות|קיים)\s*[:\-–=]?\s*(\d+)\s*(?:יח"ד|יחד)/i, field: 'units_in' },
+                                                                    { re: /(?:שב"צ|שבצ)\s*(?:נכנס|קיים)\s*[:\-–=]?\s*(\d+)/i, field: 'shavatz_in_sqm' },
+                                                                    { re: /(?:שב"צ|שבצ|מבני ציבור)\s*(?:יוצא\s*)?[:\-–=]?\s*(\d+)\s*(?:מ"ר|מר)/i, field: 'shavatz_out_sqm' },
+                                                                    { re: /(?:הפרשה מבונה)\s*[:\-–=]?\s*(\d+)\s*(?:מ"ר|מר)/i, field: 'hafrash_sqm' },
+                                                                    { re: /(?:מסחר)\s*[:\-–=]?\s*(\d+)\s*(?:מ"ר|מר)/i, field: 'commerce_sqm' },
+                                                                    { re: /(?:תעסוקה|משרדים)\s*[:\-–=]?\s*(\d+)\s*(?:מ"ר|מר)/i, field: 'employment_sqm' },
+                                                                    { re: /(?:שצ"פ|שצפ)\s*(?:נכנס|קיים)\s*[:\-–=]?\s*(\d+)/i, field: 'shatzap_in' },
+                                                                    { re: /(?:שצ"פ|שצפ)\s*(?:יוצא\s*)?[:\-–=]?\s*(\d+)\s*(?:מ"ר|מר)/i, field: 'shatzap_out' },
+                                                                ];
+                                                                for (const {re, field} of patterns) { const m2 = n.match(re); if (m2 && !seen.has(field)) { seen.add(field); detected.push({ field, value: m2[1] }); } }
+                                                                // Plan type
+                                                                const typeMap = {'תשתיות':'תשתיות','התחדשות עירונית':'התחדשות עירונית','פינוי בינוי':'פינוי בינוי','עיבוי':'עיבוי ובניה חדשה','תמ"א 38':'תמא 38'};
+                                                                for (const [kw, val] of Object.entries(typeMap)) { if (n.includes(kw) && !seen.has('plan_type')) { seen.add('plan_type'); detected.push({ field: 'plan_type', value: val }); } }
+                                                                const changeM = note.match(/(?:שנה|תשנה|עדכן)\s+(?:את\s+)?(?:ה)?סוג\s+(?:ל|ל-)\s*(.+)/i);
+                                                                if (changeM && !seen.has('plan_type')) { seen.add('plan_type'); detected.push({ field: 'plan_type', value: changeM[1].trim() }); }
+                                                                // Public-use program text → needs user choice
+                                                                const pubUseKw = ['גן ילדים','גני ילדים','מעון יום','מעונות יום','בית כנסת','בתי כנסת','מועדון נוער','מתנ"ס','ספרייה','רווחה','קהילה','תרבות','ספורט','חינוך','בי"ס','בית ספר','טיפת חלב','מקווה','אולם ספורט','לשכת רווחה','משרדים עירוניים','מרכז קהילתי','שלוחת מתנ"ס'];
+                                                                if (pubUseKw.some(kw => n.includes(kw)) && !seen.has('shavatz_out_prog') && !seen.has('hafrash_prg')) { detected.push({ field: '__prog_choice', value: note.trim() }); }
+                                                                return detected;
+                                                            }
+                                                            async function sendToGS(updates) {
+                                                                const overlay = document.getElementById('gs-update-overlay') || document.createElement('div');
+                                                                if (!overlay.id) { overlay.id = 'gs-update-overlay'; Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'}); document.body.appendChild(overlay); }
+                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#9203;</div><div style="font-size:14px">מעדכן ' + updates.length + ' שדות ב-Google Sheets...</div></div>';
+                                                                try {
+                                                                    const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(updates), headers: { 'Content-Type': 'text/plain' } });
+                                                                    const result = await resp.json();
+                                                                    if (result.ok) {
+                                                                        const gd2 = geoDataRef.current;
+                                                                        if (gd2.plans) { const um = {}; updates.forEach(u => { if (!um[u.plan_name]) um[u.plan_name] = {}; um[u.plan_name][u.field] = u.value; }); gd2.plans.features.forEach(f => { const m = um[f.properties.plan_name]; if (m) Object.assign(f.properties, m); }); }
+                                                                        const updatedPlans = new Set(updates.map(u => u.plan_name)); const annots2 = window.__annotations || {}; updatedPlans.forEach(pn => { delete annots2[pn]; }); localStorage.setItem('plan_annotations', JSON.stringify(annots2));
+                                                                        overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #27ae60;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#9989;</div><div style="font-size:14px;margin-bottom:8px">עודכנו ' + result.applied + ' שדות בהצלחה</div>' + (result.skipped && result.skipped.length ? '<div style="font-size:11px;color:#f39c12;margin-bottom:8px">דולגו: ' + result.skipped.join(', ') + '</div>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="padding:8px 24px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px;margin-top:8px">סגור</button></div>';
+                                                                    } else { throw new Error(result.error || 'Unknown error'); }
+                                                                } catch (err) { overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #c0392b;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#10060;</div><div style="font-size:14px;margin-bottom:8px">שגיאה: ' + err.message + '</div><button onclick="this.closest(\'div\').parentElement.remove()" style="padding:8px 24px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px;margin-top:8px">סגור</button></div>'; }
+                                                            }
+                                                            const gd = geoDataRef.current; const planMap = {};
+                                                            if (gd.plans) gd.plans.features.forEach(f => { const id = f.properties.plan_name || ''; if (id) planMap[id] = f.properties; });
+                                                            const collected = []; const needsManual = []; const needsProgChoice = [];
+                                                            for (const [planId, note] of entries) {
+                                                                const detected = autoDetect(note); const progItem = detected.find(d => d.field === '__prog_choice'); const others = detected.filter(d => d.field !== '__prog_choice');
+                                                                if (others.length) { others.forEach(d => collected.push({ plan_name: planId, field: d.field, value: d.value, note })); }
+                                                                if (progItem) { needsProgChoice.push([planId, note, progItem.value]); } else if (!others.length) { needsManual.push([planId, note]); }
+                                                            }
+                                                            if (!needsProgChoice.length && !needsManual.length) { if (collected.length) { sendToGS(collected); } else { alert('לא זוהו שדות לעדכון בהערות'); } return; }
+                                                            let progIdx = 0;
+                                                            function showProgChoice() {
+                                                                if (progIdx >= needsProgChoice.length) { showManualNext(); return; }
+                                                                const [planId, note, progText] = needsProgChoice[progIdx]; const p = planMap[planId] || {}; const planLabel = p.plan_summary || p.plan_name_he || planId;
                                                                 let overlay = document.getElementById('gs-update-overlay');
-                                                                if (!overlay) {
-                                                                    overlay = document.createElement('div');
-                                                                    overlay.id = 'gs-update-overlay';
-                                                                    Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'});
-                                                                    document.body.appendChild(overlay);
-                                                                }
-
-                                                                const optionsHtml = GS_FIELDS.map(f => '<option value="'+f.key+'">'+f.label+'</option>').join('');
-                                                                let pendingRows = []; // rows added for this annotation
-
+                                                                if (!overlay) { overlay = document.createElement('div'); overlay.id = 'gs-update-overlay'; Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'}); document.body.appendChild(overlay); }
+                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #4fc3f7;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                    + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:8px">זוהו שימושים ציבוריים (' + (progIdx+1) + '/' + needsProgChoice.length + ')</div>'
+                                                                    + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div><div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
+                                                                    + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:16px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
+                                                                    + '<div style="font-size:13px;margin-bottom:12px">לאיזה שדה לשייך?</div><div style="display:flex;gap:8px;flex-wrap:wrap">'
+                                                                    + '<button id="gs-prog-shavatz" style="padding:10px 20px;border-radius:6px;border:none;background:#8B4513;color:#fff;cursor:pointer;font-size:13px">שב"צ יוצא פרוגרמה</button>'
+                                                                    + '<button id="gs-prog-hafrash" style="padding:10px 20px;border-radius:6px;border:none;background:#C4956A;color:#fff;cursor:pointer;font-size:13px">הפרשה מבונה פרוגרמה</button>'
+                                                                    + '<button id="gs-prog-skip" style="padding:10px 20px;border-radius:6px;border:none;background:#555;color:#fff;cursor:pointer;font-size:13px">דלג</button></div></div>';
+                                                                document.getElementById('gs-prog-shavatz').onclick = () => { collected.push({ plan_name: planId, field: 'shavatz_out_prog', value: progText, note }); progIdx++; showProgChoice(); };
+                                                                document.getElementById('gs-prog-hafrash').onclick = () => { collected.push({ plan_name: planId, field: 'hafrash_prg', value: progText, note }); progIdx++; showProgChoice(); };
+                                                                document.getElementById('gs-prog-skip').onclick = () => { progIdx++; showProgChoice(); };
+                                                            }
+                                                            let manualIdx = 0;
+                                                            function showManualNext() {
+                                                                if (manualIdx >= needsManual.length) { const old = document.getElementById('gs-update-overlay'); if (old) old.remove(); if (collected.length) { sendToGS(collected); } else { alert('לא נבחרו עדכונים'); } return; }
+                                                                const [planId, note] = needsManual[manualIdx]; const p = planMap[planId] || {}; const planLabel = p.plan_summary || p.plan_name_he || planId;
+                                                                let overlay = document.getElementById('gs-update-overlay');
+                                                                if (!overlay) { overlay = document.createElement('div'); overlay.id = 'gs-update-overlay'; Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'}); document.body.appendChild(overlay); }
+                                                                const optionsHtml = GS_FIELDS.map(f => '<option value="'+f.key+'">'+f.label+'</option>').join(''); let pendingRows = [];
                                                                 function renderDialog() {
-                                                                    const addedHtml = pendingRows.length ? '<div style="margin-bottom:12px;border:1px solid #2a2a4a;border-radius:6px;padding:8px;background:#252540">'
-                                                                        + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:4px">שדות שנוספו:</div>'
-                                                                        + pendingRows.map((r,i) => '<div style="font-size:12px;color:#aaa;padding:2px 0">'
-                                                                            + GS_FIELDS.find(f=>f.key===r.field)?.label + ' = ' + r.value
-                                                                            + '</div>').join('')
-                                                                        + '</div>' : '';
-
-                                                                    overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
-                                                                        + '<div style="font-size:11px;color:#888;margin-bottom:8px">הערה ' + (idx+1) + ' מתוך ' + entries.length + '</div>'
-                                                                        + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div>'
-                                                                        + '<div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
-                                                                        + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
-                                                                        + addedHtml
-                                                                        + '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end">'
-                                                                        + '<div style="flex:1"><label style="font-size:11px;color:#aaa">שדה:</label>'
-                                                                        + '<select id="gs-upd-field" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px">'
-                                                                        + '<option value="">-- בחר --</option>' + optionsHtml + '</select></div>'
-                                                                        + '<div style="flex:1"><label style="font-size:11px;color:#aaa">ערך:</label>'
-                                                                        + '<input id="gs-upd-value" type="text" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px;box-sizing:border-box" /></div>'
-                                                                        + '<button id="gs-upd-add" style="padding:6px 12px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;white-space:nowrap">+ הוסף</button>'
-                                                                        + '</div>'
-                                                                        + '<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:12px">'
-                                                                        + '<button id="gs-upd-next" style="padding:8px 20px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px">' + (pendingRows.length ? 'הבא ←' : 'דלג') + '</button>'
-                                                                        + '<button id="gs-upd-cancel" style="padding:8px 20px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px">סיום</button>'
-                                                                        + '</div></div>';
-
-                                                                    document.getElementById('gs-upd-add').onclick = () => {
-                                                                        const field = document.getElementById('gs-upd-field').value;
-                                                                        const value = document.getElementById('gs-upd-value').value.trim();
-                                                                        if (!field) { alert('יש לבחור שדה'); return; }
-                                                                        if (!value) { alert('יש להזין ערך'); return; }
-                                                                        pendingRows.push({ plan_name: planId, field, value, note });
-                                                                        renderDialog(); // re-render to show added row
-                                                                    };
-                                                                    document.getElementById('gs-upd-next').onclick = () => {
-                                                                        collected.push(...pendingRows);
-                                                                        pendingRows = [];
-                                                                        idx++;
-                                                                        showNext();
-                                                                    };
-                                                                    document.getElementById('gs-upd-cancel').onclick = () => {
-                                                                        collected.push(...pendingRows);
-                                                                        overlay.remove();
-                                                                        if (collected.length) {
-                                                                            const json = JSON.stringify(collected, null, 2);
-                                                                            const blob = new Blob([json], {type:'application/json;charset=utf-8'});
-                                                                            const url = URL.createObjectURL(blob);
-                                                                            const a = document.createElement('a');
-                                                                            a.href = url; a.download = 'gs_updates.json'; a.click();
-                                                                            URL.revokeObjectURL(url);
-                                                                            alert('נוצר gs_updates.json עם ' + collected.length + ' עדכונים.\nהרץ: python apply_annotations.py gs_updates.json');
-                                                                        }
-                                                                    };
+                                                                    const addedHtml = pendingRows.length ? '<div style="margin-bottom:12px;border:1px solid #2a2a4a;border-radius:6px;padding:8px;background:#252540"><div style="font-size:11px;color:#4fc3f7;margin-bottom:4px">שדות שנוספו:</div>' + pendingRows.map(r => '<div style="font-size:12px;color:#aaa;padding:2px 0">' + GS_FIELDS.find(f=>f.key===r.field)?.label + ' = ' + r.value + '</div>').join('') + '</div>' : '';
+                                                                    overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #f39c12;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                        + '<div style="font-size:11px;color:#f39c12;margin-bottom:8px">&#9888; לא זוהה אוטומטית (' + (manualIdx+1) + '/' + needsManual.length + ')</div>'
+                                                                        + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div><div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
+                                                                        + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>' + addedHtml
+                                                                        + '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end"><div style="flex:1"><label style="font-size:11px;color:#aaa">שדה:</label><select id="gs-upd-field" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px"><option value="">-- בחר --</option>' + optionsHtml + '</select></div>'
+                                                                        + '<div style="flex:1"><label style="font-size:11px;color:#aaa">ערך:</label><input id="gs-upd-value" type="text" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a4a;background:#252540;color:#e0e0e0;font-size:12px;margin-top:2px;box-sizing:border-box" /></div>'
+                                                                        + '<button id="gs-upd-add" style="padding:6px 12px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;white-space:nowrap">+ הוסף</button></div>'
+                                                                        + '<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:12px"><button id="gs-upd-next" style="padding:8px 20px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px">' + (pendingRows.length ? 'הבא &larr;' : 'דלג') + '</button>'
+                                                                        + '<button id="gs-upd-cancel" style="padding:8px 20px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px">סיום</button></div></div>';
+                                                                    document.getElementById('gs-upd-add').onclick = () => { const field = document.getElementById('gs-upd-field').value; const value = document.getElementById('gs-upd-value').value.trim(); if (!field) { alert('יש לבחור שדה'); return; } if (!value) { alert('יש להזין ערך'); return; } pendingRows.push({ plan_name: planId, field, value, note }); renderDialog(); };
+                                                                    document.getElementById('gs-upd-next').onclick = () => { collected.push(...pendingRows); pendingRows = []; manualIdx++; showManualNext(); };
+                                                                    document.getElementById('gs-upd-cancel').onclick = () => { collected.push(...pendingRows); overlay.remove(); if (collected.length) { sendToGS(collected); } };
                                                                 }
                                                                 renderDialog();
                                                             }
-                                                            showNext();
+                                                            showProgChoice();
                                                         }}>
                                                         &#128259; עדכן GS
                                             </button>
