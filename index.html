@@ -3033,18 +3033,16 @@
                     setLayers(prev => {
                         const newLayers = { ...prev };
                         allKnownIds.forEach(id => {
-                            // Only toggle layers that appear in hash OR are planning/admin layers
-                            // Keep default for infrastructure layers not mentioned in hash
                             if (hashLayerIds.includes(id)) {
                                 newLayers[id] = true;
                             } else {
-                                // Check if this layer type was part of hash (any from same group)
                                 const group = Object.values(LAYER_CONFIG).find(g => g.layers.some(l => l.id === id));
                                 const groupHasAny = group && group.layers.some(l => hashLayerIds.includes(l.id));
-                                if (groupHasAny) {
+                                const layerDef = group && group.layers.find(l => l.id === id);
+                                if (groupHasAny && !(layerDef && layerDef.on)) {
                                     newLayers[id] = false; // explicitly excluded
                                 }
-                                // else: keep default (layer added after hash was created)
+                                // else: keep default (default-on layer or layer added after hash was created)
                             }
                         });
                         return newLayers;
