@@ -4664,7 +4664,7 @@
                         plansBySubType[m] = {};
                     });
 
-                    // Filter out plans already implemented in kayam
+                    // Filter out plans already implemented in kayam (only if no permits AND date <= 2019)
                     const kayamSet = window.__kayamTabaSet;
                     if (kayamSet && kayamSet.size > 0) {
                         const beforeLen = planRows.length;
@@ -4672,7 +4672,12 @@
                             const pn = (p.plan_name || '').trim();
                             if (!pn || !pn.includes('-')) return true;
                             const taba = String(parseInt(pn.split('-')[1]));
-                            return !kayamSet.has(taba);
+                            if (!kayamSet.has(taba)) return true;
+                            const hasPermit = (p.stage || '').trim() !== '';
+                            const dateStr = p.mavat_date || '';
+                            const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+                            const isOld = year > 0 && year <= 2019;
+                            return hasPermit || !isOld;
                         });
                         console.log('[Filter] planRows:', beforeLen, '->', planRows.length, '(removed', beforeLen - planRows.length, 'already-implemented plans)');
                     }
@@ -5005,11 +5010,20 @@
                         const s = normalizeStatus((f.properties.status_mavat || '').trim());
                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                         if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
-                        // Filter already-implemented plans
+                        // Filter already-implemented plans: hide only if ALL 3 conditions met:
+                        // 1) taba is in kayamTabaSet (has existing landuse)
+                        // 2) no permits (stage field is empty)
+                        // 3) plan date is 2019 or before
                         const kt = window.__kayamTabaSet;
                         if (kt && kt.size > 0) {
                             const t = String(f.properties.taba || '').trim();
-                            if (t && kt.has(t)) return false;
+                            if (t && kt.has(t)) {
+                                const hasPermit = (f.properties.stage || '').trim() !== '';
+                                const dateStr = f.properties.mavat_date || '';
+                                const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+                                const isOld = year > 0 && year <= 2019;
+                                if (!hasPermit && isOld) return false;
+                            }
                         }
                         return true;
                     }).length;
@@ -5022,11 +5036,18 @@
                             const s = normalizeStatus((f.properties.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
-                            // Filter already-implemented plans
+                            // Filter already-implemented plans: hide only if ALL 3 conditions met:
+                            // 1) taba is in kayamTabaSet  2) no permits  3) plan date <= 2019
                             const kt = window.__kayamTabaSet;
                             if (kt && kt.size > 0) {
                                 const t = String(f.properties.taba || '').trim();
-                                if (t && kt.has(t)) return false;
+                                if (t && kt.has(t)) {
+                                    const hasPermit = (f.properties.stage || '').trim() !== '';
+                                    const dateStr = f.properties.mavat_date || '';
+                                    const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+                                    const isOld = year > 0 && year <= 2019;
+                                    if (!hasPermit && isOld) return false;
+                                }
                             }
                             // Advanced filters
                             const af = filters;
@@ -5336,7 +5357,13 @@
                             const kt = window.__kayamTabaSet;
                             if (kt && kt.size > 0) {
                                 const t = String(f.properties.taba || '').trim();
-                                if (t && kt.has(t)) return false;
+                                if (t && kt.has(t)) {
+                                    const hasPermit = (f.properties.stage || '').trim() !== '';
+                                    const dateStr = f.properties.mavat_date || '';
+                                    const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+                                    const isOld = year > 0 && year <= 2019;
+                                    if (!hasPermit && isOld) return false;
+                                }
                             }
                             const p = f.properties;
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
