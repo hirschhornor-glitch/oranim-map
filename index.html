@@ -4387,10 +4387,11 @@
             }, [measureMode, stopMeasure]);
 
             // ── Print function ──
-            const [printScale, setPrintScale] = useState('current'); // 'current' | '1:2500' | '1:5000' | ...
+            const [printScale, setPrintScale] = useState('fit'); // 'fit' | 'current' | '1:2500' | ...
             const [printPageSize, setPrintPageSize] = useState('A4'); // 'A4' | 'A3'
             const [printOrientation, setPrintOrientation] = useState('landscape'); // 'landscape' | 'portrait'
             const PRINT_SCALES = [
+                { value: 'fit', label: 'מותאם לדף' },
                 { value: 'current', label: 'קנ"מ נוכחי' },
                 { value: '1:2500', label: '1:2,500', denom: 2500 },
                 { value: '1:5000', label: '1:5,000', denom: 5000 },
@@ -4459,13 +4460,19 @@
                 let printScaleLabel;
                 const selectedScale = PRINT_SCALES.find(s => s.value === printScale);
 
-                if (printScale !== 'current' && selectedScale && selectedScale.denom) {
+                if (printScale !== 'current' && printScale !== 'fit' && selectedScale && selectedScale.denom) {
                     // Calculate bounds for exact scale
                     // At this scale, 1 cm on paper = denom cm in reality
                     // Print area ~ A4 landscape = ~27cm x 17cm
-                    const paperDims = printPageSize === 'A3'
-                        ? (printOrientation === 'landscape' ? { w: 38, h: 25 } : { w: 25, h: 35 })
-                        : (printOrientation === 'landscape' ? { w: 27, h: 17 } : { w: 17, h: 25 });
+                    const PAPER_SIZES = {
+                        A4: { w: 27, h: 17 },
+                        A3: { w: 38, h: 25 },
+                        A2: { w: 55, h: 37 },
+                        A1: { w: 79, h: 53 },
+                        A0: { w: 112, h: 77 },
+                    };
+                    const baseDims = PAPER_SIZES[printPageSize] || PAPER_SIZES.A4;
+                    const paperDims = printOrientation === 'landscape' ? baseDims : { w: baseDims.h, h: baseDims.w };
                     const paperWidthCm = paperDims.w;
                     const paperHeightCm = paperDims.h;
                     const metersWide = (selectedScale.denom * paperWidthCm) / 100;
@@ -4508,11 +4515,15 @@
                     document.body.appendChild(printLegendEl);
                 }
 
+                const PAGE_MM = { A4:[210,297], A3:[297,420], A2:[420,594], A1:[594,841], A0:[841,1189] };
+                const [pw, ph] = PAGE_MM[printPageSize] || PAGE_MM.A4;
+                const pageSize = printOrientation === 'landscape' ? `${ph}mm ${pw}mm` : `${pw}mm ${ph}mm`;
+
                 const printStyle = document.createElement('style');
                 printStyle.id = 'print-inject-style';
                 printStyle.textContent = `
                     @media print {
-                        @page { size: ${printPageSize} ${printOrientation}; margin: 8mm; }
+                        @page { size: ${pageSize}; margin: 8mm; }
                         body { overflow: hidden; }
                         .sidebar, .top-bar, .toolbar, .leaflet-control-zoom,
                         .leaflet-control-attribution, .leaflet-control-scale,
@@ -7898,6 +7909,9 @@
                                             >
                                                 <option value="A4">A4</option>
                                                 <option value="A3">A3</option>
+                                                <option value="A2">A2</option>
+                                                <option value="A1">A1</option>
+                                                <option value="A0">A0</option>
                                             </select>
                                         </div>
                                         <div className="print-field" style={{flex:1}}>
@@ -7929,9 +7943,7 @@
                                     <button className="modal-action-btn primary" onClick={handlePrint}>
                                         🖨️ הדפס
                                     </button>
-                                    <button className="modal-action-btn" style={{background:'#2a6fb5'}} onClick={async () => {
-                                        await handlePrint();
-                                    }}>
+                                    <button className="modal-action-btn" style={{background:'#2a6fb5'}} onClick={handlePrint}>
                                         📄 שמור PDF
                                     </button>
                                     <button className="modal-action-btn" style={{background:'#27ae60'}} onClick={async () => {
