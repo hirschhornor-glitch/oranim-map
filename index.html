@@ -5361,12 +5361,16 @@
                             if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
+                                const isLocal = (p.authority || '').includes('מקומית');
                                 const endDate = p.objection_end_date || '';
-                                if (endDate) {
-                                    const parts = endDate.split('/');
-                                    if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                                const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
+                                if (isLocal && endFuture) return true;
+                                if (p.has_objection_btn) {
+                                    const md = (p.mavat_date || '').split('/');
+                                    if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); if (sd < co) return false; }
+                                    return true;
                                 }
-                                return true;
+                                return false;
                             }
                             return false;
                         },
@@ -6270,18 +6274,20 @@
                 const objEndDate = props.objection_end_date || '';
                 let objectionStillOpen = false;
                 if (isObjectionStatus) {
+                    const isLocal = (props.authority || '').includes('מקומית');
                     if (objEndDate) {
                         const parts = objEndDate.split('/');
                         if (parts.length === 3) {
                             const end = new Date(parts[2], parts[1]-1, parts[0]);
-                            objectionStillOpen = end >= new Date();
+                            if (end >= new Date()) objectionStillOpen = true;
                         }
-                    } else {
+                    }
+                    if (!objectionStillOpen && props.has_objection_btn) {
                         const md = (props.mavat_date || '').split('/');
                         if (md.length === 3) {
                             const statusDate = new Date(md[2], md[1]-1, md[0]);
                             const cutoff = new Date();
-                            cutoff.setDate(cutoff.getDate() - 90);
+                            cutoff.setDate(cutoff.getDate() - 60);
                             objectionStillOpen = statusDate >= cutoff;
                         }
                     }
@@ -8833,12 +8839,18 @@
                             if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
-                            // Hide if objection_end_date exists and is in the past
-                            const endDate = f.properties.objection_end_date || '';
-                            if (endDate) {
-                                const parts = endDate.split('/');
-                                if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) < new Date()) return false;
+                            const p = f.properties;
+                            const isLocal = (p.authority || '').includes('מקומית');
+                            const endDate = p.objection_end_date || '';
+                            const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
+                            let show = false;
+                            if (isLocal && endFuture) show = true;
+                            if (!show && p.has_objection_btn) {
+                                const md = (p.mavat_date || '').split('/');
+                                if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); show = sd >= co; }
+                                else show = true;
                             }
+                            if (!show) return false;
                             const planId = f.properties.plan_name || '';
                             if (seenPlans.has(planId)) return false;
                             seenPlans.add(planId);
@@ -8864,16 +8876,17 @@
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תאריך סטטוס</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תום הפקדה</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>סמכות</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
                                         </tr></thead>
                                         <tbody>
                                             {plans.map((p, i) => (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} onClick={() => {
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = (e) => {
+                                                    e.stopPropagation();
                                                     const gd = geoDataRef.current;
-                                                    if (!gd.plans || !mapRef.current) return;
+                                                    if (!gd.plans || !mapInstanceRef.current) return;
                                                     const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
                                                     if (!feat || !feat.geometry) return;
-                                                    // Save data before closing modal
                                                     const coords = [];
                                                     const g = feat.geometry;
                                                     if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
@@ -8885,20 +8898,21 @@
                                                     const props = JSON.parse(JSON.stringify(feat.properties));
                                                     setObjectionsReport(false);
                                                     setTimeout(() => {
-                                                        mapRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                                        mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
                                                         setTimeout(() => {
                                                             const mapped = mapPlanProps(props);
                                                             const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
-                                                            popup.openOn(mapRef.current);
+                                                            popup.openOn(mapInstanceRef.current);
                                                             bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
                                                         }, 600);
                                                     }, 100);
-                                                }}>
+                                                }; }}>
                                                     <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                     <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{p.mavat_date || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ef5350'}}>{p.objection_end_date || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{(p.authority || '-').trim()}</td>
                                                     <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
                                                 </tr>
                                             ))}
