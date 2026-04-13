@@ -8184,17 +8184,35 @@
                                                                 const fieldAliases = {'שב"צ':'shavatz_out_sqm','שבצ':'shavatz_out_sqm','מבני ציבור':'shavatz_out_sqm','שב"צ נכנס':'shavatz_in_sqm','שבצ נכנס':'shavatz_in_sqm','שב"צ קיים':'shavatz_in_sqm','שב"צ יוצא':'shavatz_out_sqm','הפרשה מבונה':'hafrash_sqm','שצ"פ':'shatzap_out','שצפ':'shatzap_out','שצ"פ נכנס':'shatzap_in','שצ"פ קיים':'shatzap_in','שצ"פ יוצא':'shatzap_out','מסחר':'commerce_sqm','תעסוקה':'employment_sqm','משרדים':'employment_sqm','יח"ד':'units_total','תוספת יח"ד':'units_add','תוספת':'units_add','יח"ד קיימות':'units_in','קיימות':'units_in','סה"כ יח"ד':'units_total','סה"כ':'units_total','השכרה':'rental_units','להשכרה':'rental_units','יח"ד להשכרה':'rental_units','מלון':'hotel_rooms','חדרי מלון':'hotel_rooms','תמצית שם':'plan_summary','תמצית':'plan_summary','שם תכנית':'plan_summary'};
                                                                 // Parse structured lines: "שב"צ = 0" or "הפרשה מבונה = 441 מ"ר"
                                                                 for (const line of note.split(/\n/)) {
-                                                                    const m = line.match(/^\s*\d*\.?\s*(.+?)\s*[=:\-–]\s*(.+?)\s*$/);
+                                                                    // Handle "בלי מלל" lines (no = sign)
+                                                                    if (/בלי\s+מלל/i.test(line)) {
+                                                                        let clearField = null;
+                                                                        if (/שב"צ|שבצ/.test(line) && /פרוגרמה|פרוג/.test(line)) clearField = 'shavatz_out_prog';
+                                                                        else if (/הפרשה/.test(line) && /פרוגרמה|פרוג/.test(line)) clearField = 'hafrash_prg';
+                                                                        if (clearField && !seen.has(clearField)) { seen.add(clearField); detected.push({ field: clearField, value: '' }); }
+                                                                        continue;
+                                                                    }
+                                                                    // Handle "שימי/עדכני" instructions: "שימי תמצית שם התכנית "בית הערבה 22-24""
+                                                                    const instrM = line.match(/^\s*\d*\.?\s*(?:שימי?|עדכני?|תשימי?)\s+(.+?)\s+["״](.+?)["״]\s*$/);
+                                                                    if (instrM) {
+                                                                        let iKey = instrM[1].trim(); let iVal = instrM[2].trim();
+                                                                        let iField = null;
+                                                                        if (iKey.includes('תמצית') || iKey.includes('שם התכנית') || iKey.includes('שם תכנית')) iField = 'plan_summary';
+                                                                        if (iField && !seen.has(iField)) { seen.add(iField); detected.push({ field: iField, value: iVal }); }
+                                                                        continue;
+                                                                    }
+                                                                    const m = line.match(/^\s*\d*\.?\s*(.+?)\s*[=:]\s*(.+?)\s*$/);
                                                                     if (!m) continue;
-                                                                    let key = m[1].replace(/\u201c|\u201d/g, '"').trim(); let val = m[2].replace(/מ"ר|מר/g, '').trim();
-                                                                    let field = fieldAliases[key];
-                                                                    if (!field) { for (const [alias, f] of Object.entries(fieldAliases)) { if (key.includes(alias)) { field = f; break; } } }
-                                                                    if (!field) { const gsf = GS_FIELDS.find(f => key.includes(f.label)); if (gsf) field = gsf.key; }
-                                                                    // Handle prog fields: "בלי מלל בשב"צ פרוגרמה" or "הפרשה מבונה פרוגרמה = 3 כיתות מעון"
-                                                                    if (!field && (key.includes('פרוגרמה') || key.includes('פרוג'))) {
+                                                                    let key = m[1].replace(/\u201c|\u201d/g, '"').trim(); let val = m[2].replace(/מ"ר|מר/g, '').replace(/\.\s*$/, '').trim();
+                                                                    let field = null;
+                                                                    // Check prog fields FIRST (before alias lookup catches "הפרשה מבונה" as hafrash_sqm)
+                                                                    if (key.includes('פרוגרמה') || key.includes('פרוג')) {
                                                                         if (key.includes('הפרשה')) field = 'hafrash_prg';
                                                                         else if (key.includes('שב"צ') || key.includes('שבצ')) field = 'shavatz_out_prog';
                                                                     }
+                                                                    if (!field) field = fieldAliases[key];
+                                                                    if (!field) { for (const [alias, f] of Object.entries(fieldAliases)) { if (key.includes(alias)) { field = f; break; } } }
+                                                                    if (!field) { const gsf = GS_FIELDS.find(f => key.includes(f.label)); if (gsf) field = gsf.key; }
                                                                     if (field && !seen.has(field)) { seen.add(field); detected.push({ field, value: val }); }
                                                                 }
                                                                 // Fallback regex patterns for free-text
