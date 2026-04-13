@@ -4839,9 +4839,10 @@
                         });
                     });
 
+                    const EXCLUDE_MINAHAK_REPORT = ['גבעת המטוס'];
                     const minahaks = minahakOrder.filter(m => byMinahak[m]);
                     Object.keys(byMinahak).forEach(m => {
-                        if (!minahaks.includes(m) && m) minahaks.push(m);
+                        if (!minahaks.includes(m) && m && !EXCLUDE_MINAHAK_REPORT.includes(m)) minahaks.push(m);
                     });
 
                     // Collect all type groups that have data
@@ -6162,6 +6163,7 @@
                             const minahak = (f.properties.minahak || '').trim();
                             if (total <= 0 || !f.geometry) return false;
                             if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
+                            if (minahak === 'גבעת המטוס') return false;
                             if (!planInMinahak(f.properties)) return false;
                             return true;
                         },
