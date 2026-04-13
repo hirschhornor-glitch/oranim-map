@@ -4922,7 +4922,9 @@
                         // District inner ring (hole) — reverse winding
                         const distCoords = districtFeature.geometry.coordinates[0];
                         const holeRing = distCoords.map(c => [c[1], c[0]]); // GeoJSON [lng,lat] → Leaflet [lat,lng]
-                        const maskPolygon = L.polygon([worldRing, holeRing], {
+                        // Additional hole for גבעת המטוס area (plan 657593 outside main district)
+                        const givatHamatosHole = [[31.7315,35.2055],[31.7315,35.2160],[31.7450,35.2160],[31.7450,35.2055]];
+                        const maskPolygon = L.polygon([worldRing, holeRing, givatHamatosHole], {
                             pane: 'districtPane',
                             color: 'transparent', weight: 0,
                             fillColor: '#ffffff', fillOpacity: 0.2
