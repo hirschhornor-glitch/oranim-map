@@ -3126,11 +3126,30 @@
                     }
 
                     // --- Filter already-implemented plans from future layers ---
+                    // Only filter plans that exist in kayam AND whose mavat_date is before 2020
                     const kayamTabaSet = new Set();
-                    if (gd.yiud_karka_kayam && gd.yiud_karka_kayam.features) {
+                    if (gd.yiud_karka_kayam && gd.yiud_karka_kayam.features && gd.plans && gd.plans.features) {
+                        // Collect all TABAs present in kayam
+                        const allKayamTabas = new Set();
                         gd.yiud_karka_kayam.features.forEach(f => {
                             const t = String(f.properties.TABA || '').trim();
-                            if (t) kayamTabaSet.add(t);
+                            if (t) allKayamTabas.add(t);
+                        });
+                        // Only include TABAs whose plan mavat_date is before 2020 AND has no permits
+                        gd.plans.features.forEach(f => {
+                            const t = String(f.properties.taba || '').trim();
+                            if (!t || !allKayamTabas.has(t)) return;
+                            const md = (f.properties.mavat_date || '').trim();
+                            if (!md) return; // no date — don't filter
+                            const parts = md.split('/');
+                            if (parts.length === 3) {
+                                const year = parseInt(parts[2]);
+                                if (year >= 2020) return; // recent plan — keep
+                            }
+                            // Keep plans that have permits (stage field)
+                            const stage = (f.properties.stage || '').trim();
+                            if (stage) return;
+                            kayamTabaSet.add(t);
                         });
                     }
                     window.__kayamTabaSet = kayamTabaSet;
@@ -4380,7 +4399,7 @@
                 const mapRect = mapContainer.getBoundingClientRect();
                 const center = map.getCenter();
 
-                let printBounds, printScaleLabel;
+                let printScaleLabel;
                 const selectedScale = PRINT_SCALES.find(s => s.value === printScale);
 
                 if (printScale !== 'current' && selectedScale && selectedScale.denom) {
@@ -4402,13 +4421,8 @@
                     const dLat = (metersHigh / 2) / mPerDegLat;
                     const dLng = (metersWide / 2) / mPerDegLng;
 
-                    printBounds = L.latLngBounds(
-                        [center.lat - dLat, center.lng - dLng],
-                        [center.lat + dLat, center.lng + dLng]
-                    );
                     printScaleLabel = selectedScale.label;
                 } else {
-                    printBounds = map.getBounds();
                     // Calculate current scale
                     const centerPx = map.latLngToContainerPoint(center);
                     const rightPx = L.point(centerPx.x + 100, centerPx.y);
@@ -4420,153 +4434,73 @@
                     printScaleLabel = '1:' + scaleDenom.toLocaleString('he-IL');
                 }
 
-                // Capture map as canvas image for print
-                const bSw = printBounds.getSouthWest();
-                const bNe = printBounds.getNorthEast();
-                const printRect = mapContainer.getBoundingClientRect();
-                const printW = Math.round(printRect.width);
-                const printH = Math.round(printRect.height);
+                // ── window.print() approach: inject print styles and print the page directly ──
+                // Hide sidebar, toolbar, controls; add title/scale overlay; print; restore
 
-                // Capture map by manually composing tiles + SVG overlays onto a canvas
-                let mapImgUrl = '';
-                {
-                    const scale = 2;
-                    const canvasEl = document.createElement('canvas');
-                    canvasEl.width = printW * scale;
-                    canvasEl.height = printH * scale;
-                    const ctx = canvasEl.getContext('2d');
-                    ctx.scale(scale, scale);
-                    ctx.fillStyle = printShowBasemap ? '#f2efe9' : '#ffffff';
-                    ctx.fillRect(0, 0, printW, printH);
+                // Build a print header overlay
+                const printOverlay = document.createElement('div');
+                printOverlay.id = 'print-overlay';
+                printOverlay.innerHTML = `
+                    ${title ? `<div class="print-header-title">${title}</div>` : ''}
+                    <div class="print-header-date">${printScaleLabel} | ${new Date().toLocaleDateString('he-IL')}</div>
+                `;
+                document.body.appendChild(printOverlay);
 
-                    // Draw tile images at their exact positions via fetch to bypass CORS
-                    const mapRect = mapContainer.getBoundingClientRect();
-                    const tileImgs = mapContainer.querySelectorAll('.leaflet-tile-pane img');
-                    if (printShowBasemap) {
-                        const tilePromises = Array.from(tileImgs).map(async (img) => {
-                            if (!img.complete || !img.naturalWidth || !img.src) return;
-                            const r = img.getBoundingClientRect();
-                            // Expand each tile by 1px on each side to cover seams
-                            const x = r.left - mapRect.left - 0.5;
-                            const y = r.top - mapRect.top - 0.5;
-                            const w = r.width + 1;
-                            const h = r.height + 1;
-                            try {
-                                const resp = await fetch(img.src, { mode: 'cors' });
-                                const blob = await resp.blob();
-                                const blobUrl = URL.createObjectURL(blob);
-                                const tileImg = new Image();
-                                await new Promise((res) => { tileImg.onload = res; tileImg.onerror = res; tileImg.src = blobUrl; });
-                                ctx.drawImage(tileImg, x, y, w, h);
-                                URL.revokeObjectURL(blobUrl);
-                            } catch(e) {
-                                try { ctx.drawImage(img, x, y, w, h); } catch(e2) {}
-                            }
-                        });
-                        await Promise.all(tilePromises);
-                    }
-
-                    // Draw SVG overlays (vector layers, markers, etc.)
-                    const svgs = mapContainer.querySelectorAll('.leaflet-overlay-pane svg, .leaflet-pane svg');
-                    for (const svg of svgs) {
-                        try {
-                            const r = svg.getBoundingClientRect();
-                            if (r.width === 0 || r.height === 0) continue;
-                            const clone = svg.cloneNode(true);
-                            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                            if (!clone.getAttribute('width')) clone.setAttribute('width', r.width);
-                            if (!clone.getAttribute('height')) clone.setAttribute('height', r.height);
-                            const svgData = new XMLSerializer().serializeToString(clone);
-                            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-                            const url = URL.createObjectURL(svgBlob);
-                            const svgImg = new Image();
-                            await new Promise((resolve) => {
-                                svgImg.onload = resolve;
-                                svgImg.onerror = resolve;
-                                svgImg.src = url;
-                            });
-                            const x = r.left - mapRect.left;
-                            const y = r.top - mapRect.top;
-                            ctx.drawImage(svgImg, x, y, r.width, r.height);
-                            URL.revokeObjectURL(url);
-                        } catch(e) {}
-                    }
-
-                    // Draw non-SVG marker panes (HTML markers, labels, divIcons)
-                    if (window.html2canvas) {
-                        try {
-                            const markerPanes = mapContainer.querySelectorAll('.leaflet-marker-pane, .leaflet-popup-pane, .leaflet-tooltip-pane');
-                            for (const pane of markerPanes) {
-                                if (!pane.children.length) continue;
-                                const paneCanvas = await window.html2canvas(pane, {
-                                    useCORS: true, allowTaint: true, logging: false,
-                                    backgroundColor: null, scale: 1,
-                                    x: mapRect.left, y: mapRect.top,
-                                    width: printW, height: printH
-                                });
-                                ctx.drawImage(paneCanvas, 0, 0, printW, printH);
-                            }
-                        } catch(e) {}
-                    }
-
-                    mapImgUrl = canvasEl.toDataURL('image/png');
+                // Build print legend overlay
+                let printLegendEl = null;
+                if (printShowLegend && legendHtml) {
+                    printLegendEl = document.createElement('div');
+                    printLegendEl.id = 'print-legend-overlay';
+                    printLegendEl.innerHTML = legendHtml;
+                    document.body.appendChild(printLegendEl);
                 }
 
-                // Scale bar: compute a nice round distance
-                function niceScaleBar(boundsWidthM, imgWidthPx) {
-                    const mPerPx = boundsWidthM / imgWidthPx;
-                    const targetPx = 150;
-                    const targetM = targetPx * mPerPx;
-                    const nice = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
-                    let bestM = nice[0];
-                    for (const n of nice) { if (n <= targetM * 1.5) bestM = n; }
-                    const barPx = Math.round(bestM / mPerPx);
-                    const label = bestM >= 1000 ? (bestM / 1000) + ' ק"מ' : bestM + ' מ\'';
-                    return { barPx, label };
-                }
-                const boundsWidthM = bSw.distanceTo(L.latLng(bSw.lat, bNe.lng));
-                const scaleBar = niceScaleBar(boundsWidthM, printW);
+                // Add print stylesheet
+                const printStyle = document.createElement('style');
+                printStyle.id = 'print-inject-style';
+                printStyle.textContent = `
+                    @media print {
+                        @page { size: ${printPageSize} ${printOrientation}; margin: 8mm; }
+                        body { overflow: hidden; }
+                        /* Hide everything except map */
+                        .sidebar, .top-bar, .toolbar, .leaflet-control-zoom,
+                        .leaflet-control-attribution, .leaflet-control-scale,
+                        .modal-overlay, .modal-content, #root > div > div:not(#map),
+                        [class*="sidebar"], [class*="toolbar"], [class*="panel"],
+                        button, select, input, .no-print { display: none !important; }
+                        /* Make map fill the page */
+                        #map { position: fixed !important; top: 40px !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: calc(100% - 40px) !important; z-index: 1 !important; }
+                        .leaflet-tile-pane { background: #fff !important; }
+                        ${!printShowBasemap ? '.leaflet-tile-pane { display: none !important; }' : ''}
+                        /* Print overlays */
+                        #print-overlay { display: block !important; position: fixed; top: 0; left: 0; right: 0; z-index: 99999; text-align: center; background: #fff; padding: 4px 0; }
+                        .print-header-title { font-size: 18px; font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; }
+                        .print-header-date { font-size: 11px; color: #666; font-family: 'Segoe UI', Arial, sans-serif; }
+                        #print-legend-overlay { display: block !important; position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999; background: #fff; padding: 4px 8px; font-size: 11px; max-height: 120px; overflow: hidden; }
+                        /* Ensure colors print correctly */
+                        * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+                    }
+                    /* Hide overlays on screen */
+                    #print-overlay, #print-legend-overlay { display: none; }
+                `;
+                document.head.appendChild(printStyle);
 
-                const printWin = window.open('', '_blank');
-                if (!printWin) { alert('נא לאפשר חלונות קופצים להדפסה'); return; }
-
-                printWin.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head>
-                    <meta charset="UTF-8">
-                    <title>${title || 'הדפסת מפה'}</title>
-                    <style>
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-                        @media print { body { padding: 5mm; } .no-print { display: none !important; } @page { size: ${printPageSize} ${printOrientation}; margin: 8mm; } }
-                        .print-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 6px; color: #1a1a2e; }
-                        .print-date { font-size: 11px; color: #666; text-align: center; margin-bottom: 10px; }
-                        .map-container { position: relative; width: 100%; border: 2px solid #333; border-radius: 4px; overflow: hidden; background: #e8e8e8; }
-                        .map-container img { width: 100%; height: auto; display: block; }
-                        .scale-bar-box { position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #333; border: 1px solid #999; }
-                        .scale-bar-line { height: 4px; background: #333; margin-top: 3px; border-radius: 1px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-                        .scale-label { font-size: 12px; font-weight: bold; position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 4px; color: #333; border: 1px solid #999; }
-                        .print-actions { margin-top: 16px; text-align: center; }
-                        .print-actions button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #e94560; color: #fff; border: none; border-radius: 6px; font-family: inherit; }
-                    </style>
-                </head><body>
-                    ${title ? `<div class="print-title">${title}</div>` : ''}
-                    <div class="print-date">${new Date().toLocaleDateString('he-IL')} | ${printScaleLabel}</div>
-                    <div class="map-container">
-                        <img src="${mapImgUrl}" alt="מפה" />
-                        <div class="scale-bar-box">
-                            <div>${scaleBar.label}</div>
-                            <div class="scale-bar-line" style="width:${scaleBar.barPx * (100 / printW) * 100}%"></div>
-                        </div>
-                        <div class="scale-label">${printScaleLabel}</div>
-                    </div>
-                    ${legendHtml}
-                    <div class="print-actions no-print" style="display:flex;gap:10px;justify-content:center">
-                        <button onclick="window.print()">🖨️ הדפס</button>
-                        <button onclick="window.print()" style="background:#2a6fb5">📄 שמור PDF</button>
-                        <button onclick="(function(){var img=document.querySelector('.map-container img');var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);var a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.92);a.download='map_oranim.jpg';a.click()})()">🖼️ שמור JPEG</button>
-                    </div>
-                </body></html>`);
-                printWin.document.close();
                 setShowPrint(false);
+
+                // Wait a tick for modal to close and styles to apply
+                await new Promise(r => setTimeout(r, 300));
+
+                window.print();
+
+                // Cleanup after print
+                setTimeout(() => {
+                    const ps = document.getElementById('print-inject-style');
+                    if (ps) ps.remove();
+                    const po = document.getElementById('print-overlay');
+                    if (po) po.remove();
+                    const pl = document.getElementById('print-legend-overlay');
+                    if (pl) pl.remove();
+                }, 500);
             }, [printTitle, printShowLegend, printShowTitle, printShowBasemap, printScale, printPageSize, printOrientation, layers]);
 
             // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
