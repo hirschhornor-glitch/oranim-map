@@ -6742,12 +6742,13 @@
                         ev.stopPropagation();
                         const planId = permitBtn.dataset.plan;
                         const current = window.__annotations[planId] || '';
-                        const note = prompt('\u05d4\u05e2\u05e8\u05d4 \u05dc\u05ea\u05db\u05e0\u05d9\u05ea:', current);
-                        if (note !== null) {
-                            window.__annotations[planId] = note;
-                            localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
-                            popup.setContent(buildForIndex(currentIdx));
-                        }
+                        window.showNoteModal(current).then(function(note) {
+                            if (note !== null) {
+                                window.__annotations[planId] = note;
+                                localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                                popup.setContent(buildForIndex(currentIdx));
+                            }
+                        });
                         return;
                     }
                     if (permitBtn && permitBtn.dataset.action === 'jump-to-shavaz') {
@@ -8011,16 +8012,17 @@
 
                         const handleEditAnnotation = (planId) => {
                             const current = window.__annotations[planId] || '';
-                            const newNote = prompt('ערוך הערה עבור ' + planId + ':', current);
-                            if (newNote !== null) {
-                                if (newNote.trim()) {
-                                    window.__annotations[planId] = newNote;
-                                } else {
-                                    delete window.__annotations[planId];
+                            window.showNoteModal(current).then(newNote => {
+                                if (newNote !== null) {
+                                    if (newNote.trim()) {
+                                        window.__annotations[planId] = newNote;
+                                    } else {
+                                        delete window.__annotations[planId];
+                                    }
+                                    localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
+                                    setAnnotationsRefresh(prev => prev + 1);
                                 }
-                                localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations));
-                                setAnnotationsRefresh(prev => prev + 1);
-                            }
+                            });
                         };
 
                         const handleDeleteAnnotation = (planId) => {
