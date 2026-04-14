@@ -6180,7 +6180,6 @@
                             const minahak = (f.properties.minahak || '').trim();
                             if (total <= 0 || !f.geometry) return false;
                             if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
-                            if (minahak === 'גבעת המטוס') return false;
                             if (!planInMinahak(f.properties)) return false;
                             return true;
                         },
