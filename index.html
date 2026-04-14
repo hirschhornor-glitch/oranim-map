@@ -1604,6 +1604,27 @@
             return inside;
         }
 
+        function segmentsIntersect(a1, a2, b1, b2) {
+            const d1x = a2[0]-a1[0], d1y = a2[1]-a1[1];
+            const d2x = b2[0]-b1[0], d2y = b2[1]-b1[1];
+            const cross = d1x*d2y - d1y*d2x;
+            if (Math.abs(cross) < 1e-12) return false;
+            const t = ((b1[0]-a1[0])*d2y - (b1[1]-a1[1])*d2x) / cross;
+            const u = ((b1[0]-a1[0])*d1y - (b1[1]-a1[1])*d1x) / cross;
+            return t > 0 && t < 1 && u > 0 && u < 1;
+        }
+
+        function polygonsOverlap(ringA, ringB) {
+            for (const pt of ringA) { if (pointInPolygon(pt, ringB)) return true; }
+            for (const pt of ringB) { if (pointInPolygon(pt, ringA)) return true; }
+            for (let i = 0; i < ringA.length - 1; i++) {
+                for (let j = 0; j < ringB.length - 1; j++) {
+                    if (segmentsIntersect(ringA[i], ringA[i+1], ringB[j], ringB[j+1])) return true;
+                }
+            }
+            return false;
+        }
+
         function visualCenter(geometry, excludeRings) {
             // For MultiPolygon, find the largest part by area
             let ring;
@@ -1657,14 +1678,17 @@
                         if (!pointInPolygon([gx, gy], ring)) continue;
                         if (excludeRings && excludeRings.some(er => pointInPolygon([gx, gy], er))) continue;
                         let minEdgeDist = Infinity;
-                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-                            const ax = ring[j][0], ay = ring[j][1];
-                            const bx = ring[i][0], by = ring[i][1];
-                            const abx = bx-ax, aby = by-ay;
-                            const ab2 = abx*abx + aby*aby;
-                            const t = ab2 > 0 ? Math.max(0, Math.min(1, ((gx-ax)*abx+(gy-ay)*aby)/ab2)) : 0;
-                            const d = (gx-ax-t*abx)*(gx-ax-t*abx)+(gy-ay-t*aby)*(gy-ay-t*aby);
-                            if (d < minEdgeDist) minEdgeDist = d;
+                        const allRings = excludeRings ? [ring, ...excludeRings] : [ring];
+                        for (const edgeRing of allRings) {
+                            for (let i = 0, j = edgeRing.length - 1; i < edgeRing.length; j = i++) {
+                                const ax = edgeRing[j][0], ay = edgeRing[j][1];
+                                const bx = edgeRing[i][0], by = edgeRing[i][1];
+                                const abx = bx-ax, aby = by-ay;
+                                const ab2 = abx*abx + aby*aby;
+                                const t = ab2 > 0 ? Math.max(0, Math.min(1, ((gx-ax)*abx+(gy-ay)*aby)/ab2)) : 0;
+                                const d = (gx-ax-t*abx)*(gx-ax-t*abx)+(gy-ay-t*aby)*(gy-ay-t*aby);
+                                if (d < minEdgeDist) minEdgeDist = d;
+                            }
                         }
                         if (minEdgeDist > bestDist) { bestDist = minEdgeDist; bestPt = [gy, gx]; }
                     }
@@ -4708,9 +4732,15 @@
                         console.log('[Filter] planRows:', beforeLen, '->', planRows.length, '(removed', beforeLen - planRows.length, 'already-implemented plans)');
                     }
 
+                    // Normalize minahak name variants
+                    const MINAHAK_NORMALIZE = {
+                        'אזור תעשייה תלפיות': 'א.ת. תלפיות',
+                        'אזור תעשיה תלפיות': 'א.ת. תלפיות',
+                    };
                     // Plans (from Google Sheets CSV)
                     planRows.forEach(p => {
-                        const m = (p.minahak || '').trim();
+                        const mRaw = (p.minahak || '').trim();
+                        const m = MINAHAK_NORMALIZE[mRaw] || mRaw;
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
                         // Skip rejected/archived plans for units_add
                         const status = (p.status_mavat || '').trim();
@@ -5241,7 +5271,52 @@
                                         if (add > 0) labelText = '+' + add + "\nיח\"ד";
                                     }
 
-                                    // Check if label fits inside polygon
+                                    // For overlapping plans, compute exclude rings before fit check
+                                    let excludeRings = null;
+                                    if ((parseFloat(f.properties.overlapping_plans) || 0) > 0 && f.geometry) {
+                                        excludeRings = [];
+                                        const myRing = f.geometry.type === 'MultiPolygon'
+                                            ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                                        const gd = geoDataRef.current;
+                                        if (gd.plans) gd.plans.features.forEach(other => {
+                                            if (other === f || !other.geometry) return;
+                                            const otherRing = other.geometry.type === 'MultiPolygon'
+                                                ? other.geometry.coordinates[0][0] : other.geometry.coordinates[0];
+                                            if (polygonsOverlap(myRing, otherRing)) {
+                                                excludeRings.push(otherRing);
+                                            }
+                                        });
+                                        if (!excludeRings.length) excludeRings = null;
+                                    }
+
+                                    // Check if label fits — use non-overlapping area bbox when overlapping
+                                    let fitW = pxW, fitH = pxH;
+                                    if (excludeRings && f.geometry) {
+                                        const ring = f.geometry.type === 'MultiPolygon'
+                                            ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                                        // Sample grid points to find bbox of non-excluded area
+                                        let fMinX = Infinity, fMinY = Infinity, fMaxX = -Infinity, fMaxY = -Infinity;
+                                        let bMinX = Infinity, bMinY = Infinity, bMaxX = -Infinity, bMaxY = -Infinity;
+                                        for (const c of ring) { if (c[0]<bMinX) bMinX=c[0]; if (c[1]<bMinY) bMinY=c[1]; if (c[0]>bMaxX) bMaxX=c[0]; if (c[1]>bMaxY) bMaxY=c[1]; }
+                                        const N = 10;
+                                        const sx = (bMaxX-bMinX)/N, sy = (bMaxY-bMinY)/N;
+                                        let found = false;
+                                        for (let xi=0; xi<N; xi++) { for (let yi=0; yi<N; yi++) {
+                                            const px = bMinX+(xi+0.5)*sx, py = bMinY+(yi+0.5)*sy;
+                                            if (!pointInPolygon([px,py], ring)) continue;
+                                            if (excludeRings.some(er => pointInPolygon([px,py], er))) continue;
+                                            if (px<fMinX) fMinX=px; if (py<fMinY) fMinY=py;
+                                            if (px>fMaxX) fMaxX=px; if (py>fMaxY) fMaxY=py;
+                                            found = true;
+                                        }}
+                                        if (found) {
+                                            const sw2 = map.latLngToContainerPoint([fMinY, fMinX]);
+                                            const ne2 = map.latLngToContainerPoint([fMaxY, fMaxX]);
+                                            fitW = Math.abs(ne2.x - sw2.x);
+                                            fitH = Math.abs(ne2.y - sw2.y);
+                                        }
+                                    }
+
                                     const lines = labelText.split('\n');
                                     const maxLineLen = Math.max(...lines.map(l => l.length));
                                     const fontSize = zoom >= 18 ? 11 : zoom === 16 ? 9 : 8;
@@ -5251,32 +5326,12 @@
                                     const estLabelH = lines.length * lineH;
 
                                     const fitRatio = zoom >= 18 ? 0.85 : zoom >= 17 ? 0.75 : 0.65;
-                                    if (estLabelW <= pxW * fitRatio && estLabelH <= pxH * fitRatio) {
+                                    if (estLabelW <= fitW * fitRatio && estLabelH <= fitH * fitRatio) {
                                         let labelClass = 'plan-label-center';
                                         if (zoom >= 18) labelClass += ' plan-label-z18';
                                         if (add >= 30) labelClass += ' plan-label-large';
                                         else labelClass += ' plan-label-small';
 
-                                        // For overlapping plans, place label in non-overlapping area
-                                        let excludeRings = null;
-                                        if ((parseFloat(f.properties.overlapping_plans) || 0) > 0 && f.geometry) {
-                                            excludeRings = [];
-                                            const myRing = f.geometry.type === 'MultiPolygon'
-                                                ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
-                                            const myBounds = layer.getBounds();
-                                            const myCenterPt = [myBounds.getCenter().lng, myBounds.getCenter().lat];
-                                            const gd = geoDataRef.current;
-                                            if (gd.plans) gd.plans.features.forEach(other => {
-                                                if (other === f || !other.geometry) return;
-                                                const otherRing = other.geometry.type === 'MultiPolygon'
-                                                    ? other.geometry.coordinates[0][0] : other.geometry.coordinates[0];
-                                                if (pointInPolygon(myCenterPt, otherRing)
-                                                    || pointInPolygon([otherRing[0][0], otherRing[0][1]], myRing)) {
-                                                    excludeRings.push(otherRing);
-                                                }
-                                            });
-                                            if (!excludeRings.length) excludeRings = null;
-                                        }
                                         const center = f.geometry ? visualCenter(f.geometry, excludeRings) : layer.getBounds().getCenter();
                                         const labelMarker = L.marker(center, {
                                             icon: L.divIcon({
