@@ -8279,7 +8279,7 @@
                                                                             if (!pat) { pat = prompt('הזיני GitHub PAT (פעם אחת) כדי לעדכן את האתר:'); if (pat) localStorage.setItem('gh_pat', pat.trim()); }
                                                                             if (pat) {
                                                                                 const ghResp = await fetch('https://api.github.com/repos/hirschhornor-glitch/oranim-map/actions/workflows/update_data.yml/dispatches', {
-                                                                                    method: 'POST', headers: { 'Authorization': 'token ' + pat.trim(), 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify({ ref: 'main' })
+                                                                                    method: 'POST', headers: { 'Authorization': 'token ' + pat.trim(), 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify({ ref: 'master' })
                                                                                 });
                                                                                 ghMsg = ghResp.status === 204 ? '<div style="font-size:11px;color:#4fc3f7;margin-top:4px">האתר יתעדכן תוך ~2 דקות</div>' : '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ')</div>';
                                                                             }
