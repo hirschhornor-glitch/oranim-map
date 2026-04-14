@@ -6609,6 +6609,16 @@
                 if (isFuture && formattedUses.length) {
                     html += `<div class="popup-row"><span class="popup-row-label">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
+                // Hafrashah enrichment data from מטלות יזם
+                if (isHafrashah) {
+                    const hfSqm = cleanNull(props.hafrash_sqm);
+                    const hfPrg = cleanNull(props.hafrash_prg);
+                    if (hfSqm || hfPrg) {
+                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה</div>';
+                        if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
+                        if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">תוכנית</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                    }
+                }
                 html += '</div>';
                 // Footer — jump-to-plan with exact taba matching
                 const tabaNum = taba.replace(/[^\d]/g, '');
