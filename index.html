@@ -2726,6 +2726,7 @@
             { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
             { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
             { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
+            { label: 'תכניות איחוד וחלוקה', color: '#00aa00', style: 'hatch' },
         ];
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -2792,7 +2793,8 @@
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
                 archived: false,        // תכניות שנגנזו/נדחו
-                shavaz_demolition: false // מבני ציבור להריסה במסגרת התחדשות עירונית
+                shavaz_demolition: false, // מבני ציבור להריסה במסגרת התחדשות עירונית
+                consolidation: false     // תכניות איחוד וחלוקה
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -3137,6 +3139,9 @@
                 const archivedPane = map.createPane('archivedPane');
                 archivedPane.style.zIndex = 285;
                 archivedPane.style.pointerEvents = 'none';
+                const consolidationPane = map.createPane('consolidationPane');
+                consolidationPane.style.zIndex = 287;
+                consolidationPane.style.pointerEvents = 'none';
                 map.createPane('topicsPane').style.zIndex = 290;
                 map.createPane('plansPane').style.zIndex = 300;
                 map.createPane('topicsPane').style.pointerEvents = 'none';
@@ -5554,6 +5559,31 @@
                     geoLayersRef.current.archived = archivedLayer;
                 }
 
+                // --- Consolidation layer (איחוד וחלוקה) ---
+                if (gd.plans && planningTopics.consolidation) {
+                    const consolidationLayer = L.geoJSON(gd.plans, {
+                        pane: 'consolidationPane',
+                        renderer: L.svg({ pane: 'consolidationPane' }),
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            return normalizePlanType(f.properties.plan_type || '') === 'איחוד וחלוקה';
+                        },
+                        style: () => ({ color: '#00aa00', weight: 2, fillColor: '#00cc00', fillOpacity: 0.35 }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: 340 })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.consolidation = consolidationLayer;
+                }
+
                 // --- Shavaz demolition overlay (public buildings overlapping active plans) ---
                 if (planningTopics.shavaz_demolition && gd.shavaz_kayam && gd.plans) {
                     const activePlans = gd.plans.features.filter(f => {
@@ -5707,8 +5737,20 @@
                 // --- Hafrashah from landuse_xplan (mixed-use parcels with public buildings) ---
                 const HAFRASHAH_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604, 1670]);
                 if (layers['hafrashah_future'] && gd.landuse_xplan) {
+                    // Get district ring for spatial filtering
+                    const distRing = gd.district_oranim && gd.district_oranim.features[0]
+                        ? (gd.district_oranim.features[0].geometry.type === 'MultiPolygon'
+                            ? gd.district_oranim.features[0].geometry.coordinates[0][0]
+                            : gd.district_oranim.features[0].geometry.coordinates[0])
+                        : null;
                     const hafrashah = gd.landuse_xplan.features.filter(f => {
-                        return HAFRASHAH_CODES.has(f.properties.mavat_code);
+                        if (!HAFRASHAH_CODES.has(f.properties.mavat_code)) return false;
+                        if (!distRing) return true;
+                        // Check centroid inside district
+                        const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                        const cx = ring.reduce((s,c) => s+c[0], 0) / ring.length;
+                        const cy = ring.reduce((s,c) => s+c[1], 0) / ring.length;
+                        return pointInPolygon([cx, cy], distRing);
                     });
                     // Convert polygons to centroid points
                     const pointFeatures = hafrashah.map(f => {
@@ -6097,7 +6139,7 @@
                             else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             return L.circleMarker(latlng, {
-                                radius: 3, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
+                                radius: 6, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
                             });
                         },
                         onEachFeature: (f, layer) => {
@@ -6616,7 +6658,7 @@
                     if (hfSqm || hfPrg) {
                         html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה</div>';
                         if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
-                        if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">תוכנית</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                        if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
                     }
                 }
                 html += '</div>';
@@ -7276,6 +7318,12 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, plan7778: !prev.plan7778}))}>
                                 <input type="checkbox" checked={planningTopics.plan7778} onChange={() => {}} />
                                 <label>תכניות 77/78</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תכניות איחוד וחלוקה'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, consolidation: !prev.consolidation}))}>
+                                <input type="checkbox" checked={planningTopics.consolidation} onChange={() => {}} />
+                                <label>תכניות איחוד וחלוקה</label>
                             </div>
                             <div className="layer-item"
                                  title='תכניות שנגנזו/נדחו'
