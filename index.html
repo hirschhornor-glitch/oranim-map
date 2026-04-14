@@ -2694,6 +2694,7 @@
             { label: 'מבני ציבור קיים', color: '#8B4513' },
             { label: 'מבני ציבור עתידי', color: '#D2B48C' },
             { label: 'מגרשי ספורט', color: '#4CAF50' },
+            { label: 'הפרשה מבונה עתידי', color: '#9C27B0' },
         ];
 
         const TOPICS_LEGEND = [
@@ -5648,12 +5649,11 @@
                     geoLayersRef.current.future_shavaz = futureShavazLayer;
                 }
 
-                // --- Hafrashah from future_shavaz (מגורים features as points) ---
-                if (layers['hafrashah_future'] && gd.future_shavaz) {
-                    const hafrashah = gd.future_shavaz.features.filter(f => {
-                        const s = normalizeStatus((f.properties.Mavat_Status || '').trim());
-                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                        return (f.properties.MAVAT_NAME || '').includes('מגורים') || f.properties.MAVAT_CODE === 1576;
+                // --- Hafrashah from landuse_xplan (mixed-use parcels with public buildings) ---
+                const HAFRASHAH_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604, 1670]);
+                if (layers['hafrashah_future'] && gd.landuse_xplan) {
+                    const hafrashah = gd.landuse_xplan.features.filter(f => {
+                        return HAFRASHAH_CODES.has(f.properties.mavat_code);
                     });
                     // Convert polygons to centroid points
                     const pointFeatures = hafrashah.map(f => {
@@ -5681,7 +5681,7 @@
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 5, fillColor: '#D2B48C', fillOpacity: 0.8, color: '#8B4513', weight: 1
+                            radius: 5, fillColor: '#9C27B0', fillOpacity: 0.8, color: '#6A1B9A', weight: 1
                         }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
