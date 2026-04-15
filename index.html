@@ -5228,11 +5228,14 @@
                     });
 
                     const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const COMMERCE_HIDE_MINAHAKS = ['גבעת המטוס', 'התחדשות עירונית'];
                     const MINAHAK_NORMALIZE = { 'אזור תעשייה תלפיות': 'א.ת. תלפיות', 'אזור תעשיה תלפיות': 'א.ת. תלפיות' };
                     const byMinahak = {};
                     const bySub = {};
                     const plansByCell = {}; // { minahak: { statusKey: [plans] } }
                     const plansBySub = {}; // { minahak: { sub: { statusKey: [plans] } } }
+                    const plansAll = {}; // { minahak: [all plans with commerce data] }
+                    const plansAllSub = {}; // { minahak: { sub: [all plans] } }
                     const emptyRow = () => ({ commerce_in: 0, commerce_out: 0, employment: 0, byStatus: {} });
 
                     const STATUS_GROUPS = [
@@ -5271,6 +5274,11 @@
                         byMinahak[m].commerce_out += coVal;
                         byMinahak[m].employment += empVal;
 
+                        // Track all plans per minahak for clickable cells
+                        const planInfoAll = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', commerce_in: ciVal, commerce_out: coVal, employment: empVal, status_mavat: status };
+                        if (!plansAll[m]) plansAll[m] = [];
+                        if (!plansAll[m].some(x => x.plan_name === planInfoAll.plan_name)) plansAll[m].push(planInfoAll);
+
                         const totalOut = coVal + empVal;
                         if (!isRejected && totalOut > 0 && status) {
                             const grp = getStatusGroup(status);
@@ -5289,6 +5297,11 @@
                         bySub[m][sub].commerce_out += coVal;
                         bySub[m][sub].employment += empVal;
 
+                        // Track all plans per sub
+                        if (!plansAllSub[m]) plansAllSub[m] = {};
+                        if (!plansAllSub[m][sub]) plansAllSub[m][sub] = [];
+                        if (!plansAllSub[m][sub].some(x => x.plan_name === planInfoAll.plan_name)) plansAllSub[m][sub].push(planInfoAll);
+
                         if (!isRejected && totalOut > 0 && status) {
                             const grp = getStatusGroup(status);
                             bySub[m][sub].byStatus[grp] = (bySub[m][sub].byStatus[grp] || 0) + totalOut;
@@ -5300,11 +5313,11 @@
                         }
                     });
 
-                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
-                    // Add any minahaks not in the predefined order
-                    Object.keys(byMinahak).forEach(m => { if (!minahaks.includes(m)) minahaks.push(m); });
+                    const minahaks = minahakOrder.filter(m => byMinahak[m] && !COMMERCE_HIDE_MINAHAKS.includes(m));
+                    // Add any minahaks not in the predefined order (excluding hidden ones)
+                    Object.keys(byMinahak).forEach(m => { if (!minahaks.includes(m) && !COMMERCE_HIDE_MINAHAKS.includes(m)) minahaks.push(m); });
 
-                    const result = { minahaks, byMinahak, bySub, STATUS_GROUPS, plansByCell, plansBySub };
+                    const result = { minahaks, byMinahak, bySub, STATUS_GROUPS, plansByCell, plansBySub, plansAll, plansAllSub };
                     setCommerceData(result);
                     setCommerceLoading(false);
                     console.log('[Commerce] Aggregated data:', minahaks.length, 'minahaks');
@@ -9286,42 +9299,44 @@
                                                     <tr>
                                                         <th></th>
                                                         {subs.map(s => <th key={s}>{s}</th>)}
-                                                        <th style={{background: '#141440', color: '#8c6bb1'}}>סה"כ</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
+                                                    {/* ── נכנס ── */}
+                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:'#8899bb',fontWeight:700,fontSize:12,background:'rgba(60,60,100,0.3)',borderTop:'2px solid #3a3a6a',letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
                                                     <tr>
-                                                        <td>מסחר נכנס</td>
-                                                        {subs.map(s => <td key={s}>{fmt(subData[s].commerce_in)}</td>)}
-                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_in || 0), 0))}</td>
+                                                        <td>מסחר</td>
+                                                        {subs.map(s => {
+                                                            const plans = commerceData.plansAllSub && commerceData.plansAllSub[commerceDrilldown] && commerceData.plansAllSub[commerceDrilldown][s];
+                                                            const fp = plans ? plans.filter(p => p.commerce_in > 0) : [];
+                                                            return <td key={s} style={fp.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}} onClick={() => { if (fp.length > 0) setCommerceCellReport({minahak: s, statusKey: 'all', statusLabel: 'מסחר נכנס — ' + s, plans: fp}); }}>{fmt(subData[s].commerce_in)}</td>;
+                                                        })}
                                                     </tr>
+                                                    {/* ── יוצא ── */}
+                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:'#8c6bb1',fontWeight:700,fontSize:12,background:'rgba(140,107,177,0.15)',borderTop:'3px solid #8c6bb1',letterSpacing:'1px'}}>
+                                                        <div style={{display:'flex',alignItems:'center',gap:12}}>
+                                                            <span>יוצא (מ"ר)</span>
+                                                            <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
+                                                                onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                סטטוס
+                                                            </button>
+                                                        </div>
+                                                    </td></tr>
                                                     <tr>
-                                                        <td>מסחר יוצא</td>
-                                                        {subs.map(s => <td key={s}>{fmt(subData[s].commerce_out)}</td>)}
-                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_out || 0), 0))}</td>
+                                                        <td>מסחר</td>
+                                                        {subs.map(s => {
+                                                            const plans = commerceData.plansAllSub && commerceData.plansAllSub[commerceDrilldown] && commerceData.plansAllSub[commerceDrilldown][s];
+                                                            const fp = plans ? plans.filter(p => p.commerce_out > 0) : [];
+                                                            return <td key={s} style={fp.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}} onClick={() => { if (fp.length > 0) setCommerceCellReport({minahak: s, statusKey: 'all', statusLabel: 'מסחר יוצא — ' + s, plans: fp}); }}>{fmt(subData[s].commerce_out)}</td>;
+                                                        })}
                                                     </tr>
                                                     <tr>
                                                         <td>תעסוקה</td>
-                                                        {subs.map(s => <td key={s}>{fmt(subData[s].employment)}</td>)}
-                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].employment || 0), 0))}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style={{verticalAlign: 'top'}}>
-                                                            <div style={{fontWeight:700}}>סה"כ יוצא</div>
-                                                            <div className="units-toggle-btns" style={{marginTop: 4}}>
-                                                                <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
-                                                                    onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
-                                                                    סטטוס
-                                                                </button>
-                                                            </div>
-                                                        </td>
                                                         {subs.map(s => {
-                                                            const val = (subData[s].commerce_out || 0) + (subData[s].employment || 0);
-                                                            return <td key={s} style={{color: '#8c6bb1', fontWeight: 600}}>{fmt(val)}</td>;
+                                                            const plans = commerceData.plansAllSub && commerceData.plansAllSub[commerceDrilldown] && commerceData.plansAllSub[commerceDrilldown][s];
+                                                            const fp = plans ? plans.filter(p => p.employment > 0) : [];
+                                                            return <td key={s} style={fp.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}} onClick={() => { if (fp.length > 0) setCommerceCellReport({minahak: s, statusKey: 'all', statusLabel: 'תעסוקה — ' + s, plans: fp}); }}>{fmt(subData[s].employment)}</td>;
                                                         })}
-                                                        <td style={{color: '#8c6bb1', fontWeight: 700, background: '#141440'}}>
-                                                            {fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_out || 0) + (subData[s].employment || 0), 0))}
-                                                        </td>
                                                     </tr>
                                                     {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
                                                         const total = subs.reduce((sum, s) => sum + ((subData[s].byStatus || {})[g.key] || 0), 0);
@@ -9339,98 +9354,88 @@
                                                                         title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
                                                                     >{fmt(val)}</td>);
                                                                 })}
-                                                                <td style={{background: '#12122a'}}>{fmt(total)}</td>
                                                             </tr>
                                                         );
                                                     })}
                                                 </tbody>
                                             </table>
                                         );
-                                    })() : (
+                                    })() : (() => {
+                                        const fmt = v => v ? Math.round(v).toLocaleString('he-IL') : '-';
+                                        const ms = commerceData.minahaks;
+                                        const clk = {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'};
+                                        const showP = (m, label, plans) => { if (plans && plans.length > 0) setCommerceCellReport({minahak: m, statusKey: 'all', statusLabel: label, plans}); };
+                                        return (
                                         <table className="units-table">
                                             <thead>
                                                 <tr>
                                                     <th></th>
-                                                    {commerceData.minahaks.map(m => (
-                                                        <th key={m}
-                                                            className="units-minahak-clickable"
+                                                    {ms.map(m => (
+                                                        <th key={m} className="units-minahak-clickable"
                                                             onClick={() => setCommerceDrilldown(m)}
                                                             title={`לחץ לפירוט תת-שכונות ${m}`}
                                                         >{m}</th>
                                                     ))}
-                                                    <th style={{background: '#141440', color: '#8c6bb1'}}>סה"כ</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                {/* ── נכנס ── */}
+                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:'#8899bb',fontWeight:700,fontSize:12,background:'rgba(60,60,100,0.3)',borderTop:'2px solid #3a3a6a',letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
                                                 <tr>
-                                                    <td>מסחר נכנס</td>
-                                                    {commerceData.minahaks.map(m => (
-                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].commerce_in).toLocaleString('he-IL')}</td>
-                                                    ))}
-                                                    <td style={{background: '#141440'}}>
-                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_in, 0)).toLocaleString('he-IL')}
-                                                    </td>
+                                                    <td>מסחר</td>
+                                                    {ms.map(m => {
+                                                        const plans = (commerceData.plansAll || {})[m];
+                                                        const fp = plans ? plans.filter(p => p.commerce_in > 0) : [];
+                                                        return <td key={m} style={fp.length > 0 ? clk : {}} onClick={() => showP(m, 'מסחר נכנס — ' + m, fp)} title={fp.length > 0 ? `${fp.length} תכניות` : ''}>{fmt(commerceData.byMinahak[m].commerce_in)}</td>;
+                                                    })}
                                                 </tr>
+                                                {/* ── יוצא ── */}
+                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:'#8c6bb1',fontWeight:700,fontSize:12,background:'rgba(140,107,177,0.15)',borderTop:'3px solid #8c6bb1',letterSpacing:'1px'}}>
+                                                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                                                        <span>יוצא (מ"ר)</span>
+                                                        <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
+                                                            onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                            סטטוס
+                                                        </button>
+                                                    </div>
+                                                </td></tr>
                                                 <tr>
-                                                    <td>מסחר יוצא</td>
-                                                    {commerceData.minahaks.map(m => (
-                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].commerce_out).toLocaleString('he-IL')}</td>
-                                                    ))}
-                                                    <td style={{background: '#141440'}}>
-                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_out, 0)).toLocaleString('he-IL')}
-                                                    </td>
+                                                    <td>מסחר</td>
+                                                    {ms.map(m => {
+                                                        const plans = (commerceData.plansAll || {})[m];
+                                                        const fp = plans ? plans.filter(p => p.commerce_out > 0) : [];
+                                                        return <td key={m} style={fp.length > 0 ? clk : {}} onClick={() => showP(m, 'מסחר יוצא — ' + m, fp)} title={fp.length > 0 ? `${fp.length} תכניות` : ''}>{fmt(commerceData.byMinahak[m].commerce_out)}</td>;
+                                                    })}
                                                 </tr>
                                                 <tr>
                                                     <td>תעסוקה</td>
-                                                    {commerceData.minahaks.map(m => (
-                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].employment).toLocaleString('he-IL')}</td>
-                                                    ))}
-                                                    <td style={{background: '#141440'}}>
-                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.employment, 0)).toLocaleString('he-IL')}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style={{verticalAlign: 'top'}}>
-                                                        <div style={{fontWeight:700}}>סה"כ יוצא</div>
-                                                        <div className="units-toggle-btns" style={{marginTop: 4}}>
-                                                            <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
-                                                                onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
-                                                                סטטוס
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                    {commerceData.minahaks.map(m => {
-                                                        const val = commerceData.byMinahak[m].commerce_out + commerceData.byMinahak[m].employment;
-                                                        return <td key={m} style={{color: '#8c6bb1', fontWeight: 600}}>{Math.round(val).toLocaleString('he-IL')}</td>;
+                                                    {ms.map(m => {
+                                                        const plans = (commerceData.plansAll || {})[m];
+                                                        const fp = plans ? plans.filter(p => p.employment > 0) : [];
+                                                        return <td key={m} style={fp.length > 0 ? clk : {}} onClick={() => showP(m, 'תעסוקה — ' + m, fp)} title={fp.length > 0 ? `${fp.length} תכניות` : ''}>{fmt(commerceData.byMinahak[m].employment)}</td>;
                                                     })}
-                                                    <td style={{color: '#8c6bb1', fontWeight: 700, background: '#141440'}}>
-                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_out + d.employment, 0)).toLocaleString('he-IL')}
-                                                    </td>
                                                 </tr>
                                                 {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
+                                                    const hasAny = ms.some(m => (commerceData.byMinahak[m].byStatus[g.key] || 0) > 0);
+                                                    if (!hasAny) return null;
                                                     return (
                                                     <tr key={g.key} className="units-sub-row">
                                                         <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
-                                                        {commerceData.minahaks.map(m => {
+                                                        {ms.map(m => {
                                                             const val = commerceData.byMinahak[m].byStatus[g.key] || 0;
                                                             const plans = commerceData.plansByCell && commerceData.plansByCell[m] && commerceData.plansByCell[m][g.key];
                                                             return (
                                                             <td key={m}
-                                                                style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
-                                                                onClick={() => {
-                                                                    if (plans && plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: g.label, plans});
-                                                                }}
+                                                                style={plans && plans.length > 0 ? clk : {}}
+                                                                onClick={() => { if (plans && plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: g.label, plans}); }}
                                                                 title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
-                                                            >{Math.round(val).toLocaleString('he-IL')}</td>);
+                                                            >{fmt(val)}</td>);
                                                         })}
-                                                        <td style={{background: '#12122a'}}>
-                                                            {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0)).toLocaleString('he-IL')}
-                                                        </td>
                                                     </tr>);
                                                 })}
                                             </tbody>
-                                        </table>
-                                    )}
+                                        </table>);
+                                    })()}
                                 </div>
                             </div>
                         </div>
