@@ -900,11 +900,7 @@
                 top: max(60px, env(safe-area-inset-top));
                 padding: 3px 4px;
                 max-width: calc(100vw - 70px);
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                -webkit-mask-image: linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent);
-                mask-image: linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent);
+                overflow: visible;
             }
             .map-toolbar::-webkit-scrollbar {
                 display: none;
@@ -944,6 +940,7 @@
             }
             .map-toolbar {
                 max-width: calc(100vw - 60px);
+                overflow: visible;
             }
             .toolbar-btn {
                 padding: 6px 6px !important;
@@ -1038,6 +1035,19 @@
             direction: rtl;
         }
         .toolbar-dropdown-item:hover { background: #2a2a4a; color: #fff; }
+        .toolbar-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: rgba(22,22,46,0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 4px 0;
+            min-width: 180px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 1002;
+        }
 
         /* ── Shared modal styles ── */
         .modal-close {
@@ -4179,6 +4189,11 @@
                     map.off('click', onClick);
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
+                    // Clean up drawn polygon and markers when area mode ends
+                    r.markers.forEach(m => map.removeLayer(m));
+                    if (r.polygon) map.removeLayer(r.polygon);
+                    r.points = []; r.markers = []; r.polygon = null;
+                    setAreaPts(0);
                 };
             }, [areaMode]);
 
@@ -4360,6 +4375,7 @@
                 m.layers.forEach(l => map.removeLayer(l));
                 if (m.tooltip) map.removeLayer(m.tooltip);
                 if (m.guideLine) map.removeLayer(m.guideLine);
+                if (m.mainCircle) { map.removeLayer(m.mainCircle); m.mainCircle = null; }
                 m.points = [];
                 m.layers = [];
                 m.tooltip = null;
@@ -4478,6 +4494,31 @@
                             updateTooltip(pt, fmtDist(dist));
                             setMeasureResult({ type: 'distance', value: fmtDist(dist) });
                         }
+                    } else if (measureMode === 'radius') {
+                        // Radius mode: first click = center, second click = edge
+                        if (m.points.length === 1) {
+                            updateTooltip(pt, 'לחצו על נקודת הקצה');
+                        } else if (m.points.length === 2) {
+                            const center = m.points[0];
+                            const edge = m.points[1];
+                            const radius = center.distanceTo(edge);
+                            if (m.mainCircle) map.removeLayer(m.mainCircle);
+                            const circle = L.circle(center, { radius, color: '#e94560', fillColor: 'rgba(233,69,96,0.15)', weight: 3, dashArray: null }).addTo(map);
+                            m.mainCircle = circle;
+                            m.layers.push(circle);
+                            // Also draw radius line
+                            const radLine = L.polyline([center, edge], { color: '#e94560', weight: 2, dashArray: '6 4' }).addTo(map);
+                            m.layers.push(radLine);
+                            const radiusText = fmtDist(radius);
+                            updateTooltip(edge, 'רדיוס: ' + radiusText);
+                            setMeasureResult({ type: 'radius', value: radiusText });
+                            // Done — stop listening
+                            if (m.guideLine) { map.removeLayer(m.guideLine); m.guideLine = null; }
+                            map.off('click', onMapClick);
+                            map.off('mousemove', onMouseMove);
+                            map.off('dblclick', onDblClick);
+                            container.classList.remove('measuring');
+                        }
                     } else {
                         // Area mode
                         if (m.mainPoly) map.removeLayer(m.mainPoly);
@@ -4509,6 +4550,13 @@
                     if (measureMode === 'distance') {
                         const totalDist = polylineDist(m.points) + lastPt.distanceTo(e.latlng);
                         updateTooltip(e.latlng, fmtDist(totalDist));
+                    } else if (measureMode === 'radius') {
+                        // Show growing circle from center to cursor
+                        const center = m.points[0];
+                        const radius = center.distanceTo(e.latlng);
+                        if (m.mainCircle) map.removeLayer(m.mainCircle);
+                        m.mainCircle = L.circle(center, { radius, color: '#e94560', fillColor: 'rgba(233,69,96,0.1)', weight: 1.5, dashArray: '6 4' }).addTo(map);
+                        updateTooltip(e.latlng, 'רדיוס: ' + fmtDist(radius));
                     } else if (m.points.length >= 2) {
                         const tempPts = [...m.points, e.latlng];
                         const area = polygonArea(tempPts);
@@ -5070,6 +5118,136 @@
                         window.__unitsDataCallbacks = [];
                     }
                     setUnitsLoading(false);
+                });
+            }, []);
+
+            // Commerce/Employment table — fetch + aggregate
+            const fetchCommerceData = useCallback(() => {
+                if (commerceData) { setShowCommerceTable(true); return; }
+                setCommerceLoading(true);
+                setShowCommerceTable(true);
+                fetchCommerceDataInternal();
+            }, [commerceData]);
+
+            const fetchCommerceDataInternal = useCallback(() => {
+                const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+                function parseCSV(text) {
+                    const rows = [];
+                    let row = []; let field = ''; let inQuotes = false;
+                    for (let i = 0; i < text.length; i++) {
+                        const ch = text[i];
+                        if (inQuotes) {
+                            if (ch === '"' && text[i+1] === '"') { field += '"'; i++; }
+                            else if (ch === '"') { inQuotes = false; }
+                            else { field += ch; }
+                        } else {
+                            if (ch === '"') { inQuotes = true; }
+                            else if (ch === ',') { row.push(field); field = ''; }
+                            else if (ch === '\n' || (ch === '\r' && text[i+1] === '\n')) {
+                                row.push(field); field = '';
+                                if (row.length > 1) rows.push(row);
+                                row = [];
+                                if (ch === '\r') i++;
+                            } else { field += ch; }
+                        }
+                    }
+                    if (field || row.length) { row.push(field); rows.push(row); }
+                    return rows;
+                }
+
+                fetch(sheetUrl).then(r => r.text()).then(csv => {
+                    const rows = parseCSV(csv);
+                    const header = rows[0];
+                    const planRows = rows.slice(1).map(r => {
+                        const obj = {};
+                        header.forEach((h, i) => { obj[h] = r[i] || ''; });
+                        return obj;
+                    });
+
+                    const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const MINAHAK_NORMALIZE = { 'אזור תעשייה תלפיות': 'א.ת. תלפיות', 'אזור תעשיה תלפיות': 'א.ת. תלפיות' };
+                    const byMinahak = {};
+                    const bySub = {};
+                    const plansByCell = {}; // { minahak: { statusKey: [plans] } }
+                    const plansBySub = {}; // { minahak: { sub: { statusKey: [plans] } } }
+                    const emptyRow = () => ({ commerce_in: 0, commerce_out: 0, employment: 0, byStatus: {} });
+
+                    const STATUS_GROUPS = [
+                        { key: 'approved', label: 'אושרה', color: '#50d25a', match: ['אושרה', 'פרסום ברשומות', 'תנאים לפני אישור'] },
+                        { key: 'objections', label: 'הפקדה', color: '#fafa3c', match: ['הפקדה להתנגדויות', 'הפקדה להתנגדויות/השגות'] },
+                        { key: 'conditions', label: 'תנאים', color: '#f56e05', match: ['תנאים לפני הפקדה', 'בדיקת תנאי סף'] },
+                        { key: 'review', label: 'בדיקה', color: '#eb0000', match: ['בדיקה תכנונית', 'פתיחת תיק'] },
+                    ];
+                    function getStatusGroup(status) {
+                        const s = normalizeStatus(status);
+                        for (const g of STATUS_GROUPS) {
+                            if (g.match.some(m => s.includes(m) || m.includes(s))) return g.key;
+                        }
+                        return 'other';
+                    }
+
+                    // Use the same SUB_NORMALIZE from the units table context
+                    const SUB_NORMALIZE = window.__subNormalize || {};
+
+                    planRows.forEach(p => {
+                        const mRaw = (p.minahak || '').trim();
+                        const m = MINAHAK_NORMALIZE[mRaw] || mRaw;
+                        if (!m) return;
+                        if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
+
+                        const status = (p.status_mavat || '').trim();
+                        const isRejected = status === 'נגנזה/נדחתה' || status === 'נגנזה' || status === 'נדחתה';
+
+                        const ciVal = isRejected ? 0 : (parseFloat(p.commerce_in) || 0);
+                        const coVal = isRejected ? 0 : (parseFloat(p.commerce_out) || 0);
+                        const empVal = isRejected ? 0 : (parseFloat(p.employment) || 0);
+
+                        if (ciVal === 0 && coVal === 0 && empVal === 0) return;
+
+                        byMinahak[m].commerce_in += ciVal;
+                        byMinahak[m].commerce_out += coVal;
+                        byMinahak[m].employment += empVal;
+
+                        const totalOut = coVal + empVal;
+                        if (!isRejected && totalOut > 0 && status) {
+                            const grp = getStatusGroup(status);
+                            byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + totalOut;
+                            if (!plansByCell[m]) plansByCell[m] = {};
+                            if (!plansByCell[m][grp]) plansByCell[m][grp] = [];
+                            const planInfo = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', commerce_out: coVal, employment: empVal, status_mavat: status };
+                            if (!plansByCell[m][grp].some(x => x.plan_name === planInfo.plan_name)) plansByCell[m][grp].push(planInfo);
+                        }
+
+                        // Sub-neighborhood breakdown
+                        const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                        if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
+                        bySub[m][sub].commerce_in += ciVal;
+                        bySub[m][sub].commerce_out += coVal;
+                        bySub[m][sub].employment += empVal;
+
+                        if (!isRejected && totalOut > 0 && status) {
+                            const grp = getStatusGroup(status);
+                            bySub[m][sub].byStatus[grp] = (bySub[m][sub].byStatus[grp] || 0) + totalOut;
+                            if (!plansBySub[m]) plansBySub[m] = {};
+                            if (!plansBySub[m][sub]) plansBySub[m][sub] = {};
+                            if (!plansBySub[m][sub][grp]) plansBySub[m][sub][grp] = [];
+                            const planInfo2 = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', commerce_out: coVal, employment: empVal, status_mavat: status };
+                            if (!plansBySub[m][sub][grp].some(x => x.plan_name === planInfo2.plan_name)) plansBySub[m][sub][grp].push(planInfo2);
+                        }
+                    });
+
+                    const minahaks = minahakOrder.filter(m => byMinahak[m]);
+                    // Add any minahaks not in the predefined order
+                    Object.keys(byMinahak).forEach(m => { if (!minahaks.includes(m)) minahaks.push(m); });
+
+                    const result = { minahaks, byMinahak, bySub, STATUS_GROUPS, plansByCell, plansBySub };
+                    setCommerceData(result);
+                    setCommerceLoading(false);
+                    console.log('[Commerce] Aggregated data:', minahaks.length, 'minahaks');
+                }).catch(err => {
+                    console.error('[Commerce] Fetch error:', err);
+                    setCommerceLoading(false);
                 });
             }, []);
 
@@ -6473,8 +6651,8 @@
                     geoLayersRef.current.heatmap = heatLayer;
                 }
 
-                // Commerce/Employment heat map — colored polygons by (commerce_out + employment) per dunam
-                if (showCommerceHeatMap && gd.plans) {
+                // Commerce/Employment heat map — existing (landuse) + future (plans)
+                if (showCommerceHeatMap) {
                     function geojsonAreaSqmC(geom) {
                         const toRad = d => d * Math.PI / 180;
                         function ringArea(coords) {
@@ -6505,54 +6683,119 @@
                         }
                         return commerceColors[0][1];
                     }
-                    const commLayer = L.geoJSON(gd.plans, {
-                        pane: 'plansPane',
-                        filter: f => {
+                    const COMMERCE_KEYWORDS = ['מסחר', 'מסחרי', 'תעסוקה', 'משרדים', 'תעשיה', 'אחסנה'];
+                    function isCommerceLanduse(name) {
+                        if (!name) return false;
+                        return COMMERCE_KEYWORDS.some(kw => name.includes(kw));
+                    }
+
+                    // Collect plan TABAs that have commerce data — to exclude overlapping landuse
+                    const planCommerceTabas = new Set();
+                    if (gd.plans) {
+                        gd.plans.features.forEach(f => {
                             const cmOut = parseFloat(f.properties.commerce_out) || 0;
                             const emp = parseFloat(f.properties.employment) || 0;
-                            const total = cmOut + emp;
-                            const st = normalizeStatus((f.properties.status_mavat || '').trim());
-                            if (total <= 0 || !f.geometry) return false;
-                            if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
-                            if (!planInMinahak(f.properties)) return false;
-                            return true;
-                        },
-                        style: f => {
-                            const cmOut = parseFloat(f.properties.commerce_out) || 0;
-                            const emp = parseFloat(f.properties.employment) || 0;
-                            const total = cmOut + emp;
-                            const areaSqm = geojsonAreaSqmC(f.geometry);
-                            const areaDunam = areaSqm / 1000;
-                            const density = areaDunam > 0 ? total / areaDunam : 0;
-                            return {
-                                fillColor: commerceToColor(density),
-                                fillOpacity: 0.7,
-                                color: '#333',
-                                weight: 0.5
-                            };
-                        },
-                        onEachFeature: (f, layer) => {
-                            const cmOut = parseFloat(f.properties.commerce_out) || 0;
-                            const emp = parseFloat(f.properties.employment) || 0;
-                            const total = cmOut + emp;
-                            const areaSqm = geojsonAreaSqmC(f.geometry);
-                            const areaDunam = areaSqm / 1000;
-                            const density = areaDunam > 0 ? (total / areaDunam).toFixed(1) : '—';
-                            let tip = `<b>${density}</b> מ"ר/דונם`;
-                            if (cmOut > 0 && emp > 0) tip += `<br><span style="font-size:10px">מסחר: ${cmOut.toLocaleString('he-IL')} | תעסוקה: ${emp.toLocaleString('he-IL')}</span>`;
-                            layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
-                            layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
-                                const mapped = mapPlanProps(f.properties);
-                                const content = buildPlanPopup(mapped, { properties: mapped }, null);
-                                L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                    .setLatLng(e.latlng)
-                                    .setContent(content)
-                                    .openOn(map);
-                            });
-                        }
-                    }).addTo(map);
-                    geoLayersRef.current.commerceHeatmap = commLayer;
+                            if (cmOut + emp > 0) {
+                                const taba = String(f.properties.taba || f.properties.plan_name || '').trim();
+                                if (taba) planCommerceTabas.add(taba);
+                            }
+                        });
+                    }
+
+                    // Layer 1: Existing landuse — commerce/employment polygons from landuse_xplan
+                    if (gd.landuse_xplan) {
+                        const existingLayer = L.geoJSON(gd.landuse_xplan, {
+                            pane: 'plansPane',
+                            filter: f => {
+                                const name = (f.properties.mavat_name || '').trim();
+                                if (!isCommerceLanduse(name) || !f.geometry) return false;
+                                // Exclude if the plan (pl_number) has a new plan with commerce data
+                                const plNum = (f.properties.pl_number || '').trim();
+                                if (plNum && planCommerceTabas.has(plNum)) return false;
+                                return true;
+                            },
+                            style: f => {
+                                const areaSqm = parseFloat(f.properties.shape_area) || geojsonAreaSqmC(f.geometry);
+                                const areaDunam = areaSqm / 1000;
+                                // Existing landuse: show area as density (sqm commerce per dunam = full coverage)
+                                return {
+                                    fillColor: '#8c96c6',
+                                    fillOpacity: 0.55,
+                                    color: '#4a4a8a',
+                                    weight: 2.5,
+                                    dashArray: null
+                                };
+                            },
+                            onEachFeature: (f, layer) => {
+                                const name = f.properties.mavat_name || '';
+                                const areaSqm = parseFloat(f.properties.shape_area) || geojsonAreaSqmC(f.geometry);
+                                const plan = f.properties.pl_number || '';
+                                let tip = `<b>קיים</b> — ${name}`;
+                                tip += `<br><span style="font-size:10px">שטח: ${Math.round(areaSqm).toLocaleString('he-IL')} מ"ר</span>`;
+                                if (plan) tip += `<br><span style="font-size:10px">תכנית: ${plan}</span>`;
+                                layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
+                            }
+                        }).addTo(map);
+                        geoLayersRef.current.commerceExisting = existingLayer;
+                    }
+
+                    // Layer 2: Future plans — commerce_out + employment per dunam
+                    if (gd.plans) {
+                        const commLayer = L.geoJSON(gd.plans, {
+                            pane: 'plansPane',
+                            filter: f => {
+                                const cmOut = parseFloat(f.properties.commerce_out) || 0;
+                                const emp = parseFloat(f.properties.employment) || 0;
+                                const total = cmOut + emp;
+                                const st = normalizeStatus((f.properties.status_mavat || '').trim());
+                                if (total <= 0 || !f.geometry) return false;
+                                if (st === 'נגנזה/נדחתה' || st === 'נגנזה' || st === 'נדחתה') return false;
+                                if (!planInMinahak(f.properties)) return false;
+                                return true;
+                            },
+                            style: f => {
+                                const cmOut = parseFloat(f.properties.commerce_out) || 0;
+                                const emp = parseFloat(f.properties.employment) || 0;
+                                const total = cmOut + emp;
+                                const areaSqm = geojsonAreaSqmC(f.geometry);
+                                const areaDunam = areaSqm / 1000;
+                                const density = areaDunam > 0 ? total / areaDunam : 0;
+                                const statusColor = getStatusColor(normalizeStatus(f.properties.status_mavat || ''));
+                                return {
+                                    fillColor: commerceToColor(density),
+                                    fillOpacity: 0.7,
+                                    color: statusColor,
+                                    weight: 2.5,
+                                    dashArray: '6 3'
+                                };
+                            },
+                            onEachFeature: (f, layer) => {
+                                const cmOut = parseFloat(f.properties.commerce_out) || 0;
+                                const emp = parseFloat(f.properties.employment) || 0;
+                                const total = cmOut + emp;
+                                const areaSqm = geojsonAreaSqmC(f.geometry);
+                                const areaDunam = areaSqm / 1000;
+                                const density = areaDunam > 0 ? (total / areaDunam).toFixed(1) : '—';
+                                const status = f.properties.status_mavat || '';
+                                let tip = `<b>עתידי</b> — ${density} מ"ר/דונם`;
+                                tip += `<br><span style="font-size:10px">סטטוס: ${status}</span>`;
+                                if (cmOut > 0 && emp > 0) tip += `<br><span style="font-size:10px">מסחר: ${cmOut.toLocaleString('he-IL')} | תעסוקה: ${emp.toLocaleString('he-IL')}</span>`;
+                                else if (cmOut > 0) tip += `<br><span style="font-size:10px">מסחר: ${cmOut.toLocaleString('he-IL')} מ"ר</span>`;
+                                else if (emp > 0) tip += `<br><span style="font-size:10px">תעסוקה: ${emp.toLocaleString('he-IL')} מ"ר</span>`;
+                                layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
+                                layer.on('click', (e) => {
+                                    if (areaModeRef.current) return;
+                                    const mapped = mapPlanProps(f.properties);
+                                    const content = buildPlanPopup(mapped, { properties: mapped }, null);
+                                    L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(e.latlng)
+                                        .setContent(content)
+                                        .openOn(map);
+                                });
+                            }
+                        }).addTo(map);
+                        geoLayersRef.current.commerceHeatmap = commLayer;
+                    }
                 }
 
                 window.__geoLayersForPrint = geoLayersRef.current;
@@ -7672,7 +7915,7 @@
                         </button>
                         <div id="map" ref={mapRef}></div>
 
-                        {/* ── Map Toolbar ── */}
+                        {/* ── Map Toolbar (grouped) ── */}
                         <div className="map-toolbar">
                             {/* חזרה למבט קודם */}
                             <button
@@ -7686,379 +7929,274 @@
                                 </svg>
                                 <span className="toolbar-label">מבט קודם</span>
                             </button>
-                            {/* מדידה */}
-                            <button
-                                className={`toolbar-btn ${measureMode ? 'active' : ''}`}
-                                onClick={() => {
-                                    if (measureMode) {
-                                        stopMeasure();
-                                        setActiveDropdown(null);
-                                    } else {
-                                        setActiveDropdown(prev => prev === 'measure' ? null : 'measure');
-                                    }
-                                }}
-                                title="מדידה"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M2 20L20 2" />
-                                    <path d="M5.5 16.5L8 14" />
-                                    <path d="M9.5 12.5L12 10" />
-                                    <path d="M13.5 8.5L16 6" />
-                                    <path d="M2 20h4v-4" />
-                                    <path d="M20 2h-4v4" />
-                                </svg>
-                                <span className="toolbar-label">{measureMode === 'distance' ? 'מרחק' : measureMode === 'area' ? 'שטח' : 'מדידה'}</span>
-                                {activeDropdown === 'measure' && !measureMode && (
-                                    <div className="toolbar-dropdown" onClick={e => e.stopPropagation()}>
-                                        <button className="toolbar-dropdown-item" onClick={() => {
-                                            clearMeasurement();
-                                            setMeasureMode('distance');
-                                            setActiveDropdown(null);
-                                        }}>
-                                            📏 מדידת מרחק
-                                        </button>
-                                        <button className="toolbar-dropdown-item" onClick={() => {
-                                            clearMeasurement();
-                                            setMeasureMode('area');
-                                            setActiveDropdown(null);
-                                        }}>
-                                            📐 מדידת שטח
-                                        </button>
-                                    </div>
-                                )}
-                            </button>
 
                             <div className="toolbar-sep" />
 
-                            {/* בחירת אזור */}
+                            {/* ══ כלים ══ */}
+                            <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${areaMode ? 'active' : ''}`}
-                                onClick={() => {
-                                    if (areaMode) {
-                                        const r = areaRef.current;
-                                        if (r.points.length >= 3) {
-                                            // Finish — save points, analysis runs in useEffect
-                                            setAreaFinished([...r.points]);
-                                            setAreaMode(false);
-                                        } else {
-                                            // Cancel — not enough points
-                                            const map = mapInstanceRef.current;
-                                            if (map) {
-                                                r.markers.forEach(m => map.removeLayer(m));
-                                                if (r.polygon) map.removeLayer(r.polygon);
-                                                map.getContainer().classList.remove('measuring');
-                                            }
-                                            r.points = []; r.markers = []; r.polygon = null;
-                                            setAreaMode(false);
-                                        }
-                                    } else {
-                                        setAreaFinished(null);
-                                        const prev = document.getElementById('area-select-result');
-                                        if (prev) prev.remove();
-                                        setAreaMode(true);
-                                    }
-                                    setActiveDropdown(null);
-                                }}
-                                title={areaMode ? 'לחץ לסיום (3+ נקודות), Escape לביטול' : 'בחירת אזור'}
+                                className={`toolbar-btn ${(measureMode || showFilter || showAnnotations || showPrint) ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'tools' ? null : 'tools'); }}
+                                title="כלים"
                             >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round" />
-                                    <circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none" />
-                                    <circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none" />
-                                    <circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none" />
-                                    <circle cx="12" cy="22" r="1.5" fill="currentColor" stroke="none" />
-                                    <circle cx="2" cy="16" r="1.5" fill="currentColor" stroke="none" />
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                                 </svg>
-                                <span className="toolbar-label">{areaMode ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : 'אזור'}</span>
+                                <span className="toolbar-label">כלים ▾</span>
                             </button>
-
-                            {/* ייעודי קרקע נכנס-יוצא */}
-                            <button
-                                className={`toolbar-btn ${landuseCompareMode ? 'active' : ''}`}
-                                onClick={() => {
-                                    if (landuseCompareMode) {
-                                        setLanduseCompareMode(null);
+                            {activeDropdown === 'tools' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    {/* מדידה */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        if (measureMode) { stopMeasure(); }
+                                        else { setActiveDropdown('measure'); }
+                                    }}>
+                                        📏 {measureMode ? 'עצור מדידה' : 'מדידה'}
+                                    </button>
+                                    {/* סינון */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setShowFilter(prev => !prev); setActiveDropdown(null);
+                                    }}>
+                                        {showFilter ? '✓ ' : ''}🔍 סינון מתקדם
+                                    </button>
+                                    {/* הדפסה */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setShowPrint(true); setActiveDropdown(null);
+                                    }}>
+                                        🖨️ הדפסה
+                                    </button>
+                                    {/* שיתוף */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        updateHash();
+                                        navigator.clipboard.writeText(window.location.href).then(() => {
+                                            setShowToast(true); setTimeout(() => setShowToast(false), 2000);
+                                        }).catch(() => {
+                                            const ta = document.createElement('textarea'); ta.value = window.location.href;
+                                            document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                                            document.body.removeChild(ta);
+                                            setShowToast(true); setTimeout(() => setShowToast(false), 2000);
+                                        });
                                         setActiveDropdown(null);
-                                    } else {
-                                        setActiveDropdown(activeDropdown === 'landuse-compare' ? null : 'landuse-compare');
-                                    }
-                                }}
-                                title="ייעודי קרקע נכנס-יוצא"
+                                    }}>
+                                        🔗 שיתוף קישור
+                                    </button>
+                                    {/* ייצוא */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setActiveDropdown(null);
+                                        const gd = geoDataRef.current;
+                                        if (!gd.plans) return;
+                                        const adminLayers = LAYER_CONFIG.admin.layers;
+                                        const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
+                                        const allAdminOn = adminLayers.every(l => layers[l.id]);
+                                        const exported = gd.plans.features.filter(f => {
+                                            const p = f.properties;
+                                            if (!allAdminOn && !selectedMinahaks.includes(p.minahak || '')) return false;
+                                            const s = normalizeStatus((p.status_mavat || '').trim());
+                                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                                            if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
+                                            if (filters.minUnits && (parseFloat(p.units_add) || 0) < filters.minUnits) return false;
+                                            if (filters.maxUnits && (parseFloat(p.units_add) || 0) > filters.maxUnits) return false;
+                                            if (filters.planTypes.length > 0 && !filters.planTypes.includes(normalizePlanType(p.plan_type || ''))) return false;
+                                            if (filters.freeText) {
+                                                const q = filters.freeText.toLowerCase();
+                                                const searchable = [p.plan_name, p.plan_name_he, p.plan_summary, p.architect, p.developer].join(' ').toLowerCase();
+                                                if (!searchable.includes(q)) return false;
+                                            }
+                                            return true;
+                                        });
+                                        const format = window.prompt('בחר פורמט:\n1 = GeoJSON\n2 = CSV\n\nהקלד 1 או 2:', '2');
+                                        if (!format) return;
+                                        let blob, filename;
+                                        if (format === '1') {
+                                            const geojson = { type: 'FeatureCollection', features: exported };
+                                            blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+                                            filename = 'plans_export.geojson';
+                                        } else {
+                                            const cols = ['plan_name', 'plan_name_he', 'plan_summary', 'status_mavat', 'units_add', 'units_in', 'minahak', 'sub_neighborhood', 'plan_type', 'stage', 'mavat_date', 'architect', 'developer'];
+                                            const header = cols.join(',');
+                                            const rows = exported.map(f => {
+                                                const p = f.properties;
+                                                return cols.map(c => { let v = (p[c] != null ? String(p[c]) : '').replace(/"/g, '""'); return '"' + v + '"'; }).join(',');
+                                            });
+                                            const bom = '\uFEFF';
+                                            blob = new Blob([bom + header + '\n' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+                                            filename = 'plans_export.csv';
+                                        }
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a'); a.href = url; a.download = filename;
+                                        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                                    }}>
+                                        📥 ייצוא תכניות
+                                    </button>
+                                    {/* הערות */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setShowAnnotations(true); setActiveDropdown(null);
+                                    }}>
+                                        📝 הערות לתכניות
+                                    </button>
+                                </div>
+                            )}
+                            {activeDropdown === 'measure' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        clearMeasurement(); setMeasureMode('distance'); setActiveDropdown(null);
+                                    }}>📏 מדידת מרחק</button>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        clearMeasurement(); setMeasureMode('area'); setActiveDropdown(null);
+                                    }}>📐 מדידת שטח</button>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        clearMeasurement(); setMeasureMode('radius'); setActiveDropdown(null);
+                                    }}>⭕ מדידת רדיוס</button>
+                                </div>
+                            )}
+                            </div>
+
+                            {/* ══ ניתוח כללי ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${(areaMode || landuseCompareMode) ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'analysis' ? null : 'analysis'); }}
+                                title="ניתוח כללי"
                             >
                                 <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <rect x="3" y="3" width="7" height="7" rx="1" />
                                     <rect x="14" y="14" width="7" height="7" rx="1" />
                                     <path d="M10 7h4M7 10v4M14 17h-4M17 14v-4" />
                                 </svg>
-                                <span className="toolbar-label">{landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'נכנס-יוצא'}</span>
+                                <span className="toolbar-label">{areaMode ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'ניתוח ▾'}</span>
                             </button>
+                            {activeDropdown === 'analysis' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    {/* בחירת אזור */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        if (areaMode) {
+                                            const r = areaRef.current;
+                                            if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); }
+                                            else {
+                                                const map = mapInstanceRef.current;
+                                                if (map) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); map.getContainer().classList.remove('measuring'); }
+                                                r.points = []; r.markers = []; r.polygon = null; setAreaMode(false);
+                                            }
+                                        } else {
+                                            setAreaFinished(null);
+                                            const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
+                                            setAreaMode(true);
+                                        }
+                                        setActiveDropdown(null);
+                                    }}>
+                                        {areaMode ? '✓ סיים בחירת אזור' : '📐 בחירת אזור'}
+                                    </button>
+                                    {/* נכנס-יוצא */}
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        if (landuseCompareMode) { setLanduseCompareMode(null); setActiveDropdown(null); }
+                                        else { setActiveDropdown('landuse-compare'); }
+                                    }}>
+                                        {landuseCompareMode ? '✓ בטל נכנס-יוצא' : '🔄 נכנס-יוצא ייעודי קרקע'}
+                                    </button>
+                                </div>
+                            )}
                             {activeDropdown === 'landuse-compare' && (
-                                <div style={{position:'absolute',top:'100%',background:'rgba(26,26,46,0.97)',border:'1px solid #444',borderRadius:'8px',padding:'4px',zIndex:9999,minWidth:'160px',boxShadow:'0 4px 20px rgba(0,0,0,0.5)'}}>
-                                    <button onClick={() => { setLanduseCompareMode('plan'); setActiveDropdown(null); }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
-                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" onClick={() => { setLanduseCompareMode('plan'); setActiveDropdown(null); }}>
                                         📋 בחירת תכנית
                                     </button>
-                                    <button onClick={() => { setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
-                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
+                                    <button className="toolbar-dropdown-item" onClick={() => { setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }}>
                                         ✏️ בחירת אזור
                                     </button>
                                 </div>
                             )}
+                            </div>
 
-                            {/* שצ"פ לנפש */}
+                            {/* ══ יח"ד ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${(showUnits || showHeatMap) ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'units-group' ? null : 'units-group'); }}
+                                title='יח"ד'
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 21h18" /><path d="M5 21V7l5-4 5 4v14" /><path d="M9 21v-4h2v4" /><path d="M19 21V11l-4-3" />
+                                    <path d="M8 9h1" /><path d="M11 9h1" /><path d="M8 13h1" /><path d="M11 13h1" />
+                                </svg>
+                                <span className="toolbar-label">יח"ד ▾</span>
+                            </button>
+                            {activeDropdown === 'units-group' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" onClick={() => { fetchUnitsData(); setActiveDropdown(null); }}>
+                                        📊 טבלת יח"ד
+                                    </button>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setShowHeatMap(prev => { if (!prev) setShowCommerceHeatMap(false); return !prev; });
+                                        setActiveDropdown(null);
+                                    }}>
+                                        {showHeatMap ? '✓ ' : ''}🗺️ מפת צפיפות
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
+                            {/* ══ מסחר ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${(showCommerceTable || showCommerceHeatMap) ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'commerce-group' ? null : 'commerce-group'); }}
+                                title="מסחר ותעסוקה"
+                            >
+                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="7" width="18" height="13" rx="2" opacity="0.3" fill="currentColor" stroke="none"/><rect x="6" y="4" width="12" height="4" rx="1" opacity="0.5" fill="currentColor" stroke="none"/><line x1="12" y1="11" x2="12" y2="17" strokeWidth="2"/><line x1="9" y1="14" x2="15" y2="14" strokeWidth="2"/></svg></span>
+                                <span className="toolbar-label">מסחר ▾</span>
+                            </button>
+                            {activeDropdown === 'commerce-group' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" onClick={() => { fetchCommerceData(); setActiveDropdown(null); }}>
+                                        📊 טבלת מסחר
+                                    </button>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        setShowCommerceHeatMap(prev => { if (!prev) setShowHeatMap(false); return !prev; });
+                                        setActiveDropdown(null);
+                                    }}>
+                                        {showCommerceHeatMap ? '✓ ' : ''}🗺️ מפת מסחר
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
+                            {/* ══ שצ"פ ══ */}
+                            <div style={{position:'relative'}}>
                             <button
                                 className={`toolbar-btn ${shatzafMode ? 'active' : ''}`}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     if (shatzafMode) {
                                         shatzafModeRef.current = false;
                                         setShatzafMode(false);
                                         setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.remove('measuring');
                                     } else {
-                                        setActiveDropdown(activeDropdown === 'shatzaf' ? null : 'shatzaf');
+                                        setActiveDropdown(prev => prev === 'shatzaf' ? null : 'shatzaf');
                                     }
                                 }}
-                                title='שצ"פ לנפש - שטח ציבורי פתוח לנפש'
+                                title='שצ"פ לנפש'
                             >
                                 <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <circle cx="12" cy="12" r="9" />
                                     <path d="M12 6v3M8 9c0 0 1 3 4 3s4-3 4-3M9 16c0-1.5 1.3-3 3-3s3 1.5 3 3" />
                                     <line x1="7" y1="19" x2="17" y2="19" strokeWidth="1.5" />
                                 </svg>
-                                <span className="toolbar-label">{shatzafMode === 'plan' ? 'בחר תכנית...' : shatzafMode === 'sub' ? 'בחר שכונה...' : 'שצ"פ לנפש'}</span>
+                                <span className="toolbar-label">{shatzafMode === 'plan' ? 'בחר תכנית...' : shatzafMode === 'sub' ? 'בחר שכונה...' : 'שצ"פ'}</span>
                             </button>
                             {activeDropdown === 'shatzaf' && (
-                                <div style={{position:'absolute',top:'100%',background:'rgba(26,26,46,0.97)',border:'1px solid #444',borderRadius:'8px',padding:'4px',zIndex:9999,minWidth:'160px',boxShadow:'0 4px 20px rgba(0,0,0,0.5)'}}>
-                                    <button onClick={() => {
-                                        shatzafModeRef.current = 'plan';
-                                        setShatzafMode('plan');
-                                        setActiveDropdown(null);
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        shatzafModeRef.current = 'plan'; setShatzafMode('plan'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
-                                    }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
-                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
-                                        📋 בחירת תכנית
-                                    </button>
-                                    <button onClick={() => {
-                                        shatzafModeRef.current = 'sub';
-                                        setShatzafMode('sub');
-                                        setActiveDropdown(null);
+                                    }}>📋 בחירת תכנית</button>
+                                    <button className="toolbar-dropdown-item" onClick={() => {
+                                        shatzafModeRef.current = 'sub'; setShatzafMode('sub'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
-                                    }} style={{display:'block',width:'100%',background:'transparent',border:'none',color:'#e0e0e0',padding:'8px 12px',textAlign:'right',cursor:'pointer',borderRadius:'6px',fontSize:'13px',fontFamily:'inherit'}}
-                                        onMouseOver={e => e.target.style.background='#2a2a5a'} onMouseOut={e => e.target.style.background='transparent'}>
-                                        🏘️ בחירת תת שכונה
-                                    </button>
+                                    }}>🏘️ בחירת תת שכונה</button>
                                 </div>
                             )}
-
-                            <div className="toolbar-sep" />
-
-                            {/* הדפסה */}
-                            <button
-                                className="toolbar-btn"
-                                onClick={() => {
-                                    setShowPrint(true);
-                                    setActiveDropdown(null);
-                                }}
-                                title="הדפסה"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="6 9 6 2 18 2 18 9" />
-                                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
-                                    <rect x="6" y="14" width="12" height="8" />
-                                </svg>
-                                <span className="toolbar-label">הדפסה</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* תוספת יח"ד */}
-                            <button
-                                className={`toolbar-btn ${showUnits ? 'active' : ''}`}
-                                onClick={() => {
-                                    fetchUnitsData();
-                                    setActiveDropdown(null);
-                                }}
-                                title='תוספת יח"ד'
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 21h18" />
-                                    <path d="M5 21V7l5-4 5 4v14" />
-                                    <path d="M9 21v-4h2v4" />
-                                    <path d="M19 21V11l-4-3" />
-                                    <path d="M8 9h1" />
-                                    <path d="M11 9h1" />
-                                    <path d="M8 13h1" />
-                                    <path d="M11 13h1" />
-                                </svg>
-                                <span className="toolbar-label">יח"ד</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* סינון */}
-                            <button
-                                className={`toolbar-btn ${showFilter ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowFilter(prev => !prev);
-                                    setActiveDropdown(null);
-                                }}
-                                title="סינון מתקדם"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                                </svg>
-                                <span className="toolbar-label">סינון</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* מפת חום - צפיפות */}
-                            <button
-                                className={`toolbar-btn ${showHeatMap ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowHeatMap(prev => {
-                                        if (!prev) setShowCommerceHeatMap(false);
-                                        return !prev;
-                                    });
-                                    setActiveDropdown(null);
-                                }}
-                                title="צפיפות יח&quot;ד"
-                            >
-                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="10" r="6" opacity="0.5" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="5" opacity="0.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="5.5" opacity="0.45" fill="currentColor" stroke="none"/><circle cx="10" cy="11" r="2" opacity="0.9" fill="currentColor" stroke="none"/></svg></span>
-                                <span className="toolbar-label">צפיפות</span>
-                            </button>
-
-                            {/* מפת חום - מסחר ותעסוקה */}
-                            <button
-                                className={`toolbar-btn ${showCommerceHeatMap ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowCommerceHeatMap(prev => {
-                                        if (!prev) setShowHeatMap(false);
-                                        return !prev;
-                                    });
-                                    setActiveDropdown(null);
-                                }}
-                                title="מסחר ותעסוקה"
-                            >
-                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="7" width="18" height="13" rx="2" opacity="0.3" fill="currentColor" stroke="none"/><rect x="6" y="4" width="12" height="4" rx="1" opacity="0.5" fill="currentColor" stroke="none"/><line x1="12" y1="11" x2="12" y2="17" strokeWidth="2"/><line x1="9" y1="14" x2="15" y2="14" strokeWidth="2"/></svg></span>
-                                <span className="toolbar-label">מסחר</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* שתף */}
-                            <button
-                                className="toolbar-btn"
-                                onClick={() => {
-                                    updateHash();
-                                    navigator.clipboard.writeText(window.location.href).then(() => {
-                                        setShowToast(true);
-                                        setTimeout(() => setShowToast(false), 2000);
-                                    }).catch(() => {
-                                        // Fallback for older browsers
-                                        const ta = document.createElement('textarea');
-                                        ta.value = window.location.href;
-                                        document.body.appendChild(ta);
-                                        ta.select();
-                                        document.execCommand('copy');
-                                        document.body.removeChild(ta);
-                                        setShowToast(true);
-                                        setTimeout(() => setShowToast(false), 2000);
-                                    });
-                                    setActiveDropdown(null);
-                                }}
-                                title="שתף תצוגה"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="18" cy="5" r="3" />
-                                    <circle cx="6" cy="12" r="3" />
-                                    <circle cx="18" cy="19" r="3" />
-                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                                </svg>
-                                <span className="toolbar-label">שתף</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* ייצוא */}
-                            <button
-                                className="toolbar-btn"
-                                onClick={() => {
-                                    setActiveDropdown(null);
-                                    const gd = geoDataRef.current;
-                                    if (!gd.plans) return;
-                                    // Get currently visible/filtered plans
-                                    const adminLayers = LAYER_CONFIG.admin.layers;
-                                    const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
-                                    const allAdminOn = adminLayers.every(l => layers[l.id]);
-                                    const exported = gd.plans.features.filter(f => {
-                                        const p = f.properties;
-                                        if (!allAdminOn && !selectedMinahaks.includes(p.minahak || '')) return false;
-                                        const s = normalizeStatus((p.status_mavat || '').trim());
-                                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
-                                        // Apply filters
-                                        if (filters.minUnits && (parseFloat(p.units_add) || 0) < filters.minUnits) return false;
-                                        if (filters.maxUnits && (parseFloat(p.units_add) || 0) > filters.maxUnits) return false;
-                                        if (filters.planTypes.length > 0 && !filters.planTypes.includes(normalizePlanType(p.plan_type || ''))) return false;
-                                        if (filters.freeText) {
-                                            const q = filters.freeText.toLowerCase();
-                                            const searchable = [p.plan_name, p.plan_name_he, p.plan_summary, p.architect, p.developer].join(' ').toLowerCase();
-                                            if (!searchable.includes(q)) return false;
-                                        }
-                                        return true;
-                                    });
-                                    // Create dropdown for format choice
-                                    const format = window.prompt('בחר פורמט:\n1 = GeoJSON\n2 = CSV\n\nהקלד 1 או 2:', '2');
-                                    if (!format) return;
-                                    let blob, filename;
-                                    if (format === '1') {
-                                        const geojson = { type: 'FeatureCollection', features: exported };
-                                        blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
-                                        filename = 'plans_export.geojson';
-                                    } else {
-                                        // CSV
-                                        const cols = ['plan_name', 'plan_name_he', 'plan_summary', 'status_mavat', 'units_add', 'units_in', 'minahak', 'sub_neighborhood', 'plan_type', 'stage', 'mavat_date', 'architect', 'developer'];
-                                        const header = cols.join(',');
-                                        const rows = exported.map(f => {
-                                            const p = f.properties;
-                                            return cols.map(c => {
-                                                let v = (p[c] != null ? String(p[c]) : '').replace(/"/g, '""');
-                                                return '"' + v + '"';
-                                            }).join(',');
-                                        });
-                                        const bom = '\uFEFF';
-                                        blob = new Blob([bom + header + '\n' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
-                                        filename = 'plans_export.csv';
-                                    }
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url; a.download = filename;
-                                    document.body.appendChild(a); a.click();
-                                    document.body.removeChild(a);
-                                    URL.revokeObjectURL(url);
-                                }}
-                                title="ייצוא תכניות מסוננות"
-                            >
-                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-                                <span className="toolbar-label">ייצוא</span>
-                            </button>
-
-                            <div className="toolbar-sep" />
-
-                            {/* הערות */}
-                            <button
-                                className={`toolbar-btn ${showAnnotations ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowAnnotations(true);
-                                    setActiveDropdown(null);
-                                }}
-                                title="הערות לתכניות"
-                            >
-                                <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-                                <span className="toolbar-label">הערות</span>
-                            </button>
+                            </div>
                         </div>
 
                         {/* ── Filter Panel ── */}
@@ -8222,10 +8360,21 @@
                                 position:'absolute', bottom:40, left:10, zIndex:1001,
                                 background:'rgba(15,15,30,0.92)', backdropFilter:'blur(8px)',
                                 borderRadius:10, padding:'12px 16px', direction:'rtl',
-                                border:'1px solid #2a2a4a', maxWidth:280
+                                border:'1px solid #2a2a4a', maxWidth:300
                             }}>
-                                <div style={{color:'#8c6bb1',fontWeight:'bold',fontSize:13,marginBottom:6}}>מסחר ותעסוקה — מ"ר/דונם</div>
-                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על תכנית לפרטים</div>
+                                <div style={{color:'#8c6bb1',fontWeight:'bold',fontSize:13,marginBottom:6}}>מסחר ותעסוקה</div>
+                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על פוליגון לפרטים</div>
+                                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                                    <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                        <div style={{width:18,height:12,borderRadius:3,background:'#8c96c6',border:'2px solid #4a4a8a'}}></div>
+                                        <span style={{color:'#ccc',fontSize:10}}>קיים</span>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                        <div style={{width:18,height:12,borderRadius:3,background:'#8c6bb1',border:'2px dashed #50d25a'}}></div>
+                                        <span style={{color:'#ccc',fontSize:10}}>עתידי (קו = סטטוס)</span>
+                                    </div>
+                                </div>
+                                <div style={{color:'#888',fontSize:10,marginBottom:4}}>סקאלה עתידי (מ"ר/דונם):</div>
                                 <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'nowrap'}}>
                                     {[[0,'#edf8fb','0'],[50,'#bfd3e6','50'],[200,'#9ebcda','200'],[500,'#8c96c6','500'],[1000,'#8c6bb1','1K'],[2000,'#88419d','2K'],[5000,'#6e016b','5K'],[10000,'#4d004b','10K+']].map(([v,c,l]) =>
                                         <div key={l} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
@@ -8233,7 +8382,6 @@
                                             <span style={{color:'#aaa',fontSize:8}}>{l}</span>
                                         </div>
                                     )}
-                                    <span style={{color:'#aaa',fontSize:9,marginRight:4}}>מ"ר/דונם</span>
                                 </div>
                             </div>
                         )}
@@ -9016,6 +9164,241 @@
                                         </table>
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Commerce/Employment Summary Modal ── */}
+                    {showCommerceTable && (
+                        <div className="units-overlay" onClick={() => setShowCommerceTable(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                <div className="units-header">
+                                    {commerceDrilldown ? (
+                                        <>
+                                            <button className="units-back-btn" onClick={() => setCommerceDrilldown(null)}>
+                                                → חזרה
+                                            </button>
+                                            <h2>🏬 {commerceDrilldown} — מסחר ותעסוקה לפי תת שכונה</h2>
+                                        </>
+                                    ) : (
+                                        <h2>🏬 מסחר ותעסוקה לפי מינהל קהילתי (מ"ר)</h2>
+                                    )}
+                                    <button className="modal-close" onClick={() => { setShowCommerceTable(false); setCommerceDrilldown(null); }}>&times;</button>
+                                </div>
+                                <div className="units-body">
+                                    {commerceLoading || !commerceData ? (
+                                        <div className="units-loading">
+                                            <p style={{fontSize: '28px', marginBottom: '10px'}}>⏳</p>
+                                            <p>טוען נתוני מסחר ותעסוקה...</p>
+                                        </div>
+                                    ) : commerceDrilldown ? (() => {
+                                        const subData = commerceData.bySub[commerceDrilldown] || {};
+                                        const subs = Object.keys(subData).sort();
+                                        if (subs.length === 0) return <div className="units-loading"><p>אין נתוני תת-שכונות עבור {commerceDrilldown}</p></div>;
+                                        const fmt = v => v ? Math.round(v).toLocaleString('he-IL') : '-';
+                                        return (
+                                            <table className="units-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        {subs.map(s => <th key={s}>{s}</th>)}
+                                                        <th style={{background: '#141440', color: '#8c6bb1'}}>סה"כ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>מסחר נכנס</td>
+                                                        {subs.map(s => <td key={s}>{fmt(subData[s].commerce_in)}</td>)}
+                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_in || 0), 0))}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>מסחר יוצא</td>
+                                                        {subs.map(s => <td key={s}>{fmt(subData[s].commerce_out)}</td>)}
+                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_out || 0), 0))}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>תעסוקה</td>
+                                                        {subs.map(s => <td key={s}>{fmt(subData[s].employment)}</td>)}
+                                                        <td style={{background: '#141440'}}>{fmt(subs.reduce((sum, s) => sum + (subData[s].employment || 0), 0))}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{verticalAlign: 'top'}}>
+                                                            <div style={{fontWeight:700}}>סה"כ יוצא</div>
+                                                            <div className="units-toggle-btns" style={{marginTop: 4}}>
+                                                                <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
+                                                                    onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                    סטטוס
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                        {subs.map(s => {
+                                                            const val = (subData[s].commerce_out || 0) + (subData[s].employment || 0);
+                                                            return <td key={s} style={{color: '#8c6bb1', fontWeight: 600}}>{fmt(val)}</td>;
+                                                        })}
+                                                        <td style={{color: '#8c6bb1', fontWeight: 700, background: '#141440'}}>
+                                                            {fmt(subs.reduce((sum, s) => sum + (subData[s].commerce_out || 0) + (subData[s].employment || 0), 0))}
+                                                        </td>
+                                                    </tr>
+                                                    {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
+                                                        const total = subs.reduce((sum, s) => sum + ((subData[s].byStatus || {})[g.key] || 0), 0);
+                                                        if (total === 0) return null;
+                                                        return (
+                                                            <tr key={g.key} className="units-sub-row">
+                                                                <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                                {subs.map(s => {
+                                                                    const val = (subData[s].byStatus || {})[g.key] || 0;
+                                                                    const plans = commerceData.plansBySub && commerceData.plansBySub[commerceDrilldown] && commerceData.plansBySub[commerceDrilldown][s] && commerceData.plansBySub[commerceDrilldown][s][g.key];
+                                                                    return (
+                                                                    <td key={s}
+                                                                        style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                        onClick={() => { if (plans && plans.length > 0) setCommerceCellReport({minahak: s, statusKey: g.key, statusLabel: g.label, plans}); }}
+                                                                        title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                                    >{fmt(val)}</td>);
+                                                                })}
+                                                                <td style={{background: '#12122a'}}>{fmt(total)}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        );
+                                    })() : (
+                                        <table className="units-table">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    {commerceData.minahaks.map(m => (
+                                                        <th key={m}
+                                                            className="units-minahak-clickable"
+                                                            onClick={() => setCommerceDrilldown(m)}
+                                                            title={`לחץ לפירוט תת-שכונות ${m}`}
+                                                        >{m}</th>
+                                                    ))}
+                                                    <th style={{background: '#141440', color: '#8c6bb1'}}>סה"כ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>מסחר נכנס</td>
+                                                    {commerceData.minahaks.map(m => (
+                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].commerce_in).toLocaleString('he-IL')}</td>
+                                                    ))}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_in, 0)).toLocaleString('he-IL')}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>מסחר יוצא</td>
+                                                    {commerceData.minahaks.map(m => (
+                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].commerce_out).toLocaleString('he-IL')}</td>
+                                                    ))}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_out, 0)).toLocaleString('he-IL')}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>תעסוקה</td>
+                                                    {commerceData.minahaks.map(m => (
+                                                        <td key={m}>{Math.round(commerceData.byMinahak[m].employment).toLocaleString('he-IL')}</td>
+                                                    ))}
+                                                    <td style={{background: '#141440'}}>
+                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.employment, 0)).toLocaleString('he-IL')}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{verticalAlign: 'top'}}>
+                                                        <div style={{fontWeight:700}}>סה"כ יוצא</div>
+                                                        <div className="units-toggle-btns" style={{marginTop: 4}}>
+                                                            <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
+                                                                onClick={() => setCommerceExpanded(prev => prev === 'status' ? null : 'status')}>
+                                                                סטטוס
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    {commerceData.minahaks.map(m => {
+                                                        const val = commerceData.byMinahak[m].commerce_out + commerceData.byMinahak[m].employment;
+                                                        return <td key={m} style={{color: '#8c6bb1', fontWeight: 600}}>{Math.round(val).toLocaleString('he-IL')}</td>;
+                                                    })}
+                                                    <td style={{color: '#8c6bb1', fontWeight: 700, background: '#141440'}}>
+                                                        {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + d.commerce_out + d.employment, 0)).toLocaleString('he-IL')}
+                                                    </td>
+                                                </tr>
+                                                {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
+                                                    return (
+                                                    <tr key={g.key} className="units-sub-row">
+                                                        <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                        {commerceData.minahaks.map(m => {
+                                                            const val = commerceData.byMinahak[m].byStatus[g.key] || 0;
+                                                            const plans = commerceData.plansByCell && commerceData.plansByCell[m] && commerceData.plansByCell[m][g.key];
+                                                            return (
+                                                            <td key={m}
+                                                                style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                onClick={() => {
+                                                                    if (plans && plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: g.label, plans});
+                                                                }}
+                                                                title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                            >{Math.round(val).toLocaleString('he-IL')}</td>);
+                                                        })}
+                                                        <td style={{background: '#12122a'}}>
+                                                            {Math.round(Object.values(commerceData.byMinahak).reduce((s, d) => s + (d.byStatus[g.key] || 0), 0)).toLocaleString('he-IL')}
+                                                        </td>
+                                                    </tr>);
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Commerce Cell Report Modal ── */}
+                    {commerceCellReport && (
+                        <div className="units-overlay" onClick={() => setCommerceCellReport(null)} style={{zIndex:10002}}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(500px,95vw)'}}>
+                                <button className="modal-close" onClick={() => setCommerceCellReport(null)}>&times;</button>
+                                <h2 style={{color:'#fff',fontSize:16,marginBottom:12}}>
+                                    🏬 {commerceCellReport.minahak} — {commerceCellReport.statusLabel}
+                                </h2>
+                                <table style={{width:'100%',borderCollapse:'collapse',color:'#ccc',fontSize:12}}>
+                                    <thead>
+                                        <tr style={{borderBottom:'1px solid #333'}}>
+                                            <th style={{textAlign:'right',padding:'6px 8px',color:'#888'}}>תכנית</th>
+                                            <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>מסחר יוצא</th>
+                                            <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>תעסוקה</th>
+                                            <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>סטטוס</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {commerceCellReport.plans.map((p, i) => (
+                                            <tr key={i} style={{borderBottom:'1px solid #222',cursor:'pointer'}}
+                                                onClick={() => {
+                                                    setCommerceCellReport(null);
+                                                    setShowCommerceTable(false);
+                                                    const gd = geoDataRef.current;
+                                                    if (gd.plans) {
+                                                        const f = gd.plans.features.find(f => f.properties.plan_name === p.plan_name);
+                                                        if (f && f.geometry) {
+                                                            const map = mapInstanceRef.current;
+                                                            const layer = L.geoJSON(f);
+                                                            const bounds = layer.getBounds();
+                                                            if (bounds.isValid()) map.flyToBounds(bounds, { padding: [40,40], maxZoom: 17, duration: 0.5 });
+                                                        }
+                                                    }
+                                                }}
+                                                title="לחץ לזום לתכנית"
+                                            >
+                                                <td style={{padding:'6px 8px',textAlign:'right'}}>
+                                                    <div style={{color:'#e0e0e0',fontWeight:500}}>{p.plan_name_he || p.plan_summary || p.plan_name}</div>
+                                                    <div style={{color:'#666',fontSize:10}}>{p.plan_name}</div>
+                                                </td>
+                                                <td style={{textAlign:'center',padding:'6px 8px'}}>{p.commerce_out ? Math.round(p.commerce_out).toLocaleString('he-IL') : '-'}</td>
+                                                <td style={{textAlign:'center',padding:'6px 8px'}}>{p.employment ? Math.round(p.employment).toLocaleString('he-IL') : '-'}</td>
+                                                <td style={{textAlign:'center',padding:'6px 8px',fontSize:10}}>{p.status_mavat}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     )}
