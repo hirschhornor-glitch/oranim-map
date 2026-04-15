@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a1a2e"/>
+  <g transform="translate(256, 280)">
+    <!-- Pine tree (oranim = pines) -->
+    <polygon points="0,-180 -60,-80 -30,-80 -80,20 -40,20 -100,120 100,120 40,20 80,20 30,-80 60,-80" fill="#e94560"/>
+    <!-- Trunk -->
+    <rect x="-18" y="120" width="36" height="50" rx="4" fill="#a0354a"/>
+    <!-- Map pin circle -->
+    <circle cx="0" cy="-120" r="24" fill="#fff" opacity="0.9"/>
+    <circle cx="0" cy="-120" r="10" fill="#e94560"/>
+  </g>
+</svg>

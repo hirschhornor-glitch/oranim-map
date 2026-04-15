@@ -2,8 +2,15 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>אורנים - תכנון עירוני</title>
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="אורנים">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -173,7 +180,7 @@
             direction: rtl;
             text-align: right;
             margin: 0 !important;
-            width: 300px !important;
+            width: min(300px, 85vw) !important;
         }
 
         .leaflet-popup-content-wrapper {
@@ -615,6 +622,59 @@
 
         .loading-indicator.visible { display: block; }
 
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #e94560;
+            color: #fff;
+            text-align: center;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            z-index: 9999;
+            direction: rtl;
+        }
+
+        .install-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 20px;
+            z-index: 9999;
+            direction: rtl;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+        .install-banner-text { font-size: 0.9em; }
+        .install-banner-btn {
+            background: #e94560;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .install-banner-btn:hover { background: #c73650; }
+        .install-banner-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
         .legend-item {
             display: flex;
             align-items: center;
@@ -812,6 +872,7 @@
                 z-index: 1100;
                 box-shadow: -4px 0 20px rgba(0,0,0,0.5);
                 transition: transform 0.3s ease;
+                padding-bottom: env(safe-area-inset-bottom);
             }
             .sidebar.collapsed {
                 margin-right: 0;
@@ -828,7 +889,7 @@
             }
             .toggle-btn {
                 position: fixed;
-                top: 60px;
+                top: max(60px, env(safe-area-inset-top));
                 right: 10px;
                 z-index: 1200;
                 width: 44px;
@@ -836,14 +897,69 @@
                 font-size: 1.4em;
             }
             .map-toolbar {
-                top: 60px;
+                top: max(60px, env(safe-area-inset-top));
                 padding: 3px 4px;
+                max-width: calc(100vw - 70px);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -webkit-mask-image: linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent);
+                mask-image: linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent);
+            }
+            .map-toolbar::-webkit-scrollbar {
+                display: none;
             }
             .toolbar-btn {
                 padding: 6px 8px !important;
+                min-height: 44px;
+                min-width: 44px;
             }
             .toolbar-label {
                 font-size: 9px !important;
+            }
+            .filter-panel {
+                width: 100vw;
+            }
+            .filter-panel .filter-close-btn {
+                padding: 8px 12px;
+            }
+            .layer-item {
+                padding: 10px 8px;
+            }
+            .layer-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                min-width: 20px;
+                min-height: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+                max-width: 100vw;
+            }
+            .filter-panel {
+                width: 100vw;
+            }
+            .map-toolbar {
+                max-width: calc(100vw - 60px);
+            }
+            .toolbar-btn {
+                padding: 6px 6px !important;
+                min-width: 40px;
+            }
+            .toolbar-label {
+                font-size: 8px !important;
+            }
+            .annotations-modal,
+            .units-modal {
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 10px 10px 0 0;
+            }
+            .leaflet-popup-content {
+                width: min(280px, 85vw) !important;
             }
         }
 
@@ -1925,6 +2041,8 @@
             'תבעמאושרת': 'תבע מאושרת',
             'תחילתתוקף': 'תחילת תוקף',
         };
+        function popupMaxWidth() { return Math.min(340, window.innerWidth * 0.9); }
+
         function normalizeStatus(s) {
             if (!s) return s;
             const trimmed = s.trim();
@@ -2451,7 +2569,7 @@
 
             const div = document.createElement('div');
             div.id = 'landuse-compare-result';
-            div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:400px;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+            div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:min(400px,90vw);max-width:min(560px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
             div.innerHTML =
                 '<button onclick="var el=document.getElementById(\'landuse-compare-result\');if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                 '<h3 id="landuse-report-title" contenteditable="true" style="color:#e94560;margin:0;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">ייעודי קרקע נכנס-יוצא</h3>' +
@@ -2777,6 +2895,9 @@
             const [basemap, setBasemap] = useState('cartoLight');
             const [loading, setLoading] = useState(true);
             const [dataLoaded, setDataLoaded] = useState(false);
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [showInstallBanner, setShowInstallBanner] = useState(false);
             const [cursorPos, setCursorPos] = useState(null);
             const [searchText, setSearchText] = useState('');
             const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -2885,6 +3006,36 @@
                 { key: 'ד-היתר בנייה', label: 'היתר בנייה' },
                 { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך' },
             ];
+
+            // PWA: online/offline detection
+            useEffect(() => {
+                const goOnline = () => setIsOnline(true);
+                const goOffline = () => setIsOnline(false);
+                window.addEventListener('online', goOnline);
+                window.addEventListener('offline', goOffline);
+                return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
+            }, []);
+
+            // PWA: install prompt
+            useEffect(() => {
+                const dismissed = localStorage.getItem('oranim-install-dismissed');
+                const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); if (!dismissed) setShowInstallBanner(true); };
+                window.addEventListener('beforeinstallprompt', handler);
+                return () => window.removeEventListener('beforeinstallprompt', handler);
+            }, []);
+
+            const handleInstall = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                if (result.outcome === 'accepted') setShowInstallBanner(false);
+                setDeferredPrompt(null);
+            };
+
+            const dismissInstall = () => {
+                setShowInstallBanner(false);
+                localStorage.setItem('oranim-install-dismissed', '1');
+            };
 
             // Auto-enable relevant status/type categories when free text search matches plans (debounced)
             useEffect(() => {
@@ -3528,7 +3679,7 @@
                     // Show dialog for household size
                     const panel = document.createElement('div');
                     panel.id = 'shatzaf-panel';
-                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:340px;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
                         '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + planDisplay + '</h3>' +
@@ -3885,7 +4036,7 @@
                     // Show result dialog
                     const panel = document.createElement('div');
                     panel.id = 'shatzaf-panel';
-                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:360px;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(360px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
 
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
@@ -4135,7 +4286,7 @@
 
                 const div = document.createElement('div');
                 div.id = 'area-select-result';
-                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:320px;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:min(320px,90vw);max-width:min(480px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
                 div.innerHTML = '<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                     '<h3 id="area-result-title" contenteditable="true" style="color:#e94560;margin:0 0 12px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">סיכום אזור נבחר</h3>' +
                     '<div style="display:flex;gap:24px;margin-bottom:14px">' +
@@ -5217,7 +5368,7 @@
                                 const content = first.type === 'tama38'
                                     ? buildTama38Popup(first.properties, navInfo)
                                     : buildPlanPopup(first.properties, { properties: first.properties }, navInfo);
-                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(clickLatLng)
                                     .setContent(content);
                                 popup.openOn(map);
@@ -5506,7 +5657,7 @@
                             layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
-                                const popup = L.popup({ maxWidth: 340 })
+                                const popup = L.popup({ maxWidth: popupMaxWidth() })
                                     .setLatLng(layer.getBounds().getCenter())
                                     .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
                                 popup.openOn(map);
@@ -5532,7 +5683,7 @@
                             layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
-                                const popup = L.popup({ maxWidth: 340 })
+                                const popup = L.popup({ maxWidth: popupMaxWidth() })
                                     .setLatLng(layer.getBounds().getCenter())
                                     .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
                                 popup.openOn(map);
@@ -5573,7 +5724,7 @@
                             layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
-                                const popup = L.popup({ maxWidth: 340 })
+                                const popup = L.popup({ maxWidth: popupMaxWidth() })
                                     .setLatLng(layer.getBounds().getCenter())
                                     .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
                                 popup.openOn(map);
@@ -5633,7 +5784,7 @@
                                 if (el) { el.setAttribute('fill', 'url(#hatch-red)'); el.setAttribute('fill-opacity', '1'); el.style.pointerEvents = 'auto'; }
                             });
                             layer.on('click', () => {
-                                const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(false) })
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(false) })
                                     .setLatLng(layer.getBounds().getCenter())
                                     .setContent(buildShavazPopup(f.properties, false));
                                 popup.openOn(map);
@@ -5675,7 +5826,7 @@
                     const idx = startIdx || 0;
                     const entry = allShavaz[idx];
                     const navInfo = allShavaz.length > 1 ? { current: idx, total: allShavaz.length } : null;
-                    const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(entry.isFuture) })
+                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(entry.isFuture) })
                         .setLatLng(latlng)
                         .setContent(buildShavazPopup(entry.properties, entry.isFuture, false, navInfo));
                     popup.openOn(map);
@@ -5783,7 +5934,7 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
                                 if (areaModeRef.current) return;
-                                const popup = L.popup({ maxWidth: 340, className: shavazPopupClass(true) })
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
                                     .setLatLng(layer.getLatLng())
                                     .setContent(buildShavazPopup(f.properties, true, false, null, true));
                                 popup.openOn(map);
@@ -5971,7 +6122,7 @@
                                     });
                                 }
                                 html += '</div>';
-                                L.popup({ maxWidth: 340, className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
@@ -6037,7 +6188,7 @@
                                     });
                                 }
                                 html += '</div>';
-                                L.popup({ maxWidth: 340, className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
                         }
                     }).addTo(map);
@@ -6107,7 +6258,7 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
-                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(layer.getBounds().getCenter())
                                     .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
                                 popup.openOn(map);
@@ -6147,7 +6298,7 @@
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
                                 const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
-                                const popup = L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
                                     .setContent(buildTama38Popup(p));
                                 popup.openOn(m);
@@ -6304,7 +6455,7 @@
                                 if (areaModeRef.current) return;
                                 const mapped = mapPlanProps(f.properties);
                                 const content = buildPlanPopup(mapped, { properties: mapped }, null);
-                                L.popup({ maxWidth: 340, className: 'plan-popup' })
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(e.latlng)
                                     .setContent(content)
                                     .openOn(map);
@@ -6976,7 +7127,7 @@
                     );
                     if (!match) return;
                     const mapped = mapPlanProps(match.properties);
-                    const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
+                    const popup = L.popup({ maxWidth: popupMaxWidth(), minWidth: Math.min(300, window.innerWidth * 0.85), closeButton: true })
                         .setLatLng(plan.c)
                         .setContent(buildPlanPopup(mapped, { properties: mapped }))
                         .openOn(map);
@@ -7975,6 +8126,19 @@
                         <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
                             טוען שכבות...
                         </div>
+
+                        {!isOnline && (
+                            <div className="offline-banner">אין חיבור לאינטרנט — מציג נתונים שמורים</div>
+                        )}
+
+                        {showInstallBanner && (
+                            <div className="install-banner">
+                                <span className="install-banner-text">התקן את אורנים למסך הבית</span>
+                                <button className="install-banner-btn" onClick={handleInstall}>התקנה</button>
+                                <button className="install-banner-close" onClick={dismissInstall}>✕</button>
+                            </div>
+                        )}
+
                         {mapScale && (
                             <div className="scale-display">{mapScale}</div>
                         )}
@@ -8416,7 +8580,7 @@
                                                                 const [planId, note, progText] = needsProgChoice[progIdx]; const p = planMap[planId] || {}; const planLabel = p.plan_summary || p.plan_name_he || planId;
                                                                 let overlay = document.getElementById('gs-update-overlay');
                                                                 if (!overlay) { overlay = document.createElement('div'); overlay.id = 'gs-update-overlay'; Object.assign(overlay.style, {position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.7)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center'}); document.body.appendChild(overlay); }
-                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #4fc3f7;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #4fc3f7;border-radius:12px;padding:24px;min-width:min(380px,90vw);max-width:min(520px,95vw);color:#e0e0e0;font-family:Arial,sans-serif">'
                                                                     + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:8px">זוהו שימושים ציבוריים (' + (progIdx+1) + '/' + needsProgChoice.length + ')</div>'
                                                                     + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div><div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
                                                                     + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:16px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>'
@@ -8437,7 +8601,7 @@
                                                                 const optionsHtml = GS_FIELDS.map(f => '<option value="'+f.key+'">'+f.label+'</option>').join(''); let pendingRows = [];
                                                                 function renderDialog() {
                                                                     const addedHtml = pendingRows.length ? '<div style="margin-bottom:12px;border:1px solid #2a2a4a;border-radius:6px;padding:8px;background:#252540"><div style="font-size:11px;color:#4fc3f7;margin-bottom:4px">שדות שנוספו:</div>' + pendingRows.map(r => '<div style="font-size:12px;color:#aaa;padding:2px 0">' + GS_FIELDS.find(f=>f.key===r.field)?.label + ' = ' + r.value + '</div>').join('') + '</div>' : '';
-                                                                    overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #f39c12;border-radius:12px;padding:24px;min-width:380px;max-width:520px;color:#e0e0e0;font-family:Arial,sans-serif">'
+                                                                    overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #f39c12;border-radius:12px;padding:24px;min-width:min(380px,90vw);max-width:min(520px,95vw);color:#e0e0e0;font-family:Arial,sans-serif">'
                                                                         + '<div style="font-size:11px;color:#f39c12;margin-bottom:8px">&#9888; לא זוהה אוטומטית (' + (manualIdx+1) + '/' + needsManual.length + ')</div>'
                                                                         + '<div style="font-size:15px;font-weight:bold;margin-bottom:4px">' + planLabel + '</div><div style="font-size:12px;color:#888;margin-bottom:12px">תכנית: ' + planId + '</div>'
                                                                         + '<div style="background:#252540;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;white-space:pre-wrap">' + note.replace(/</g,'&lt;') + '</div>' + addedHtml
@@ -8725,7 +8889,7 @@
 
                     {minahakReport && (
                         <div className="units-overlay" onClick={() => setMinahakReport(null)}>
-                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 600}}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(600px, 95vw)'}}>
                                 <button className="units-close" onClick={() => setMinahakReport(null)}>&times;</button>
                                 <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח מינהל — {minahakReport}</h2>
                                 {(() => {
@@ -8840,7 +9004,7 @@
                                                                     map.setView(latlng, 18);
                                                                     setTimeout(() => {
                                                                         const mapped = mapPlanProps(f.properties);
-                                                                        const popup = L.popup({ maxWidth: 320, minWidth: 300, closeButton: true })
+                                                                        const popup = L.popup({ maxWidth: popupMaxWidth(), minWidth: Math.min(300, window.innerWidth * 0.85), closeButton: true })
                                                                             .setLatLng(latlng)
                                                                             .setContent(buildPlanPopup(mapped, { properties: mapped }))
                                                                             .openOn(map);
@@ -8873,7 +9037,7 @@
 
                     {cellReport && (
                         <div className="units-overlay" onClick={() => setCellReport(null)}>
-                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 700, maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(700px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
                                 <button className="units-close" onClick={() => setCellReport(null)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128196; דוח תכניות — {cellReport.statusLabel}</h2>
@@ -9003,7 +9167,7 @@
                         });
                         return (
                         <div className="units-overlay" onClick={() => setObjectionsReport(false)}>
-                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 750, maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(750px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
                                 <button className="units-close" onClick={() => setObjectionsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128203; תכניות המופקדות להתנגדויות</h2>
@@ -9130,6 +9294,15 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.warn('SW registration failed:', err));
+        });
+    }
     </script>
 </body>
 </html>
