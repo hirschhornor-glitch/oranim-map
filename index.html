@@ -6825,28 +6825,51 @@
                             return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.5 };
                         },
                         onEachFeature: (f, layer) => {
-                            layer.on('click', () => {
+                            layer.on('click', (e) => {
+                                // Collect all permits from overlapping plans at click point
+                                const clickLatLng = e.latlng;
+                                let allPermits = [];
+                                let allPlans = [];
+                                permitsLayer.eachLayer(otherLayer => {
+                                    try {
+                                        if (otherLayer.getBounds && leafletPip(otherLayer, clickLatLng)) {
+                                            const op = otherLayer.feature || (otherLayer.options && otherLayer.options.feature);
+                                            if (op && op.properties) {
+                                                const p = _getPermits(op.properties.taba);
+                                                if (p.length > 0) {
+                                                    allPermits = allPermits.concat(p);
+                                                    allPlans.push(op.properties);
+                                                }
+                                            }
+                                        }
+                                    } catch(ex) {}
+                                });
+                                // Fallback: if pip found nothing, use clicked feature
+                                if (allPermits.length === 0) {
+                                    allPermits = _getPermits(f.properties.taba);
+                                    allPlans = allPermits.length > 0 ? [f.properties] : [];
+                                }
                                 const mapped = mapPlanProps(f.properties);
-                                const permits = _getPermits(f.properties.taba);
-                                const title = mapped.plan_summary || mapped.plan_name_he || 'תוכנית';
                                 const fd = { properties: mapped, type: 'plan' };
                                 const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
-                                if (permits.length > 0) {
-                                    // Always show permits popup in permits layer
+                                if (allPermits.length > 0) {
+                                    // Build combined title from all overlapping plans
+                                    const title = allPlans.length > 1
+                                        ? allPlans.length + ' תוכניות'
+                                        : (mapped.plan_summary || mapped.plan_name_he || 'תוכנית');
+                                    const subtitle = allPlans.map(p => p.plan_name || String(p.taba || '')).join(' | ');
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                        .setLatLng(layer.getBounds().getCenter())
-                                        .setContent(buildPermitsDetailPopup(permits, title, mapped.plan_name || String(f.properties.taba), null, 'back-to-plan', "data-feature='" + featureJson + "'"));
+                                        .setLatLng(clickLatLng)
+                                        .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'"));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 } else if (!plansOff) {
-                                    // No permits, but plans layer is on — show plan popup
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(layer.getBounds().getCenter())
                                         .setContent(buildPlanPopup(mapped, fd));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 }
-                                // else: no permits + plans off = don't open anything
                             });
                             // Labels for plans with permits (when plans layer is off)
                             if (plansOff) {
