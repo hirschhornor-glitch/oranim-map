@@ -6887,7 +6887,14 @@
                                 fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false
                             });
                             marker.on('click', () => {
-                                const title = f.properties.address || 'תמ"א 38';
+                                // Detect tama type from permits or harisaa field
+                                var tamaType = '';
+                                var tt = permits.find(function(p) { return p.tama_type; });
+                                if (tt) { tamaType = tt.tama_type; }
+                                else if (f.properties.harisaa === 'כן') { tamaType = '38/2'; }
+                                else if (f.properties.harisaa === 'לא') { tamaType = '38/1'; }
+                                const addr = f.properties.address || 'תמ"א 38';
+                                const title = addr + (tamaType ? ' - תמ"א ' + tamaType : '');
                                 const unitsTose = f.properties.units_tose != null ? f.properties.units_tose : '';
                                 const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
@@ -7960,7 +7967,12 @@
                             // Tama38 permits
                             const permits = getPermitsForTama38(fid);
                             const entry = allFeatures[currentIdx];
-                            const title = entry.properties.address || 'תמ"א 38';
+                            var tamaT = '';
+                            var ttP = permits.find(function(p) { return p.tama_type; });
+                            if (ttP) { tamaT = ttP.tama_type; }
+                            else if (entry.properties.harisaa === 'כן') { tamaT = '38/2'; }
+                            else if (entry.properties.harisaa === 'לא') { tamaT = '38/1'; }
+                            const title = (entry.properties.address || 'תמ"א 38') + (tamaT ? ' - תמ"א ' + tamaT : '');
                             const unitsTose = entry.properties.units_tose != null ? entry.properties.units_tose : '';
                             const tama38Sub = [entry.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                             popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`));
