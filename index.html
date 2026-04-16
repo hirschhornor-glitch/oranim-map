@@ -8480,6 +8480,10 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="10" r="6" opacity="0.5" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="5" opacity="0.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="5.5" opacity="0.45" fill="currentColor" stroke="none"/><circle cx="10" cy="11" r="2" opacity="0.9" fill="currentColor" stroke="none"/></svg>
                                         <span className="sub-label">צפיפות</span>
                                     </button>
+                                    <button className={`toolbar-dropdown-item ${showMimush ? 'sub-active' : ''}`} data-tip="אחוזי מימוש ושלביות לפי מינהל" onClick={() => { openMimushModal(); setActiveDropdown(null); }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+                                        <span className="sub-label">מימוש</span>
+                                    </button>
                                 </div>
                             )}
                             </div>
@@ -8510,18 +8514,6 @@
                                 </div>
                             )}
                             </div>
-
-                            {/* ══ מימוש ══ */}
-                            <button
-                                className={`toolbar-btn ${showMimush ? 'active' : ''}`}
-                                onClick={() => { openMimushModal(); setActiveDropdown(null); }}
-                                title="אחוזי מימוש ושלביות"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                                </svg>
-                                <span className="toolbar-label">מימוש</span>
-                            </button>
 
                             {/* ══ שצ"פ ══ */}
                             <div style={{position:'relative'}}>
@@ -10019,6 +10011,49 @@
                                     ) : (
                                         <h2>&#128200; אחוזי מימוש ושלביות לפי מינהל קהילתי</h2>
                                     )}
+                                    <button style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'5px 14px',cursor:'pointer',fontSize:12,fontWeight:600,marginLeft:8,whiteSpace:'nowrap'}} onClick={() => {
+                                        const printWin = window.open('', '_blank', 'width=1000,height=800');
+                                        const data = mimushDrilldown ? mimushData.bySub[mimushDrilldown] : mimushData.byMinahak;
+                                        const keys = mimushDrilldown ? Object.keys(data).sort() : mimushData.minahaks;
+                                        const tots = mimushDrilldown ? null : mimushData.totals;
+                                        const title = mimushDrilldown ? 'מימוש ושלביות — ' + mimushDrilldown : 'אחוזי מימוש ושלביות לפי מינהל קהילתי';
+                                        let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>';
+                                        html += '<style>body{font-family:Arial,sans-serif;padding:24px;direction:rtl}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#1a1a3a;color:#8ecae6;padding:8px 6px;text-align:center;border:1px solid #333}th:first-child{text-align:right}td{padding:6px;border:1px solid #ddd;text-align:center}td:first-child{text-align:right;font-weight:600}.total-row td{font-weight:700;border-top:2px solid #e94560;background:#f0f0f0}.tail{color:#e94560;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{margin:0;color:#666;font-size:13px}.print-btns{margin-top:16px;display:flex;gap:8px}@media print{.print-btns{display:none}}</style></head><body>';
+                                        html += '<div class="header"><h2>' + title + '</h2><p>תאריך: ' + new Date().toLocaleDateString('he-IL') + '</p></div>';
+                                        html += '<table><thead><tr><th>' + (mimushDrilldown ? 'תת-שכונה' : 'מינהק') + '</th><th>סה"כ יח"ד</th>';
+                                        MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<th>' + s.shortLabel + '</th>'; });
+                                        html += '<th>% מימוש</th><th>זנב</th></tr></thead><tbody>';
+                                        keys.forEach(k => {
+                                            const row = data[k];
+                                            if (!row || row.total <= 0) return;
+                                            html += '<tr><td>' + k + '</td><td>' + row.total.toLocaleString() + '</td>';
+                                            MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<td>' + ((row.byStage[s.index] || 0) > 0 ? (row.byStage[s.index]).toLocaleString() : '-') + '</td>'; });
+                                            html += '<td>' + row.avgMimush + '%</td>';
+                                            html += '<td' + (row.tailCount > 0 ? ' class="tail"' : '') + '>' + (row.tailCount > 0 ? row.tailCount : '-') + '</td></tr>';
+                                        });
+                                        if (tots) {
+                                            html += '<tr class="total-row"><td>סה"כ</td><td>' + tots.total.toLocaleString() + '</td>';
+                                            MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<td>' + (tots.byStage[s.index] || 0).toLocaleString() + '</td>'; });
+                                            html += '<td>' + tots.avgMimush + '%</td><td class="tail">' + (tots.tailCount > 0 ? tots.tailCount : '-') + '</td></tr>';
+                                        }
+                                        html += '</tbody></table>';
+                                        // CSV export
+                                        let csvRows = [(mimushDrilldown ? 'תת-שכונה' : 'מינהק') + ',סה"כ יח"ד,' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>s.shortLabel).join(',') + ',% מימוש,זנב'];
+                                        keys.forEach(k => {
+                                            const row = data[k];
+                                            if (!row || row.total <= 0) return;
+                                            csvRows.push(k + ',' + row.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(row.byStage[s.index]||0)).join(',') + ',' + row.avgMimush + '%,' + (row.tailCount||0));
+                                        });
+                                        if (tots) csvRows.push('סה"כ,' + tots.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(tots.byStage[s.index]||0)).join(',') + ',' + tots.avgMimush + '%,' + (tots.tailCount||0));
+                                        const csvContent = csvRows.join('\\n');
+                                        html += '<div class="print-btns"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">הדפסה</button>';
+                                        html += '<button id="csvBtn" style="background:#2d6a4f;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">Excel/CSV</button></div>';
+                                        html += '<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="mimush_report.csv";a.click()});<\/script>';
+                                        html += '</body></html>';
+                                        printWin.document.write(html);
+                                        printWin.document.close();
+                                        printWin.focus();
+                                    }}>&#128424; דוח</button>
                                     <button className="units-close" onClick={() => { setShowMimush(false); setMimushDrilldown(null); setMimushCellReport(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
