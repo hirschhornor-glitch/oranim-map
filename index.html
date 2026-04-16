@@ -6824,20 +6824,21 @@
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
                                 const permits = _getPermits(f.properties.taba);
-                                // When plans layer is off and plan has permits, show permits detail directly
-                                if (plansOff && permits.length > 0) {
-                                    const title = mapped.plan_summary || mapped.plan_name_he || 'תוכנית';
-                                    const fd = { properties: mapped, type: 'plan' };
-                                    const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
+                                const title = mapped.plan_summary || mapped.plan_name_he || 'תוכנית';
+                                const fd = { properties: mapped, type: 'plan' };
+                                const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
+                                if (permits.length > 0) {
+                                    // Always show permits popup in permits layer
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(layer.getBounds().getCenter())
                                         .setContent(buildPermitsDetailPopup(permits, title, mapped.plan_name || String(f.properties.taba), null, 'back-to-plan', "data-feature='" + featureJson + "'"));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 } else {
+                                    // No permits — show plan popup
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(layer.getBounds().getCenter())
-                                        .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                        .setContent(buildPlanPopup(mapped, fd));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 }
