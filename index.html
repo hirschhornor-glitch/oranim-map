@@ -6551,8 +6551,10 @@
                             else if (status === 'נפתח תיק היתר') fillColor = 'rgb(253,174,97)';
                             else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
+                            const z = map.getZoom();
+                            const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
                             return L.circleMarker(latlng, {
-                                radius: 6, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
+                                radius: r, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
                             });
                         },
                         onEachFeature: (f, layer) => {
@@ -6576,6 +6578,11 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.tama38 = tama38Layer;
+                    map.on('zoomend', () => {
+                        const z = map.getZoom();
+                        const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
+                        tama38Layer.eachLayer(l => { if (l.setRadius) l.setRadius(r); });
+                    });
                 }
 
                 // --- Rakal line colors ---
