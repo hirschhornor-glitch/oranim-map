@@ -3448,14 +3448,21 @@
                 // Pre-init permit globals
                 window.__allPermits = {};
                 window.__tama38Permits = {};
+                // Add permit JSONs to the entries so they load together with geojson
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json']]);
                 Promise.all([
-                    Promise.all(entries.map(([key, url]) =>
+                    Promise.all(allEntries.map(([key, url]) =>
                         fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )),
                     fetch(sheetUrl).then(r => r.text()).catch(() => '')
                 ]).then(([geoResults, csvText]) => {
                     const gd = {};
-                    geoResults.forEach(([key, data]) => { if (data) gd[key] = data; });
+                    geoResults.forEach(([key, data]) => {
+                        if (key === '__allPermits') { window.__allPermits = data || {}; }
+                        else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
+                        else if (data) { gd[key] = data; }
+                    });
+                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -3555,9 +3562,6 @@
 
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
-                    // Load permit data (async, populates globals for popup use)
-                    fetch('data/all_permits.json?v=' + Date.now()).then(r => r.json()).then(d => { window.__allPermits = d; console.log('[Permits] all_permits:', Object.keys(d).length); });
-                    fetch('data/tama38_permits.json?v=' + Date.now()).then(r => r.json()).then(d => { window.__tama38Permits = d; console.log('[Permits] tama38_permits:', Object.keys(d).length); });
                     setDataLoaded(true);
                     setLoading(false);
                     // Extract unique plan types for filter
