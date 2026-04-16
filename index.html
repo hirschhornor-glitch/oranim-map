@@ -7272,17 +7272,21 @@
             }
 
             // ─── Permit helpers ───────────────────────────────────────
+            function isPermitClosed(p) {
+                const s = (p.status || '').trim();
+                return s.includes('נסגרה') || s.includes('בוטל') || s === 'הבקשה נסגרה';
+            }
             function getPermitsForTaba(taba) {
                 const data = window.__allPermits || {};
                 const entry = data[String(taba)];
                 if (!entry || !entry.permits) return [];
-                return entry.permits.filter(p => !p.filtered);
+                return entry.permits.filter(p => !p.filtered && !isPermitClosed(p));
             }
             function getPermitsForTama38(fid) {
                 const data = window.__tama38Permits || {};
                 const entry = data[String(fid)];
                 if (!entry || !entry.permits) return [];
-                return entry.permits.filter(p => !p.filtered);
+                return entry.permits.filter(p => !p.filtered && !isPermitClosed(p));
             }
             function getPermitStatusColor(status) {
                 if (!status) return '#5dade2';
