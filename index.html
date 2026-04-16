@@ -6888,9 +6888,11 @@
                             });
                             marker.on('click', () => {
                                 const title = f.properties.address || 'תמ"א 38';
+                                const unitsTose = f.properties.units_tose != null ? f.properties.units_tose : '';
+                                const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildPermitsDetailPopup(permits, title, f.properties.tik || '', null, 'back-to-tama38', "data-fid='" + fid + "'"));
+                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'"));
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
                             });
@@ -7959,7 +7961,9 @@
                             const permits = getPermitsForTama38(fid);
                             const entry = allFeatures[currentIdx];
                             const title = entry.properties.address || 'תמ"א 38';
-                            popup.setContent(buildPermitsDetailPopup(permits, title, entry.properties.tik || '', navInfo, 'back-to-tama38', `data-fid='${fid}'`));
+                            const unitsTose = entry.properties.units_tose != null ? entry.properties.units_tose : '';
+                            const tama38Sub = [entry.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
+                            popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`));
                         }
                         return;
                     }
