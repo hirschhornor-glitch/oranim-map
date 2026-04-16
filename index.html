@@ -6873,7 +6873,7 @@
                                 return entry && entry.permits && entry.permits.filter(function(p){return !p.filtered}).length > 0;
                             },
                             pointToLayer: (f, latlng) => {
-                                return L.circleMarker(latlng, { pane: 'permitsPane', radius: 3, color: '#e94560', weight: 1, fillColor: '#e94560', fillOpacity: 0.7 });
+                                return L.circleMarker(latlng, { pane: 'permitsPane', radius: 3, color: '#5dade2', weight: 1, fillColor: '#5dade2', fillOpacity: 0.7 });
                             },
                             onEachFeature: (f, layer) => {
                                 layer.on('click', (e) => {
