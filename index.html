@@ -1473,9 +1473,11 @@
         .mimush-stage-cell {
             cursor: pointer; transition: background 0.15s;
             position: relative;
+            text-decoration: underline; text-decoration-style: dashed;
+            text-underline-offset: 3px; text-decoration-color: #555;
         }
-        .mimush-stage-cell:hover { filter: brightness(1.3); }
-        .mimush-stage-cell.empty { cursor: default; opacity: 0.3; }
+        .mimush-stage-cell:hover { filter: brightness(1.3); text-decoration-color: #8ecae6; }
+        .mimush-stage-cell.empty { cursor: default; opacity: 0.3; text-decoration: none; }
         .mimush-stage-cell.empty:hover { filter: none; }
         .mimush-tail-badge {
             display: inline-block; background: #e94560; color: #fff;
@@ -3439,10 +3441,16 @@
                     Promise.all(entries.map(([key, url]) =>
                         fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )),
-                    fetch(sheetUrl).then(r => r.text()).catch(() => '')
-                ]).then(([geoResults, csvText]) => {
+                    fetch(sheetUrl).then(r => r.text()).catch(() => ''),
+                    fetch('data/all_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => ({})),
+                    fetch('data/tama38_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => ({})),
+                ]).then(([geoResults, csvText, allPermitsData, tama38PermitsData]) => {
                     const gd = {};
                     geoResults.forEach(([key, data]) => { if (data) gd[key] = data; });
+                    // Store permits data globally for popup access
+                    window.__allPermits = allPermitsData;
+                    window.__tama38Permits = tama38PermitsData;
+                    console.log('[Permits] Loaded all_permits:', Object.keys(allPermitsData).length, 'plans, tama38_permits:', Object.keys(tama38PermitsData).length, 'features');
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -5498,9 +5506,10 @@
                     MIMUSH_STAGES.forEach((_, i) => { plansByCell[m][i] = []; });
                 });
 
+                const MIMUSH_MINAHAK_NORMALIZE = { 'אזור תעשייה תלפיות': 'א.ת. תלפיות', 'אזור תעשיה תלפיות': 'א.ת. תלפיות' };
                 gd.plans.features.forEach(f => {
                     const p = f.properties;
-                    const m = p.minahak || '';
+                    const m = MIMUSH_MINAHAK_NORMALIZE[p.minahak] || p.minahak || '';
                     if (!byMinahak[m]) return;
                     const result = calcMimush(p);
                     if (!result) return;
@@ -7163,6 +7172,84 @@
                     `</div>`;
             }
 
+            // ─── Permit helpers ───────────────────────────────────────
+            function getPermitsForTaba(taba) {
+                const data = window.__allPermits || {};
+                const entry = data[String(taba)];
+                if (!entry || !entry.permits) return [];
+                return entry.permits.filter(p => !p.filtered);
+            }
+            function getPermitsForTama38(fid) {
+                const data = window.__tama38Permits || {};
+                const entry = data[String(fid)];
+                if (!entry || !entry.permits) return [];
+                return entry.permits.filter(p => !p.filtered);
+            }
+            function getPermitStatusColor(status) {
+                if (!status) return '#5dade2';
+                if (status.includes('הופק') || status.includes('היתר בני')) return '#50d25a';
+                if (status.includes('אושר')) return '#50d25a';
+                if (status.includes('בנייה') || status.includes('בביצוע')) return '#4a69d1';
+                if (status.includes('נפתח')) return '#f56e05';
+                if (status.includes('נסגר') || status.includes('בוטל')) return '#888';
+                if (status.includes('נדונה') || status.includes('בתהליך')) return '#4ba1f0';
+                return '#5dade2';
+            }
+            function getBestPermitStatus(permits) {
+                const priority = ['הופק', 'היתר בני', 'אושר', 'בביצוע', 'בנייה', 'נדונה', 'בתהליך', 'נפתח'];
+                let best = null;
+                for (const kw of priority) {
+                    const match = permits.find(p => (p.status || '').includes(kw));
+                    if (match) { best = match; break; }
+                }
+                return best || permits[0];
+            }
+            function buildPermitsSummaryHTML(permits, buttonDataAttr) {
+                if (!permits || permits.length === 0) return '';
+                const best = getBestPermitStatus(permits);
+                const bestColor = getPermitStatusColor(best.status);
+                const totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
+                let html = '<div class="popup-section-title" style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a">היתרים</div>';
+                html += `<div class="popup-row"><span class="popup-row-label">מספר היתרים</span><span class="popup-row-value">${permits.length}</span></div>`;
+                html += `<div class="popup-row"><span class="popup-row-label">סטטוס מתקדם</span><span class="popup-status-badge" style="background:${bestColor}33;color:${bestColor};border:1px solid ${bestColor};font-size:11px">${best.status || '-'}</span></div>`;
+                if (totalUnits > 0) {
+                    html += `<div class="popup-row"><span class="popup-row-label">סה"כ יח"ד בהיתרים</span><span class="popup-row-value">${totalUnits}</span></div>`;
+                }
+                html += `<div style="text-align:center;margin-top:6px"><button class="popup-btn-permit" data-action="show-permits" ${buttonDataAttr}>${permits.length} היתרים ←</button></div>`;
+                return html;
+            }
+            function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr) {
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                html += '<div class="permit-detail-header">';
+                html += `<div class="popup-header-title">${title}</div>`;
+                html += `<div class="popup-header-subtitle">${subtitle} | ${permits.length} היתרים</div>`;
+                html += '</div>';
+                html += '<div class="popup-body" style="max-height:350px;overflow-y:auto">';
+                permits.forEach((p, i) => {
+                    const sc = getPermitStatusColor(p.status);
+                    const unitsStr = p.units ? p.units + ' יח"ד' : '';
+                    const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
+                    html += `<div style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''}">`;
+                    html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
+                    html += `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
+                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px">${p.status || '-'}</span>`;
+                    html += `</div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${unitsStr ? ' | ' + unitsStr : ''}${tamaStr}</div>`;
+                    if (p.request_description) {
+                        const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
+                        html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
+                    }
+                    html += `</div>`;
+                });
+                html += '</div>';
+                html += '<div class="popup-footer">';
+                html += `<button class="popup-btn-permit" data-action="${backAction}" ${backDataAttr}>→ חזרה</button>`;
+                html += '</div>';
+                html += '</div>';
+                return html;
+            }
+
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
                 const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const subtitle = props.plan_name || props.taba || '';
@@ -7327,15 +7414,20 @@
                     html += `<div class="popup-row"><span class="popup-row-label">סיום הפקדה</span><span class="popup-row-value" style="color:#999">${objEndDate}</span></div>`;
                 }
 
+                // ── Permits summary (from all_permits.json) ──
+                const taba = props.taba || '';
+                const permits = getPermitsForTaba(taba);
+                if (permits.length > 0) {
+                    const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                    html += buildPermitsSummaryHTML(permits, `data-feature='${featureJson}' data-taba='${taba}'`);
+                }
+
                 html += '</div>'; // end popup-body
 
                 // ── Footer ──
                 html += '<div class="popup-footer">';
                 if (mavatUrl) {
                     html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
-                }
-                if (hasPermit) {
-                    html += `<button class="popup-btn-permit" data-feature='${JSON.stringify(featureData).replace(/'/g, "&#39;")}'>להיתר \u2190</button>`;
                 }
                 html += '</div>';
 
@@ -7589,6 +7681,12 @@
                 if (comment) {
                     const shortComment = comment.length > 120 ? comment.substring(0, 120) + '...' : comment;
                     html += `<div class="popup-row" style="flex-direction:column;align-items:flex-start"><span class="popup-row-label" style="margin-bottom:4px">הערות</span><span class="popup-row-value" style="font-size:11px;line-height:1.4;text-align:right;white-space:pre-wrap;max-width:100%">${shortComment}</span></div>`;
+                }
+                // ── Permits from tama38_permits.json ──
+                const fid = props.fid != null ? props.fid : '';
+                const tama38Permits = getPermitsForTama38(fid);
+                if (tama38Permits.length > 0) {
+                    html += buildPermitsSummaryHTML(tama38Permits, `data-fid='${fid}'`);
                 }
                 html += '</div>';
                 html += '</div>';
@@ -10092,22 +10190,30 @@
                                         const keys = mimushDrilldown ? Object.keys(data).sort() : mimushData.minahaks;
                                         const cellPlans = mimushDrilldown ? mimushData.plansBySub[mimushDrilldown] : mimushData.plansByCell;
                                         const tots = mimushDrilldown ? null : mimushData.totals;
+                                        const showStages = mimushExpanded === 'stages';
 
                                         return (
+                                            <React.Fragment>
+                                            <div className="units-toggle-btns" style={{marginBottom:8}}>
+                                                <button className={`units-toggle-btn ${showStages ? 'active' : ''}`}
+                                                    onClick={() => setMimushExpanded(prev => prev === 'stages' ? null : 'stages')}>
+                                                    פירוט שלבים
+                                                </button>
+                                            </div>
                                             <table className="units-table" style={{tableLayout:'auto'}}>
                                                 <thead>
                                                     <tr>
                                                         <th style={{textAlign:'right',minWidth:120}}>{mimushDrilldown ? 'תת-שכונה' : 'מינהק'}</th>
                                                         <th>סה"כ יח"ד</th>
-                                                        {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
-                                                            <th key={s.index} style={{background: s.color + '22', color: s.color, fontSize:11, padding:'8px 4px'}}>
-                                                                {s.shortLabel}
-                                                            </th>
-                                                        ))}
                                                         <th style={{fontSize:11}}>% מימוש<br/>ממוצע</th>
                                                         <th style={{fontSize:11}}>זנב</th>
                                                         {mimushData.milestoneYears.map(y => (
                                                             <th key={y} style={{fontSize:11, background:'#2d6a4f22', color:'#4CAF50'}}>{y}</th>
+                                                        ))}
+                                                        {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
+                                                            <th key={s.index} style={{background: s.color + '22', color: s.color, fontSize:11, padding:'8px 4px'}}>
+                                                                {s.shortLabel}
+                                                            </th>
                                                         ))}
                                                     </tr>
                                                 </thead>
@@ -10125,19 +10231,6 @@
                                                                     )}
                                                                 </td>
                                                                 <td style={{fontWeight:700, color:'#e0e0ff'}}>{row.total.toLocaleString()}</td>
-                                                                {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => {
-                                                                    const val = row.byStage[s.index] || 0;
-                                                                    const plans = cellPlans[k] ? (cellPlans[k][s.index] || []) : [];
-                                                                    return (
-                                                                        <td key={s.index}
-                                                                            className={`mimush-stage-cell ${val === 0 ? 'empty' : ''}`}
-                                                                            style={{background: val > 0 ? s.color + '18' : 'transparent'}}
-                                                                            onClick={() => { if (plans.length > 0) setMimushCellReport({ label: k, stage: s.shortLabel, stageIndex: s.index, plans }); }}
-                                                                        >
-                                                                            {val > 0 ? val.toLocaleString() : '-'}
-                                                                        </td>
-                                                                    );
-                                                                })}
                                                                 <td>
                                                                     <div className="mimush-pct-bar">
                                                                         <div className="mimush-pct-bar-fill" style={{width: row.avgMimush + '%', background: row.avgMimush >= 80 ? '#4CAF50' : row.avgMimush >= 50 ? '#FF9800' : '#e94560'}}></div>
@@ -10153,6 +10246,19 @@
                                                                         {val > 0 ? val.toLocaleString() : '-'}
                                                                     </td>;
                                                                 })}
+                                                                {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => {
+                                                                    const val = row.byStage[s.index] || 0;
+                                                                    const plans = cellPlans[k] ? (cellPlans[k][s.index] || []) : [];
+                                                                    return (
+                                                                        <td key={s.index}
+                                                                            className={`mimush-stage-cell ${val === 0 ? 'empty' : ''}`}
+                                                                            style={{background: val > 0 ? s.color + '18' : 'transparent'}}
+                                                                            onClick={() => { if (plans.length > 0) setMimushCellReport({ label: k, stage: s.shortLabel, stageIndex: s.index, plans }); }}
+                                                                        >
+                                                                            {val > 0 ? val.toLocaleString() : '-'}
+                                                                        </td>
+                                                                    );
+                                                                })}
                                                             </tr>
                                                         );
                                                     })}
@@ -10160,11 +10266,6 @@
                                                         <tr className="total-row">
                                                             <td style={{textAlign:'right'}}>סה"כ</td>
                                                             <td style={{fontWeight:700}}>{tots.total.toLocaleString()}</td>
-                                                            {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
-                                                                <td key={s.index} style={{background: s.color + '18'}}>
-                                                                    {(tots.byStage[s.index] || 0).toLocaleString()}
-                                                                </td>
-                                                            ))}
                                                             <td>
                                                                 <div className="mimush-pct-bar">
                                                                     <div className="mimush-pct-bar-fill" style={{width: tots.avgMimush + '%', background: tots.avgMimush >= 80 ? '#4CAF50' : tots.avgMimush >= 50 ? '#FF9800' : '#e94560'}}></div>
@@ -10177,10 +10278,16 @@
                                                                     {Math.round(tots.byYear[y] || 0).toLocaleString()}
                                                                 </td>
                                                             ))}
+                                                            {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
+                                                                <td key={s.index} style={{background: s.color + '18'}}>
+                                                                    {(tots.byStage[s.index] || 0).toLocaleString()}
+                                                                </td>
+                                                            ))}
                                                         </tr>
                                                     )}
                                                 </tbody>
                                             </table>
+                                            </React.Fragment>
                                         );
                                     })()}
 
