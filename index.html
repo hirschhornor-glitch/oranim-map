@@ -3445,19 +3445,15 @@
                 // Load all GeoJSON data + CSV for plan_type enrichment
                 const entries = Object.entries(GEOJSON_FILES);
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+                // Pre-init permit globals
+                window.__allPermits = {};
+                window.__tama38Permits = {};
                 Promise.all([
                     Promise.all(entries.map(([key, url]) =>
                         fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )),
-                    fetch(sheetUrl).then(r => r.text()).catch(() => ''),
-                    fetch('data/all_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => { return {}; }),
-                    fetch('data/tama38_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => { return {}; })
-                ]).then(results => {
-                    const geoResults = results[0];
-                    const csvText = results[1];
-                    window.__allPermits = results[2] || {};
-                    window.__tama38Permits = results[3] || {};
-                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length);
+                    fetch(sheetUrl).then(r => r.text()).catch(() => '')
+                ]).then(([geoResults, csvText]) => {
                     const gd = {};
                     geoResults.forEach(([key, data]) => { if (data) gd[key] = data; });
                     // Merge CSV plan_type into GeoJSON features
@@ -3559,6 +3555,9 @@
 
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
+                    // Load permit data (async, populates globals for popup use)
+                    fetch('data/all_permits.json?v=' + Date.now()).then(r => r.json()).then(d => { window.__allPermits = d; console.log('[Permits] all_permits:', Object.keys(d).length); });
+                    fetch('data/tama38_permits.json?v=' + Date.now()).then(r => r.json()).then(d => { window.__tama38Permits = d; console.log('[Permits] tama38_permits:', Object.keys(d).length); });
                     setDataLoaded(true);
                     setLoading(false);
                     // Extract unique plan types for filter
@@ -6848,12 +6847,10 @@
                                 const permits = _getPermits(f.properties.taba);
                                 if (permits.length > 0) {
                                     const totalUnits = permits.reduce(function(s,p){return s+(p.units||0)},0);
-                                    if (totalUnits > 0 || permits.length > 0) {
-                                        let line1 = totalUnits > 0 ? totalUnits + ' יח"ד' : '';
-                                        let line2 = permits.length + ' היתרים';
-                                        let labelText = [line1, line2].filter(Boolean).join('\n');
+                                    if (totalUnits > 0) {
+                                        const labelText = totalUnits + ' יח"ד\n' + permits.length + ' היתרים';
                                         try {
-                                            const center = layer.getBounds().getCenter();
+                                            const center = f.geometry ? visualCenter(f.geometry) : layer.getBounds().getCenter();
                                             const icon = L.divIcon({
                                                 className: 'plan-label-center plan-label-small',
                                                 html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
