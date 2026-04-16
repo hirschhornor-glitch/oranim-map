@@ -1469,6 +1469,41 @@
             text-align: center; padding: 40px; color: #8888aa; font-size: 14px;
         }
 
+        /* Mimush modal extras */
+        .mimush-stage-cell {
+            cursor: pointer; transition: background 0.15s;
+            position: relative;
+        }
+        .mimush-stage-cell:hover { filter: brightness(1.3); }
+        .mimush-stage-cell.empty { cursor: default; opacity: 0.3; }
+        .mimush-stage-cell.empty:hover { filter: none; }
+        .mimush-tail-badge {
+            display: inline-block; background: #e94560; color: #fff;
+            font-size: 10px; padding: 1px 6px; border-radius: 8px;
+            margin-right: 4px; font-weight: 600;
+        }
+        .mimush-pct-bar {
+            display: inline-block; height: 6px; border-radius: 3px;
+            background: #2a2a4a; width: 48px; vertical-align: middle; margin-right: 4px;
+        }
+        .mimush-pct-bar-fill {
+            height: 100%; border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .mimush-est-date {
+            font-size: 11px; color: #8888aa; white-space: nowrap;
+        }
+        .mimush-legend {
+            display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0 4px;
+            justify-content: center; font-size: 11px; color: #8888aa;
+        }
+        .mimush-legend-item {
+            display: flex; align-items: center; gap: 4px;
+        }
+        .mimush-legend-dot {
+            width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+        }
+
         /* Measurement result panel */
         .measure-result {
             position: absolute;
@@ -3031,6 +3066,11 @@
             const [commerceCellReport, setCommerceCellReport] = useState(null);
             const [minahakReport, setMinahakReport] = useState(null);
             const [cellReport, setCellReport] = useState(null); // {minahak, statusKey, statusLabel, plans}
+            const [showMimush, setShowMimush] = useState(false);
+            const [mimushData, setMimushData] = useState(null);
+            const [mimushDrilldown, setMimushDrilldown] = useState(null);
+            const [mimushExpanded, setMimushExpanded] = useState(null); // null | 'stage' | 'tail'
+            const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
@@ -5326,6 +5366,218 @@
                     setCommerceLoading(false);
                 });
             }, []);
+
+            // ══════════════════════════════════════════
+            // Mimush (Realization) model — constants & calculation
+            // ══════════════════════════════════════════
+            const MIMUSH_STAGES = [
+                { index: 0, label: 'פתיחת תיק → מתן תוקף', shortLabel: 'תכנון', months: 42, mimushPct: 80, color: '#F44336' },
+                { index: 1, label: 'מתן תוקף → רישוי', shortLabel: 'תוקף', months: 6, mimushPct: 86, color: '#4CAF50' },
+                { index: 2, label: 'רישוי → היתר הריסה', shortLabel: 'רישוי', months: 7, mimushPct: 100, color: '#4ba1f0' },
+                { index: 3, label: 'התארגנות לביצוע', shortLabel: 'התארגנות', months: 6, mimushPct: 100, color: '#4b85e0' },
+                { index: 4, label: 'היתר בנייה', shortLabel: 'היתר', months: 15, mimushPct: 100, color: '#4b85e0' },
+                { index: 5, label: 'ביצוע → אכלוס', shortLabel: 'בנייה', months: 54, mimushPct: 100, color: '#4a69d1' },
+                { index: 6, label: 'הושלם', shortLabel: 'הושלם', months: 0, mimushPct: 100, color: '#494CC2' },
+            ];
+            const MIMUSH_TAIL_RULES = [
+                { phase: 'planning', thresholdMonths: 48, mimushPct: 50, extraMonths: 12, reason: 'תכנון מעל 4 שנה' },
+                { phase: 'planning', thresholdMonths: 60, mimushPct: 30, extraMonths: 24, reason: 'תכנון מעל 5 שנה' },
+                { phase: 'licensing', thresholdMonths: 30, mimushPct: 70, extraMonths: 12, reason: 'רישוי מעל 2.5 שנה' },
+                { phase: 'licensing', thresholdMonths: 42, mimushPct: 30, extraMonths: 12, reason: 'רישוי מעל 3.5 שנה' },
+            ];
+
+            function getStageFromStatus(statusMavat, stage) {
+                const s = (statusMavat || '').trim();
+                const st = (stage || '').trim();
+                if (s === 'נגנזה' || s === 'נדחתה') return -1; // excluded
+                if (st === 'ו-גמר בנייה') return 6;
+                if (st === 'ה-בבנייה') return 5;
+                if (st === 'ד-היתר בנייה') return 4;
+                if (st === 'ג-רישוי בתהליך') return 2; // stages 2-3 combined
+                // Approved without stage → stage 1 (tokef → licensing)
+                if (['אישור','מאושרת','תבע מאושרת','תחילת תוקף','בהליך אישור','תבע - טרום אישור'].includes(s)) return 1;
+                // Planning stages → stage 0
+                if (['נפתח תיק למתכנן','נפתח תיק תבע','בבדיקה תכנונית','נקלטה מקובץ מבאת',
+                     'במילוי תנאים להפקדה','תכנית עומדת בתנאי סף',
+                     'הפקדה להתנגדויות/השגות','דיון בהתנגדויות ותיקונים'].includes(s)) return 0;
+                return s ? 0 : -1; // unknown status → planning; empty → exclude
+            }
+
+            function calcMimush(props) {
+                const stageIdx = getStageFromStatus(props.status_mavat, props.stage);
+                if (stageIdx < 0) return null;
+                const stageDef = MIMUSH_STAGES[stageIdx];
+
+                // Parse mavat_date to calculate time in stage
+                let monthsInStage = 0;
+                const dateStr = props.mavat_date || '';
+                const dp = dateStr.split('/');
+                if (dp.length === 3) {
+                    const d = new Date(parseInt(dp[2]), parseInt(dp[1]) - 1, parseInt(dp[0]));
+                    if (!isNaN(d.getTime())) {
+                        const now = new Date();
+                        monthsInStage = Math.max(0, (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()));
+                    }
+                }
+
+                // Calculate remaining months from current stage onward
+                let monthsRemaining = 0;
+                for (let i = stageIdx; i < 6; i++) {
+                    monthsRemaining += MIMUSH_STAGES[i].months;
+                }
+                // Subtract time already spent in current stage
+                monthsRemaining = Math.max(0, monthsRemaining - monthsInStage);
+
+                // Add extra months for large plans
+                const totalUnits = parseInt(props.units_total) || 0;
+                if (totalUnits > 500) monthsRemaining += 12;
+                else if (totalUnits > 300) monthsRemaining += 6;
+
+                // Check tail rules
+                let mimushPct = stageDef.mimushPct;
+                let isTail = false;
+                let tailReason = '';
+                const phase = stageIdx <= 0 ? 'planning' : (stageIdx >= 2 && stageIdx <= 4) ? 'licensing' : null;
+                if (phase) {
+                    // Apply most severe matching rule
+                    const matchingRules = MIMUSH_TAIL_RULES.filter(r => r.phase === phase && monthsInStage >= r.thresholdMonths);
+                    if (matchingRules.length > 0) {
+                        const worstRule = matchingRules[matchingRules.length - 1]; // sorted by severity
+                        mimushPct = worstRule.mimushPct;
+                        monthsRemaining += worstRule.extraMonths;
+                        isTail = true;
+                        tailReason = worstRule.reason;
+                    }
+                }
+                if (stageIdx === 6) { mimushPct = 100; monthsRemaining = 0; }
+
+                // Estimated completion date
+                const est = new Date();
+                est.setMonth(est.getMonth() + monthsRemaining);
+                const estimatedDate = (est.getMonth() + 1).toString().padStart(2, '0') + '/' + est.getFullYear();
+
+                return {
+                    stageIndex: stageIdx,
+                    stageLabel: stageDef.shortLabel,
+                    stageLabelFull: stageDef.label,
+                    stageColor: stageDef.color,
+                    mimushPct,
+                    monthsInStage,
+                    monthsRemaining,
+                    estimatedDate,
+                    isTail,
+                    tailReason,
+                    unitsAdd: parseFloat(props.units_add) || 0,
+                    unitsTotal: totalUnits,
+                };
+            }
+
+            // Build mimush aggregation data
+            const buildMimushData = useCallback(() => {
+                const gd = geoDataRef.current;
+                if (!gd || !gd.plans) return null;
+                const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                const byMinahak = {};
+                const bySub = {};
+                const plansByCell = {};   // { minahak: { stageIndex: [plan...] } }
+                const plansBySub = {};    // { minahak: { sub: { stageIndex: [plan...] } } }
+                const tailPlans = [];
+
+                minahakOrder.forEach(m => {
+                    byMinahak[m] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0 };
+                    MIMUSH_STAGES.forEach((_, i) => { byMinahak[m].byStage[i] = 0; });
+                    bySub[m] = {};
+                    plansByCell[m] = {};
+                    plansBySub[m] = {};
+                    MIMUSH_STAGES.forEach((_, i) => { plansByCell[m][i] = []; });
+                });
+
+                gd.plans.features.forEach(f => {
+                    const p = f.properties;
+                    const m = p.minahak || '';
+                    if (!byMinahak[m]) return;
+                    const result = calcMimush(p);
+                    if (!result) return;
+                    const ua = result.unitsAdd || 0;
+                    if (ua <= 0) return;
+
+                    byMinahak[m].total += ua;
+                    byMinahak[m].byStage[result.stageIndex] = (byMinahak[m].byStage[result.stageIndex] || 0) + ua;
+                    byMinahak[m].weightedMimush += ua * result.mimushPct;
+                    byMinahak[m].planCount++;
+                    if (result.isTail) byMinahak[m].tailCount++;
+
+                    const planInfo = {
+                        plan_name: p.plan_name || '',
+                        plan_name_he: p.plan_name_he || p.plan_summary || '',
+                        units_add: ua,
+                        stageIndex: result.stageIndex,
+                        stageLabel: result.stageLabel,
+                        stageColor: result.stageColor,
+                        mimushPct: result.mimushPct,
+                        estimatedDate: result.estimatedDate,
+                        monthsInStage: result.monthsInStage,
+                        monthsRemaining: result.monthsRemaining,
+                        isTail: result.isTail,
+                        tailReason: result.tailReason,
+                        status_mavat: p.status_mavat || '',
+                        sub_neighborhood: p.sub_neighborhood || '',
+                        geometry: f.geometry,
+                    };
+                    plansByCell[m][result.stageIndex].push(planInfo);
+                    if (result.isTail) tailPlans.push({ ...planInfo, minahak: m });
+
+                    // Sub-neighborhood
+                    const sub = p.sub_neighborhood || 'לא ידוע';
+                    if (!bySub[m][sub]) {
+                        bySub[m][sub] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0 };
+                        MIMUSH_STAGES.forEach((_, i) => { bySub[m][sub].byStage[i] = 0; });
+                        plansBySub[m][sub] = {};
+                        MIMUSH_STAGES.forEach((_, i) => { plansBySub[m][sub][i] = []; });
+                    }
+                    bySub[m][sub].total += ua;
+                    bySub[m][sub].byStage[result.stageIndex] = (bySub[m][sub].byStage[result.stageIndex] || 0) + ua;
+                    bySub[m][sub].weightedMimush += ua * result.mimushPct;
+                    bySub[m][sub].planCount++;
+                    if (result.isTail) bySub[m][sub].tailCount++;
+                    plansBySub[m][sub][result.stageIndex].push(planInfo);
+                });
+
+                // Calculate weighted average mimush per minahak
+                minahakOrder.forEach(m => {
+                    const d = byMinahak[m];
+                    d.avgMimush = d.total > 0 ? Math.round(d.weightedMimush / d.total) : 0;
+                    Object.values(bySub[m]).forEach(sd => {
+                        sd.avgMimush = sd.total > 0 ? Math.round(sd.weightedMimush / sd.total) : 0;
+                    });
+                });
+
+                // Totals row
+                const totals = { total: 0, byStage: {}, avgMimush: 0, planCount: 0, tailCount: 0, weightedMimush: 0 };
+                MIMUSH_STAGES.forEach((_, i) => { totals.byStage[i] = 0; });
+                minahakOrder.forEach(m => {
+                    const d = byMinahak[m];
+                    totals.total += d.total;
+                    totals.weightedMimush += d.weightedMimush;
+                    totals.planCount += d.planCount;
+                    totals.tailCount += d.tailCount;
+                    MIMUSH_STAGES.forEach((_, i) => { totals.byStage[i] += d.byStage[i] || 0; });
+                });
+                totals.avgMimush = totals.total > 0 ? Math.round(totals.weightedMimush / totals.total) : 0;
+
+                return { minahaks: minahakOrder, byMinahak, bySub, plansByCell, plansBySub, tailPlans, totals, stages: MIMUSH_STAGES };
+            }, [dataLoaded]);
+
+            const openMimushModal = useCallback(() => {
+                const data = buildMimushData();
+                if (data) {
+                    setMimushData(data);
+                    setShowMimush(true);
+                    setMimushDrilldown(null);
+                    setMimushExpanded(null);
+                    setMimushCellReport(null);
+                }
+            }, [buildMimushData]);
 
             // GeoJSON rendering: add/remove L.geoJSON layers based on state
             useEffect(() => {
@@ -8258,6 +8510,18 @@
                             )}
                             </div>
 
+                            {/* ══ מימוש ══ */}
+                            <button
+                                className={`toolbar-btn ${showMimush ? 'active' : ''}`}
+                                onClick={() => { openMimushModal(); setActiveDropdown(null); }}
+                                title="אחוזי מימוש ושלביות"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                </svg>
+                                <span className="toolbar-label">מימוש</span>
+                            </button>
+
                             {/* ══ שצ"פ ══ */}
                             <div style={{position:'relative'}}>
                             <button
@@ -9736,6 +10000,234 @@
                                             &#128424; הדפסה / שמירה
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ══ Mimush Modal ══ */}
+                    {showMimush && mimushData && (
+                        <div className="units-overlay" onClick={() => { setShowMimush(false); setMimushDrilldown(null); setMimushCellReport(null); }}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:1100}}>
+                                <div className="units-header">
+                                    {mimushDrilldown ? (
+                                        <React.Fragment>
+                                            <button className="units-back-btn" onClick={() => setMimushDrilldown(null)}>&#8594; חזרה</button>
+                                            <h2>&#128200; מימוש ושלביות — {mimushDrilldown}</h2>
+                                        </React.Fragment>
+                                    ) : (
+                                        <h2>&#128200; אחוזי מימוש ושלביות לפי מינהל קהילתי</h2>
+                                    )}
+                                    <button className="units-close" onClick={() => { setShowMimush(false); setMimushDrilldown(null); setMimushCellReport(null); }}>&times;</button>
+                                </div>
+                                <div className="units-body">
+                                    <div className="mimush-legend">
+                                        {MIMUSH_STAGES.filter(s => s.index < 7).map(s => (
+                                            <span key={s.index} className="mimush-legend-item">
+                                                <span className="mimush-legend-dot" style={{background: s.color}}></span>
+                                                {s.shortLabel}
+                                            </span>
+                                        ))}
+                                        <span className="mimush-legend-item">
+                                            <span className="mimush-legend-dot" style={{background:'#e94560'}}></span>
+                                            זנב
+                                        </span>
+                                    </div>
+
+                                    {(() => {
+                                        const data = mimushDrilldown ? mimushData.bySub[mimushDrilldown] : mimushData.byMinahak;
+                                        const keys = mimushDrilldown ? Object.keys(data).sort() : mimushData.minahaks;
+                                        const cellPlans = mimushDrilldown ? mimushData.plansBySub[mimushDrilldown] : mimushData.plansByCell;
+                                        const tots = mimushDrilldown ? null : mimushData.totals;
+
+                                        return (
+                                            <table className="units-table" style={{tableLayout:'auto'}}>
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{textAlign:'right',minWidth:120}}>{mimushDrilldown ? 'תת-שכונה' : 'מינהק'}</th>
+                                                        <th>סה"כ יח"ד</th>
+                                                        {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
+                                                            <th key={s.index} style={{background: s.color + '22', color: s.color, fontSize:11, padding:'8px 4px'}}>
+                                                                {s.shortLabel}
+                                                            </th>
+                                                        ))}
+                                                        <th style={{fontSize:11}}>% מימוש<br/>ממוצע</th>
+                                                        <th style={{fontSize:11}}>זנב</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {keys.map(k => {
+                                                        const row = data[k];
+                                                        if (!row || row.total <= 0) return null;
+                                                        return (
+                                                            <tr key={k}>
+                                                                <td style={{textAlign:'right', fontWeight:600}}>
+                                                                    {mimushDrilldown ? (
+                                                                        <span>{k}</span>
+                                                                    ) : (
+                                                                        <span className="units-minahak-clickable" onClick={() => setMimushDrilldown(k)}>{k}</span>
+                                                                    )}
+                                                                </td>
+                                                                <td style={{fontWeight:700, color:'#e0e0ff'}}>{row.total.toLocaleString()}</td>
+                                                                {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => {
+                                                                    const val = row.byStage[s.index] || 0;
+                                                                    const plans = cellPlans[k] ? (cellPlans[k][s.index] || []) : [];
+                                                                    return (
+                                                                        <td key={s.index}
+                                                                            className={`mimush-stage-cell ${val === 0 ? 'empty' : ''}`}
+                                                                            style={{background: val > 0 ? s.color + '18' : 'transparent'}}
+                                                                            onClick={() => { if (plans.length > 0) setMimushCellReport({ label: k, stage: s.shortLabel, stageIndex: s.index, plans }); }}
+                                                                        >
+                                                                            {val > 0 ? val.toLocaleString() : '-'}
+                                                                        </td>
+                                                                    );
+                                                                })}
+                                                                <td>
+                                                                    <div className="mimush-pct-bar">
+                                                                        <div className="mimush-pct-bar-fill" style={{width: row.avgMimush + '%', background: row.avgMimush >= 80 ? '#4CAF50' : row.avgMimush >= 50 ? '#FF9800' : '#e94560'}}></div>
+                                                                    </div>
+                                                                    <span style={{fontSize:12}}>{row.avgMimush}%</span>
+                                                                </td>
+                                                                <td style={{color: row.tailCount > 0 ? '#e94560' : '#8888aa', fontWeight: row.tailCount > 0 ? 700 : 400}}>
+                                                                    {row.tailCount > 0 ? row.tailCount : '-'}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {tots && (
+                                                        <tr className="total-row">
+                                                            <td style={{textAlign:'right'}}>סה"כ</td>
+                                                            <td style={{fontWeight:700}}>{tots.total.toLocaleString()}</td>
+                                                            {MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
+                                                                <td key={s.index} style={{background: s.color + '18'}}>
+                                                                    {(tots.byStage[s.index] || 0).toLocaleString()}
+                                                                </td>
+                                                            ))}
+                                                            <td>
+                                                                <div className="mimush-pct-bar">
+                                                                    <div className="mimush-pct-bar-fill" style={{width: tots.avgMimush + '%', background: tots.avgMimush >= 80 ? '#4CAF50' : tots.avgMimush >= 50 ? '#FF9800' : '#e94560'}}></div>
+                                                                </div>
+                                                                <span style={{fontSize:12}}>{tots.avgMimush}%</span>
+                                                            </td>
+                                                            <td style={{color:'#e94560', fontWeight:700}}>{tots.tailCount > 0 ? tots.tailCount : '-'}</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        );
+                                    })()}
+
+                                    {/* Tail toggle */}
+                                    {!mimushDrilldown && mimushData.tailPlans.length > 0 && (
+                                        <div style={{marginTop:16}}>
+                                            <div className="units-toggle-btns">
+                                                <button className={`units-toggle-btn ${mimushExpanded === 'tail' ? 'active' : ''}`}
+                                                    onClick={() => setMimushExpanded(prev => prev === 'tail' ? null : 'tail')}>
+                                                    &#128680; תכניות "זנב" ({mimushData.tailPlans.length})
+                                                </button>
+                                            </div>
+                                            {mimushExpanded === 'tail' && (
+                                                <table className="units-table" style={{marginTop:8, tableLayout:'auto'}}>
+                                                    <thead>
+                                                        <tr>
+                                                            <th style={{textAlign:'right'}}>תכנית</th>
+                                                            <th>מינהק</th>
+                                                            <th>יח"ד</th>
+                                                            <th>שלב</th>
+                                                            <th>חודשים בשלב</th>
+                                                            <th>% מימוש</th>
+                                                            <th>סיבה</th>
+                                                            <th>צפי אכלוס</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {[...mimushData.tailPlans].sort((a,b) => b.units_add - a.units_add).map((p, i) => (
+                                                            <tr key={i} style={{cursor:'pointer'}} onClick={() => {
+                                                                if (p.geometry) {
+                                                                    const c = p.geometry.coordinates ? (p.geometry.type === 'MultiPolygon' ? p.geometry.coordinates[0][0][0] : p.geometry.coordinates[0][0]) : null;
+                                                                    if (c) { mapInstanceRef.current?.setView([c[1], c[0]], 17); setShowMimush(false); }
+                                                                }
+                                                            }}>
+                                                                <td style={{textAlign:'right', fontSize:12}}>
+                                                                    <span className="mimush-tail-badge">זנב</span>
+                                                                    {p.plan_name}
+                                                                </td>
+                                                                <td style={{fontSize:11}}>{p.minahak}</td>
+                                                                <td>{p.units_add.toLocaleString()}</td>
+                                                                <td style={{color: p.stageColor}}>{p.stageLabel}</td>
+                                                                <td>{p.monthsInStage}</td>
+                                                                <td style={{color: p.mimushPct <= 50 ? '#e94560' : '#FF9800', fontWeight:600}}>{p.mimushPct}%</td>
+                                                                <td style={{fontSize:11, color:'#e94560'}}>{p.tailReason}</td>
+                                                                <td className="mimush-est-date">{p.estimatedDate}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ══ Mimush Cell Report ══ */}
+                    {mimushCellReport && (
+                        <div className="units-overlay" style={{zIndex:2100}} onClick={() => setMimushCellReport(null)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:800}}>
+                                <div className="units-header">
+                                    <h2 style={{color:'#fff', fontSize:16}}>
+                                        &#128196; {mimushCellReport.label} — {mimushCellReport.stage}
+                                        <span style={{color:'#8888aa', fontSize:13, marginRight:8}}>
+                                            ({mimushCellReport.plans.length} תכניות, {mimushCellReport.plans.reduce((s,p) => s + p.units_add, 0).toLocaleString()} יח"ד)
+                                        </span>
+                                    </h2>
+                                    <button className="units-close" onClick={() => setMimushCellReport(null)}>&times;</button>
+                                </div>
+                                <div className="units-body">
+                                    <table className="units-table" style={{tableLayout:'auto'}}>
+                                        <thead>
+                                            <tr>
+                                                <th style={{width:30}}>#</th>
+                                                <th style={{textAlign:'right'}}>מס׳ תכנית</th>
+                                                <th style={{textAlign:'right'}}>שם</th>
+                                                <th>יח"ד</th>
+                                                <th>% מימוש</th>
+                                                <th>חודשים בשלב</th>
+                                                <th>צפי אכלוס</th>
+                                                <th>סטטוס</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {[...mimushCellReport.plans].sort((a,b) => b.units_add - a.units_add).map((p, i) => (
+                                                <tr key={i} style={{cursor:'pointer'}} onClick={() => {
+                                                    if (p.geometry) {
+                                                        const c = p.geometry.coordinates ? (p.geometry.type === 'MultiPolygon' ? p.geometry.coordinates[0][0][0] : p.geometry.coordinates[0][0]) : null;
+                                                        if (c) { mapInstanceRef.current?.setView([c[1], c[0]], 17); setShowMimush(false); setMimushCellReport(null); }
+                                                    }
+                                                }}>
+                                                    <td>{i + 1}</td>
+                                                    <td style={{textAlign:'right', fontSize:12}}>
+                                                        {p.isTail && <span className="mimush-tail-badge">זנב</span>}
+                                                        {p.plan_name}
+                                                    </td>
+                                                    <td style={{textAlign:'right', fontSize:11, color:'#8888aa', maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                                                        {p.plan_name_he}
+                                                    </td>
+                                                    <td style={{fontWeight:600, color:'#4CAF50'}}>{p.units_add.toLocaleString()}</td>
+                                                    <td>
+                                                        <div className="mimush-pct-bar" style={{width:36}}>
+                                                            <div className="mimush-pct-bar-fill" style={{width: p.mimushPct + '%', background: p.mimushPct >= 80 ? '#4CAF50' : p.mimushPct >= 50 ? '#FF9800' : '#e94560'}}></div>
+                                                        </div>
+                                                        <span style={{fontSize:11}}>{p.mimushPct}%</span>
+                                                    </td>
+                                                    <td>{p.monthsInStage}</td>
+                                                    <td className="mimush-est-date">{p.estimatedDate}</td>
+                                                    <td style={{fontSize:10, color:'#8888aa'}}>{p.status_mavat}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
