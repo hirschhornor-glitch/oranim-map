@@ -6922,7 +6922,7 @@
                                 const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'"));
+                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0));
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
                             });
@@ -7342,7 +7342,7 @@
                 let html = `<div style="text-align:center;margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a"><button class="popup-btn-permit" data-action="show-permits" ${buttonDataAttr}>${permits.length} היתרים ←</button></div>`;
                 return html;
             }
-            function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr) {
+            function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr, fallbackUnits) {
                 let html = '<div>';
                 html += buildNavBar(navInfo);
                 html += '<div class="permit-detail-header">';
@@ -7370,7 +7370,8 @@
                     html += `</div>`;
                 });
                 html += '</div>'; // end scrollable popup-body
-                const totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
+                let totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
+                if (!totalUnits && fallbackUnits) totalUnits = fallbackUnits;
                 if (totalUnits > 0) {
                     html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center;font-size:13px;font-weight:bold;color:#fff">סה"כ ${totalUnits} יח"ד בהיתרים</div>`;
                 }
@@ -7998,7 +7999,7 @@
                             const title = (entry.properties.address || 'תמ"א 38') + (tamaT ? ' - תמ"א ' + tamaT : '');
                             const unitsTose = entry.properties.units_tose != null ? entry.properties.units_tose : '';
                             const tama38Sub = [entry.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
-                            popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`));
+                            popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`, unitsTose ? Number(unitsTose) : 0));
                         }
                         return;
                     }
