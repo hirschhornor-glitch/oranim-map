@@ -5457,6 +5457,8 @@
                 est.setMonth(est.getMonth() + monthsRemaining);
                 const estimatedDate = (est.getMonth() + 1).toString().padStart(2, '0') + '/' + est.getFullYear();
 
+                const estimatedYear = est.getFullYear() + (est.getMonth() >= 6 ? 1 : 0); // round to nearest year
+
                 return {
                     stageIndex: stageIdx,
                     stageLabel: stageDef.shortLabel,
@@ -5466,6 +5468,7 @@
                     monthsInStage,
                     monthsRemaining,
                     estimatedDate,
+                    estimatedYear,
                     isTail,
                     tailReason,
                     unitsAdd: parseFloat(props.units_add) || 0,
@@ -5484,8 +5487,10 @@
                 const plansBySub = {};    // { minahak: { sub: { stageIndex: [plan...] } } }
                 const tailPlans = [];
 
+                const MILESTONE_YEARS = [2030, 2035, 2040];
                 minahakOrder.forEach(m => {
-                    byMinahak[m] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0 };
+                    byMinahak[m] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0, byYear: {} };
+                    MILESTONE_YEARS.forEach(y => { byMinahak[m].byYear[y] = 0; });
                     MIMUSH_STAGES.forEach((_, i) => { byMinahak[m].byStage[i] = 0; });
                     bySub[m] = {};
                     plansByCell[m] = {};
@@ -5507,6 +5512,8 @@
                     byMinahak[m].weightedMimush += ua * result.mimushPct;
                     byMinahak[m].planCount++;
                     if (result.isTail) byMinahak[m].tailCount++;
+                    const effectiveUnits = ua * result.mimushPct / 100;
+                    MILESTONE_YEARS.forEach(y => { if (result.estimatedYear <= y) byMinahak[m].byYear[y] += effectiveUnits; });
 
                     const planInfo = {
                         plan_name: p.plan_name || '',
@@ -5531,7 +5538,8 @@
                     // Sub-neighborhood
                     const sub = p.sub_neighborhood || 'לא ידוע';
                     if (!bySub[m][sub]) {
-                        bySub[m][sub] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0 };
+                        bySub[m][sub] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0, byYear: {} };
+                        MILESTONE_YEARS.forEach(y => { bySub[m][sub].byYear[y] = 0; });
                         MIMUSH_STAGES.forEach((_, i) => { bySub[m][sub].byStage[i] = 0; });
                         plansBySub[m][sub] = {};
                         MIMUSH_STAGES.forEach((_, i) => { plansBySub[m][sub][i] = []; });
@@ -5541,6 +5549,7 @@
                     bySub[m][sub].weightedMimush += ua * result.mimushPct;
                     bySub[m][sub].planCount++;
                     if (result.isTail) bySub[m][sub].tailCount++;
+                    MILESTONE_YEARS.forEach(y => { if (result.estimatedYear <= y) bySub[m][sub].byYear[y] += effectiveUnits; });
                     plansBySub[m][sub][result.stageIndex].push(planInfo);
                 });
 
@@ -5554,8 +5563,9 @@
                 });
 
                 // Totals row
-                const totals = { total: 0, byStage: {}, avgMimush: 0, planCount: 0, tailCount: 0, weightedMimush: 0 };
+                const totals = { total: 0, byStage: {}, avgMimush: 0, planCount: 0, tailCount: 0, weightedMimush: 0, byYear: {} };
                 MIMUSH_STAGES.forEach((_, i) => { totals.byStage[i] = 0; });
+                MILESTONE_YEARS.forEach(y => { totals.byYear[y] = 0; });
                 minahakOrder.forEach(m => {
                     const d = byMinahak[m];
                     totals.total += d.total;
@@ -5563,10 +5573,11 @@
                     totals.planCount += d.planCount;
                     totals.tailCount += d.tailCount;
                     MIMUSH_STAGES.forEach((_, i) => { totals.byStage[i] += d.byStage[i] || 0; });
+                    MILESTONE_YEARS.forEach(y => { totals.byYear[y] += d.byYear[y] || 0; });
                 });
                 totals.avgMimush = totals.total > 0 ? Math.round(totals.weightedMimush / totals.total) : 0;
 
-                return { minahaks: minahakOrder, byMinahak, bySub, plansByCell, plansBySub, tailPlans, totals, stages: MIMUSH_STAGES };
+                return { minahaks: minahakOrder, byMinahak, bySub, plansByCell, plansBySub, tailPlans, totals, stages: MIMUSH_STAGES, milestoneYears: MILESTONE_YEARS };
             }, [dataLoaded]);
 
             const openMimushModal = useCallback(() => {
@@ -10022,29 +10033,35 @@
                                         html += '<div class="header"><h2>' + title + '</h2><p>תאריך: ' + new Date().toLocaleDateString('he-IL') + '</p></div>';
                                         html += '<table><thead><tr><th>' + (mimushDrilldown ? 'תת-שכונה' : 'מינהק') + '</th><th>סה"כ יח"ד</th>';
                                         MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<th>' + s.shortLabel + '</th>'; });
-                                        html += '<th>% מימוש</th><th>זנב</th></tr></thead><tbody>';
+                                        html += '<th>% מימוש</th><th>זנב</th>';
+                                        MILESTONE_YEARS.forEach(y => { html += '<th style="color:#2d6a4f">' + y + '</th>'; });
+                                        html += '</tr></thead><tbody>';
                                         keys.forEach(k => {
                                             const row = data[k];
                                             if (!row || row.total <= 0) return;
                                             html += '<tr><td>' + k + '</td><td>' + row.total.toLocaleString() + '</td>';
                                             MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<td>' + ((row.byStage[s.index] || 0) > 0 ? (row.byStage[s.index]).toLocaleString() : '-') + '</td>'; });
                                             html += '<td>' + row.avgMimush + '%</td>';
-                                            html += '<td' + (row.tailCount > 0 ? ' class="tail"' : '') + '>' + (row.tailCount > 0 ? row.tailCount : '-') + '</td></tr>';
+                                            html += '<td' + (row.tailCount > 0 ? ' class="tail"' : '') + '>' + (row.tailCount > 0 ? row.tailCount : '-') + '</td>';
+                                            MILESTONE_YEARS.forEach(y => { const v = Math.round(row.byYear[y] || 0); html += '<td style="color:#2d6a4f">' + (v > 0 ? v.toLocaleString() : '-') + '</td>'; });
+                                            html += '</tr>';
                                         });
                                         if (tots) {
                                             html += '<tr class="total-row"><td>סה"כ</td><td>' + tots.total.toLocaleString() + '</td>';
                                             MIMUSH_STAGES.filter(s => s.index <= 6).forEach(s => { html += '<td>' + (tots.byStage[s.index] || 0).toLocaleString() + '</td>'; });
-                                            html += '<td>' + tots.avgMimush + '%</td><td class="tail">' + (tots.tailCount > 0 ? tots.tailCount : '-') + '</td></tr>';
+                                            html += '<td>' + tots.avgMimush + '%</td><td class="tail">' + (tots.tailCount > 0 ? tots.tailCount : '-') + '</td>';
+                                            MILESTONE_YEARS.forEach(y => { html += '<td style="color:#2d6a4f;font-weight:700">' + Math.round(tots.byYear[y] || 0).toLocaleString() + '</td>'; });
+                                            html += '</tr>';
                                         }
                                         html += '</tbody></table>';
                                         // CSV export
-                                        let csvRows = [(mimushDrilldown ? 'תת-שכונה' : 'מינהק') + ',סה"כ יח"ד,' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>s.shortLabel).join(',') + ',% מימוש,זנב'];
+                                        let csvRows = [(mimushDrilldown ? 'תת-שכונה' : 'מינהק') + ',סה"כ יח"ד,' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>s.shortLabel).join(',') + ',% מימוש,זנב,' + MILESTONE_YEARS.join(',')];
                                         keys.forEach(k => {
                                             const row = data[k];
                                             if (!row || row.total <= 0) return;
-                                            csvRows.push(k + ',' + row.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(row.byStage[s.index]||0)).join(',') + ',' + row.avgMimush + '%,' + (row.tailCount||0));
+                                            csvRows.push(k + ',' + row.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(row.byStage[s.index]||0)).join(',') + ',' + row.avgMimush + '%,' + (row.tailCount||0) + ',' + MILESTONE_YEARS.map(y=>Math.round(row.byYear[y]||0)).join(','));
                                         });
-                                        if (tots) csvRows.push('סה"כ,' + tots.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(tots.byStage[s.index]||0)).join(',') + ',' + tots.avgMimush + '%,' + (tots.tailCount||0));
+                                        if (tots) csvRows.push('סה"כ,' + tots.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(tots.byStage[s.index]||0)).join(',') + ',' + tots.avgMimush + '%,' + (tots.tailCount||0) + ',' + MILESTONE_YEARS.map(y=>Math.round(tots.byYear[y]||0)).join(','));
                                         const csvContent = csvRows.join('\\n');
                                         html += '<div class="print-btns"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">הדפסה</button>';
                                         html += '<button id="csvBtn" style="background:#2d6a4f;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">Excel/CSV</button></div>';
@@ -10089,6 +10106,9 @@
                                                         ))}
                                                         <th style={{fontSize:11}}>% מימוש<br/>ממוצע</th>
                                                         <th style={{fontSize:11}}>זנב</th>
+                                                        {mimushData.milestoneYears.map(y => (
+                                                            <th key={y} style={{fontSize:11, background:'#2d6a4f22', color:'#4CAF50'}}>{y}</th>
+                                                        ))}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -10127,6 +10147,12 @@
                                                                 <td style={{color: row.tailCount > 0 ? '#e94560' : '#8888aa', fontWeight: row.tailCount > 0 ? 700 : 400}}>
                                                                     {row.tailCount > 0 ? row.tailCount : '-'}
                                                                 </td>
+                                                                {mimushData.milestoneYears.map(y => {
+                                                                    const val = Math.round(row.byYear[y] || 0);
+                                                                    return <td key={y} style={{color: val > 0 ? '#4CAF50' : '#8888aa', fontWeight: val > 0 ? 600 : 400, background: val > 0 ? '#4CAF5010' : 'transparent'}}>
+                                                                        {val > 0 ? val.toLocaleString() : '-'}
+                                                                    </td>;
+                                                                })}
                                                             </tr>
                                                         );
                                                     })}
@@ -10146,6 +10172,11 @@
                                                                 <span style={{fontSize:12}}>{tots.avgMimush}%</span>
                                                             </td>
                                                             <td style={{color:'#e94560', fontWeight:700}}>{tots.tailCount > 0 ? tots.tailCount : '-'}</td>
+                                                            {mimushData.milestoneYears.map(y => (
+                                                                <td key={y} style={{color:'#4CAF50', fontWeight:700, background:'#4CAF5010'}}>
+                                                                    {Math.round(tots.byYear[y] || 0).toLocaleString()}
+                                                                </td>
+                                                            ))}
                                                         </tr>
                                                     )}
                                                 </tbody>
