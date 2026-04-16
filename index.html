@@ -6838,14 +6838,15 @@
                                         .setContent(buildPermitsDetailPopup(permits, title, mapped.plan_name || String(f.properties.taba), null, 'back-to-plan', "data-feature='" + featureJson + "'"));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                                } else {
-                                    // No permits — show plan popup
+                                } else if (!plansOff) {
+                                    // No permits, but plans layer is on — show plan popup
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(layer.getBounds().getCenter())
                                         .setContent(buildPlanPopup(mapped, fd));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 }
+                                // else: no permits + plans off = don't open anything
                             });
                             // Labels for plans with permits (when plans layer is off)
                             if (plansOff) {
@@ -6870,40 +6871,32 @@
                     }).addTo(map);
                     // Add tama38 points that have permits
                     if (gd.tama38 && window.__tama38Permits) {
-                        const tama38PermLayer = L.geoJSON(gd.tama38, {
-                            pane: 'tama38Pane',
-                            filter: f => {
-                                if (!tama38InMinahak(f.properties)) return false;
-                                const fid = String(f.properties.fid != null ? f.properties.fid : '');
-                                const entry = window.__tama38Permits[fid];
-                                return entry && entry.permits && entry.permits.filter(function(p){return !p.filtered}).length > 0;
-                            },
-                            pointToLayer: (f, latlng) => {
-                                return L.circleMarker(latlng, { pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5, fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false });
-                            },
-                            onEachFeature: (f, layer) => {
-                                layer.on('click', (e) => {
-                                    const fid = String(f.properties.fid != null ? f.properties.fid : '');
-                                    const permits = getPermitsForTama38(fid);
-                                    if (plansOff && permits.length > 0) {
-                                        // Show permits detail directly
-                                        const title = f.properties.address || 'תמ"א 38';
-                                        const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                            .setLatLng(layer.getLatLng())
-                                            .setContent(buildPermitsDetailPopup(permits, title, f.properties.tik || '', null, 'back-to-tama38', "data-fid='" + fid + "'"));
-                                        popup.openOn(map);
-                                        bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
-                                    } else {
-                                        const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                            .setLatLng(layer.getLatLng())
-                                            .setContent(buildTama38Popup(f.properties));
-                                        popup.openOn(map);
-                                        bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
-                                    }
-                                });
-                            }
-                        }).addTo(map);
-                        geoLayersRef.current.tama38Permits = tama38PermLayer;
+                        // Add tama38 permit markers directly (not via L.geoJSON to avoid MultiPoint issues)
+                        const tama38PermGroup = L.layerGroup().addTo(map);
+                        gd.tama38.features.forEach(f => {
+                            if (!tama38InMinahak(f.properties)) return;
+                            const fid = String(f.properties.fid != null ? f.properties.fid : '');
+                            const permits = getPermitsForTama38(fid);
+                            if (permits.length === 0) return;
+                            const coords = f.geometry && f.geometry.coordinates;
+                            if (!coords || !coords[0]) return;
+                            const c = f.geometry.type === 'MultiPoint' ? coords[0] : coords;
+                            const latlng = L.latLng(c[1], c[0]);
+                            const marker = L.circleMarker(latlng, {
+                                pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5,
+                                fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false
+                            });
+                            marker.on('click', () => {
+                                const title = f.properties.address || 'תמ"א 38';
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(latlng)
+                                    .setContent(buildPermitsDetailPopup(permits, title, f.properties.tik || '', null, 'back-to-tama38', "data-fid='" + fid + "'"));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
+                            });
+                            marker.addTo(tama38PermGroup);
+                        });
+                        geoLayersRef.current.tama38Permits = tama38PermGroup;
                     }
                     geoLayersRef.current.permits = permitsLayer;
                 }
