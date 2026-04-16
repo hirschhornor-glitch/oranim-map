@@ -6844,14 +6844,17 @@
                                 const permits = _getPermits(f.properties.taba);
                                 if (permits.length > 0) {
                                     const totalUnits = permits.reduce(function(s,p){return s+(p.units||0)},0);
-                                    const permitNums = permits.map(function(p){return p.file_number||''}).filter(Boolean);
-                                    if (totalUnits > 0 || permitNums.length > 0) {
-                                        let labelHtml = '';
-                                        if (totalUnits > 0) labelHtml += '<div style="font-size:13px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000">' + totalUnits + ' יח"ד</div>';
-                                        labelHtml += '<div style="font-size:9px;color:#ccc;text-shadow:1px 1px 2px #000;direction:ltr">' + permitNums.join(', ') + '</div>';
+                                    if (totalUnits > 0 || permits.length > 0) {
+                                        let line1 = totalUnits > 0 ? totalUnits + ' יח"ד' : '';
+                                        let line2 = permits.length + ' היתרים';
+                                        let labelText = [line1, line2].filter(Boolean).join('\n');
                                         try {
                                             const center = layer.getBounds().getCenter();
-                                            const icon = L.divIcon({ className: 'permit-label', html: labelHtml, iconSize: [120, 40], iconAnchor: [60, 20] });
+                                            const icon = L.divIcon({
+                                                className: 'plan-label-center plan-label-small',
+                                                html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
+                                                iconSize: [0, 0], iconAnchor: [0, 0]
+                                            });
                                             L.marker(center, { icon: icon, pane: 'permitsPane', interactive: false }).addTo(map);
                                         } catch(e) {}
                                     }
@@ -6870,7 +6873,7 @@
                                 return entry && entry.permits && entry.permits.filter(function(p){return !p.filtered}).length > 0;
                             },
                             pointToLayer: (f, latlng) => {
-                                return L.circleMarker(latlng, { pane: 'permitsPane', radius: 4, color: '#e94560', weight: 1.5, fillColor: '#e94560', fillOpacity: 0.6 });
+                                return L.circleMarker(latlng, { pane: 'permitsPane', radius: 3, color: '#e94560', weight: 1, fillColor: '#e94560', fillOpacity: 0.7 });
                             },
                             onEachFeature: (f, layer) => {
                                 layer.on('click', (e) => {
@@ -10333,13 +10336,14 @@
                                                         <th>סה"כ יח"ד</th>
                                                         <th style={{fontSize:11}}>% מימוש<br/>ממוצע</th>
                                                         <th style={{fontSize:11}}>זנב</th>
-                                                        {mimushData.milestoneYears.map(y => (
-                                                            <th key={y} style={{fontSize:11, background:'#2d6a4f22', color:'#4CAF50'}}>{y}</th>
-                                                        ))}
                                                         {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
                                                             <th key={s.index} style={{background: s.color + '22', color: s.color, fontSize:11, padding:'8px 4px'}}>
                                                                 {s.shortLabel}
                                                             </th>
+                                                        ))}
+                                                        {showStages && <th style={{padding:0, width:3, background:'#e9456044', border:'none'}}></th>}
+                                                        {mimushData.milestoneYears.map(y => (
+                                                            <th key={y} style={{fontSize:13, fontWeight:700, background:'#2d6a4f33', color:'#4CAF50', padding:'10px 12px'}}>{y}</th>
                                                         ))}
                                                     </tr>
                                                 </thead>
@@ -10366,12 +10370,6 @@
                                                                 <td style={{color: row.tailCount > 0 ? '#e94560' : '#8888aa', fontWeight: row.tailCount > 0 ? 700 : 400}}>
                                                                     {row.tailCount > 0 ? row.tailCount : '-'}
                                                                 </td>
-                                                                {mimushData.milestoneYears.map(y => {
-                                                                    const val = Math.round(row.byYear[y] || 0);
-                                                                    return <td key={y} style={{color: val > 0 ? '#4CAF50' : '#8888aa', fontWeight: val > 0 ? 600 : 400, background: val > 0 ? '#4CAF5010' : 'transparent'}}>
-                                                                        {val > 0 ? val.toLocaleString() : '-'}
-                                                                    </td>;
-                                                                })}
                                                                 {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => {
                                                                     const val = row.byStage[s.index] || 0;
                                                                     const plans = cellPlans[k] ? (cellPlans[k][s.index] || []) : [];
@@ -10384,6 +10382,13 @@
                                                                             {val > 0 ? val.toLocaleString() : '-'}
                                                                         </td>
                                                                     );
+                                                                })}
+                                                                {showStages && <td style={{padding:0, width:3, background:'#e9456044', border:'none'}}></td>}
+                                                                {mimushData.milestoneYears.map(y => {
+                                                                    const val = Math.round(row.byYear[y] || 0);
+                                                                    return <td key={y} style={{color: val > 0 ? '#4CAF50' : '#8888aa', fontWeight: val > 0 ? 700 : 400, fontSize: 14, background: val > 0 ? '#4CAF5012' : 'transparent', padding:'10px 12px'}}>
+                                                                        {val > 0 ? val.toLocaleString() : '-'}
+                                                                    </td>;
                                                                 })}
                                                             </tr>
                                                         );
@@ -10399,14 +10404,15 @@
                                                                 <span style={{fontSize:12}}>{tots.avgMimush}%</span>
                                                             </td>
                                                             <td style={{color:'#e94560', fontWeight:700}}>{tots.tailCount > 0 ? tots.tailCount : '-'}</td>
-                                                            {mimushData.milestoneYears.map(y => (
-                                                                <td key={y} style={{color:'#4CAF50', fontWeight:700, background:'#4CAF5010'}}>
-                                                                    {Math.round(tots.byYear[y] || 0).toLocaleString()}
-                                                                </td>
-                                                            ))}
                                                             {showStages && MIMUSH_STAGES.filter(s => s.index <= 6).map(s => (
                                                                 <td key={s.index} style={{background: s.color + '18'}}>
                                                                     {(tots.byStage[s.index] || 0).toLocaleString()}
+                                                                </td>
+                                                            ))}
+                                                            {showStages && <td style={{padding:0, width:3, background:'#e9456044', border:'none'}}></td>}
+                                                            {mimushData.milestoneYears.map(y => (
+                                                                <td key={y} style={{color:'#4CAF50', fontWeight:700, fontSize:14, background:'#4CAF5012', padding:'10px 12px'}}>
+                                                                    {Math.round(tots.byYear[y] || 0).toLocaleString()}
                                                                 </td>
                                                             ))}
                                                         </tr>
