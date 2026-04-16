@@ -358,6 +358,14 @@
             border-radius: 10px;
         }
 
+        .permit-label {
+            background: transparent !important;
+            border: none !important;
+            text-align: center;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
         .popup-section-title {
             font-size: 11px;
             color: #fff;
@@ -3437,20 +3445,17 @@
                 // Load all GeoJSON data + CSV for plan_type enrichment
                 const entries = Object.entries(GEOJSON_FILES);
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+                // Load permit data in parallel (separate from main Promise.all to avoid Babel issues)
+                fetch('data/all_permits.json?v=' + Date.now()).then(function(r){return r.json()}).then(function(d){window.__allPermits=d;console.log('[Permits] all_permits:',Object.keys(d).length)}).catch(function(){window.__allPermits={}});
+                fetch('data/tama38_permits.json?v=' + Date.now()).then(function(r){return r.json()}).then(function(d){window.__tama38Permits=d;console.log('[Permits] tama38_permits:',Object.keys(d).length)}).catch(function(){window.__tama38Permits={}});
                 Promise.all([
                     Promise.all(entries.map(([key, url]) =>
                         fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )),
-                    fetch(sheetUrl).then(r => r.text()).catch(() => ''),
-                    fetch('data/all_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => ({})),
-                    fetch('data/tama38_permits.json?v=' + Date.now()).then(r => r.json()).catch(() => ({})),
-                ]).then(([geoResults, csvText, allPermitsData, tama38PermitsData]) => {
+                    fetch(sheetUrl).then(r => r.text()).catch(() => '')
+                ]).then(([geoResults, csvText]) => {
                     const gd = {};
                     geoResults.forEach(([key, data]) => { if (data) gd[key] = data; });
-                    // Store permits data globally for popup access
-                    window.__allPermits = allPermitsData;
-                    window.__tama38Permits = tama38PermitsData;
-                    console.log('[Permits] Loaded all_permits:', Object.keys(allPermitsData).length, 'plans, tama38_permits:', Object.keys(tama38PermitsData).length, 'features');
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -6774,33 +6779,124 @@
 
                 // --- Permits overlay ---
                 if (layers['permits'] && gd.plans) {
+                    const plansOff = !layers['plans'];
+                    // Helper: get permits for a taba
+                    function _getPermits(taba) {
+                        const t = String(taba || '');
+                        const e = window.__allPermits && window.__allPermits[t];
+                        return (e && e.permits) ? e.permits.filter(function(p){return !p.filtered}) : [];
+                    }
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
+                            const permits = _getPermits(f.properties.taba);
                             const stage = (f.properties.stage || '').trim();
-                            return stage !== '';
+                            const hasPermit = stage !== '' || permits.length > 0;
+                            // When plans layer is off, show all approved plans (with dashed for no-permit)
+                            if (plansOff) {
+                                const status = f.properties.status_mavat || '';
+                                return status && status !== 'נגנזה' && status !== 'נדחתה';
+                            }
+                            return hasPermit;
                         },
                         style: f => {
-                            const stage = (f.properties.stage || '').trim().replace(/\s+/g, ' ');
-                            const color = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
+                            const permits = _getPermits(f.properties.taba);
+                            const stage = (f.properties.stage || '').trim();
+                            const hasPermit = stage !== '' || permits.length > 0;
+                            const statusColor = STATUS_COLORS[f.properties.status_mavat] || '#5dade2';
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
-                            if (shavazActive) {
-                                return { color, weight: 2, fillColor: color, fillOpacity: 0.07 };
+                            if (!hasPermit && plansOff) {
+                                // No permit — dashed outline, status color, thin
+                                return { color: statusColor, weight: 1.5, fillColor: statusColor, fillOpacity: 0.05, dashArray: '6,4' };
                             }
-                            return { color, weight: 2, fillColor: color, fillOpacity: 0.5 };
+                            // Has permit — solid fill
+                            const stageColor = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
+                            if (shavazActive) {
+                                return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.07 };
+                            }
+                            return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.5 };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
                                 const mapped = mapPlanProps(f.properties);
-                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                    .setLatLng(layer.getBounds().getCenter())
-                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
-                                popup.openOn(map);
-                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                const permits = _getPermits(f.properties.taba);
+                                // When plans layer is off and plan has permits, show permits detail directly
+                                if (plansOff && permits.length > 0) {
+                                    const title = mapped.plan_summary || mapped.plan_name_he || 'תוכנית';
+                                    const fd = { properties: mapped, type: 'plan' };
+                                    const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(layer.getBounds().getCenter())
+                                        .setContent(buildPermitsDetailPopup(permits, title, mapped.plan_name || String(f.properties.taba), null, 'back-to-plan', "data-feature='" + featureJson + "'"));
+                                    popup.openOn(map);
+                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                } else {
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(layer.getBounds().getCenter())
+                                        .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                    popup.openOn(map);
+                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                }
                             });
+                            // Labels for plans with permits (when plans layer is off)
+                            if (plansOff) {
+                                const permits = _getPermits(f.properties.taba);
+                                if (permits.length > 0) {
+                                    const totalUnits = permits.reduce(function(s,p){return s+(p.units||0)},0);
+                                    const permitNums = permits.map(function(p){return p.file_number||''}).filter(Boolean);
+                                    if (totalUnits > 0 || permitNums.length > 0) {
+                                        let labelHtml = '';
+                                        if (totalUnits > 0) labelHtml += '<div style="font-size:13px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000">' + totalUnits + ' יח"ד</div>';
+                                        labelHtml += '<div style="font-size:9px;color:#ccc;text-shadow:1px 1px 2px #000;direction:ltr">' + permitNums.join(', ') + '</div>';
+                                        try {
+                                            const center = layer.getBounds().getCenter();
+                                            const icon = L.divIcon({ className: 'permit-label', html: labelHtml, iconSize: [120, 40], iconAnchor: [60, 20] });
+                                            L.marker(center, { icon: icon, pane: 'permitsPane', interactive: false }).addTo(map);
+                                        } catch(e) {}
+                                    }
+                                }
+                            }
                         }
                     }).addTo(map);
+                    // Add tama38 points that have permits
+                    if (gd.tama38 && window.__tama38Permits) {
+                        const tama38PermLayer = L.geoJSON(gd.tama38, {
+                            pane: 'permitsPane',
+                            filter: f => {
+                                if (!tama38InMinahak(f.properties)) return false;
+                                const fid = String(f.properties.fid != null ? f.properties.fid : '');
+                                const entry = window.__tama38Permits[fid];
+                                return entry && entry.permits && entry.permits.filter(function(p){return !p.filtered}).length > 0;
+                            },
+                            pointToLayer: (f, latlng) => {
+                                return L.circleMarker(latlng, { pane: 'permitsPane', radius: 4, color: '#e94560', weight: 1.5, fillColor: '#e94560', fillOpacity: 0.6 });
+                            },
+                            onEachFeature: (f, layer) => {
+                                layer.on('click', (e) => {
+                                    L.DomEvent.stopPropagation(e);
+                                    const fid = String(f.properties.fid != null ? f.properties.fid : '');
+                                    const permits = getPermitsForTama38(fid);
+                                    if (plansOff && permits.length > 0) {
+                                        // Show permits detail directly
+                                        const title = f.properties.address || 'תמ"א 38';
+                                        const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                            .setLatLng(layer.getLatLng())
+                                            .setContent(buildPermitsDetailPopup(permits, title, f.properties.tik || '', null, 'back-to-tama38', "data-fid='" + fid + "'"));
+                                        popup.openOn(map);
+                                        bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
+                                    } else {
+                                        const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                            .setLatLng(layer.getLatLng())
+                                            .setContent(buildTama38Popup(f.properties));
+                                        popup.openOn(map);
+                                        bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
+                                    }
+                                });
+                            }
+                        }).addTo(map);
+                        geoLayersRef.current.tama38Permits = tama38PermLayer;
+                    }
                     geoLayersRef.current.permits = permitsLayer;
                 }
 
@@ -7206,16 +7302,7 @@
             }
             function buildPermitsSummaryHTML(permits, buttonDataAttr) {
                 if (!permits || permits.length === 0) return '';
-                const best = getBestPermitStatus(permits);
-                const bestColor = getPermitStatusColor(best.status);
-                const totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
-                let html = '<div class="popup-section-title" style="margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a">היתרים</div>';
-                html += `<div class="popup-row"><span class="popup-row-label">מספר היתרים</span><span class="popup-row-value">${permits.length}</span></div>`;
-                html += `<div class="popup-row"><span class="popup-row-label">סטטוס מתקדם</span><span class="popup-status-badge" style="background:${bestColor}33;color:${bestColor};border:1px solid ${bestColor};font-size:11px">${best.status || '-'}</span></div>`;
-                if (totalUnits > 0) {
-                    html += `<div class="popup-row"><span class="popup-row-label">סה"כ יח"ד בהיתרים</span><span class="popup-row-value">${totalUnits}</span></div>`;
-                }
-                html += `<div style="text-align:center;margin-top:6px"><button class="popup-btn-permit" data-action="show-permits" ${buttonDataAttr}>${permits.length} היתרים ←</button></div>`;
+                let html = `<div style="text-align:center;margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a"><button class="popup-btn-permit" data-action="show-permits" ${buttonDataAttr}>${permits.length} היתרים ←</button></div>`;
                 return html;
             }
             function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr) {
@@ -7232,17 +7319,24 @@
                     const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
                     html += `<div style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''}">`;
                     html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
-                    html += `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
+                    const permitUrl = p.file_number ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(p.file_number) + '&SystemCode=26400046' : '';
+                    html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
+                    html += `<div style="display:flex;gap:4px;align-items:center">`;
+                    if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
                     html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px">${p.status || '-'}</span>`;
-                    html += `</div>`;
-                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${unitsStr ? ' | ' + unitsStr : ''}${tamaStr}</div>`;
+                    html += `</div></div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr}</div>`;
                     if (p.request_description) {
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
                     }
                     html += `</div>`;
                 });
-                html += '</div>';
+                html += '</div>'; // end scrollable popup-body
+                const totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
+                if (totalUnits > 0) {
+                    html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center;font-size:13px;font-weight:bold;color:#fff">סה"כ ${totalUnits} יח"ד בהיתרים</div>`;
+                }
                 html += '<div class="popup-footer">';
                 html += `<button class="popup-btn-permit" data-action="${backAction}" ${backDataAttr}>→ חזרה</button>`;
                 html += '</div>';
@@ -7785,6 +7879,8 @@
                 if (!el) return;
                 if (el._popupHandler) el.removeEventListener('click', el._popupHandler);
                 el._popupHandler = function(ev) {
+                    // Let <a> links work normally
+                    if (ev.target.closest('a[href]')) return;
                     const navBtn = ev.target.closest('.popup-nav-btn');
                     if (navBtn) {
                         ev.stopPropagation();
@@ -7840,18 +7936,48 @@
                         bindShavazPopupEvents(popup, originShavazProps, popup.getLatLng(), null, null, 0);
                         return;
                     }
+                    // ── Show all permits for a plan/tama38 ──
+                    if (permitBtn && permitBtn.dataset.action === 'show-permits') {
+                        ev.stopPropagation();
+                        const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
+                        const taba = permitBtn.dataset.taba;
+                        const fid = permitBtn.dataset.fid;
+                        if (taba) {
+                            // Plan permits
+                            const permits = getPermitsForTaba(taba);
+                            const fd = JSON.parse(permitBtn.dataset.feature);
+                            const title = fd.properties.plan_summary || fd.properties.plan_name_he || 'תוכנית';
+                            const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
+                            popup.setContent(buildPermitsDetailPopup(permits, title, fd.properties.plan_name || taba, navInfo, 'back-to-plan', `data-feature='${featureJson}'`));
+                        } else if (fid !== undefined && fid !== '') {
+                            // Tama38 permits
+                            const permits = getPermitsForTama38(fid);
+                            const entry = allFeatures[currentIdx];
+                            const title = entry.properties.address || 'תמ"א 38';
+                            popup.setContent(buildPermitsDetailPopup(permits, title, entry.properties.tik || '', navInfo, 'back-to-tama38', `data-fid='${fid}'`));
+                        }
+                        return;
+                    }
+                    // ── Back to tama38 from permits detail ──
+                    if (permitBtn && permitBtn.dataset.action === 'back-to-tama38') {
+                        ev.stopPropagation();
+                        const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
+                        popup.setContent(buildTama38Popup(allFeatures[currentIdx].properties, navInfo));
+                        return;
+                    }
                     if (permitBtn) {
                         ev.stopPropagation();
-                        const fd = JSON.parse(permitBtn.dataset.feature);
                         const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                         if (permitBtn.dataset.action === 'back-to-plan') {
+                            const fd = permitBtn.dataset.feature ? JSON.parse(permitBtn.dataset.feature) : { properties: allFeatures[currentIdx].properties };
                             popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
                             setTimeout(() => setLayers(prev => ({
                                 ...prev,
                                 plans: !prev.plans ? true : prev.plans,
                                 permits: false
                             })), 100);
-                        } else {
+                        } else if (permitBtn.dataset.feature) {
+                            const fd = JSON.parse(permitBtn.dataset.feature);
                             popup.setContent(buildPermitPopup(fd.properties, fd, navInfo));
                             setTimeout(() => setLayers(prev => ({
                                 ...prev,
