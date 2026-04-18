@@ -6799,27 +6799,12 @@
                         pane: 'permitsPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
-                            const permits = _getPermits(f.properties.taba);
-                            const stage = (f.properties.stage || '').trim();
-                            const hasPermit = stage !== '' || permits.length > 0;
-                            // When plans layer is off, show all approved plans (with dashed for no-permit)
-                            if (plansOff) {
-                                const status = f.properties.status_mavat || '';
-                                return status && status !== 'נגנזה' && status !== 'נדחתה';
-                            }
-                            return hasPermit;
+                            // Only show polygons that actually have permits in the JSON
+                            return _getPermits(f.properties.taba).length > 0;
                         },
                         style: f => {
-                            const permits = _getPermits(f.properties.taba);
                             const stage = (f.properties.stage || '').trim();
-                            const hasPermit = stage !== '' || permits.length > 0;
-                            const statusColor = STATUS_COLORS[f.properties.status_mavat] || '#5dade2';
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
-                            if (!hasPermit && plansOff) {
-                                // No permit — dashed outline, status color, thin
-                                return { color: statusColor, weight: 1.5, fillColor: statusColor, fillOpacity: 0.05, dashArray: '6,4' };
-                            }
-                            // Has permit — solid fill
                             const stageColor = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
                             if (shavazActive) {
                                 return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.07 };
@@ -6865,10 +6850,11 @@
                                         .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'"));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                                } else {
-                                    // Fallback: no permits in JSON — show plan popup
+                                } else if (!plansOff) {
+                                    // Shouldn't normally happen (filter excludes no-permit plans),
+                                    // but keep as fallback when plans layer is on
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                        .setLatLng(clickLatLng)
+                                        .setLatLng(layer.getBounds().getCenter())
                                         .setContent(buildPlanPopup(mapped, fd));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
