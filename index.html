@@ -7546,15 +7546,13 @@
                 // ── Tree survey section (from tree_surveys.json) ──
                 const treeSurvey = (window.__treeSurveys || {})[taba];
                 if (treeSurvey && treeSurvey.total > 0) {
-                    const preserved = treeSurvey.shimur || 0;
                     const removed = (treeSurvey.krita || 0) + (treeSurvey.haataka || 0);
                     const total = treeSurvey.total;
                     const removedPct = total > 0 ? Math.round((removed / total) * 100) : 0;
                     html += '<div class="popup-section-title">🌳 עצים</div>';
                     html += '<div class="popup-pair">';
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${preserved}</span></div>`;
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${removed}</span></div>`;
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">% יוצא</span><span class="popup-pair-value" style="color:#5dade2">${removedPct}%</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${total}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">העתקה/כריתה</span><span class="popup-pair-value">${removed} <span style="color:#5dade2;font-size:11px">(${removedPct}%)</span></span></div>`;
                     html += '</div>';
                 }
 
