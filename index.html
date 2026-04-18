@@ -3448,8 +3448,9 @@
                 // Pre-init permit globals
                 window.__allPermits = {};
                 window.__tama38Permits = {};
+                window.__treeSurveys = {};
                 // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json']]);
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json']]);
                 Promise.all([
                     Promise.all(allEntries.map(([key, url]) =>
                         fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
@@ -3460,9 +3461,10 @@
                     geoResults.forEach(([key, data]) => {
                         if (key === '__allPermits') { window.__allPermits = data || {}; }
                         else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
+                        else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                         else if (data) { gd[key] = data; }
                     });
-                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length);
+                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -7552,6 +7554,17 @@
                 if (permits.length > 0) {
                     const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
                     html += buildPermitsSummaryHTML(permits, `data-feature='${featureJson}' data-taba='${taba}'`);
+                }
+
+                // ── Tree survey row (from tree_surveys.json) ──
+                const treeSurvey = (window.__treeSurveys || {})[taba];
+                if (treeSurvey && treeSurvey.total > 0) {
+                    const preserved = treeSurvey.shimur || 0;
+                    const removed = (treeSurvey.krita || 0) + (treeSurvey.haataka || 0);
+                    const total = treeSurvey.total;
+                    const removedPct = total > 0 ? Math.round((removed / total) * 100) : 0;
+                    const preservedPct = total > 0 ? Math.round((preserved / total) * 100) : 0;
+                    html += `<div class="popup-row"><span class="popup-row-label">🌳 עצים</span><span class="popup-row-value">${preserved} לשימור (${preservedPct}%), ${removed} לכריתה/העתקה (${removedPct}%)</span></div>`;
                 }
 
                 html += '</div>'; // end popup-body
