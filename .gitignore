@@ -3,3 +3,12 @@
 *.swp
 *.swo
 *~
+
+# Claude Code local settings
+.claude/
+
+# Private dev notes
+NEW_CONVERSATION_PROMPT.md
+
+# Tooling intermediate files (not used by the site)
+data/gmaps_lookup.json
