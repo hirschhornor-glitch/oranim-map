@@ -7497,7 +7497,7 @@
                     if (szProgIn) html += `<div class="popup-prog-text">פרוגרמה נכנס: ${szProgIn}</div>`;
                     if (szProgOut) html += `<div class="popup-prog-text">פרוגרמה יוצא: ${szProgOut}</div>`;
                     if (hfSqm || hfPrg) {
-                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:4px">הפרשה מבונה</div>';
+                        html += '<div class="popup-section-title">הפרשה מבונה</div>';
                         html += '<div class="popup-pair">';
                         html += `<div class="popup-pair-item"><span class="popup-pair-label">מ"ר</span><span class="popup-pair-value" style="font-size:13px">${hfSqm ? fmt(hfSqm) : '-'}</span></div>`;
                         if (hfPrg) html += `<div class="popup-pair-item"><span class="popup-prog-text">${hfPrg}</span></div>`;
