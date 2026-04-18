@@ -3265,6 +3265,9 @@
 
             // Apply hash on first load
             const hashAppliedRef = useRef(false);
+            const planJumpedRef = useRef(false);
+            // Capture initial hash BEFORE updateHash() overwrites it
+            const initialHashRef = useRef(parseHash());
 
             // Initialize map
             useEffect(() => {
@@ -6498,6 +6501,38 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.plans = plansLayer;
+
+                    // Deep-link: jump to plan from ?plan=XXX in URL hash (first load only)
+                    if (!planJumpedRef.current) {
+                        const hp = initialHashRef.current;
+                        if (hp && hp.plan) {
+                            const target = String(hp.plan).trim();
+                            const targetNum = target.replace(/[^\d]/g, '');
+                            let matched = null;
+                            plansLayer.eachLayer(layer => {
+                                if (matched) return;
+                                const t = String((layer.feature.properties.taba || layer.feature.properties.TABA || '')).trim();
+                                if (t === target || (targetNum && t === targetNum)) matched = layer;
+                            });
+                            if (matched) {
+                                planJumpedRef.current = true;
+                                const b = matched.getBounds();
+                                map.fitBounds(b, { padding: [60, 60], maxZoom: 18, animate: false });
+                                // Fire click after a short delay to let layers stabilize
+                                setTimeout(() => {
+                                    const cur = geoLayersRef.current.plans;
+                                    if (!cur) return;
+                                    let m = null;
+                                    cur.eachLayer(l => {
+                                        if (m) return;
+                                        const t = String((l.feature.properties.taba || l.feature.properties.TABA || '')).trim();
+                                        if (t === target || (targetNum && t === targetNum)) m = l;
+                                    });
+                                    if (m) try { m.fire('click', { latlng: b.getCenter() }); } catch(e){}
+                                }, 300);
+                            }
+                        }
+                    }
                 }
 
                 // --- Topics overlay ---
