@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
@@ -71,9 +71,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 3: Network-first for data files (GeoJSON/JSON updated periodically)
+  // Strategy 3: Stale-while-revalidate for data files
+  // Serves cached version instantly, fetches fresh in background for next visit
   if (url.pathname.includes('/data/') && (url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json') || url.pathname.endsWith('.js'))) {
-    event.respondWith(networkFirst(event.request, DATA_CACHE));
+    event.respondWith(staleWhileRevalidate(event.request, DATA_CACHE));
     return;
   }
 
@@ -119,6 +120,27 @@ function networkFirst(request, cacheName) {
       return response;
     })
     .catch(() => caches.match(cacheRequest).then((cached) => cached || offlineFallback()));
+}
+
+// Helper: stale-while-revalidate — cache-first for speed, refresh in background
+function staleWhileRevalidate(request, cacheName) {
+  const cacheRequest = stripCacheBuster(request);
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(cacheName).then((cache) => cache.put(cacheRequest, clone));
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  return caches.match(cacheRequest).then((cached) => {
+    // Serve from cache immediately if available; background fetch updates for next time
+    if (cached) return cached;
+    // No cache yet — wait for network
+    return fetchPromise.then((net) => net || offlineFallback());
+  });
 }
 
 // Strip ?v=timestamp cache busters used in the app's fetch calls
