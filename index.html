@@ -616,19 +616,57 @@
 
         .loading-indicator {
             position: absolute;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(26, 26, 46, 0.9);
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 46, 0.95);
             color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.85em;
+            padding: 20px 32px;
+            border-radius: 12px;
+            font-size: 1em;
             z-index: 1000;
             display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            min-width: 220px;
+            text-align: center;
         }
 
-        .loading-indicator.visible { display: block; }
+        .loading-indicator.visible { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #4fc3f7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .loading-progress-fill {
+            height: 100%;
+            background: #4fc3f7;
+            transition: width 0.2s ease;
+        }
+
+        .loading-label {
+            font-size: 0.95em;
+        }
+
+        .loading-count {
+            font-size: 0.8em;
+            color: #aaa;
+        }
 
         .offline-banner {
             position: fixed;
@@ -3012,6 +3050,7 @@
             const [basemapOpacity, setBasemapOpacity] = useState(1);
             const [basemap, setBasemap] = useState('cartoLight');
             const [loading, setLoading] = useState(true);
+            const [loadProgress, setLoadProgress] = useState({ done: 0, total: 0 });
             const [dataLoaded, setDataLoaded] = useState(false);
             const [isOnline, setIsOnline] = useState(navigator.onLine);
             const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -3458,9 +3497,19 @@
                 window.__treeSurveys = {};
                 // Add permit JSONs to the entries so they load together with geojson
                 var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json']]);
+                setLoadProgress({ done: 0, total: allEntries.length });
+                let doneCount = 0;
                 Promise.all([
                     Promise.all(allEntries.map(([key, url]) =>
-                        fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
+                        fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => {
+                            doneCount++;
+                            setLoadProgress({ done: doneCount, total: allEntries.length });
+                            return [key, data];
+                        }).catch(() => {
+                            doneCount++;
+                            setLoadProgress({ done: doneCount, total: allEntries.length });
+                            return [key, null];
+                        })
                     )),
                     fetch(sheetUrl).then(r => r.text()).catch(() => '')
                 ]).then(([geoResults, csvText]) => {
@@ -9598,7 +9647,16 @@
                         )}
 
                         <div className={`loading-indicator ${loading ? 'visible' : ''}`}>
-                            טוען שכבות...
+                            <div className="loading-spinner"></div>
+                            <div className="loading-label">טוען שכבות...</div>
+                            {loadProgress.total > 0 && (
+                                <>
+                                    <div className="loading-count">{loadProgress.done} / {loadProgress.total} קבצים</div>
+                                    <div className="loading-progress-bar">
+                                        <div className="loading-progress-fill" style={{ width: `${(loadProgress.done / loadProgress.total) * 100}%` }}></div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {!isOnline && (
