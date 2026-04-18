@@ -6865,9 +6865,10 @@
                                         .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'"));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                                } else if (!plansOff) {
+                                } else {
+                                    // Fallback: no permits in JSON — show plan popup
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                        .setLatLng(layer.getBounds().getCenter())
+                                        .setLatLng(clickLatLng)
                                         .setContent(buildPlanPopup(mapped, fd));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
