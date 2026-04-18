@@ -3049,6 +3049,10 @@
             const landuseCompareModeRef = useRef(null);
             const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode - UI only
             const shatzafModeRef = useRef(false);
+            const [treeMode, setTreeMode] = useState(false); // עצים mode - UI only: false | 'plan' | 'sub'
+            const treeModeRef = useRef(false);
+            const [treeAreaActive, setTreeAreaActive] = useState(false); // true when polygon draw is for trees
+            const treeAreaActiveRef = useRef(false);
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -4232,6 +4236,298 @@
                 };
             }, [dataLoaded]); // Run once when data loaded
 
+            // ── עצים: plan + sub-neighborhood click handlers (one-time setup) ──
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const container = map.getContainer();
+
+                function findPlanAtPoint(pt) {
+                    const plansLayer = geoLayersRef.current.plans;
+                    if (!plansLayer) return null;
+                    let found = null;
+                    plansLayer.eachLayer(layer => {
+                        if (found) return;
+                        try {
+                            const geo = layer.feature.geometry;
+                            let coords;
+                            if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                            else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                            else return;
+                            const lng = pt.lng, lat = pt.lat;
+                            let inside = false;
+                            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                                const [xi, yi] = coords[i], [xj, yj] = coords[j];
+                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) found = layer.feature;
+                        } catch(ex) {}
+                    });
+                    return found;
+                }
+
+                function findSubAtPoint(pt) {
+                    const gd = window.__geoDataForLanduse || {};
+                    if (!gd.sub_neighborhoods) return null;
+                    let found = null;
+                    gd.sub_neighborhoods.features.forEach(f => {
+                        if (found) return;
+                        try {
+                            const g = f.geometry;
+                            const rings = g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map(c => c[0]) : [];
+                            for (const ring of rings) {
+                                let inside = false;
+                                const lng = pt.lng, lat = pt.lat;
+                                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                                    if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                        inside = !inside;
+                                }
+                                if (inside) { found = f; break; }
+                            }
+                        } catch(ex) {}
+                    });
+                    return found;
+                }
+
+                let treeSubHoverLayer = null;
+                let treeSubSelectedLayer = null;
+
+                function showPlanTreePanel(feature) {
+                    const p = feature.properties;
+                    const taba = p.taba || '';
+                    const rec = (window.__treeSurveys || {})[taba];
+                    const planId = p.plan_name || p.pl_number || taba || '';
+                    const planSummary = p.plan_summary || p.plan_name_he || '';
+                    const planDisplay = planSummary ? planId + ' — ' + planSummary : planId;
+
+                    const prev = document.getElementById('tree-panel');
+                    if (prev) prev.remove();
+
+                    const panel = document.createElement('div');
+                    panel.id = 'tree-panel';
+                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);max-width:min(440px,92vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+
+                    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — ' + planDisplay + '</h3>' +
+                        '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+
+                    if (!rec || !rec.total) {
+                        html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין נתוני סקר עצים לתכנית זו</div>';
+                    } else {
+                        const removed = (rec.krita || 0) + (rec.haataka || 0);
+                        const pct = rec.total > 0 ? Math.round(removed / rec.total * 100) : 0;
+                        html +=
+                            '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
+                            '<div style="font-size:36px;font-weight:bold;color:#e94560">' + pct + '%</div>' +
+                            '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + removed + ' מתוך ' + rec.total + ')</div>' +
+                            '</div>' +
+                            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+                            '<div style="padding:8px;background:rgba(76,175,80,0.12);border-radius:6px"><div style="color:#888;font-size:10px">שימור</div><div style="font-size:18px;font-weight:bold;color:#4CAF50">' + (rec.shimur || 0) + '</div></div>' +
+                            '<div style="padding:8px;background:rgba(233,69,96,0.12);border-radius:6px"><div style="color:#888;font-size:10px">כריתה</div><div style="font-size:18px;font-weight:bold;color:#e94560">' + (rec.krita || 0) + '</div></div>' +
+                            '<div style="padding:8px;background:rgba(255,152,0,0.12);border-radius:6px"><div style="color:#888;font-size:10px">העתקה</div><div style="font-size:18px;font-weight:bold;color:#FF9800">' + (rec.haataka || 0) + '</div></div>' +
+                            '<div style="padding:8px;background:rgba(100,181,246,0.12);border-radius:6px"><div style="color:#888;font-size:10px">לא נדרש</div><div style="font-size:18px;font-weight:bold;color:#64b5f6">' + (rec.lo_nidresh || 0) + '</div></div>' +
+                            '</div>';
+                        if (rec.confidence) {
+                            html += '<div style="margin-top:10px;font-size:10px;color:#888;text-align:center">רמת ודאות הנתונים: ' + rec.confidence + '</div>';
+                        }
+                    }
+
+                    panel.innerHTML = html;
+                    document.body.appendChild(panel);
+                    document.getElementById('tree-close').onclick = () => panel.remove();
+                }
+
+                function zoomAndOpenPlanPopup(feature) {
+                    if (!feature || !feature.geometry) return;
+                    try {
+                        const center = visualCenter(feature.geometry) || L.geoJSON(feature).getBounds().getCenter();
+                        const latlng = center.lat ? [center.lat, center.lng] : center;
+                        map.setView(latlng, 18);
+                        setTimeout(() => {
+                            const mapped = mapPlanProps(feature.properties);
+                            const popup = L.popup({ maxWidth: popupMaxWidth(), minWidth: Math.min(300, window.innerWidth * 0.85), closeButton: true })
+                                .setLatLng(latlng)
+                                .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                                .openOn(map);
+                            bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                        }, 500);
+                    } catch(err) { console.warn('zoom to plan failed', err); }
+                }
+
+                function attachTreePlanLinks(panel) {
+                    const gd = window.__geoDataRef?.current || {};
+                    panel.querySelectorAll('.tree-plan-link').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const taba = link.dataset.taba;
+                            const feature = gd.plans?.features.find(f => (f.properties.taba || '') === taba);
+                            if (!feature) return;
+                            panel.remove();
+                            if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
+                            const r = areaRef.current;
+                            if (r) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); r.points = []; r.markers = []; r.polygon = null; }
+                            zoomAndOpenPlanPopup(feature);
+                        });
+                    });
+                }
+
+                function showSubTreePanel(subName, subCoords) {
+                    const gd = window.__geoDataRef?.current || {};
+                    const ts = window.__treeSurveys || {};
+                    const plansInside = [];
+                    if (gd.plans) {
+                        gd.plans.features.forEach(f => {
+                            const p = f.properties;
+                            const s = normalizeStatus((p.status_mavat || '').trim());
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                            const geo = f.geometry;
+                            if (!geo || !geo.coordinates) return;
+                            let coords;
+                            try {
+                                if (geo.type === 'Polygon') coords = geo.coordinates[0];
+                                else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+                                else return;
+                            } catch(ex) { return; }
+                            if (!coords || !coords.length) return;
+                            let cx = 0, cy = 0, n = 0;
+                            for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                            if (!n) return;
+                            cx /= n; cy /= n;
+                            let inside = false;
+                            for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
+                                const [xi, yi] = subCoords[i], [xj, yj] = subCoords[j];
+                                if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) plansInside.push({ ...p });
+                        });
+                    }
+                    // Deduplicate by taba
+                    const seen = new Set();
+                    const deduped = [];
+                    plansInside.forEach(p => { const t = p.taba || ''; if (t && !seen.has(t)) { seen.add(t); deduped.push(p); } });
+                    const stats = aggregateTreeStats(deduped);
+
+                    const prev = document.getElementById('tree-panel');
+                    if (prev) prev.remove();
+
+                    const panel = document.createElement('div');
+                    panel.id = 'tree-panel';
+                    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+
+                    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — ' + subName + '</h3>' +
+                        '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+
+                    if (stats.withData === 0) {
+                        html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים בשכונה זו</div>';
+                    } else {
+                        html +=
+                            '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
+                            '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
+                            '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
+                            '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
+                            '</div>' +
+                            '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
+                            '<table style="width:100%;font-size:11px;border-collapse:collapse">' +
+                            '<thead><tr style="border-bottom:1px solid #2a2a4a">' +
+                            '<th style="text-align:right;padding:4px;color:#fff">שם</th>' +
+                            '<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>' +
+                            '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' +
+                            '<th style="text-align:center;padding:4px;color:#fff">%</th>' +
+                            '</tr></thead><tbody>' +
+                            stats.plans.slice(0, 15).map(row =>
+                                '<tr style="border-bottom:1px solid #1a1a2e">' +
+                                '<td style="padding:4px"><a href="#" class="tree-plan-link" data-taba="' + row.taba + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' +
+                                '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' +
+                                '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' +
+                                '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' +
+                                '</tr>'
+                            ).join('') +
+                            '</tbody></table>';
+                    }
+
+                    panel.innerHTML = html;
+                    document.body.appendChild(panel);
+                    document.getElementById('tree-close').onclick = () => {
+                        panel.remove();
+                        if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
+                    };
+                    attachTreePlanLinks(panel);
+                }
+
+                window.__treePanelAttach = attachTreePlanLinks;
+
+                function onTreeDomClick(e) {
+                    if (treeModeRef.current !== 'plan') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const feature = findPlanAtPoint(pt);
+                    if (!feature) return;
+                    treeModeRef.current = null;
+                    setTreeMode(false);
+                    container.classList.remove('measuring');
+                    showPlanTreePanel(feature);
+                }
+                container.addEventListener('click', onTreeDomClick, true);
+
+                function onTreeSubMouseMove(e) {
+                    if (treeModeRef.current !== 'sub') {
+                        if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                        return;
+                    }
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const found = findSubAtPoint(pt);
+                    if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                    if (found) {
+                        treeSubHoverLayer = L.geoJSON(found, {
+                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.1, dashArray: '' }
+                        }).addTo(map);
+                        treeSubHoverLayer.bindTooltip(found.properties.schn_nama, { sticky: true, direction: 'top', className: 'landuse-tooltip' }).openTooltip();
+                    }
+                }
+                container.addEventListener('mousemove', onTreeSubMouseMove);
+
+                function onTreeSubDomClick(e) {
+                    if (treeModeRef.current !== 'sub') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const found = findSubAtPoint(pt);
+                    if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                    if (!found) return;
+                    treeModeRef.current = null;
+                    setTreeMode(false);
+                    container.classList.remove('measuring');
+                    if (treeSubSelectedLayer) map.removeLayer(treeSubSelectedLayer);
+                    treeSubSelectedLayer = L.geoJSON(found, {
+                        style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.15, dashArray: '' }
+                    }).addTo(map);
+                    let subCoords;
+                    try {
+                        if (found.geometry.type === 'Polygon') subCoords = found.geometry.coordinates[0];
+                        else if (found.geometry.type === 'MultiPolygon') subCoords = found.geometry.coordinates[0][0];
+                    } catch(ex) { return; }
+                    if (!subCoords) return;
+                    showSubTreePanel(found.properties.schn_nama, subCoords);
+                }
+                container.addEventListener('click', onTreeSubDomClick, true);
+
+                return () => {
+                    container.removeEventListener('click', onTreeDomClick, true);
+                    container.removeEventListener('click', onTreeSubDomClick, true);
+                    container.removeEventListener('mousemove', onTreeSubMouseMove);
+                    if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                    if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
+                };
+            }, [dataLoaded]);
+
             // ── Landuse compare: area mode finished → run analysis ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3 || landuseCompareModeRef.current !== 'area') return;
@@ -4323,12 +4619,116 @@
                 };
             }, [areaMode]);
 
+            // ── Tree area: analyze plans inside polygon for tree-survey aggregation ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3 || !treeAreaActiveRef.current) return;
+                treeAreaActiveRef.current = false;
+                setTreeAreaActive(false);
+                window.__treeHandledArea = true;
+
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
+                function pip(pt, ring) {
+                    const [x, y] = pt;
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                            inside = !inside;
+                    }
+                    return inside;
+                }
+
+                const gd = geoDataRef.current;
+                const plansInside = [];
+                const seen = new Set();
+                if (gd && gd.plans) {
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let coords;
+                        try {
+                            if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                            else return;
+                        } catch(ex) { return; }
+                        if (!coords || !coords.length) return;
+                        let cx = 0, cy = 0, n = 0;
+                        for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                        if (!n) return;
+                        cx /= n; cy /= n;
+                        if (!pip([cx, cy], polyCoords)) return;
+                        const taba = p.taba || '';
+                        if (taba && seen.has(taba)) return;
+                        if (taba) seen.add(taba);
+                        plansInside.push({ ...p });
+                    });
+                }
+                const stats = aggregateTreeStats(plansInside);
+
+                const prev = document.getElementById('tree-panel');
+                if (prev) prev.remove();
+                const panel = document.createElement('div');
+                panel.id = 'tree-panel';
+                panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+
+                let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+                    '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — אזור נבחר</h3>' +
+                    '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+
+                if (stats.withData === 0) {
+                    html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים באזור זה</div>';
+                } else {
+                    html +=
+                        '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
+                        '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
+                        '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
+                        '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
+                        '</div>' +
+                        '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
+                        '<table style="width:100%;font-size:11px;border-collapse:collapse">' +
+                        '<thead><tr style="border-bottom:1px solid #2a2a4a">' +
+                        '<th style="text-align:right;padding:4px;color:#fff">שם</th>' +
+                        '<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>' +
+                        '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' +
+                        '<th style="text-align:center;padding:4px;color:#fff">%</th>' +
+                        '</tr></thead><tbody>' +
+                        stats.plans.slice(0, 15).map(row =>
+                            '<tr style="border-bottom:1px solid #1a1a2e">' +
+                            '<td style="padding:4px"><a href="#" class="tree-plan-link" data-taba="' + row.taba + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' +
+                            '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' +
+                            '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' +
+                            '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' +
+                            '</tr>'
+                        ).join('') +
+                        '</tbody></table>';
+                }
+
+                panel.innerHTML = html;
+                document.body.appendChild(panel);
+                document.getElementById('tree-close').onclick = () => panel.remove();
+                if (window.__treePanelAttach) window.__treePanelAttach(panel);
+
+                // Clean up drawn polygon layers from the map
+                const r = areaRef.current;
+                const map = mapInstanceRef.current;
+                if (map) {
+                    r.markers.forEach(m => map.removeLayer(m));
+                    if (r.polygon) map.removeLayer(r.polygon);
+                }
+                r.points = []; r.markers = []; r.polygon = null;
+            }, [areaFinished]);
+
             // ── Area select: analyze results when drawing is finished ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3) return;
                 // Skip regular area analysis if landuse compare handled this
                 if (landuseCompareModeRef.current === 'area') return;
                 if (window.__landuseHandledArea) { window.__landuseHandledArea = false; return; }
+                if (window.__treeHandledArea) { window.__treeHandledArea = false; return; }
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return;
 
@@ -5845,10 +6245,11 @@
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                // Suppress popups during area/measure drawing or landuse compare or shatzaf
+                                // Suppress popups during area/measure drawing or landuse compare or shatzaf/tree
                                 if (areaModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
+                                if (treeModeRef.current) return;
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
@@ -7374,6 +7775,44 @@
                 return html;
             }
 
+            // Aggregate tree-survey stats across an array of plan property objects.
+            // Returns { total, removed, pct, withData, plans: [{taba, name, removed, total, pct, props}] }
+            // where `plans` is sorted DESC by `removed`.
+            function aggregateTreeStats(planPropsArr) {
+                const ts = window.__treeSurveys || {};
+                let total = 0, removed = 0, withData = 0;
+                const perPlan = [];
+                const seen = new Set();
+                planPropsArr.forEach(p => {
+                    if (!p) return;
+                    const taba = p.taba || '';
+                    if (!taba || seen.has(taba)) return;
+                    const rec = ts[taba];
+                    if (!rec || !rec.total) return;
+                    seen.add(taba);
+                    const r = (rec.krita || 0) + (rec.haataka || 0);
+                    total += rec.total;
+                    removed += r;
+                    withData += 1;
+                    perPlan.push({
+                        taba,
+                        name: p.plan_summary || p.plan_name_he || p.plan_name || taba,
+                        removed: r,
+                        total: rec.total,
+                        pct: rec.total > 0 ? Math.round((r / rec.total) * 100) : 0,
+                        props: p,
+                    });
+                });
+                perPlan.sort((a, b) => b.removed - a.removed);
+                return {
+                    total,
+                    removed,
+                    pct: total > 0 ? Math.round((removed / total) * 100) : 0,
+                    withData,
+                    plans: perPlan,
+                };
+            }
+
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
                 const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const subtitle = props.plan_name || props.taba || '';
@@ -8799,40 +9238,114 @@
                             )}
                             </div>
 
-                            {/* ══ שצ"פ ══ */}
+                            {/* ══ שטחים ירוקים (עצים + שצ"פ לנפש) ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${shatzafMode ? 'active' : ''}`}
+                                className={`toolbar-btn ${(shatzafMode || treeMode || treeAreaActive) ? 'active' : ''}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (shatzafMode) {
-                                        shatzafModeRef.current = false;
-                                        setShatzafMode(false);
+                                    if (treeAreaActive && areaMode) {
+                                        // Finalize tree-area drawing
+                                        const r = areaRef.current;
+                                        if (r.points.length >= 3) {
+                                            setAreaFinished([...r.points]);
+                                            setAreaMode(false);
+                                        } else {
+                                            const map = mapInstanceRef.current;
+                                            if (map) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); map.getContainer().classList.remove('measuring'); }
+                                            r.points = []; r.markers = []; r.polygon = null;
+                                            setAreaMode(false);
+                                            treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        }
+                                        setActiveDropdown(null);
+                                    } else if (shatzafMode || treeMode) {
+                                        shatzafModeRef.current = false; setShatzafMode(false);
+                                        treeModeRef.current = false; setTreeMode(false);
                                         setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.remove('measuring');
                                     } else {
-                                        setActiveDropdown(prev => prev === 'shatzaf' ? null : 'shatzaf');
+                                        setActiveDropdown(prev => prev === 'green' ? null : 'green');
                                     }
                                 }}
-                                title='שצ"פ לנפש'
+                                title='שטחים ירוקים'
                             >
                                 <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path d="M12 6v3M8 9c0 0 1 3 4 3s4-3 4-3M9 16c0-1.5 1.3-3 3-3s3 1.5 3 3" />
-                                    <line x1="7" y1="19" x2="17" y2="19" strokeWidth="1.5" />
+                                    <path d="M12 2C9 5 7 8 7 12a5 5 0 0 0 10 0c0-4-2-7-5-10z" />
+                                    <line x1="12" y1="12" x2="12" y2="22" />
                                 </svg>
-                                <span className="toolbar-label">{shatzafMode === 'plan' ? 'בחר תכנית...' : shatzafMode === 'sub' ? 'בחר שכונה...' : 'שצ"פ'}</span>
+                                <span className="toolbar-label">{(treeAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : shatzafMode === 'plan' ? 'בחר תכנית...' : (treeMode === 'sub' || shatzafMode === 'sub') ? 'בחר שכונה...' : 'שטחים ירוקים'}</span>
                             </button>
-                            {activeDropdown === 'shatzaf' && (
+                            {activeDropdown === 'green' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className="toolbar-dropdown-item" data-tip="לחצו על תכנית במפה לחישוב שצ&quot;פ לנפש" onClick={() => {
+                                    <button className={`toolbar-dropdown-item ${(treeMode || treeAreaActive) ? 'sub-active' : ''}`} data-tip="דוחות עצים נעקרים לפי תכנית, שכונה או אזור" onClick={() => {
+                                        if (treeMode || treeAreaActive) {
+                                            treeModeRef.current = false; setTreeMode(false);
+                                            treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                            if (areaMode) setAreaMode(false);
+                                            setActiveDropdown(null);
+                                            mapInstanceRef.current?.getContainer().classList.remove('measuring');
+                                        } else {
+                                            setActiveDropdown('green-trees');
+                                        }
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C9 5 7 8 7 12a5 5 0 0 0 10 0c0-4-2-7-5-10z"/><line x1="12" y1="12" x2="12" y2="22"/></svg>
+                                        <span className="sub-label">עצים</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${shatzafMode ? 'sub-active' : ''}`} data-tip="חישוב מ&quot;ר שצ&quot;פ לנפש לפי תכנית או שכונה" onClick={() => {
+                                        if (shatzafMode) {
+                                            shatzafModeRef.current = false; setShatzafMode(false);
+                                            setActiveDropdown(null);
+                                            mapInstanceRef.current?.getContainer().classList.remove('measuring');
+                                        } else {
+                                            setActiveDropdown('green-shatzaf');
+                                        }
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 6v3M8 9c0 0 1 3 4 3s4-3 4-3M9 16c0-1.5 1.3-3 3-3s3 1.5 3 3"/><line x1="7" y1="19" x2="17" y2="19" strokeWidth="1.5"/></svg>
+                                        <span className="sub-label">שצ"פ לנפש</span>
+                                    </button>
+                                </div>
+                            )}
+                            {activeDropdown === 'green-trees' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className={`toolbar-dropdown-item ${treeMode === 'sub' ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה לצפייה באחוז עצים לעקירה" onClick={() => {
+                                        shatzafModeRef.current = false; setShatzafMode(false);
+                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        treeModeRef.current = 'sub'; setTreeMode('sub'); setActiveDropdown(null);
+                                        mapInstanceRef.current?.getContainer().classList.add('measuring');
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l5-4 5 4v14"/><path d="M19 21V11l-4-3"/></svg>
+                                        <span className="sub-label">שכונה</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${treeAreaActive ? 'sub-active' : ''}`} data-tip="ציור אזור חופשי על המפה לצפייה בנתוני עצים" onClick={() => {
+                                        shatzafModeRef.current = false; setShatzafMode(false);
+                                        treeModeRef.current = false; setTreeMode(false);
+                                        setLanduseCompareMode(null); landuseCompareModeRef.current = null;
+                                        setAreaFinished(null);
+                                        const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
+                                        const prev2 = document.getElementById('tree-panel'); if (prev2) prev2.remove();
+                                        treeAreaActiveRef.current = true; setTreeAreaActive(true);
+                                        setAreaMode(true);
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                        <span className="sub-label">אזור</span>
+                                    </button>
+                                </div>
+                            )}
+                            {activeDropdown === 'green-shatzaf' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className={`toolbar-dropdown-item ${shatzafMode === 'plan' ? 'sub-active' : ''}`} data-tip="לחצו על תכנית במפה לחישוב שצ&quot;פ לנפש" onClick={() => {
+                                        treeModeRef.current = false; setTreeMode(false);
+                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
                                         shatzafModeRef.current = 'plan'; setShatzafMode('plan'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
                                         <span className="sub-label">תכנית</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="בחירת תת-שכונה לחישוב שצ&quot;פ ממוצע" onClick={() => {
+                                    <button className={`toolbar-dropdown-item ${shatzafMode === 'sub' ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה לחישוב שצ&quot;פ ממוצע" onClick={() => {
+                                        treeModeRef.current = false; setTreeMode(false);
+                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
                                         shatzafModeRef.current = 'sub'; setShatzafMode('sub'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
