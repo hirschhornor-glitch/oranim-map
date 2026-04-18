@@ -71,8 +71,8 @@
         "status_date": "20/04/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בנייה ע\"פ 38 וע\"פ התכנית הקיימת",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -102,8 +102,8 @@
         "status_date": "04/05/2015",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 לחיזוק הבניין מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -144,8 +144,8 @@
         "status_date": "27/12/2017",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים והקמת בניין בן 4.5 קומות מעל 2 קומות שרות במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -172,8 +172,8 @@
         "status_date": "28/06/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 לצורך חיזוק הבניין מפני רעידות אדמה + מעלית והפיכת מקלט קיים למחסן.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -192,8 +192,8 @@
         "status_date": "28/01/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בניה בהתאם לתמ\"א 38 ותוכנית 10038 ותוספת 2 קומות חדשות",
-        "units": null,
-        "units_source": null,
+        "units": 20,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -355,8 +355,8 @@
         "status_date": "29/03/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בנייה בהתאם לתמ\"א 38 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -499,7 +499,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 692.96,
+        "sqm_service": 104.44,
+        "sqm_mirpesot": 182.11
       },
       {
         "file_number": "1990/0616.09",
@@ -626,8 +629,8 @@
         "status_date": "14/04/2016",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת ובניית בניין חדש בן 7 קומות מעל 2 קומות חניה ומחסנים בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק בניינים מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 39,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -648,8 +651,8 @@
         "status_date": "10/12/2019",
         "request_type": "תוכנית שינויים",
         "request_description": "תכנית שינויים לתמ\"א 38 למבנה מגורים מאושר בהיתר מס'  2014/0889.00",
-        "units": null,
-        "units_source": null,
+        "units": 39,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -668,8 +671,8 @@
         "status_date": "29/02/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 לצורך חיזוק הבניין מפני רעידות אדמה ותוספת 1.5 קומות חדשות",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -754,10 +757,12 @@
         "status_date": "13/03/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1146.15,
+        "sqm_mirpesot": 159.28
       },
       {
         "file_number": "2014/0801.01",
@@ -807,8 +812,8 @@
         "status_date": "02/12/2015",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות לבניין קיים בהתאם לת\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -871,10 +876,13 @@
         "status_date": "12/03/2012",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה לפי תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 25,
+        "sqm_service": 40.5,
+        "sqm_mirpesot": 29.65
       },
       {
         "file_number": "2010/0771.01",
@@ -902,8 +910,8 @@
         "status_date": "29/06/2011",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק בניין קיים בן 3 קומות קיימות ובניית תוספת בהתאם לתמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -999,8 +1007,8 @@
         "status_date": "17/07/2012",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק בנין קיים ותוספת בניה במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1021,8 +1029,8 @@
         "status_date": "12/02/2014",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק בנין קיים ותוספת בניה המסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1063,10 +1071,13 @@
         "status_date": "10/08/2011",
         "request_type": "תוספת בניה לדירות",
         "request_description": "תוספת בניה על פי תמ\"א 38 + מעלית  ומחסנים",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 444.81,
+        "sqm_service": 14,
+        "sqm_mirpesot": 38.04
       },
       {
         "file_number": "2010/0671.01",
@@ -1074,8 +1085,8 @@
         "status_date": "16/02/2015",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חידוש היתר 103220",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -1088,7 +1099,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1121.34,
+        "sqm_service": 409.36,
+        "sqm_mirpesot": 119.74
       },
       {
         "file_number": "2020/0344.01",
@@ -1138,10 +1152,12 @@
         "status_date": "27/08/2012",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה בהתאם לתמ\"א 38 לחיזוק מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 1,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 11.64,
+        "sqm_mirpesot": 99.82
       },
       {
         "file_number": "2011/0967.01",
@@ -1149,10 +1165,12 @@
         "status_date": "20/08/2013",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "1. ביטול שטח עיקרי בקומה ג' והעברת השטח לקומה ד' .\r\n2. הורדת עובי קירות הבנין ל- 25 ס\"מ עובי.\r\n3. הוספת פרגולה במרפסת הגג- +7.68 . תוכנית שינויים תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 153.77,
+        "sqm_service": 3.68
       },
       {
         "file_number": "2011/0967.02",
@@ -1180,8 +1198,8 @@
         "status_date": "07/07/2013",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה בהתאם לתמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1191,8 +1209,8 @@
         "status_date": "14/07/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת קומה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1202,8 +1220,8 @@
         "status_date": "10/08/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "קירוי מבנה חדר מדרגות קיים על הגג",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -1277,8 +1295,8 @@
         "status_date": "22/09/2014",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה לבניין קיים ע\"פ תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1369,8 +1387,8 @@
         "status_date": "19/09/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1466,8 +1484,8 @@
         "status_date": "24/12/2023",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה והקמת 2 בניינים בני 5-6 קומות מעל 2 קומות חניה משותפים ל 2 הבינינים למגורים בהתאם להוראות תמ\"א 38 ותוכנית 10038 - חיזוק הבניין מפני רעידת אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -1477,8 +1495,8 @@
         "status_date": "18/09/2024",
         "request_type": "",
         "request_description": "הריסת בנין ובניית צמד מבני מגורים חדשים במסגרת תמ\"א 38-ב ו- 10038",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -1572,10 +1590,12 @@
         "status_date": "15/01/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה בהתאם לתמ\"א 38 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 935.12,
+        "sqm_mirpesot": 108.51
       },
       {
         "file_number": "2010/0602.01",
@@ -1603,8 +1623,8 @@
         "status_date": "30/06/2019",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה ובניה מחדש ע\"פ תמ\"א 38 ,תוך שימור החזית.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -1667,8 +1687,8 @@
         "status_date": "19/01/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -1709,8 +1729,8 @@
         "status_date": "10/02/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בנית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1751,8 +1771,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בניה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1804,8 +1824,8 @@
         "status_date": "08/09/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1857,8 +1877,8 @@
         "status_date": "16/05/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספות בניה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -1868,8 +1888,8 @@
         "status_date": "14/02/2019",
         "request_type": "תוכנית שינויים",
         "request_description": "תכנית שינויים לתמ\"א 38 ותכנית 10038 לחיזוק מבנים לרעידת אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -1921,8 +1941,8 @@
         "status_date": "27/10/2019",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת בית קיים ובנייתו ע\"פ תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 18,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -1932,8 +1952,8 @@
         "status_date": "06/09/2022",
         "request_type": "",
         "request_description": "בקשה לשינויים להיתר בנייה מס' 114387 כוללת הקטנת מספר דירות מ- 18 ל- 16 יח. ע\"י איחוד דירות בקומה הרביעית ללא שינויים בשטחים המותרים ובתכסית",
-        "units": null,
-        "units_source": null,
+        "units": 18,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -1985,8 +2005,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -2060,8 +2080,8 @@
         "status_date": "01/08/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת בניין קיים  ובנייה בהתאם תמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2091,8 +2111,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בנייה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 33,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -2122,8 +2142,8 @@
         "status_date": "21/03/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038  - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2164,8 +2184,8 @@
         "status_date": "12/12/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת 2.5 קומות מגורים וחיזוק המבנה ע\"פ תמ\"א 38 ותיקונייה",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2217,8 +2237,8 @@
         "status_date": "13/02/2017",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת חלקי מבנה והקמת בניין בן 5.5 קומות מעל קומת חניה למגורים בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -2228,8 +2248,8 @@
         "status_date": "11/05/2020",
         "request_type": "",
         "request_description": "תכנית שינויים להיתר לפי תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -2270,8 +2290,8 @@
         "status_date": "15/11/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בנית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2400,8 +2420,8 @@
         "status_date": "17/03/2021",
         "request_type": "",
         "request_description": "תכנית שינויים לתמ''א 38, תוספת שטח לפי זכויות תכנית מתאר רחביה 9988 + צובר גז",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -2411,8 +2431,8 @@
         "status_date": "26/03/2023",
         "request_type": "",
         "request_description": "תכנית שינויים לתמ''א 38 ברחוב אבן שפרוט 19, רחביה",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -2453,8 +2473,8 @@
         "status_date": "08/05/2018",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסה ובניה עפ\"י תכנית 10038למעט שמירת חזיתות מטעמי שימור",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -2473,8 +2493,8 @@
         "status_date": "26/07/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": ",תוספות בניה ותוספת קומות מרפסות וממדי\"ם לפי תמ\"א 38 ותוכנית 10038 לחיזוק מיבנים \r\nמפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2484,8 +2504,8 @@
         "status_date": "01/03/2020",
         "request_type": "",
         "request_description": "תוכנית שינויים לתוכנית תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -2537,8 +2557,8 @@
         "status_date": "13/08/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 23,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2551,7 +2571,10 @@
         "units": null,
         "units_source": null,
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1777.26,
+        "sqm_service": 1205.5,
+        "sqm_mirpesot": 296.63
       },
       {
         "file_number": "2016/0683.02",
@@ -2626,7 +2649,9 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 200.86,
+        "sqm_mirpesot": 150.39
       }
     ],
     "scraped_at": "2026-04-16T06:43:23.259817",
@@ -2687,8 +2712,8 @@
         "status_date": "11/05/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2885,8 +2910,8 @@
         "status_date": "10/07/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -2927,8 +2952,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -2938,8 +2963,8 @@
         "status_date": "29/11/2022",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 4 קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -3027,7 +3052,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 727.22,
+        "sqm_service": 114.27,
+        "sqm_mirpesot": 18.89
       }
     ],
     "scraped_at": "2026-04-16T06:47:21.537403",
@@ -3044,8 +3072,8 @@
         "status_date": "13/09/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסה מבנה קיים והקמת בניין בן 6 קומות מעל קומת חניה + מחסנים תת קרקעית למגורים בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -3161,8 +3189,8 @@
         "status_date": "06/04/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בניה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -3183,8 +3211,8 @@
         "status_date": "04/11/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תכנית שינויים לתמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 38,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -3366,8 +3394,8 @@
         "status_date": "30/04/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 40,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -3419,8 +3447,8 @@
         "status_date": "10/04/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספות בניה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -3483,8 +3511,8 @@
         "status_date": "19/12/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק ותוספת למבנה לשימור לפי תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -3567,10 +3595,13 @@
         "status_date": "11/05/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בנית תוספת בהתאם לתמ\"א 38 ותיכנון 10038 חיזוק הבניין מפני רעידת אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 446.27,
+        "sqm_service": 88.19,
+        "sqm_mirpesot": 183.44
       },
       {
         "file_number": "2017/0158.01",
@@ -3672,8 +3703,8 @@
         "status_date": "24/10/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 38,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -3736,8 +3767,8 @@
         "status_date": "30/08/2020",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים תוך שמירת חזית שימורית ובניית מבנה חדש בן 5 קומות .",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -3775,8 +3806,8 @@
         "status_date": "12/11/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -3848,8 +3879,8 @@
         "status_date": "01/08/2019",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים תוך שימור חלקי של חזיתות לשימור ובניית מבנה\r\nבן 3 קומות וקומת גג רעפים למגורים מעל קומת מחסנים ומגורים .",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -3879,10 +3910,12 @@
         "status_date": "19/08/2019",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה ובנייתו מחדש לפי תמ\"א 38 ותוכנית 10038 לחיזוק מיבנים מפני רעידות אדמה \r\nלמעט שמירת חזיתות מטעמי שימור.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 463.7,
+        "sqm_mirpesot": 112.29
       },
       {
         "file_number": "2017/0325.01",
@@ -4046,8 +4079,8 @@
         "status_date": "17/12/2018",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים ובניית מבנה מגורים בן 4 קומות 5 י\"חד בהתאם לתמ\"א 38 ותכנית 10038.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -4154,8 +4187,8 @@
         "status_date": "30/11/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת מבנה קיים ובניית בניין חדש בן 6 קומות מעל 2 קומות חניה לפי תמ\"א 38-2 ותכנית 10038 לחיזוק המבנה מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -4174,8 +4207,8 @@
         "status_date": "02/02/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת קומה וחצי על בניין קיים בן 4 קומות 25 מ\"רכולל ממדי\"ם ומרפסות תוספת 6 י\"חד לפי תמ\"א 38 ותוכנית 10038 לחיזוק המבנה מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 17,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -4403,8 +4436,8 @@
         "status_date": "08/11/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת קומה וחצי חדשות מעל בניין קיים בן 4 קומות וקומת מחסנים בהתאם לתמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -4434,8 +4467,8 @@
         "status_date": "05/05/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 18,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -4531,8 +4564,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת חלקי בניין והקמת 2 בניינים בני  3 קומות+גג רעפים למגורים מעל קומה וחצי חניה ומחסנים בהתאם לתמ\"א38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -4648,8 +4681,8 @@
         "status_date": "18/07/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": ",תוספת 2 קומות חדשות מעל בניין קיים בן 4 קומות  והשלמת קומה מפולשת לפי תמ\"א 38 ותוכנית 10038 לחיזוק מיבנים מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -4684,7 +4717,10 @@
         "units": null,
         "units_source": null,
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1046.69,
+        "sqm_service": 295.39,
+        "sqm_mirpesot": 14.88
       }
     ],
     "scraped_at": "2026-04-16T06:59:36.878867",
@@ -4712,8 +4748,8 @@
         "status_date": "12/04/2022",
         "request_type": "",
         "request_description": "הריסה ובנייה מחדש לפי תמ\"א 38/2",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -4726,7 +4762,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1529.17,
+        "sqm_service": 1952.54,
+        "sqm_mirpesot": 342.31
       }
     ],
     "scraped_at": "2026-04-16T07:00:01.053252",
@@ -4798,8 +4837,8 @@
         "status_date": "06/04/2020",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת חלקי מבנה והקמת מבנה בן 6 קומות מעל 4 קומות חניה ומחסנים.לפי תמ\"א 38/2 לחיזוק המבנה לרעידות  אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 31,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -4851,8 +4890,8 @@
         "status_date": "30/01/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש בן 5 קומות מעל קומת חניות ומחסנים לפי תמ\"א 38-2  ותכנית 10038 לחיזוק מיבנים מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -4871,8 +4910,8 @@
         "status_date": "25/06/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38 חיזוק המבנה ושיפוצו הוספת ממ\"ד לכל דירה הוספת 2 קומות עליונות מעל בניין בן 3 קומות קיימות וקומת מחסנים.",
-        "units": null,
-        "units_source": null,
+        "units": 13,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -4924,8 +4963,8 @@
         "status_date": "12/01/2021",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספת בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -4935,8 +4974,8 @@
         "status_date": "10/01/2023",
         "request_type": "",
         "request_description": "תכנית שינויים בניית תוספת בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -4977,8 +5016,8 @@
         "status_date": "04/11/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בנייה בהתאם לתמ\"א 38 ותכנית 10038 לחיזוק הבניין מפני רעידת אדמה ,תוספת קומה וחצי מעל בניין קיים בן 3 קומות וקומת חניה.,",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -5036,10 +5075,13 @@
         "status_date": "10/12/2024",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק וחידוש הבניין ע\"פ תמ\"א 38 והוספת 4 י\"ח ב-5.1 קומות חדשות.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 855.69,
+        "sqm_service": 294.1,
+        "sqm_mirpesot": 182.12
       }
     ],
     "scraped_at": "2026-04-16T07:04:14.482150",
@@ -5067,8 +5109,8 @@
         "status_date": "01/01/2023",
         "request_type": "",
         "request_description": "שינויים לתמ\"א 38 - עדכון תוספות בניה, הגדלת מרפסות, שינויי פנים במבנה.",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -5107,8 +5149,8 @@
         "status_date": "15/11/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38 חיזוק הנדסי .הוספת ממ\"דים , מרפסות ומעלית תוספת 1.5 קומות למבנה קיים בן 3 קומות מעל קומת מחסנים.",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -5160,8 +5202,8 @@
         "status_date": "01/08/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הרחבות בניה ותוספת 2 קומות מעל בניין קיים בן 4 קומות.על פי תמ\"א 38 ותוכנית 10038 לחיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 20,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -5202,8 +5244,8 @@
         "status_date": "24/12/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות לפי תמ\"א 38 ותוכנית 10038 לחיזוק מיבנים מפני רעידות אדמה ותוספת  2 קומות מעל בניין קיים בן 3 קומות.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -5358,10 +5400,12 @@
         "status_date": "08/07/2024",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 17,
+        "units_source": "shtachim_tab",
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2075.78,
+        "sqm_mirpesot": 440.76
       }
     ],
     "scraped_at": "2026-04-16T07:08:07.252125",
@@ -5400,8 +5444,8 @@
         "status_date": "26/02/2020",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת 2 קומות מעל מבנה קיים בן 2 קומות וקומת מרתף לפי תמ\"א 38 ותוכנית 10038 לחיזוק המבנה  מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -5420,8 +5464,8 @@
         "status_date": "12/09/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38-1",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -5440,8 +5484,8 @@
         "status_date": "09/03/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת תואמת תמ\"א 38 תיקון 3",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -5471,8 +5515,8 @@
         "status_date": "14/03/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38 הריסה ובניה מחדש תוך שימור חזיתות המבנה הקיים",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -5482,8 +5526,8 @@
         "status_date": "23/11/2023",
         "request_type": "",
         "request_description": "הריסה ובניה מחדש תוך שימור חזיתות המבנה הקיים ותוספת 3 קומות חדשות.",
-        "units": null,
-        "units_source": null,
+        "units": 13,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -5493,8 +5537,8 @@
         "status_date": "07/09/2025",
         "request_type": "",
         "request_description": "תמ\"א 38 הריסה ובניה מחדש תוך שימור חזיתות המבנה הקיים",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -5560,7 +5604,8 @@
         "units": null,
         "units_source": null,
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_mirpesot": 13.2
       }
     ],
     "scraped_at": "2026-04-16T07:10:35.176758",
@@ -5621,8 +5666,8 @@
         "status_date": "11/07/2022",
         "request_type": "",
         "request_description": "הריסה ובניה מחדש במסגרת תמ\"א 38/2",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -5718,10 +5763,13 @@
         "status_date": "26/02/2026",
         "request_type": "",
         "request_description": "תכנון קומפלקס מגורים כתוספת לבנין לשימור במסלול תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 718.09,
+        "sqm_service": 253.9,
+        "sqm_mirpesot": 28.65
       },
       {
         "file_number": "1987/0083.05",
@@ -5791,8 +5839,8 @@
         "status_date": "07/06/2021",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת חלקי מבנה קיים תוך שמירת חזיתות והקמת בניין בן 5 קומות מעל 2 קומות חניה ומחסנים.",
-        "units": null,
-        "units_source": null,
+        "units": 13,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -5939,8 +5987,8 @@
         "status_date": "19/06/2022",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיין ובניית בית מגורים חדש במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -5992,8 +6040,8 @@
         "status_date": "22/02/2023",
         "request_type": "",
         "request_description": "?תוספת בניה עפ\"י תמ\"א 10038-חיזוק מבנים בפני רעידות אדמה .",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6023,8 +6071,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק הבניין לפי הוראות תמא 38\r\nתוספת בניה לפי הוראות תכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -6057,7 +6105,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 401.25,
+        "sqm_service": 95.47,
+        "sqm_mirpesot": 20
       }
     ],
     "scraped_at": "2026-04-16T07:15:20.434796",
@@ -6160,8 +6211,8 @@
         "status_date": "11/10/2021",
         "request_type": "",
         "request_description": "תוספת ממ\"דים +2 קומות ע\"פ תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6171,8 +6222,8 @@
         "status_date": "19/05/2024",
         "request_type": "",
         "request_description": "שינויים לתמ\"א 38:התאמת קיר למצב בשטח+ ביטול הריסת מרפסות+תוספת חניות+הזזת אשפה",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -6191,8 +6242,8 @@
         "status_date": "19/07/2021",
         "request_type": "",
         "request_description": "חיזוק בניין קיים כנגד רעידות אדמה ותוספת יח\"ד עפ\"י תכנית מתאר 10038",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6222,8 +6273,8 @@
         "status_date": "21/09/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם  לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6244,8 +6295,8 @@
         "status_date": "27/06/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוכנית שינויים ללא תוספת שטחים",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "shtachim_tab",
         "tama_type": null,
         "filtered": false
       }
@@ -6289,7 +6340,8 @@
         "units": null,
         "units_source": null,
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1844.24
       },
       {
         "file_number": "2013/1017.00",
@@ -6379,8 +6431,8 @@
         "status_date": "27/06/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק מבנה מגורים מפני רעידות אדמה, ע\"פ תמ\"א 38 תוספת 5.2 קומות חדשות.",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -6399,10 +6451,13 @@
         "status_date": "29/06/2023",
         "request_type": "",
         "request_description": "שימור חזיתות מבנה קיים, ותוספת 3 קומות עפ\"י תמ\"א 38/2 הריסה ובנייה.",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 743.34,
+        "sqm_service": 507.23,
+        "sqm_mirpesot": 29.46
       },
       {
         "file_number": "2022/0252.01",
@@ -6410,8 +6465,8 @@
         "status_date": "03/12/2025",
         "request_type": "",
         "request_description": "שימור חזיתות מבנה קיים ותוספת 3 קומות ע\"פ תמ\"א 38/2 הריסה ובניה",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -6441,8 +6496,8 @@
         "status_date": "07/08/2025",
         "request_type": "",
         "request_description": "חיזוק וחידוש הבניין ע\"פ תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 28,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -6543,10 +6598,13 @@
         "status_date": "06/01/2026",
         "request_type": "",
         "request_description": "תוספת וחיזוק למבנה קיים במסגרת תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1691.2,
+        "sqm_service": 463.4,
+        "sqm_mirpesot": 114.58
       },
       {
         "file_number": "2014/0316.02",
@@ -6585,8 +6643,8 @@
         "status_date": "23/07/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6630,7 +6688,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1134.44,
+        "sqm_service": 458.07,
+        "sqm_mirpesot": 138.27
       }
     ],
     "scraped_at": "2026-04-16T07:21:22.178371",
@@ -6650,7 +6711,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 350.32,
+        "sqm_service": 32.21,
+        "sqm_mirpesot": 80.18
       },
       {
         "file_number": "2019/0466.01",
@@ -6661,7 +6725,10 @@
         "units": null,
         "units_source": null,
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 715.01,
+        "sqm_service": 248.76,
+        "sqm_mirpesot": 83.32
       }
     ],
     "scraped_at": "2026-04-16T07:21:46.086729",
@@ -6731,10 +6798,13 @@
         "status_date": "18/03/2026",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת בניין מגורים קיים והקמת בניין מגורים במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1428.25,
+        "sqm_service": 1534.83,
+        "sqm_mirpesot": 355.97
       }
     ],
     "scraped_at": "2026-04-16T07:22:34.335484",
@@ -6751,8 +6821,8 @@
         "status_date": "06/03/2022",
         "request_type": "",
         "request_description": "הריסת חלקי מבנה ובנית מבנה בן 4 קומות וקומת גג רעפים עפ\"י תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6762,8 +6832,8 @@
         "status_date": "07/07/2025",
         "request_type": "",
         "request_description": "חידוש היתר להריסת חלקי מבנה ובנית מבנה בן 4 קומות וקומת גג רעפים עפ\"י תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -6804,8 +6874,8 @@
         "status_date": "04/11/2019",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסה ובניה ע\"פ תוכנית  תמ\"א 3810038 למעט שמירה על חזיתות  מטעמי שימור.",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -6885,8 +6955,8 @@
         "status_date": "10/02/2021",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 3 קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6960,8 +7030,8 @@
         "status_date": "05/10/2021",
         "request_type": "",
         "request_description": "תוספת לבניין קיים במסגרת תמא 38 ברח' עוזיה 13",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -6971,8 +7041,8 @@
         "status_date": "02/04/2024",
         "request_type": "",
         "request_description": "שינוי תמא38 תיקון טעות בהזנת היתר קיים,עדכון חיזוק לפי קיים והתאמת קומות חדשות",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7046,8 +7116,8 @@
         "status_date": "27/04/2025",
         "request_type": "",
         "request_description": "תוספת בניה עפ\"י הוראות תמ\"א ותכנית 10038 לחיזוק הבניין מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 24,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7105,8 +7175,8 @@
         "status_date": "13/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "שדרוג הנדסי מלא במסגרת תמ\"א 38, הרחבת יחידות דיור קיימות ותוספת של סה\"כ שש יחידות בשתי קומות חדשות. הרחבת שטחי החנייה התת\"ק ועבודות פיתוח וגינון.",
-        "units": null,
-        "units_source": null,
+        "units": 17,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7147,8 +7217,8 @@
         "status_date": "30/07/2025",
         "request_type": "",
         "request_description": "תוספת 2 קומות חדשות ותוספת בנייה בהתאם לתמא 38 ותכנית 10038 חיזוק מבנים",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7244,8 +7314,8 @@
         "status_date": "06/03/2022",
         "request_type": "",
         "request_description": "הרחבות בנייה ותוספת קומה וחצי מעל בניין בן 4 קומות ע\"פ תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 22,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -7255,8 +7325,8 @@
         "status_date": "17/02/2026",
         "request_type": "",
         "request_description": "חידוש היתר - הרחבות בנייה ותוספת קומה וחצי מעל בניין בן 4 קומות ע\"פ תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7275,8 +7345,8 @@
         "status_date": "15/08/2021",
         "request_type": "",
         "request_description": "הריסה ובניה מחדש לפי תמ\"א 38/2 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -7317,8 +7387,8 @@
         "status_date": "27/06/2023",
         "request_type": "",
         "request_description": "בקשה להריסת בנין קיים בן 3 קומות ובניה של בנין חדש בן 6 קומות עפ\"י תמא 38 2",
-        "units": null,
-        "units_source": null,
+        "units": 19,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7348,8 +7418,8 @@
         "status_date": "28/05/2025",
         "request_type": "",
         "request_description": "הרחבת יחידות דיור קיימות. הוספת עמודות ממדים. תוספת בניה על הגג+ יח\"ד חדשות. מעלית חיצונית בהתאם לתמ\"א 38 לסעיף 13.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7390,10 +7460,12 @@
         "status_date": "26/03/2023",
         "request_type": "",
         "request_description": "תמ\"א 38 תוספות - חיזוק המבנה, בניית ממ\"דים ותוספות לדירות הקיימות ותוספת 2 קומות",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 451.88,
+        "sqm_mirpesot": 154.85
       }
     ],
     "scraped_at": "2026-04-16T07:29:44.179667",
@@ -7410,8 +7482,8 @@
         "status_date": "03/06/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת מבנה חד קומתי למעט קירות לשימור והקמת בניין בן 4 קומות מעל קומת מחסנים בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -7424,7 +7496,9 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 901.49,
+        "sqm_service": 417.71
       }
     ],
     "scraped_at": "2026-04-16T07:30:08.502744",
@@ -7463,10 +7537,13 @@
         "status_date": "29/01/2026",
         "request_type": "",
         "request_description": "תוספת בנייה לבניין קיים לפי תמ\"א 38+תוספת מרפסות זיזיות.",
-        "units": null,
-        "units_source": null,
+        "units": 19,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 4105.95,
+        "sqm_service": 1802.48,
+        "sqm_mirpesot": 491.22
       }
     ],
     "scraped_at": "2026-04-16T07:30:32.641462",
@@ -7483,8 +7560,8 @@
         "status_date": "27/10/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת שתי קומות לבניין, סגירת קומת עמודים ותוספות לדירות קיימות עפ\"י תמא 38",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7503,10 +7580,13 @@
         "status_date": "13/06/2024",
         "request_type": "",
         "request_description": "חיזוק מבנה קיים ותוספת בניה לפי תמ\"א 38 ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 31,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2974.48,
+        "sqm_service": 1416.49,
+        "sqm_mirpesot": 268.74
       },
       {
         "file_number": "2020/0739.01",
@@ -7545,10 +7625,13 @@
         "status_date": "08/11/2025",
         "request_type": "",
         "request_description": "בניין מגורים לפי תמ\"א 38/2 - הריסה ובניה",
-        "units": null,
-        "units_source": null,
+        "units": 22,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1767.98,
+        "sqm_service": 1854.96,
+        "sqm_mirpesot": 143.81
       }
     ],
     "scraped_at": "2026-04-16T07:32:00.949129",
@@ -7618,10 +7701,13 @@
         "status_date": "10/08/2011",
         "request_type": "תוספת בניה לדירות",
         "request_description": "תוספת בניה על פי תמ\"א 38 + מעלית  ומחסנים",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 444.81,
+        "sqm_service": 14,
+        "sqm_mirpesot": 38.04
       },
       {
         "file_number": "2010/0671.01",
@@ -7629,8 +7715,8 @@
         "status_date": "16/02/2015",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חידוש היתר 103220",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -7643,7 +7729,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1121.34,
+        "sqm_service": 409.36,
+        "sqm_mirpesot": 119.74
       },
       {
         "file_number": "2020/0344.01",
@@ -7693,8 +7782,8 @@
         "status_date": "12/03/2025",
         "request_type": "",
         "request_description": "תוספת בניה כולל תוספת 2 קומות על בניין 4 קומות במסגרת תמ\"א 38-1.",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7821,8 +7910,8 @@
         "status_date": "09/02/2023",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -7832,8 +7921,8 @@
         "status_date": "29/11/2022",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 4 קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7863,8 +7952,8 @@
         "status_date": "23/06/2024",
         "request_type": "",
         "request_description": "חיזוק מבנה קיים והרחבות ותוספת קומה וחצי ע\"פ תמא 38",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -7894,8 +7983,8 @@
         "status_date": "03/06/2025",
         "request_type": "",
         "request_description": "תוספת וחיזוק למבנה במסגרת תמ\"א 38\nפיצול דירה קיימת והכשרת דירה בקומת קרקע",
-        "units": null,
-        "units_source": null,
+        "units": 47,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -8030,10 +8119,13 @@
         "status_date": "09/06/2024",
         "request_type": "",
         "request_description": "חיזוק בניין קיים ובניית תוספות ע\"פ תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 971.89,
+        "sqm_service": 400.26,
+        "sqm_mirpesot": 155.57
       }
     ],
     "scraped_at": "2026-04-16T07:37:16.563794",
@@ -8257,8 +8349,8 @@
         "status_date": "08/11/2022",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 4 קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -8385,8 +8477,8 @@
         "status_date": "22/12/2021",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 3 קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -8416,8 +8508,8 @@
         "status_date": "30/03/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -8467,8 +8559,8 @@
         "status_date": "09/02/2023",
         "request_type": "",
         "request_description": "הריסת מבנה קיים ובנית מבנה חדש בן 5 קומות לפי תכנית 38/2 ועל פי 10038",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       },
@@ -8478,10 +8570,13 @@
         "status_date": "10/08/2025",
         "request_type": "",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש בן 5 קומות עפ\"י תמ\"א 38 תכנית 10038 חיזוק מבנים",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1079.89,
+        "sqm_service": 1468.89,
+        "sqm_mirpesot": 194.03
       }
     ],
     "scraped_at": "2026-04-16T07:40:35.980014",
@@ -8636,10 +8731,13 @@
         "status_date": "25/02/2026",
         "request_type": "",
         "request_description": "חיזוק בניין קיים ובניית תוספות ע\"פ תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1579.05,
+        "sqm_service": 446.38,
+        "sqm_mirpesot": 252.57
       }
     ],
     "scraped_at": "2026-04-16T10:28:09.686985",
@@ -8764,8 +8862,8 @@
         "status_date": "07/02/2024",
         "request_type": "",
         "request_description": "תוספת בניה ל-15 יח''ד קיימות בצידי המבנה  ו-13 יח''ד חדשות  במסגרת תמ''א 38",
-        "units": null,
-        "units_source": null,
+        "units": 28,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -8795,10 +8893,13 @@
         "status_date": "14/01/2026",
         "request_type": "",
         "request_description": "תוספת בניה ע\"פ סעיף 13 לתמ\"א 38-  בנית מרפסות ממדים תוספת יח\"ד מעלית ובריכה.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 927.71,
+        "sqm_service": 464.32,
+        "sqm_mirpesot": 157.6
       }
     ],
     "scraped_at": "2026-04-16T10:29:50.717880",
@@ -8859,8 +8960,8 @@
         "status_date": "01/07/2024",
         "request_type": "",
         "request_description": "תוספות בנייה ויח\"ד בהליך של תמ\"א 38/1 על פי תכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 22,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -8945,8 +9046,8 @@
         "status_date": "30/07/2025",
         "request_type": "",
         "request_description": "תוספת וחיזוק למבנה במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -9075,8 +9176,8 @@
         "status_date": "23/02/2025",
         "request_type": "",
         "request_description": "תוספת בניה כולל תוספת 2 קומות על בנין 4 קומות, במסגרת תמ\"א 38-1.",
-        "units": null,
-        "units_source": null,
+        "units": 32,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -9214,8 +9315,8 @@
         "status_date": "07/07/2024",
         "request_type": "",
         "request_description": "תוספת בניה כולל תוספת 2.5 קומות על בנין 4 קומות, במסגרת תמ\"א 38-1.",
-        "units": null,
-        "units_source": null,
+        "units": 40,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -9276,8 +9377,8 @@
         "status_date": "20/11/2024",
         "request_type": "",
         "request_description": "תמ\"א 38 הריסה ובניה מחדש תוך שימור חזיתות",
-        "units": null,
-        "units_source": null,
+        "units": 13,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -9329,10 +9430,13 @@
         "status_date": "17/06/2025",
         "request_type": "",
         "request_description": "הריסת מבנה ובנית מבנה חדש בין6-7 קומות מעל 3 קומות חניה במסגרת תמ\"א 38/2",
-        "units": null,
-        "units_source": null,
+        "units": 13,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2085.68,
+        "sqm_service": 2774.16,
+        "sqm_mirpesot": 206.85
       }
     ],
     "scraped_at": "2026-04-16T10:33:20.086743",
@@ -9371,8 +9475,8 @@
         "status_date": "19/06/2024",
         "request_type": "",
         "request_description": "תוספת שתי קומות במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 24,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -9435,10 +9539,12 @@
         "status_date": "21/06/2023",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 1בחצי קומות מעל מבנה קיים בין3 קומות",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 311.14,
+        "sqm_mirpesot": 83.39
       }
     ],
     "scraped_at": "2026-04-16T10:34:08.459319",
@@ -9466,8 +9572,8 @@
         "status_date": "30/01/2025",
         "request_type": "",
         "request_description": "הרחבות בניה ע\"פ תכנית 10038 ותוספת קומה וחצי חדשות",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -9527,8 +9633,8 @@
         "status_date": "18/12/2024",
         "request_type": "",
         "request_description": "חיזוק המבנה הקיים מפני רעידות אדמה עפ\"י תמ\"א 38 ותוספת קומה וחצי.",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -9547,8 +9653,8 @@
         "status_date": "17/01/2024",
         "request_type": "",
         "request_description": "שינוי יעוד מחסנים חדר הסקה ומסדרון ליחידת מוזאון לאומנות מקומית כחלק מתמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       },
@@ -9558,8 +9664,8 @@
         "status_date": "13/02/2025",
         "request_type": "",
         "request_description": "תמ\"א 38 ברחביה",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -9836,10 +9942,13 @@
         "status_date": "12/02/2025",
         "request_type": "",
         "request_description": "הריסה ובניית בניין חדש במסגרת תמ\"א 38-2 פינוי בינוי",
-        "units": null,
-        "units_source": null,
+        "units": 40,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2569.85,
+        "sqm_service": 3956.19,
+        "sqm_mirpesot": 695.7
       }
     ],
     "scraped_at": "2026-04-16T10:38:16.549445",
@@ -9922,8 +10031,8 @@
         "status_date": "25/11/2025",
         "request_type": "",
         "request_description": "הריסה ובניה עפ\"י תכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -9942,10 +10051,13 @@
         "status_date": "19/06/2025",
         "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת בניין קיים ובנית בניין חדש במסגירת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 891.95,
+        "sqm_service": 709.74,
+        "sqm_mirpesot": 103.36
       }
     ],
     "scraped_at": "2026-04-16T10:39:19.858516",
@@ -9984,10 +10096,13 @@
         "status_date": "19/11/2025",
         "request_type": "",
         "request_description": "תמ\"א 38 הריסה ובניה",
-        "units": null,
-        "units_source": null,
+        "units": 40,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2497.07,
+        "sqm_service": 3780.52,
+        "sqm_mirpesot": 412.37
       }
     ],
     "scraped_at": "2026-04-16T10:39:51.027867",
@@ -10037,10 +10152,13 @@
         "status_date": "30/01/2025",
         "request_type": "",
         "request_description": "הריסה ובניה חדשה של בית מגורים פרטי",
-        "units": null,
-        "units_source": null,
+        "units": 1,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 343.4,
+        "sqm_service": 75.85,
+        "sqm_mirpesot": 69.75
       },
       {
         "file_number": "2023/0466.00",
@@ -10048,8 +10166,8 @@
         "status_date": "19/10/2025",
         "request_type": "",
         "request_description": "מסלול הריסה ובניה, רישוי מלא עם הקלות תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -10101,10 +10219,13 @@
         "status_date": "26/08/2024",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 1.5 קומות מעל המבנה קיים בין 3 קומות",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 874.27,
+        "sqm_service": 342.74,
+        "sqm_mirpesot": 238.17
       },
       {
         "file_number": "2022/0123.01",
@@ -10204,8 +10325,8 @@
         "status_date": "14/01/2026",
         "request_type": "",
         "request_description": "בקשה להריסה ובניה לפי תמ\"א 38/2",
-        "units": null,
-        "units_source": null,
+        "units": 32,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -10290,8 +10411,8 @@
         "status_date": "10/03/2026",
         "request_type": "",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש בן 6 קומות במסלול תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -10310,8 +10431,8 @@
         "status_date": "18/03/2026",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק בניין קיים כנגד רעידות אדמה, תוספת יח\"ד והרחבת הדירות הקיימות",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -10403,10 +10524,13 @@
         "status_date": "15/09/2024",
         "request_type": "",
         "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת1.5קומות מעל המבנה בין 3קומות מעל 0.00",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1024.32,
+        "sqm_service": 354.3,
+        "sqm_mirpesot": 147.76
       },
       {
         "file_number": "2022/0481.01",
@@ -10434,8 +10558,8 @@
         "status_date": "03/04/2025",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, בנית מחסן/מחסנים, תמ\"א 38 - תוספות",
         "request_description": "חיזוק הבניין ותוספות מכח תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -10509,8 +10633,8 @@
         "status_date": "24/01/2024",
         "request_type": "",
         "request_description": "תוספות בניה במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 30,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -10609,8 +10733,8 @@
         "status_date": "26/03/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -10659,10 +10783,13 @@
         "status_date": "17/06/2025",
         "request_type": "",
         "request_description": "תוספת 2 קומות למבנה קיים ותוספת ממדים לפי תמ\"א 38 ותוכנית 10038 לחיזוק מבנים",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1398.94,
+        "sqm_service": 444.72,
+        "sqm_mirpesot": 249.91
       }
     ],
     "scraped_at": "2026-04-16T10:49:11.862391",
@@ -10745,10 +10872,13 @@
         "status_date": "26/01/2026",
         "request_type": "",
         "request_description": "תוספות עפ\"י תמ\"א 38/1",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1145.13,
+        "sqm_service": 473.92,
+        "sqm_mirpesot": 120.04
       }
     ],
     "scraped_at": "2026-04-16T10:49:42.979259",
@@ -10831,8 +10961,8 @@
         "status_date": "30/07/2025",
         "request_type": "",
         "request_description": "תוספת בניה, ממדי\"ם, מרפסות ומחסנים ,תוספת קומות ויח\"ד ע\"פ תמ\"א 38 ותוכנית 10038.",
-        "units": null,
-        "units_source": null,
+        "units": 20,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -10862,8 +10992,8 @@
         "status_date": "30/07/2025",
         "request_type": "",
         "request_description": "תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -10882,10 +11012,13 @@
         "status_date": "16/11/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38 תוספות",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "shtachim_tab",
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1041.56,
+        "sqm_service": 450.24,
+        "sqm_mirpesot": 227.27
       }
     ],
     "scraped_at": "2026-04-16T10:51:20.313427",
@@ -10930,8 +11063,8 @@
         "status_date": "18/12/2024",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תמ\"א 38-תוספות",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -11022,8 +11155,8 @@
         "status_date": "17/03/2026",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת ממדים ומרפסות לדירות קיימות ותוספת של קומה וחצי במסגרת תמ\"א 1-38",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -11064,10 +11197,13 @@
         "status_date": "08/02/2026",
         "request_type": "",
         "request_description": "תוספת בניה, ממדי\"ם, מרפסות ומחסנים ,תוספת קומות ויח\"ד ע\"פ תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1316.22,
+        "sqm_service": 380.94,
+        "sqm_mirpesot": 233.3
       }
     ],
     "scraped_at": "2026-04-16T10:54:11.917547",
@@ -11137,8 +11273,8 @@
         "status_date": "03/12/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "חיזוק בנין קיים ובניית תוספות ע\"פ תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -11157,8 +11293,8 @@
         "status_date": "12/02/2025",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספת בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -11452,8 +11588,8 @@
         "status_date": "06/11/2025",
         "request_type": "",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש בהתאם לתמ\"א 38/2 תכנית 10038 ו- 3770 החלה במקום",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -11502,8 +11638,8 @@
         "status_date": "08/07/2025",
         "request_type": "",
         "request_description": "הריסה ובנייה במסרגת תמ\"א 38-2 פינוי בינוי",
-        "units": null,
-        "units_source": null,
+        "units": 43,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -11533,8 +11669,8 @@
         "status_date": "27/01/2025",
         "request_type": "",
         "request_description": "תמ\"א 38 הריסה ובניה",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -11553,10 +11689,13 @@
         "status_date": "25/02/2026",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש למגורים במסגרת תכנית 10038.",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 784.67,
+        "sqm_service": 848.33,
+        "sqm_mirpesot": 139.44
       }
     ],
     "scraped_at": "2026-04-16T11:00:02.615036",
@@ -11595,8 +11734,8 @@
         "status_date": "01/08/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה על פי תמ\"א 38  ותכנית 10038 - חיזוק מפני רעידות אדמה",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -11634,8 +11773,8 @@
         "status_date": "04/11/2013",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת 2 בניינים והקמת 2 בניינים חדשים מעל קומת חניה במסגרת תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -11718,8 +11857,8 @@
         "status_date": "11/09/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית  10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -11895,7 +12034,8 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2294.93
       },
       {
         "file_number": "2006/0812.02",
@@ -11925,10 +12065,13 @@
         "status_date": "23/02/2025",
         "request_type": "",
         "request_description": "תוספת יחידות דיור חדשות ותוספת שטחים לדירות קיימות לפי תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 18,
+        "units_source": "shtachim_tab",
         "tama_type": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 4687.91,
+        "sqm_service": 2531.83,
+        "sqm_mirpesot": 439.68
       },
       {
         "file_number": "2006/0812.03",
@@ -11978,8 +12121,8 @@
         "status_date": "08/04/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת 25 מ\"ר לדירה ותוספת של קומה וחצי חדשות ל 4 יח' דיור חדשות, בהתאם לתמ\"א 38  ותכנית 10038 לחיזוק מבנים  בניית קומה וחצי מעל קומת מחסנים  ו3 קומות קיימות.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -11998,8 +12141,8 @@
         "status_date": "26/06/2022",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בקשה לתוספות בנייה וחיזוק מבנה במסגרת תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 23,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -12076,7 +12219,10 @@
         "units": null,
         "units_source": null,
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1298.51,
+        "sqm_service": 194.42,
+        "sqm_mirpesot": 117.08
       },
       {
         "file_number": "2022/0424.00",
@@ -12084,10 +12230,13 @@
         "status_date": "18/07/2022",
         "request_type": "",
         "request_description": "חיזוק בניין ותוספת 2 קומות ע\"ג בניין בן 3 קומות וקומת מרתף עפ\"י תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "shtachim_tab",
         "tama_type": "38/1",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1298.51,
+        "sqm_service": 194.42,
+        "sqm_mirpesot": 117.08
       }
     ],
     "scraped_at": "2026-04-16T11:39:43.632681",
@@ -12104,8 +12253,8 @@
         "status_date": "07/05/2024",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת שטח לדירות מגורים קיימות ע\"פ תמ\"א 38 ותב\"ע מס 3010 א''  ותוספת 2 קומות מגור",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12146,8 +12295,8 @@
         "status_date": "29/05/2023",
         "request_type": "",
         "request_description": "תמ\"א 38/1 - חיזוק ותוספות במבנה קיים",
-        "units": null,
-        "units_source": null,
+        "units": 24,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       },
@@ -12177,8 +12326,8 @@
         "status_date": "24/02/2026",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת 2 קומות מעל 3 קומות קיימות",
-        "units": null,
-        "units_source": null,
+        "units": 23,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -12197,10 +12346,13 @@
         "status_date": "11/03/2026",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "תמ\"א 38 ב' הריסת מבנה קיים ובניית בנין בן 6 קומות עם 2 קומות תת קרקעיות",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "shtachim_tab",
         "tama_type": "38/2",
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1245,
+        "sqm_service": 1574.28,
+        "sqm_mirpesot": 177.88
       }
     ],
     "scraped_at": "2026-04-16T11:42:21.974381",
@@ -12259,8 +12411,8 @@
         "status_date": "04/12/2025",
         "request_type": "",
         "request_description": "תוספת וחיזוק למבנה קיים במסגרת תמ\"א 38.",
-        "units": null,
-        "units_source": null,
+        "units": 28,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12279,8 +12431,8 @@
         "status_date": "09/01/2014",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספת בניה וחיזוק בניין מפני רעידות אדמה - תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12299,8 +12451,8 @@
         "status_date": "11/02/2015",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת בניין קיים תוך שימור החזיתות הפונות לרחוב ובניית בניין בהתאם לתמ\"א 38 (חיזוק מפני רעידות אדמה).",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -12319,8 +12471,8 @@
         "status_date": "04/09/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "תוספות בנייה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 22,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12339,8 +12491,8 @@
         "status_date": "24/01/2016",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת מבנה קיים למעט קירות לשימור והקמת בניין חדש בן 6 קומות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידת אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -12359,8 +12511,8 @@
         "status_date": "28/11/2021",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת מבנה והקמת בניין חדש בן 7 מעל 3 קומות חניה למגורים בהתאם לתמ\"א 38 ותנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -12379,8 +12531,8 @@
         "status_date": "17/04/2018",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הוספת 2 קומות והרחבות צד למבנה קיים בתמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": null,
         "filtered": false
       }
@@ -12399,8 +12551,8 @@
         "status_date": "06/06/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12419,8 +12571,8 @@
         "status_date": "10/07/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12439,8 +12591,8 @@
         "status_date": "06/02/2019",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "הריסת חלקי מבנה קיים למעט חזיתות לשימור ותוספת 3 קומות מעל 2 קומות קיימות בהתאם לתמ\"א 38 חיזוק המבנה מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12487,8 +12639,8 @@
         "status_date": "06/06/2017",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }
@@ -12555,8 +12707,8 @@
         "status_date": "21/10/2021",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסה ובניית בניין חדש במסגרת תמ\"א 38-2 פינוי בינוי",
-        "units": null,
-        "units_source": null,
+        "units": 32,
+        "units_source": "detail_page",
         "tama_type": "38/2",
         "filtered": false
       }
@@ -12583,8 +12735,8 @@
         "status_date": "01/06/2021",
         "request_type": "תמ\"א 38 - תוספות",
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה.",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "tama_type": "38/1",
         "filtered": false
       }

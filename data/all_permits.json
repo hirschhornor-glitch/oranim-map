@@ -25,7 +25,8 @@
         "request_description": "שימוש חורג מתעשייה לאולם אירועים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1941.4
       },
       {
         "file_number": "2017/0745.00",
@@ -35,7 +36,9 @@
         "request_description": "מבנה טרומי יביל המשמש משרד למגרש מכירת רכב.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 67.74,
+        "sqm_service": 17.06
       },
       {
         "file_number": "2018/0713.00",
@@ -45,7 +48,10 @@
         "request_description": "חניון ציבורי מקורה מתחת להמשך כביש פייר קניג לכיוון דרום",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 14137.6,
+        "sqm_service": 906.5,
+        "floors": 595
       },
       {
         "file_number": "2018/0713.01",
@@ -65,7 +71,10 @@
         "request_description": "בקשה עבור תוספת של 3 קומות חניה מקורות ומשרדים, ו12 קומות משרדים.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 24948.22,
+        "sqm_service": 28006.4,
+        "sqm_mirpesot": 4572.71
       },
       {
         "file_number": "2018/0065.02",
@@ -75,7 +84,10 @@
         "request_description": "תכנית שינויים למסד מסחר ותעשייה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 9185.35,
+        "sqm_service": 6568.66,
+        "sqm_mirpesot": 223.55
       },
       {
         "file_number": "2005/0415.03",
@@ -95,7 +107,8 @@
         "request_description": "מבנה גרעין היציאה מחניון ציבורי מקורה מתחת לכביש פייר קניג לכיוון דרום",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 29.19
       },
       {
         "file_number": "2023/0160.00",
@@ -103,9 +116,11 @@
         "status_date": "05/06/2023",
         "request_type": "",
         "request_description": "בניית חניון מחושמל לאוטובוסים חדר מיתוג חדר שנאים ומבנה שומר",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 4,
+        "sqm_service": 109.58
       },
       {
         "file_number": "2017/0408.01",
@@ -115,7 +130,8 @@
         "request_description": "שימוש חורג מתעשייה לאולם אירועים תיק עסק מס 8040628",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1914.87
       }
     ],
     "scraped_at": "2026-04-15T22:32:14.846722",
@@ -132,7 +148,8 @@
         "request_description": "תוספת מקומות חניה בקרוסלות חניה אוטומטיות במגרש חניה ציבורי קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 71.92
       }
     ],
     "scraped_at": "2026-04-15T22:32:38.535867",
@@ -149,7 +166,9 @@
         "request_description": "הסדרת תוספות בינוי בבנין מגורים קיים בתואם לתב\"ע 101-0120220",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 81.25,
+        "sqm_service": 17.23
       },
       {
         "file_number": "2016/0896.01",
@@ -159,7 +178,10 @@
         "request_description": "הכשרת עבירה לתוספות שטח עיקרי וממ\"ד בקומות הקרקע והמרתף בהתאם לתב\"ע  120220.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 816.11,
+        "sqm_service": 282.46,
+        "sqm_mirpesot": 101.73
       },
       {
         "file_number": "2016/0896.02",
@@ -169,7 +191,10 @@
         "request_description": "הכשרת עבירה לתוספת שטח עיקרי וממ\"ד בקומת הקרקע והמרתף בהתאם לתבע 20220",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 761.19,
+        "sqm_service": 270.86,
+        "sqm_mirpesot": 101.73
       }
     ],
     "scraped_at": "2026-04-15T22:33:02.158910",
@@ -186,7 +211,9 @@
         "request_description": "היתר תואם תב\"ע להסדרת בינוי קיים ברחוב רבדים 21.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 512.32,
+        "sqm_service": 250.68
       }
     ],
     "scraped_at": "2026-04-15T22:33:25.765199",
@@ -250,7 +277,9 @@
         "request_description": "תוספת בניה, ממ\"ד/הכשרת עבירת בניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 154.98,
+        "sqm_service": 11.97
       }
     ],
     "scraped_at": "2026-04-15T22:34:12.847204",
@@ -284,7 +313,8 @@
         "request_description": "שימוש חורג ממגורים ל-2 גני ילדים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 96.13
       }
     ],
     "scraped_at": "2026-04-15T22:35:00.056988",
@@ -315,9 +345,11 @@
         "status_date": "26/03/2026",
         "request_type": "",
         "request_description": "תוספת יחידת דיור מעל בניין קיים",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 467.96,
+        "sqm_service": 59.32
       }
     ],
     "scraped_at": "2026-04-15T22:35:38.579984",
@@ -371,7 +403,10 @@
         "request_description": "תוספת ממ\"ד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 130.07,
+        "sqm_service": 13.81,
+        "sqm_mirpesot": 26.75
       }
     ],
     "scraped_at": "2026-04-15T22:36:25.808736",
@@ -388,7 +423,10 @@
         "request_description": "בניית חניון תת קרקעי, הרחבות בניה ותוספת קומה במכללת אפרתה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3253.02,
+        "sqm_service": 960.88,
+        "sqm_mirpesot": 96.21
       }
     ],
     "scraped_at": "2026-04-15T22:36:49.401504",
@@ -613,7 +651,10 @@
         "request_description": "תוספת קומה למבנה קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 607.45,
+        "sqm_service": 525.18,
+        "sqm_mirpesot": 153.95
       }
     ],
     "scraped_at": "2026-04-15T22:40:51.259487",
@@ -636,7 +677,9 @@
         "request_description": "מבנה חדש לתחנת כיבוי אש.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 165.81,
+        "sqm_service": 287.73
       },
       {
         "file_number": "2017/0976.01",
@@ -713,7 +756,11 @@
         "request_description": "תוספת בניה למלון קיים, הריסות ושינויים לצורך נגישות וחיזוק הבנין לרעידות אדמה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 17676.86,
+        "sqm_service": 13109.04,
+        "sqm_mirpesot": 470.09,
+        "floors": 75
       },
       {
         "file_number": "1977/0463.13",
@@ -723,7 +770,9 @@
         "request_description": "תוכנית שינויים לתיק 12.463/1977 הרחבת מוצעת לחדר אשפה + מרפסת גג מוצעת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 109.88,
+        "sqm_mirpesot": 109.88
       },
       {
         "file_number": "1977/0463.14",
@@ -733,7 +782,10 @@
         "request_description": "הרחבת חדר אוכל במפלס כניסה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 17647.54,
+        "sqm_service": 13090.61,
+        "sqm_mirpesot": 1333.83
       }
     ],
     "scraped_at": "2026-04-15T22:42:55.399005",
@@ -750,7 +802,10 @@
         "request_description": "הרחבת מרפסות, בניית מחסנים ומדרגות מילוט בהתאם לתכנית 101-0194688",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2423.8,
+        "sqm_service": 1215.98,
+        "sqm_mirpesot": 15.02
       }
     ],
     "scraped_at": "2026-04-15T22:43:19.004896",
@@ -782,9 +837,12 @@
         "status_date": "11/07/2022",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "הכשרת בנייה קיימת לפי תב\"ע נקודתית שמספרה  101-0190280",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 644.81,
+        "sqm_service": 90.29,
+        "sqm_mirpesot": 30.01
       }
     ],
     "scraped_at": "2026-04-15T22:44:06.218256",
@@ -809,8 +867,8 @@
         "status_date": "11/11/2021",
         "request_type": "",
         "request_description": "בקשה להיתר הריסה, חפירה דיפון ורצפה ראשונה עבור 2 בניינים עם חניון אחד משותף",
-        "units": null,
-        "units_source": null,
+        "units": 68,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -828,7 +886,10 @@
         "request_description": "תוספת קומה עליונה בתוך חלל גג הרעפים, תוספת מבואת כניסה במפלס הקרקע ושיפוץ חורבה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1890.37,
+        "sqm_service": 673.7,
+        "sqm_mirpesot": 104.38
       },
       {
         "file_number": "2018/0568.00",
@@ -836,9 +897,12 @@
         "status_date": "10/07/2019",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "הקמת בניין מגורים בן 4 קומות מעל קומת עמודים",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 7,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 579.67,
+        "sqm_service": 726.52,
+        "sqm_mirpesot": 55.71
       }
     ],
     "scraped_at": "2026-04-15T22:44:53.299546",
@@ -1079,7 +1143,8 @@
         "request_description": "הנחת בריכה פרטית עם חדר מכונות מובנה על גג הדירות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_mirpesot": 354.05
       }
     ],
     "scraped_at": "2026-04-15T22:48:07.858901",
@@ -1096,7 +1161,9 @@
         "request_description": "תוספת קומה מ2 יח''ד על בניין קיים פלוס דירה בקומת קרקע. הרחבת 5 יח''ד, סה''כ 8.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1134.13,
+        "sqm_service": 196.18
       }
     ],
     "scraped_at": "2026-04-15T22:48:31.432407",
@@ -1177,7 +1244,10 @@
         "request_description": "הרחבת מרפסות זיזיות בחזית מזרחית והרחבת ביתן אשפה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1437.21,
+        "sqm_service": 1540.34,
+        "sqm_mirpesot": 228.53
       }
     ],
     "scraped_at": "2026-04-15T22:49:42.121577",
@@ -1211,7 +1281,11 @@
         "request_description": "תוספת בניה להרחבת מוסך מאושר במפלס 4.9 - בשכונת תלפיות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 5777.98,
+        "sqm_service": 9062.09,
+        "sqm_mirpesot": 354.71,
+        "floors": 191
       },
       {
         "file_number": "2009/0633.04",
@@ -1238,7 +1312,9 @@
         "request_description": "תוספת שטחים למגורים במרתף ובחלל הגג",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 657.26,
+        "sqm_service": 17.63
       }
     ],
     "scraped_at": "2026-04-15T22:50:52.756116",
@@ -1315,7 +1391,8 @@
         "request_description": "בנין חדש: השלמת קומה ושינוי מקום המקלט- בית כנסת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 685
       },
       {
         "file_number": "1982/0783.01",
@@ -1325,7 +1402,8 @@
         "request_description": "",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 700
       },
       {
         "file_number": "2020/0355.00",
@@ -1343,9 +1421,12 @@
         "status_date": "12/01/2021",
         "request_type": "",
         "request_description": "בניית 2 בנייני מגורים בני 11 קומות כ\"א על קומת מסחר ו-4 קומות חניון תת קרקעי.(מגרש 2)",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 131,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 12731.09,
+        "sqm_service": 12839.61,
+        "sqm_mirpesot": 880.78
       },
       {
         "file_number": "2020/0384.00",
@@ -1353,9 +1434,12 @@
         "status_date": "12/01/2021",
         "request_type": "",
         "request_description": "בניית 2 בנייני מגורים בני 10-11 קומות כ\"א על קומת מסחר ו3 קומות חניון תת קרקעי.(מגרש 3)",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 126,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 10640.92,
+        "sqm_service": 11408.32,
+        "sqm_mirpesot": 806.73
       },
       {
         "file_number": "2020/0355.01",
@@ -1392,7 +1476,9 @@
         "request_description": "הרחבת יחידת דיור קיימת עפ\"י תב\"ע 101-0290049",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 352.68,
+        "sqm_service": 7
       }
     ],
     "scraped_at": "2026-04-15T22:52:41.750315",
@@ -1455,7 +1541,10 @@
         "request_description": "בניין חדש לתעשייה קלה ומלאכה ומסחר",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 9763.93,
+        "sqm_service": 6608.21,
+        "floors": 102
       },
       {
         "file_number": "2018/0713.01",
@@ -1475,7 +1564,10 @@
         "request_description": "בקשה עבור תוספת של 3 קומות חניה מקורות ומשרדים, ו12 קומות משרדים.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 24948.22,
+        "sqm_service": 28006.4,
+        "sqm_mirpesot": 4572.71
       },
       {
         "file_number": "2018/0065.02",
@@ -1485,7 +1577,10 @@
         "request_description": "תכנית שינויים למסד מסחר ותעשייה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 9185.35,
+        "sqm_service": 6568.66,
+        "sqm_mirpesot": 223.55
       }
     ],
     "scraped_at": "2026-04-15T22:54:22.113904",
@@ -1502,7 +1597,9 @@
         "request_description": "תוספת לפי תב''ע  מאושרת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 150.9,
+        "sqm_service": 48.52
       }
     ],
     "scraped_at": "2026-04-15T22:54:45.680765",
@@ -1580,7 +1677,9 @@
         "request_description": "הרחבת דיור",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 166.81,
+        "sqm_service": 20.17
       },
       {
         "file_number": "2017/0374.00",
@@ -1719,9 +1818,13 @@
         "status_date": "29/05/2017",
         "request_type": "תוכנית שינויים",
         "request_description": "תכנית שינויים לבנין מגורים ופיצול יח\"ד",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 8,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 1363.67,
+        "sqm_service": 1022.15,
+        "sqm_mirpesot": 220,
+        "floors": 14
       }
     ],
     "scraped_at": "2026-04-15T22:58:35.491904",
@@ -1736,9 +1839,12 @@
         "status_date": "16/12/2019",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "הקמת מבנה מגורים חדש בן 5 קומות בשכונת בית צפאפא",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 10,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 1167.12,
+        "sqm_service": 810.35,
+        "sqm_mirpesot": 57.76
       }
     ],
     "scraped_at": "2026-04-15T22:58:59.002361",
@@ -1788,7 +1894,9 @@
         "request_description": "הכשרת בנייה קיימת בשכונת בית צפפא, כלל הרחבת לשתי יחידות דיור קיימות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 156.82,
+        "sqm_service": 50.26
       }
     ],
     "scraped_at": "2026-04-15T23:00:10.038568",
@@ -1811,7 +1919,9 @@
         "request_description": "שינוי מדרגות פיתוח ופריצת פתחים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1201.77,
+        "sqm_service": 432.66
       }
     ],
     "scraped_at": "2026-04-15T23:00:48.382222",
@@ -1826,9 +1936,11 @@
         "status_date": "25/07/2019",
         "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "הפיכת שטח מחסן וחדר הסקה קיימים לדירה חדשה",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 5,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 29.53,
+        "sqm_service": 94.27
       }
     ],
     "scraped_at": "2026-04-15T23:01:11.903728",
@@ -1868,7 +1980,10 @@
         "request_description": "תוספת בנייה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 251.7,
+        "sqm_service": 12.79,
+        "sqm_mirpesot": 72.09
       }
     ],
     "scraped_at": "2026-04-15T23:02:13.732646",
@@ -1925,7 +2040,9 @@
         "request_description": "הוספת חנויות בקניון לב תלפיות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 14696.7,
+        "sqm_service": 23074.74
       },
       {
         "file_number": "2001/0529.08",
@@ -1960,9 +2077,10 @@
         "status_date": "21/09/2022",
         "request_type": "",
         "request_description": "שיפור הנגישות בקומות חניה, הזזת שטחים מאושרים. שנויים מתכנית תמא 38 מאושרת",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 44,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_service": 3327.84
       },
       {
         "file_number": "2012/0079.01",
@@ -1972,7 +2090,8 @@
         "request_description": "תוספת 3 כיתות ספח ושינויים פנימיים בבניין קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 178.77
       }
     ],
     "scraped_at": "2026-04-15T23:04:11.752853",
@@ -2143,7 +2262,10 @@
         "request_description": "בניין משרדים חדש",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3944.79,
+        "sqm_service": 5425.74,
+        "sqm_mirpesot": 177.23
       },
       {
         "file_number": "2021/0118.00",
@@ -2153,7 +2275,10 @@
         "request_description": "בניין משרדים חדש",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3520.49,
+        "sqm_service": 5227.5,
+        "sqm_mirpesot": 124.74
       }
     ],
     "scraped_at": "2026-04-15T23:07:26.018352",
@@ -2231,7 +2356,9 @@
         "request_description": "הרחבת קיוסק קיים בעמק רפאים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 49.24,
+        "sqm_service": 26.8
       }
     ],
     "scraped_at": "2026-04-15T23:09:00.230833",
@@ -2306,7 +2433,10 @@
         "request_description": "הקמת מבנה לקונסרבטוריון הסדנה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2233.09,
+        "sqm_service": 100.13,
+        "sqm_mirpesot": 27.53
       }
     ],
     "scraped_at": "2026-04-15T23:11:19.203442",
@@ -2377,8 +2507,8 @@
         "status_date": "27/06/2019",
         "request_type": "חפירה ומילוי",
         "request_description": "הריסת בניין וגדרות קיימים, חפירה ודיפון עבור חניון תת קרקעי ,יציקת רצפה ראשונה.",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2446,7 +2576,9 @@
         "request_description": "הרחבת בניה וקירוי אלומניום לבריכות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 590.07,
+        "sqm_service": 21.16
       },
       {
         "file_number": "2022/0024.00",
@@ -2466,7 +2598,10 @@
         "request_description": "תוספת שטח עיקרי מכח 5% השלמת קומת הגג",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 232.93,
+        "sqm_service": 4.89,
+        "sqm_mirpesot": 159.23
       }
     ],
     "scraped_at": "2026-04-15T23:14:33.891824",
@@ -2487,8 +2622,8 @@
         "status_date": "23/11/2023",
         "request_type": "",
         "request_description": "תוספת בניה לבניין קיים לפי תב\"ע",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -2497,8 +2632,8 @@
         "status_date": "30/04/2020",
         "request_type": "",
         "request_description": "תוספת 2 קומות מעל בניין קיים (2 קומות וקומת חנייה)",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2522,7 +2657,10 @@
         "request_description": "קירוי חלק מרמפה לחניה תת קרקעית, ושינוי לקו בנין תת קרקעי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 626.96,
+        "sqm_service": 455.5,
+        "sqm_mirpesot": 29.62
       }
     ],
     "scraped_at": "2026-04-15T23:15:50.383276",
@@ -2590,8 +2728,8 @@
         "status_date": "28/05/2024",
         "request_type": "",
         "request_description": "בניית מבנה מגורים 116 יח''''ד, גן ילדים ומסחר",
-        "units": null,
-        "units_source": null,
+        "units": 232,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -2600,8 +2738,8 @@
         "status_date": "28/05/2024",
         "request_type": "",
         "request_description": "בניית מבנה מגורים 115 יח''''ד,2 גני ילדים ומסחר",
-        "units": null,
-        "units_source": null,
+        "units": 232,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2617,8 +2755,8 @@
         "status_date": "30/04/2019",
         "request_type": "",
         "request_description": "תוספת קומה לבניין קיים",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -2627,8 +2765,8 @@
         "status_date": "11/11/2025",
         "request_type": "",
         "request_description": "תוספת 2 קומות מעל 2 מבנים קיימים ע''''פ תוכנית 484170",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2677,8 +2815,8 @@
         "status_date": "22/08/2021",
         "request_type": "",
         "request_description": "חפירה דיפון ורצפה ראשונה, הריסת בניינים קיימים עבור פינוי בינוי למגורים ומסחר",
-        "units": null,
-        "units_source": null,
+        "units": 122,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2694,8 +2832,8 @@
         "status_date": "08/05/2023",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בניין מגורים חדש בן 5 קומות סה''כ 15 יח''ד בית צפפה",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2746,7 +2884,8 @@
         "request_description": "שימוש חורג מ\"אירועים באוהל שישמש את מוזיאון ארצות המקרא בלבד\" ל\"אירועים חיצונים\", תיק עסק מס' 1015565",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 287.58
       },
       {
         "file_number": "2025/0010.00",
@@ -2756,7 +2895,9 @@
         "request_description": "הקמת מבנה בית קפה, כולל מטבח . עמדת מידע, שירותים ציבוריים ומרחב מוגן",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 94.67,
+        "sqm_service": 229.09
       }
     ],
     "scraped_at": "2026-04-15T23:19:51.986900",
@@ -2821,8 +2962,8 @@
         "status_date": "24/02/2020",
         "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "תוספת מעלית דירתית בדירה 1, שינויים במרפסות, ותוספת יחידת דיור בקומה העליונה.",
-        "units": null,
-        "units_source": null,
+        "units": 19,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -2846,7 +2987,10 @@
         "request_description": "תוספת קומה,מרפסות והשלמות בניה בבנין מגורים ללא תוספת יח\"ד,הגבהת פיר מעלית קיים.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1099.63,
+        "sqm_service": 690.35,
+        "sqm_mirpesot": 57.65
       }
     ],
     "scraped_at": "2026-04-15T23:21:55.599904",
@@ -2880,7 +3024,10 @@
         "request_description": "הריסת מבנה קיים ובניית מלון",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1509.19,
+        "sqm_service": 1360.87,
+        "sqm_mirpesot": 393.06
       }
     ],
     "scraped_at": "2026-04-15T23:22:42.629601",
@@ -2897,7 +3044,9 @@
         "request_description": "שינוי ותוספת שטחים להיתר קיים 2013/0657.01",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 8756.32,
+        "sqm_service": 3216.81
       },
       {
         "file_number": "2020/0399.00",
@@ -2907,7 +3056,10 @@
         "request_description": "תוספת בניה, ממדי''''ם, מרפסות ומחסנים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 921.93,
+        "sqm_service": 73.62,
+        "sqm_mirpesot": 126.59
       },
       {
         "file_number": "2019/0245.01",
@@ -2927,7 +3079,10 @@
         "request_description": "היתר בניה מנהרות, מרכז אנרגיה, מדרגות מילוט .",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 107.37,
+        "sqm_service": 580.66,
+        "sqm_mirpesot": 5.81
       },
       {
         "file_number": "2021/0174.00",
@@ -2937,7 +3092,10 @@
         "request_description": "היתר בניה חניון חנה וסע",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 77235.12,
+        "sqm_service": 5983.36,
+        "sqm_mirpesot": 5157.77
       },
       {
         "file_number": "2025/0012.00",
@@ -2947,7 +3105,9 @@
         "request_description": "הקמת תחנת משנה לחשמל 161/24 ק\"ו",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3960.31,
+        "sqm_service": 1072.42
       }
     ],
     "scraped_at": "2026-04-15T23:23:06.175479",
@@ -2978,8 +3138,8 @@
         "status_date": "11/11/2021",
         "request_type": "",
         "request_description": "בקשה להיתר הריסה, חפירה דיפון ורצפה ראשונה עבור 2 בניינים עם חניון אחד משותף",
-        "units": null,
-        "units_source": null,
+        "units": 68,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -2995,8 +3155,8 @@
         "status_date": "20/06/2023",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת קומה",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3012,8 +3172,8 @@
         "status_date": "23/04/2025",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בניין חדש בן 8 קומות עם 23 יח''ד, ו-2 קומות חניון כולל מבנה קיים לשימור",
-        "units": null,
-        "units_source": null,
+        "units": 24,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3058,7 +3218,9 @@
         "request_description": "מרכז טניס הכולל מגרשי ספורט שימושים תומכים ומסחר.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 7184.74,
+        "sqm_service": 2201.09
       },
       {
         "file_number": "2022/0246.00",
@@ -3095,7 +3257,9 @@
         "request_description": "הרחבת יח\"ד קיימות ברחוב זרובבל 8 עפ\"י תב\"ע",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 629.34,
+        "sqm_service": 96.33
       }
     ],
     "scraped_at": "2026-04-15T23:25:42.195846",
@@ -3110,8 +3274,8 @@
         "status_date": "21/06/2023",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "בנין מוגרים לפי תמ\"א 38 -2 הריסה ובניה",
-        "units": null,
-        "units_source": null,
+        "units": 16,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3180,8 +3344,8 @@
         "status_date": "10/11/2022",
         "request_type": "",
         "request_description": "תוספת בניה / הרחבה לבניין קיים",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3233,8 +3397,8 @@
         "status_date": "12/04/2026",
         "request_type": "",
         "request_description": "הקמת בנין למשרדים בן 20 קומות",
-        "units": null,
-        "units_source": null,
+        "units": 298,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3267,8 +3431,8 @@
         "status_date": "07/07/2024",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בניין מגורים בן 5 קומות סה''כ 9 יח''ד בית צפפה",
-        "units": null,
-        "units_source": null,
+        "units": 9,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3317,8 +3481,8 @@
         "status_date": "23/01/2024",
         "request_type": "",
         "request_description": "תוספת בניה\\הרחבה לבנין קיים, בניית מחסנים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3342,7 +3506,8 @@
         "request_description": "הקמת 4 קומות מרתפי חניה,עבור פרוייקט מסחר ומשרדים.המשך להיתר חפירה ודיפון 112931",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 30515.03
       },
       {
         "file_number": "2017/0588.03",
@@ -3352,7 +3517,10 @@
         "request_description": "הקמת מבנה משרדים ומסחר 5 קומות מסד וקומה חלקית לשימוש ציבורי(2 קומות תחתונות מסחר ומעליהן 3 קומות משרדים וקומה חלקית לשימוש ציבורי)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 12051.41,
+        "sqm_service": 4981.45,
+        "sqm_mirpesot": 767.35
       },
       {
         "file_number": "2017/0588.04",
@@ -3362,7 +3530,10 @@
         "request_description": "הקמת מבנה משרדים בן 14 קומות. בקשת המשך לבקשות - 2017/0588.02, 2017/0588.03.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 19289.21,
+        "sqm_service": 4009.81,
+        "sqm_mirpesot": 1033.5
       },
       {
         "file_number": "2017/0588.05",
@@ -3372,7 +3543,10 @@
         "request_description": "בקשת שינויים לבקשות  מס' 2017/0588.02, 2017/0588.03",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 19629.87,
+        "sqm_service": 35458.69,
+        "sqm_mirpesot": 715.93
       },
       {
         "file_number": "2017/0588.06",
@@ -3443,7 +3617,9 @@
         "request_description": "‏: ‏",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 607.5,
+        "sqm_service": 28.15
       }
     ],
     "scraped_at": "2026-04-15T23:31:32.699801",
@@ -3489,7 +3665,8 @@
         "request_description": "בניית 2 קומות חניון זמני על חניון קיים בחלק הדרומי של הקניון",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 17367.78
       },
       {
         "file_number": "2023/0284.00",
@@ -3499,7 +3676,8 @@
         "request_description": "הקמת 4 קומות מרתפי חניה, הכולל חדרי מדרגות ויציאה במפלס הקרקע.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 96369.35
       }
     ],
     "scraped_at": "2026-04-15T23:32:49.315561",
@@ -3533,7 +3711,9 @@
         "request_description": "בקשה לתוספת שטחים עיקריים בקומת המרתף",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 410.3,
+        "sqm_service": 37.85
       },
       {
         "file_number": "1973/0773.03",
@@ -3543,7 +3723,10 @@
         "request_description": "תוספת בניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 452.94,
+        "sqm_service": 82.45,
+        "sqm_mirpesot": 56.54
       }
     ],
     "scraped_at": "2026-04-15T23:33:36.366329",
@@ -3564,9 +3747,12 @@
         "status_date": "17/05/2023",
         "request_type": "תוספת יח\"ד באמצעות תוספת בניה, תוספת בניה על גג בניין מגורים",
         "request_description": "תוספת יחידת דיור חדשה לבניין קיים בקומה נוספת",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 232.96,
+        "sqm_service": 75.12,
+        "sqm_mirpesot": 69.53
       }
     ],
     "scraped_at": "2026-04-15T23:34:23.744121",
@@ -3591,8 +3777,8 @@
         "status_date": "19/11/2025",
         "request_type": "",
         "request_description": "היתר הריסה, חפירה , דיפון וביסוס",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -3608,9 +3794,12 @@
         "status_date": "19/08/2025",
         "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
         "request_description": "חיזוק במסגרת ניצול זכויות מאושרות לפי הוראות סעיף 13 לתמ\"א 38 ולפי הוראות 10038 ובהתאם לתכנית 613679",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 10,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 2300.16,
+        "sqm_service": 701.88,
+        "sqm_mirpesot": 242.48
       }
     ],
     "scraped_at": "2026-04-15T23:35:10.822240",
@@ -3654,8 +3843,8 @@
         "status_date": "05/01/2026",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה המיועד למגורים והקמתו מחדש לפי הוראות סעיף 14 א'' לתמ\"א 38 ולפי הוראות תכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 15,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3671,9 +3860,12 @@
         "status_date": "13/09/2023",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בניין מגורים חדש בן 5 קומות,סה''כ  5 יח''ד, בית צפפה, ירושלים",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 5,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 706.9,
+        "sqm_service": 390.95,
+        "sqm_mirpesot": 8.35
       }
     ],
     "scraped_at": "2026-04-15T23:36:59.995187",
@@ -3706,7 +3898,10 @@
         "request_description": "שינויים לתוכנית תמ\"א 38 - שינוי בלוביים, תוספת מרפסות והרחבת פתחים.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3007.88,
+        "sqm_service": 983.99,
+        "sqm_mirpesot": 696.37
       },
       {
         "file_number": "2024/0107.00",
@@ -3714,8 +3909,8 @@
         "status_date": "25/09/2025",
         "request_type": "",
         "request_description": "חיזוק והרחבת יח\"ד לפי תמ\"א 38 ותוספת שתים וחצי קומות.",
-        "units": null,
-        "units_source": null,
+        "units": 30,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3741,8 +3936,8 @@
         "status_date": "02/09/2025",
         "request_type": "",
         "request_description": "הקמת שלושה מגדלי מגורים בני 29 קומות מעל קומת מסחר ומבני ציבור ו5 מרתפי חניה ועבודות פיתוח",
-        "units": null,
-        "units_source": null,
+        "units": 545,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3797,9 +3992,12 @@
         "status_date": "12/09/2023",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בנין חדש בשני אגפים - אגף מגורים בן 9 קומות ואגף מלון בן 4 קומות מעל ק.הקרקע. ק.הקרקע וק. הקרקע המונמכת כוללות פונקציות של מסחר, מלונאות ומבנה ציבור. בנוסף 4 קומות מרתף חניה.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 62,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 9717.78,
+        "sqm_service": 14630.16,
+        "sqm_mirpesot": 1588.67
       }
     ],
     "scraped_at": "2026-04-15T23:39:18.396229",
@@ -3872,9 +4070,12 @@
         "status_date": "01/07/2024",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "‏ : ‏",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 24,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 2247.63,
+        "sqm_service": 1298.61,
+        "sqm_mirpesot": 79.56
       }
     ],
     "scraped_at": "2026-04-15T23:41:46.236912",
@@ -3889,8 +4090,8 @@
         "status_date": "26/05/2024",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "הקמת מבנה חדש למגורים ומסחר (בקומת הקרקע) בן ארבע קומות מעל שלוש קומות חניה",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -3930,7 +4131,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0308.00",
@@ -3940,7 +4144,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0346.00",
@@ -3950,7 +4157,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0347.00",
@@ -3960,7 +4170,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       }
     ],
     "scraped_at": "2026-04-15T23:43:02.980260",
@@ -3985,8 +4198,8 @@
         "status_date": "19/06/2022",
         "request_type": "",
         "request_description": "חפירה",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -4019,8 +4232,8 @@
         "status_date": "14/09/2025",
         "request_type": "עבודות הריסה, חפירה ומילוי",
         "request_description": "הריסת מבנה קיים במגרש, חפירה ודיפון למתחם התחנה הראשונה J-MSC מגרש 3A עבור מגורים ומסחר",
-        "units": null,
-        "units_source": null,
+        "units": 64,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -4054,7 +4267,9 @@
         "request_description": "מרכז טניס הכולל מגרשי ספורט שימושים תומכים ומסחר.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 7184.74,
+        "sqm_service": 2201.09
       }
     ],
     "scraped_at": "2026-04-15T23:44:51.836497",
@@ -4150,8 +4365,8 @@
         "status_date": "24/07/2022",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "תוספת בנייה, תוספת יח\"ד, בניית מרפסת",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4192,7 +4407,10 @@
         "request_description": "תוספת 2-3 קומות מסד, שינוים ב-3 בנינים מאושרים, שימוש בקומות תת קרקעיות לחניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 24232,
+        "sqm_service": 26201,
+        "sqm_mirpesot": 492.86
       },
       {
         "file_number": "2008/0632.09",
@@ -4202,7 +4420,10 @@
         "request_description": "בניית מגדל משרדים A בן 13 קומות מעל קומות מסד קיימות בהתאם לתוכנית 673897. ושימוש בקומות חניה קיימות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 39789.65,
+        "sqm_service": 48988.57,
+        "sqm_mirpesot": 4262.15
       }
     ],
     "scraped_at": "2026-04-15T23:48:50.715076",
@@ -4283,7 +4504,8 @@
         "request_description": "הגשת חפירה ודיפון לצורך הקמת 2 מגדלים לתעשיות עתירות ידע על מסד מסחרי ומרתפים, מתחם גט\"י",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 33624.22
       }
     ],
     "scraped_at": "2026-04-15T23:51:24.214035",
@@ -4298,9 +4520,11 @@
         "status_date": "02/05/2024",
         "request_type": "",
         "request_description": "תוספת בנייה לבניין קיים בשכונת בית צפפא, ירושלים.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 3,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 590.34,
+        "sqm_service": 52.81
       }
     ],
     "scraped_at": "2026-04-15T23:51:47.710286",
@@ -4317,7 +4541,10 @@
         "request_description": "‏ : ‏",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 454.7,
+        "sqm_service": 232.72,
+        "sqm_mirpesot": 151.89
       }
     ],
     "scraped_at": "2026-04-15T23:52:11.220732",
@@ -4355,8 +4582,8 @@
         "status_date": "03/04/2024",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, בניית מרפסת",
         "request_description": "‏: ‏",
-        "units": null,
-        "units_source": null,
+        "units": 5,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4382,8 +4609,8 @@
         "status_date": "30/10/2022",
         "request_type": "",
         "request_description": "פיצול היתר לבניית חדר טרנספורמציה בשלב א'",
-        "units": null,
-        "units_source": null,
+        "units": 31,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4416,8 +4643,8 @@
         "status_date": "19/06/2022",
         "request_type": "",
         "request_description": "תוספת בניה וקומת חניה תחתונה עם מחסנים ושתי קומות בבניין ברח אפרתה 23  י-ם",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -4426,8 +4653,8 @@
         "status_date": "24/12/2023",
         "request_type": "",
         "request_description": "היתר חפירה עבור תוספות בניה בבניין ברח' אפרתה 23, ירושלים.",
-        "units": null,
-        "units_source": null,
+        "units": 12,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -4436,8 +4663,8 @@
         "status_date": "21/02/2024",
         "request_type": "",
         "request_description": "תכנית שינוים מהיתר מס' 1999/0699.04",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4453,8 +4680,8 @@
         "status_date": "07/08/2025",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "בניין חדש - מגורים+מסחר+בניין ציבור סה''''כ 29 יחידת דיור",
-        "units": null,
-        "units_source": null,
+        "units": 29,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4476,9 +4703,11 @@
         "status_date": "26/03/2026",
         "request_type": "התקנת מעלית חיצונית, תוספת בניה / הרחבה לבניין קיים",
         "request_description": "‏: ‏",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 467.96,
+        "sqm_service": 59.32
       }
     ],
     "scraped_at": "2026-04-15T23:55:43.541005",
@@ -4566,8 +4795,8 @@
         "status_date": "05/08/2025",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, עבודות הריסה, תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "‏: ‏",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4642,7 +4871,10 @@
         "request_description": "תוכנית שינויים לדירה 1",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 214.46,
+        "sqm_service": 29.74,
+        "sqm_mirpesot": 2.8
       }
     ],
     "scraped_at": "2026-04-15T23:59:45.105463",
@@ -4771,8 +5003,8 @@
         "status_date": "24/07/2022",
         "request_type": "",
         "request_description": "הריסת בנין וקירות קיימים, חפירה ,דיפון ורצפה ראשונה עבור חניון תת קרקעי.",
-        "units": null,
-        "units_source": null,
+        "units": 43,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4790,7 +5022,8 @@
         "request_description": "הוספת קולונדה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 259.83
       },
       {
         "file_number": "2017/0315.08",
@@ -4800,7 +5033,8 @@
         "request_description": "הוספת קולונדה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 34.5
       }
     ],
     "scraped_at": "2026-04-16T00:04:02.313176",
@@ -4827,8 +5061,8 @@
         "status_date": "25/01/2026",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "תוספת 2 קומות על קרקעיות ו-2 קומות תת קרקעיות לבניין מאושר ע''''פי היתר 0.332/2017",
-        "units": null,
-        "units_source": null,
+        "units": 34,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -4940,7 +5174,10 @@
         "request_description": "שינויים והרחבת יח\"ד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 991.96,
+        "sqm_service": 857.14,
+        "sqm_mirpesot": 75.59
       }
     ],
     "scraped_at": "2026-04-16T00:09:37.343216",
@@ -4969,7 +5206,8 @@
         "request_description": "תוספת בניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 51.23
       }
     ],
     "scraped_at": "2026-04-16T00:10:39.558409",
@@ -4990,8 +5228,8 @@
         "status_date": "29/09/2025",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "‎ :‎",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5019,8 +5257,8 @@
         "status_date": "27/12/2022",
         "request_type": "",
         "request_description": "במבנה קיים, תוספת והרחבת מרפסות,שינויים פנים דירתים ושינויים נקודתיים במעטפת",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5054,9 +5292,11 @@
         "status_date": "20/06/2023",
         "request_type": "בנית מחסן/מחסנים, בניית גדר גבוהה מ 1.5 מטר, בניה חדשה / בניין חדש, בניית מרפסת, פרגולה, ממ\"ד",
         "request_description": "שתי בנינים חדשים ו 3 קומות למרתף סהייכ 38",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 38,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 3790.43,
+        "sqm_service": 3679.2
       }
     ],
     "scraped_at": "2026-04-16T00:13:46.098558",
@@ -5103,7 +5343,10 @@
         "request_description": "תוכנית שינויים להיתר 2016/0084.01 הכולל שינוי בקומות ת\"ק מחניון למסחר ומלונואות כולל בקשה לשימוש דו- תכליתי בממ\"מ. סה\"כ 21 חדרי מלון",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1083.99,
+        "sqm_service": 754.8,
+        "sqm_mirpesot": 66.43
       }
     ],
     "scraped_at": "2026-04-16T00:16:00.138870",
@@ -5236,7 +5479,10 @@
         "request_description": "בניית עמודת ממ\"דים למבנה מגורים קיים בן ארבע קומות ותוספת בניה בקומת קרקע,",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 529.61,
+        "sqm_service": 64.71,
+        "sqm_mirpesot": 104.9
       },
       {
         "file_number": "1997/0115.04",
@@ -5246,7 +5492,10 @@
         "request_description": "תוספת בניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 202.77,
+        "sqm_service": 14.51,
+        "sqm_mirpesot": 94
       }
     ],
     "scraped_at": "2026-04-16T00:20:23.345138",
@@ -5267,9 +5516,12 @@
         "status_date": "15/01/2026",
         "request_type": "",
         "request_description": "שינויים לבקשה 2016/846 הקמת בית מגורים וחפירת מרתפי חנייה ומחסנים.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 11,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 997.49,
+        "sqm_service": 1014.64,
+        "sqm_mirpesot": 119.58
       }
     ],
     "scraped_at": "2026-04-16T00:21:01.715899",
@@ -5296,9 +5548,12 @@
         "status_date": "07/01/2024",
         "request_type": "",
         "request_description": "תוספת על בניין ק''''ם סהייכ 4 קומות ו 3 יח''''ד",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 2,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 507.37,
+        "sqm_service": 109.45,
+        "sqm_mirpesot": 10.23
       },
       {
         "file_number": "2023/0270.00",
@@ -5306,8 +5561,8 @@
         "status_date": "03/09/2025",
         "request_type": "",
         "request_description": "בניין חדש בן 5 קומות ושתי קומות למרתף סהייכ 10 יח''ד",
-        "units": null,
-        "units_source": null,
+        "units": 10,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -5316,8 +5571,8 @@
         "status_date": "03/09/2025",
         "request_type": "",
         "request_description": "תוספת על בניין קיים סהייכ 4 קומות ו 3 יחייד",
-        "units": null,
-        "units_source": null,
+        "units": 3,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5432,8 +5687,8 @@
         "status_date": "24/02/2026",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד",
         "request_description": "‏: ‏",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5503,7 +5758,9 @@
         "request_description": "‏: ‏",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 259.29,
+        "sqm_mirpesot": 47.61
       }
     ],
     "scraped_at": "2026-04-16T00:28:16.850714",
@@ -5530,7 +5787,10 @@
         "request_description": "הקמת שני גני ילדים זמניים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 242.28,
+        "sqm_service": 31.38,
+        "sqm_mirpesot": 360.7
       }
     ],
     "scraped_at": "2026-04-16T00:28:40.362741",
@@ -5622,8 +5882,8 @@
         "status_date": "25/12/2025",
         "request_type": "עבודות הריסה, בניית קיר תומך/מגן, חפירה ומילוי",
         "request_description": "בקשה להיתר הריסה, חפירה דיפון וביסוס,  להקמת מרתפי חניה עבור מתחם מגורים הכולל שטחי ציבור ומסחר במסגרת פרויקט התחדשות עירונית",
-        "units": null,
-        "units_source": null,
+        "units": 406,
+        "units_source": "shtachim_tab",
         "filtered": false
       }
     ],
@@ -5749,8 +6009,8 @@
         "status_date": "03/03/2024",
         "request_type": "חפירה ומילוי",
         "request_description": "חפירה ודיפון בשטח המגרש עבור 22 יחי\"ד",
-        "units": null,
-        "units_source": null,
+        "units": 22,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5778,8 +6038,8 @@
         "status_date": "01/03/2026",
         "request_type": "",
         "request_description": "הכשרת בינוי קיים בהתאם לתכנית",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -5788,8 +6048,8 @@
         "status_date": "17/02/2026",
         "request_type": "",
         "request_description": "שימוש חורג ע\"פ תב\"ע  ממסחר למגורים ותוספת ממ\"ד",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5859,8 +6119,8 @@
         "status_date": "03/12/2025",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "‎.‎",
-        "units": null,
-        "units_source": null,
+        "units": 23,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -5936,9 +6196,12 @@
         "status_date": "19/11/2025",
         "request_type": "",
         "request_description": "הקמת שני מגדלי מגורים חדשים מעל קומות מסחריות מבנה ציבור וחניונים במסגרת פינוי בינוי",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 418,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 38448.01,
+        "sqm_service": 43083.5,
+        "sqm_mirpesot": 7888.57
       }
     ],
     "scraped_at": "2026-04-16T00:43:32.315624",
@@ -5953,9 +6216,12 @@
         "status_date": "01/12/2025",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "תוספת דירה בשכונת שרפאת",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 545.4,
+        "sqm_service": 438.01,
+        "sqm_mirpesot": 196.71
       }
     ],
     "scraped_at": "2026-04-16T00:43:56.018817",
@@ -6006,8 +6272,8 @@
         "status_date": "26/03/2026",
         "request_type": "עבודות הריסה, חפירה ומילוי",
         "request_description": "בקשה להיתר הריסה ודיפון לצורך פרויקט פינוי בינוי, הכוללת חפירת חניון תת קרקעי בן 5 קומות מלאות ו־2 קומות חלקיות, עבור בניין בן 9 קומות.",
-        "units": null,
-        "units_source": null,
+        "units": 35,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -6025,7 +6291,8 @@
         "request_description": "שימוש חורג מתעשייה לאולם אירועים בתיק עסק מס 8040610",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 937.24
       }
     ],
     "scraped_at": "2026-04-16T00:46:31.513735",
@@ -6060,7 +6327,10 @@
         "request_description": "תוספת 6 קומות משרדים ו-2 קומות גג מעל בניין קיים בן 18 קומות משרדים ו-2 קומות גג,שינוים לבנין קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 27772.35,
+        "sqm_service": 5649.33,
+        "sqm_mirpesot": 1219.75
       }
     ],
     "scraped_at": "2026-04-16T00:47:58.334986",
@@ -6122,9 +6392,12 @@
         "status_date": "25/08/2025",
         "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "‏: ‏",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 71.07,
+        "sqm_service": 30.84,
+        "sqm_mirpesot": 33.91
       }
     ],
     "scraped_at": "2026-04-16T00:50:18.538126",
@@ -6145,9 +6418,11 @@
         "status_date": "12/01/1987",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 10,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 1588.16,
+        "sqm_service": 409.69
       },
       {
         "file_number": "1985/0509.09",
@@ -6157,7 +6432,10 @@
         "request_description": "היתר תואם לתב\"ע 101-0999185",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 747.96,
+        "sqm_service": 310.49,
+        "sqm_mirpesot": 18.98
       }
     ],
     "scraped_at": "2026-04-16T00:50:57.043972",
@@ -6204,7 +6482,9 @@
         "request_description": "‏: ‏",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 413.31,
+        "sqm_service": 13.13
       }
     ],
     "scraped_at": "2026-04-16T00:53:02.741603",
@@ -6563,7 +6843,10 @@
         "request_description": "חניה תת קרקעית, תוספת יח\"ד חדשה בקומת מרתף, תוספות לקומות בנויות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1144.86,
+        "sqm_service": 725.95,
+        "sqm_mirpesot": 57.99
       }
     ],
     "scraped_at": "2026-04-16T01:07:49.028182",
@@ -6580,7 +6863,10 @@
         "request_description": "בקשה לתוספת בניה ותוספת קומה באמצעות הרחבת הדירה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 411.2,
+        "sqm_service": 81.86,
+        "sqm_mirpesot": 49.69
       }
     ],
     "scraped_at": "2026-04-16T01:08:12.735323",
@@ -6788,7 +7074,8 @@
         "request_description": "‏  ‏",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 192.37
       }
     ],
     "scraped_at": "2026-04-16T01:16:50.609946",
@@ -6805,7 +7092,10 @@
         "request_description": "תוספת לבניין קיים לפי תכנית 60434",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 388.18,
+        "sqm_service": 52.97,
+        "sqm_mirpesot": 15.45
       },
       {
         "file_number": "2013/0364.01",
@@ -6825,7 +7115,10 @@
         "request_description": "תוספת חדר משאבות ללא תוספת שטחים, מס' תיק קודם: 13/364.1",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 198.08,
+        "sqm_service": 18.53,
+        "sqm_mirpesot": 27.91
       }
     ],
     "scraped_at": "2026-04-16T01:17:14.030453",
@@ -6860,8 +7153,8 @@
         "status_date": "17/03/2021",
         "request_type": "",
         "request_description": "תכנית שינויים לתמ''א 38, תוספת שטח לפי זכויות תכנית מתאר רחביה 9988 + צובר גז",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -6870,8 +7163,8 @@
         "status_date": "26/03/2023",
         "request_type": "",
         "request_description": "תכנית שינויים לתמ''א 38 ברחוב אבן שפרוט 19, רחביה",
-        "units": null,
-        "units_source": null,
+        "units": 14,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -6916,7 +7209,10 @@
         "request_description": "תכנית שינויים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 315.25,
+        "sqm_service": 28.61,
+        "sqm_mirpesot": 120.8
       }
     ],
     "scraped_at": "2026-04-16T01:18:24.293707",
@@ -6941,8 +7237,8 @@
         "status_date": "05/01/2021",
         "request_type": "",
         "request_description": "שינוי שימושים בין שטחי שרות ללא תוספת שטחי בניה",
-        "units": null,
-        "units_source": null,
+        "units": 61,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -6985,8 +7281,8 @@
         "status_date": "17/10/2018",
         "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "הוספת שתי קומות לבניין קיים",
-        "units": null,
-        "units_source": null,
+        "units": 11,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -6997,7 +7293,10 @@
         "request_description": "תוספת מרפסות זיזיות, חניות, מיקום פח אשפה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1017.14,
+        "sqm_service": 359.02,
+        "sqm_mirpesot": 8.62
       }
     ],
     "scraped_at": "2026-04-16T01:19:34.499414",
@@ -7024,9 +7323,11 @@
         "status_date": "31/03/2008",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה בשני מפלסים לדירה קיימת.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 8,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 137.04,
+        "sqm_mirpesot": 60
       },
       {
         "file_number": "1981/0084.03",
@@ -7034,9 +7335,10 @@
         "status_date": "29/10/2008",
         "request_type": "תוספת בניה לדירות",
         "request_description": "תוספת מפלס שני לדירה קיימת בקומה א",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 142.98
       },
       {
         "file_number": "1981/0916.03",
@@ -7054,9 +7356,11 @@
         "status_date": "01/08/2004",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "הרחבת דירה בקומה שניה ותוספת קומה חלקית להרחבת דיור.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 8,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 122.92,
+        "sqm_mirpesot": 17.04
       },
       {
         "file_number": "1994/0417.00",
@@ -7064,9 +7368,10 @@
         "status_date": "04/08/1994",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה לדירה בקומת הקרקע",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 6
       },
       {
         "file_number": "1996/0938.01",
@@ -7074,9 +7379,11 @@
         "status_date": "16/06/1998",
         "request_type": "תוספת בניה לדירות",
         "request_description": "תוספת קומה להרחבת דירה קיימת.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 144.94,
+        "sqm_mirpesot": 23.5
       },
       {
         "file_number": "2016/0245.00",
@@ -7086,7 +7393,10 @@
         "request_description": "תוספת בניה ע\"פ תב\"ע 4627",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 153.12,
+        "sqm_service": 16.13,
+        "sqm_mirpesot": 10.7
       }
     ],
     "scraped_at": "2026-04-16T01:20:45.876799",
@@ -7111,9 +7421,10 @@
         "status_date": "13/10/1999",
         "request_type": "תוספת בניה לדירות",
         "request_description": "הרחבת דירה בקומה א'.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 139.03
       },
       {
         "file_number": "1999/0415.02",
@@ -7121,8 +7432,8 @@
         "status_date": "09/11/2006",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה בקומה א' בחלקה מעל עמודים,תוספת קומה חלקית ופרגולות",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7131,9 +7442,11 @@
         "status_date": "09/01/2001",
         "request_type": "תוספת בניה לדירות",
         "request_description": "תוספת בניה לדירה בקומה א",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 4,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 145,
+        "sqm_mirpesot": 29.6
       },
       {
         "file_number": "1979/0273.09",
@@ -7141,8 +7454,8 @@
         "status_date": "17/01/2018",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בנייה",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7151,8 +7464,8 @@
         "status_date": "18/03/2019",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7161,8 +7474,8 @@
         "status_date": "22/01/2018",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה.",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7173,7 +7486,9 @@
         "request_description": "תוספת בנייה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 144.94,
+        "sqm_service": 36.19
       },
       {
         "file_number": "1989/0416.07",
@@ -7181,8 +7496,8 @@
         "status_date": "27/06/2018",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בנייה והריסת מבנה קיים",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7191,8 +7506,8 @@
         "status_date": "09/02/2023",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת בניה מכח זכויות לפי תב\"ע+השלמת דירת גג חלק יחסי",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7203,7 +7518,9 @@
         "request_description": "הרחבת דירה בקומת קרקע, בניית ממ\"ד ובניית מחסן תת\"ק",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 134.25,
+        "sqm_service": 32.12
       },
       {
         "file_number": "1979/0273.12",
@@ -7238,8 +7555,8 @@
         "status_date": "17/10/2018",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "תוספת יח\"ד בקומת החנייה, הפיכת שטחי שרות לשטח עיקרי, ותוספת קומה.",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7292,9 +7609,11 @@
         "status_date": "10/07/2022",
         "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
         "request_description": "‏ ‏",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 2,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 70.38,
+        "sqm_service": 11.96
       }
     ],
     "scraped_at": "2026-04-16T01:22:19.935911",
@@ -7319,8 +7638,8 @@
         "status_date": "25/01/2026",
         "request_type": "",
         "request_description": "תוספת 2 קומות על קרקעיות ו-2 קומות תת קרקעיות לבניין מאושר ע''''פי היתר 0.332/2017",
-        "units": null,
-        "units_source": null,
+        "units": 34,
+        "units_source": "detail_page",
         "filtered": false
       }
     ],
@@ -7336,8 +7655,8 @@
         "status_date": "28/08/2024",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "הפיכת מחסנים ליחידת דיור, פתיחת שטח לאטימה",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7348,7 +7667,9 @@
         "request_description": "בקשה לתוספת ממד, פרגולה, מחסן, תוספת שטח עיקרי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 125.48,
+        "sqm_service": 130.3
       }
     ],
     "scraped_at": "2026-04-16T01:23:06.927974",
@@ -7365,7 +7686,9 @@
         "request_description": "קומה חניה תת קרקעית. קומת קרקע מסחר ואחסנה. קומת גלריה משרדים ואחסנה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 236.82,
+        "sqm_service": 1112.76
       },
       {
         "file_number": "2017/0711.00",
@@ -7375,7 +7698,8 @@
         "request_description": "הצבת מנ\"ד וקונטנרים לשם מכירה ואחסנת עצים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 181.73
       }
     ],
     "scraped_at": "2026-04-16T01:23:30.583584",
@@ -7421,7 +7745,10 @@
         "request_description": "הקמת מבנה חדש עבור משרדיםּ לשכת רווחה רכז הכשרה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 18846.11,
+        "sqm_service": 27186.12,
+        "sqm_mirpesot": 181.27
       }
     ],
     "scraped_at": "2026-04-16T01:24:47.133606",
@@ -7463,9 +7790,10 @@
         "status_date": "16/03/2017",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": ".0יית בנין חדש מגורים ומסחר",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 16,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 1239.53
       },
       {
         "file_number": "2018/0184.00",
@@ -7485,7 +7813,9 @@
         "request_description": "תוספת 6 כיתות ספח במבנים יבילים לבית ספר שחרית",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 421.14,
+        "sqm_service": 105.76
       }
     ],
     "scraped_at": "2026-04-16T01:25:34.298119",
@@ -7508,7 +7838,8 @@
         "request_description": "שימוש חורג ממגורים לבית מדרש",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 229.82
       },
       {
         "file_number": "2005/0865.01",
@@ -7518,7 +7849,9 @@
         "request_description": "תוספת בניה ע\"פ מתאר ותוספת ממ\"ד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 886.48,
+        "sqm_service": 128.57
       },
       {
         "file_number": "2013/0026.04",
@@ -7528,7 +7861,8 @@
         "request_description": "הקמת חדר שנאים ברחוב הרצוג",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 26.78
       },
       {
         "file_number": "2017/0393.00",
@@ -7538,7 +7872,8 @@
         "request_description": "עבודות הכנה להקמת קו רכבת קלה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 205.05
       },
       {
         "file_number": "2017/0396.00",
@@ -7548,7 +7883,8 @@
         "request_description": "עבודות הכנה להקמת מסילת רכבת הקלה שלוחת גבעת מרדכי כולל גשר וחדר מיישרים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 200
       },
       {
         "file_number": "2017/0625.00",
@@ -7578,7 +7914,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו ירוק - קטע דב יוסף דרום",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 531.68
       },
       {
         "file_number": "2018/0026.00",
@@ -7588,7 +7925,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה כולל חדר מיישרים - קו הירוק  -  קטע דב יוסף צפון   (22)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 321.1
       },
       {
         "file_number": "2018/0032.00",
@@ -7618,7 +7956,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו ירוק - קטע גילה דרום (12)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 231.13
       },
       {
         "file_number": "2018/0183.00",
@@ -7626,8 +7965,8 @@
         "status_date": "09/02/2023",
         "request_type": "תוספת בניה / הרחבה לבניין קיים",
         "request_description": "הרחבת יח\"ד קיימת",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7638,7 +7977,9 @@
         "request_description": "תוספת חדר ומרפסת מקורה בקומת כניסה ובקומה ראשונה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 182.66,
+        "sqm_service": 35.01
       },
       {
         "file_number": "2018/0276.00",
@@ -7648,7 +7989,10 @@
         "request_description": "הקמת מבנה חדש עבור משרדיםּ לשכת רווחה רכז הכשרה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 18846.11,
+        "sqm_service": 27186.12,
+        "sqm_mirpesot": 181.27
       },
       {
         "file_number": "2008/0632.05",
@@ -7666,8 +8010,8 @@
         "status_date": "21/11/2019",
         "request_type": "ממ\"ד",
         "request_description": "תוספת ממ\"ד לדירה קיימת",
-        "units": null,
-        "units_source": null,
+        "units": 6,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7678,7 +8022,10 @@
         "request_description": "בניין שיקום הדסה הר הצופים - שלב א' - 3 קומות ת\"ק",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2135.13,
+        "sqm_service": 6392.89,
+        "floors": 95
       },
       {
         "file_number": "2018/0682.00",
@@ -7688,7 +8035,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו ירוק - קטע גבעת רם (28)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 233.07
       },
       {
         "file_number": "2013/0263.01",
@@ -7696,9 +8044,12 @@
         "status_date": "20/12/2018",
         "request_type": "",
         "request_description": "תוספת לדירת גג קיימת, תוספת יח\"ד חדשה על הגג, תוספת מעלית ושינוים כהכנה לטופס 4.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 436.33,
+        "sqm_service": 31.54,
+        "sqm_mirpesot": 23.25
       },
       {
         "file_number": "2018/0832.00",
@@ -7708,7 +8059,10 @@
         "request_description": "ממ\"ד ומרפסת לדירה מס' 3",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 70.01,
+        "sqm_service": 39.11,
+        "sqm_mirpesot": 14
       },
       {
         "file_number": "2018/0839.00",
@@ -7748,7 +8102,9 @@
         "request_description": "הקמת בנין בית כנסת חדש",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 268.24,
+        "sqm_service": 27.49
       },
       {
         "file_number": "2019/0017.00",
@@ -7768,7 +8124,8 @@
         "request_description": "שימוש חורג בבניין מגורים ביח\"ד אחת לגן ילדים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 112.89
       },
       {
         "file_number": "2019/0080.00",
@@ -7778,7 +8135,9 @@
         "request_description": "חניון לאוטובוסים, מבנה נהגים ושירותים ציבוריים, עבודות פיתוח והסדרת תנועה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 87.63,
+        "sqm_service": 247.43
       },
       {
         "file_number": "2019/0190.00",
@@ -7788,7 +8147,10 @@
         "request_description": "בניית תוספות בהתאם לתמ\"א 38 – חיזוק מבנה מפני רעידות אדמה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3865.38,
+        "sqm_service": 1976.83,
+        "sqm_mirpesot": 537.81
       },
       {
         "file_number": "2017/0358.01",
@@ -7798,7 +8160,10 @@
         "request_description": "תוספת בניה +מרפסת זיז+חדר מחוזק",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 85.2,
+        "sqm_service": 10.91,
+        "sqm_mirpesot": 14.43
       },
       {
         "file_number": "2019/0245.00",
@@ -7818,7 +8183,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו ירוק - קטע ירמיהו (35)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 202.41
       },
       {
         "file_number": "2019/0286.00",
@@ -7838,7 +8204,9 @@
         "request_description": "תוספת בניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 155.85,
+        "sqm_mirpesot": 11.16
       },
       {
         "file_number": "2019/0316.00",
@@ -7858,7 +8226,8 @@
         "request_description": "בקשה לתוספת שטח לחנות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 36.06
       },
       {
         "file_number": "2019/0428.00",
@@ -7876,8 +8245,8 @@
         "status_date": "13/04/2022",
         "request_type": "",
         "request_description": "תוספת 2.5 קומות מעל מבנה קיים בן 5 קומות הכוללות מגורים לפי תמ\"א 38/1\r\nלחיז",
-        "units": null,
-        "units_source": null,
+        "units": 44,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -7888,7 +8257,8 @@
         "request_description": "חניון ציבורי הכולל 5 מרתפי חניה מתחת לכיכר עירונית - סה\"כ 646 מקומות חניה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 18787
       },
       {
         "file_number": "2020/0255.00",
@@ -7898,7 +8268,9 @@
         "request_description": "תוספת בניה + ממד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 143.78,
+        "sqm_service": 24.98
       },
       {
         "file_number": "2020/0255.01",
@@ -7908,7 +8280,10 @@
         "request_description": "תוספת בנייה + ממ\"ד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 145,
+        "sqm_service": 25.54,
+        "sqm_mirpesot": 8.4
       },
       {
         "file_number": "2020/0335.00",
@@ -7928,7 +8303,8 @@
         "request_description": "הקמת חדר שנאים ברח' בר אילן",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 39.17
       },
       {
         "file_number": "2019/0062.01",
@@ -7938,7 +8314,8 @@
         "request_description": "שימוש חורג בבניין מגורים ביח\"ד אחת לגן ילדים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 112.89
       },
       {
         "file_number": "2019/0316.02",
@@ -7948,7 +8325,8 @@
         "request_description": "הקמת חדר שנאים ברח' ירמיהו- 'צפניה חדש' עבור חח\"י",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 32.97
       },
       {
         "file_number": "2020/0375.00",
@@ -8008,7 +8386,10 @@
         "request_description": "הרחבה לדירה + בניית מחסן+מרפסת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 175.43,
+        "sqm_service": 29.1,
+        "sqm_mirpesot": 11.5
       },
       {
         "file_number": "2020/0489.00",
@@ -8018,7 +8399,8 @@
         "request_description": "תכנון רחובות נורדאו/שרי ישראל/יפו, במסגרת הכנות לקו ירוק רק\"ל, כולל חדר שנאים RR",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 245.3
       },
       {
         "file_number": "2018/0026.01",
@@ -8046,8 +8428,8 @@
         "status_date": "24/12/2023",
         "request_type": "",
         "request_description": "תוספת בניה/ הרחבה לבנין קיים , פיתוח שטח וריצוף חצר",
-        "units": null,
-        "units_source": null,
+        "units": 72,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8068,7 +8450,8 @@
         "request_description": "תכנית אתר התארגנות ואחסון פתוח",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 240
       },
       {
         "file_number": "2020/0606.00",
@@ -8098,7 +8481,9 @@
         "request_description": "הקמת מבנה בית ספר על יסודי לבנות של החינוך החרדי, 24 כיתות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 5392.98,
+        "sqm_service": 1861.51
       },
       {
         "file_number": "2015/0844.02",
@@ -8108,7 +8493,10 @@
         "request_description": "תוספת בניה ומרפסת  + מחסן וממ\"ד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 110.87,
+        "sqm_service": 37.6,
+        "sqm_mirpesot": 8.71
       },
       {
         "file_number": "2006/0183.10",
@@ -8118,7 +8506,10 @@
         "request_description": "תוספת שטח מגורים למרתף, ותוספת מחסן",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 123.25,
+        "sqm_service": 24.88,
+        "sqm_mirpesot": 12.05
       },
       {
         "file_number": "2020/0124.01",
@@ -8128,7 +8519,10 @@
         "request_description": "הקמת מבנה משרדים של חברת גב ים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 43139.65,
+        "sqm_service": 46240.23,
+        "sqm_mirpesot": 7957.47
       },
       {
         "file_number": "2018/0032.03",
@@ -8138,7 +8532,9 @@
         "request_description": "בניין שיקום הדסה הר הצופים-תוספת בנייה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 13907.7,
+        "sqm_service": 10961.87
       },
       {
         "file_number": "2013/0054.01",
@@ -8148,7 +8544,9 @@
         "request_description": "תוספת בניה לפי תבע",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 94.3,
+        "sqm_service": 3.47
       },
       {
         "file_number": "2011/0795.03",
@@ -8158,7 +8556,10 @@
         "request_description": "שינויים והרחבת בי\"ס קיים \"בית מלכה\" מ-35 ל-39 כיתות ושידרוג האולם",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 4247.02,
+        "sqm_service": 980.12,
+        "sqm_mirpesot": 133.62
       },
       {
         "file_number": "2021/0205.00",
@@ -8198,7 +8599,10 @@
         "request_description": "מבנה חדש עבור ההסתדרות הציונית כולל שטחי ארכיב משרדים מסחר וחניון תת קרקעי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 24021.76,
+        "sqm_service": 17034.46,
+        "sqm_mirpesot": 6.5
       },
       {
         "file_number": "2016/0258.02",
@@ -8218,7 +8622,9 @@
         "request_description": "תוספת בניה בקומה 10 ו11",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 536.08,
+        "sqm_service": 121.29
       },
       {
         "file_number": "2018/0469.01",
@@ -8228,7 +8634,10 @@
         "request_description": "תוספת מרפסות בהתאם לתב\"ע,",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1291.56,
+        "sqm_service": 551.05,
+        "sqm_mirpesot": 158.39
       },
       {
         "file_number": "1999/0274.05",
@@ -8238,7 +8647,8 @@
         "request_description": "תוספת 2 כיתות גנ\"י יבילים (העתקה מת.ב.315/2015) על גג בי\"ס עמליה ת.ב.1999/274.1",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 187.34
       },
       {
         "file_number": "2008/0076.05",
@@ -8248,7 +8658,10 @@
         "request_description": "תוספת מעלית פנימית ועמודת ממ\"דים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 325.29,
+        "sqm_service": 48.29,
+        "sqm_mirpesot": 35.42
       },
       {
         "file_number": "1988/0584.08",
@@ -8258,7 +8671,10 @@
         "request_description": "תוספת בניה על הגג",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 195.52,
+        "sqm_service": 33.15,
+        "sqm_mirpesot": 15.92
       },
       {
         "file_number": "2008/0076.06",
@@ -8278,7 +8694,9 @@
         "request_description": "תוספת מרפסות לדירה מספר 8",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 117.27,
+        "sqm_mirpesot": 13.4
       },
       {
         "file_number": "2016/0258.03",
@@ -8286,8 +8704,8 @@
         "status_date": "07/02/2024",
         "request_type": "",
         "request_description": "הוספת מרפסות זיז",
-        "units": null,
-        "units_source": null,
+        "units": 32,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8298,7 +8716,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו כחול - מקטע תלפיות - רחוב בן דוסא ושצ\"פ (T2)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 209.09
       },
       {
         "file_number": "2022/0199.00",
@@ -8318,7 +8737,9 @@
         "request_description": "תוספת שטחים בקומה העליונה, שינויים לצורך שיפור נראות המבנה, שינויים פנימיים.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 9795.79,
+        "sqm_service": 7781.55
       },
       {
         "file_number": "1993/0632.12",
@@ -8328,7 +8749,10 @@
         "request_description": "תוספת לבנין קים, ממ''''ק",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2563.76,
+        "sqm_service": 465.38,
+        "sqm_mirpesot": 162.68
       },
       {
         "file_number": "2022/0251.00",
@@ -8338,7 +8762,10 @@
         "request_description": "מבנה בעל 4 קומות תעשייה ו5 קומות חניון תת קרקעי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3246.91,
+        "sqm_service": 11490.46,
+        "sqm_mirpesot": 378.38
       },
       {
         "file_number": "2011/1043.05",
@@ -8378,7 +8805,10 @@
         "request_description": "בקשה לבניית ממ\"דים , תוספת שטח עיקרי בהקלה, ומרפסת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 339.59,
+        "sqm_service": 43.2,
+        "sqm_mirpesot": 30.92
       },
       {
         "file_number": "2022/0438.00",
@@ -8386,9 +8816,12 @@
         "status_date": "30/11/2022",
         "request_type": "",
         "request_description": "הריסת מבנה קיים ובניית מבנה חדש בן 24 קומות בשימושים מעורבים מעל חניות ומחסנים",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 117,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 13164.79,
+        "sqm_service": 20887.47,
+        "sqm_mirpesot": 900.43
       },
       {
         "file_number": "2017/0739.01",
@@ -8398,7 +8831,9 @@
         "request_description": "שימוש חורג ממוגרים לקופ\"ח,הפיכת שטח אחסנה למרחב מוגן.ומחסן חדש המחליף את שבוטל",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 173.53,
+        "sqm_service": 252.03
       },
       {
         "file_number": "2022/0455.00",
@@ -8408,7 +8843,8 @@
         "request_description": "תוספת מקומות חניה בקרוסלות חניה אוטומטיות במגרש חניה ציבורי קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 203.55
       },
       {
         "file_number": "2022/0456.00",
@@ -8418,7 +8854,8 @@
         "request_description": "תוספת מקומות חניה בקרוסלות חניה אוטומטיות במגרש חניה ציבורי קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 71.92
       },
       {
         "file_number": "2022/0492.00",
@@ -8438,7 +8875,10 @@
         "request_description": "מבנה חדש עבור הביטוח הלאומי הכולל שטחי מסחר , משרדים וחניון תת קרקעי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 16145.47,
+        "sqm_service": 48044.06,
+        "sqm_mirpesot": 980.84
       },
       {
         "file_number": "1997/0541.04",
@@ -8448,7 +8888,8 @@
         "request_description": "שימוש חורג מתעשיה למעון יום לפעוטות ובי\"ס לחינוך מיוחד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 426.37
       },
       {
         "file_number": "2022/0357.02",
@@ -8468,7 +8909,8 @@
         "request_description": "תוספת בניה על פי תבע",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 89.16
       },
       {
         "file_number": "2010/0526.04",
@@ -8478,7 +8920,9 @@
         "request_description": "מבוקש 3 מרפסות זיז עבור 3 מבקשים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 299.77,
+        "sqm_mirpesot": 33.6
       },
       {
         "file_number": "2022/0597.00",
@@ -8488,7 +8932,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו כחול - מקטע תלפיות - רחוב פייר קניג  (T4)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 255.55
       },
       {
         "file_number": "2012/0079.01",
@@ -8498,7 +8943,8 @@
         "request_description": "תוספת 3 כיתות ספח ושינויים פנימיים בבניין קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 178.77
       },
       {
         "file_number": "1978/0272.03",
@@ -8508,7 +8954,10 @@
         "request_description": "תוספת על פי תב\"ע",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 87.08,
+        "sqm_service": 4.52,
+        "sqm_mirpesot": 4.81
       },
       {
         "file_number": "2019/0359.01",
@@ -8528,7 +8977,9 @@
         "request_description": "תוספת להרחבת יח\"ד קיימת במסגרת תכנית 5665 והשלמת דירת גג 5% , תוספת מעלית פנימית",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 142.34,
+        "sqm_mirpesot": 7.32
       },
       {
         "file_number": "1982/0748.05",
@@ -8538,7 +8989,10 @@
         "request_description": "בניית גשר לצורך נגישות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 119,
+        "sqm_service": 7.12,
+        "sqm_mirpesot": 12.57
       },
       {
         "file_number": "2019/0434.01",
@@ -8546,8 +9000,8 @@
         "status_date": "18/12/2024",
         "request_type": "",
         "request_description": "תכנית שינויים הכוללת תוספת שטח ושינוי קונטור הבינוי בקומות החדשות לתכנית תמ\"א 38",
-        "units": null,
-        "units_source": null,
+        "units": 26,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8568,7 +9022,8 @@
         "request_description": "בקשה לשימוש חורג מדירת מגורים למרפאת שיניים בק\"ק עם כניסה נפרדת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 71.66
       },
       {
         "file_number": "1977/0469.05",
@@ -8578,7 +9033,8 @@
         "request_description": "תוספת הנגשה ובניית פיר מעלית לבי\"ס \"ליד האוניברסיטה\" ( ת.ר. 1977/469.3 )",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 71.81
       },
       {
         "file_number": "2016/0664.01",
@@ -8588,7 +9044,8 @@
         "request_description": "שימוש חורג מדרך למסחר עבור מסעדה, תיק עסק מס' 1025425",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 84.71
       },
       {
         "file_number": "1979/0780.11",
@@ -8596,8 +9053,8 @@
         "status_date": "14/01/2026",
         "request_type": "",
         "request_description": "תוספת בניה, תוספת ממ\"דים, תוספת מרפסות, תוספת מחסנים.",
-        "units": null,
-        "units_source": null,
+        "units": 38,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8608,7 +9065,10 @@
         "request_description": "בניית מרפסות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 89.95,
+        "sqm_service": 2.13,
+        "sqm_mirpesot": 47.9
       },
       {
         "file_number": "2019/0434.02",
@@ -8628,7 +9088,10 @@
         "request_description": "תוספת ושינוי במרפסות , שינויים בפתחים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 3440.4,
+        "sqm_service": 973.5,
+        "sqm_mirpesot": 582.53
       }
     ],
     "scraped_at": "2026-04-16T01:26:12.655758",
@@ -8651,7 +9114,11 @@
         "request_description": "מבנה מסחר ומשרדים חדש",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 959.48,
+        "sqm_service": 1556.01,
+        "sqm_mirpesot": 29.19,
+        "floors": 30
       }
     ],
     "scraped_at": "2026-04-16T01:26:50.974706",
@@ -8668,7 +9135,9 @@
         "request_description": "אצטדיון טדי-תוספת מעליות, תוספת אולם VIP, שיפוץ קומת שחקנים, שיפוץ כניסות ולובי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 27121.99,
+        "sqm_service": 2670.07
       },
       {
         "file_number": "2022/0037.00",
@@ -8688,7 +9157,9 @@
         "request_description": "תוספת שרותי הסעדה מתחת ליציע הצפוני באצטדיון טדי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 430.39,
+        "sqm_service": 104.15
       },
       {
         "file_number": "2011/0314.08",
@@ -8743,7 +9214,9 @@
         "request_description": "השלמת קומת גג ותוספת קומה חדשה",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1381.43,
+        "sqm_service": 379.2
       },
       {
         "file_number": "2002/0354.05",
@@ -8751,8 +9224,8 @@
         "status_date": "13/04/2024",
         "request_type": "בנית מחסן/מחסנים",
         "request_description": "בניית עמודות ממ\"דים, בניית מחסנים",
-        "units": null,
-        "units_source": null,
+        "units": 4,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8783,7 +9256,8 @@
         "request_description": "שימוש חורג ממגורים למרפאת שיניים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 110.83
       },
       {
         "file_number": "2019/0045.00",
@@ -8803,7 +9277,9 @@
         "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 33.14,
+        "sqm_service": 167.53
       },
       {
         "file_number": "2019/0143.00",
@@ -8813,7 +9289,9 @@
         "request_description": "עבודות מקדימות עבור הרכבת הקלה - jnet",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 33.14,
+        "sqm_service": 167.53
       },
       {
         "file_number": "2018/0336.01",
@@ -8823,7 +9301,8 @@
         "request_description": "עבודות מקדימות עבור הרכבת הקלה - jnet",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 560.46
       },
       {
         "file_number": "2013/0217.01",
@@ -8833,7 +9312,10 @@
         "request_description": "תכנית שינויים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1536.43,
+        "sqm_service": 280.11,
+        "sqm_mirpesot": 66.64
       },
       {
         "file_number": "2019/0254.00",
@@ -8841,8 +9323,8 @@
         "status_date": "05/10/2021",
         "request_type": "",
         "request_description": "בנית מרפסת לדירה מס' 20",
-        "units": null,
-        "units_source": null,
+        "units": 72,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -8863,7 +9345,10 @@
         "request_description": "תוספת קומה על גג קיים וחדר מחוזק",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 69.88,
+        "sqm_service": 14.95,
+        "sqm_mirpesot": 29.34
       },
       {
         "file_number": "2019/0579.00",
@@ -8873,7 +9358,9 @@
         "request_description": "הקמת חניון \"חנה וסע\" שטח החניון כ30,000 מ\"ר, המתפרש על 5 קומות, כ1000 חניות",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 26191.34,
+        "sqm_service": 2386.6
       },
       {
         "file_number": "2016/1076.01",
@@ -8883,7 +9370,9 @@
         "request_description": "שימוש חורג מתוכנית - ממוסד למסחר.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 958.5,
+        "sqm_service": 528.95
       },
       {
         "file_number": "2017/0638.01",
@@ -8893,7 +9382,8 @@
         "request_description": "שימוש חורג ממגורים לגן ילדים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 92.09
       },
       {
         "file_number": "2020/0157.00",
@@ -8903,7 +9393,8 @@
         "request_description": "הוספת חנות בשטח כ30 מ\"ר בבנין תעשייתי-מסחרי קיים והסבת שטח שרות לשטח עיקרי במרתף",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 255.67
       },
       {
         "file_number": "2020/0264.00",
@@ -8913,7 +9404,8 @@
         "request_description": "הקמת בניין חדש בן קומה אחת.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 30.33
       },
       {
         "file_number": "2020/0322.00",
@@ -8933,7 +9425,9 @@
         "request_description": "מרכז טניס הכולל מגרשי ספורט שימושים תומכים ומסחר.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 7184.74,
+        "sqm_service": 2201.09
       },
       {
         "file_number": "2020/0354.00",
@@ -8963,7 +9457,10 @@
         "request_description": "תוספת בניה מכח 5% השלמת גג.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 214.57,
+        "sqm_service": 56.68,
+        "sqm_mirpesot": 210.66
       },
       {
         "file_number": "2020/0409.00",
@@ -8983,7 +9480,8 @@
         "request_description": "חדר גננים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 29.64
       },
       {
         "file_number": "2020/0443.00",
@@ -9003,7 +9501,8 @@
         "request_description": "בקשה להיתר לחפירת המקטע התת קרקעי של הקו הכחול-פיר יציאת חירום.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 3.74
       },
       {
         "file_number": "2020/0460.00",
@@ -9023,7 +9522,9 @@
         "request_description": "עבודות מקדימות לרק\"ל - JNET",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 490,
+        "sqm_service": 289.69
       },
       {
         "file_number": "2020/0534.00",
@@ -9041,8 +9542,8 @@
         "status_date": "24/12/2023",
         "request_type": "",
         "request_description": "תוספת בניה/ הרחבה לבנין קיים , פיתוח שטח וריצוף חצר",
-        "units": null,
-        "units_source": null,
+        "units": 72,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -9063,7 +9564,9 @@
         "request_description": "תחנה עבור הקו הכחול של הרכבת הקלה וגשר עילי להולכי רגל",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 27.14,
+        "sqm_service": 102.34
       },
       {
         "file_number": "2018/0373.03",
@@ -9073,7 +9576,9 @@
         "request_description": "הקמת מבנה בית ספר על יסודי לבנות של החינוך החרדי, 24 כיתות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 5392.98,
+        "sqm_service": 1861.51
       },
       {
         "file_number": "2020/0720.00",
@@ -9083,7 +9588,8 @@
         "request_description": "הקמת חניון חנה וסע 5 קומות+ קומת כניסה וממשק אוטובוסים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 39823.07
       },
       {
         "file_number": "2020/0720.01",
@@ -9101,8 +9607,8 @@
         "status_date": "28/02/2023",
         "request_type": "",
         "request_description": "הגשת שינויים לתוספת 8 חדרי מלון ושינוי כמות יחידות דיור ל-14, שינויים בשטחי מסחר",
-        "units": null,
-        "units_source": null,
+        "units": 40,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -9113,7 +9619,8 @@
         "request_description": "עבודות מקדימות לרק\"ל - JNET במקטע רוזמרין",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 136.79
       },
       {
         "file_number": "2021/0034.00",
@@ -9133,7 +9640,9 @@
         "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 385,
+        "sqm_service": 267.79
       },
       {
         "file_number": "2021/0097.00",
@@ -9143,7 +9652,8 @@
         "request_description": "אתר התארגנות ומבנים יבילים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 76.72
       },
       {
         "file_number": "2010/0510.01",
@@ -9153,7 +9663,8 @@
         "request_description": "שימוש חורג ממגורים ל-2 גני ילדים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 130.18
       },
       {
         "file_number": "2021/0199.00",
@@ -9173,7 +9684,8 @@
         "request_description": "הקמת מבנה שלד- עליה לרציף הרכבת הקלה כחלק מחניון רוזמרין.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 543.04
       },
       {
         "file_number": "2021/0257.00",
@@ -9183,7 +9695,9 @@
         "request_description": "בנית מעבר תת קרקעי בין מסוף אוטובוסים לתחנת רכבת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1474.91,
+        "sqm_service": 2223.39
       },
       {
         "file_number": "2021/0267.00",
@@ -9213,7 +9727,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0308.00",
@@ -9223,7 +9740,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0336.00",
@@ -9243,7 +9763,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0347.00",
@@ -9253,7 +9776,10 @@
         "request_description": "gggg",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1399.06,
+        "sqm_service": 840.76,
+        "sqm_mirpesot": 206.22
       },
       {
         "file_number": "2021/0432.00",
@@ -9261,8 +9787,8 @@
         "status_date": "17/02/2026",
         "request_type": "",
         "request_description": "תוספת 2 קומות על הגג ותוספות בניה לפי תמ\"א",
-        "units": null,
-        "units_source": null,
+        "units": 8,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -9271,9 +9797,10 @@
         "status_date": "14/05/2023",
         "request_type": "",
         "request_description": "הקמת תחנת מיישרים עבור הקו הכחול של הרכבת הקלה",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_service": 253.74
       },
       {
         "file_number": "2021/0479.00",
@@ -9293,7 +9820,9 @@
         "request_description": "הפיכה ממשרדים למרפאות.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 911.02,
+        "sqm_service": 150.3
       },
       {
         "file_number": "2009/0525.03",
@@ -9303,7 +9832,9 @@
         "request_description": "תכנית שינויים במיקום מדרגות חיצוניות ומעלית בבניין מגורים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 636.1,
+        "sqm_mirpesot": 20
       },
       {
         "file_number": "1957/0354.05",
@@ -9343,7 +9874,8 @@
         "request_description": "עבודות הכנה לרכבת הקלה - קו כחול - מקטע תלפיות - רחוב בן דוסא ושצ\"פ (T2)",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 209.09
       },
       {
         "file_number": "2022/0217.00",
@@ -9353,7 +9885,8 @@
         "request_description": "?הקמת חניון \"חנה וסע\" כ-25,000 מ\"ר  המתפרש על פני 6 קומות כ600 מקומות חניה.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 18918.48
       },
       {
         "file_number": "2006/0614.01",
@@ -9373,7 +9906,8 @@
         "request_description": "חדר גננים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 29.64
       },
       {
         "file_number": "2022/0311.00",
@@ -9401,9 +9935,10 @@
         "status_date": "22/03/2026",
         "request_type": "",
         "request_description": "הפיכת קומת מלון וגלריה קיימת ל 14 יח' מלונאיות.",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 14,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 861.39
       },
       {
         "file_number": "2022/0342.00",
@@ -9423,7 +9958,9 @@
         "request_description": "שינויים בחזיתות ופנים הבניין, תוספת חדר שנאים וח. חשמל לפי דרישת חברת החשמל.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 2015.3,
+        "sqm_service": 664.66
       },
       {
         "file_number": "2018/0249.01",
@@ -9431,9 +9968,12 @@
         "status_date": "06/01/2026",
         "request_type": "",
         "request_description": "תוספת בינוי וקומות בהתאם לתב\"ע מאושרת 101-0953182",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 17,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 3334.41,
+        "sqm_service": 982.2,
+        "sqm_mirpesot": 260.12
       },
       {
         "file_number": "2022/0456.00",
@@ -9443,7 +9983,8 @@
         "request_description": "תוספת מקומות חניה בקרוסלות חניה אוטומטיות במגרש חניה ציבורי קיים",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 71.92
       },
       {
         "file_number": "2022/0520.00",
@@ -9453,7 +9994,8 @@
         "request_description": "דיפון וחפירה עבור חניון ציבורי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 29114.15
       },
       {
         "file_number": "1999/0678.06",
@@ -9483,7 +10025,10 @@
         "request_description": "תוספת שטחים וקומות לבניין הקיים תואם תב\"ע בהתאם לתמ\"א 38 לסעיף 13.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 1655.89,
+        "sqm_service": 592.13,
+        "sqm_mirpesot": 53.14
       },
       {
         "file_number": "2022/0558.00",
@@ -9503,7 +10048,9 @@
         "request_description": "תוספת שרותי הסעדה מתחת ליציע הצפוני באצטדיון טדי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 430.39,
+        "sqm_service": 104.15
       },
       {
         "file_number": "2005/0866.11",
@@ -9533,7 +10080,9 @@
         "request_description": "תוספת בניה לבניין קיים + הרחבת מרפסת",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 106.99,
+        "sqm_mirpesot": 4.87
       },
       {
         "file_number": "2023/0027.00",
@@ -9543,7 +10092,10 @@
         "request_description": "בניית מלון חדש בתא שטח 200 בתכנית מס'''' 101-0086652 בן 314 חדרים והקמת חניון ציבורי לצידו בתא שטח 400 ותוספת חזית מסחרית",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 34553.28,
+        "sqm_service": 16850.93,
+        "sqm_mirpesot": 126.26
       },
       {
         "file_number": "2014/0693.01",
@@ -9553,7 +10105,8 @@
         "request_description": "שימוש חורג + מיזם תיירותי - בקשה להקמת מתקן זמני לעליית כדור פורח לתצפית בלבד",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_mirpesot": 26.07
       },
       {
         "file_number": "2010/0764.04",
@@ -9563,7 +10116,8 @@
         "request_description": "שינוי שימוש לעסק ממגורים לחנות מרכול(מסחר) עפ\"י תוכנית מתאר 62 בשטח של 131.92 מ\"ר- תיק עסק מס' 8036834",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 131.99
       },
       {
         "file_number": "2016/1076.02",
@@ -9603,7 +10157,8 @@
         "request_description": "עבודות מקדימות עבור הרכבת הקלה - הקו הכחול",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 638.93
       },
       {
         "file_number": "2023/0338.00",
@@ -9621,8 +10176,8 @@
         "status_date": "22/09/2025",
         "request_type": "",
         "request_description": "הריסה חלקית של מבנה הסטורי ובנית בנין חדש עפ\"י תמ\"א 38, ותכנית 10038",
-        "units": null,
-        "units_source": null,
+        "units": 21,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -9633,7 +10188,8 @@
         "request_description": "תכנון חדר שנאים תת קרקעי",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_service": 91.97
       },
       {
         "file_number": "2011/0314.08",
@@ -9661,8 +10217,8 @@
         "status_date": "10/06/2025",
         "request_type": "",
         "request_description": "הוספת ממ\"ד ל-2 הקומות הראשונות, הוספת מרפסת זיז בקומה שניה",
-        "units": null,
-        "units_source": null,
+        "units": 2,
+        "units_source": "detail_page",
         "filtered": false
       },
       {
@@ -9708,8 +10264,8 @@
         "status_date": "19/11/2025",
         "request_type": "",
         "request_description": "היתר הריסה, חפירה , דיפון וביסוס",
-        "units": null,
-        "units_source": null,
+        "units": 7,
+        "units_source": "shtachim_tab",
         "filtered": false
       },
       {
@@ -9730,7 +10286,10 @@
         "request_description": "הקמת מתחם מכולות למסחר ואוכל",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 781.78,
+        "sqm_service": 80.02,
+        "sqm_mirpesot": 623.99
       },
       {
         "file_number": "2014/0001.02",
@@ -9740,7 +10299,10 @@
         "request_description": "תוספת בניה בגג ומעלית חיצונית.",
         "units": null,
         "units_source": null,
-        "filtered": false
+        "filtered": false,
+        "sqm_main": 403.64,
+        "sqm_service": 68,
+        "sqm_mirpesot": 22.36
       },
       {
         "file_number": "1993/0095.03",
@@ -9765,9 +10327,11 @@
         "status_date": "24/12/2023",
         "request_type": "בניה חדשה / בניין חדש",
         "request_description": "",
-        "units": null,
-        "units_source": null,
-        "filtered": false
+        "units": 1,
+        "units_source": "shtachim_tab",
+        "filtered": false,
+        "sqm_main": 154.35,
+        "sqm_service": 22.6
       },
       {
         "file_number": "2021/0582.00",
