@@ -7401,14 +7401,15 @@
                 const headerBg = headerGradients[statusColor] || 'linear-gradient(135deg, #16213e, #0f3460)';
                 html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:2px solid ${statusColor}">`;
                 html += `<div class="popup-header-title">${title}</div>`;
-                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}</div>`;
+                const planType = (props.plan_type || '').trim();
+                const planTypeInline = (planType && planType !== 'מוסתר')
+                    ? ` <span style="color:#8899cc;font-size:10px;font-weight:normal"> · ${planType}</span>` : '';
+                if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}${planTypeInline}</div>`;
                 html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
                 // Status + date in header
                 const mavatDate = props.mavat_date || '';
                 html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
                 html += `<span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span>`;
-                const planType = (props.plan_type || '').trim();
-                if (planType && planType !== 'מוסתר') html += `<span class="popup-status-badge" style="background:#5566aa33;color:#8899cc;border:1px solid #5566aa55;font-size:10px">${planType}</span>`;
                 if (mavatDate) html += `<span style="font-size:11px;color:#8899bb">${mavatDate}</span>`;
                 html += '</div>';
                 // Developer / Architect row
