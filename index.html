@@ -6795,6 +6795,8 @@
                         const e = window.__allPermits && window.__allPermits[t];
                         return (e && e.permits) ? e.permits.filter(function(p){return !p.filtered}) : [];
                     }
+                    // Group for permit labels (so they toggle with the permits layer)
+                    const permitLabelsGroup = L.layerGroup();
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
@@ -6874,13 +6876,13 @@
                                                 html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
                                                 iconSize: [0, 0], iconAnchor: [0, 0]
                                             });
-                                            L.marker(center, { icon: icon, pane: 'labelsPane', interactive: false }).addTo(map);
+                                            L.marker(center, { icon: icon, pane: 'labelsPane', interactive: false }).addTo(permitLabelsGroup);
                                         } catch(e) {}
                                     }
                                 }
                             }
                         }
-                    }).addTo(map);
+                    });
                     // Add tama38 points that have permits
                     if (gd.tama38 && window.__tama38Permits) {
                         // Add tama38 permit markers directly (not via L.geoJSON to avoid MultiPoint issues)
@@ -6919,7 +6921,8 @@
                         });
                         geoLayersRef.current.tama38Permits = tama38PermGroup;
                     }
-                    geoLayersRef.current.permits = permitsLayer;
+                    // Bundle polygons + labels so toggling off removes both
+                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, permitLabelsGroup]).addTo(map);
                 }
 
                 // --- Tama38 ---
@@ -7535,15 +7538,8 @@
                     html += `<div class="popup-row"><span class="popup-row-label">סיום הפקדה</span><span class="popup-row-value" style="color:#999">${objEndDate}</span></div>`;
                 }
 
-                // ── Permits summary (from all_permits.json) ──
-                const taba = props.taba || '';
-                const permits = getPermitsForTaba(taba);
-                if (permits.length > 0) {
-                    const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
-                    html += buildPermitsSummaryHTML(permits, `data-feature='${featureJson}' data-taba='${taba}'`);
-                }
-
                 // ── Tree survey section (from tree_surveys.json) ──
+                const taba = props.taba || '';
                 const treeSurvey = (window.__treeSurveys || {})[taba];
                 if (treeSurvey && treeSurvey.total > 0) {
                     const removed = (treeSurvey.krita || 0) + (treeSurvey.haataka || 0);
@@ -7558,10 +7554,15 @@
 
                 html += '</div>'; // end popup-body
 
-                // ── Footer ──
-                html += '<div class="popup-footer">';
+                // ── Footer (mavat link + permits button) ──
+                const permits = getPermitsForTaba(taba);
+                html += '<div class="popup-footer" style="flex-direction:row;justify-content:space-between;align-items:center;gap:8px">';
                 if (mavatUrl) {
                     html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
+                }
+                if (permits.length > 0) {
+                    const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                    html += `<button class="popup-btn-permit" data-action="show-permits" data-feature='${featureJson}' data-taba='${taba}'>${permits.length} היתרים ←</button>`;
                 }
                 html += '</div>';
 
