@@ -7543,15 +7543,19 @@
                     html += buildPermitsSummaryHTML(permits, `data-feature='${featureJson}' data-taba='${taba}'`);
                 }
 
-                // ── Tree survey row (from tree_surveys.json) ──
+                // ── Tree survey section (from tree_surveys.json) ──
                 const treeSurvey = (window.__treeSurveys || {})[taba];
                 if (treeSurvey && treeSurvey.total > 0) {
                     const preserved = treeSurvey.shimur || 0;
                     const removed = (treeSurvey.krita || 0) + (treeSurvey.haataka || 0);
                     const total = treeSurvey.total;
                     const removedPct = total > 0 ? Math.round((removed / total) * 100) : 0;
-                    const preservedPct = total > 0 ? Math.round((preserved / total) * 100) : 0;
-                    html += `<div class="popup-row"><span class="popup-row-label">🌳 עצים</span><span class="popup-row-value">${preserved} לשימור (${preservedPct}%), ${removed} לכריתה/העתקה (${removedPct}%)</span></div>`;
+                    html += '<div class="popup-section-title">🌳 עצים</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${preserved}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${removed}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">% יוצא</span><span class="popup-pair-value" style="color:#5dade2">${removedPct}%</span></div>`;
+                    html += '</div>';
                 }
 
                 html += '</div>'; // end popup-body
