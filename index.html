@@ -2094,7 +2094,6 @@
             landuse_xplan: 'data/landuse_xplan.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
-            trees: 'data/trees.geojson',
             master_plan_moshavot: 'data/master_plan_moshavot.geojson',
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
@@ -2228,12 +2227,6 @@
                 layers: [
                     { id: 'mosadot_shchuna', name: 'מוסדות חינוך', desc: 'פרטי המוסדות בשכונה - מצב קיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
-                ]
-            },
-            environment: {
-                title: 'סקרים',
-                layers: [
-                    { id: 'trees', name: 'סקר עצים עירוני', desc: 'סקר עצים — צבע לפי דחיפות טיפול', on: false },
                 ]
             },
             master_plans: {
@@ -3125,7 +3118,7 @@
             { label: 'תוספת מתונה / עיבוי', color: '#ffb74d' },
             { label: 'מגורים', color: '#80cbc4' },
             { label: 'תאימות תב״עות / תמ״אות בתוך תכנית האב', style: 'header' },
-            { label: 'תקין', color: '#43a047' },
+            { label: 'לא סותר תכנית אב', color: '#43a047' },
             { label: 'אזהרה', color: '#f57c00' },
             { label: 'הפרה', color: '#d32f2f' },
             { label: 'גבול תכנית האב', style: 'header' },
@@ -7293,52 +7286,6 @@
                     geoLayersRef.current.sport_kayam = sportKayamLayer;
                 }
 
-                // --- Trees survey (סקר עצים עירוני) ---
-                if (layers['trees'] && gd.trees) {
-                    const URGENCY_COLOR = (u) => {
-                        if (!u) return '#9e9e9e';
-                        if (u.indexOf('מידי') >= 0) return '#d32f2f';
-                        if (u.indexOf('דחוף') >= 0) return '#f57c00';
-                        return '#2e7d32';
-                    };
-                    const treesLayer = L.geoJSON(gd.trees, {
-                        pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 4,
-                            fillColor: URGENCY_COLOR(f.properties.urgency),
-                            fillOpacity: 0.85,
-                            color: '#1b3a1b', weight: 0.8
-                        }),
-                        onEachFeature: (f, layer) => {
-                            const p = f.properties;
-                            const species = p.species_other || p.species || 'עץ';
-                            const tip = `<b>${species}</b>` +
-                                (p.street ? `<br>${p.street}${p.house_no?' '+p.house_no:''}` : '') +
-                                (p.urgency ? `<br><span style="color:${URGENCY_COLOR(p.urgency)}">⚑ ${p.urgency}</span>` : '');
-                            layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -4] });
-                            layer.on('click', () => {
-                                const rows = [
-                                    ['מין', species],
-                                    ['בריאות (1-5)', p.health || ''],
-                                    ['גובה', p.height || ''],
-                                    ['קוטר גזע', p.trunk_diameter || ''],
-                                    ['גיל', p.age || ''],
-                                    ['מיקום', p.location || ''],
-                                    ['השקיה', p.irrigation_state || p.irrigation || ''],
-                                    ['המלצות', p.recommendations || ''],
-                                    ['הערות', p.health_note || ''],
-                                ].filter(r => r[1]);
-                                const html = `<div style="font-family:Assistant;direction:rtl">` +
-                                    `<div style="font-weight:bold;font-size:14px;margin-bottom:6px">🌳 ${species}</div>` +
-                                    rows.map(([k,v]) => `<div style="margin:2px 0"><b>${k}:</b> ${v}</div>`).join('') +
-                                    `</div>`;
-                                L.popup({ maxWidth: 280 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
-                            });
-                        }
-                    }).addTo(map);
-                    geoLayersRef.current.trees = treesLayer;
-                }
-
                 // --- Master plans (Moshavot/Rasko/Baka) — combined per-plan layers ---
                 const MASTER_PLAN_CONFIGS = {
                     master_plan_moshavot: { color: '#7e57c2', label: 'תכנית אב מושבות' },
@@ -7501,8 +7448,8 @@
                                     const col = isViol ? '#ef5350' : isWarn ? '#ffb74d' : '#90caf9';
                                     return `<div style="font-size:10px;color:${col};margin:2px 0">• ${i}</div>`;
                                 }).join('')
-                                : '<div style="font-size:11px;color:#9ccc9c">• תקין</div>';
-                            const sl = { violation: 'הפרה', warning: 'אזהרה', ok: 'תקין' }[c.mp_status] || c.mp_status;
+                                : '<div style="font-size:11px;color:#9ccc9c">• לא סותר תכנית אב</div>';
+                            const sl = { violation: 'הפרה', warning: 'אזהרה', ok: 'לא סותר תכנית אב' }[c.mp_status] || c.mp_status;
                             const sc = COMPLIANCE_FILL[c.mp_status] || '#888';
                             const planType = (f.properties.plan_type || '').trim();
                             const isTama = c.mp_is_tama38 ? '<span style="background:#5dade2;color:white;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">תמ״א 38</span>' : '';
@@ -7715,7 +7662,7 @@
                         });
                         m.on('click', (ev) => {
                             L.DomEvent.stopPropagation(ev);
-                            const sl = { violation:'הפרה', warning:'אזהרה', ok:'תקין' }[status];
+                            const sl = { violation:'הפרה', warning:'אזהרה', ok:'לא סותר תכנית אב' }[status];
                             const sc = COMPLIANCE_FILL[status];
                             const p = feature.properties;
                             const addr = (p.address || '').trim() || 'תמ״א 38';
@@ -7733,7 +7680,7 @@
                                 (unitsExis ? `<div style="font-size:11px;color:#aaa"><b>יח״ד קיימות:</b> ${unitsExis}</div>` : '') +
                                 (unitsTose ? `<div style="font-size:11px;color:#aaa"><b>תוספת יח״ד:</b> ${unitsTose}</div>` : '') +
                                 (gradeNearby ? `<div style="font-size:11px;color:#aaa"><b>מבנה שימור סמוך:</b> דרגה ${gradeNearby}׳</div>` : '') +
-                                (issue ? `<div style="margin-top:6px;font-size:11px;color:${status==='violation'?'#ef5350':'#ffb74d'}">• ${issue}</div>` : `<div style="margin-top:6px;font-size:11px;color:#9ccc9c">• תקין</div>`) +
+                                (issue ? `<div style="margin-top:6px;font-size:11px;color:${status==='violation'?'#ef5350':'#ffb74d'}">• ${issue}</div>` : `<div style="margin-top:6px;font-size:11px;color:#9ccc9c">• לא סותר תכנית אב</div>`) +
                                 `</div>`;
                             L.popup({ maxWidth: 300 }).setLatLng(ev.latlng).setContent(html).openOn(map);
                         });
