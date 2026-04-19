@@ -3052,6 +3052,7 @@
             const [loading, setLoading] = useState(true);
             const [loadProgress, setLoadProgress] = useState({ done: 0, total: 0 });
             const [dataLoaded, setDataLoaded] = useState(false);
+            const [deferredTick, setDeferredTick] = useState(0); // bumps when a deferred geojson arrives
             const [isOnline, setIsOnline] = useState(navigator.onLine);
             const [deferredPrompt, setDeferredPrompt] = useState(null);
             const [showInstallBanner, setShowInstallBanner] = useState(false);
@@ -3488,8 +3489,13 @@
                 const landuseP = map.createPane('landusePane');
                 landuseP.style.zIndex = 295;
 
-                // Load all GeoJSON data + CSV for plan_type enrichment
-                const entries = Object.entries(GEOJSON_FILES);
+                // Load all GeoJSON data + CSV for plan_type enrichment.
+                // Heaviest files (11 MB+) are deferred — fetched in the background
+                // after the map is interactive. Used for existing-landuse popup info
+                // and for the ייעודי קרקע קיים layer (off by default).
+                const DEFERRED_FILES = ['yiud_karka_kayam'];
+                const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !DEFERRED_FILES.includes(k));
+                const deferredEntries = Object.entries(GEOJSON_FILES).filter(([k]) => DEFERRED_FILES.includes(k));
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
                 // Pre-init permit globals
                 window.__allPermits = {};
@@ -3622,6 +3628,20 @@
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
                     setDataLoaded(true);
                     setLoading(false);
+
+                    // Deferred load: big files fetched after interactive to keep first paint fast
+                    deferredEntries.forEach(([key, url]) => {
+                        fetch(url + '?v=' + Date.now())
+                            .then(r => r.json())
+                            .then(data => {
+                                if (!data) return;
+                                geoDataRef.current[key] = data;
+                                window.__geoDataForLanduse = geoDataRef.current;
+                                setDeferredTick(t => t + 1);
+                                console.log(`[GeoJSON] Deferred loaded: ${key} (${data.features ? data.features.length : '?'} features)`);
+                            })
+                            .catch(e => console.warn(`[GeoJSON] Deferred ${key} failed:`, e));
+                    });
                     // Extract unique plan types for filter
                     if (gd.plans && gd.plans.features) {
                         const types = new Set();
@@ -7762,7 +7782,7 @@
 
                 window.__geoLayersForPrint = geoLayersRef.current;
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, showCommerceHeatMap, eduFilters]);
+            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, showCommerceHeatMap, eduFilters, deferredTick]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
