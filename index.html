@@ -3229,6 +3229,11 @@
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
+            const [overlapNames, setOverlapNames] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('oranim_overlap_names') || '{}'); }
+                catch { return {}; }
+            });
+            const [overlapEditingKey, setOverlapEditingKey] = useState(null);
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
@@ -11864,17 +11869,54 @@
                                             if (next.has(idx)) next.delete(idx); else next.add(idx);
                                             return next;
                                         });
+                                        const groupKey = (plans) => plans.map(p => String(p.taba || '')).sort().join('|');
+                                        const saveName = (key, value) => {
+                                            setOverlapNames(prev => {
+                                                const next = { ...prev };
+                                                if (value && value.trim()) next[key] = value.trim();
+                                                else delete next[key];
+                                                try { localStorage.setItem('oranim_overlap_names', JSON.stringify(next)); } catch {}
+                                                return next;
+                                            });
+                                        };
                                         return groups.map((g, gi) => {
                                             const expanded = overlapExpanded.has(gi);
-                                            const name = groupName(g.plans) || 'קבוצה';
+                                            const key = groupKey(g.plans);
+                                            const autoName = groupName(g.plans) || 'קבוצה';
+                                            const displayName = overlapNames[key] || autoName;
+                                            const isEditing = overlapEditingKey === key;
                                             const minahaks = [...new Set(g.plans.map(p => (p.minahak||'').trim()).filter(Boolean))];
                                             const minahakText = minahaks.length === 1 ? minahaks[0] : (minahaks.length > 1 ? `${minahaks.length} מינהלים` : '-');
                                             return (
                                             <div key={gi} style={{marginBottom:10,border:'1px solid #2a2a4a',borderRadius:8,background:'rgba(51,102,255,0.06)',overflow:'hidden'}}>
-                                                <div onClick={() => toggleGroup(gi)}
-                                                     style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',cursor:'pointer',userSelect:'none'}}>
+                                                <div onClick={() => !isEditing && toggleGroup(gi)}
+                                                     style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',cursor:isEditing ? 'default' : 'pointer',userSelect:'none'}}>
                                                     <span style={{color:'#9cf',fontSize:12,width:14}}>{expanded ? '▾' : '▸'}</span>
-                                                    <span style={{color:'#9cf',fontSize:14,fontWeight:700,flex:1}}>{name} <span style={{color:'#7788aa',fontSize:12,fontWeight:400}}>· {g.plans.length} תכניות</span></span>
+                                                    <span style={{flex:1,display:'flex',alignItems:'center',gap:6}}>
+                                                        {isEditing ? (
+                                                            <input autoFocus defaultValue={displayName}
+                                                                onClick={e => e.stopPropagation()}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') { saveName(key, e.target.value); setOverlapEditingKey(null); }
+                                                                    else if (e.key === 'Escape') { setOverlapEditingKey(null); }
+                                                                }}
+                                                                onBlur={e => { saveName(key, e.target.value); setOverlapEditingKey(null); }}
+                                                                style={{background:'rgba(255,255,255,0.08)',color:'#fff',border:'1px solid #4a5a8a',borderRadius:4,padding:'2px 6px',fontSize:14,fontWeight:700,minWidth:180,fontFamily:'inherit'}} />
+                                                        ) : (
+                                                            <>
+                                                                <span style={{color:'#9cf',fontSize:14,fontWeight:700}}>{displayName}</span>
+                                                                <button title="ערוך שם קבוצה"
+                                                                    onClick={e => { e.stopPropagation(); setOverlapEditingKey(key); }}
+                                                                    style={{background:'none',border:'none',cursor:'pointer',color:'#7788aa',fontSize:11,padding:'0 2px',opacity:0.6}}>✏️</button>
+                                                                {overlapNames[key] && (
+                                                                    <button title="שחזר שם אוטומטי"
+                                                                        onClick={e => { e.stopPropagation(); saveName(key, ''); }}
+                                                                        style={{background:'none',border:'none',cursor:'pointer',color:'#7788aa',fontSize:10,padding:'0 2px',opacity:0.5}}>↺</button>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        <span style={{color:'#7788aa',fontSize:12,fontWeight:400}}>· {g.plans.length} תכניות</span>
+                                                    </span>
                                                     <span style={{color:'#ce93d8',fontSize:12}}>{minahakText}</span>
                                                     <span style={{color:'#ffa726',fontSize:12,minWidth:90,textAlign:'left'}}>{Math.round(g.totalUnits)} יח"ד תוספת</span>
                                                 </div>
