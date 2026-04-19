@@ -3591,6 +3591,8 @@
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
                 const masterPlanPane = map.createPane('masterPlanPane');
                 masterPlanPane.style.zIndex = 260;
+                const masterPlanTbaPane = map.createPane('masterPlanTbaPane');
+                masterPlanTbaPane.style.zIndex = 350;
                 map.createPane('minahakPane').style.zIndex = 270;
                 const infraPane = map.createPane('infrastructurePane');
                 infraPane.style.zIndex = 280;
@@ -6579,6 +6581,18 @@
                             const isSatellite = basemap === 'satellite';
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
                             const landuseActive = layers['landuse_xplan'];
+                            // When any master plan layer is on: hide plans inside an active
+                            // master plan (drawn by that layer); show others as outline only
+                            const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona'].filter(k => layers[k]);
+                            if (activeMpKeys.length > 0) {
+                                const MP_NAME_BY_KEY = { master_plan_moshavot:'מושבות', master_plan_rasko:'רסקו', master_plan_baka:'בקעה', master_plan_arnona:'ארנונה' };
+                                const activeMpNames = new Set(activeMpKeys.map(k => MP_NAME_BY_KEY[k]));
+                                const c = (window.__masterPlanCompliance || {})[f.properties.plan_name];
+                                if (c && activeMpNames.has(c.mp_match)) {
+                                    return { color: 'transparent', weight: 0, fillOpacity: 0, opacity: 0 };
+                                }
+                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                            }
                             if (landuseActive) {
                                 return { color: statusColor, weight: 2.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
                             }
@@ -7395,22 +7409,8 @@
                             if (ft === 'boundary') {
                                 return { color: cfg.color, weight: 3, fillOpacity: 0, dashArray: '6,4' };
                             }
-                            if (ft === 'subzone') {
-                                const c = ZONE_FILL_COLORS[f.properties.zone_code] || cfg.color;
-                                return { color: c, weight: 1, fillColor: c, fillOpacity: 0.35 };
-                            }
-                            if (ft === 'special_focus') {
-                                return { color: '#000', weight: 2, fillColor: '#ffeb3b', fillOpacity: 0.5 };
-                            }
-                            if (ft === 'texture') {
-                                const c = MERKAM_COLORS[f.properties.merkam] || '#bbdefb';
-                                return { color: c, weight: 0.5, fillColor: c, fillOpacity: 0.45 };
-                            }
-                            if (ft === 'conservation') {
-                                const c = f.properties.is_strict ? '#d32f2f' : '#f57c00';
-                                return { color: c, weight: 1, fillColor: c, fillOpacity: 0.4 };
-                            }
-                            return { color: cfg.color, weight: 1, fillOpacity: 0.3 };
+                            // Uniform background per master plan: cfg.color for all zone polygons
+                            return { color: cfg.color, weight: 1, fillColor: cfg.color, fillOpacity: 0.85 };
                         },
                         onEachFeature: (f, lyr) => {
                             const html = buildMasterPlanPopup(f.properties);
@@ -7431,11 +7431,11 @@
                         return c && c.mp_match === mpName;
                     });
                     const plansLayer = L.geoJSON({ type: 'FeatureCollection', features: insidePlans }, {
-                        pane: 'masterPlanPane',
+                        pane: 'masterPlanTbaPane',
                         style: f => {
                             const c = compliance[f.properties.plan_name];
                             const fc = COMPLIANCE_FILL[c.mp_status] || '#9e9e9e';
-                            return { color: fc, weight: 2.5, fillColor: fc, fillOpacity: 0.55, dashArray: '' };
+                            return { color: '#111', weight: 1.5, fillColor: fc, fillOpacity: 0.95, dashArray: '' };
                         },
                         onEachFeature: (f, lyr) => {
                             const c = compliance[f.properties.plan_name];
@@ -7464,7 +7464,15 @@
                                 (c.mp_subzone_far_pct ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>אחוזי בנייה:</b> ${c.mp_subzone_far_pct}%</div>` : '') +
                                 `<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px">${issuesHtml}</div>` +
                                 `</div>`;
-                            lyr.bindPopup(html, { maxWidth: 320 });
+                            // Open popup directly on click and stop bubbling so the underlying
+                            // regular plans layer doesn't replace it with its own popup
+                            lyr.on('click', (e) => {
+                                L.DomEvent.stopPropagation(e);
+                                L.popup({ maxWidth: 320, className: 'plan-popup' })
+                                    .setLatLng(e.latlng)
+                                    .setContent(html)
+                                    .openOn(map);
+                            });
                             lyr.bindTooltip(`${f.properties.plan_name || ''} — ${sl}`, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
                         }
                     }).addTo(map);
