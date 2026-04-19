@@ -7680,7 +7680,7 @@
                         const fc = COMPLIANCE_FILL[status] || '#888';
                         const m = L.circleMarker(latlng, {
                             pane: 'masterPlanTbaPane',
-                            radius: 6, fillColor: fc, fillOpacity: 0.95, color: '#000', weight: 1.2
+                            radius: 4, fillColor: fc, fillOpacity: 0.95, color: '#000', weight: 1
                         });
                         m.on('click', (ev) => {
                             L.DomEvent.stopPropagation(ev);
