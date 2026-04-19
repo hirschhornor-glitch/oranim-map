@@ -7541,12 +7541,13 @@
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
                 if (layers['yiud_karka_kayam'] && gd.yiud_karka_kayam) {
                     const xplanAlsoOn = layers['landuse_xplan'];
+                    const plansAlsoOn = layers['plans'];
                     const yiudKayamLayer = L.geoJSON(gd.yiud_karka_kayam, {
                         pane: 'landusePane',
                         style: f => {
                             const name = (f.properties.Descr || '').trim();
                             const c = getLanduseColor(name);
-                            return { fillColor: c, fillOpacity: xplanAlsoOn ? 0.35 : 0.65, color: xplanAlsoOn ? '#999' : '#333', weight: 0.15 };
+                            return { fillColor: c, fillOpacity: xplanAlsoOn ? 0.35 : 0.65, color: xplanAlsoOn ? '#999' : '#333', weight: plansAlsoOn ? 0 : 0.15 };
                         },
                         interactive: !layers['plans'],
                         onEachFeature: !layers['plans'] ? (f, layer) => {
@@ -7560,6 +7561,9 @@
                 // --- Landuse XPLAN (land use from MAVAT/XPLAN) ---
                 if (layers['landuse_xplan'] && gd.landuse_xplan) {
                     const bothLanduseOn = layers['yiud_karka_kayam'];
+                    // When plans layer is also on, hide parcel outlines — user wants plot
+                    // subdivisions visible only when the land-use view is shown alone.
+                    const plansAlsoOn = layers['plans'];
                     const xplanLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'landusePane',
                         filter: f => {
@@ -7569,7 +7573,8 @@
                         style: f => {
                             const name = (f.properties.mavat_name || '').trim();
                             const c = getLanduseColor(name);
-                            return { fillColor: c, fillOpacity: 0.75, color: bothLanduseOn ? '#000' : '#333', weight: bothLanduseOn ? 1 : 0.25, className: bothLanduseOn ? 'landuse-shadow' : '' };
+                            const weight = plansAlsoOn ? 0 : (bothLanduseOn ? 1 : 0.25);
+                            return { fillColor: c, fillOpacity: 0.75, color: bothLanduseOn ? '#000' : '#333', weight, className: bothLanduseOn && !plansAlsoOn ? 'landuse-shadow' : '' };
                         },
                         interactive: !layers['plans'],
                         onEachFeature: !layers['plans'] ? (f, layer) => {
