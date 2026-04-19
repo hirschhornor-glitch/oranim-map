@@ -1897,6 +1897,106 @@
             return false;
         }
 
+        function getAllRings(geom) {
+            if (!geom) return [];
+            if (geom.type === 'Polygon') return geom.coordinates[0] ? [geom.coordinates[0]] : [];
+            if (geom.type === 'MultiPolygon') {
+                const rings = [];
+                for (const poly of geom.coordinates) { if (poly[0]) rings.push(poly[0]); }
+                return rings;
+            }
+            return [];
+        }
+
+        function ringBBox(ring) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const p of ring) {
+                if (p[0] < minX) minX = p[0];
+                if (p[0] > maxX) maxX = p[0];
+                if (p[1] < minY) minY = p[1];
+                if (p[1] > maxY) maxY = p[1];
+            }
+            return [minX, minY, maxX, maxY];
+        }
+
+        function bboxesOverlap(a, b) {
+            return !(a[2] < b[0] || b[2] < a[0] || a[3] < b[1] || b[3] < a[1]);
+        }
+
+        // Sample grid inside ringA's bbox, count samples in A and in (A ∩ B).
+        // Returns (samples in A ∩ B) / (samples in A). 0 if A area is ~0.
+        function sampleOverlapFraction(ringA, ringB, n) {
+            const [minX, minY, maxX, maxY] = ringBBox(ringA);
+            const stepX = (maxX - minX) / n, stepY = (maxY - minY) / n;
+            let inA = 0, inBoth = 0;
+            for (let i = 0; i < n; i++) {
+                const x = minX + (i + 0.5) * stepX;
+                for (let j = 0; j < n; j++) {
+                    const y = minY + (j + 0.5) * stepY;
+                    if (pointInPolygon([x, y], ringA)) {
+                        inA++;
+                        if (pointInPolygon([x, y], ringB)) inBoth++;
+                    }
+                }
+            }
+            return inA === 0 ? 0 : inBoth / inA;
+        }
+
+        // "Significant" overlap — majority of one polygon's area is inside the other.
+        // Grid-sampled area ratio in both directions; if either >= threshold, count as overlap.
+        function significantOverlap(ringA, ringB, threshold = 0.5, samples = 14) {
+            if (!bboxesOverlap(ringBBox(ringA), ringBBox(ringB))) return false;
+            if (sampleOverlapFraction(ringA, ringB, samples) >= threshold) return true;
+            if (sampleOverlapFraction(ringB, ringA, samples) >= threshold) return true;
+            return false;
+        }
+
+        // Compute pairs of plans whose geometries overlap.
+        // Returns a Map: taba -> Set of overlapping tabas.
+        function computeOverlapMap(features) {
+            // Build ring/bbox per feature (skip plans without taba or geometry)
+            const items = [];
+            for (const f of features) {
+                const taba = String(f.properties.taba || '').trim();
+                if (!taba) continue;
+                const rings = getAllRings(f.geometry);
+                if (!rings.length) continue;
+                items.push({ taba, rings, bboxes: rings.map(ringBBox) });
+            }
+            const map = new Map();
+            for (let i = 0; i < items.length; i++) {
+                for (let j = i + 1; j < items.length; j++) {
+                    const A = items[i], B = items[j];
+                    if (A.taba === B.taba) continue;
+                    // bbox pre-filter across any ring pair
+                    let bboxHit = false;
+                    for (const ba of A.bboxes) {
+                        for (const bb of B.bboxes) {
+                            if (bboxesOverlap(ba, bb)) { bboxHit = true; break; }
+                        }
+                        if (bboxHit) break;
+                    }
+                    if (!bboxHit) continue;
+                    // Deeper check: "significant" area overlap (>= 50% of either polygon),
+                    // not just any touching. Any ring-pair above threshold qualifies.
+                    let overlap = false;
+                    for (const ra of A.rings) {
+                        for (const rb of B.rings) {
+                            if (significantOverlap(ra, rb)) { overlap = true; break; }
+                        }
+                        if (overlap) break;
+                    }
+                    if (overlap) {
+                        if (!map.has(A.taba)) map.set(A.taba, new Set());
+                        if (!map.has(B.taba)) map.set(B.taba, new Set());
+                        map.get(A.taba).add(B.taba);
+                        map.get(B.taba).add(A.taba);
+                    }
+                }
+            }
+            return map;
+        }
+
         function visualCenter(geometry, excludeRings) {
             // For MultiPolygon, find the largest part by area
             let ring;
@@ -3277,6 +3377,10 @@
             const geoLayersRef = useRef({});
             const baseTileRef = useRef(null);
             const layersRef = useRef(layers);
+            // taba -> Set(other tabas this plan geometrically overlaps with).
+            // Populated once when plans data arrives. Used by the "overlapping"
+            // planning topic to filter overlaps based on currently-visible plans.
+            const overlapMapRef = useRef(null);
 
             // ── URL Hash helpers ──
             function parseHash() {
@@ -3587,6 +3691,7 @@
                             if (t) planByTaba[t] = f.properties;
                         });
                     }
+                    window.__planByTaba = planByTaba;
                     function shouldHideKayam(taba) {
                         if (!kayamTabaSet.has(taba)) return false;
                         const plan = planByTaba[taba];
@@ -3628,6 +3733,18 @@
 
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
+
+                    // Compute overlap map once (taba -> overlapping tabas).
+                    // Heavy (O(n²) bbox + geometry check) but runs once.
+                    try {
+                        const t0 = performance.now();
+                        overlapMapRef.current = computeOverlapMap(gd.plans ? gd.plans.features : []);
+                        console.log(`[Overlap] Built map: ${overlapMapRef.current.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
+                    } catch (e) {
+                        console.warn('[Overlap] computation failed:', e);
+                        overlapMapRef.current = new Map();
+                    }
+
                     setDataLoaded(true);
                     setLoading(false);
 
@@ -6154,6 +6271,44 @@
                 const gd = geoDataRef.current;
                 if (!map || !dataLoaded) return;
 
+                // Shared filter used by plans layer AND the "overlapping" topic —
+                // keeps both in sync so overlap-highlighting matches visible plans.
+                function isPlanVisibleInLayer(p) {
+                    if (!planInMinahak(p)) return false;
+                    const s = normalizeStatus((p.status_mavat || '').trim());
+                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                    if (s === 'הכנת הודעה 77/78') return false;
+                    if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
+                    const shk = window.__shouldHideKayam;
+                    if (shk) {
+                        const t = String(p.taba || '').trim();
+                        if (t && shk(t)) return false;
+                    }
+                    const af = filters;
+                    const units = parseFloat(p.units_add) || 0;
+                    if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
+                    if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
+                    if (af.planTypes.length > 0) {
+                        const pt = normalizePlanType(p.plan_type || '');
+                        if (!af.planTypes.includes(pt)) return false;
+                    }
+                    if (af.statuses.length > 0) {
+                        const sg = getFilterStatusGroup(s);
+                        const stageVal = (p.stage || '').trim();
+                        const sgStage = getFilterStatusGroup(stageVal);
+                        if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
+                    }
+                    if (af.freeText) {
+                        const q = af.freeText.toLowerCase();
+                        const searchFields = [
+                            p.plan_summary || '', p.plan_name || '',
+                            p.architect || '', p.developer || '',
+                        ].join(' ').toLowerCase();
+                        if (!searchFields.includes(q)) return false;
+                    }
+                    return true;
+                }
+
                 // Remove all previous geo layers + label markers
                 function cleanupLayer(ll) {
                     if (ll.eachLayer) ll.eachLayer(sub => {
@@ -6699,7 +6854,22 @@
                                 if (t && shk(t)) return false;
                             }
                             const p = f.properties;
-                            if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) return true;
+                            if (planningTopics.overlapping && (() => {
+                                const oMap = overlapMapRef.current;
+                                if (!oMap) return false;
+                                const taba = String(p.taba || '').trim();
+                                if (!taba) return false;
+                                const partners = oMap.get(taba);
+                                if (!partners || !partners.size) return false;
+                                if (!isPlanVisibleInLayer(p)) return false;
+                                // At least one overlap partner must also be visible
+                                const byTaba = window.__planByTaba || null;
+                                for (const otherTaba of partners) {
+                                    const op = byTaba ? byTaba[otherTaba] : null;
+                                    if (op && isPlanVisibleInLayer(op)) return true;
+                                }
+                                return false;
+                            })()) return true;
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 const isLocal = (p.authority || '').includes('מקומית');
@@ -6721,7 +6891,22 @@
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים')
                                 return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
-                            if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0)
+                            if (planningTopics.overlapping && (() => {
+                                const oMap = overlapMapRef.current;
+                                if (!oMap) return false;
+                                const taba = String(p.taba || '').trim();
+                                if (!taba) return false;
+                                const partners = oMap.get(taba);
+                                if (!partners || !partners.size) return false;
+                                if (!isPlanVisibleInLayer(p)) return false;
+                                // At least one overlap partner must also be visible
+                                const byTaba = window.__planByTaba || null;
+                                for (const otherTaba of partners) {
+                                    const op = byTaba ? byTaba[otherTaba] : null;
+                                    if (op && isPlanVisibleInLayer(op)) return true;
+                                }
+                                return false;
+                            })())
                                 return { color: '#3366ff', weight: 2, fillOpacity: 0 };
                             return {};
                         },
@@ -6731,7 +6916,22 @@
                             layer.on('add', () => {
                                 const el = layer.getElement();
                                 if (!el) return;
-                                if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) {
+                                if (planningTopics.overlapping && (() => {
+                                const oMap = overlapMapRef.current;
+                                if (!oMap) return false;
+                                const taba = String(p.taba || '').trim();
+                                if (!taba) return false;
+                                const partners = oMap.get(taba);
+                                if (!partners || !partners.size) return false;
+                                if (!isPlanVisibleInLayer(p)) return false;
+                                // At least one overlap partner must also be visible
+                                const byTaba = window.__planByTaba || null;
+                                for (const otherTaba of partners) {
+                                    const op = byTaba ? byTaba[otherTaba] : null;
+                                    if (op && isPlanVisibleInLayer(op)) return true;
+                                }
+                                return false;
+                            })()) {
                                     el.setAttribute('fill', 'url(#hatch-blue)');
                                     el.setAttribute('fill-opacity', '1');
                                 } else if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') {
@@ -6747,7 +6947,22 @@
                         const el = layer.getElement();
                         const p = layer.feature.properties;
                         if (!el) return;
-                        if (planningTopics.overlapping && (parseFloat(p.overlapping_plans) || 0) > 0) {
+                        if (planningTopics.overlapping && (() => {
+                                const oMap = overlapMapRef.current;
+                                if (!oMap) return false;
+                                const taba = String(p.taba || '').trim();
+                                if (!taba) return false;
+                                const partners = oMap.get(taba);
+                                if (!partners || !partners.size) return false;
+                                if (!isPlanVisibleInLayer(p)) return false;
+                                // At least one overlap partner must also be visible
+                                const byTaba = window.__planByTaba || null;
+                                for (const otherTaba of partners) {
+                                    const op = byTaba ? byTaba[otherTaba] : null;
+                                    if (op && isPlanVisibleInLayer(op)) return true;
+                                }
+                                return false;
+                            })()) {
                             el.setAttribute('fill', 'url(#hatch-blue)');
                             el.setAttribute('fill-opacity', '1');
                         } else if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') {
@@ -10218,7 +10433,14 @@
                                                                                 const ghResp = await fetch('https://api.github.com/repos/hirschhornor-glitch/oranim-map/actions/workflows/update_data.yml/dispatches', {
                                                                                     method: 'POST', headers: { 'Authorization': 'token ' + pat.trim(), 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify({ ref: 'master' })
                                                                                 });
-                                                                                ghMsg = ghResp.status === 204 ? '<div style="font-size:11px;color:#4fc3f7;margin-top:4px">האתר יתעדכן תוך ~2 דקות</div>' : '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ')</div>';
+                                                                                if (ghResp.status === 204) {
+                                                                                    ghMsg = '<div style="font-size:11px;color:#4fc3f7;margin-top:4px">האתר יתעדכן תוך ~2 דקות</div>';
+                                                                                } else if (ghResp.status === 401 || ghResp.status === 403 || ghResp.status === 404) {
+                                                                                    localStorage.removeItem('gh_pat');
+                                                                                    ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ') &mdash; ה-PAT אינו תקף</div><button onclick="localStorage.removeItem(\'gh_pat\'); this.closest(\'#gs-update-overlay\').remove();" style="margin-top:6px;padding:6px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-size:11px">הזני PAT חדש בעדכון הבא</button>';
+                                                                                } else {
+                                                                                    ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ')</div>';
+                                                                                }
                                                                             }
                                                                         } catch(ghErr) { ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל</div>'; }
                                                                         overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #27ae60;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#9989;</div><div style="font-size:14px;margin-bottom:8px">עודכנו ' + result.applied + ' שדות בהצלחה</div>' + ghMsg + (result.skipped && result.skipped.length ? '<div style="font-size:11px;color:#f39c12;margin-bottom:8px">דולגו: ' + result.skipped.join(', ') + '</div>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="padding:8px 24px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px;margin-top:8px">סגור</button></div>';
