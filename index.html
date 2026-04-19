@@ -11886,27 +11886,42 @@
 
                                     return (
                                         <>
-                                            {/* KPI cards */}
-                                            <div style={{display:'flex',gap:16,margin:'16px 0',justifyContent:'center',flexWrap:'wrap'}}>
-                                                <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plansInMp.length}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>תכניות בתחום</div>
+                                            {/* KPI: two side-by-side groups, separated */}
+                                            <div style={{display:'flex',gap:12,margin:'16px 0',justifyContent:'center',flexWrap:'wrap'}}>
+                                                {/* Group 1 — Plans (TBA + TMA-38) */}
+                                                <div style={{flex:'0 1 auto',padding:'8px 14px',background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6}}>
+                                                    <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,textAlign:'center',marginBottom:6}}>תכניות בתחום</div>
+                                                    <div style={{display:'flex',gap:18,justifyContent:'center'}}>
+                                                        <div style={{textAlign:'center'}}>
+                                                            <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plansInMp.length}</div>
+                                                            <div style={{fontSize:11,color:'#aaa'}}>תב״עות</div>
+                                                        </div>
+                                                        <div style={{width:1,background:'#2a2a3e'}}></div>
+                                                        <div style={{textAlign:'center'}}>
+                                                            <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
+                                                            <div style={{fontSize:11,color:'#aaa'}}>תמ״א 38</div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#ef5350'}}>{violations}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>הפרות</div>
-                                                </div>
-                                                <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#ffb74d'}}>{warnings}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>אזהרות</div>
-                                                </div>
-                                                <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#9ccc9c'}}>{ok}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>לא סותר תכנית האב</div>
-                                                </div>
-                                                <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38 בתחום</div>
+                                                {/* Group 2 — Compliance vs. master plan */}
+                                                <div style={{flex:'0 1 auto',padding:'8px 14px',background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6}}>
+                                                    <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,textAlign:'center',marginBottom:6}}>יחס לתכנית האב</div>
+                                                    <div style={{display:'flex',gap:18,justifyContent:'center'}}>
+                                                        <div style={{textAlign:'center'}}>
+                                                            <div style={{fontSize:24,fontWeight:'bold',color:'#ef5350'}}>{violations}</div>
+                                                            <div style={{fontSize:11,color:'#aaa'}}>הפרות</div>
+                                                        </div>
+                                                        <div style={{width:1,background:'#2a2a3e'}}></div>
+                                                        <div style={{textAlign:'center'}}>
+                                                            <div style={{fontSize:24,fontWeight:'bold',color:'#ffb74d'}}>{warnings}</div>
+                                                            <div style={{fontSize:11,color:'#aaa'}}>אזהרות</div>
+                                                        </div>
+                                                        <div style={{width:1,background:'#2a2a3e'}}></div>
+                                                        <div style={{textAlign:'center'}}>
+                                                            <div style={{fontSize:24,fontWeight:'bold',color:'#9ccc9c'}}>{ok}</div>
+                                                            <div style={{fontSize:11,color:'#aaa'}}>לא סותר</div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
