@@ -3690,6 +3690,25 @@
                     }
                     window.__kayamTabaSet = kayamTabaSet;
 
+                    // Correct stale units_add: when units_total + units_in are known,
+                    // trust them over a possibly-stale stored units_add (e.g. 2500 vs 2000).
+                    if (gd.plans && gd.plans.features) {
+                        let fixedCount = 0;
+                        for (const f of gd.plans.features) {
+                            const p = f.properties;
+                            const total = parseFloat(p.units_total) || 0;
+                            if (total <= 0) continue;
+                            const inn = parseFloat(p.units_in) || 0;
+                            const stored = parseFloat(p.units_add) || 0;
+                            const expected = Math.max(total - inn, 0);
+                            if (Math.abs(stored - expected) >= 1) {
+                                p.units_add = expected;
+                                fixedCount++;
+                            }
+                        }
+                        if (fixedCount > 0) console.log(`[Units] Corrected units_add on ${fixedCount} plans (used units_total - units_in)`);
+                    }
+
                     // Build plan lookup by taba for kayam filter conditions
                     const planByTaba = {};
                     if (gd.plans && gd.plans.features) {
