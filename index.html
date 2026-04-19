@@ -7475,11 +7475,15 @@
                     });
 
                     // Plans (TBA + TMA) being promoted INSIDE this master plan,
-                    // colored by compliance (red=violation, orange=warning, green=ok)
+                    // colored by compliance (red=violation, orange=warning, green=ok).
+                    // Exclude archived/rejected plans (נגנזה / נדחתה) — same as regular plans layer.
                     const compliance = window.__masterPlanCompliance || {};
                     const insidePlans = (gd.plans && gd.plans.features || []).filter(f => {
                         const c = compliance[f.properties.plan_name];
-                        return c && c.mp_match === mpName;
+                        if (!c || c.mp_match !== mpName) return false;
+                        const status = normalizeStatus((f.properties.status_mavat || '').trim());
+                        if (status === 'נגנזה' || status === 'נדחתה' || status === 'נגנזה/נדחתה') return false;
+                        return true;
                     });
                     const plansLayer = L.geoJSON({ type: 'FeatureCollection', features: insidePlans }, {
                         pane: 'masterPlanTbaPane',
@@ -9003,10 +9007,12 @@
                 // Annotation display
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
 
-                // Master plan compliance — generic button to open compliance popup
+                // Master plan compliance — styled like the "N היתרים" button (popup-footer pattern)
                 const mpCompForBtn = (window.__masterPlanCompliance || {})[props.plan_name];
                 if (mpCompForBtn) {
-                    html += `<div style="margin-top:6px;text-align:center"><button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}">🎯 התייחסות לתכנית אב</button></div>`;
+                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end;align-items:center;gap:8px">';
+                    html += `<button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}">התייחסות לתכנית אב ←</button>`;
+                    html += '</div>';
                 }
 
                 html += '</div>';
@@ -9709,7 +9715,7 @@
                                     ) : (
                                     <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, [groupKey]: !prev[groupKey]}))} style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',gap:4}}>
                                         <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups[groupKey]?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
-                                        {groupKey === 'admin' && (
+                                        {(groupKey === 'admin' || groupKey === 'master_plans') && (
                                             <input type="checkbox"
                                                 checked={group.layers.every(l => layers[l.id])}
                                                 onChange={() => {
@@ -10516,18 +10522,16 @@
                         {/* Master plan compliance disclaimer — shown when any master plan layer is active */}
                         {['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona'].some(k => layers[k]) && (
                             <div style={{
-                                position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)',
-                                zIndex:1001, maxWidth:'min(640px, 90vw)',
-                                background:'rgba(15,15,30,0.95)', backdropFilter:'blur(8px)',
-                                border:'1px solid #3a3a5a', borderRadius:6, padding:'8px 12px',
-                                fontSize:'11px', color:'#cdd', direction:'rtl', fontFamily:'Assistant,sans-serif',
+                                position:'absolute', bottom:14, left:'50%', transform:'translateX(-50%)',
+                                zIndex:1001, maxWidth:'min(720px, 92vw)',
+                                background:'rgba(15,15,30,0.96)', backdropFilter:'blur(8px)',
+                                border:'1px solid #3a3a5a', borderRadius:8, padding:'12px 18px',
+                                fontSize:'14px', lineHeight:1.5, color:'#dde',
+                                direction:'rtl', fontFamily:'Assistant,sans-serif',
                                 boxShadow:'0 2px 12px rgba(0,0,0,0.5)'
                             }}>
-                                <span style={{color:'#5dade2',fontWeight:'bold'}}>ℹ️ נבדק כיום:</span>
-                                <span style={{margin:'0 6px'}}>מבני שימור (א/ב/ג), אזור "לא לציפוף", תמ״א 38 על מבנה שימור.</span>
-                                <span style={{color:'#888'}}>·</span>
-                                <span style={{color:'#bb8',fontWeight:'bold',marginRight:6}}>טרם נבדק:</span>
-                                <span>קומות, אחוזי בנייה, תכסית, גובה, שימושים — דורש שדות חסרים ב‑plans.geojson.</span>
+                                <span style={{color:'#ffb74d',fontWeight:'bold',marginLeft:6}}>טרם נבדק:</span>
+                                <span>מספר קומות, אחוזי בנייה, תכסית, גובה, שימושים, חזית מסחרית</span>
                             </div>
                         )}
 
