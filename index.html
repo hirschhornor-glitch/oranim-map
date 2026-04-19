@@ -2098,6 +2098,7 @@
             master_plan_moshavot: 'data/master_plan_moshavot.geojson',
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
+            master_plan_arnona: 'data/master_plan_arnona.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -2241,6 +2242,7 @@
                     { id: 'master_plan_moshavot', name: 'מושבות', desc: 'תכנית אב מושבות (גרמנית/יוונית/קטמון/טלביה) — גבול, אזורי מגורים, מבני שימור', on: false },
                     { id: 'master_plan_rasko', name: 'רסקו – גבעת הורדים', desc: 'תכנית אב רסקו — גבול, מתחמי גובה (A-G), מבני ומתחמי שימור', on: false },
                     { id: 'master_plan_baka', name: 'בקעה', desc: 'תכנית אב בקעה — גבול, גובה מבנים, מרקמים, דרגות שימור', on: false },
+                    { id: 'master_plan_arnona', name: 'ארנונה', desc: 'תכנית אב ארנונה — גבול, מתחמי קומות, מבנים + שימור', on: false },
                 ]
             },
         };
@@ -7299,6 +7301,7 @@
                     master_plan_moshavot: { color: '#7e57c2', label: 'תכנית אב מושבות' },
                     master_plan_rasko:    { color: '#1976d2', label: 'תכנית אב רסקו' },
                     master_plan_baka:     { color: '#388e3c', label: 'תכנית אב בקעה' },
+                    master_plan_arnona:   { color: '#e65100', label: 'תכנית אב ארנונה' },
                 };
                 const ZONE_FILL_COLORS = {
                     A: '#ef5350', B: '#42a5f5', C: '#66bb6a', D: '#ffa726',
@@ -7418,7 +7421,7 @@
                     }).addTo(map);
                     return layer;
                 }
-                ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka'].forEach(key => {
+                ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona'].forEach(key => {
                     if (layers[key] && gd[key]) {
                         geoLayersRef.current[key] = buildMasterPlanLayer(key, gd[key]);
                     }
