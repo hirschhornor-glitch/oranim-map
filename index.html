@@ -8976,12 +8976,10 @@
                 // Annotation display
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
 
-                // Master plan compliance — show button to open compliance popup
+                // Master plan compliance — generic button to open compliance popup
                 const mpCompForBtn = (window.__masterPlanCompliance || {})[props.plan_name];
                 if (mpCompForBtn) {
-                    const sl2 = { violation:'הפרה', warning:'אזהרה', ok:'תקין' }[mpCompForBtn.mp_status] || mpCompForBtn.mp_status;
-                    const sc2 = { violation:'#d32f2f', warning:'#f57c00', ok:'#43a047' }[mpCompForBtn.mp_status] || '#888';
-                    html += `<div style="margin-top:6px;text-align:center"><button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}" style="background:${sc2};color:white">🎯 התייחסות לתכנית אב ${mpCompForBtn.mp_match} · ${sl2}</button></div>`;
+                    html += `<div style="margin-top:6px;text-align:center"><button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}">🎯 התייחסות לתכנית אב</button></div>`;
                 }
 
                 html += '</div>';
