@@ -6280,6 +6280,10 @@
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                     if (s === 'הכנת הודעה 77/78') return false;
                     if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
+                    // Exclude consolidation-and-division plans from overlap logic
+                    // (they cover the same area as building plans but are procedural).
+                    const nameJoined = `${p.plan_summary || ''} ${p.plan_name_he || ''}`;
+                    if (nameJoined.includes('איחוד וחלוקה') || normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
                     const shk = window.__shouldHideKayam;
                     if (shk) {
                         const t = String(p.taba || '').trim();
@@ -9266,7 +9270,7 @@
                                 <label style={{flex:1}}>תבעות כפולות על אותו מרחב</label>
                                 <button className="layer-legend-btn" title="דוח תכניות כפולות"
                                     onClick={(e) => { e.stopPropagation(); setOverlapReport(true); }}
-                                    style={{background:'none',border:'none',color:'#888',cursor:'pointer',padding:'0 4px',fontSize:14}}>📊</button>
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
                                  title='תוכניות לעיבוי שטחים חומים - תוספת יח"ד בשטחים מאושרים'
@@ -9282,7 +9286,7 @@
                                 <label style={{flex:1}}>תכניות המופקדות להתנגדויות</label>
                                 <button className="layer-legend-btn" title="דוח סיכום הפקדות"
                                     onClick={(e) => { e.stopPropagation(); setObjectionsReport(true); }}
-                                    style={{marginRight:4,fontSize:13}}>📋</button>
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
                                  title='תכניות תשתיות'
@@ -11714,13 +11718,15 @@
                         const allAdminOn2 = adminLayers2.every(l => layers[l.id]);
                         const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
 
-                        // Same filter as plans layer: no archived/infra/already-implemented
+                        // Same filter as plans layer: no archived/infra/consolidation-division
                         const isVisible = (p) => {
                             if (!checkMinahak(p)) return false;
                             const s = normalizeStatus((p.status_mavat || '').trim());
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             if (s === 'הכנת הודעה 77/78') return false;
                             if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
+                            const nameJoined = `${p.plan_summary || ''} ${p.plan_name_he || ''}`;
+                            if (nameJoined.includes('איחוד וחלוקה') || normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
                             const shk = window.__shouldHideKayam;
                             if (shk) {
                                 const t = String(p.taba || '').trim();
