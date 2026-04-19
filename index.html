@@ -11751,7 +11751,77 @@
                                     const violations = plansInMp.filter(p => p.c.mp_status === 'violation').length;
                                     const warnings   = plansInMp.filter(p => p.c.mp_status === 'warning').length;
                                     const ok         = plansInMp.filter(p => p.c.mp_status === 'ok').length;
-                                    const tamaCount  = plansInMp.filter(p => p.c.mp_is_tama38).length;
+
+                                    // TMA-38: count separate tama38 features inside the MP boundary
+                                    // (these are actual permits, not plans classified as tama38)
+                                    const LAYER_BY_NAME = {
+                                        'מושבות': 'master_plan_moshavot',
+                                        'רסקו':    'master_plan_rasko',
+                                        'בקעה':    'master_plan_baka',
+                                        'ארנונה':  'master_plan_arnona',
+                                    };
+                                    const mpLayerKey = LAYER_BY_NAME[masterPlanReport];
+                                    const mpFc = mpLayerKey && gd[mpLayerKey];
+                                    const boundaryFeat = mpFc && (mpFc.features || []).find(ff => (ff.properties || {}).feature_type === 'boundary');
+                                    const boundaryGeom = boundaryFeat ? boundaryFeat.geometry : null;
+
+                                    // Inline point-in-polygon helpers (mirrors buildMasterPlanLayer)
+                                    const ringContains = (lng, lat, ring) => {
+                                        let inside = false;
+                                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                            const xi = ring[i][0], yi = ring[i][1];
+                                            const xj = ring[j][0], yj = ring[j][1];
+                                            if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+                                        }
+                                        return inside;
+                                    };
+                                    const pointInGeom = (lng, lat, geom) => {
+                                        if (!geom) return false;
+                                        const polys = geom.type === 'Polygon' ? [geom.coordinates]
+                                                    : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+                                        for (const poly of polys) {
+                                            if (poly[0] && ringContains(lng, lat, poly[0])) {
+                                                let inHole = false;
+                                                for (let h = 1; h < poly.length; h++) {
+                                                    if (ringContains(lng, lat, poly[h])) { inHole = true; break; }
+                                                }
+                                                if (!inHole) return true;
+                                            }
+                                        }
+                                        return false;
+                                    };
+
+                                    const tama38InsideMp = [];
+                                    if (boundaryGeom && gd.tama38 && gd.tama38.features) {
+                                        gd.tama38.features.forEach(tf => {
+                                            if (!tf.geometry || !tf.geometry.coordinates) return;
+                                            const c = tf.geometry.type === 'MultiPoint' ? tf.geometry.coordinates[0] : tf.geometry.coordinates;
+                                            if (!c) return;
+                                            if (pointInGeom(c[0], c[1], boundaryGeom)) tama38InsideMp.push(tf);
+                                        });
+                                    }
+                                    const tamaCount = tama38InsideMp.length;
+                                    const tamaUnitsAdd = tama38InsideMp.reduce((s, tf) => s + (parseFloat(tf.properties.units_tose) || 0), 0);
+
+                                    // Master-plan context: subzone counts, floor range, conservation totals, no-densif zones
+                                    const mpFeatures = (mpFc && mpFc.features) || [];
+                                    const subzoneFeats = mpFeatures.filter(ff => (ff.properties || {}).feature_type === 'subzone' || (ff.properties || {}).feature_type === 'texture' || (ff.properties || {}).feature_type === 'building_height');
+                                    const floorVals = subzoneFeats
+                                        .map(ff => {
+                                            const p = ff.properties;
+                                            const raw = p.max_floors ?? p.floors_max ?? p.floors_max_int ?? p.floors_per_master_plan;
+                                            // Pull the first integer out of "יקבע בהתאם..." / "4-5" / etc.
+                                            const m = String(raw || '').match(/\d+/);
+                                            return m ? parseInt(m[0], 10) : NaN;
+                                        })
+                                        .filter(v => v && isFinite(v) && v > 0);
+                                    const floorsMinAllowed = floorVals.length ? Math.min(...floorVals) : null;
+                                    const floorsMaxAllowed = floorVals.length ? Math.max(...floorVals) : null;
+                                    const consPointCount = mpFeatures.filter(ff => (ff.properties || {}).feature_type === 'conservation_point').length;
+                                    const noDensifZones = subzoneFeats.filter(ff => {
+                                        const txt = Object.values(ff.properties).filter(v => typeof v === 'string').join(' ');
+                                        return /לא לציפוף|אזור לא לציפוף/.test(txt);
+                                    }).length;
 
                                     // Aggregate sqm + units (from Table 5 / existing fields)
                                     const agg = { units_add:0, commerce_in:0, employment:0, shavatz_out:0, hafrash:0 };
@@ -11832,22 +11902,42 @@
                                                 </div>
                                                 <div style={{textAlign:'center'}}>
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#9ccc9c'}}>{ok}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>תקין</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>לא סותר תכנית האב</div>
                                                 </div>
                                                 <div style={{textAlign:'center'}}>
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
-                                                    <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38 בתחום</div>
                                                 </div>
                                             </div>
 
-                                            {/* Aggregate sqm + units */}
+                                            {/* Aggregate sqm + units — with MP context underneath */}
                                             <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 6px'}}>סיכום כמותי</h3>
-                                            <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12,color:'#cdd',background:'#15152a',padding:'8px 10px',borderRadius:4}}>
-                                                <span><b>יח"ד תוספת:</b> {fmt(agg.units_add)}</span>
-                                                <span><b>מסחר נכנס:</b> {fmt(agg.commerce_in)} מ"ר</span>
-                                                <span><b>תעסוקה:</b> {fmt(agg.employment)} מ"ר</span>
-                                                <span><b>שב"צ יוצא:</b> {fmt(agg.shavatz_out)} מ"ר</span>
-                                                <span><b>הפרשה מבונה:</b> {fmt(agg.hafrash)} מ"ר</span>
+                                            <div style={{background:'#15152a',padding:'8px 10px',borderRadius:4}}>
+                                                <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>מה התכניות מציעות</div>
+                                                <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12,color:'#cdd'}}>
+                                                    <span><b>יח"ד תוספת:</b> {fmt(agg.units_add)}</span>
+                                                    {tamaUnitsAdd > 0 && (
+                                                        <span style={{color:'#5dade2'}}><b>יח"ד תמ"א 38:</b> {fmt(tamaUnitsAdd)}</span>
+                                                    )}
+                                                    <span><b>מסחר נכנס:</b> {fmt(agg.commerce_in)} מ"ר</span>
+                                                    <span><b>תעסוקה:</b> {fmt(agg.employment)} מ"ר</span>
+                                                    <span><b>שב"צ יוצא:</b> {fmt(agg.shavatz_out)} מ"ר</span>
+                                                    <span><b>הפרשה מבונה:</b> {fmt(agg.hafrash)} מ"ר</span>
+                                                </div>
+                                                {(subzoneFeats.length > 0 || consPointCount > 0) && (
+                                                    <>
+                                                        <div style={{borderTop:'1px dashed #2a2a3e',margin:'8px 0 6px'}}></div>
+                                                        <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>מה תכנית האב מגדירה (מהמסמכים)</div>
+                                                        <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12,color:'#aab'}}>
+                                                            {subzoneFeats.length > 0 && <span><b>תת-מתחמים:</b> {subzoneFeats.length}</span>}
+                                                            {floorsMinAllowed !== null && floorsMaxAllowed !== null && (
+                                                                <span><b>קומות מותרות:</b> {floorsMinAllowed === floorsMaxAllowed ? floorsMaxAllowed : (floorsMinAllowed + '–' + floorsMaxAllowed)}</span>
+                                                            )}
+                                                            {consPointCount > 0 && <span><b>מבני שימור:</b> {consPointCount}</span>}
+                                                            {noDensifZones > 0 && <span style={{color:'#ffb74d'}}><b>אזורים ללא ציפוף:</b> {noDensifZones}</span>}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
 
                                             {/* Top-N violators */}
