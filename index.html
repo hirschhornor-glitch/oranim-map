@@ -3108,6 +3108,33 @@
             { label: 'אין הרשאה', color: '#e74c3c' },
         ];
 
+        const MASTER_PLAN_LEGEND = [
+            { label: 'אזורים נושאיים (משותף לכל תכניות האב)', style: 'header' },
+            { label: 'שימור מחמיר / שימור מלא', color: '#b71c1c' },
+            { label: 'שימור (כללי)', color: '#ef6c00' },
+            { label: 'שימור מרקמי / מתחם לשימור', color: '#fbc02d' },
+            { label: 'אזור לא לציפוף', color: '#90caf9' },
+            { label: 'התחדשות עירונית / פינוי-בינוי', color: '#7b1fa2' },
+            { label: 'שטח ציבורי פתוח (שצ״פ)', color: '#66bb6a' },
+            { label: 'מבני ציבור / שב״צ', color: '#2e7d32' },
+            { label: 'חזית מסחרית', color: '#6d4c41' },
+            { label: 'דרך / שביל / מיתון תנועה', color: '#757575' },
+            { label: 'אזורי ליבה / תכנית מאושרת', color: '#9e9e9e' },
+            { label: 'מתחם בנייה (לפי קומות)', color: '#80deea' },
+            { label: 'מתחם מיוחד / הנחיות מיוחדות', color: '#ffeb3b' },
+            { label: 'תוספת מתונה / עיבוי', color: '#ffb74d' },
+            { label: 'מגורים', color: '#80cbc4' },
+            { label: 'תאימות תב״עות / תמ״אות בתוך תכנית האב', style: 'header' },
+            { label: 'תקין', color: '#43a047' },
+            { label: 'אזהרה', color: '#f57c00' },
+            { label: 'הפרה', color: '#d32f2f' },
+            { label: 'גבול תכנית האב', style: 'header' },
+            { label: 'מושבות', color: '#7e57c2' },
+            { label: 'רסקו', color: '#1976d2' },
+            { label: 'בקעה', color: '#388e3c' },
+            { label: 'ארנונה', color: '#e65100' },
+        ];
+
         const SHAVAZ_LEGEND = [
             { label: 'מבני ציבור קיים', color: '#8B4513' },
             { label: 'מבני ציבור עתידי', color: '#D2B48C' },
@@ -9496,6 +9523,10 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id && layer.id.startsWith('master_plan_') && (
+                                                <button className="layer-legend-btn" title="מקרא תכנית אב — צבעים נושאיים + תאימות"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תכניות אב', items: MASTER_PLAN_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
