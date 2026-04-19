@@ -9727,13 +9727,8 @@
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.id === 'tama38' && (
-                                                <>
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
-                                                <button className="layer-legend-btn" title="דוח סיכום תמ&quot;א 38 בתכניות האב"
-                                                    onClick={(e) => { e.stopPropagation(); setMasterPlanReport('תמ"א 38'); }}
-                                                    style={{marginRight:4,fontSize:11}}>📊</button>
-                                                </>
                                             )}
                                             {groupKey === 'master_plans' && (
                                                 <button className="layer-legend-btn" title={"דוח סיכום — תכנית אב " + layer.name}
@@ -11731,15 +11726,13 @@
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(700px, 95vw)', maxHeight: '85vh', display:'flex', flexDirection:'column'}}>
                                 <button className="units-close" onClick={() => setMasterPlanReport(null)}>&times;</button>
                                 <div style={{overflowY:'auto', flex:1}}>
-                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח סיכום — {masterPlanReport === 'תמ"א 38' ? 'תמ"א 38 בתכניות האב' : 'תכנית אב ' + masterPlanReport}</h2>
+                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח סיכום — תכנית אב {masterPlanReport}</h2>
                                 {(() => {
                                     const gd = geoDataRef.current;
                                     const compliance = window.__masterPlanCompliance || {};
                                     if (!gd.plans) return <p>טוען...</p>;
 
-                                    const isTama38Report = masterPlanReport === 'תמ"א 38';
-
-                                    // Filter plans: match MP (or all MPs for tama38 report) + exclude rejected
+                                    // Filter plans matching the current master plan + exclude rejected
                                     const rejected = new Set(['נגנזה','נדחתה','נגנזה/נדחתה']);
                                     const seen = new Set();
                                     const plansInMp = [];
@@ -11747,12 +11740,7 @@
                                         const pn = f.properties.plan_name;
                                         if (!pn || seen.has(pn)) return;
                                         const c = compliance[pn];
-                                        if (!c) return;
-                                        if (isTama38Report) {
-                                            if (!c.mp_is_tama38) return;
-                                        } else {
-                                            if (c.mp_match !== masterPlanReport) return;
-                                        }
+                                        if (!c || c.mp_match !== masterPlanReport) return;
                                         const st = normalizeStatus((f.properties.status_mavat || '').trim());
                                         if (rejected.has(st)) return;
                                         seen.add(pn);
@@ -11846,12 +11834,10 @@
                                                     <div style={{fontSize:24,fontWeight:'bold',color:'#9ccc9c'}}>{ok}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>תקין</div>
                                                 </div>
-                                                {!isTama38Report && (
-                                                    <div style={{textAlign:'center'}}>
-                                                        <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
-                                                        <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38</div>
-                                                    </div>
-                                                )}
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38</div>
+                                                </div>
                                             </div>
 
                                             {/* Aggregate sqm + units */}
