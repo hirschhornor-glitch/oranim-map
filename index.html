@@ -3228,6 +3228,7 @@
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
+            const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
             const [showToast, setShowToast] = useState(false);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
@@ -11827,40 +11828,89 @@
                                     {groups.length === 0 && (
                                         <p style={{color:'#888',fontSize:13}}>אין כפולות בקרב התכניות המוצגות כעת.</p>
                                     )}
-                                    {groups.map((g, gi) => (
-                                        <div key={gi} style={{marginBottom:18,border:'1px solid #2a2a4a',borderRadius:8,padding:'10px 12px',background:'rgba(51,102,255,0.06)'}}>
-                                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
-                                                <div style={{color:'#9cf',fontSize:13,fontWeight:700}}>קבוצה {gi+1} — {g.plans.length} תכניות</div>
-                                                <div style={{color:'#ffa726',fontSize:12}}>סה"כ {Math.round(g.totalUnits)} יח"ד תוספת</div>
-                                            </div>
-                                            <table style={{width:'100%',fontSize:12,borderCollapse:'collapse'}}>
-                                                <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
-                                                    <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מספר</th>
-                                                    <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>שם תכנית</th>
-                                                    <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>סטטוס</th>
-                                                    <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>תאריך</th>
-                                                    <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מינה"ק</th>
-                                                    <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>יח"ד תוספת</th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {g.plans.map((p, i) => {
-                                                        const s = normalizeStatus((p.status_mavat||'').trim());
-                                                        const statusColor = STATUS_COLORS[s] || '#aaa';
-                                                        return (
-                                                        <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
-                                                            onClick={() => jumpToPlan(p)}>
-                                                            <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
-                                                            <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
-                                                            <td style={{padding:'4px',color:statusColor}}>{s || '-'}</td>
-                                                            <td style={{textAlign:'center',padding:'4px',color:'#ccc'}}>{p.mavat_date || '-'}</td>
-                                                            <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
-                                                            <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{parseFloat(p.units_add) > 0 ? Math.round(parseFloat(p.units_add)) : '-'}</td>
-                                                        </tr>);
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ))}
+                                    {(() => {
+                                        // Pick a representative name for a group.
+                                        // Words shared across plan_summary of most plans → common location.
+                                        const STOPWORDS = new Set([
+                                            'תוספת','בנייה','בניה','הגדלת','זכויות','תוכנית','תכנית','שינוי',
+                                            'הקמת','הוספת','חדש','חדשה','שכונת','שכ','ירושלים','ב','של','על',
+                                            'מס','סה','ד','יח','מבני','מבנה','מגורים','מסחר','תעסוקה','ותעסוקה',
+                                            'קומות','קומה','בבניין','קיים','חדשים','חדשות','בכל','לבנייה','לבניה',
+                                            'במתחם','במקום','ממ','הגדלה','איחוד','חלוקה','בהסכמת','ללא','עם',
+                                            'בית','בתים','חברת','חב','תב','תב"ע'
+                                        ]);
+                                        const groupName = (plans) => {
+                                            const wordCount = new Map();
+                                            let n = 0;
+                                            for (const p of plans) {
+                                                const s = (p.plan_summary || '').trim();
+                                                if (!s) continue;
+                                                n++;
+                                                const words = s.replace(/[.,\-–—:;()"'\/]+/g, ' ').split(/\s+/).filter(w =>
+                                                    w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS.has(w));
+                                                const uniq = new Set(words);
+                                                for (const w of uniq) wordCount.set(w, (wordCount.get(w) || 0) + 1);
+                                            }
+                                            if (n === 0) return '';
+                                            const threshold = Math.max(2, Math.ceil(n / 2));
+                                            const common = [...wordCount.entries()]
+                                                .filter(([, c]) => c >= threshold)
+                                                .sort((a, b) => b[1] - a[1])
+                                                .map(([w]) => w);
+                                            return common.slice(0, 3).join(' ');
+                                        };
+                                        const toggleGroup = (idx) => setOverlapExpanded(prev => {
+                                            const next = new Set(prev);
+                                            if (next.has(idx)) next.delete(idx); else next.add(idx);
+                                            return next;
+                                        });
+                                        return groups.map((g, gi) => {
+                                            const expanded = overlapExpanded.has(gi);
+                                            const name = groupName(g.plans) || 'קבוצה';
+                                            const minahaks = [...new Set(g.plans.map(p => (p.minahak||'').trim()).filter(Boolean))];
+                                            const minahakText = minahaks.length === 1 ? minahaks[0] : (minahaks.length > 1 ? `${minahaks.length} מינהלים` : '-');
+                                            return (
+                                            <div key={gi} style={{marginBottom:10,border:'1px solid #2a2a4a',borderRadius:8,background:'rgba(51,102,255,0.06)',overflow:'hidden'}}>
+                                                <div onClick={() => toggleGroup(gi)}
+                                                     style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',cursor:'pointer',userSelect:'none'}}>
+                                                    <span style={{color:'#9cf',fontSize:12,width:14}}>{expanded ? '▾' : '▸'}</span>
+                                                    <span style={{color:'#9cf',fontSize:14,fontWeight:700,flex:1}}>{name} <span style={{color:'#7788aa',fontSize:12,fontWeight:400}}>· {g.plans.length} תכניות</span></span>
+                                                    <span style={{color:'#ce93d8',fontSize:12}}>{minahakText}</span>
+                                                    <span style={{color:'#ffa726',fontSize:12,minWidth:90,textAlign:'left'}}>{Math.round(g.totalUnits)} יח"ד תוספת</span>
+                                                </div>
+                                                {expanded && (
+                                                    <div style={{padding:'0 12px 10px'}}>
+                                                        <table style={{width:'100%',fontSize:12,borderCollapse:'collapse'}}>
+                                                            <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                                <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מספר</th>
+                                                                <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>שם תכנית</th>
+                                                                <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>סטטוס</th>
+                                                                <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>תאריך</th>
+                                                                <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מינה"ק</th>
+                                                                <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>יח"ד תוספת</th>
+                                                            </tr></thead>
+                                                            <tbody>
+                                                                {g.plans.map((p, i) => {
+                                                                    const s = normalizeStatus((p.status_mavat||'').trim());
+                                                                    const statusColor = STATUS_COLORS[s] || '#aaa';
+                                                                    return (
+                                                                    <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                                        onClick={() => jumpToPlan(p)}>
+                                                                        <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
+                                                                        <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                                        <td style={{padding:'4px',color:statusColor}}>{s || '-'}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px',color:'#ccc'}}>{p.mavat_date || '-'}</td>
+                                                                        <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{parseFloat(p.units_add) > 0 ? Math.round(parseFloat(p.units_add)) : '-'}</td>
+                                                                    </tr>);
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>);
+                                        });
+                                    })()}
                                 </div>
                             </div>
                         </div>);
