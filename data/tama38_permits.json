@@ -12641,14 +12641,6 @@
     "permit_count": 1,
     "error": ""
   },
-  "88": {
-    "tik": "14892",
-    "address": "שמעוני דוד 33",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:04:22.419216",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "107": {
     "tik": "2016/1056",
     "address": "יפתח 1",
@@ -12663,46 +12655,6 @@
     ],
     "scraped_at": "2026-04-19T03:04:42.823801",
     "permit_count": 1,
-    "error": ""
-  },
-  "119": {
-    "tik": "15008",
-    "address": "יהושע בן נון 3",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:05:07.481234",
-    "permit_count": 0,
-    "error": ""
-  },
-  "134": {
-    "tik": "15004",
-    "address": "ככר מגנס 1",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:05:22.194525",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "151": {
-    "tik": "15191",
-    "address": "הנשיא 7",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:05:46.245977",
-    "permit_count": 0,
-    "error": ""
-  },
-  "152": {
-    "tik": "15184",
-    "address": "הנשיא 4",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:06:10.310951",
-    "permit_count": 0,
-    "error": ""
-  },
-  "161": {
-    "tik": "15230",
-    "address": "דן 4",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:06:33.974896",
-    "permit_count": 0,
     "error": ""
   },
   "166": {
@@ -12721,30 +12673,6 @@
     "permit_count": 1,
     "error": ""
   },
-  "168": {
-    "tik": "15266",
-    "address": "הרב ברלין 22",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:07:08.866039",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "184": {
-    "tik": "15318",
-    "address": "קיבוץ גלויות 3",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:07:23.990395",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "192": {
-    "tik": "15416",
-    "address": "43 ניקנור",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:07:38.776889",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "200": {
     "tik": "2019/0590.00",
     "address": "עמינדב 2",
@@ -12759,70 +12687,6 @@
     ],
     "scraped_at": "2026-04-19T03:07:59.159275",
     "permit_count": 1,
-    "error": ""
-  },
-  "206": {
-    "tik": "15722",
-    "address": "המשוריינים 5",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:08:13.947141",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "213": {
-    "tik": "15462",
-    "address": "הרב ברודי 3",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:08:28.825962",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "214": {
-    "tik": "15468",
-    "address": "מטודלה 12",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:08:52.990501",
-    "permit_count": 0,
-    "error": ""
-  },
-  "216": {
-    "tik": "",
-    "address": "\b",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:09:06.941967",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "219": {
-    "tik": "15488",
-    "address": "ציפורה 3",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:09:21.421047",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "223": {
-    "tik": "15499",
-    "address": "עזריאל הילדסהימר",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:09:36.988254",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "233": {
-    "tik": "15534",
-    "address": "גד 12",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:10:00.645317",
-    "permit_count": 0,
-    "error": ""
-  },
-  "246": {
-    "tik": "15381",
-    "address": "דן 1",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:10:28.980934",
-    "permit_count": 0,
     "error": ""
   },
   "255": {
@@ -12934,30 +12798,6 @@
     "permit_count": 8,
     "error": ""
   },
-  "259": {
-    "tik": "15687",
-    "address": "אסתר המלכה 2",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:11:58.524443",
-    "permit_count": 0,
-    "error": ""
-  },
-  "263": {
-    "tik": "15482",
-    "address": "בנימין זאב בכר 10",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:12:14.971062",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "267": {
-    "tik": "15688",
-    "address": "האר\"י 13",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:12:45.621903",
-    "permit_count": 0,
-    "error": ""
-  },
   "269": {
     "tik": "15599",
     "address": "רמבן 29",
@@ -13016,14 +12856,6 @@
     "permit_count": 7,
     "error": ""
   },
-  "278": {
-    "tik": "15673",
-    "address": "רד\"ק 18",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:13:31.696789",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "279": {
     "tik": "15681",
     "address": "עמק רפאים 68",
@@ -13047,19 +12879,306 @@
     "permit_count": 2,
     "error": ""
   },
+  "88": {
+    "tik": "14892",
+    "address": "שמעוני דוד 33",
+    "permits": [
+      {
+        "file_number": "2010/1064.00",
+        "status": "הבקשה נסגרה",
+        "status_date": "24/12/2023",
+        "request_type": "תוספת בניה / הרחבה לבניין קיים",
+        "request_description": "הרחבות יח\"ד קיימות"
+      },
+      {
+        "file_number": "2010/1064.01",
+        "status": "הבקשה נסגרה",
+        "status_date": "09/02/2023",
+        "request_type": "תוספת בניה / הרחבה לבניין קיים",
+        "request_description": "תוספת בניה"
+      },
+      {
+        "file_number": "2017/0002.00",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "27/12/2017",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסה מבנה והקמת בניין בן 5 קומות מעל קומת חניה ומחסנים בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה."
+      },
+      {
+        "file_number": "2017/0002.01",
+        "status": "הבקשה נסגרה",
+        "status_date": "04/02/2019",
+        "request_type": "תוכנית שינויים",
+        "request_description": "תכנית שינויים בחניה, מחסנים ופתחים, שינוי לתמ\"א 38."
+      },
+      {
+        "file_number": "2017/0002.02",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "28/11/2021",
+        "request_type": "",
+        "request_description": "תכנית שינויים לתמ\"א 38 2. ללא תוספת שטחים עיקריים"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:18:21.504463",
+    "permit_count": 5,
+    "error": ""
+  },
+  "119": {
+    "tik": "15008",
+    "address": "יהושע בן נון 3",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:18:45.306195",
+    "permit_count": 0,
+    "error": ""
+  },
+  "134": {
+    "tik": "15004",
+    "address": "ככר מגנס 1",
+    "permits": [
+      {
+        "file_number": "2011/1121.00",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "06/06/2013",
+        "request_type": "התקנת מעלית",
+        "request_description": "התקנת מעלית חצונית חדשה מזכוכית לבניין קיים"
+      },
+      {
+        "file_number": "2011/1121.01",
+        "status": "הבקשה נסגרה",
+        "status_date": "21/03/2012",
+        "request_type": "התקנת מעלית",
+        "request_description": "התקנת 2 מעליות פנימיות בבניין קיים"
+      },
+      {
+        "file_number": "2025/0334.00",
+        "status": "נפתח תיק רישוי",
+        "status_date": "10/09/2025",
+        "request_type": "",
+        "request_description": "הקמת אגף חדש ביה\"ס להנדסה ומדעי המחשב, האוניברסיטה העברית, גבעת רם"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:19:20.185081",
+    "permit_count": 3,
+    "error": ""
+  },
+  "151": {
+    "tik": "15191",
+    "address": "הנשיא 7",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:19:43.274212",
+    "permit_count": 0,
+    "error": ""
+  },
+  "152": {
+    "tik": "15184",
+    "address": "הנשיא 4",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:20:06.590803",
+    "permit_count": 0,
+    "error": ""
+  },
+  "161": {
+    "tik": "15230",
+    "address": "דן 4",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:20:29.569538",
+    "permit_count": 0,
+    "error": ""
+  },
+  "168": {
+    "tik": "15266",
+    "address": "הרב ברלין 22",
+    "permits": [
+      {
+        "file_number": "2020/0451.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "31/07/2024",
+        "request_type": "תמ\"א 38 - תוספות",
+        "request_description": "הרחבות ותוספת קומות עפ\"י תמ\"א 38/1"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:21:04.766118",
+    "permit_count": 1,
+    "error": ""
+  },
+  "184": {
+    "tik": "15318",
+    "address": "קיבוץ גלויות 3",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:21:23.008888",
+    "permit_count": 0,
+    "error": "no_street_suggestion"
+  },
+  "192": {
+    "tik": "15416",
+    "address": "43 ניקנור",
+    "permits": [
+      {
+        "file_number": "2023/0555.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "14/01/2026",
+        "request_type": "תמ\"א 38 - תוספות",
+        "request_description": "חיזוקים הרחבות ותוספת קומות, מחסנים, מרפסות ומעלית מתוקף תמ\"א 38 ותוכנית 10038"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:21:46.333626",
+    "permit_count": 1,
+    "error": ""
+  },
+  "206": {
+    "tik": "15722",
+    "address": "המשוריינים 5",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:21:58.279711",
+    "permit_count": 0,
+    "error": "no_street_suggestion"
+  },
+  "213": {
+    "tik": "15462",
+    "address": "הרב ברודי 3",
+    "permits": [
+      {
+        "file_number": "2021/0163.00",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "13/02/2025",
+        "request_type": "",
+        "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א 38,תוספת 2 קומותמעל המבנה בין 3 קומות מעל 0.00"
+      },
+      {
+        "file_number": "2021/0163.01",
+        "status": "שולמה מקדמה",
+        "status_date": "02/12/2025",
+        "request_type": "",
+        "request_description": "תוספת מרפסות,שינוי חלונות,תוספת מסתור מזגנים חזית דרומית"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:22:33.449715",
+    "permit_count": 2,
+    "error": ""
+  },
+  "214": {
+    "tik": "15468",
+    "address": "מטודלה 12",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:22:56.657797",
+    "permit_count": 0,
+    "error": ""
+  },
+  "219": {
+    "tik": "15488",
+    "address": "ציפורה 3",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:23:08.361376",
+    "permit_count": 0,
+    "error": "no_street_suggestion"
+  },
+  "223": {
+    "tik": "15499",
+    "address": "עזריאל הילדסהימר",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:23:27.654386",
+    "permit_count": 0,
+    "error": "no_street_suggestion"
+  },
+  "233": {
+    "tik": "15534",
+    "address": "גד 12",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:23:50.585176",
+    "permit_count": 0,
+    "error": ""
+  },
+  "246": {
+    "tik": "15381",
+    "address": "דן 1",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:24:13.571001",
+    "permit_count": 0,
+    "error": ""
+  },
+  "259": {
+    "tik": "15687",
+    "address": "אסתר המלכה 2",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:24:37.325518",
+    "permit_count": 0,
+    "error": ""
+  },
+  "263": {
+    "tik": "15482",
+    "address": "בנימין זאב בכר 10",
+    "permits": [],
+    "scraped_at": "2026-04-19T03:25:13.661840",
+    "permit_count": 0,
+    "error": ""
+  },
+  "267": {
+    "tik": "15688",
+    "address": "האר\"י 13",
+    "permits": [
+      {
+        "file_number": "1956/0675.01",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "02/06/2009",
+        "request_type": "התקנת מעלית",
+        "request_description": "התקנת מעלית חיצונית."
+      },
+      {
+        "file_number": "2023/0569.00",
+        "status": "נדונה בוועדת המשנה",
+        "status_date": "10/02/2025",
+        "request_type": "",
+        "request_description": "תמ\"א 38- תוספות"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:25:42.735277",
+    "permit_count": 2,
+    "error": ""
+  },
+  "278": {
+    "tik": "15673",
+    "address": "רד\"ק 18",
+    "permits": [
+      {
+        "file_number": "1953/0718.00",
+        "status": "הוכנה טיוטת היתר בניה",
+        "status_date": "25/02/1954",
+        "request_type": "תוספת בניה / הרחבה לבניין קיים",
+        "request_description": "תוספת בניה"
+      },
+      {
+        "file_number": "2024/0188.00",
+        "status": "התקבלה בקשה לדיון המועצה",
+        "status_date": "25/09/2025",
+        "request_type": "",
+        "request_description": "הריסת בניין קיים והקמת מבנה חדש עפ\"י תמ\"א 38/2 ותכנית 10038 ובהתאמה לתכנית 9988 כולל עבודות שימור"
+      }
+    ],
+    "scraped_at": "2026-04-19T03:26:12.781814",
+    "permit_count": 2,
+    "error": ""
+  },
   "284": {
     "tik": "15702",
     "address": "דוד שמעוני29",
-    "permits": [],
-    "scraped_at": "2026-04-19T03:14:18.759388",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
+    "permits": [
+      {
+        "file_number": "2023/0495.00",
+        "status": "נדונה בועדת ערר",
+        "status_date": "02/09/2025",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסת מבנה ובניה של בניין בן 6 קומות מעל קומת המחסנים ו-2 קומות חניה תת קרקעיות."
+      }
+    ],
+    "scraped_at": "2026-04-19T03:26:42.857517",
+    "permit_count": 1,
+    "error": ""
   },
   "285": {
     "tik": "15709",
     "address": "יהושע בן נון 24",
     "permits": [],
-    "scraped_at": "2026-04-19T03:14:43.597112",
+    "scraped_at": "2026-04-19T03:27:13.919229",
     "permit_count": 0,
     "error": ""
   }
