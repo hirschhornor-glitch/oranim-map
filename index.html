@@ -3501,8 +3501,9 @@
                 window.__allPermits = {};
                 window.__tama38Permits = {};
                 window.__treeSurveys = {};
+                window.__tama38TreeSurveys = {};
                 // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json']]);
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json']]);
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
                 Promise.all([
@@ -3524,9 +3525,10 @@
                         if (key === '__allPermits') { window.__allPermits = data || {}; }
                         else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
                         else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
+                        else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                         else if (data) { gd[key] = data; }
                     });
-                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length);
+                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -4428,19 +4430,51 @@
                     } catch(err) { console.warn('zoom to plan failed', err); }
                 }
 
+                function zoomAndOpenTama38Popup(feature) {
+                    if (!feature || !feature.geometry) return;
+                    try {
+                        let lng, lat;
+                        if (feature.geometry.type === 'Point') { [lng, lat] = feature.geometry.coordinates; }
+                        else if (feature.geometry.type === 'MultiPoint') { [lng, lat] = feature.geometry.coordinates[0]; }
+                        else {
+                            const c = L.geoJSON(feature).getBounds().getCenter();
+                            lat = c.lat; lng = c.lng;
+                        }
+                        if (typeof lat !== 'number' || typeof lng !== 'number') return;
+                        const latlng = [lat, lng];
+                        map.setView(latlng, 18);
+                        setTimeout(() => {
+                            const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildTama38Popup(feature.properties))
+                                .openOn(map);
+                            bindPopupEvents(popup, [{ properties: feature.properties, type: 'tama38' }], 0);
+                        }, 500);
+                    } catch(err) { console.warn('zoom to tama38 failed', err); }
+                }
+
                 function attachTreePlanLinks(panel) {
                     const gd = window.__geoDataRef?.current || {};
                     panel.querySelectorAll('.tree-plan-link').forEach(link => {
                         link.addEventListener('click', (e) => {
                             e.preventDefault();
-                            const taba = link.dataset.taba;
-                            const feature = gd.plans?.features.find(f => (f.properties.taba || '') === taba);
+                            const tik = link.dataset.tik || '';
+                            const taba = link.dataset.taba || '';
+                            let feature = null;
+                            let isTama = false;
+                            if (tik) {
+                                feature = gd.tama38?.features.find(f => (f.properties.tik || '') === tik);
+                                isTama = true;
+                            } else if (taba) {
+                                feature = gd.plans?.features.find(f => (f.properties.taba || '') === taba);
+                            }
                             if (!feature) return;
                             panel.remove();
                             if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
                             const r = areaRef.current;
                             if (r) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); r.points = []; r.markers = []; r.polygon = null; }
-                            zoomAndOpenPlanPopup(feature);
+                            if (isTama) zoomAndOpenTama38Popup(feature);
+                            else zoomAndOpenPlanPopup(feature);
                         });
                     });
                 }
@@ -4510,14 +4544,15 @@
                             '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' +
                             '<th style="text-align:center;padding:4px;color:#fff">%</th>' +
                             '</tr></thead><tbody>' +
-                            stats.plans.slice(0, 15).map(row =>
-                                '<tr style="border-bottom:1px solid #1a1a2e">' +
-                                '<td style="padding:4px"><a href="#" class="tree-plan-link" data-taba="' + row.taba + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' +
+                            stats.plans.slice(0, 15).map(row => {
+                                const dataAttr = row.isTama ? 'data-tik="' + row.tik + '"' : 'data-taba="' + row.taba + '"';
+                                return '<tr style="border-bottom:1px solid #1a1a2e">' +
+                                '<td style="padding:4px"><a href="#" class="tree-plan-link" ' + dataAttr + ' style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' +
                                 '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' +
                                 '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' +
                                 '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' +
-                                '</tr>'
-                            ).join('') +
+                                '</tr>';
+                            }).join('') +
                             '</tbody></table>';
                     }
 
@@ -4736,7 +4771,28 @@
                         const taba = p.taba || '';
                         if (taba && seen.has(taba)) return;
                         if (taba) seen.add(taba);
-                        plansInside.push({ ...p });
+                        plansInside.push({ ...p, _source: 'plan' });
+                    });
+                }
+                // Add TAMA 38 features inside the polygon
+                if (gd && gd.tama38 && gd.tama38.features) {
+                    const seenTama = new Set();
+                    gd.tama38.features.forEach(f => {
+                        const p = f.properties;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let lng, lat;
+                        try {
+                            if (geom.type === 'Point') { [lng, lat] = geom.coordinates; }
+                            else if (geom.type === 'MultiPoint') { [lng, lat] = geom.coordinates[0]; }
+                            else return;
+                        } catch(ex) { return; }
+                        if (typeof lng !== 'number' || typeof lat !== 'number') return;
+                        if (!pip([lng, lat], polyCoords)) return;
+                        const tik = p.tik || '';
+                        if (tik && seenTama.has(tik)) return;
+                        if (tik) seenTama.add(tik);
+                        plansInside.push({ ...p, _source: 'tama38' });
                     });
                 }
                 const stats = aggregateTreeStats(plansInside);
@@ -4781,17 +4837,23 @@
 
                 panel.innerHTML = html;
                 document.body.appendChild(panel);
-                document.getElementById('tree-close').onclick = () => panel.remove();
-                if (window.__treePanelAttach) window.__treePanelAttach(panel);
 
-                // Clean up drawn polygon layers from the map
+                // Keep the drawn polygon and markers visible while the tree panel
+                // is open. Only remove them when the user closes the popup.
                 const r = areaRef.current;
                 const map = mapInstanceRef.current;
-                if (map) {
-                    r.markers.forEach(m => map.removeLayer(m));
-                    if (r.polygon) map.removeLayer(r.polygon);
+                function clearAreaDrawing() {
+                    if (map && r) {
+                        r.markers.forEach(m => map.removeLayer(m));
+                        if (r.polygon) map.removeLayer(r.polygon);
+                    }
+                    if (r) { r.points = []; r.markers = []; r.polygon = null; }
                 }
-                r.points = []; r.markers = []; r.polygon = null;
+                document.getElementById('tree-close').onclick = () => {
+                    panel.remove();
+                    clearAreaDrawing();
+                };
+                if (window.__treePanelAttach) window.__treePanelAttach(panel);
             }, [areaFinished]);
 
             // ── Area select: analyze results when drawing is finished ──
@@ -7294,11 +7356,9 @@
                 // --- Permits overlay ---
                 if (layers['permits'] && gd.plans) {
                     const plansOff = !layers['plans'];
-                    // Helper: get permits for a taba
+                    // Helper: get permits for a taba (same filtering as getPermitsForTaba)
                     function _getPermits(taba) {
-                        const t = String(taba || '');
-                        const e = window.__allPermits && window.__allPermits[t];
-                        return (e && e.permits) ? e.permits.filter(function(p){return !p.filtered}) : [];
+                        return getPermitsForTaba(taba);
                     }
                     // Group for permit labels (so they toggle with the permits layer)
                     const permitLabelsGroup = L.layerGroup();
@@ -7804,17 +7864,24 @@
                 const s = (p.status || '').trim();
                 return s.includes('נסגרה') || s.includes('בוטל') || s === 'הבקשה נסגרה';
             }
+            function isPermitTest(p) {
+                // "הגשה מקוונת הושלמה" = form submitted online but no real permit activity — treat as test/placeholder
+                return (p.status || '').trim() === 'הגשה מקוונת הושלמה';
+            }
+            function _includePermit(p) {
+                return !p.filtered && !isPermitClosed(p) && !isPermitTest(p);
+            }
             function getPermitsForTaba(taba) {
                 const data = window.__allPermits || {};
                 const entry = data[String(taba)];
                 if (!entry || !entry.permits) return [];
-                return entry.permits.filter(p => !p.filtered && !isPermitClosed(p));
+                return entry.permits.filter(_includePermit);
             }
             function getPermitsForTama38(fid) {
                 const data = window.__tama38Permits || {};
                 const entry = data[String(fid)];
                 if (!entry || !entry.permits) return [];
-                return entry.permits.filter(p => !p.filtered && !isPermitClosed(p));
+                return entry.permits.filter(_includePermit);
             }
             function getPermitStatusColor(status) {
                 if (!status) return '#5dade2';
@@ -7885,23 +7952,41 @@
             // where `plans` is sorted DESC by `removed`.
             function aggregateTreeStats(planPropsArr) {
                 const ts = window.__treeSurveys || {};
+                const tsTama = window.__tama38TreeSurveys || {};
                 let total = 0, removed = 0, withData = 0;
                 const perPlan = [];
                 const seen = new Set();
                 planPropsArr.forEach(p => {
                     if (!p) return;
-                    const taba = p.taba || '';
-                    if (!taba || seen.has(taba)) return;
-                    const rec = ts[taba];
+                    // Determine if this is TAMA38 by _source marker or TAMA38 id pattern
+                    const isTama = p._source === 'tama38';
+                    // TAMA38 uses tik (file folder) as key; plans use taba
+                    const key = isTama ? (p.tik || '') : (p.taba || '');
+                    if (!key) return;
+                    const seenKey = (isTama ? 'tama:' : 'plan:') + key;
+                    if (seen.has(seenKey)) return;
+                    const rec = isTama ? tsTama[key] : ts[key];
                     if (!rec || !rec.total) return;
-                    seen.add(taba);
+                    seen.add(seenKey);
                     const r = (rec.krita || 0) + (rec.haataka || 0);
                     total += rec.total;
                     removed += r;
                     withData += 1;
+                    let name, linkId;
+                    if (isTama) {
+                        const addr = p.address || '';
+                        name = 'תמ"א 38' + (addr ? ': ' + addr : '') + (p.tik ? ' (' + p.tik + ')' : '');
+                        linkId = 'tama:' + key;
+                    } else {
+                        name = p.plan_summary || p.plan_name_he || p.plan_name || key;
+                        linkId = 'plan:' + key;
+                    }
                     perPlan.push({
-                        taba,
-                        name: p.plan_summary || p.plan_name_he || p.plan_name || taba,
+                        taba: isTama ? '' : key,
+                        tik: isTama ? key : '',
+                        isTama,
+                        linkId,
+                        name,
                         removed: r,
                         total: rec.total,
                         pct: rec.total > 0 ? Math.round((r / rec.total) * 100) : 0,
