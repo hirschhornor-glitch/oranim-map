@@ -7601,9 +7601,118 @@
                         }
                     });
 
-                    const group = L.layerGroup([zoneLayer, plansLayer]).addTo(map);
+                    // === TMA-38 points inside this master plan ===
+                    // Geometry helpers (kept inline — small)
+                    const ringContains = (lng, lat, ring) => {
+                        let inside = false;
+                        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                            const xi = ring[i][0], yi = ring[i][1];
+                            const xj = ring[j][0], yj = ring[j][1];
+                            if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                                inside = !inside;
+                            }
+                        }
+                        return inside;
+                    };
+                    const pointInGeom = (lng, lat, geom) => {
+                        if (!geom) return false;
+                        const polys = geom.type === 'Polygon' ? [geom.coordinates] :
+                                       geom.type === 'MultiPolygon' ? geom.coordinates : [];
+                        for (const poly of polys) {
+                            if (poly[0] && ringContains(lng, lat, poly[0])) {
+                                let inHole = false;
+                                for (let h = 1; h < poly.length; h++) {
+                                    if (ringContains(lng, lat, poly[h])) { inHole = true; break; }
+                                }
+                                if (!inHole) return true;
+                            }
+                        }
+                        return false;
+                    };
+                    const distM = (a, b) => {
+                        const R = 6371000, toRad = d => d * Math.PI / 180;
+                        const dLat = toRad(b[1] - a[1]), dLon = toRad(b[0] - a[0]);
+                        const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon/2)**2;
+                        return 2 * R * Math.asin(Math.sqrt(x));
+                    };
+                    const gradeOf = (props) => {
+                        const g = (props.conservation_grade || '').trim();
+                        if (/מחמיר|שימור מלא/.test(g)) return 'א';
+                        if (/^מבנה לשימור א/.test(g)) return 'א';
+                        if (/^מבנה לשימור ב/.test(g) || /שימור עם תוספות/.test(g) || /מבנן לשימור/.test(g)) return 'ב';
+                        if (/^מבנה לשימור ג/.test(g)) return 'ג';
+                        if (/^שימור מלא/.test(g)) return 'א';
+                        return '';
+                    };
+
+                    const boundaryFeat = (geojson.features || []).find(ff => ff.properties.feature_type === 'boundary');
+                    const boundaryGeom = boundaryFeat ? boundaryFeat.geometry : null;
+                    const consPts = (geojson.features || [])
+                        .filter(ff => ff.properties.feature_type === 'conservation_point' && ff.geometry && ff.geometry.coordinates);
+                    const tamaInside = [];
+                    if (boundaryGeom && gd.tama38 && gd.tama38.features) {
+                        gd.tama38.features.forEach(tf => {
+                            if (!tf.geometry || !tf.geometry.coordinates) return;
+                            const c = tf.geometry.type === 'MultiPoint' ? tf.geometry.coordinates[0] : tf.geometry.coordinates;
+                            if (!c) return;
+                            const lng = c[0], lat = c[1];
+                            if (!pointInGeom(lng, lat, boundaryGeom)) return;
+                            // Find nearest conservation point within 30m
+                            let nearest = '';
+                            let nearestDist = Infinity;
+                            for (const cp of consPts) {
+                                const cc = cp.geometry.coordinates;
+                                const d = distM([lng, lat], cc);
+                                if (d < nearestDist && d <= 30) {
+                                    nearestDist = d;
+                                    nearest = gradeOf(cp.properties);
+                                }
+                            }
+                            let status = 'ok', issue = '';
+                            if (nearest === 'א') { status = 'violation'; issue = 'תמ״א 38 על מבנה שימור דרגה א׳ — אסור הריסה ואין הרחבת מעטפת'; }
+                            else if (nearest === 'ב') { status = 'warning'; issue = 'תמ״א 38 על/ליד מבנה שימור דרגה ב׳ — מותר רק באגף אחורי, לא בחזית'; }
+                            tamaInside.push({ feature: tf, latlng: [lat, lng], status, issue, gradeNearby: nearest });
+                        });
+                    }
+
+                    const tamaLayer = L.layerGroup();
+                    tamaInside.forEach(({ feature, latlng, status, issue, gradeNearby }) => {
+                        const fc = COMPLIANCE_FILL[status] || '#888';
+                        const m = L.circleMarker(latlng, {
+                            pane: 'masterPlanTbaPane',
+                            radius: 6, fillColor: fc, fillOpacity: 0.95, color: '#000', weight: 1.2
+                        });
+                        m.on('click', (ev) => {
+                            L.DomEvent.stopPropagation(ev);
+                            const sl = { violation:'הפרה', warning:'אזהרה', ok:'תקין' }[status];
+                            const sc = COMPLIANCE_FILL[status];
+                            const p = feature.properties;
+                            const addr = (p.address || '').trim() || 'תמ״א 38';
+                            const tik = (p.tik || '').trim();
+                            const unitsExis = p.units_exis || '';
+                            const unitsTose = p.units_tose || '';
+                            const html =
+                                `<div style="font-family:Assistant;direction:rtl;max-width:280px">` +
+                                `<div style="font-weight:bold;font-size:13px;margin-bottom:4px">תמ״א 38 — ${addr}</div>` +
+                                (tik ? `<div style="font-size:11px;color:#999;margin-bottom:6px">תיק ${tik}</div>` : '') +
+                                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">` +
+                                  `<span style="background:${sc};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold">${sl}</span>` +
+                                  `<span style="font-size:10px;color:#bbb">תכנית אב ${mpName}</span>` +
+                                `</div>` +
+                                (unitsExis ? `<div style="font-size:11px;color:#aaa"><b>יח״ד קיימות:</b> ${unitsExis}</div>` : '') +
+                                (unitsTose ? `<div style="font-size:11px;color:#aaa"><b>תוספת יח״ד:</b> ${unitsTose}</div>` : '') +
+                                (gradeNearby ? `<div style="font-size:11px;color:#aaa"><b>מבנה שימור סמוך:</b> דרגה ${gradeNearby}׳</div>` : '') +
+                                (issue ? `<div style="margin-top:6px;font-size:11px;color:${status==='violation'?'#ef5350':'#ffb74d'}">• ${issue}</div>` : `<div style="margin-top:6px;font-size:11px;color:#9ccc9c">• תקין</div>`) +
+                                `</div>`;
+                            L.popup({ maxWidth: 300 }).setLatLng(ev.latlng).setContent(html).openOn(map);
+                        });
+                        m.addTo(tamaLayer);
+                    });
+
+                    const group = L.layerGroup([zoneLayer, plansLayer, tamaLayer]).addTo(map);
                     // Stash the inner plansLayer so popup actions can find sublayers by plan_name
                     group.__plansLayer = plansLayer;
+                    group.__tamaCount = tamaInside.length;
                     return group;
                 }
                 ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona'].forEach(key => {
