@@ -7381,6 +7381,35 @@
                         `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
                         rows + `</div>`;
                 }
+                // Thematic color palette — same color for the same theme across ALL master plans
+                // (e.g. "שימור מחמיר" is dark red whether it's in Moshavot or Baka)
+                function masterPlanThemeColor(props) {
+                    const ft = props.feature_type;
+                    if (ft === 'special_focus') return '#ffeb3b';
+                    if (ft === 'conservation') {
+                        if (props.is_strict || (props.conservation_type || '').includes('מחמיר')) return '#b71c1c';
+                        return '#ef6c00';
+                    }
+                    const text = (props.character || props.sog || props.merkam || props['אזור'] ||
+                                  props.conservation_type || props.zone_name || '').trim();
+                    if (!text) return '#bdbdbd';
+                    if (/מחמיר|שימור מלא/.test(text)) return '#b71c1c';                                     // strict preservation
+                    if (/שימור מרקמי|מרקם היסטורי לשימור|מתחם לשימור|מתחם שימור/.test(text)) return '#fbc02d'; // texture preservation
+                    if (/שימור/.test(text)) return '#ef6c00';                                                // general preservation
+                    if (/אזור לא לציפוף/.test(text)) return '#90caf9';                                        // no-densification
+                    if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';                       // urban renewal
+                    if (/שצ"?פ|שטח ציבורי פתוח|שטח פרטי פטוח|שטח פרטי פתוח/.test(text)) return '#66bb6a';      // open public space
+                    if (/מבני ציבור|שב"?צ|מוסדות/.test(text)) return '#2e7d32';                              // public buildings
+                    if (/חזית מסחר|מסחרי|מסחר/.test(text)) return '#6d4c41';                                  // commercial frontage
+                    if (/דרך|שביל|תנועה|מיתון/.test(text)) return '#757575';                                  // road/path
+                    if (/אזורי ליבה|ללא תוספת|תכנית מאושרת/.test(text)) return '#9e9e9e';                     // approved core
+                    if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';                    // building zone
+                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffeb3b';                             // special
+                    if (/תוספת מתונה|עיבוי מרקם/.test(text)) return '#ffb74d';                                // moderate addition
+                    if (/מגורים/.test(text)) return '#80cbc4';                                                // residential default
+                    return '#bdbdbd';
+                }
+
                 // Master plan name (Hebrew) per layer key — matches mp_match in compliance JSON
                 const MP_NAME_BY_KEY = {
                     master_plan_moshavot: 'מושבות',
@@ -7409,8 +7438,8 @@
                             if (ft === 'boundary') {
                                 return { color: cfg.color, weight: 3, fillOpacity: 0, dashArray: '6,4' };
                             }
-                            // Uniform background per master plan: cfg.color for all zone polygons
-                            return { color: cfg.color, weight: 1, fillColor: cfg.color, fillOpacity: 0.85 };
+                            const c = masterPlanThemeColor(f.properties);
+                            return { color: c, weight: 1, fillColor: c, fillOpacity: 0.85 };
                         },
                         onEachFeature: (f, lyr) => {
                             const html = buildMasterPlanPopup(f.properties);
