@@ -2094,6 +2094,7 @@
             landuse_xplan: 'data/landuse_xplan.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
+            master_plan_baka_zones: 'data/master_plan_baka_zones.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -2223,6 +2224,12 @@
                 layers: [
                     { id: 'mosadot_shchuna', name: 'מוסדות חינוך', desc: 'פרטי המוסדות בשכונה - מצב קיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
+                ]
+            },
+            master_plans: {
+                title: 'תכניות אב',
+                layers: [
+                    { id: 'master_plan_baka_zones', name: 'תכנית אב — בקעה רבתי', desc: '7 אזורי משנה במרחב בקעה רבתי (MVP - הדיגיטציה המלאה תיעשה ב-QGIS)', on: false },
                 ]
             }
         };
@@ -3569,6 +3576,8 @@
                 // Separate SVG renderer for rakal so pane z-index works
                 window.__rakalRenderer = L.svg({ pane: 'rakalPane' });
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
+                const masterPlanPane = map.createPane('masterPlanPane');
+                masterPlanPane.style.zIndex = 260;
                 map.createPane('minahakPane').style.zIndex = 270;
                 const infraPane = map.createPane('infrastructurePane');
                 infraPane.style.zIndex = 280;
@@ -3613,8 +3622,11 @@
                 window.__tama38Permits = {};
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
+                window.__masterPlanBakaPlans = null;
+                window.__masterPlanBakaMatching = null;
+                window.__masterPlanBakaByTaba = {};
                 // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json']]);
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__masterPlanBakaPlans', 'data/master_plan_baka_plans.json'], ['__masterPlanBakaMatching', 'data/master_plan_baka_matching.json']]);
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
                 Promise.all([
@@ -3637,8 +3649,18 @@
                         else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
                         else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                         else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
+                        else if (key === '__masterPlanBakaPlans') { window.__masterPlanBakaPlans = data; }
+                        else if (key === '__masterPlanBakaMatching') { window.__masterPlanBakaMatching = data; }
                         else if (data) { gd[key] = data; }
                     });
+                    // Build master-plan-by-taba index for popup enrichment
+                    if (window.__masterPlanBakaPlans && window.__masterPlanBakaPlans.records) {
+                        window.__masterPlanBakaPlans.records.forEach(rec => {
+                            const k = rec.plan_number_numeric;
+                            if (k != null) window.__masterPlanBakaByTaba[String(k)] = rec;
+                        });
+                        console.log('[MasterPlan] Baka records indexed:', Object.keys(window.__masterPlanBakaByTaba).length);
+                    }
                     console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
@@ -7557,6 +7579,35 @@
                     geoLayersRef.current.sara_march_2026 = saraLayer;
                 }
 
+                // --- Master Plan Baka zones (A–E from official plan) ---
+                if (layers['master_plan_baka_zones'] && gd.master_plan_baka_zones) {
+                    const ZONE_DESC = {
+                        A: 'מרקם לשימור — לב בקעה. 3 קומות + גג, תכסית 80%',
+                        B: 'תכניות מאושרות — ללא שינוי',
+                        C: 'שיכונים והתחדשות עירונית — לפי תכניות מפורטות',
+                        D: 'התחדשות דרך חברון — 6–8 קומות, גובה 23מ\', 200–280%',
+                        E: 'התחדשות פייר קניג — 14 קומות (4 מסד + 10 מגורים)',
+                    };
+                    const mpLayer = L.geoJSON(gd.master_plan_baka_zones, {
+                        pane: 'masterPlanPane',
+                        style: f => ({
+                            color: f.properties.color || '#666',
+                            weight: 2,
+                            fillColor: f.properties.color || '#666',
+                            fillOpacity: 0.25,
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const zone = f.properties.zone || '?';
+                            const name = f.properties.name || '';
+                            const desc = ZONE_DESC[zone] || '';
+                            const tipHtml = `<div style="font-weight:bold;margin-bottom:4px">${name}</div>` +
+                                `<div style="font-size:11px;color:#bbc">${desc}</div>`;
+                            layer.bindTooltip(tipHtml, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.master_plan_baka_zones = mpLayer;
+                }
+
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
                 if (layers['yiud_karka_kayam'] && gd.yiud_karka_kayam) {
                     const xplanAlsoOn = layers['landuse_xplan'];
@@ -9554,12 +9605,6 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                         <span className="sub-label">ייצוא</span>
                                     </button>
-                                    <button className={`toolbar-dropdown-item ${showAnnotations ? 'sub-active' : ''}`} data-tip="הצגת וניהול הערות לתכניות" onClick={() => {
-                                        setShowAnnotations(true); setActiveDropdown(null);
-                                    }}>
-                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                        <span className="sub-label">הערות</span>
-                                    </button>
                                 </div>
                             )}
                             {activeDropdown === 'measure' && (
@@ -9585,6 +9630,15 @@
                                 </div>
                             )}
                             </div>
+
+                            <button
+                                className={`toolbar-btn ${showAnnotations ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setShowAnnotations(true); setActiveDropdown(null); }}
+                                title="הערות"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span className="toolbar-label">הערות</span>
+                            </button>
 
                             {/* ══ ניתוח כללי ══ */}
                             <div style={{position:'relative'}}>
@@ -9740,7 +9794,7 @@
                                     <path d="M12 2C9 5 7 8 7 12a5 5 0 0 0 10 0c0-4-2-7-5-10z" />
                                     <line x1="12" y1="12" x2="12" y2="22" />
                                 </svg>
-                                <span className="toolbar-label">{(treeAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : shatzafMode === 'plan' ? 'בחר תכנית...' : (treeMode === 'sub' || shatzafMode === 'sub') ? 'בחר שכונה...' : 'שטחים ירוקים'}</span>
+                                <span className="toolbar-label">{(treeAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : shatzafMode === 'plan' ? 'בחר תכנית...' : (treeMode === 'sub' || shatzafMode === 'sub') ? 'בחר שכונה...' : 'שטחים ירוקים ▾'}</span>
                             </button>
                             {activeDropdown === 'green' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
@@ -10389,7 +10443,7 @@
                                                                 { key: 'hotel_rooms', label: 'חדרי מלון' },
                                                                 { key: 'plan_type', label: 'סוג תכנית' },
                                                             ];
-                                                            const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfO7KwhxAJw0YZLQrGllggwKG-un0Ym0_pv8Xt2ndtciLVY7vS3Ud651o7UwByla3hWQ/exec';
+                                                            const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyceSqlIRb876ACGqA1iytp_S5WtvmKG-qSpl5yGh0kjxsNzap-3eVi44iUAmB_Q2v6g/exec';
                                                             function autoDetect(note) {
                                                                 const detected = []; const n = note.replace(/,/g, ''); const seen = new Set();
                                                                 const fieldAliases = {'שב"צ':'shavatz_out_sqm','שבצ':'shavatz_out_sqm','מבני ציבור':'shavatz_out_sqm','שב"צ נכנס':'shavatz_in_sqm','שבצ נכנס':'shavatz_in_sqm','שב"צ קיים':'shavatz_in_sqm','שב"צ יוצא':'shavatz_out_sqm','הפרשה מבונה':'hafrash_sqm','שצ"פ':'shatzap_out','שצפ':'shatzap_out','שצ"פ נכנס':'shatzap_in','שצ"פ קיים':'shatzap_in','שצ"פ יוצא':'shatzap_out','מסחר':'commerce_sqm','תעסוקה':'employment_sqm','משרדים':'employment_sqm','יח"ד':'units_total','תוספת יח"ד':'units_add','תוספת':'units_add','יח"ד קיימות':'units_in','קיימות':'units_in','נכנס':'units_in','יח"ד נכנס':'units_in','יוצא':'units_total','יח"ד יוצא':'units_total','סה"כ יח"ד':'units_total','סה"כ':'units_total','השכרה':'rental_units','להשכרה':'rental_units','יח"ד להשכרה':'rental_units','מלון':'hotel_rooms','חדרי מלון':'hotel_rooms','תמצית שם':'plan_summary','תמצית':'plan_summary','שם תכנית':'plan_summary'};
@@ -10464,25 +10518,8 @@
                                                                         const updatedPlans = new Set(updates.map(u => u.plan_name)); const annots2 = window.__annotations || {}; updatedPlans.forEach(pn => { delete annots2[pn]; }); window.__annotations = annots2; localStorage.setItem('plan_annotations', JSON.stringify(annots2));
                                                                         // Force re-render annotations table
                                                                         if (typeof setShowAnnotations === 'function') { setShowAnnotations(false); setTimeout(() => setShowAnnotations(true), 200); }
-                                                                        // Trigger GitHub Action to update website
-                                                                        let ghMsg = '';
-                                                                        try {
-                                                                            let pat = localStorage.getItem('gh_pat');
-                                                                            if (!pat) { pat = prompt('הזיני GitHub PAT (פעם אחת) כדי לעדכן את האתר:'); if (pat) localStorage.setItem('gh_pat', pat.trim()); }
-                                                                            if (pat) {
-                                                                                const ghResp = await fetch('https://api.github.com/repos/hirschhornor-glitch/oranim-map/actions/workflows/update_data.yml/dispatches', {
-                                                                                    method: 'POST', headers: { 'Authorization': 'token ' + pat.trim(), 'Accept': 'application/vnd.github.v3+json' }, body: JSON.stringify({ ref: 'master' })
-                                                                                });
-                                                                                if (ghResp.status === 204) {
-                                                                                    ghMsg = '<div style="font-size:11px;color:#4fc3f7;margin-top:4px">האתר יתעדכן תוך ~2 דקות</div>';
-                                                                                } else if (ghResp.status === 401 || ghResp.status === 403 || ghResp.status === 404) {
-                                                                                    localStorage.removeItem('gh_pat');
-                                                                                    ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ') &mdash; ה-PAT אינו תקף</div><button onclick="localStorage.removeItem(\'gh_pat\'); this.closest(\'#gs-update-overlay\').remove();" style="margin-top:6px;padding:6px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-size:11px">הזני PAT חדש בעדכון הבא</button>';
-                                                                                } else {
-                                                                                    ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל (קוד ' + ghResp.status + ')</div>';
-                                                                                }
-                                                                            }
-                                                                        } catch(ghErr) { ghMsg = '<div style="font-size:11px;color:#f39c12;margin-top:4px">עדכון האתר נכשל</div>'; }
+                                                                        // Website updates via GitHub Actions cron (every 10 min), no client-side trigger needed
+                                                                        const ghMsg = '<div style="font-size:11px;color:#4fc3f7;margin-top:4px">האתר יתעדכן תוך ~10 דקות</div>';
                                                                         overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #27ae60;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#9989;</div><div style="font-size:14px;margin-bottom:8px">עודכנו ' + result.applied + ' שדות בהצלחה</div>' + ghMsg + (result.skipped && result.skipped.length ? '<div style="font-size:11px;color:#f39c12;margin-bottom:8px">דולגו: ' + result.skipped.join(', ') + '</div>' : '') + '<button onclick="this.closest(\'div\').parentElement.remove()" style="padding:8px 24px;border-radius:6px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-size:13px;margin-top:8px">סגור</button></div>';
                                                                     } else { throw new Error(result.error || 'Unknown error'); }
                                                                 } catch (err) { overlay.innerHTML = '<div dir="rtl" style="background:#1a1a2e;border:1px solid #c0392b;border-radius:12px;padding:32px;color:#e0e0e0;font-family:Arial,sans-serif;text-align:center"><div style="font-size:24px;margin-bottom:12px">&#10060;</div><div style="font-size:14px;margin-bottom:8px">שגיאה: ' + err.message + '</div><button onclick="this.closest(\'div\').parentElement.remove()" style="padding:8px 24px;border-radius:6px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-size:13px;margin-top:8px">סגור</button></div>'; }

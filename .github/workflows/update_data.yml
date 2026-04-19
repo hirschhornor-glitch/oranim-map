@@ -2,8 +2,8 @@ name: Update Plans Data
 
 on:
   schedule:
-    - cron: '0 21 * * *'  # כל יום בשעה 21:00 UTC (23:00 ישראל)
-  workflow_dispatch:        # הפעלה ידנית
+    - cron: '*/10 * * * *'  # כל 10 דקות
+  workflow_dispatch:         # הפעלה ידנית
 
 jobs:
   update:
