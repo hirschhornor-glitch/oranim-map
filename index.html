@@ -6282,8 +6282,9 @@
                     if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
                     // Exclude consolidation-and-division plans from overlap logic
                     // (they cover the same area as building plans but are procedural).
-                    const nameJoined = `${p.plan_summary || ''} ${p.plan_name_he || ''}`;
-                    if (nameJoined.includes('איחוד וחלוקה') || normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
+                    // Use startsWith on summary (short title), not includes (summary may be long body text).
+                    if (normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
+                    if ((p.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
                     const shk = window.__shouldHideKayam;
                     if (shk) {
                         const t = String(p.taba || '').trim();
@@ -11725,8 +11726,8 @@
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             if (s === 'הכנת הודעה 77/78') return false;
                             if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
-                            const nameJoined = `${p.plan_summary || ''} ${p.plan_name_he || ''}`;
-                            if (nameJoined.includes('איחוד וחלוקה') || normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
+                            if (normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
+                            if ((p.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
                             const shk = window.__shouldHideKayam;
                             if (shk) {
                                 const t = String(p.taba || '').trim();
