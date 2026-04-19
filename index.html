@@ -7498,8 +7498,17 @@
                                     (planStatusRaw ? ` · <span style="color:${planStatusColor};font-weight:bold">${planStatusRaw}</span>` : '') +
                                   `</div>` +
                                 `</div>`;
-                            // Context: master plan area
-                            const contextBlock = (c.mp_subzone || c.mp_subzone_max_floors || c.mp_subzone_far_pct) ? (
+                            // Context: master plan area — now also shows what the plan proposes
+                            // (floors_max/height_max from Table 5) next to master-plan limits.
+                            // The violation check itself lives in compute_master_plan_compliance.py
+                            // and arrives here via c.mp_status / c.mp_issues.
+                            const planFloorsNum = parseFloat(f.properties.floors_max) || 0;
+                            const planHeightNum = parseFloat(f.properties.height_max) || 0;
+                            const planValsText =
+                                (planFloorsNum > 0 ? `קומות: ${planFloorsNum}` : '') +
+                                (planFloorsNum > 0 && planHeightNum > 0 ? ' · ' : '') +
+                                (planHeightNum > 0 ? `גובה: ${planHeightNum} מ'` : '');
+                            const contextBlock = (c.mp_subzone || c.mp_subzone_max_floors || c.mp_subzone_far_pct || planValsText) ? (
                                 `<div style="padding:8px 12px;background:#1a1a2e">` +
                                   `<div style="font-size:10px;color:#7a8a9a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">📍 לפי תכנית האב</div>` +
                                   (c.mp_subzone ? `<div style="font-size:11px;color:#cdd;margin:2px 0">${c.mp_subzone}</div>` : '') +
@@ -7507,6 +7516,7 @@
                                       (c.mp_subzone_max_floors ? `<span><b>קומות מקס׳:</b> ${c.mp_subzone_max_floors}</span>` : '') +
                                       (c.mp_subzone_far_pct ? `<span><b>FAR:</b> ${c.mp_subzone_far_pct}%</span>` : '') +
                                     `</div>` : '') +
+                                  (planValsText ? `<div style="font-size:11px;color:#aab;margin-top:4px"><b>התכנית (טבלה 5):</b> ${planValsText}</div>` : '') +
                                 `</div>`
                             ) : '';
                             // Why block — reasons for the determination
