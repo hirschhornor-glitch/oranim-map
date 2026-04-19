@@ -2095,6 +2095,9 @@
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
             trees: 'data/trees.geojson',
+            master_plan_moshavot: 'data/master_plan_moshavot.geojson',
+            master_plan_rasko: 'data/master_plan_rasko.geojson',
+            master_plan_baka: 'data/master_plan_baka.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -2230,6 +2233,14 @@
                 title: 'סקרים',
                 layers: [
                     { id: 'trees', name: 'סקר עצים עירוני', desc: 'סקר עצים — צבע לפי דחיפות טיפול', on: false },
+                ]
+            },
+            master_plans: {
+                title: 'תכניות אב',
+                layers: [
+                    { id: 'master_plan_moshavot', name: 'מושבות', desc: 'תכנית אב מושבות (גרמנית/יוונית/קטמון/טלביה) — גבול, אזורי מגורים, מבני שימור', on: false },
+                    { id: 'master_plan_rasko', name: 'רסקו – גבעת הורדים', desc: 'תכנית אב רסקו — גבול, מתחמי גובה (A-G), מבני ומתחמי שימור', on: false },
+                    { id: 'master_plan_baka', name: 'בקעה', desc: 'תכנית אב בקעה — גבול, גובה מבנים, מרקמים, דרגות שימור', on: false },
                 ]
             },
         };
@@ -7282,6 +7293,136 @@
                     }).addTo(map);
                     geoLayersRef.current.trees = treesLayer;
                 }
+
+                // --- Master plans (Moshavot/Rasko/Baka) — combined per-plan layers ---
+                const MASTER_PLAN_CONFIGS = {
+                    master_plan_moshavot: { color: '#7e57c2', label: 'תכנית אב מושבות' },
+                    master_plan_rasko:    { color: '#1976d2', label: 'תכנית אב רסקו' },
+                    master_plan_baka:     { color: '#388e3c', label: 'תכנית אב בקעה' },
+                };
+                const ZONE_FILL_COLORS = {
+                    A: '#ef5350', B: '#42a5f5', C: '#66bb6a', D: '#ffa726',
+                    D1: '#ffa726', D2: '#ff7043', E: '#ab47bc', F: '#8d6e63', G: '#78909c',
+                };
+                const GRADE_COLORS = {
+                    'מבנים לשימור א': '#d32f2f',
+                    'מבנים לשימור ב': '#f57c00',
+                    'מבנים לשימור ג': '#388e3c',
+                    'שימור מלא': '#d32f2f',
+                    'שימור עם תוספות': '#f57c00',
+                    'מבנן לשימור': '#7b1fa2',
+                };
+                const MERKAM_COLORS = {
+                    'אזור שימור מרקמי': '#ffd54f',
+                    'שיכונים והתחדשות עירונית': '#90caf9',
+                    'שטח ציבורי פתוח מאושר': '#a5d6a7',
+                    'שטח ציבורי': '#c5e1a5',
+                };
+                function buildMasterPlanPopup(p) {
+                    const skip = new Set(['feature_type', 'plan_short']);
+                    const labels = {
+                        plan_name: 'שם תכנית', plan_number: 'מס תכנית', plan_year: 'שנה',
+                        area_dunam: 'שטח (דונם)', plan_type: 'סוג', architect: 'אדריכל',
+                        adopted_date: 'אומצה', existing_units_total: 'יח״ד קיימות',
+                        realistic_addition_min: 'תוספת ריאלית (מינימום)',
+                        realistic_addition_max: 'תוספת ריאלית (מקסימום)',
+                        public_space_shatzap_sqm: 'שצ״פ (מ״ר)',
+                        public_buildings_added_sqm: 'מבני ציבור (מ״ר)',
+                        sub_zones: 'תת-מתחמים', central_axis: 'ציר מרכזי',
+                        main_commercial: 'רחוב מסחרי ראשי',
+                        zone_code: 'מתחם', zone_name: 'שם המתחם', character: 'אופי',
+                        max_floors: 'מקס׳ קומות', min_floors: 'מינ׳ קומות',
+                        far_pct: 'אחוזי בנייה', far_pct_min: 'אחוזי בנייה (מינ׳)', far_pct_max: 'אחוזי בנייה (מקס׳)',
+                        coverage_pct: 'תכסית', max_height_m: 'גובה מקסימלי (מ׳)',
+                        commercial_frontage: 'חזית מסחרית',
+                        existing_units: 'יח״ד קיימות', realistic_units: 'יח״ד ריאלי', realization_pct: 'אחוז מימוש',
+                        floors_per_master_plan: 'קומות לפי תכנית אב', real_height_m: 'גובה בפועל (מ׳)',
+                        building_floors_existing: 'קומות קיימות', building_year: 'שנת בנייה',
+                        street: 'רחוב', house_no: 'מס׳ בית', status: 'סטטוס מבנה',
+                        merkam: 'מרקם', conservation_grade: 'דרגת שימור', grade_meaning: 'משמעות',
+                        sog: 'סוג / שימור', conservation_level: 'רמת שימור',
+                        focus_id: 'מס׳ מוקד', description: 'תיאור', conservation_type: 'סוג שימור',
+                        is_strict: 'מחמיר', tama38_units_realistic: 'יח״ד תמ״א 38 (ריאלי)',
+                        pinui_binui_units_realistic: 'יח״ד פינוי-בינוי (ריאלי)',
+                        related_tba: 'תב״עות קשורות', area_description: 'תיאור אזור',
+                        small_units_pct: 'יח״ד קטנות', review_trigger: 'מועד עדכון',
+                    };
+                    const rows = Object.entries(p)
+                        .filter(([k, v]) => !skip.has(k) && v !== '' && v !== null && v !== undefined)
+                        .map(([k, v]) => {
+                            const label = labels[k] || k;
+                            const val = (typeof v === 'boolean') ? (v ? 'כן' : 'לא') : v;
+                            return `<div style="margin:2px 0"><b>${label}:</b> ${val}</div>`;
+                        }).join('');
+                    const heading = p.plan_name || p.zone_name || p.merkam || p.conservation_grade ||
+                        ({boundary: 'גבול תכנית', subzone: 'תת-מתחם', building_height: 'גובה מבנה',
+                          texture: 'מרקם', conservation_point: 'מבנה לשימור', conservation: 'שימור',
+                          special_focus: 'מוקד מיוחד'}[p.feature_type] || 'פרטים');
+                    return `<div style="font-family:Assistant;direction:rtl;max-width:300px">` +
+                        `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
+                        rows + `</div>`;
+                }
+                function buildMasterPlanLayer(layerKey, geojson) {
+                    const cfg = MASTER_PLAN_CONFIGS[layerKey];
+                    const layer = L.geoJSON(geojson, {
+                        pane: 'masterPlanPane',
+                        style: f => {
+                            const ft = f.properties.feature_type;
+                            if (ft === 'boundary') {
+                                return { color: cfg.color, weight: 3, fillOpacity: 0, dashArray: '6,4' };
+                            }
+                            if (ft === 'subzone') {
+                                const c = ZONE_FILL_COLORS[f.properties.zone_code] || cfg.color;
+                                return { color: c, weight: 1, fillColor: c, fillOpacity: 0.35 };
+                            }
+                            if (ft === 'special_focus') {
+                                return { color: '#000', weight: 2, fillColor: '#ffeb3b', fillOpacity: 0.5 };
+                            }
+                            if (ft === 'texture') {
+                                const c = MERKAM_COLORS[f.properties.merkam] || '#bbdefb';
+                                return { color: c, weight: 0.5, fillColor: c, fillOpacity: 0.45 };
+                            }
+                            if (ft === 'building_height') {
+                                const fl = f.properties.floors_max_int;
+                                let c = '#9e9e9e';
+                                if (fl >= 8) c = '#d32f2f';
+                                else if (fl >= 5) c = '#f57c00';
+                                else if (fl >= 3) c = '#fbc02d';
+                                else if (fl >= 1) c = '#aed581';
+                                return { color: '#555', weight: 0.4, fillColor: c, fillOpacity: 0.55 };
+                            }
+                            if (ft === 'conservation') {
+                                const c = f.properties.is_strict ? '#d32f2f' : '#f57c00';
+                                return { color: c, weight: 1, fillColor: c, fillOpacity: 0.4 };
+                            }
+                            return { color: cfg.color, weight: 1, fillOpacity: 0.3 };
+                        },
+                        pointToLayer: (f, latlng) => {
+                            const grade = f.properties.conservation_grade || '';
+                            const c = GRADE_COLORS[grade] || cfg.color;
+                            return L.circleMarker(latlng, {
+                                radius: 4, fillColor: c, fillOpacity: 0.85, color: '#222', weight: 0.6
+                            });
+                        },
+                        onEachFeature: (f, lyr) => {
+                            const html = buildMasterPlanPopup(f.properties);
+                            lyr.bindPopup(html, { maxWidth: 320 });
+                            const ft = f.properties.feature_type;
+                            const tipText = f.properties.zone_name || f.properties.merkam ||
+                                f.properties.conservation_grade || f.properties.plan_name ||
+                                f.properties.floors_per_master_plan || '';
+                            if (tipText) {
+                                lyr.bindTooltip(tipText, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                            }
+                        }
+                    }).addTo(map);
+                    return layer;
+                }
+                ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka'].forEach(key => {
+                    if (layers[key] && gd[key]) {
+                        geoLayersRef.current[key] = buildMasterPlanLayer(key, gd[key]);
+                    }
+                });
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
