@@ -7532,6 +7532,12 @@
                             const noteBlock = existingNote
                                 ? `<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ${existingNote}</div>`
                                 : '';
+                            // Disclaimer — what's covered and what isn't yet
+                            const disclaimerBlock =
+                                `<div style="margin-top:6px;padding:6px;background:#1f1f30;border-right:3px solid #5dade2;border-radius:3px;font-size:10px;color:#9bb">` +
+                                `<b>ℹ️ נבדק כיום (גאוגרפי בלבד):</b> מבני שימור (א/ב/ג), אזור "לא לציפוף", תמ״א 38 על מבנה שימור.` +
+                                `<br><b>טרם נבדק:</b> מספר קומות, אחוזי בנייה (FAR), תכסית, גובה, שימושים, חזית מסחרית — דורש שדות חסרים ב‑plans.geojson.` +
+                                `</div>`;
                             const html = `<div style="font-family:Assistant;direction:rtl;max-width:320px">` +
                                 `<div style="font-weight:bold;font-size:13px;margin-bottom:4px">${f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name || 'תכנית'}</div>` +
                                 `<div style="font-size:11px;color:#999;margin-bottom:6px">${f.properties.plan_name || ''} ${planType ? '· '+planType : ''}</div>` +
@@ -7546,6 +7552,7 @@
                                 (c.mp_subzone_far_pct ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>אחוזי בנייה:</b> ${c.mp_subzone_far_pct}%</div>` : '') +
                                 `<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px">${issuesHtml}</div>` +
                                 ruleBlock +
+                                disclaimerBlock +
                                 noteBlock +
                                 `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">` +
                                   `<button class="popup-btn-permit" data-action="open-plan-from-mp" data-plan="${planNameSafe}">פתח פרטי תב״ע →</button>` +
