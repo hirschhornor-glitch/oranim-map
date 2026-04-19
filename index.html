@@ -7471,13 +7471,8 @@
                         onEachFeature: (f, lyr) => {
                             const html = buildMasterPlanPopup(f.properties);
                             lyr.bindPopup(html, { maxWidth: 320 });
-                            const tipText = f.properties.zone_name || f.properties.merkam ||
-                                f.properties.plan_name || '';
-                            if (tipText) {
-                                lyr.bindTooltip(tipText, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
-                            }
                         }
-                    }).addTo(map);
+                    });
 
                     // Plans (TBA + TMA) being promoted INSIDE this master plan,
                     // colored by compliance (red=violation, orange=warning, green=ok)
@@ -7507,33 +7502,109 @@
                             const sc = COMPLIANCE_FILL[c.mp_status] || '#888';
                             const planType = (f.properties.plan_type || '').trim();
                             const isTama = c.mp_is_tama38 ? '<span style="background:#5dade2;color:white;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">תמ״א 38</span>' : '';
-                            const html = `<div style="font-family:Assistant;direction:rtl;max-width:300px">` +
+                            const planStatusRaw = (f.properties.status_mavat || '').trim();
+                            const planStatus = normalizeStatus(planStatusRaw);
+                            const planStatusColor = STATUS_COLORS[planStatus] || '#888';
+                            const planNameForNote = f.properties.plan_name || '';
+                            const existingNote = (window.__annotations || {})[planNameForNote] || '';
+                            // "Why" explanation: tie the rule (from master plan) to the plan's own value
+                            const unitsAddRaw = parseFloat(f.properties.units_add) || 0;
+                            const ruleParts = [];
+                            if (c.mp_is_no_densification) {
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>כלל בתכנית אב:</b> אזור לא לציפוף — אסור להוסיף יח״ד</div>`);
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>מצב בתכנית:</b> תוספת ${Math.round(unitsAddRaw)} יח״ד</div>`);
+                            }
+                            if (c.mp_cons_a > 0) {
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>כלל בתכנית אב:</b> מבני שימור דרגה א׳ — אסור הריסה ואסור תוספת מעבר למאושר</div>`);
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>נמצא בגבול התכנית:</b> ${c.mp_cons_a} מבני שימור דרגה א׳</div>`);
+                            }
+                            if (c.mp_cons_b > 0) {
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>כלל בתכנית אב:</b> שימור עם תוספות (דרגה ב׳) — שימור חזית/מסה</div>`);
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>נמצא בגבול התכנית:</b> ${c.mp_cons_b} מבני שימור דרגה ב׳</div>`);
+                            }
+                            if (c.mp_is_tama38 && (c.mp_cons_a > 0 || c.mp_cons_b > 0)) {
+                                ruleParts.push(`<div style="font-size:11px;color:#aaa"><b>כלל תמ״א 38:</b> בתכנית אב זו — מותר רק באגף אחורי, לא על מבנה שימור</div>`);
+                            }
+                            const ruleBlock = ruleParts.length
+                                ? `<div style="margin-top:6px;background:#1a1a2e;padding:6px;border-radius:4px">${ruleParts.join('')}</div>`
+                                : '';
+                            const planNameSafe = (f.properties.plan_name || '').replace(/"/g, '&quot;');
+                            const noteBlock = existingNote
+                                ? `<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ${existingNote}</div>`
+                                : '';
+                            const html = `<div style="font-family:Assistant;direction:rtl;max-width:320px">` +
                                 `<div style="font-weight:bold;font-size:13px;margin-bottom:4px">${f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name || 'תכנית'}</div>` +
                                 `<div style="font-size:11px;color:#999;margin-bottom:6px">${f.properties.plan_name || ''} ${planType ? '· '+planType : ''}</div>` +
-                                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">` +
+                                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">` +
                                 `<span style="background:${sc};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold">${sl}</span>` +
                                 isTama +
                                 `<span style="font-size:10px;color:#bbb">תכנית אב ${c.mp_match}</span>` +
+                                (planStatusRaw ? `<span style="background:${planStatusColor};color:#000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold">סטטוס: ${planStatusRaw}</span>` : '') +
                                 `</div>` +
                                 (c.mp_subzone ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>תת-מתחם:</b> ${c.mp_subzone}</div>` : '') +
                                 (c.mp_subzone_max_floors ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>קומות מקס׳ בתכנית אב:</b> ${c.mp_subzone_max_floors}</div>` : '') +
                                 (c.mp_subzone_far_pct ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>אחוזי בנייה:</b> ${c.mp_subzone_far_pct}%</div>` : '') +
                                 `<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px">${issuesHtml}</div>` +
+                                ruleBlock +
+                                noteBlock +
+                                `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">` +
+                                  `<button class="popup-btn-permit" data-action="open-plan-from-mp" data-plan="${planNameSafe}">פתח פרטי תב״ע →</button>` +
+                                  `<button class="popup-btn-permit" data-action="add-note" data-plan="${planNameSafe}" title="הוסף/עדכן סטטוס בהערה">📝 עדכן הערה / סטטוס</button>` +
+                                `</div>` +
                                 `</div>`;
                             // Open popup directly on click and stop bubbling so the underlying
-                            // regular plans layer doesn't replace it with its own popup
+                            // regular plans layer doesn't replace it with its own popup.
+                            // We re-build the popup HTML (so the latest annotation is shown).
+                            const renderHtml = () => {
+                                const note = (window.__annotations || {})[planNameForNote] || '';
+                                return html.replace(
+                                    /<div style="background:#ffeaa7[^]*?<\/div>/,
+                                    note ? `<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ${note}</div>` : ''
+                                ).replace(
+                                    /(<div style="font-family:Assistant)/,
+                                    note ? '$1' : '$1'
+                                );
+                            };
                             lyr.on('click', (e) => {
                                 L.DomEvent.stopPropagation(e);
-                                L.popup({ maxWidth: 320, className: 'plan-popup' })
+                                const popup = L.popup({ maxWidth: 360, className: 'plan-popup' })
                                     .setLatLng(e.latlng)
                                     .setContent(html)
                                     .openOn(map);
+                                setTimeout(() => {
+                                    const el = popup.getElement();
+                                    if (!el) return;
+                                    el.addEventListener('click', (evt) => {
+                                        const btn = evt.target.closest('[data-action]');
+                                        if (!btn) return;
+                                        const action = btn.dataset.action;
+                                        if (action === 'open-plan-from-mp') {
+                                            evt.stopPropagation();
+                                            popup.setContent(buildPlanPopup(f.properties, { properties: f.properties }));
+                                            bindPopupEvents(popup, [{ properties: f.properties, type: 'plan' }], 0);
+                                        } else if (action === 'add-note') {
+                                            evt.stopPropagation();
+                                            const planId = btn.dataset.plan;
+                                            const current = (window.__annotations || {})[planId] || '';
+                                            window.showNoteModal(current).then(function(noteVal) {
+                                                if (noteVal !== null) {
+                                                    if (!window.__annotations) window.__annotations = {};
+                                                    window.__annotations[planId] = noteVal;
+                                                    try { localStorage.setItem('plan_annotations', JSON.stringify(window.__annotations)); } catch(e){}
+                                                    popup.setContent(renderHtml());
+                                                }
+                                            });
+                                        }
+                                    });
+                                }, 30);
                             });
-                            lyr.bindTooltip(`${f.properties.plan_name || ''} — ${sl}`, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
                         }
-                    }).addTo(map);
+                    });
 
-                    return L.layerGroup([zoneLayer, plansLayer]);
+                    const group = L.layerGroup([zoneLayer, plansLayer]).addTo(map);
+                    // Stash the inner plansLayer so popup actions can find sublayers by plan_name
+                    group.__plansLayer = plansLayer;
+                    return group;
                 }
                 ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona'].forEach(key => {
                     if (layers[key] && gd[key]) {
@@ -8796,6 +8867,14 @@
                 // Annotation display
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
 
+                // Master plan compliance — show button to open compliance popup
+                const mpCompForBtn = (window.__masterPlanCompliance || {})[props.plan_name];
+                if (mpCompForBtn) {
+                    const sl2 = { violation:'הפרה', warning:'אזהרה', ok:'תקין' }[mpCompForBtn.mp_status] || mpCompForBtn.mp_status;
+                    const sc2 = { violation:'#d32f2f', warning:'#f57c00', ok:'#43a047' }[mpCompForBtn.mp_status] || '#888';
+                    html += `<div style="margin-top:6px;text-align:center"><button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}" style="background:${sc2};color:white">🎯 התייחסות לתכנית אב ${mpCompForBtn.mp_match} · ${sl2}</button></div>`;
+                }
+
                 html += '</div>';
                 return html;
             }
@@ -9161,6 +9240,29 @@
                         });
                         return;
                     }
+                    if (permitBtn && permitBtn.dataset.action === 'show-mp-compliance') {
+                        ev.stopPropagation();
+                        const planName = permitBtn.dataset.plan;
+                        const c = (window.__masterPlanCompliance || {})[planName];
+                        if (!c) return;
+                        const f = (geoDataRef.current.plans?.features || []).find(ff => ff.properties.plan_name === planName);
+                        if (!f) return;
+                        // Trigger the same renderer used by the master plan TBA polygon click,
+                        // by simulating a click on the matching layer in the active master plan group
+                        const mpKey = { 'מושבות':'master_plan_moshavot','רסקו':'master_plan_rasko','בקעה':'master_plan_baka','ארנונה':'master_plan_arnona' }[c.mp_match];
+                        const grp = mpKey && geoLayersRef.current[mpKey];
+                        if (grp && grp.__plansLayer) {
+                            grp.__plansLayer.eachLayer(sub => {
+                                if (sub.feature && sub.feature.properties && sub.feature.properties.plan_name === planName) {
+                                    sub.fire('click', { latlng: popup.getLatLng() });
+                                }
+                            });
+                        } else {
+                            // Master plan layer not active — auto-enable it then fire click after layer rebuilds
+                            setLayers(prev => ({ ...prev, [mpKey]: true }));
+                        }
+                        return;
+                    }
                     if (permitBtn && permitBtn.dataset.action === 'jump-to-shavaz') {
                         ev.stopPropagation();
                         const taba = permitBtn.dataset.taba;
@@ -9499,6 +9601,11 @@
                                                 onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מבני ציבור', items: SHAVAZ_LEGEND }); }}
                                                 style={{fontSize:'14px',margin:0}}>⋯</button>
                                         )}
+                                        {groupKey === 'master_plans' && (
+                                            <button className="layer-legend-btn" title="מקרא תכניות אב — צבעים נושאיים + תאימות"
+                                                onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תכניות אב', items: MASTER_PLAN_LEGEND }); }}
+                                                style={{fontSize:'14px',margin:0}}>⋯</button>
+                                        )}
                                     </div>
                                     )}
                                     {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.map(layer => (
@@ -9523,10 +9630,6 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
-                                            )}
-                                            {layer.id && layer.id.startsWith('master_plan_') && (
-                                                <button className="layer-legend-btn" title="מקרא תכנית אב — צבעים נושאיים + תאימות"
-                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תכניות אב', items: MASTER_PLAN_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
