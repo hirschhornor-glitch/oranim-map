@@ -3268,6 +3268,8 @@
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
+            // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
+            const [masterPlanReport, setMasterPlanReport] = useState(null);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
             const [overlapNames, setOverlapNames] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('oranim_overlap_names') || '{}'); }
@@ -9725,8 +9727,28 @@
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.id === 'tama38' && (
+                                                <>
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
+                                                <button className="layer-legend-btn" title="דוח סיכום תמ&quot;א 38 בתכניות האב"
+                                                    onClick={(e) => { e.stopPropagation(); setMasterPlanReport('תמ"א 38'); }}
+                                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                                                </>
+                                            )}
+                                            {groupKey === 'master_plans' && (
+                                                <button className="layer-legend-btn" title={"דוח סיכום — תכנית אב " + layer.name}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // Map layer id to MP name
+                                                        const NAME_BY_ID = {
+                                                            master_plan_moshavot: 'מושבות',
+                                                            master_plan_rasko:    'רסקו',
+                                                            master_plan_baka:     'בקעה',
+                                                            master_plan_arnona:   'ארנונה',
+                                                        };
+                                                        setMasterPlanReport(NAME_BY_ID[layer.id] || layer.name);
+                                                    }}
+                                                    style={{marginRight:4,fontSize:11}}>📊</button>
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
@@ -11700,6 +11722,221 @@
                                         </>
                                     );
                                 })()}
+                            </div>
+                        </div>
+                    )}
+
+                    {masterPlanReport && (
+                        <div className="units-overlay" onClick={() => setMasterPlanReport(null)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(700px, 95vw)', maxHeight: '85vh', display:'flex', flexDirection:'column'}}>
+                                <button className="units-close" onClick={() => setMasterPlanReport(null)}>&times;</button>
+                                <div style={{overflowY:'auto', flex:1}}>
+                                <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח סיכום — {masterPlanReport === 'תמ"א 38' ? 'תמ"א 38 בתכניות האב' : 'תכנית אב ' + masterPlanReport}</h2>
+                                {(() => {
+                                    const gd = geoDataRef.current;
+                                    const compliance = window.__masterPlanCompliance || {};
+                                    if (!gd.plans) return <p>טוען...</p>;
+
+                                    const isTama38Report = masterPlanReport === 'תמ"א 38';
+
+                                    // Filter plans: match MP (or all MPs for tama38 report) + exclude rejected
+                                    const rejected = new Set(['נגנזה','נדחתה','נגנזה/נדחתה']);
+                                    const seen = new Set();
+                                    const plansInMp = [];
+                                    gd.plans.features.forEach(f => {
+                                        const pn = f.properties.plan_name;
+                                        if (!pn || seen.has(pn)) return;
+                                        const c = compliance[pn];
+                                        if (!c) return;
+                                        if (isTama38Report) {
+                                            if (!c.mp_is_tama38) return;
+                                        } else {
+                                            if (c.mp_match !== masterPlanReport) return;
+                                        }
+                                        const st = normalizeStatus((f.properties.status_mavat || '').trim());
+                                        if (rejected.has(st)) return;
+                                        seen.add(pn);
+                                        plansInMp.push({ feat: f, c });
+                                    });
+
+                                    // KPIs: status counts
+                                    const violations = plansInMp.filter(p => p.c.mp_status === 'violation').length;
+                                    const warnings   = plansInMp.filter(p => p.c.mp_status === 'warning').length;
+                                    const ok         = plansInMp.filter(p => p.c.mp_status === 'ok').length;
+                                    const tamaCount  = plansInMp.filter(p => p.c.mp_is_tama38).length;
+
+                                    // Aggregate sqm + units (from Table 5 / existing fields)
+                                    const agg = { units_add:0, commerce_in:0, employment:0, shavatz_out:0, hafrash:0 };
+                                    plansInMp.forEach(({ feat }) => {
+                                        const pr = feat.properties;
+                                        agg.units_add   += parseFloat(pr.units_add) || 0;
+                                        agg.commerce_in += parseFloat(pr.commerce_in) || 0;
+                                        agg.employment  += parseFloat(pr.employment)  || 0;
+                                        agg.shavatz_out += parseFloat(pr.shavatz_out_sqm) || 0;
+                                        agg.hafrash     += parseFloat(pr.hafrash_sqm) || 0;
+                                    });
+
+                                    // Top-N violators — rank by severity
+                                    // Score = (violation? 100 : warning? 10 : 0) + floors_over + 0.1*cons_a + 0.01*cons_b
+                                    const scored = plansInMp
+                                        .filter(p => p.c.mp_status !== 'ok')
+                                        .map(p => {
+                                            const planFloors = parseFloat(p.feat.properties.floors_max) || 0;
+                                            const mpFloors   = parseFloat(p.c.mp_subzone_max_floors) || 0;
+                                            const floorsOver = (planFloors && mpFloors && planFloors > mpFloors) ? (planFloors - mpFloors) : 0;
+                                            const score = (p.c.mp_status === 'violation' ? 100 : 10)
+                                                + floorsOver
+                                                + 0.1 * (p.c.mp_cons_a || 0)
+                                                + 0.01 * (p.c.mp_cons_b || 0);
+                                            return { ...p, score, planFloors, mpFloors, floorsOver };
+                                        })
+                                        .sort((a, b) => b.score - a.score)
+                                        .slice(0, 10);
+
+                                    // Subzone breakdown
+                                    const bySubzone = {};
+                                    plansInMp.forEach(p => {
+                                        const sz = p.c.mp_subzone || '(ללא תת-מתחם)';
+                                        if (!bySubzone[sz]) bySubzone[sz] = { total:0, violations:0, warnings:0, ok:0, max_floors: p.c.mp_subzone_max_floors };
+                                        bySubzone[sz].total++;
+                                        if (p.c.mp_status === 'violation') bySubzone[sz].violations++;
+                                        else if (p.c.mp_status === 'warning') bySubzone[sz].warnings++;
+                                        else bySubzone[sz].ok++;
+                                    });
+                                    const subzones = Object.entries(bySubzone).sort((a,b) => b[1].total - a[1].total);
+
+                                    const zoomToPlan = (f) => {
+                                        setMasterPlanReport(null);
+                                        const map = mapInstanceRef.current;
+                                        if (!map || !f.geometry) return;
+                                        try {
+                                            const center = visualCenter(f.geometry) || L.geoJSON(f).getBounds().getCenter();
+                                            const latlng = center.lat ? [center.lat, center.lng] : center;
+                                            map.setView(latlng, 18);
+                                            setTimeout(() => {
+                                                const mapped = mapPlanProps(f.properties);
+                                                const popup = L.popup({ maxWidth: popupMaxWidth(), closeButton: true })
+                                                    .setLatLng(latlng)
+                                                    .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                                                    .openOn(map);
+                                                bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                                            }, 500);
+                                        } catch(err) { console.warn('zoom to plan failed', err); }
+                                    };
+
+                                    const fmt = n => (n > 0 ? Math.round(n).toLocaleString() : '—');
+
+                                    return (
+                                        <>
+                                            {/* KPI cards */}
+                                            <div style={{display:'flex',gap:16,margin:'16px 0',justifyContent:'center',flexWrap:'wrap'}}>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#e94560'}}>{plansInMp.length}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תכניות בתחום</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#ef5350'}}>{violations}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>הפרות</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#ffb74d'}}>{warnings}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>אזהרות</div>
+                                                </div>
+                                                <div style={{textAlign:'center'}}>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#9ccc9c'}}>{ok}</div>
+                                                    <div style={{fontSize:12,color:'#aaa'}}>תקין</div>
+                                                </div>
+                                                {!isTama38Report && (
+                                                    <div style={{textAlign:'center'}}>
+                                                        <div style={{fontSize:24,fontWeight:'bold',color:'#5dade2'}}>{tamaCount}</div>
+                                                        <div style={{fontSize:12,color:'#aaa'}}>תמ"א 38</div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Aggregate sqm + units */}
+                                            <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 6px'}}>סיכום כמותי</h3>
+                                            <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12,color:'#cdd',background:'#15152a',padding:'8px 10px',borderRadius:4}}>
+                                                <span><b>יח"ד תוספת:</b> {fmt(agg.units_add)}</span>
+                                                <span><b>מסחר נכנס:</b> {fmt(agg.commerce_in)} מ"ר</span>
+                                                <span><b>תעסוקה:</b> {fmt(agg.employment)} מ"ר</span>
+                                                <span><b>שב"צ יוצא:</b> {fmt(agg.shavatz_out)} מ"ר</span>
+                                                <span><b>הפרשה מבונה:</b> {fmt(agg.hafrash)} מ"ר</span>
+                                            </div>
+
+                                            {/* Top-N violators */}
+                                            {scored.length > 0 && (
+                                                <>
+                                                    <h3 style={{color:'#e94560',fontSize:14,margin:'14px 0 6px'}}>תכניות מפרות מובילות</h3>
+                                                    <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
+                                                        <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                            <th style={{textAlign:'right',padding:4,color:'#fff'}}>שם</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#fff'}}>סטטוס</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#fff'}}>קומות</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#fff'}}>נושא</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {scored.map((p, i) => {
+                                                                const pr = p.feat.properties;
+                                                                const sev = p.c.mp_status;
+                                                                const col = sev === 'violation' ? '#ef5350' : '#ffb74d';
+                                                                const floorsCell = p.planFloors > 0
+                                                                    ? (p.mpFloors > 0
+                                                                        ? <span style={{color: p.floorsOver > 0 ? '#ef5350' : '#9ccc9c'}}>{p.planFloors} / {p.mpFloors}</span>
+                                                                        : <span>{p.planFloors}</span>)
+                                                                    : '—';
+                                                                const firstIssue = (p.c.mp_issues || [])[0] || '';
+                                                                return (
+                                                                    <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                                        <td style={{padding:4}}>
+                                                                            <a href="#" style={{color:'#64b5f6',textDecoration:'underline',cursor:'pointer'}}
+                                                                               onClick={(e) => { e.preventDefault(); zoomToPlan(p.feat); }}>
+                                                                                {pr.plan_summary || pr.plan_name_he || pr.plan_name}
+                                                                            </a>
+                                                                        </td>
+                                                                        <td style={{textAlign:'center',padding:4,color:col,fontSize:10}}>{sev === 'violation' ? 'הפרה' : 'אזהרה'}</td>
+                                                                        <td style={{textAlign:'center',padding:4,fontSize:10}}>{floorsCell}</td>
+                                                                        <td style={{padding:4,color:'#aaa',fontSize:10}}>{firstIssue.replace(/^(הפרה|אזהרה):\s*/, '')}</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </>
+                                            )}
+
+                                            {/* Subzone breakdown */}
+                                            {subzones.length > 0 && (
+                                                <>
+                                                    <h3 style={{color:'#e94560',fontSize:14,margin:'14px 0 6px'}}>פילוח לפי תת-מתחם</h3>
+                                                    <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
+                                                        <thead><tr style={{borderBottom:'1px solid #2a2a4a'}}>
+                                                            <th style={{textAlign:'right',padding:4,color:'#fff'}}>תת-מתחם</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#fff'}}>קומות מקס׳</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#fff'}}>סה"כ</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#ef5350'}}>הפרות</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#ffb74d'}}>אזהרות</th>
+                                                            <th style={{textAlign:'center',padding:4,color:'#9ccc9c'}}>תקין</th>
+                                                        </tr></thead>
+                                                        <tbody>
+                                                            {subzones.map(([name, data], i) => (
+                                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                                    <td style={{padding:4,color:'#cdd'}}>{name}</td>
+                                                                    <td style={{textAlign:'center',padding:4,color:'#aab'}}>{data.max_floors || '—'}</td>
+                                                                    <td style={{textAlign:'center',padding:4,color:'#cdd'}}>{data.total}</td>
+                                                                    <td style={{textAlign:'center',padding:4,color:data.violations ? '#ef5350' : '#555'}}>{data.violations || '—'}</td>
+                                                                    <td style={{textAlign:'center',padding:4,color:data.warnings ? '#ffb74d' : '#555'}}>{data.warnings || '—'}</td>
+                                                                    <td style={{textAlign:'center',padding:4,color:data.ok ? '#9ccc9c' : '#555'}}>{data.ok || '—'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                                </div>
                             </div>
                         </div>
                     )}
