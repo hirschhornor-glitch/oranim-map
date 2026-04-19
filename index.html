@@ -7465,6 +7465,7 @@
                                     .setLatLng(latlng)
                                     .setContent(buildTama38Popup(p));
                                 popup.openOn(m);
+                                bindPopupEvents(popup, [{ properties: p, type: 'tama38' }], 0);
                             });
                             const addr = f.properties.address || '';
                             const tose = parseFloat(f.properties.units_tose) || 0;
