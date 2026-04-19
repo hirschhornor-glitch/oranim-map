@@ -7969,12 +7969,34 @@
 
                 // ── Objection Banner ──
                 const isObjectionStatus = normalizeStatus(status) === 'הפקדה להתנגדויות/השגות';
-                const objEndDate = props.objection_end_date || '';
+                const isDistrict = (props.authority || '').includes('מחוזית');
+                let objEndDate = props.objection_end_date || '';
+                // For district plans: compute 60 days from mavat_date if no explicit date
+                // (also override if the stored date is before mavat_date — stale calc)
+                if (isObjectionStatus && isDistrict) {
+                    const md = (props.mavat_date || '').split('/');
+                    if (md.length === 3) {
+                        const mavDate = new Date(md[2], md[1]-1, md[0]);
+                        let useCalc = !objEndDate;
+                        if (objEndDate) {
+                            const parts = objEndDate.split('/');
+                            if (parts.length === 3) {
+                                const stored = new Date(parts[2], parts[1]-1, parts[0]);
+                                if (stored < mavDate) useCalc = true;  // stored date is stale
+                            }
+                        }
+                        if (useCalc && !isNaN(mavDate.getTime())) {
+                            const end = new Date(mavDate);
+                            end.setDate(end.getDate() + 60);
+                            objEndDate = `${String(end.getDate()).padStart(2,'0')}/${String(end.getMonth()+1).padStart(2,'0')}/${end.getFullYear()} (60 יום)`;
+                        }
+                    }
+                }
                 let objectionStillOpen = false;
                 if (isObjectionStatus) {
-                    const isLocal = (props.authority || '').includes('מקומית');
                     if (objEndDate) {
-                        const parts = objEndDate.split('/');
+                        const dateOnly = objEndDate.split(' ')[0];
+                        const parts = dateOnly.split('/');
                         if (parts.length === 3) {
                             const end = new Date(parts[2], parts[1]-1, parts[0]);
                             if (end >= new Date()) objectionStillOpen = true;
