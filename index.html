@@ -8032,7 +8032,7 @@
                 html += `<div class="popup-header-title">${title}</div>`;
                 const planType = (props.plan_type || '').trim();
                 const planTypeInline = (planType && planType !== 'מוסתר')
-                    ? ` <span style="color:#8899cc;font-weight:bold"> · ${planType}</span>` : '';
+                    ? ` <span style="color:#8899cc;font-weight:bold;font-family:Assistant,sans-serif"> · ${planType}</span>` : '';
                 if (subtitle) html += `<div class="popup-header-subtitle">${subtitle}${planTypeInline}</div>`;
                 html += '<button class="popup-btn-permit" data-action="add-note" data-plan="' + planId + '" style="position:absolute;bottom:6px;left:6px;background:transparent;border:none;color:' + (note ? '#ffeaa7' : '#666') + ';font-size:16px;padding:2px;min-width:auto;cursor:pointer" title="' + (note || 'הוסף הערה') + '">📝</button>';
                 // Status + date in header
