@@ -3259,7 +3259,6 @@
             const [showFilter, setShowFilter] = useState(false);
             const [showHeatMap, setShowHeatMap] = useState(false);
             const [showCommerceHeatMap, setShowCommerceHeatMap] = useState(false);
-            const [showCompliance, setShowCompliance] = useState(false);
             const [showAnnotations, setShowAnnotations] = useState(false);
             const [annotationSubtitle, setAnnotationSubtitle] = useState('');
             const [annotationName, setAnnotationName] = useState('');
@@ -6574,18 +6573,6 @@
                             return true;
                         },
                         style: f => {
-                            // Compliance mode overrides default styling
-                            if (showCompliance) {
-                                const planName = f.properties.plan_name || '';
-                                const c = (window.__masterPlanCompliance || {})[planName];
-                                if (c) {
-                                    const colorMap = { violation: '#d32f2f', warning: '#f57c00', ok: '#43a047' };
-                                    const fc = colorMap[c.mp_status] || '#9e9e9e';
-                                    return { color: fc, weight: 2, fillColor: fc, fillOpacity: 0.45, dashArray: '' };
-                                }
-                                // No master plan covers this plan
-                                return { color: '#888', weight: 1, fillColor: '#bbb', fillOpacity: 0.12, dashArray: '4,2' };
-                            }
                             const status = normalizeStatus(f.properties.status_mavat || '');
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                             const statusColor = STATUS_COLORS[status] || '#888';
@@ -7380,9 +7367,28 @@
                         `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
                         rows + `</div>`;
                 }
+                // Master plan name (Hebrew) per layer key — matches mp_match in compliance JSON
+                const MP_NAME_BY_KEY = {
+                    master_plan_moshavot: 'מושבות',
+                    master_plan_rasko: 'רסקו',
+                    master_plan_baka: 'בקעה',
+                    master_plan_arnona: 'ארנונה',
+                };
+                // Feature types we display at zone level (NOT individual buildings)
+                const ZONE_FEATURE_TYPES = new Set(['boundary', 'subzone', 'special_focus', 'texture', 'conservation']);
+                const COMPLIANCE_FILL = { violation: '#d32f2f', warning: '#f57c00', ok: '#43a047' };
+
                 function buildMasterPlanLayer(layerKey, geojson) {
                     const cfg = MASTER_PLAN_CONFIGS[layerKey];
-                    const layer = L.geoJSON(geojson, {
+                    const mpName = MP_NAME_BY_KEY[layerKey];
+
+                    // Zone-level features only (skip building_height + conservation_point)
+                    const zoneFc = {
+                        type: 'FeatureCollection',
+                        features: geojson.features.filter(f => ZONE_FEATURE_TYPES.has(f.properties.feature_type))
+                    };
+
+                    const zoneLayer = L.geoJSON(zoneFc, {
                         pane: 'masterPlanPane',
                         style: f => {
                             const ft = f.properties.feature_type;
@@ -7400,41 +7406,70 @@
                                 const c = MERKAM_COLORS[f.properties.merkam] || '#bbdefb';
                                 return { color: c, weight: 0.5, fillColor: c, fillOpacity: 0.45 };
                             }
-                            if (ft === 'building_height') {
-                                const fl = f.properties.floors_max_int;
-                                let c = '#9e9e9e';
-                                if (fl >= 8) c = '#d32f2f';
-                                else if (fl >= 5) c = '#f57c00';
-                                else if (fl >= 3) c = '#fbc02d';
-                                else if (fl >= 1) c = '#aed581';
-                                return { color: '#555', weight: 0.4, fillColor: c, fillOpacity: 0.55 };
-                            }
                             if (ft === 'conservation') {
                                 const c = f.properties.is_strict ? '#d32f2f' : '#f57c00';
                                 return { color: c, weight: 1, fillColor: c, fillOpacity: 0.4 };
                             }
                             return { color: cfg.color, weight: 1, fillOpacity: 0.3 };
                         },
-                        pointToLayer: (f, latlng) => {
-                            const grade = f.properties.conservation_grade || '';
-                            const c = GRADE_COLORS[grade] || cfg.color;
-                            return L.circleMarker(latlng, {
-                                radius: 4, fillColor: c, fillOpacity: 0.85, color: '#222', weight: 0.6
-                            });
-                        },
                         onEachFeature: (f, lyr) => {
                             const html = buildMasterPlanPopup(f.properties);
                             lyr.bindPopup(html, { maxWidth: 320 });
-                            const ft = f.properties.feature_type;
                             const tipText = f.properties.zone_name || f.properties.merkam ||
-                                f.properties.conservation_grade || f.properties.plan_name ||
-                                f.properties.floors_per_master_plan || '';
+                                f.properties.plan_name || '';
                             if (tipText) {
                                 lyr.bindTooltip(tipText, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
                             }
                         }
                     }).addTo(map);
-                    return layer;
+
+                    // Plans (TBA + TMA) being promoted INSIDE this master plan,
+                    // colored by compliance (red=violation, orange=warning, green=ok)
+                    const compliance = window.__masterPlanCompliance || {};
+                    const insidePlans = (gd.plans && gd.plans.features || []).filter(f => {
+                        const c = compliance[f.properties.plan_name];
+                        return c && c.mp_match === mpName;
+                    });
+                    const plansLayer = L.geoJSON({ type: 'FeatureCollection', features: insidePlans }, {
+                        pane: 'masterPlanPane',
+                        style: f => {
+                            const c = compliance[f.properties.plan_name];
+                            const fc = COMPLIANCE_FILL[c.mp_status] || '#9e9e9e';
+                            return { color: fc, weight: 2.5, fillColor: fc, fillOpacity: 0.55, dashArray: '' };
+                        },
+                        onEachFeature: (f, lyr) => {
+                            const c = compliance[f.properties.plan_name];
+                            const issuesHtml = (c.mp_issues && c.mp_issues.length)
+                                ? c.mp_issues.map(i => {
+                                    const isViol = i.startsWith('הפרה');
+                                    const isWarn = i.startsWith('אזהרה');
+                                    const col = isViol ? '#ef5350' : isWarn ? '#ffb74d' : '#90caf9';
+                                    return `<div style="font-size:10px;color:${col};margin:2px 0">• ${i}</div>`;
+                                }).join('')
+                                : '<div style="font-size:11px;color:#9ccc9c">• תקין</div>';
+                            const sl = { violation: 'הפרה', warning: 'אזהרה', ok: 'תקין' }[c.mp_status] || c.mp_status;
+                            const sc = COMPLIANCE_FILL[c.mp_status] || '#888';
+                            const planType = (f.properties.plan_type || '').trim();
+                            const isTama = c.mp_is_tama38 ? '<span style="background:#5dade2;color:white;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">תמ״א 38</span>' : '';
+                            const html = `<div style="font-family:Assistant;direction:rtl;max-width:300px">` +
+                                `<div style="font-weight:bold;font-size:13px;margin-bottom:4px">${f.properties.plan_summary || f.properties.plan_name_he || f.properties.plan_name || 'תכנית'}</div>` +
+                                `<div style="font-size:11px;color:#999;margin-bottom:6px">${f.properties.plan_name || ''} ${planType ? '· '+planType : ''}</div>` +
+                                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">` +
+                                `<span style="background:${sc};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold">${sl}</span>` +
+                                isTama +
+                                `<span style="font-size:10px;color:#bbb">תכנית אב ${c.mp_match}</span>` +
+                                `</div>` +
+                                (c.mp_subzone ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>תת-מתחם:</b> ${c.mp_subzone}</div>` : '') +
+                                (c.mp_subzone_max_floors ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>קומות מקס׳ בתכנית אב:</b> ${c.mp_subzone_max_floors}</div>` : '') +
+                                (c.mp_subzone_far_pct ? `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>אחוזי בנייה:</b> ${c.mp_subzone_far_pct}%</div>` : '') +
+                                `<div style="margin-top:6px;border-top:1px solid #333;padding-top:4px">${issuesHtml}</div>` +
+                                `</div>`;
+                            lyr.bindPopup(html, { maxWidth: 320 });
+                            lyr.bindTooltip(`${f.properties.plan_name || ''} — ${sl}`, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                        }
+                    }).addTo(map);
+
+                    return L.layerGroup([zoneLayer, plansLayer]);
                 }
                 ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona'].forEach(key => {
                     if (layers[key] && gd[key]) {
@@ -8308,7 +8343,7 @@
 
                 window.__geoLayersForPrint = geoLayersRef.current;
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, showCommerceHeatMap, showCompliance, eduFilters, deferredTick]);
+            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, showCommerceHeatMap, eduFilters, deferredTick]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -8696,41 +8731,6 @@
 
                 // Annotation display
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
-
-                // Master plan compliance section
-                const compliance = (window.__masterPlanCompliance || {})[props.plan_name];
-                if (compliance) {
-                    const statusColors = { violation: '#d32f2f', warning: '#f57c00', ok: '#43a047' };
-                    const statusLabels = { violation: 'הפרה', warning: 'אזהרה', ok: 'תקין' };
-                    const sc = statusColors[compliance.mp_status] || '#888';
-                    const sl = statusLabels[compliance.mp_status] || compliance.mp_status;
-                    html += `<div style="margin-top:8px;border-top:1px solid #333;padding-top:6px">`;
-                    html += `<div style="font-weight:bold;color:#bbc;font-size:11px;margin-bottom:4px">תאימות לתכנית אב</div>`;
-                    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">`;
-                    html += `<span style="background:${sc};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold">${sl}</span>`;
-                    html += `<span style="font-size:11px;color:#ccc">תכנית אב ${compliance.mp_match}</span>`;
-                    html += `</div>`;
-                    if (compliance.mp_subzone) {
-                        html += `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>תת-מתחם:</b> ${compliance.mp_subzone}</div>`;
-                    }
-                    if (compliance.mp_subzone_max_floors) {
-                        html += `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>קומות מקס׳ (תכנית אב):</b> ${compliance.mp_subzone_max_floors}</div>`;
-                    }
-                    if (compliance.mp_subzone_far_pct) {
-                        html += `<div style="font-size:11px;color:#aaa;margin:2px 0"><b>אחוזי בנייה (תכנית אב):</b> ${compliance.mp_subzone_far_pct}%</div>`;
-                    }
-                    if (compliance.mp_issues && compliance.mp_issues.length) {
-                        html += `<div style="margin-top:4px">`;
-                        compliance.mp_issues.forEach(iss => {
-                            const isViol = iss.startsWith('הפרה');
-                            const isWarn = iss.startsWith('אזהרה');
-                            const c = isViol ? '#ef5350' : isWarn ? '#ffb74d' : '#90caf9';
-                            html += `<div style="font-size:10px;color:${c};margin:2px 0">• ${iss}</div>`;
-                        });
-                        html += `</div>`;
-                    }
-                    html += `</div>`;
-                }
 
                 html += '</div>';
                 return html;
@@ -9930,18 +9930,6 @@
                                 </div>
                             )}
                             </div>
-
-                            {/* ══ תאימות לתכניות אב ══ */}
-                            <button
-                                className={`toolbar-btn ${showCompliance ? 'active' : ''}`}
-                                onClick={() => setShowCompliance(p => !p)}
-                                title="תאימות לתכנית אב — צביעת תכניות לפי תאימות (ירוק=תקין, כתום=אזהרה, אדום=הפרה, אפור=מחוץ לתכנית אב)"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                                </svg>
-                                <span className="toolbar-label">תאימות</span>
-                            </button>
 
                             {/* ══ מסחר ══ */}
                             <div style={{position:'relative'}}>
