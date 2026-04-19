@@ -23,14 +23,6 @@
     "lo_nidresh": 0,
     "confidence": "medium"
   },
-  "161257": {
-    "total": 1,
-    "shimur": 1,
-    "krita": 0,
-    "haataka": 0,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
   "98251": {
     "total": 42,
     "shimur": 11,
@@ -52,22 +44,6 @@
     "shimur": 4,
     "krita": 6,
     "haataka": 0,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
-  "252379": {
-    "total": 1,
-    "shimur": 0,
-    "krita": 0,
-    "haataka": 1,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
-  "397752": {
-    "total": 1,
-    "shimur": 0,
-    "krita": 0,
-    "haataka": 1,
     "lo_nidresh": 0,
     "confidence": "medium"
   },
@@ -111,27 +87,11 @@
     "lo_nidresh": 0,
     "confidence": "medium"
   },
-  "540500": {
-    "total": 1,
-    "shimur": 0,
-    "krita": 0,
-    "haataka": 1,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
   "548891": {
     "total": 13,
     "shimur": 4,
     "krita": 9,
     "haataka": 0,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
-  "415976": {
-    "total": 1764,
-    "shimur": 30,
-    "krita": 1554,
-    "haataka": 180,
     "lo_nidresh": 0,
     "confidence": "medium"
   },
@@ -148,14 +108,6 @@
     "shimur": 6,
     "krita": 25,
     "haataka": 2,
-    "lo_nidresh": 0,
-    "confidence": "medium"
-  },
-  "502948": {
-    "total": 1,
-    "shimur": 0,
-    "krita": 0,
-    "haataka": 1,
     "lo_nidresh": 0,
     "confidence": "medium"
   },
@@ -212,6 +164,790 @@
     "shimur": 4,
     "krita": 62,
     "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "535591": {
+    "total": 20,
+    "shimur": 20,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "657601": {
+    "total": 21,
+    "shimur": 0,
+    "krita": 21,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "826636": {
+    "total": 39,
+    "shimur": 24,
+    "krita": 15,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "791467": {
+    "total": 23,
+    "shimur": 5,
+    "krita": 18,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "690859": {
+    "total": 12,
+    "shimur": 3,
+    "krita": 5,
+    "haataka": 4,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "870519": {
+    "total": 13,
+    "shimur": 0,
+    "krita": 0,
+    "haataka": 13,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "855668": {
+    "total": 34,
+    "shimur": 17,
+    "krita": 17,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "969519": {
+    "total": 7,
+    "shimur": 6,
+    "krita": 1,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "955450": {
+    "total": 33,
+    "shimur": 14,
+    "krita": 19,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1002054": {
+    "total": 62,
+    "shimur": 8,
+    "krita": 53,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "605956": {
+    "total": 17,
+    "shimur": 0,
+    "krita": 16,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "842617": {
+    "total": 12,
+    "shimur": 3,
+    "krita": 9,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "791319": {
+    "total": 57,
+    "shimur": 7,
+    "krita": 50,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1032291": {
+    "total": 19,
+    "shimur": 9,
+    "krita": 9,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "972554": {
+    "total": 11,
+    "shimur": 2,
+    "krita": 7,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "899880": {
+    "total": 62,
+    "shimur": 21,
+    "krita": 41,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1062645": {
+    "total": 18,
+    "shimur": 6,
+    "krita": 12,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1069764": {
+    "total": 84,
+    "shimur": 17,
+    "krita": 46,
+    "haataka": 10,
+    "lo_nidresh": 11,
+    "confidence": "high"
+  },
+  "921213": {
+    "total": 11,
+    "shimur": 4,
+    "krita": 7,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "665752": {
+    "total": 7,
+    "shimur": 4,
+    "krita": 3,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1033869": {
+    "total": 39,
+    "shimur": 13,
+    "krita": 23,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1052901": {
+    "total": 10,
+    "shimur": 5,
+    "krita": 5,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1071448": {
+    "total": 12,
+    "shimur": 10,
+    "krita": 2,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1115294": {
+    "total": 30,
+    "shimur": 9,
+    "krita": 21,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1095124": {
+    "total": 37,
+    "shimur": 7,
+    "krita": 28,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1106483": {
+    "total": 22,
+    "shimur": 20,
+    "krita": 2,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1131945": {
+    "total": 8,
+    "shimur": 0,
+    "krita": 8,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1078476": {
+    "total": 8,
+    "shimur": 3,
+    "krita": 4,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1030790": {
+    "total": 35,
+    "shimur": 12,
+    "krita": 16,
+    "haataka": 7,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1161439": {
+    "total": 6,
+    "shimur": 0,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1133180": {
+    "total": 77,
+    "shimur": 69,
+    "krita": 6,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1016229": {
+    "total": 12,
+    "shimur": 1,
+    "krita": 11,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1189281": {
+    "total": 14,
+    "shimur": 12,
+    "krita": 1,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1229517": {
+    "total": 34,
+    "shimur": 14,
+    "krita": 17,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1191014": {
+    "total": 12,
+    "shimur": 6,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1114040": {
+    "total": 23,
+    "shimur": 0,
+    "krita": 23,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1094481": {
+    "total": 4,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1247485": {
+    "total": 20,
+    "shimur": 13,
+    "krita": 7,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1144179": {
+    "total": 49,
+    "shimur": 3,
+    "krita": 31,
+    "haataka": 0,
+    "lo_nidresh": 15,
+    "confidence": "high"
+  },
+  "1247717": {
+    "total": 14,
+    "shimur": 7,
+    "krita": 5,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1185578": {
+    "total": 51,
+    "shimur": 21,
+    "krita": 30,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1019157": {
+    "total": 7,
+    "shimur": 3,
+    "krita": 4,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1298728": {
+    "total": 9,
+    "shimur": 7,
+    "krita": 2,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1246404": {
+    "total": 6,
+    "shimur": 3,
+    "krita": 3,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1350719": {
+    "total": 25,
+    "shimur": 22,
+    "krita": 1,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1322452": {
+    "total": 50,
+    "shimur": 0,
+    "krita": 50,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1300003": {
+    "total": 59,
+    "shimur": 43,
+    "krita": 16,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1363290": {
+    "total": 5,
+    "shimur": 2,
+    "krita": 2,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "778035": {
+    "total": 51,
+    "shimur": 21,
+    "krita": 28,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1354356": {
+    "total": 17,
+    "shimur": 7,
+    "krita": 9,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1291525": {
+    "total": 68,
+    "shimur": 32,
+    "krita": 36,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1301753": {
+    "total": 47,
+    "shimur": 12,
+    "krita": 35,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1305739": {
+    "total": 17,
+    "shimur": 9,
+    "krita": 5,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "833038": {
+    "total": 10,
+    "shimur": 2,
+    "krita": 8,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1315431": {
+    "total": 11,
+    "shimur": 4,
+    "krita": 6,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1386671": {
+    "total": 19,
+    "shimur": 3,
+    "krita": 10,
+    "haataka": 6,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1345420": {
+    "total": 6,
+    "shimur": 1,
+    "krita": 5,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1388404": {
+    "total": 18,
+    "shimur": 8,
+    "krita": 10,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1215656": {
+    "total": 16,
+    "shimur": 3,
+    "krita": 13,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1430339": {
+    "total": 10,
+    "shimur": 10,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1415090": {
+    "total": 42,
+    "shimur": 36,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1437755": {
+    "total": 39,
+    "shimur": 11,
+    "krita": 22,
+    "haataka": 0,
+    "lo_nidresh": 6,
+    "confidence": "high"
+  },
+  "1398130": {
+    "total": 37,
+    "shimur": 9,
+    "krita": 26,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1244417": {
+    "total": 15,
+    "shimur": 5,
+    "krita": 9,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1444603": {
+    "total": 18,
+    "shimur": 14,
+    "krita": 3,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1420926": {
+    "total": 16,
+    "shimur": 10,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1450394": {
+    "total": 31,
+    "shimur": 21,
+    "krita": 9,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1397504": {
+    "total": 25,
+    "shimur": 14,
+    "krita": 11,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1492099": {
+    "total": 10,
+    "shimur": 10,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1492735": {
+    "total": 56,
+    "shimur": 20,
+    "krita": 16,
+    "haataka": 7,
+    "lo_nidresh": 13,
+    "confidence": "medium"
+  },
+  "210054": {
+    "total": 9,
+    "shimur": 3,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1198613": {
+    "total": 4,
+    "shimur": 0,
+    "krita": 4,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1474931": {
+    "total": 5,
+    "shimur": 2,
+    "krita": 3,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1252980": {
+    "total": 65,
+    "shimur": 0,
+    "krita": 65,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1300367": {
+    "total": 83,
+    "shimur": 30,
+    "krita": 53,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "653840": {
+    "total": 271,
+    "shimur": 53,
+    "krita": 216,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1008176": {
+    "total": 32,
+    "shimur": 13,
+    "krita": 18,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "987016": {
+    "total": 20,
+    "shimur": 1,
+    "krita": 18,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "923755": {
+    "total": 61,
+    "shimur": 54,
+    "krita": 7,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1010123": {
+    "total": 4,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "998336": {
+    "total": 34,
+    "shimur": 29,
+    "krita": 2,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1025295": {
+    "total": 50,
+    "shimur": 4,
+    "krita": 46,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1151901": {
+    "total": 36,
+    "shimur": 18,
+    "krita": 16,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1115450": {
+    "total": 7,
+    "shimur": 5,
+    "krita": 2,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1231349": {
+    "total": 19,
+    "shimur": 16,
+    "krita": 3,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1309061": {
+    "total": 9,
+    "shimur": 9,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1326446": {
+    "total": 22,
+    "shimur": 1,
+    "krita": 2,
+    "haataka": 19,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1297548": {
+    "total": 86,
+    "shimur": 31,
+    "krita": 55,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1307255": {
+    "total": 32,
+    "shimur": 15,
+    "krita": 17,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1377753": {
+    "total": 29,
+    "shimur": 13,
+    "krita": 15,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1394444": {
+    "total": 14,
+    "shimur": 5,
+    "krita": 9,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1372788": {
+    "total": 8,
+    "shimur": 0,
+    "krita": 0,
+    "haataka": 8,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1451699": {
+    "total": 54,
+    "shimur": 29,
+    "krita": 25,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "731877": {
+    "total": 358,
+    "shimur": 59,
+    "krita": 0,
+    "haataka": 299,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1424969": {
+    "total": 40,
+    "shimur": 34,
+    "krita": 5,
+    "haataka": 0,
+    "lo_nidresh": 1,
+    "confidence": "high"
+  },
+  "798306": {
+    "total": 5,
+    "shimur": 2,
+    "krita": 2,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "657593": {
+    "total": 26,
+    "shimur": 3,
+    "krita": 12,
+    "haataka": 11,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "352096": {
+    "total": 27,
+    "shimur": 6,
+    "krita": 0,
+    "haataka": 21,
     "lo_nidresh": 0,
     "confidence": "medium"
   }

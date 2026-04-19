@@ -2094,7 +2094,7 @@
             landuse_xplan: 'data/landuse_xplan.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
-            master_plan_baka_zones: 'data/master_plan_baka_zones.geojson',
+            trees: 'data/trees.geojson',
         };
 
         // Map Hebrew property names to English aliases used by popup builders
@@ -2226,12 +2226,12 @@
                     { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
                 ]
             },
-            master_plans: {
-                title: 'תכניות אב',
+            environment: {
+                title: 'סקרים',
                 layers: [
-                    { id: 'master_plan_baka_zones', name: 'תכנית אב — בקעה רבתי', desc: '7 אזורי משנה במרחב בקעה רבתי (MVP - הדיגיטציה המלאה תיעשה ב-QGIS)', on: false },
+                    { id: 'trees', name: 'סקר עצים עירוני', desc: 'סקר עצים — צבע לפי דחיפות טיפול', on: false },
                 ]
-            }
+            },
         };
 
         const HEBREW_FIELD_NAMES = {
@@ -3622,11 +3622,8 @@
                 window.__tama38Permits = {};
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
-                window.__masterPlanBakaPlans = null;
-                window.__masterPlanBakaMatching = null;
-                window.__masterPlanBakaByTaba = {};
                 // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__masterPlanBakaPlans', 'data/master_plan_baka_plans.json'], ['__masterPlanBakaMatching', 'data/master_plan_baka_matching.json']]);
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json']]);
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
                 Promise.all([
@@ -3649,18 +3646,8 @@
                         else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
                         else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                         else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
-                        else if (key === '__masterPlanBakaPlans') { window.__masterPlanBakaPlans = data; }
-                        else if (key === '__masterPlanBakaMatching') { window.__masterPlanBakaMatching = data; }
                         else if (data) { gd[key] = data; }
                     });
-                    // Build master-plan-by-taba index for popup enrichment
-                    if (window.__masterPlanBakaPlans && window.__masterPlanBakaPlans.records) {
-                        window.__masterPlanBakaPlans.records.forEach(rec => {
-                            const k = rec.plan_number_numeric;
-                            if (k != null) window.__masterPlanBakaByTaba[String(k)] = rec;
-                        });
-                        console.log('[MasterPlan] Baka records indexed:', Object.keys(window.__masterPlanBakaByTaba).length);
-                    }
                     console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
@@ -7250,6 +7237,52 @@
                     geoLayersRef.current.sport_kayam = sportKayamLayer;
                 }
 
+                // --- Trees survey (סקר עצים עירוני) ---
+                if (layers['trees'] && gd.trees) {
+                    const URGENCY_COLOR = (u) => {
+                        if (!u) return '#9e9e9e';
+                        if (u.indexOf('מידי') >= 0) return '#d32f2f';
+                        if (u.indexOf('דחוף') >= 0) return '#f57c00';
+                        return '#2e7d32';
+                    };
+                    const treesLayer = L.geoJSON(gd.trees, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 4,
+                            fillColor: URGENCY_COLOR(f.properties.urgency),
+                            fillOpacity: 0.85,
+                            color: '#1b3a1b', weight: 0.8
+                        }),
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const species = p.species_other || p.species || 'עץ';
+                            const tip = `<b>${species}</b>` +
+                                (p.street ? `<br>${p.street}${p.house_no?' '+p.house_no:''}` : '') +
+                                (p.urgency ? `<br><span style="color:${URGENCY_COLOR(p.urgency)}">⚑ ${p.urgency}</span>` : '');
+                            layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -4] });
+                            layer.on('click', () => {
+                                const rows = [
+                                    ['מין', species],
+                                    ['בריאות (1-5)', p.health || ''],
+                                    ['גובה', p.height || ''],
+                                    ['קוטר גזע', p.trunk_diameter || ''],
+                                    ['גיל', p.age || ''],
+                                    ['מיקום', p.location || ''],
+                                    ['השקיה', p.irrigation_state || p.irrigation || ''],
+                                    ['המלצות', p.recommendations || ''],
+                                    ['הערות', p.health_note || ''],
+                                ].filter(r => r[1]);
+                                const html = `<div style="font-family:Assistant;direction:rtl">` +
+                                    `<div style="font-weight:bold;font-size:14px;margin-bottom:6px">🌳 ${species}</div>` +
+                                    rows.map(([k,v]) => `<div style="margin:2px 0"><b>${k}:</b> ${v}</div>`).join('') +
+                                    `</div>`;
+                                L.popup({ maxWidth: 280 }).setLatLng(layer.getLatLng()).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.trees = treesLayer;
+                }
+
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
                     const SHAVAZ_CODES = new Set([400, 410, 450, 460]);
@@ -7577,35 +7610,6 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.sara_march_2026 = saraLayer;
-                }
-
-                // --- Master Plan Baka zones (A–E from official plan) ---
-                if (layers['master_plan_baka_zones'] && gd.master_plan_baka_zones) {
-                    const ZONE_DESC = {
-                        A: 'מרקם לשימור — לב בקעה. 3 קומות + גג, תכסית 80%',
-                        B: 'תכניות מאושרות — ללא שינוי',
-                        C: 'שיכונים והתחדשות עירונית — לפי תכניות מפורטות',
-                        D: 'התחדשות דרך חברון — 6–8 קומות, גובה 23מ\', 200–280%',
-                        E: 'התחדשות פייר קניג — 14 קומות (4 מסד + 10 מגורים)',
-                    };
-                    const mpLayer = L.geoJSON(gd.master_plan_baka_zones, {
-                        pane: 'masterPlanPane',
-                        style: f => ({
-                            color: f.properties.color || '#666',
-                            weight: 2,
-                            fillColor: f.properties.color || '#666',
-                            fillOpacity: 0.25,
-                        }),
-                        onEachFeature: (f, layer) => {
-                            const zone = f.properties.zone || '?';
-                            const name = f.properties.name || '';
-                            const desc = ZONE_DESC[zone] || '';
-                            const tipHtml = `<div style="font-weight:bold;margin-bottom:4px">${name}</div>` +
-                                `<div style="font-size:11px;color:#bbc">${desc}</div>`;
-                            layer.bindTooltip(tipHtml, { sticky: true, direction: 'top', className: 'landuse-tooltip' });
-                        }
-                    }).addTo(map);
-                    geoLayersRef.current.master_plan_baka_zones = mpLayer;
                 }
 
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
