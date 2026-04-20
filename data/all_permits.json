@@ -3241,10 +3241,20 @@
         "units": 210,
         "units_source": "description",
         "filtered": false
+      },
+      {
+        "file_number": "2024/0527.00",
+        "status": "נפתח תיק רישוי",
+        "status_date": "15/01/2025",
+        "request_type": "עבודות הריסה, בנייה חדשה / בניין חדש, חפירה ומילוי",
+        "request_description": "בניית 2 מגדלי מגורים (430 יח\"ד) 35 קומות לפי תכנית פינוי בינוי, משולבים מסחר, מבני ציבור ושצ\"פ מעל 4",
+        "units": 430,
+        "units_source": "manual",
+        "filtered": false
       }
     ],
     "scraped_at": "2026-04-15T23:25:18.673511",
-    "permit_count": 4,
+    "permit_count": 5,
     "error": ""
   },
   "566729": {
