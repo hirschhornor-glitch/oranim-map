@@ -3335,6 +3335,7 @@
             const [showPermitsBySub, setShowPermitsBySub] = useState(false);
             const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
             const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
+            const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set(['bniya_chadasha', 'tosefet', 'chafira_difun', 'harisa', 'shiputs', 'tama38', 'tashtit', 'acher']));
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
@@ -12369,6 +12370,8 @@
                             const inclusion = getEffectivePermitInclusion(permits, 'plan:' + taba, planUnits);
                             permits.forEach((perm, i) => {
                                 if (!inclusion[i]) return;
+                                const cat = classifyPermitCategory(perm);
+                                if (!permitsBySubCatFilter.has(cat)) return;
                                 const stage = getPermitStage(perm);
                                 const u = Number(perm.units) || 0;
                                 bySub[sub][stage].count++;
@@ -12379,7 +12382,7 @@
                                     date: perm.status_date || '',
                                     units: u,
                                     desc: perm.request_description || '',
-                                    cat: classifyPermitCategory(perm),
+                                    cat,
                                     plan: p.plan_summary || p.plan_name || taba,
                                     taba
                                 });
@@ -12434,10 +12437,10 @@
                                                             <td style={{padding:'6px',color:'#cfcfdf'}}>{p.plan}</td>
                                                             <td style={{padding:'6px',direction:'ltr',color:'#5dade2'}}>{p.file}</td>
                                                             <td style={{padding:'6px',color:'#e0e0e0'}}>{p.status}</td>
-                                                            <td style={{padding:'6px',color:'#aaa'}}>{p.date}</td>
+                                                            <td style={{padding:'6px',color:'#c9c9d9'}}>{p.date}</td>
                                                             <td style={{padding:'6px',textAlign:'left',fontWeight:'bold',color:'#fff'}}>{p.units}</td>
-                                                            <td style={{padding:'6px',color:'#e0e0e0'}}>{getPermitCategoryIcon(p.cat)} {getPermitCategoryLabel(p.cat)}</td>
-                                                            <td style={{padding:'6px',color:'#aaa',fontSize:11}}>{p.desc.substring(0, 80)}</td>
+                                                            <td style={{padding:'6px',color:'#fff'}}>{getPermitCategoryIcon(p.cat)} <span style={{color:'#fff'}}>{getPermitCategoryLabel(p.cat)}</span></td>
+                                                            <td style={{padding:'6px',color:'#c9c9d9',fontSize:11}}>{p.desc.substring(0, 80)}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -12480,16 +12483,45 @@
                         return (
                             <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1100px,95vw)'}}>
-                                    <div className="units-header">
-                                        <h2>🏘️ היתרים לפי תת-שכונה ({subs.length}{permitsBySubMinahakFilter !== 'all' ? '/' + subsAll.length : ''} תת-שכונות)</h2>
-                                        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                                            <select value={permitsBySubMinahakFilter} onChange={e => setPermitsBySubMinahakFilter(e.target.value)} style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'4px 8px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
-                                                <option value="all">כל המינהלים</option>
-                                                {minahakOpts.map(m => <option key={m} value={m}>{m}</option>)}
-                                            </select>
-                                            <button onClick={exportSubReport} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
-                                            <button onClick={printSubReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
-                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                    <div className="units-header" style={{flexDirection:'column',alignItems:'stretch',gap:8}}>
+                                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                                            <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ היתרים לפי תת-שכונה ({subs.length}{permitsBySubMinahakFilter !== 'all' ? '/' + subsAll.length : ''} תת-שכונות)</h2>
+                                            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                                                <select value={permitsBySubMinahakFilter} onChange={e => setPermitsBySubMinahakFilter(e.target.value)} style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'4px 8px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                                    <option value="all">כל המינהלים</option>
+                                                    {minahakOpts.map(m => <option key={m} value={m}>{m}</option>)}
+                                                </select>
+                                                <button onClick={exportSubReport} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
+                                                <button onClick={printSubReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                                <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                            </div>
+                                        </div>
+                                        <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                                            <span style={{fontSize:11,color:'#9ca3af',marginLeft:4}}>סוגי היתרים:</span>
+                                            {PERMIT_CATS_ALL.map(cat => {
+                                                const on = permitsBySubCatFilter.has(cat);
+                                                return (
+                                                    <button key={cat} onClick={() => {
+                                                        setPermitsBySubCatFilter(prev => {
+                                                            const next = new Set(prev);
+                                                            if (next.has(cat)) next.delete(cat); else next.add(cat);
+                                                            return next;
+                                                        });
+                                                    }} style={{
+                                                        background: on ? '#3a3a5a' : 'transparent',
+                                                        color: on ? '#e0e0ff' : '#666',
+                                                        border: '1px solid ' + (on ? '#5a5a7a' : '#333'),
+                                                        padding: '3px 9px', borderRadius: 12, cursor: 'pointer',
+                                                        fontSize: 11, fontFamily: 'inherit',
+                                                        textDecoration: on ? 'none' : 'line-through',
+                                                        opacity: on ? 1 : 0.6
+                                                    }}>
+                                                        {getPermitCategoryIcon(cat)} {getPermitCategoryLabel(cat)}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button onClick={() => setPermitsBySubCatFilter(new Set(PERMIT_CATS_ALL))} style={{marginRight:6,background:'#1a5276',color:'#fff',border:'none',padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>הכל</button>
+                                            <button onClick={() => setPermitsBySubCatFilter(new Set())} style={{background:'transparent',color:'#9ca3af',border:'1px solid #444',padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>נקה</button>
                                         </div>
                                     </div>
                                     <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
