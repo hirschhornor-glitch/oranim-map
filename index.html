@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="אורנים">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -943,13 +943,24 @@
                 font-size: 1.4em;
             }
             .map-toolbar {
-                top: max(60px, env(safe-area-inset-top));
-                padding: 3px 4px;
-                max-width: calc(100vw - 70px);
-                overflow: visible;
+                top: max(60px, env(safe-area-inset-top)) !important;
+                padding: 3px 4px !important;
+                left: 10px !important;
+                right: 60px !important;
+                transform: none !important;
+                max-width: none !important;
+                width: auto !important;
+                overflow-x: auto !important;
+                overflow-y: visible !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                justify-content: flex-start !important;
             }
             .map-toolbar::-webkit-scrollbar {
                 display: none;
+            }
+            .toolbar-btn {
+                flex: 0 0 auto;
             }
             .toolbar-btn {
                 padding: 6px 8px !important;
@@ -985,8 +996,8 @@
                 width: 100vw;
             }
             .map-toolbar {
-                max-width: calc(100vw - 60px);
-                overflow: visible;
+                right: 55px !important;
+                left: 8px !important;
             }
             .toolbar-btn {
                 padding: 6px 6px !important;
@@ -6121,7 +6132,9 @@
                         const totalOut = coVal + empVal;
                         if (!isRejected && totalOut > 0 && status) {
                             const grp = getStatusGroup(status);
-                            byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + totalOut;
+                            const bs = byMinahak[m].byStatus[grp] = byMinahak[m].byStatus[grp] || { co: 0, emp: 0 };
+                            bs.co += coVal;
+                            bs.emp += empVal;
                             if (!plansByCell[m]) plansByCell[m] = {};
                             if (!plansByCell[m][grp]) plansByCell[m][grp] = [];
                             const planInfo = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', commerce_out: coVal, employment: empVal, status_mavat: status };
@@ -6143,7 +6156,9 @@
 
                         if (!isRejected && totalOut > 0 && status) {
                             const grp = getStatusGroup(status);
-                            bySub[m][sub].byStatus[grp] = (bySub[m][sub].byStatus[grp] || 0) + totalOut;
+                            const bs2 = bySub[m][sub].byStatus[grp] = bySub[m][sub].byStatus[grp] || { co: 0, emp: 0 };
+                            bs2.co += coVal;
+                            bs2.emp += empVal;
                             if (!plansBySub[m]) plansBySub[m] = {};
                             if (!plansBySub[m][sub]) plansBySub[m][sub] = {};
                             if (!plansBySub[m][sub][grp]) plansBySub[m][sub][grp] = [];
@@ -12232,6 +12247,25 @@
                                                             return <td key={s} style={fp.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}} onClick={() => { if (fp.length > 0) setCommerceCellReport({minahak: s, statusKey: 'all', statusLabel: 'מסחר יוצא — ' + s, plans: fp}); }}>{fmt(subData[s].commerce_out)}</td>;
                                                         })}
                                                     </tr>
+                                                    {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
+                                                        const total = subs.reduce((sum, s) => sum + (((subData[s].byStatus || {})[g.key] || {}).co || 0), 0);
+                                                        if (total === 0) return null;
+                                                        return (
+                                                            <tr key={'co-'+g.key} className="units-sub-row">
+                                                                <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                                {subs.map(s => {
+                                                                    const val = ((subData[s].byStatus || {})[g.key] || {}).co || 0;
+                                                                    const plansAll = commerceData.plansBySub && commerceData.plansBySub[commerceDrilldown] && commerceData.plansBySub[commerceDrilldown][s] && commerceData.plansBySub[commerceDrilldown][s][g.key];
+                                                                    const plans = plansAll ? plansAll.filter(p => p.commerce_out > 0) : [];
+                                                                    return (
+                                                                    <td key={s}
+                                                                        style={plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                        onClick={() => { if (plans.length > 0) setCommerceCellReport({minahak: s, statusKey: g.key, statusLabel: 'מסחר יוצא — ' + g.label + ' — ' + s, plans}); }}
+                                                                        title={plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                                    >{fmt(val)}</td>);
+                                                                })}
+                                                            </tr>);
+                                                    })}
                                                     <tr>
                                                         <td>תעסוקה</td>
                                                         {subs.map(s => {
@@ -12241,19 +12275,20 @@
                                                         })}
                                                     </tr>
                                                     {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
-                                                        const total = subs.reduce((sum, s) => sum + ((subData[s].byStatus || {})[g.key] || 0), 0);
+                                                        const total = subs.reduce((sum, s) => sum + (((subData[s].byStatus || {})[g.key] || {}).emp || 0), 0);
                                                         if (total === 0) return null;
                                                         return (
-                                                            <tr key={g.key} className="units-sub-row">
+                                                            <tr key={'emp-'+g.key} className="units-sub-row">
                                                                 <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
                                                                 {subs.map(s => {
-                                                                    const val = (subData[s].byStatus || {})[g.key] || 0;
-                                                                    const plans = commerceData.plansBySub && commerceData.plansBySub[commerceDrilldown] && commerceData.plansBySub[commerceDrilldown][s] && commerceData.plansBySub[commerceDrilldown][s][g.key];
+                                                                    const val = ((subData[s].byStatus || {})[g.key] || {}).emp || 0;
+                                                                    const plansAll = commerceData.plansBySub && commerceData.plansBySub[commerceDrilldown] && commerceData.plansBySub[commerceDrilldown][s] && commerceData.plansBySub[commerceDrilldown][s][g.key];
+                                                                    const plans = plansAll ? plansAll.filter(p => p.employment > 0) : [];
                                                                     return (
                                                                     <td key={s}
-                                                                        style={plans && plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
-                                                                        onClick={() => { if (plans && plans.length > 0) setCommerceCellReport({minahak: s, statusKey: g.key, statusLabel: g.label, plans}); }}
-                                                                        title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                                        style={plans.length > 0 ? {cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'} : {}}
+                                                                        onClick={() => { if (plans.length > 0) setCommerceCellReport({minahak: s, statusKey: g.key, statusLabel: 'תעסוקה — ' + g.label + ' — ' + s, plans}); }}
+                                                                        title={plans.length > 0 ? `${plans.length} תכניות` : ''}
                                                                     >{fmt(val)}</td>);
                                                                 })}
                                                             </tr>
@@ -12309,6 +12344,25 @@
                                                         return <td key={m} style={fp.length > 0 ? clk : {}} onClick={() => showP(m, 'מסחר יוצא — ' + m, fp)} title={fp.length > 0 ? `${fp.length} תכניות` : ''}>{fmt(commerceData.byMinahak[m].commerce_out)}</td>;
                                                     })}
                                                 </tr>
+                                                {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
+                                                    const hasAny = ms.some(m => ((commerceData.byMinahak[m].byStatus[g.key] || {}).co || 0) > 0);
+                                                    if (!hasAny) return null;
+                                                    return (
+                                                    <tr key={'co-'+g.key} className="units-sub-row">
+                                                        <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
+                                                        {ms.map(m => {
+                                                            const val = (commerceData.byMinahak[m].byStatus[g.key] || {}).co || 0;
+                                                            const plansAll = commerceData.plansByCell && commerceData.plansByCell[m] && commerceData.plansByCell[m][g.key];
+                                                            const plans = plansAll ? plansAll.filter(p => p.commerce_out > 0) : [];
+                                                            return (
+                                                            <td key={m}
+                                                                style={plans.length > 0 ? clk : {}}
+                                                                onClick={() => { if (plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: 'מסחר יוצא — ' + g.label + ' — ' + m, plans}); }}
+                                                                title={plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                            >{fmt(val)}</td>);
+                                                        })}
+                                                    </tr>);
+                                                })}
                                                 <tr>
                                                     <td>תעסוקה</td>
                                                     {ms.map(m => {
@@ -12318,19 +12372,20 @@
                                                     })}
                                                 </tr>
                                                 {commerceExpanded === 'status' && commerceData.STATUS_GROUPS.map(g => {
-                                                    const hasAny = ms.some(m => (commerceData.byMinahak[m].byStatus[g.key] || 0) > 0);
+                                                    const hasAny = ms.some(m => ((commerceData.byMinahak[m].byStatus[g.key] || {}).emp || 0) > 0);
                                                     if (!hasAny) return null;
                                                     return (
-                                                    <tr key={g.key} className="units-sub-row">
+                                                    <tr key={'emp-'+g.key} className="units-sub-row">
                                                         <td><span style={{display:'inline-block',width:10,height:10,borderRadius:2,background:g.color,marginLeft:6,verticalAlign:'middle'}}></span> {g.label}</td>
                                                         {ms.map(m => {
-                                                            const val = commerceData.byMinahak[m].byStatus[g.key] || 0;
-                                                            const plans = commerceData.plansByCell && commerceData.plansByCell[m] && commerceData.plansByCell[m][g.key];
+                                                            const val = (commerceData.byMinahak[m].byStatus[g.key] || {}).emp || 0;
+                                                            const plansAll = commerceData.plansByCell && commerceData.plansByCell[m] && commerceData.plansByCell[m][g.key];
+                                                            const plans = plansAll ? plansAll.filter(p => p.employment > 0) : [];
                                                             return (
                                                             <td key={m}
-                                                                style={plans && plans.length > 0 ? clk : {}}
-                                                                onClick={() => { if (plans && plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: g.label, plans}); }}
-                                                                title={plans && plans.length > 0 ? `${plans.length} תכניות` : ''}
+                                                                style={plans.length > 0 ? clk : {}}
+                                                                onClick={() => { if (plans.length > 0) setCommerceCellReport({minahak: m, statusKey: g.key, statusLabel: 'תעסוקה — ' + g.label + ' — ' + m, plans}); }}
+                                                                title={plans.length > 0 ? `${plans.length} תכניות` : ''}
                                                             >{fmt(val)}</td>);
                                                         })}
                                                     </tr>);
@@ -12351,12 +12406,21 @@
                                 <h2 style={{color:'#fff',fontSize:16,marginBottom:12}}>
                                     🏬 {commerceCellReport.minahak} — {commerceCellReport.statusLabel}
                                 </h2>
+                                {(() => {
+                                    const lbl = commerceCellReport.statusLabel || '';
+                                    const isIn = lbl.startsWith('מסחר נכנס');
+                                    const isEmp = lbl.startsWith('תעסוקה');
+                                    const cols = isIn
+                                        ? [{h:'מסחר נכנס', get: p => p.commerce_in}]
+                                        : isEmp
+                                            ? [{h:'תעסוקה', get: p => p.employment}]
+                                            : [{h:'מסחר יוצא', get: p => p.commerce_out}, {h:'תעסוקה', get: p => p.employment}];
+                                    return (
                                 <table style={{width:'100%',borderCollapse:'collapse',color:'#ccc',fontSize:12}}>
                                     <thead>
                                         <tr style={{borderBottom:'1px solid #333'}}>
                                             <th style={{textAlign:'right',padding:'6px 8px',color:'#888'}}>תכנית</th>
-                                            <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>מסחר יוצא</th>
-                                            <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>תעסוקה</th>
+                                            {cols.map(c => <th key={c.h} style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>{c.h}</th>)}
                                             <th style={{textAlign:'center',padding:'6px 8px',color:'#888'}}>סטטוס</th>
                                         </tr>
                                     </thead>
@@ -12383,13 +12447,14 @@
                                                     <div style={{color:'#e0e0e0',fontWeight:500}}>{p.plan_name_he || p.plan_summary || p.plan_name}</div>
                                                     <div style={{color:'#666',fontSize:10}}>{p.plan_name}</div>
                                                 </td>
-                                                <td style={{textAlign:'center',padding:'6px 8px'}}>{p.commerce_out ? Math.round(p.commerce_out).toLocaleString('he-IL') : '-'}</td>
-                                                <td style={{textAlign:'center',padding:'6px 8px'}}>{p.employment ? Math.round(p.employment).toLocaleString('he-IL') : '-'}</td>
+                                                {cols.map(c => <td key={c.h} style={{textAlign:'center',padding:'6px 8px'}}>{c.get(p) ? Math.round(c.get(p)).toLocaleString('he-IL') : '-'}</td>)}
                                                 <td style={{textAlign:'center',padding:'6px 8px',fontSize:10}}>{p.status_mavat}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}
