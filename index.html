@@ -8094,6 +8094,8 @@
                     function _getPermits(taba) {
                         return getPermitsForTaba(taba);
                     }
+                    // Reset label registry — labels are about to be (re)created
+                    window.__permitLabels = {};
                     // Group for permit labels (so they toggle with the permits layer)
                     const permitLabelsGroup = L.layerGroup();
                     const permitsLayer = L.geoJSON(gd.plans, {
@@ -8165,7 +8167,8 @@
                             if (plansOff) {
                                 const permits = _getPermits(f.properties.taba);
                                 if (permits.length > 0) {
-                                    const totalUnits = sumIncludedPermitUnits(permits, 'plan:' + f.properties.taba, parsePlanUnits(f.properties.units_total) || parsePlanUnits(f.properties.units_add));
+                                    const planUnits = parsePlanUnits(f.properties.units_total) || parsePlanUnits(f.properties.units_add);
+                                    const totalUnits = sumIncludedPermitUnits(permits, 'plan:' + f.properties.taba, planUnits);
                                     if (totalUnits > 0) {
                                         const labelText = totalUnits + ' יח"ד\n' + permits.length + ' היתרים';
                                         try {
@@ -8175,7 +8178,10 @@
                                                 html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
                                                 iconSize: [0, 0], iconAnchor: [0, 0]
                                             });
-                                            L.marker(center, { icon: icon, pane: 'labelsPane', interactive: false }).addTo(permitLabelsGroup);
+                                            const labelMarker = L.marker(center, { icon: icon, pane: 'labelsPane', interactive: false });
+                                            labelMarker.addTo(permitLabelsGroup);
+                                            const tabaKey = String(f.properties.taba);
+                                            window.__permitLabels[tabaKey] = { marker: labelMarker, permits: permits, planUnits: planUnits, taba: tabaKey };
                                         } catch(e) {}
                                     }
                                 }
@@ -8763,6 +8769,24 @@
                 if (total > planU * PERMIT_PLAN_TOLERANCE) return '#ff7a7a';
                 return '#7adf7a';
             }
+            function refreshPermitLabel(taba) {
+                const reg = window.__permitLabels;
+                const entry = reg && reg[String(taba)];
+                if (!entry || !entry.marker) return;
+                const totalUnits = sumIncludedPermitUnits(entry.permits, 'plan:' + entry.taba, entry.planUnits);
+                if (totalUnits <= 0) {
+                    try { entry.marker.remove(); } catch(e) {}
+                    delete reg[String(taba)];
+                    return;
+                }
+                const labelText = totalUnits + ' יח"ד\n' + entry.permits.length + ' היתרים';
+                const newIcon = L.divIcon({
+                    className: 'plan-label-center plan-label-small',
+                    html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                });
+                entry.marker.setIcon(newIcon);
+            }
             function updatePopupPermitTotal(rootEl) {
                 if (!rootEl) return;
                 const rows = rootEl.querySelectorAll('.permit-row');
@@ -8799,7 +8823,7 @@
                 html += `<div class="popup-header-title">${title}</div>`;
                 html += `<div class="popup-header-subtitle">${subtitle} | ${permits.length} היתרים</div>`;
                 html += '</div>';
-                html += '<div class="popup-body" style="max-height:350px;overflow-y:auto">';
+                html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
                     const sc = getPermitStatusColor(p.status);
                     const unitsStr = p.units ? p.units + ' יח"ד' : '';
@@ -9630,6 +9654,11 @@
                     if (!cb) return;
                     setPermitOverride(cb.dataset.permitKey, cb.checked);
                     updatePopupPermitTotal(el);
+                    const body = cb.closest('[data-permit-scope]');
+                    const scope = body && body.dataset.permitScope;
+                    if (scope && scope.indexOf('plan:') === 0) {
+                        refreshPermitLabel(scope.substring(5));
+                    }
                 };
                 el.addEventListener('change', el._popupChangeHandler);
             }
