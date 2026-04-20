@@ -1032,11 +1032,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 3px;
             transition: all 0.15s;
             white-space: nowrap;
             font-family: inherit;
             position: relative;
+            min-width: 90px;
         }
         .toolbar-btn:hover { background: #2a2a4a; color: #e0e0ff; border-color: #3a3a5a; }
         .toolbar-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
@@ -1047,6 +1049,44 @@
             background: #2a2a4a;
             margin: 6px 2px;
             align-self: stretch;
+        }
+
+        /* ── Reports Menu Modal ── */
+        .reports-menu-modal { max-width: 760px; width: 92vw; max-height: 85vh; overflow-y: auto; }
+        .reports-menu-body { padding: 16px 22px 22px; }
+        .reports-category { margin-bottom: 18px; }
+        .reports-category h3 { font-size: 13px; color: #9ca3af; margin: 0 0 8px; font-weight: 600; letter-spacing: 0.3px; border-right: 3px solid #e94560; padding-right: 8px; }
+        .reports-menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .reports-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: #2a2a3e;
+            border: 1px solid #3a3a50;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            color: inherit;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .reports-menu-item:hover { background: #33334a; border-color: #e94560; transform: translateY(-1px); }
+        .report-icon { font-size: 22px; flex-shrink: 0; }
+        .report-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+        .report-title { font-weight: 600; color: #fff; font-size: 13px; }
+        .report-desc { font-size: 11px; color: #9ca3af; line-height: 1.4; }
+        .reports-menu-item select {
+            background: #1a1a2e;
+            color: #e0e0ff;
+            border: 1px solid #3a3a50;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        @media (max-width: 640px) {
+            .reports-menu-grid { grid-template-columns: 1fr; }
         }
 
         /* Toolbar dropdown (shared) */
@@ -3270,6 +3310,15 @@
             const [overlapReport, setOverlapReport] = useState(false);
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
+            const [showReportsMenu, setShowReportsMenu] = useState(false);
+            const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
+            const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
+            const [showPermitsGap, setShowPermitsGap] = useState(false);
+            const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
+            const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
+            const [permitsGapRev, setPermitsGapRev] = useState(0);
+            const [reasonDraft, setReasonDraft] = useState('');
+            const [reasonSaving, setReasonSaving] = useState(false);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
             const [overlapNames, setOverlapNames] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('oranim_overlap_names') || '{}'); }
@@ -4744,7 +4793,7 @@
                                 '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' +
                                 '</tr>';
                             }).join('') +
-                            '</tbody></table>';
+                            '</tbody></table>' + renderSuppressedTreeNotice(stats.suppressed);
                     }
 
                     panel.innerHTML = html;
@@ -5023,7 +5072,7 @@
                             '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' +
                             '</tr>'
                         ).join('') +
-                        '</tbody></table>';
+                        '</tbody></table>' + renderSuppressedTreeNotice(stats.suppressed);
                 }
 
                 panel.innerHTML = html;
@@ -8876,20 +8925,33 @@
                 return html;
             }
 
+            // Render a notice listing plans whose tree surveys were suppressed to avoid
+            // double-counting. Returns '' if no suppressions.
+            function renderSuppressedTreeNotice(suppressed) {
+                if (!suppressed || suppressed.length === 0) return '';
+                const items = suppressed.map(s => {
+                    return '<li style="margin-bottom:3px"><span style="color:#aaa">' + s.name + '</span> <span style="color:#777;font-size:10px">(' + s.total + ' עצים, חופפת ל-' + s.suppressedBy + ')</span></li>';
+                }).join('');
+                return '<div style="margin-top:12px;padding:10px 12px;background:rgba(233,69,96,0.1);border-right:3px solid #e94560;border-radius:6px;font-size:11px;color:#e0e0e0">'
+                    + '<div style="font-weight:bold;color:#e94560;margin-bottom:6px">⚠ ' + suppressed.length + ' סקר' + (suppressed.length === 1 ? '' : 'י עצים') + ' הוחרג' + (suppressed.length === 1 ? '' : 'ו') + ' כדי למנוע כפילות</div>'
+                    + '<div style="color:#aaa;margin-bottom:4px;font-size:10px">תב"עות חופפות משמעותית (≥50%) לתב"ע אחרת עם יותר עצים בסקר:</div>'
+                    + '<ul style="margin:0;padding-right:14px;font-size:11px">' + items + '</ul>'
+                    + '</div>';
+            }
+
             // Aggregate tree-survey stats across an array of plan property objects.
-            // Returns { total, removed, pct, withData, plans: [{taba, name, removed, total, pct, props}] }
-            // where `plans` is sorted DESC by `removed`.
+            // Returns { total, removed, pct, withData, plans: [..], suppressed: [..] }
+            // `plans` sorted DESC by `removed`. `suppressed` lists plans dropped due to
+            // significant spatial overlap with a larger-survey plan (to prevent double-counting).
             function aggregateTreeStats(planPropsArr) {
                 const ts = window.__treeSurveys || {};
                 const tsTama = window.__tama38TreeSurveys || {};
-                let total = 0, removed = 0, withData = 0;
-                const perPlan = [];
+                // Step 1: collect candidate plans (with survey data), dedup by key
+                const candidates = [];
                 const seen = new Set();
                 planPropsArr.forEach(p => {
                     if (!p) return;
-                    // Determine if this is TAMA38 by _source marker or TAMA38 id pattern
                     const isTama = p._source === 'tama38';
-                    // TAMA38 uses tik (file folder) as key; plans use taba
                     const key = isTama ? (p.tik || '') : (p.taba || '');
                     if (!key) return;
                     const seenKey = (isTama ? 'tama:' : 'plan:') + key;
@@ -8897,10 +8959,6 @@
                     const rec = isTama ? tsTama[key] : ts[key];
                     if (!rec || !rec.total) return;
                     seen.add(seenKey);
-                    const r = (rec.krita || 0) + (rec.haataka || 0);
-                    total += rec.total;
-                    removed += r;
-                    withData += 1;
                     let name, linkId;
                     if (isTama) {
                         const addr = p.address || '';
@@ -8910,25 +8968,75 @@
                         name = p.plan_summary || p.plan_name_he || p.plan_name || key;
                         linkId = 'plan:' + key;
                     }
-                    perPlan.push({
+                    const r = (rec.krita || 0) + (rec.haataka || 0);
+                    candidates.push({
                         taba: isTama ? '' : key,
                         tik: isTama ? key : '',
                         isTama,
                         linkId,
+                        key,
                         name,
                         removed: r,
                         total: rec.total,
                         pct: rec.total > 0 ? Math.round((r / rec.total) * 100) : 0,
                         props: p,
+                        suppressedBy: null,
                     });
                 });
-                perPlan.sort((a, b) => b.removed - a.removed);
+                // Step 2: dedup by significant spatial overlap — among taba-candidates with
+                // overlapping geometries (≥50% area), keep the one with highest `total`.
+                // Dropped candidates record which `suppressedBy` won. TAMA38 plans are not
+                // cross-compared here (they use tik, not taba, and usually sit inside plans).
+                const oMap = overlapMapRef.current;
+                if (oMap && oMap.size) {
+                    const tabaIndex = new Map();
+                    candidates.forEach(c => { if (!c.isTama) tabaIndex.set(c.key, c); });
+                    // Build connected components among candidates that overlap each other
+                    const visited = new Set();
+                    tabaIndex.forEach((c, taba) => {
+                        if (visited.has(taba)) return;
+                        const component = [];
+                        const stack = [taba];
+                        while (stack.length) {
+                            const t = stack.pop();
+                            if (visited.has(t)) continue;
+                            visited.add(t);
+                            const cc = tabaIndex.get(t);
+                            if (!cc) continue;
+                            component.push(cc);
+                            const neighbors = oMap.get(t);
+                            if (!neighbors) continue;
+                            neighbors.forEach(nb => { if (!visited.has(nb) && tabaIndex.has(nb)) stack.push(nb); });
+                        }
+                        if (component.length > 1) {
+                            // Winner: highest `total` (most trees surveyed). Tiebreaker: taba numeric asc.
+                            component.sort((a, b) => b.total - a.total || String(a.key).localeCompare(String(b.key)));
+                            const winner = component[0];
+                            for (let i = 1; i < component.length; i++) {
+                                component[i].suppressedBy = winner.key;
+                            }
+                        }
+                    });
+                }
+                // Step 3: aggregate only non-suppressed
+                let total = 0, removed = 0, withData = 0;
+                const included = [];
+                const suppressed = [];
+                candidates.forEach(c => {
+                    if (c.suppressedBy) { suppressed.push(c); return; }
+                    total += c.total;
+                    removed += c.removed;
+                    withData += 1;
+                    included.push(c);
+                });
+                included.sort((a, b) => b.removed - a.removed);
                 return {
                     total,
                     removed,
                     pct: total > 0 ? Math.round((removed / total) * 100) : 0,
                     withData,
-                    plans: perPlan,
+                    plans: included,
+                    suppressed,
                 };
             }
 
@@ -10332,6 +10440,17 @@
                                 <span className="toolbar-label">הערות</span>
                             </button>
 
+                            <button
+                                className={`toolbar-btn ${showReportsMenu ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setShowReportsMenu(true); setActiveDropdown(null); }}
+                                title="דוחות"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>
+                                </svg>
+                                <span className="toolbar-label">דוחות</span>
+                            </button>
+
                             {/* ══ ניתוח כללי ══ */}
                             <div style={{position:'relative'}}>
                             <button
@@ -11294,6 +11413,450 @@
                         );
                     })()}
 
+                    {/* ── Reports Menu Modal ── */}
+                    {showReportsMenu && (
+                        <div className="units-overlay" onClick={() => setShowReportsMenu(false)}>
+                            <div className="units-modal reports-menu-modal" onClick={e => e.stopPropagation()}>
+                                <div className="units-header">
+                                    <h2>📊 דוחות</h2>
+                                    <button className="units-close" onClick={() => setShowReportsMenu(false)}>&times;</button>
+                                </div>
+                                <div className="reports-menu-body">
+                                    {/* קטגוריה: דוחות אזוריים */}
+                                    <div className="reports-category">
+                                        <h3>🏘️ דוחות אזוריים</h3>
+                                        <div className="reports-menu-grid">
+                                            <div className="reports-menu-item" onClick={(e) => {
+                                                if (e.target.tagName === 'SELECT') return;
+                                                setShowReportsMenu(false);
+                                                setMasterPlanReport(reportsMenuMP);
+                                            }}>
+                                                <span className="report-icon">🗺️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דוח תכנית אב</span>
+                                                    <span className="report-desc">KPI, מימוש, ותכניות לפי תת מתחם</span>
+                                                    <select value={reportsMenuMP} onClick={e => e.stopPropagation()} onChange={e => setReportsMenuMP(e.target.value)}>
+                                                        <option value="מושבות">מושבות</option>
+                                                        <option value="רסקו">רסקו</option>
+                                                        <option value="בקעה">בקעה</option>
+                                                        <option value="ארנונה">ארנונה</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="reports-menu-item" onClick={(e) => {
+                                                if (e.target.tagName === 'SELECT') return;
+                                                setShowReportsMenu(false);
+                                                setMinahakReport(reportsMenuMinahak);
+                                            }}>
+                                                <span className="report-icon">🏛️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דוח מינהל קהילתי</span>
+                                                    <span className="report-desc">פירוט תכניות לפי סטטוס במינהל</span>
+                                                    <select value={reportsMenuMinahak} onClick={e => e.stopPropagation()} onChange={e => setReportsMenuMinahak(e.target.value)}>
+                                                        <option value="גינות העיר">גינות העיר</option>
+                                                        <option value="בית צפאפא">בית צפאפא</option>
+                                                        <option value="גוננים">גוננים</option>
+                                                        <option value="בקעה רבתי">בקעה רבתי</option>
+                                                        <option value="מינהל מוסדי מלחה">מינהל מוסדי מלחה</option>
+                                                        <option value="א.ת. תלפיות">א.ת. תלפיות</option>
+                                                        <option value="גבעת המטוס">גבעת המטוס</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* קטגוריה: דוחות תכניות */}
+                                    <div className="reports-category">
+                                        <h3>📋 דוחות תכניות</h3>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowUnits(true); }}>
+                                                <span className="report-icon">🏠</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">סיכום יח"ד</span>
+                                                    <span className="report-desc">טבלת יחידות דיור לפי מינהל וסטטוס</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitsGapDrilldown(null); setShowPermitsGap(true); }}>
+                                                <span className="report-icon">📑</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים מול תב"ע</span>
+                                                    <span className="report-desc">פערים בין יח"ד מאושרות ליח"ד בהיתרים</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowCommerceTable(true); }}>
+                                                <span className="report-icon">🏪</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">סיכום מסחר ותעסוקה</span>
+                                                    <span className="report-desc">שטחי מסחר ותעסוקה לפי מינהל</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowMimush(true); }}>
+                                                <span className="report-icon">🚧</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דוח מימוש</span>
+                                                    <span className="report-desc">שלביות ביצוע לפי מינהל ותכנית</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setOverlapReport(true); }}>
+                                                <span className="report-icon">🔁</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">תב"עות כפולות</span>
+                                                    <span className="report-desc">תכניות חופפות באותו מרחב</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setObjectionsReport(true); }}>
+                                                <span className="report-icon">📝</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">הפקדות להתנגדויות</span>
+                                                    <span className="report-desc">תכניות מופקדות לפי סמכות</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* קטגוריה: ניתוח מרחבי */}
+                                    <div className="reports-category">
+                                        <h3>🔍 ניתוח מרחבי</h3>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLanduseCompareMode('plan');
+                                            }}>
+                                                <span className="report-icon">🎨</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">ייעודי קרקע נכנס-יוצא</span>
+                                                    <span className="report-desc">השוואת מצב קיים מול מוצע בתכנית</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setAreaMode(true);
+                                            }}>
+                                                <span className="report-icon">✏️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">סיכום אזור נבחר</span>
+                                                    <span className="report-desc">ציור פוליגון וסיכום תכניות בתוכו</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style={{marginTop:14, padding:'10px 12px', background:'#16162a', border:'1px dashed #3a3a50', borderRadius:8, fontSize:12, color:'#9ca3af', textAlign:'center'}}>
+                                        💡 דוחות נוספים (עצים לעקירה, צפיפות, חום-מסחר) זמינים גם דרך כפתורי ה-toolbar ותפריט השכבות
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Permits Gap Report Modal (היתרים מול תב"ע) ── */}
+                    {showPermitsGap && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans || !window.__allPermits) {
+                            return (
+                                <div className="units-overlay" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                        <div className="units-header">
+                                            <h2>📊 היתרים מול תב"ע</h2>
+                                            <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                        </div>
+                                        <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים...</p></div></div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        const rows = [];
+                        gd.plans.features.forEach(f => {
+                            const p = f.properties || {};
+                            const taba = String(p.taba || '').trim();
+                            if (!taba) return;
+                            const permits = getPermitsForTaba(taba);
+                            if (permits.length === 0) return;
+                            const unitsAdd = parseFloat(p.units_add) || 0;
+                            const scopeKey = 'plan:' + taba;
+                            const inclusion = getEffectivePermitInclusion(permits, scopeKey, unitsAdd);
+                            const unitsInPermits = permits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
+                            const countedPermits = inclusion.filter(Boolean).length;
+                            const gap = unitsAdd - unitsInPermits;
+                            const pctDone = unitsAdd > 0 ? (unitsInPermits / unitsAdd * 100) : 0;
+                            const reasonFromGS = p.permit_growth_reason || p['סיבת חריגה'] || '';
+                            const reasonLocal = (() => {
+                                try { return (JSON.parse(localStorage.getItem('oranim:permitGrowthReasons') || '{}'))[p.plan_name || taba] || ''; }
+                                catch(e) { return ''; }
+                            })();
+                            const reason = reasonLocal || reasonFromGS;
+                            rows.push({
+                                taba,
+                                plan_name: p.plan_name || taba,
+                                plan_summary: p.plan_summary || p.plan_name_he || '',
+                                status_mavat: p.status_mavat || '',
+                                minahak: p.minahak || '',
+                                unitsAdd, unitsInPermits, gap, pctDone,
+                                permitCount: permits.length,
+                                countedPermits,
+                                permits,
+                                inclusion,
+                                scopeKey,
+                                feature: f,
+                                reason,
+                                reasonFromGS,
+                            });
+                        });
+                        const sortCol = permitsGapSort.col;
+                        const sortDir = permitsGapSort.dir;
+                        const sortedRows = [...rows].sort((a,b) => {
+                            const av = a[sortCol], bv = b[sortCol];
+                            const d = sortDir === 'asc' ? 1 : -1;
+                            if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * d;
+                            return String(av||'').localeCompare(String(bv||''), 'he') * d;
+                        });
+                        const totals = {
+                            plans: rows.length,
+                            unitsAdd: rows.reduce((s,r) => s + r.unitsAdd, 0),
+                            unitsInPermits: rows.reduce((s,r) => s + r.unitsInPermits, 0),
+                            permitCount: rows.reduce((s,r) => s + r.permitCount, 0),
+                            countedPermits: rows.reduce((s,r) => s + r.countedPermits, 0),
+                        };
+                        totals.gap = totals.unitsAdd - totals.unitsInPermits;
+                        totals.pctDone = totals.unitsAdd > 0 ? (totals.unitsInPermits / totals.unitsAdd * 100) : 0;
+                        const isOver = (r) => r.unitsInPermits > r.unitsAdd;
+                        const toggleSort = (col) => setPermitsGapSort(prev => prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' });
+                        const sortIcon = (col) => sortCol === col ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+                        const togglePermitInclude = (row, i) => {
+                            const p = row.permits[i];
+                            const key = permitOverrideKey(p, i, row.scopeKey);
+                            setPermitOverride(key, !row.inclusion[i]);
+                            setPermitsGapRev(v => v + 1);
+                        };
+
+                        const fmt = (n) => (Math.round(n)).toLocaleString();
+
+                        // Drilldown
+                        if (permitsGapDrilldown) {
+                            const row = rows.find(r => r.taba === permitsGapDrilldown.taba) || permitsGapDrilldown;
+                            return (
+                                <div className="units-overlay" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 1000}}>
+                                        <div className="units-header">
+                                            <button className="units-back-btn" onClick={() => setPermitsGapDrilldown(null)}>→ חזרה</button>
+                                            <h2>📋 היתרים לתב"ע {row.plan_name}</h2>
+                                            <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                        </div>
+                                        <div className="units-body">
+                                            <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20}}>
+                                                <div><strong>שם:</strong> {row.plan_summary || '—'}</div>
+                                                <div><strong>מינהל:</strong> {row.minahak || '—'}</div>
+                                                <div><strong>סטטוס:</strong> {row.status_mavat || '—'}</div>
+                                                <div><strong>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}</div>
+                                                <div><strong>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#e94560',fontWeight:700} : {}}>{fmt(row.unitsInPermits)}</span></div>
+                                                <div><strong>פער:</strong> {fmt(row.gap)}</div>
+                                                {isOver(row) && <div style={{color:'#e94560',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
+                                            </div>
+                                            <table className="units-table">
+                                                <thead>
+                                                    <tr><th style={{width:60}}>נספר</th><th>מס' היתר</th><th>סטטוס</th><th>תאריך</th><th>יח"ד</th><th>סוג בקשה</th><th>תיאור</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    {row.permits.map((p, i) => {
+                                                        const inc = row.inclusion[i];
+                                                        return (
+                                                            <tr key={i} style={inc ? {} : {opacity:0.55, background:'#241a1a'}}>
+                                                                <td style={{textAlign:'center'}}>
+                                                                    <input type="checkbox" checked={inc} onChange={() => togglePermitInclude(row, i)} style={{cursor:'pointer',width:18,height:18}} title={inc ? 'לחצו להסרה מהחישוב' : 'לחצו להוספה לחישוב'} />
+                                                                </td>
+                                                                <td style={{fontFamily:'monospace',whiteSpace:'nowrap'}}>{p.file_number || '-'}</td>
+                                                                <td><span style={{background:getPermitStatusColor(p.status),color:'#fff',padding:'2px 8px',borderRadius:4,fontSize:11,whiteSpace:'nowrap'}}>{p.status || '-'}</span></td>
+                                                                <td style={{whiteSpace:'nowrap'}}>{p.status_date || '-'}</td>
+                                                                <td style={{fontWeight:600}}>{p.units || 0}</td>
+                                                                <td style={{fontSize:12}}>{p.request_type || '-'}</td>
+                                                                <td style={{fontSize:12,maxWidth:360}}>{p.request_description || '-'}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr><td colSpan={4} style={{fontWeight:700}}>סה"כ נספר ({row.countedPermits}/{row.permitCount} היתרים)</td><td style={{fontWeight:700}}>{fmt(row.unitsInPermits)}</td><td colSpan={2}></td></tr>
+                                                </tfoot>
+                                            </table>
+                                            <div style={{marginTop:10,padding:'8px 12px',background:'#16162a',border:'1px dashed #3a3a50',borderRadius:6,fontSize:11,color:'#9ca3af'}}>
+                                                💡 ברירת המחדל: dedup גרסאות תיק, החרגת תשתית (בהיתרים ללא יח"ד), ו-dedup יח"ד זהים (רק כשסכום חורג מ-{(PERMIT_PLAN_TOLERANCE*100).toFixed(0)}% מהתב"ע). שינויים ידניים בצ'ק-בוקס נשמרים אוטומטית ומשתקפים גם בפופאפ התב"ע במפה.
+                                            </div>
+
+                                            <div style={{marginTop:16,padding:'12px 14px',background:'#1f1f38',border:'1px solid ' + (isOver(row) ? '#e94560' : '#3a3a50'),borderRadius:8}}>
+                                                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                                                    <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>📝 סיבת חריגה</span>
+                                                    {row.reasonFromGS && row.reasonFromGS !== reasonDraft && <span style={{fontSize:11,color:'#9ca3af'}}>(ב-GS: "{row.reasonFromGS}")</span>}
+                                                </div>
+                                                <textarea
+                                                    value={reasonDraft}
+                                                    onChange={e => setReasonDraft(e.target.value)}
+                                                    placeholder={isOver(row) ? 'למה היח"ד בהיתרים חורגות מהמאושר בתב"ע? (למשל: תב"ע מורחבת, דירות שנוספו בהיתר שינויים, טעות נתונים...)' : 'הערות חופשיות לגבי הקשר בין ההיתרים לתב"ע'}
+                                                    dir="rtl"
+                                                    style={{width:'100%',minHeight:70,padding:8,background:'#0f0f22',color:'#e0e0ff',border:'1px solid #3a3a50',borderRadius:6,fontSize:13,fontFamily:'inherit',resize:'vertical',boxSizing:'border-box'}}
+                                                />
+                                                <div style={{display:'flex',gap:8,marginTop:10,alignItems:'center',flexWrap:'wrap'}}>
+                                                    <button disabled={reasonSaving || reasonDraft === (row.reason || '')} onClick={async () => {
+                                                        const trimmed = reasonDraft.trim();
+                                                        try {
+                                                            const all = JSON.parse(localStorage.getItem('oranim:permitGrowthReasons') || '{}');
+                                                            if (trimmed) all[row.plan_name] = trimmed;
+                                                            else delete all[row.plan_name];
+                                                            localStorage.setItem('oranim:permitGrowthReasons', JSON.stringify(all));
+                                                        } catch(e) {}
+                                                        setPermitsGapRev(v => v + 1);
+                                                        setReasonSaving(true);
+                                                        try {
+                                                            await sendToGS([{ plan_name: row.plan_name, field: 'permit_growth_reason', value: trimmed, note: 'סיבת חריגה מדוח היתרים מול תב"ע' }]);
+                                                        } catch(e) {}
+                                                        setReasonSaving(false);
+                                                    }} style={{background: reasonDraft === (row.reason || '') ? '#555' : '#27ae60',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',cursor: reasonDraft === (row.reason || '') ? 'default' : 'pointer',fontSize:13,fontWeight:600,opacity: reasonSaving ? 0.6 : 1}}>
+                                                        {reasonSaving ? '⏳ שומר...' : '💾 שמור ל-Google Sheets'}
+                                                    </button>
+                                                    <button onClick={() => setReasonDraft(row.reason || '')} disabled={reasonDraft === (row.reason || '')} style={{background:'transparent',color:'#9ca3af',border:'1px solid #3a3a50',borderRadius:6,padding:'8px 14px',cursor: reasonDraft === (row.reason || '') ? 'default' : 'pointer',fontSize:12}}>
+                                                        ביטול
+                                                    </button>
+                                                    <span style={{fontSize:11,color:'#9ca3af',flex:1,textAlign:'left'}}>עמודה AP ב-GS ({row.reason ? 'מלא' : 'ריק'}). נשמר גם מקומית.</span>
+                                                </div>
+                                            </div>
+                                            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:14}}>
+                                                <button onClick={() => {
+                                                    if (row.feature && row.feature.geometry) {
+                                                        try {
+                                                            const layer = L.geoJSON(row.feature);
+                                                            const b = layer.getBounds();
+                                                            if (b.isValid()) { mapRef.current.fitBounds(b, { padding: [40,40], maxZoom: 17 }); }
+                                                        } catch(e) {}
+                                                    }
+                                                    setShowPermitsGap(false); setPermitsGapDrilldown(null);
+                                                }} style={{background:'#4a69d1',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:600}}>🗺️ זום לתב"ע במפה</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        const exportHTML = () => {
+                            const printWin = window.open('', '_blank');
+                            printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>דוח היתרים מול תב"ע</title>');
+                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th,td{padding:5px 7px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}tfoot td{border-top:2px solid #333;font-weight:700;background:#fafafa}.over{background:#ffe5e5!important;color:#c62828;font-weight:700}@media print{.no-print{display:none!important}body tr.over{background:#ffe5e5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>');
+                            printWin.document.write('</head><body>');
+                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">🖨 הדפסה</button>');
+                            printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">📄 שמור PDF (בחר יעד: שמור כ-PDF)</button>');
+                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">📊 שמור CSV (אקסל)</button>');
+                            printWin.document.write('</div>');
+                            printWin.document.write('<h2 style="margin:0 0 4px">📊 דוח היתרים מול תב"ע</h2>');
+                            const overCountExport = sortedRows.filter(isOver).length;
+                            printWin.document.write('<p style="color:#666;margin:0 0 12px">' + totals.plans + ' תב"עות עם היתרים | ' + fmt(totals.unitsAdd) + ' יח"ד מאושרות | ' + fmt(totals.unitsInPermits) + ' יח"ד בהיתרים (נספרו ' + totals.countedPermits + '/' + totals.permitCount + ' היתרים)' + (overCountExport > 0 ? ' | <span class="over" style="padding:2px 8px;border-radius:4px">⚠ ' + overCountExport + ' בחריגה</span>' : '') + '</p>');
+                            printWin.document.write('<p style="color:#888;margin:0 0 12px;font-size:11px">סימון אדום = יח"ד בהיתרים גבוה מיח"ד מאושרות בתב"ע. ספירת יח"ד מחילה dedup גרסאות, החרגת תשתית, ו-dedup יח"ד זהים בחריגה מעל ' + (PERMIT_PLAN_TOLERANCE*100).toFixed(0) + '%.</p>');
+                            printWin.document.write('<table><thead><tr><th>#</th><th>מס\' תב"ע</th><th>שם</th><th>מינהל</th><th>סטטוס</th><th>יח"ד מאושרות</th><th>יח"ד בהיתרים</th><th>פער</th><th>היתרים (נספרו/סה"כ)</th><th>סיבת חריגה</th></tr></thead><tbody>');
+                            const esc = (s) => String(s==null?'':s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+                            sortedRows.forEach((r, i) => {
+                                const over = isOver(r);
+                                const trCls = over ? ' class="over"' : '';
+                                const permCell = r.countedPermits !== r.permitCount ? (r.countedPermits + ' / ' + r.permitCount) : r.permitCount;
+                                printWin.document.write('<tr' + trCls + '><td>' + (i+1) + (over ? ' ⚠' : '') + '</td><td>' + esc(r.plan_name) + '</td><td>' + esc(r.plan_summary) + '</td><td>' + esc(r.minahak) + '</td><td>' + esc(r.status_mavat) + '</td><td>' + fmt(r.unitsAdd) + '</td><td>' + fmt(r.unitsInPermits) + '</td><td>' + fmt(r.gap) + '</td><td>' + permCell + '</td><td style="font-size:11px">' + esc(r.reason || '') + '</td></tr>');
+                            });
+                            const totalsPermCell = totals.countedPermits !== totals.permitCount ? (totals.countedPermits + ' / ' + totals.permitCount) : totals.permitCount;
+                            printWin.document.write('</tbody><tfoot><tr><td colspan="5">סה"כ</td><td>' + fmt(totals.unitsAdd) + '</td><td>' + fmt(totals.unitsInPermits) + '</td><td>' + fmt(totals.gap) + '</td><td>' + totalsPermCell + '</td><td></td></tr></tfoot></table>');
+                            const csvRows = ['"#","מס\' תב\\"ע","שם","מינהל","סטטוס","יח\\"ד מאושרות","יח\\"ד בהיתרים","פער","חריגה?","היתרים נספרו","סה\\"כ היתרים","סיבת חריגה"'];
+                            sortedRows.forEach((r, i) => {
+                                const cell = (v) => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+                                csvRows.push([cell(i+1), cell(r.plan_name), cell(r.plan_summary), cell(r.minahak), cell(r.status_mavat), cell(fmt(r.unitsAdd)), cell(fmt(r.unitsInPermits)), cell(fmt(r.gap)), cell(isOver(r) ? 'כן' : ''), cell(r.countedPermits), cell(r.permitCount), cell(r.reason || '')].join(','));
+                            });
+                            csvRows.push(['""','"סה\\"כ"','""','""','""', '"' + fmt(totals.unitsAdd) + '"', '"' + fmt(totals.unitsInPermits) + '"', '"' + fmt(totals.gap) + '"', '""', '"' + totals.countedPermits + '"', '"' + totals.permitCount + '"', '""'].join(','));
+                            const csvContent = csvRows.join('\n');
+                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="permits_vs_taba.csv";a.click();});<\/script>');
+                            printWin.document.write('</body></html>');
+                            printWin.document.close();
+                            printWin.focus();
+                        };
+
+                        return (
+                            <div className="units-overlay" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 1200}}>
+                                    <div className="units-header">
+                                        <h2>📊 דוח היתרים מול תב"ע</h2>
+                                        <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                    </div>
+                                    <div className="units-body">
+                                        {(() => {
+                                            const overCount = rows.filter(isOver).length;
+                                            return (
+                                                <div style={{padding:'10px 14px',background:'#1a1a2e',borderRadius:8,marginBottom:12,fontSize:13,display:'flex',flexWrap:'wrap',gap:20}}>
+                                                    <div><strong>{totals.plans}</strong> תב"עות עם היתרים</div>
+                                                    <div><strong>{fmt(totals.unitsAdd)}</strong> יח"ד מאושרות</div>
+                                                    <div><strong>{fmt(totals.unitsInPermits)}</strong> יח"ד בהיתרים</div>
+                                                    <div>פער: <strong>{fmt(totals.gap)}</strong></div>
+                                                    <div><strong>{totals.countedPermits}</strong> היתרים נספרו{totals.countedPermits !== totals.permitCount ? ' (מתוך ' + totals.permitCount + ')' : ''}</div>
+                                                    {overCount > 0 && <div style={{color:'#e94560',fontWeight:700}}>⚠ {overCount} תב"עות בחריגה</div>}
+                                                </div>
+                                            );
+                                        })()}
+                                        {rows.length === 0 ? (
+                                            <div className="units-loading"><p>אין תב"עות עם היתרים במערכת</p></div>
+                                        ) : (
+                                            <div style={{maxHeight: 'calc(85vh - 260px)', overflowY: 'auto'}}>
+                                                <table className="units-table">
+                                                    <thead style={{position:'sticky',top:0,background:'#1a1a2e',zIndex:1}}>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('plan_name')}>מס' תב"ע{sortIcon('plan_name')}</th>
+                                                            <th>שם</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('minahak')}>מינהל{sortIcon('minahak')}</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('status_mavat')}>סטטוס{sortIcon('status_mavat')}</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('unitsAdd')}>יח"ד מאושרות{sortIcon('unitsAdd')}</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('unitsInPermits')}>יח"ד בהיתרים{sortIcon('unitsInPermits')}</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('gap')}>פער{sortIcon('gap')}</th>
+                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('permitCount')} title="היתרים שנספרו / סה״כ היתרים פעילים">היתרים{sortIcon('permitCount')}</th>
+                                                            <th title="סיבת חריגה (AP ב-GS)">סיבה</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {sortedRows.map((r, i) => {
+                                                            const over = isOver(r);
+                                                            return (
+                                                                <tr key={r.taba} style={{cursor:'pointer', ...(over ? {background:'#3a1a1a'} : {})}} onClick={() => { setReasonDraft(r.reason || ''); setPermitsGapDrilldown(r); }}>
+                                                                    <td>{i+1}{over ? ' ⚠' : ''}</td>
+                                                                    <td style={{fontFamily:'monospace',whiteSpace:'nowrap',color:'#8ecae6',textDecoration:'underline'}}>{r.plan_name}</td>
+                                                                    <td style={{fontSize:12}}>{r.plan_summary}</td>
+                                                                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>{r.minahak}</td>
+                                                                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>{r.status_mavat}</td>
+                                                                    <td>{fmt(r.unitsAdd)}</td>
+                                                                    <td style={over ? {color:'#e94560',fontWeight:700} : {}}>{fmt(r.unitsInPermits)}</td>
+                                                                    <td style={over ? {color:'#e94560',fontWeight:700} : {}}>{fmt(r.gap)}</td>
+                                                                    <td title="נספרו / סה״כ">{r.countedPermits}{r.countedPermits !== r.permitCount ? ' / ' + r.permitCount : ''}</td>
+                                                                    <td style={{maxWidth:200,fontSize:11,color:r.reason?'#e0e0ff':'#666'}} title={r.reason || (over ? 'אין סיבה רשומה — לחצו לעריכה' : '')}>{r.reason ? (r.reason.length > 40 ? r.reason.slice(0, 40) + '…' : r.reason) : (over ? '—' : '')}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr style={{fontWeight:700,background:'#141440'}}>
+                                                            <td colSpan={5}>סה"כ</td>
+                                                            <td>{fmt(totals.unitsAdd)}</td>
+                                                            <td>{fmt(totals.unitsInPermits)}</td>
+                                                            <td>{fmt(totals.gap)}</td>
+                                                            <td>{totals.countedPermits}{totals.countedPermits !== totals.permitCount ? ' / ' + totals.permitCount : ''}</td>
+                                                            <td style={{fontSize:11,color:'#9ca3af'}}>{rows.filter(r => r.reason).length}/{rows.filter(isOver).length} עם סיבה</td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        )}
+                                        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:14}}>
+                                            <button onClick={exportHTML} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',cursor:'pointer',fontSize:13,fontWeight:600}}>🖨 הדפסה / PDF / CSV</button>
+                                            <div style={{flex:1}}></div>
+                                            <div style={{fontSize:11,color:'#9ca3af',alignSelf:'center'}}>💡 לחצו על שורה לפרטי היתרים</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── Units Summary Modal ── */}
                     {showUnits && (
                         <div className="units-overlay" onClick={() => setShowUnits(false)}>
@@ -11865,7 +12428,7 @@
                                                     <div style={{fontSize:12,color:'#aaa'}}>תכניות פעילות</div>
                                                 </div>
                                                 <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#4CAF50'}}>{totalAdd.toLocaleString()}</div>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#4CAF50'}}>{Math.round(totalAdd).toLocaleString()}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>יח"ד תוספת</div>
                                                 </div>
                                                 <div style={{textAlign:'center'}}>
@@ -11873,7 +12436,7 @@
                                                     <div style={{fontSize:12,color:'#aaa'}}>תכניות תמ"א 38</div>
                                                 </div>
                                                 <div style={{textAlign:'center'}}>
-                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#2196F3'}}>{tamaUnitsAdd.toLocaleString()}</div>
+                                                    <div style={{fontSize:24,fontWeight:'bold',color:'#2196F3'}}>{Math.round(tamaUnitsAdd).toLocaleString()}</div>
                                                     <div style={{fontSize:12,color:'#aaa'}}>יח"ד תמ"א תוספת</div>
                                                 </div>
                                             </div>

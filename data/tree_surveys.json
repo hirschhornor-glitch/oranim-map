@@ -1,8 +1,8 @@
 {
   "71951": {
-    "total": 79,
+    "total": 81,
     "shimur": 21,
-    "krita": 24,
+    "krita": 26,
     "haataka": 34,
     "lo_nidresh": 0,
     "confidence": "medium"
@@ -728,9 +728,9 @@
     "confidence": "medium"
   },
   "210054": {
-    "total": 9,
+    "total": 16,
     "shimur": 3,
-    "krita": 6,
+    "krita": 13,
     "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "medium"
@@ -740,6 +740,14 @@
     "shimur": 0,
     "krita": 4,
     "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1185099": {
+    "total": 502,
+    "shimur": 381,
+    "krita": 107,
+    "haataka": 14,
     "lo_nidresh": 0,
     "confidence": "medium"
   },
@@ -800,8 +808,8 @@
     "confidence": "medium"
   },
   "1010123": {
-    "total": 4,
-    "shimur": 4,
+    "total": 7,
+    "shimur": 7,
     "krita": 0,
     "haataka": 0,
     "lo_nidresh": 0,
@@ -943,12 +951,180 @@
     "lo_nidresh": 0,
     "confidence": "medium"
   },
-  "352096": {
-    "total": 27,
-    "shimur": 6,
-    "krita": 0,
-    "haataka": 21,
+  "613679": {
+    "total": 17,
+    "shimur": 11,
+    "krita": 6,
+    "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "medium"
+  },
+  "836809": {
+    "total": 180,
+    "shimur": 22,
+    "krita": 150,
+    "haataka": 4,
+    "lo_nidresh": 4,
+    "confidence": "high"
+  },
+  "666032": {
+    "total": 90,
+    "shimur": 34,
+    "krita": 46,
+    "haataka": 10,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "608125": {
+    "total": 12,
+    "shimur": 6,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "682849": {
+    "total": 7,
+    "shimur": 5,
+    "krita": 1,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "761858": {
+    "total": 4,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "855585": {
+    "total": 14,
+    "shimur": 10,
+    "krita": 4,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "932152": {
+    "total": 9,
+    "shimur": 8,
+    "krita": 0,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "969162": {
+    "total": 17,
+    "shimur": 4,
+    "krita": 9,
+    "haataka": 4,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1316918": {
+    "total": 38,
+    "shimur": 15,
+    "krita": 23,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1236579": {
+    "total": 168,
+    "shimur": 0,
+    "krita": 168,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1366053": {
+    "total": 19,
+    "shimur": 11,
+    "krita": 3,
+    "haataka": 5,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "666289": {
+    "total": 412,
+    "shimur": 228,
+    "krita": 184,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "868158": {
+    "total": 4,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "944512": {
+    "total": 76,
+    "shimur": 17,
+    "krita": 59,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1158146": {
+    "total": 15,
+    "shimur": 12,
+    "krita": 2,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1370881": {
+    "total": 11,
+    "shimur": 11,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high"
+  },
+  "1351147": {
+    "total": 12,
+    "shimur": 7,
+    "krita": 4,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1296284": {
+    "total": 35,
+    "shimur": 7,
+    "krita": 27,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1024272": {
+    "total": 69,
+    "shimur": 28,
+    "krita": 34,
+    "haataka": 7,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "973958": {
+    "total": 32,
+    "shimur": 8,
+    "krita": 22,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "medium"
+  },
+  "1446319": {
+    "total": 63,
+    "shimur": 36,
+    "krita": 9,
+    "haataka": 3,
+    "lo_nidresh": 15,
+    "confidence": "high"
   }
 }
