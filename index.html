@@ -944,28 +944,29 @@
             }
             .map-toolbar {
                 top: max(60px, env(safe-area-inset-top)) !important;
-                padding: 3px 4px !important;
+                padding: 4px 4px !important;
                 left: 10px !important;
                 right: 60px !important;
                 transform: none !important;
                 max-width: none !important;
                 width: auto !important;
-                overflow-x: auto !important;
-                overflow-y: visible !important;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                justify-content: flex-start !important;
+                flex-wrap: wrap !important;
+                overflow: visible !important;
+                justify-content: center !important;
+                gap: 2px !important;
             }
-            .map-toolbar::-webkit-scrollbar {
-                display: none;
+            .toolbar-sep {
+                display: none !important;
             }
             .toolbar-btn {
                 flex: 0 0 auto;
+                padding: 4px 6px !important;
+                min-height: 40px !important;
+                min-width: 56px !important;
             }
-            .toolbar-btn {
-                padding: 6px 8px !important;
-                min-height: 44px;
-                min-width: 44px;
+            .toolbar-btn .toolbar-icon {
+                width: 18px !important;
+                height: 18px !important;
             }
             .toolbar-label {
                 font-size: 9px !important;
@@ -11778,14 +11779,23 @@
                                             </div>
                                             <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:14}}>
                                                 <button onClick={() => {
-                                                    if (row.feature && row.feature.geometry) {
-                                                        try {
-                                                            const layer = L.geoJSON(row.feature);
-                                                            const b = layer.getBounds();
-                                                            if (b.isValid()) { mapRef.current.fitBounds(b, { padding: [40,40], maxZoom: 17 }); }
-                                                        } catch(e) {}
+                                                    // Resolve feature before closing modal (row reference may become stale)
+                                                    const gd = geoDataRef.current;
+                                                    let feat = row.feature;
+                                                    if ((!feat || !feat.geometry) && gd && gd.plans) {
+                                                        feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === row.taba);
                                                     }
                                                     setShowPermitsGap(false); setPermitsGapDrilldown(null);
+                                                    // Fit after overlay is gone so map has correct size
+                                                    setTimeout(() => {
+                                                        const map = mapInstanceRef.current;
+                                                        if (!map || !feat || !feat.geometry) return;
+                                                        try {
+                                                            map.invalidateSize();
+                                                            const b = L.geoJSON(feat).getBounds();
+                                                            if (b.isValid()) map.fitBounds(b, { padding: [40,40], maxZoom: 17, animate: true });
+                                                        } catch(e) { console.warn('[permits-gap zoom] failed:', e); }
+                                                    }, 150);
                                                 }} style={{background:'#4a69d1',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:600}}>🗺️ זום לתב"ע במפה</button>
                                             </div>
                                         </div>
@@ -12401,11 +12411,12 @@
                     {/* ── Commerce Cell Report Modal ── */}
                     {commerceCellReport && (
                         <div className="units-overlay" onClick={() => setCommerceCellReport(null)} style={{zIndex:10002}}>
-                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(500px,95vw)'}}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(500px,95vw)', padding:'20px'}}>
                                 <button className="modal-close" onClick={() => setCommerceCellReport(null)}>&times;</button>
-                                <h2 style={{color:'#fff',fontSize:16,marginBottom:12}}>
+                                <h2 style={{color:'#fff',fontSize:16,marginBottom:12,flexShrink:0}}>
                                     🏬 {commerceCellReport.minahak} — {commerceCellReport.statusLabel}
                                 </h2>
+                                <div style={{flex:'1 1 auto', overflowY:'auto', minHeight:0}}>
                                 {(() => {
                                     const lbl = commerceCellReport.statusLabel || '';
                                     const isIn = lbl.startsWith('מסחר נכנס');
@@ -12455,6 +12466,7 @@
                                 </table>
                                     );
                                 })()}
+                                </div>
                             </div>
                         </div>
                     )}
