@@ -11580,6 +11580,11 @@
                             if (!taba) return;
                             if (seenTaba.has(taba)) return;
                             seenTaba.add(taba);
+                            // Exclude infrastructure plans (light rail, etc) — they have no
+                            // residential units in the plan but many construction permits
+                            // attached, which would pollute the top of the report.
+                            const planType = (p.plan_type || '').trim();
+                            if (planType === 'תשתיות' || planType === 'מוסתר') return;
                             const permits = getPermitsForTaba(taba);
                             if (permits.length === 0) return;
                             const unitsAdd = parseFloat(p.units_add) || 0;
