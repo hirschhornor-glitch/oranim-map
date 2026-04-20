@@ -8148,7 +8148,7 @@
                                     const subtitle = allPlans.map(p => p.plan_name || String(p.taba || '')).join(' | ');
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(clickLatLng)
-                                        .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'", 0, 'plan:' + (mapped.taba || ''), allPlans.reduce((s,p) => s + (parsePlanUnits(p.units_add) || parsePlanUnits(p.units_total)), 0)));
+                                        .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'", 0, 'plan:' + (mapped.taba || ''), allPlans.reduce((s,p) => s + (parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add)), 0)));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 } else if (!plansOff) {
@@ -8165,7 +8165,7 @@
                             if (plansOff) {
                                 const permits = _getPermits(f.properties.taba);
                                 if (permits.length > 0) {
-                                    const totalUnits = sumIncludedPermitUnits(permits, 'plan:' + f.properties.taba, parsePlanUnits(f.properties.units_add) || parsePlanUnits(f.properties.units_total));
+                                    const totalUnits = sumIncludedPermitUnits(permits, 'plan:' + f.properties.taba, parsePlanUnits(f.properties.units_total) || parsePlanUnits(f.properties.units_add));
                                     if (totalUnits > 0) {
                                         const labelText = totalUnits + ' יח"ד\n' + permits.length + ' היתרים';
                                         try {
@@ -8681,10 +8681,14 @@
                     for (const g of group) { if (g.i !== maxIdx) { included[g.i] = false; revisionDups++; } }
                 });
                 if (revisionDups > 0) rules.push('גרסאות תיק (' + revisionDups + ')');
-                // Rule 2: infrastructure exclusion
+                // Rule 2: infrastructure exclusion — only for permits with no units assigned.
+                // Real prep-work permits (foundation, demo-only, light-rail prep) carry zero
+                // residential units; demo+rebuild permits with units > 0 are real construction
+                // (e.g. pinui-binui), so we don't filter them on description alone.
                 let infraExcluded = 0;
                 permits.forEach((p, i) => {
                     if (!included[i]) return;
+                    if ((Number(p.units) || 0) > 0) return;
                     const desc = p.request_description || '';
                     if (PERMIT_INFRA_KEYWORDS.some(kw => desc.includes(kw))) {
                         included[i] = false;
@@ -9574,7 +9578,7 @@
                             const fd = JSON.parse(permitBtn.dataset.feature);
                             const title = fd.properties.plan_summary || fd.properties.plan_name_he || 'תוכנית';
                             const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
-                            popup.setContent(buildPermitsDetailPopup(permits, title, fd.properties.plan_name || taba, navInfo, 'back-to-plan', `data-feature='${featureJson}'`, 0, 'plan:' + taba, parsePlanUnits(fd.properties.units_add) || parsePlanUnits(fd.properties.units_total)));
+                            popup.setContent(buildPermitsDetailPopup(permits, title, fd.properties.plan_name || taba, navInfo, 'back-to-plan', `data-feature='${featureJson}'`, 0, 'plan:' + taba, parsePlanUnits(fd.properties.units_total) || parsePlanUnits(fd.properties.units_add)));
                         } else if (fid !== undefined && fid !== '') {
                             // Tama38 permits
                             const permits = getPermitsForTama38(fid);
