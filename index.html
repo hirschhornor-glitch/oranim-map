@@ -3334,6 +3334,7 @@
             const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
             const [showPermitsBySub, setShowPermitsBySub] = useState(false);
             const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
+            const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
@@ -12386,10 +12387,20 @@
                                 bySub[sub].total.units += u;
                             });
                         });
-                        const subs = Object.entries(bySub)
+                        const subsAll = Object.entries(bySub)
                             .map(([name, data]) => ({ name, ...data }))
-                            .filter(s => s.total.count > 0)
-                            .sort((a, b) => b.total.units - a.total.units);
+                            .filter(s => s.total.count > 0);
+                        // Build minahak filter options
+                        const minahakOpts = Array.from(new Set(subsAll.map(s => s.minahak).filter(Boolean))).sort();
+                        const subs = (permitsBySubMinahakFilter === 'all'
+                            ? subsAll
+                            : subsAll.filter(s => s.minahak === permitsBySubMinahakFilter))
+                            .sort((a, b) => {
+                                // primary: minahak alphabetical; secondary: total units desc
+                                const ma = (a.minahak || 'ת'), mb = (b.minahak || 'ת');
+                                if (ma !== mb) return ma.localeCompare(mb, 'he');
+                                return b.total.units - a.total.units;
+                            });
 
                         // Drilldown table
                         if (permitsBySubDrilldown) {
@@ -12404,29 +12415,29 @@
                                             <h2>{sub} — {getPermitStageLabel(stage)} ({stagePermits.length} היתרים, {data[stage].units} יח"ד)</h2>
                                             <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                         </div>
-                                        <div className="units-body" style={{padding:0}}>
-                                            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                        <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
+                                            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
                                                 <thead>
                                                     <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0}}>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תב"ע</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>היתר</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>סטטוס</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תאריך</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'left',borderBottom:'1px solid #333'}}>יח"ד</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>סוג</th>
-                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תיאור</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תב"ע</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>היתר</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>סטטוס</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תאריך</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'left',borderBottom:'1px solid #333',color:'#aaa'}}>יח"ד</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>סוג</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תיאור</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {stagePermits.sort((a,b) => b.units - a.units).map((p, i) => (
                                                         <tr key={i} style={{borderBottom:'1px solid #222'}}>
-                                                            <td style={{padding:'6px',color:'#aaa'}}>{p.plan}</td>
+                                                            <td style={{padding:'6px',color:'#cfcfdf'}}>{p.plan}</td>
                                                             <td style={{padding:'6px',direction:'ltr',color:'#5dade2'}}>{p.file}</td>
-                                                            <td style={{padding:'6px'}}>{p.status}</td>
-                                                            <td style={{padding:'6px',color:'#888'}}>{p.date}</td>
-                                                            <td style={{padding:'6px',textAlign:'left',fontWeight:'bold'}}>{p.units}</td>
-                                                            <td style={{padding:'6px'}}>{getPermitCategoryIcon(p.cat)} {getPermitCategoryLabel(p.cat)}</td>
-                                                            <td style={{padding:'6px',color:'#888',fontSize:11}}>{p.desc.substring(0, 80)}</td>
+                                                            <td style={{padding:'6px',color:'#e0e0e0'}}>{p.status}</td>
+                                                            <td style={{padding:'6px',color:'#aaa'}}>{p.date}</td>
+                                                            <td style={{padding:'6px',textAlign:'left',fontWeight:'bold',color:'#fff'}}>{p.units}</td>
+                                                            <td style={{padding:'6px',color:'#e0e0e0'}}>{getPermitCategoryIcon(p.cat)} {getPermitCategoryLabel(p.cat)}</td>
+                                                            <td style={{padding:'6px',color:'#aaa',fontSize:11}}>{p.desc.substring(0, 80)}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -12470,38 +12481,45 @@
                             <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1100px,95vw)'}}>
                                     <div className="units-header">
-                                        <h2>🏘️ היתרים לפי תת-שכונה ({subs.length} תת-שכונות)</h2>
+                                        <h2>🏘️ היתרים לפי תת-שכונה ({subs.length}{permitsBySubMinahakFilter !== 'all' ? '/' + subsAll.length : ''} תת-שכונות)</h2>
                                         <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                                            <select value={permitsBySubMinahakFilter} onChange={e => setPermitsBySubMinahakFilter(e.target.value)} style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'4px 8px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                                <option value="all">כל המינהלים</option>
+                                                {minahakOpts.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select>
                                             <button onClick={exportSubReport} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
                                             <button onClick={printSubReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
                                             <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                         </div>
                                     </div>
-                                    <div className="units-body" style={{padding:0}}>
-                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                    <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
+                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
                                             <thead>
                                                 <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0,zIndex:1}}>
-                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>מינהל</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>תב"עות</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תת-שכונה</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>מינהל</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#aaa'}}>תב"עות</th>
                                                     {PERMIT_STAGES_ALL.map(st => (
-                                                        <th key={st} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:getPermitStageColor(st)}}>{getPermitStageLabel(st)}<br/><span style={{fontSize:10,color:'#666'}}>היתרים / יח"ד</span></th>
+                                                        <th key={st} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:getPermitStageColor(st)}}>{getPermitStageLabel(st)}<br/><span style={{fontSize:10,color:'#888'}}>היתרים / יח"ד</span></th>
                                                     ))}
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה"כ</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {subs.map(s => (
-                                                    <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
-                                                        <td style={{padding:'6px',fontWeight:'bold'}}>{s.name}</td>
-                                                        <td style={{padding:'6px',color:'#aaa',fontSize:11}}>{s.minahak}</td>
-                                                        <td style={{padding:'6px',textAlign:'center',color:'#888'}}>{s.plans}</td>
+                                                {subs.map((s, idx) => {
+                                                    const prev = idx > 0 ? subs[idx - 1] : null;
+                                                    const minahakChanged = !prev || prev.minahak !== s.minahak;
+                                                    return (
+                                                    <tr key={s.name} style={{borderBottom:'1px solid #222',borderTop: minahakChanged && idx > 0 ? '2px solid #444' : 'none'}}>
+                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
+                                                        <td style={{padding:'6px',color:'#9ca3af',fontSize:11}}>{s.minahak || '—'}</td>
+                                                        <td style={{padding:'6px',textAlign:'center',color:'#aaa'}}>{s.plans}</td>
                                                         {PERMIT_STAGES_ALL.map(st => {
                                                             const cell = s[st];
                                                             const empty = cell.count === 0;
                                                             return (
                                                                 <td key={st} onClick={() => empty ? null : setPermitsBySubDrilldown({ sub: s.name, stage: st })}
-                                                                    style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#444':getPermitStageColor(st),background:empty?'transparent':'rgba(255,255,255,0.02)'}}
+                                                                    style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#555':getPermitStageColor(st),background:empty?'transparent':'rgba(255,255,255,0.02)'}}
                                                                     title={empty ? '' : 'הצג היתרים'}>
                                                                     {empty ? '—' : (cell.count + ' / ' + cell.units)}
                                                                 </td>
@@ -12509,7 +12527,8 @@
                                                         })}
                                                         <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total.count} / {s.total.units}</td>
                                                     </tr>
-                                                ))}
+                                                    );
+                                                })}
                                             </tbody>
                                             <tfoot>
                                                 <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
