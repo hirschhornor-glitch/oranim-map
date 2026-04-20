@@ -3459,6 +3459,7 @@
                             h: p.plan_name_he || '',
                             s: p.plan_summary || '',
                             t: (p.plan_name_he || '') + ' ' + (p.plan_summary || ''),
+                            ta: String(p.taba || ''),
                             c: [center.lat, center.lng]
                         });
                     } catch(e) {}
@@ -9794,12 +9795,32 @@
             const goBackViewRef = useRef(goBackView);
             goBackViewRef.current = goBackView;
 
-            // Plan search results
-            const searchResults = planSearch.length >= 2
-                ? planIndex.filter(p =>
-                    (p.t && p.t.includes(planSearch)) || (p.n && p.n.includes(planSearch))
-                ).slice(0, 15)
-                : [];
+            // Plan search results — matches plan name/Hebrew/summary AND permit file numbers
+            const searchResults = (() => {
+                const q = planSearch.trim();
+                if (q.length < 2) return [];
+                const permitMatches = [];
+                const matchedTabas = new Set();
+                const allP = window.__allPermits || {};
+                // Permit-number search: look for file_number containing q across all permits
+                for (const taba of Object.keys(allP)) {
+                    if (permitMatches.length >= 10) break;
+                    const entry = allP[taba];
+                    if (!entry || !entry.permits) continue;
+                    const hit = entry.permits.find(p => p.file_number && p.file_number.includes(q));
+                    if (hit) {
+                        const plan = planIndex.find(pl => pl.ta === taba);
+                        if (plan && !matchedTabas.has(taba)) {
+                            matchedTabas.add(taba);
+                            permitMatches.push({ ...plan, _permitNum: hit.file_number, _permitStatus: hit.status || '' });
+                        }
+                    }
+                }
+                const planMatches = planIndex
+                    .filter(p => !matchedTabas.has(p.ta) && ((p.t && p.t.includes(q)) || (p.n && p.n.includes(q))))
+                    .slice(0, 15);
+                return [...permitMatches, ...planMatches].slice(0, 20);
+            })();
 
             const handleSearchSelect = (plan) => {
                 const map = mapInstanceRef.current;
@@ -9861,7 +9882,7 @@
                                 <input
                                     className="plan-search-input"
                                     type="text"
-                                    placeholder='חיפוש תכנית או מספר...'
+                                    placeholder='חיפוש תכנית, מספר תכנית או מספר היתר...'
                                     value={planSearch}
                                     onChange={(e) => {
                                         setPlanSearch(e.target.value);
@@ -9883,6 +9904,9 @@
                                                 className="plan-search-item"
                                                 onClick={() => handleSearchSelect(plan)}
                                             >
+                                                {plan._permitNum && (
+                                                    <div style={{fontSize:10,color:'#f5b041',marginBottom:2}}>📑 היתר {plan._permitNum}{plan._permitStatus ? ' · ' + plan._permitStatus : ''}</div>
+                                                )}
                                                 <div className="plan-search-item-name">{plan.h}</div>
                                                 {plan.s && <div className="plan-search-item-summary">{plan.s}</div>}
                                                 <div className="plan-search-item-num">{plan.n}</div>
