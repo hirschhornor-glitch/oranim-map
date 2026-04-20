@@ -8148,7 +8148,7 @@
                                     const subtitle = allPlans.map(p => p.plan_name || String(p.taba || '')).join(' | ');
                                     const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                         .setLatLng(clickLatLng)
-                                        .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'"));
+                                        .setContent(buildPermitsDetailPopup(allPermits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'", 0, 'plan:' + (mapped.taba || ''), allPlans.reduce((s,p) => s + (parsePlanUnits(p.units_add) || parsePlanUnits(p.units_total)), 0)));
                                     popup.openOn(map);
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 } else if (!plansOff) {
@@ -8165,7 +8165,7 @@
                             if (plansOff) {
                                 const permits = _getPermits(f.properties.taba);
                                 if (permits.length > 0) {
-                                    const totalUnits = permits.reduce(function(s,p){return s+(p.units||0)},0);
+                                    const totalUnits = sumIncludedPermitUnits(permits, 'plan:' + f.properties.taba, parsePlanUnits(f.properties.units_add) || parsePlanUnits(f.properties.units_total));
                                     if (totalUnits > 0) {
                                         const labelText = totalUnits + ' יח"ד\n' + permits.length + ' היתרים';
                                         try {
@@ -8212,7 +8212,7 @@
                                 const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0));
+                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose)));
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
                             });
@@ -8636,12 +8636,158 @@
                 }
                 return best || permits[0];
             }
+            // Permit-inclusion logic for "סה״כ יח״ד בהיתרים" total.
+            // Sequential default rules (each operates on the survivors of the previous):
+            //   1. Revision dedup — permits sharing the same tik (year/num) keep only the highest
+            //      revision (.NN). E.g. 2020/0377.00 < .01 < .02 → keep .02.
+            //   2. Infrastructure exclusion — drop permits whose request_description contains
+            //      preparatory-work keywords (הריסה, דיפון, חפירה, ביסוס, עבודות מקדימות).
+            //   3. Units dedup — only if the surviving sum still exceeds plan_units × 1.10:
+            //      group remaining permits by unit count, keep the "best" by status priority.
+            // The plan-units comparison line is shown independently as a visual sanity-check.
+            // User can override per-permit via checkbox; overrides persist in localStorage keyed
+            // by file_number (or scope+index when no file_number).
+            const PERMIT_OVERRIDES_KEY = 'oranim:permitInclude';
+            const PERMIT_PLAN_TOLERANCE = 1.10;
+            const PERMIT_INFRA_KEYWORDS = ['הריסה', 'דיפון', 'חפירה', 'ביסוס', 'עבודות מקדימות'];
+            function parsePlanUnits(v) {
+                if (v == null || v === '') return 0;
+                const n = Number(v);
+                return isFinite(n) && n > 0 ? n : 0;
+            }
+            function parsePermitFileNumber(fn) {
+                if (!fn) return { tik: '', revision: 0 };
+                const m = String(fn).match(/^(\d+\/\d+)\.(\d+)$/);
+                if (m) return { tik: m[1], revision: parseInt(m[2], 10) };
+                return { tik: String(fn), revision: 0 };
+            }
+            function getPermitInclusionDefaults(permits, planUnits) {
+                const planU = parsePlanUnits(planUnits);
+                const included = permits.map(() => true);
+                const rules = [];
+                // Rule 1: revision dedup within same tik
+                const tikGroups = new Map();
+                permits.forEach((p, i) => {
+                    const parsed = parsePermitFileNumber(p.file_number || '');
+                    if (!parsed.tik) return;
+                    if (!tikGroups.has(parsed.tik)) tikGroups.set(parsed.tik, []);
+                    tikGroups.get(parsed.tik).push({ i: i, revision: parsed.revision });
+                });
+                let revisionDups = 0;
+                tikGroups.forEach(group => {
+                    if (group.length <= 1) return;
+                    let maxRev = -1, maxIdx = -1;
+                    for (const g of group) { if (g.revision > maxRev) { maxRev = g.revision; maxIdx = g.i; } }
+                    for (const g of group) { if (g.i !== maxIdx) { included[g.i] = false; revisionDups++; } }
+                });
+                if (revisionDups > 0) rules.push('גרסאות תיק (' + revisionDups + ')');
+                // Rule 2: infrastructure exclusion
+                let infraExcluded = 0;
+                permits.forEach((p, i) => {
+                    if (!included[i]) return;
+                    const desc = p.request_description || '';
+                    if (PERMIT_INFRA_KEYWORDS.some(kw => desc.includes(kw))) {
+                        included[i] = false;
+                        infraExcluded++;
+                    }
+                });
+                if (infraExcluded > 0) rules.push('עבודות תשתית (' + infraExcluded + ')');
+                // Rule 3: units dedup only if remaining sum still exceeds plan
+                const sumAfter12 = permits.reduce((s, p, i) => s + (included[i] ? (Number(p.units) || 0) : 0), 0);
+                const triggerUnitsDedup = !(planU > 0 && sumAfter12 <= planU * PERMIT_PLAN_TOLERANCE);
+                if (triggerUnitsDedup) {
+                    const groups = new Map();
+                    permits.forEach((p, i) => {
+                        if (!included[i]) return;
+                        const u = Number(p.units) || 0;
+                        if (u <= 0) return;
+                        if (!groups.has(u)) groups.set(u, []);
+                        groups.get(u).push(i);
+                    });
+                    const priority = ['הופק', 'היתר בני', 'אושר', 'בביצוע', 'בנייה', 'נדונה', 'בתהליך', 'נפתח'];
+                    function statusRank(p) {
+                        const s = p.status || '';
+                        for (let j = 0; j < priority.length; j++) if (s.includes(priority[j])) return j;
+                        return priority.length;
+                    }
+                    let unitsDups = 0;
+                    groups.forEach(idxs => {
+                        if (idxs.length <= 1) return;
+                        let bestIdx = idxs[0], bestRank = statusRank(permits[bestIdx]);
+                        for (let k = 1; k < idxs.length; k++) {
+                            const r = statusRank(permits[idxs[k]]);
+                            if (r < bestRank) { bestRank = r; bestIdx = idxs[k]; }
+                        }
+                        for (const idx of idxs) { if (idx !== bestIdx) { included[idx] = false; unitsDups++; } }
+                    });
+                    if (unitsDups > 0) rules.push('יח״ד זהים (' + unitsDups + ')');
+                }
+                return { included: included, rules: rules };
+            }
+            function permitOverrideKey(p, idx, scopeKey) {
+                return p.file_number ? 'fn:' + p.file_number : (scopeKey || 'noscope') + ':idx:' + idx;
+            }
+            function getPermitOverrides() {
+                try {
+                    const raw = localStorage.getItem(PERMIT_OVERRIDES_KEY);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) { return {}; }
+            }
+            function setPermitOverride(overrideKey, included) {
+                if (!overrideKey) return;
+                const overrides = getPermitOverrides();
+                overrides[overrideKey] = !!included;
+                try { localStorage.setItem(PERMIT_OVERRIDES_KEY, JSON.stringify(overrides)); } catch (e) {}
+            }
+            function getEffectivePermitInclusion(permits, scopeKey, planUnits) {
+                const defaults = getPermitInclusionDefaults(permits, planUnits);
+                const overrides = getPermitOverrides();
+                return permits.map((p, i) => {
+                    const k = permitOverrideKey(p, i, scopeKey);
+                    return Object.prototype.hasOwnProperty.call(overrides, k) ? !!overrides[k] : defaults[i];
+                });
+            }
+            function sumIncludedPermitUnits(permits, scopeKey, planUnits) {
+                const inc = getEffectivePermitInclusion(permits, scopeKey, planUnits);
+                let s = 0;
+                permits.forEach((p, i) => { if (inc[i]) s += Number(p.units) || 0; });
+                return s;
+            }
+            function permitTotalColor(total, planUnits) {
+                const planU = parsePlanUnits(planUnits);
+                if (planU <= 0) return '#fff';
+                if (total > planU * PERMIT_PLAN_TOLERANCE) return '#ff7a7a';
+                return '#7adf7a';
+            }
+            function updatePopupPermitTotal(rootEl) {
+                if (!rootEl) return;
+                const rows = rootEl.querySelectorAll('.permit-row');
+                let total = 0, count = 0;
+                rows.forEach(r => {
+                    const cb = r.querySelector('input[data-permit-include]');
+                    if (cb && cb.checked) {
+                        total += Number(r.dataset.permitUnits) || 0;
+                        count++;
+                    }
+                });
+                const totalEl = rootEl.querySelector('[data-permit-total-units]');
+                const countEl = rootEl.querySelector('[data-permit-included-count]');
+                const totalLine = rootEl.querySelector('[data-permit-total-line]');
+                if (totalEl) totalEl.textContent = total;
+                if (countEl) countEl.textContent = count;
+                if (totalLine) {
+                    const planU = parsePlanUnits(totalLine.dataset.planUnits);
+                    totalLine.style.color = permitTotalColor(total, planU);
+                }
+            }
             function buildPermitsSummaryHTML(permits, buttonDataAttr) {
                 if (!permits || permits.length === 0) return '';
                 let html = `<div style="text-align:center;margin-top:8px;padding-top:6px;border-top:1px solid #2a2a4a"><button class="popup-btn-permit" data-action="show-permits" ${buttonDataAttr}>${permits.length} היתרים ←</button></div>`;
                 return html;
             }
-            function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr, fallbackUnits) {
+            function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr, fallbackUnits, scopeKey, planUnits) {
+                const planU = parsePlanUnits(planUnits);
+                const inclusion = getEffectivePermitInclusion(permits, scopeKey, planU);
                 let html = '<div>';
                 html += buildNavBar(navInfo);
                 html += '<div class="permit-detail-header">';
@@ -8653,7 +8799,14 @@
                     const sc = getPermitStatusColor(p.status);
                     const unitsStr = p.units ? p.units + ' יח"ד' : '';
                     const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
-                    html += `<div style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''}">`;
+                    const checked = inclusion[i];
+                    const oKey = permitOverrideKey(p, i, scopeKey);
+                    const u = Number(p.units) || 0;
+                    html += `<div class="permit-row" data-permit-units="${u}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
+                    html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
+                    html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
+                    html += `</label>`;
+                    html += `<div style="flex:1;min-width:0">`;
                     html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
                     const permitUrl = p.file_number ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(p.file_number) + '&SystemCode=26400046' : '';
                     html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
@@ -8666,13 +8819,27 @@
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
                     }
-                    html += `</div>`;
+                    html += `</div>`; // end content
+                    html += `</div>`; // end row
                 });
                 html += '</div>'; // end scrollable popup-body
-                let totalUnits = permits.reduce((sum, p) => sum + (p.units || 0), 0);
-                if (!totalUnits && fallbackUnits) totalUnits = fallbackUnits;
-                if (totalUnits > 0) {
-                    html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center;font-size:13px;font-weight:bold;color:#fff">סה"כ ${totalUnits} יח"ד בהיתרים</div>`;
+                let totalIncluded = 0, countIncluded = 0;
+                permits.forEach((p, i) => { if (inclusion[i]) { totalIncluded += Number(p.units) || 0; countIncluded++; } });
+                const totalAll = permits.reduce((sum, p) => sum + (Number(p.units) || 0), 0);
+                if (totalAll > 0 || (fallbackUnits && fallbackUnits > 0)) {
+                    const displayTotal = totalIncluded || (totalAll === 0 && fallbackUnits ? fallbackUnits : 0);
+                    const totalColor = permitTotalColor(displayTotal, planU);
+                    const defaultMode = planU > 0 && totalAll <= planU * PERMIT_PLAN_TOLERANCE
+                        ? 'ברירת מחדל: כל ההיתרים נספרים (תואם לתב״ע)'
+                        : (planU > 0 ? 'ברירת מחדל: איחוד היתרים זהים בכמות יח״ד (סך גולמי חורג מהתב״ע)'
+                                     : 'ברירת מחדל: איחוד היתרים זהים בכמות יח״ד');
+                    html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center">`;
+                    if (planU > 0) {
+                        html += `<div style="font-size:11px;color:#aaa;margin-bottom:4px">תב״ע: <span style="color:#fff;font-weight:bold">${planU}</span> יח״ד</div>`;
+                    }
+                    html += `<div data-permit-total-line data-plan-units="${planU}" style="font-size:13px;font-weight:bold;color:${totalColor}">סה"כ <span data-permit-total-units>${displayTotal}</span> יח"ד בהיתרים</div>`;
+                    html += `<div style="font-size:10px;color:#8888aa;margin-top:2px">נספרו <span data-permit-included-count>${countIncluded}</span> מתוך ${permits.length} היתרים <span style="opacity:0.7">(${defaultMode})</span></div>`;
+                    html += `</div>`;
                 }
                 html += '<div class="popup-footer">';
                 html += `<button class="popup-btn-permit" data-action="${backAction}" ${backDataAttr}>→ חזרה</button>`;
@@ -9407,7 +9574,7 @@
                             const fd = JSON.parse(permitBtn.dataset.feature);
                             const title = fd.properties.plan_summary || fd.properties.plan_name_he || 'תוכנית';
                             const featureJson = JSON.stringify(fd).replace(/'/g, "&#39;");
-                            popup.setContent(buildPermitsDetailPopup(permits, title, fd.properties.plan_name || taba, navInfo, 'back-to-plan', `data-feature='${featureJson}'`));
+                            popup.setContent(buildPermitsDetailPopup(permits, title, fd.properties.plan_name || taba, navInfo, 'back-to-plan', `data-feature='${featureJson}'`, 0, 'plan:' + taba, parsePlanUnits(fd.properties.units_add) || parsePlanUnits(fd.properties.units_total)));
                         } else if (fid !== undefined && fid !== '') {
                             // Tama38 permits
                             const permits = getPermitsForTama38(fid);
@@ -9420,7 +9587,7 @@
                             const title = (entry.properties.address || 'תמ"א 38') + (tamaT ? ' - תמ"א ' + tamaT : '');
                             const unitsTose = entry.properties.units_tose != null ? entry.properties.units_tose : '';
                             const tama38Sub = [entry.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
-                            popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`, unitsTose ? Number(unitsTose) : 0));
+                            popup.setContent(buildPermitsDetailPopup(permits, title, tama38Sub, navInfo, 'back-to-tama38', `data-fid='${fid}'`, unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose)));
                         }
                         return;
                     }
@@ -9453,6 +9620,14 @@
                     }
                 };
                 el.addEventListener('click', el._popupHandler);
+                if (el._popupChangeHandler) el.removeEventListener('change', el._popupChangeHandler);
+                el._popupChangeHandler = function(ev) {
+                    const cb = ev.target.closest('input[data-permit-include]');
+                    if (!cb) return;
+                    setPermitOverride(cb.dataset.permitKey, cb.checked);
+                    updatePopupPermitTotal(el);
+                };
+                el.addEventListener('change', el._popupChangeHandler);
             }
 
             const toggleLayer = (id) => {
