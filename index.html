@@ -3317,6 +3317,7 @@
             const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
+            const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
             const [reasonDraft, setReasonDraft] = useState('');
             const [reasonSaving, setReasonSaving] = useState(false);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
@@ -10039,8 +10040,13 @@
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תב"ע - סטטוס תכנית', items: PLANS_LEGEND }); }}>⋯</button>
                                             )}
                                             {layer.id === 'permits' && (
-                                                <button className="layer-legend-btn" title="מקרא שלבים"
-                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
+                                                <>
+                                                    <button className="layer-legend-btn" title="מקרא שלבים"
+                                                        onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא היתרים - שלב', items: PERMITS_LEGEND }); }}>⋯</button>
+                                                    <button className="layer-legend-btn" title="דוח היתרים מול תב&quot;ע"
+                                                        onClick={(e) => { e.stopPropagation(); setPermitsGapDrilldown(null); setShowPermitsGap(true); }}
+                                                        style={{marginRight:4,fontSize:11}}>📊</button>
+                                                </>
                                             )}
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
@@ -11567,10 +11573,13 @@
                             );
                         }
                         const rows = [];
+                        const seenTaba = new Set();
                         gd.plans.features.forEach(f => {
                             const p = f.properties || {};
                             const taba = String(p.taba || '').trim();
                             if (!taba) return;
+                            if (seenTaba.has(taba)) return;
+                            seenTaba.add(taba);
                             const permits = getPermitsForTaba(taba);
                             if (permits.length === 0) return;
                             const unitsAdd = parseFloat(p.units_add) || 0;
@@ -11578,7 +11587,8 @@
                             const inclusion = getEffectivePermitInclusion(permits, scopeKey, unitsAdd);
                             const unitsInPermits = permits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
-                            const gap = unitsAdd - unitsInPermits;
+                            // gap = permits - plan: positive = permits exceed plan (interesting), negative = plan exceeds permits
+                            const gap = unitsInPermits - unitsAdd;
                             const pctDone = unitsAdd > 0 ? (unitsInPermits / unitsAdd * 100) : 0;
                             const reasonFromGS = p.permit_growth_reason || p['סיבת חריגה'] || '';
                             const reasonLocal = (() => {
@@ -11603,24 +11613,28 @@
                                 reasonFromGS,
                             });
                         });
+                        // Unique minhaks for filter dropdown
+                        const minhakOptions = Array.from(new Set(rows.map(r => r.minahak).filter(Boolean))).sort();
+                        const filteredRows = permitsGapMinhakFilter === 'all' ? rows : rows.filter(r => r.minahak === permitsGapMinhakFilter);
+
                         const sortCol = permitsGapSort.col;
                         const sortDir = permitsGapSort.dir;
-                        const sortedRows = [...rows].sort((a,b) => {
+                        const sortedRows = [...filteredRows].sort((a,b) => {
                             const av = a[sortCol], bv = b[sortCol];
                             const d = sortDir === 'asc' ? 1 : -1;
                             if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * d;
                             return String(av||'').localeCompare(String(bv||''), 'he') * d;
                         });
                         const totals = {
-                            plans: rows.length,
-                            unitsAdd: rows.reduce((s,r) => s + r.unitsAdd, 0),
-                            unitsInPermits: rows.reduce((s,r) => s + r.unitsInPermits, 0),
-                            permitCount: rows.reduce((s,r) => s + r.permitCount, 0),
-                            countedPermits: rows.reduce((s,r) => s + r.countedPermits, 0),
+                            plans: filteredRows.length,
+                            unitsAdd: filteredRows.reduce((s,r) => s + r.unitsAdd, 0),
+                            unitsInPermits: filteredRows.reduce((s,r) => s + r.unitsInPermits, 0),
+                            permitCount: filteredRows.reduce((s,r) => s + r.permitCount, 0),
+                            countedPermits: filteredRows.reduce((s,r) => s + r.countedPermits, 0),
                         };
-                        totals.gap = totals.unitsAdd - totals.unitsInPermits;
+                        totals.gap = totals.unitsInPermits - totals.unitsAdd;
                         totals.pctDone = totals.unitsAdd > 0 ? (totals.unitsInPermits / totals.unitsAdd * 100) : 0;
-                        const isOver = (r) => r.unitsInPermits > r.unitsAdd;
+                        const isOver = (r) => r.unitsAdd > 0 && r.unitsInPermits > r.unitsAdd;
                         const toggleSort = (col) => setPermitsGapSort(prev => prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' });
                         const sortIcon = (col) => sortCol === col ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
                         const togglePermitInclude = (row, i) => {
@@ -11751,22 +11765,22 @@
                             const overCountExport = sortedRows.filter(isOver).length;
                             printWin.document.write('<p style="color:#666;margin:0 0 12px">' + totals.plans + ' תב"עות עם היתרים | ' + fmt(totals.unitsAdd) + ' יח"ד מאושרות | ' + fmt(totals.unitsInPermits) + ' יח"ד בהיתרים (נספרו ' + totals.countedPermits + '/' + totals.permitCount + ' היתרים)' + (overCountExport > 0 ? ' | <span class="over" style="padding:2px 8px;border-radius:4px">⚠ ' + overCountExport + ' בחריגה</span>' : '') + '</p>');
                             printWin.document.write('<p style="color:#888;margin:0 0 12px;font-size:11px">סימון אדום = יח"ד בהיתרים גבוה מיח"ד מאושרות בתב"ע. ספירת יח"ד מחילה dedup גרסאות, החרגת תשתית, ו-dedup יח"ד זהים בחריגה מעל ' + (PERMIT_PLAN_TOLERANCE*100).toFixed(0) + '%.</p>');
-                            printWin.document.write('<table><thead><tr><th>#</th><th>מס\' תב"ע</th><th>שם</th><th>מינהל</th><th>סטטוס</th><th>יח"ד מאושרות</th><th>יח"ד בהיתרים</th><th>פער</th><th>היתרים (נספרו/סה"כ)</th><th>סיבת חריגה</th></tr></thead><tbody>');
+                            printWin.document.write('<table><thead><tr><th>#</th><th>מס\' תב"ע</th><th>שם</th><th>מינהל</th><th>יח"ד מאושרות</th><th>יח"ד בהיתרים</th><th>פער</th><th>היתרים (נספרו/סה"כ)</th><th>סיבת חריגה</th></tr></thead><tbody>');
                             const esc = (s) => String(s==null?'':s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
                             sortedRows.forEach((r, i) => {
                                 const over = isOver(r);
                                 const trCls = over ? ' class="over"' : '';
                                 const permCell = r.countedPermits !== r.permitCount ? (r.countedPermits + ' / ' + r.permitCount) : r.permitCount;
-                                printWin.document.write('<tr' + trCls + '><td>' + (i+1) + (over ? ' ⚠' : '') + '</td><td>' + esc(r.plan_name) + '</td><td>' + esc(r.plan_summary) + '</td><td>' + esc(r.minahak) + '</td><td>' + esc(r.status_mavat) + '</td><td>' + fmt(r.unitsAdd) + '</td><td>' + fmt(r.unitsInPermits) + '</td><td>' + fmt(r.gap) + '</td><td>' + permCell + '</td><td style="font-size:11px">' + esc(r.reason || '') + '</td></tr>');
+                                printWin.document.write('<tr' + trCls + '><td>' + (i+1) + (over ? ' ⚠' : '') + '</td><td>' + esc(r.plan_name) + '</td><td>' + esc(r.plan_summary) + '</td><td>' + esc(r.minahak) + '</td><td>' + fmt(r.unitsAdd) + '</td><td>' + fmt(r.unitsInPermits) + '</td><td>' + fmt(r.gap) + '</td><td>' + permCell + '</td><td style="font-size:11px">' + esc(r.reason || '') + '</td></tr>');
                             });
                             const totalsPermCell = totals.countedPermits !== totals.permitCount ? (totals.countedPermits + ' / ' + totals.permitCount) : totals.permitCount;
-                            printWin.document.write('</tbody><tfoot><tr><td colspan="5">סה"כ</td><td>' + fmt(totals.unitsAdd) + '</td><td>' + fmt(totals.unitsInPermits) + '</td><td>' + fmt(totals.gap) + '</td><td>' + totalsPermCell + '</td><td></td></tr></tfoot></table>');
-                            const csvRows = ['"#","מס\' תב\\"ע","שם","מינהל","סטטוס","יח\\"ד מאושרות","יח\\"ד בהיתרים","פער","חריגה?","היתרים נספרו","סה\\"כ היתרים","סיבת חריגה"'];
+                            printWin.document.write('</tbody><tfoot><tr><td colspan="4">סה"כ</td><td>' + fmt(totals.unitsAdd) + '</td><td>' + fmt(totals.unitsInPermits) + '</td><td>' + fmt(totals.gap) + '</td><td>' + totalsPermCell + '</td><td></td></tr></tfoot></table>');
+                            const csvRows = ['"#","מס\' תב\\"ע","שם","מינהל","יח\\"ד מאושרות","יח\\"ד בהיתרים","פער","חריגה?","היתרים נספרו","סה\\"כ היתרים","סיבת חריגה"'];
                             sortedRows.forEach((r, i) => {
                                 const cell = (v) => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
-                                csvRows.push([cell(i+1), cell(r.plan_name), cell(r.plan_summary), cell(r.minahak), cell(r.status_mavat), cell(fmt(r.unitsAdd)), cell(fmt(r.unitsInPermits)), cell(fmt(r.gap)), cell(isOver(r) ? 'כן' : ''), cell(r.countedPermits), cell(r.permitCount), cell(r.reason || '')].join(','));
+                                csvRows.push([cell(i+1), cell(r.plan_name), cell(r.plan_summary), cell(r.minahak), cell(fmt(r.unitsAdd)), cell(fmt(r.unitsInPermits)), cell(fmt(r.gap)), cell(isOver(r) ? 'כן' : ''), cell(r.countedPermits), cell(r.permitCount), cell(r.reason || '')].join(','));
                             });
-                            csvRows.push(['""','"סה\\"כ"','""','""','""', '"' + fmt(totals.unitsAdd) + '"', '"' + fmt(totals.unitsInPermits) + '"', '"' + fmt(totals.gap) + '"', '""', '"' + totals.countedPermits + '"', '"' + totals.permitCount + '"', '""'].join(','));
+                            csvRows.push(['""','"סה\\"כ"','""','""', '"' + fmt(totals.unitsAdd) + '"', '"' + fmt(totals.unitsInPermits) + '"', '"' + fmt(totals.gap) + '"', '""', '"' + totals.countedPermits + '"', '"' + totals.permitCount + '"', '""'].join(','));
                             const csvContent = csvRows.join('\n');
                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="permits_vs_taba.csv";a.click();});<\/script>');
                             printWin.document.write('</body></html>');
@@ -11779,18 +11793,28 @@
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 1200}}>
                                     <div className="units-header">
                                         <h2>📊 דוח היתרים מול תב"ע</h2>
+                                        <div style={{display:'flex',alignItems:'center',gap:8,marginRight:'auto',marginLeft:40}}>
+                                            <label style={{fontSize:12,color:'#9ca3af'}}>סינון מינהל:</label>
+                                            <select value={permitsGapMinhakFilter} onChange={e => setPermitsGapMinhakFilter(e.target.value)} style={{background:'#1a1a2e',color:'#e0e0ff',border:'1px solid #3a3a50',borderRadius:6,padding:'4px 8px',fontSize:12,fontFamily:'inherit',cursor:'pointer'}}>
+                                                <option value="all">כל המינהלים ({rows.length})</option>
+                                                {minhakOptions.map(m => {
+                                                    const c = rows.filter(r => r.minahak === m).length;
+                                                    return <option key={m} value={m}>{m} ({c})</option>;
+                                                })}
+                                            </select>
+                                        </div>
                                         <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                     </div>
                                     <div className="units-body">
                                         {(() => {
-                                            const overCount = rows.filter(isOver).length;
+                                            const overCount = filteredRows.filter(isOver).length;
                                             return (
-                                                <div style={{padding:'10px 14px',background:'#1a1a2e',borderRadius:8,marginBottom:12,fontSize:13,display:'flex',flexWrap:'wrap',gap:20}}>
-                                                    <div><strong>{totals.plans}</strong> תב"עות עם היתרים</div>
-                                                    <div><strong>{fmt(totals.unitsAdd)}</strong> יח"ד מאושרות</div>
-                                                    <div><strong>{fmt(totals.unitsInPermits)}</strong> יח"ד בהיתרים</div>
-                                                    <div>פער: <strong>{fmt(totals.gap)}</strong></div>
-                                                    <div><strong>{totals.countedPermits}</strong> היתרים נספרו{totals.countedPermits !== totals.permitCount ? ' (מתוך ' + totals.permitCount + ')' : ''}</div>
+                                                <div style={{padding:'10px 14px',background:'#1a1a2e',borderRadius:8,marginBottom:12,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
+                                                    <div><strong style={{color:'#fff'}}>{totals.plans}</strong> תב"עות עם היתרים</div>
+                                                    <div><strong style={{color:'#fff'}}>{fmt(totals.unitsAdd)}</strong> יח"ד מאושרות</div>
+                                                    <div><strong style={{color:'#fff'}}>{fmt(totals.unitsInPermits)}</strong> יח"ד בהיתרים</div>
+                                                    <div>פער: <strong style={{color: totals.gap > 0 ? '#e94560' : '#fff'}}>{fmt(totals.gap)}</strong></div>
+                                                    <div><strong style={{color:'#fff'}}>{totals.countedPermits}</strong> היתרים נספרו{totals.countedPermits !== totals.permitCount ? ' (מתוך ' + totals.permitCount + ')' : ''}</div>
                                                     {overCount > 0 && <div style={{color:'#e94560',fontWeight:700}}>⚠ {overCount} תב"עות בחריגה</div>}
                                                 </div>
                                             );
@@ -11806,7 +11830,6 @@
                                                             <th style={{cursor:'pointer'}} onClick={() => toggleSort('plan_name')}>מס' תב"ע{sortIcon('plan_name')}</th>
                                                             <th>שם</th>
                                                             <th style={{cursor:'pointer'}} onClick={() => toggleSort('minahak')}>מינהל{sortIcon('minahak')}</th>
-                                                            <th style={{cursor:'pointer'}} onClick={() => toggleSort('status_mavat')}>סטטוס{sortIcon('status_mavat')}</th>
                                                             <th style={{cursor:'pointer'}} onClick={() => toggleSort('unitsAdd')}>יח"ד מאושרות{sortIcon('unitsAdd')}</th>
                                                             <th style={{cursor:'pointer'}} onClick={() => toggleSort('unitsInPermits')}>יח"ד בהיתרים{sortIcon('unitsInPermits')}</th>
                                                             <th style={{cursor:'pointer'}} onClick={() => toggleSort('gap')}>פער{sortIcon('gap')}</th>
@@ -11823,7 +11846,6 @@
                                                                     <td style={{fontFamily:'monospace',whiteSpace:'nowrap',color:'#8ecae6',textDecoration:'underline'}}>{r.plan_name}</td>
                                                                     <td style={{fontSize:12}}>{r.plan_summary}</td>
                                                                     <td style={{fontSize:12,whiteSpace:'nowrap'}}>{r.minahak}</td>
-                                                                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>{r.status_mavat}</td>
                                                                     <td>{fmt(r.unitsAdd)}</td>
                                                                     <td style={over ? {color:'#e94560',fontWeight:700} : {}}>{fmt(r.unitsInPermits)}</td>
                                                                     <td style={over ? {color:'#e94560',fontWeight:700} : {}}>{fmt(r.gap)}</td>
@@ -11835,7 +11857,7 @@
                                                     </tbody>
                                                     <tfoot>
                                                         <tr style={{fontWeight:700,background:'#141440'}}>
-                                                            <td colSpan={5}>סה"כ</td>
+                                                            <td colSpan={4}>סה"כ</td>
                                                             <td>{fmt(totals.unitsAdd)}</td>
                                                             <td>{fmt(totals.unitsInPermits)}</td>
                                                             <td>{fmt(totals.gap)}</td>
