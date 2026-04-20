@@ -3277,6 +3277,11 @@
             const [areaPts, setAreaPts] = useState(0);
             const areaRef = useRef({ points: [], markers: [], polygon: null });
             const areaModeRef = useRef(false);
+            const [radiusMode, setRadiusMode] = useState(false);
+            const radiusModeRef = useRef(false);
+            const [radiusCenter, setRadiusCenter] = useState(null);
+            const [radiusMeters, setRadiusMeters] = useState(500);
+            const radiusRef = useRef({ circle: null, marker: null });
             const [landuseCompareMode, setLanduseCompareMode] = useState(null); // null | 'plan' | 'area'
             const landuseCompareModeRef = useRef(null);
             const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode - UI only
@@ -3327,6 +3332,8 @@
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             const [showPermitsGap, setShowPermitsGap] = useState(false);
             const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
+            const [showPermitsBySub, setShowPermitsBySub] = useState(false);
+            const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
@@ -4979,6 +4986,224 @@
                     setAreaPts(0);
                 };
             }, [areaMode]);
+
+            // ── Radius mode: click on map to set center ──────────────────────
+            useEffect(() => {
+                radiusModeRef.current = radiusMode;
+                const map = mapInstanceRef.current;
+                if (!map || !radiusMode) return;
+                map.getContainer().classList.add('measuring');
+                function onClick(e) {
+                    setRadiusCenter(e.latlng);
+                    setRadiusMode(false);
+                }
+                function onKey(e) {
+                    if (e.key === 'Escape') {
+                        setRadiusMode(false);
+                        setRadiusCenter(null);
+                    }
+                }
+                map.on('click', onClick);
+                document.addEventListener('keydown', onKey);
+                return () => {
+                    map.off('click', onClick);
+                    document.removeEventListener('keydown', onKey);
+                    map.getContainer().classList.remove('measuring');
+                };
+            }, [radiusMode]);
+
+            // ── Radius result: draw circle + render result modal whenever
+            //     center or radius change. Aggregates permits whose plan/tama38
+            //     centroid sits within the circle, then renders KPI breakdown.
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                const ref = radiusRef.current;
+                if (ref.circle) { try { map.removeLayer(ref.circle); } catch(e) {} ref.circle = null; }
+                if (ref.marker) { try { map.removeLayer(ref.marker); } catch(e) {} ref.marker = null; }
+                const prev = document.getElementById('radius-select-result');
+                if (prev) prev.remove();
+                if (!radiusCenter) return;
+                ref.circle = L.circle(radiusCenter, {
+                    radius: radiusMeters, color: '#9c27b0', weight: 2,
+                    fillColor: '#9c27b0', fillOpacity: 0.10, dashArray: '6,4'
+                }).addTo(map);
+                ref.marker = L.circleMarker(radiusCenter, {
+                    radius: 4, color: '#9c27b0', fillColor: '#9c27b0', fillOpacity: 1
+                }).addTo(map);
+
+                const gd = geoDataRef.current;
+                if (!gd || !gd.plans) return;
+
+                // Find plans whose centroid lies within the radius
+                function polyCentroid(geom) {
+                    if (!geom || !geom.coordinates) return null;
+                    let coords;
+                    try {
+                        if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                        else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                        else return null;
+                    } catch (ex) { return null; }
+                    if (!coords || !coords.length) return null;
+                    let cx = 0, cy = 0, n = 0;
+                    for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                    if (n === 0) return null;
+                    return L.latLng(cy / n, cx / n);
+                }
+
+                const planMatches = [];
+                const seenTaba = new Set();
+                gd.plans.features.forEach(f => {
+                    const p = f.properties || {};
+                    const taba = String(p.taba || '').trim();
+                    if (!taba || seenTaba.has(taba)) return;
+                    const planType = (p.plan_type || '').trim();
+                    if (planType === 'תשתיות' || planType === 'מוסתר') return;
+                    const c = polyCentroid(f.geometry);
+                    if (!c) return;
+                    if (radiusCenter.distanceTo(c) > radiusMeters) return;
+                    const permits = getPermitsForTaba(taba);
+                    if (permits.length === 0) return;
+                    seenTaba.add(taba);
+                    const planUnits = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add);
+                    const scopeKey = 'plan:' + taba;
+                    const inclusion = getEffectivePermitInclusion(permits, scopeKey, planUnits);
+                    const includedUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
+                    planMatches.push({ taba, props: p, permits, inclusion, includedUnits });
+                });
+
+                const tamaMatches = [];
+                if (gd.tama38 && gd.tama38.features) {
+                    gd.tama38.features.forEach(f => {
+                        const p = f.properties || {};
+                        const fid = p.fid;
+                        if (fid == null || fid === '') return;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let lat, lng;
+                        try {
+                            if (geom.type === 'Point') { lng = geom.coordinates[0]; lat = geom.coordinates[1]; }
+                            else if (geom.type === 'MultiPoint') { lng = geom.coordinates[0][0]; lat = geom.coordinates[0][1]; }
+                            else return;
+                        } catch (ex) { return; }
+                        if (radiusCenter.distanceTo(L.latLng(lat, lng)) > radiusMeters) return;
+                        const permits = getPermitsForTama38(fid);
+                        if (permits.length === 0) return;
+                        const planUnits = parsePlanUnits(p.units_tose);
+                        const scopeKey = 'tama:' + fid;
+                        const inclusion = getEffectivePermitInclusion(permits, scopeKey, planUnits);
+                        const includedUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
+                        tamaMatches.push({ fid, props: p, permits, inclusion, includedUnits });
+                    });
+                }
+
+                // Aggregate: total permits, total counted units, breakdown by stage and category
+                const allRows = [];
+                const stageAgg = { pre_licensing: { count: 0, units: 0 }, licensing: { count: 0, units: 0 }, in_construction: { count: 0, units: 0 }, done: { count: 0, units: 0 } };
+                const catAgg = {};
+                let totalPermits = 0, totalIncludedPermits = 0, totalIncludedUnits = 0;
+                function addPermit(p, included, scope) {
+                    totalPermits++;
+                    if (included) totalIncludedPermits++;
+                    const stage = getPermitStage(p);
+                    const cat = classifyPermitCategory(p);
+                    const u = Number(p.units) || 0;
+                    if (included) {
+                        if (stageAgg[stage]) { stageAgg[stage].count++; stageAgg[stage].units += u; }
+                        if (!catAgg[cat]) catAgg[cat] = { count: 0, units: 0 };
+                        catAgg[cat].count++; catAgg[cat].units += u;
+                        totalIncludedUnits += u;
+                    }
+                    allRows.push({
+                        scope, file: p.file_number || '', status: p.status || '', date: p.status_date || '',
+                        units: u, included, stage, cat, desc: p.request_description || ''
+                    });
+                }
+                planMatches.forEach(m => m.permits.forEach((p, i) => addPermit(p, m.inclusion[i], 'תב"ע ' + (m.props.plan_summary || m.props.plan_name || m.taba))));
+                tamaMatches.forEach(m => m.permits.forEach((p, i) => addPermit(p, m.inclusion[i], 'תמ"א 38 ' + (m.props.address || m.fid))));
+
+                window.__radiusExportData = allRows;
+
+                function colorBox(c) { return '<span style="display:inline-block;width:10px;height:10px;background:' + c + ';border-radius:2px;margin-left:4px;vertical-align:middle"></span>'; }
+                const stageHtml = PERMIT_STAGES_ALL.map(st => {
+                    const a = stageAgg[st];
+                    if (!a || (a.count === 0 && a.units === 0)) return '';
+                    const col = getPermitStageColor(st);
+                    return '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">' +
+                        '<span>' + colorBox(col) + getPermitStageLabel(st) + '</span>' +
+                        '<span style="color:#aaa">' + a.count + ' היתרים · <b style="color:#fff">' + a.units + '</b> יח"ד</span></div>';
+                }).filter(Boolean).join('');
+                const catHtml = Object.entries(catAgg).sort((a, b) => b[1].units - a[1].units).map(([cat, a]) => {
+                    return '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px">' +
+                        '<span>' + getPermitCategoryIcon(cat) + ' ' + getPermitCategoryLabel(cat) + '</span>' +
+                        '<span style="color:#aaa">' + a.count + ' · <b style="color:#fff">' + a.units + '</b> יח"ד</span></div>';
+                }).join('');
+
+                const div = document.createElement('div');
+                div.id = 'radius-select-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:24px;border-radius:14px;border:2px solid #9c27b0;direction:rtl;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                const totalProjects = planMatches.length + tamaMatches.length;
+                div.innerHTML = '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '<h3 id="radius-result-title" contenteditable="true" style="color:#9c27b0;margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה">היתרים ברדיוס</h3>' +
+                    '<div style="font-size:11px;color:#888;margin-bottom:10px">מרכז: ' + radiusCenter.lat.toFixed(5) + ', ' + radiusCenter.lng.toFixed(5) + '</div>' +
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px;background:#1a1a2e;border-radius:6px">' +
+                    '<label style="font-size:12px;color:#aaa">רדיוס:</label>' +
+                    '<input id="radius-input" type="range" min="50" max="3000" step="50" value="' + radiusMeters + '" style="flex:1">' +
+                    '<input id="radius-input-num" type="number" min="50" max="3000" step="50" value="' + radiusMeters + '" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">' +
+                    '<span style="font-size:11px;color:#888">מטר</span>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:18px;margin-bottom:14px;justify-content:space-around">' +
+                    '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + totalProjects + '</div><div style="font-size:11px;color:#aaa">פרוייקטים</div></div>' +
+                    '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#5dade2">' + totalIncludedPermits + '</div><div style="font-size:11px;color:#aaa">היתרים פעילים</div><div style="font-size:9px;color:#666">מתוך ' + totalPermits + '</div></div>' +
+                    '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#4CAF50">' + totalIncludedUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד מצטברות</div></div>' +
+                    '</div>' +
+                    (stageHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח שלב:</div>' + stageHtml + '</div>' : '') +
+                    (catHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סוג:</div>' + catHtml + '</div>' : '') +
+                    (totalProjects === 0 ? '<div style="text-align:center;color:#888;font-size:12px;padding:18px">לא נמצאו פרוייקטים עם היתרים ברדיוס זה</div>' : '') +
+                    '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
+                    '<button id="radius-export-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' +
+                    '<button id="radius-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+
+                document.getElementById('radius-close-btn').addEventListener('click', () => {
+                    setRadiusCenter(null);
+                });
+                const slider = document.getElementById('radius-input');
+                const numInput = document.getElementById('radius-input-num');
+                slider.addEventListener('input', e => { numInput.value = e.target.value; });
+                slider.addEventListener('change', e => { setRadiusMeters(Number(e.target.value)); });
+                numInput.addEventListener('change', e => {
+                    const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
+                    slider.value = v; setRadiusMeters(v);
+                });
+                document.getElementById('radius-export-csv').addEventListener('click', () => {
+                    const rows = window.__radiusExportData || [];
+                    const title = document.getElementById('radius-result-title')?.textContent || 'היתרים ברדיוס';
+                    const cols = ['פרוייקט', 'מס\' היתר', 'סטטוס', 'שלב', 'סוג', 'תאריך', 'יח"ד', 'נכלל', 'תיאור'];
+                    const csv = [cols.join(',')].concat(rows.map(r => [
+                        r.scope, r.file, r.status, getPermitStageLabel(r.stage), getPermitCategoryLabel(r.cat),
+                        r.date, r.units, r.included ? 'כן' : 'לא', r.desc
+                    ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/\s+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+                document.getElementById('radius-print').addEventListener('click', () => {
+                    const el = document.getElementById('radius-select-result');
+                    if (!el) return;
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + (document.getElementById('radius-result-title')?.textContent || 'היתרים ברדיוס') + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0}button,input{display:none!important}</style></head><body>');
+                    win.document.write(el.innerHTML);
+                    win.document.write('</body></html>');
+                    win.document.close();
+                    win.print();
+                });
+            }, [radiusCenter, radiusMeters]);
 
             // ── Tree area: analyze plans inside polygon for tree-survey aggregation ──
             useEffect(() => {
@@ -8700,6 +8925,114 @@
                 if (status.includes('נדונה') || status.includes('בתהליך')) return '#4ba1f0';
                 return '#5dade2';
             }
+            // ─── Permit lifecycle stages (4 stages, derived from raw status + heuristics) ──
+            // No "in_construction" field exists in source data, so we infer from request_type
+            // keywords (digging/demolition/prep work imply active work) and date math (issued
+            // permit between 6mo–3yr ago → likely under construction).
+            const PERMIT_STAGE_PRE = 'pre_licensing';
+            const PERMIT_STAGE_LIC = 'licensing';
+            const PERMIT_STAGE_EXEC = 'in_construction';
+            const PERMIT_STAGE_DONE = 'done';
+            const PERMIT_EXEC_KEYWORDS = ['חפירה', 'דיפון', 'הריסה', 'עבודות מקדימות', 'ביסוס'];
+            function parsePermitDate(s) {
+                if (!s) return null;
+                const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (!m) return null;
+                const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+                return isNaN(d.getTime()) ? null : d;
+            }
+            function getPermitStage(p) {
+                const s = (p && p.status || '').trim();
+                if (!s) return PERMIT_STAGE_PRE;
+                if (s.includes('נסגר') || s.includes('בוטל')) return PERMIT_STAGE_DONE;
+                // Issued permits — split by date heuristic + request type
+                if (s.includes('הופק') || s.includes('הוצא היתר')) {
+                    const rt = (p.request_type || '') + ' ' + (p.request_description || '');
+                    if (PERMIT_EXEC_KEYWORDS.some(kw => rt.includes(kw))) return PERMIT_STAGE_EXEC;
+                    const d = parsePermitDate(p.status_date);
+                    if (d) {
+                        const now = new Date();
+                        const monthsAgo = (now - d) / (1000 * 60 * 60 * 24 * 30.44);
+                        if (monthsAgo >= 6 && monthsAgo <= 36) return PERMIT_STAGE_EXEC;
+                        if (monthsAgo > 36) return PERMIT_STAGE_DONE;
+                    }
+                    return PERMIT_STAGE_EXEC;
+                }
+                if (s.includes('היתר בני') || s.includes('בעתידה') || s.includes('בתוקף')) return PERMIT_STAGE_LIC;
+                if (s.includes('אושר') || s.includes('טיוטת')) return PERMIT_STAGE_LIC;
+                if (s.includes('בביצוע') || s.includes('בנייה')) return PERMIT_STAGE_EXEC;
+                if (s.includes('נדונה') || s.includes('בתהליך') || s.includes('נפתח') || s.includes('הגשה')) return PERMIT_STAGE_PRE;
+                return PERMIT_STAGE_PRE;
+            }
+            function getPermitStageLabel(stage) {
+                if (stage === PERMIT_STAGE_PRE) return 'טרום-רישוי';
+                if (stage === PERMIT_STAGE_LIC) return 'ברישוי';
+                if (stage === PERMIT_STAGE_EXEC) return 'בביצוע';
+                if (stage === PERMIT_STAGE_DONE) return 'גמור';
+                return stage;
+            }
+            function getPermitStageColor(stage) {
+                if (stage === PERMIT_STAGE_PRE) return '#f56e05';
+                if (stage === PERMIT_STAGE_LIC) return '#4ba1f0';
+                if (stage === PERMIT_STAGE_EXEC) return '#4a69d1';
+                if (stage === PERMIT_STAGE_DONE) return '#888';
+                return '#5dade2';
+            }
+            // ─── Permit category (request type classification) ────────────────
+            const PERMIT_CAT_BNIYA = 'bniya_chadasha';
+            const PERMIT_CAT_TOSEFET = 'tosefet';
+            const PERMIT_CAT_CHAFIRA = 'chafira_difun';
+            const PERMIT_CAT_HARISA = 'harisa';
+            const PERMIT_CAT_SHIPUTS = 'shiputs';
+            const PERMIT_CAT_TAMA38 = 'tama38';
+            const PERMIT_CAT_TASHTIT = 'tashtit';
+            const PERMIT_CAT_ACHER = 'acher';
+            function classifyPermitCategory(p) {
+                if (!p) return PERMIT_CAT_ACHER;
+                if (p.tama_type) return PERMIT_CAT_TAMA38;
+                const text = ((p.request_type || '') + ' ' + (p.request_description || '')).trim();
+                if (!text) return PERMIT_CAT_ACHER;
+                const hasUnits = (Number(p.units) || 0) > 0;
+                if (text.includes('תמ"א 38') || text.includes('תמא 38')) return PERMIT_CAT_TAMA38;
+                // Real construction takes precedence over prep-work keywords when units > 0:
+                // demo+rebuild and digging-with-units permits describe actual buildings, not
+                // standalone infrastructure work (matches the existing units>0 carve-out in
+                // PERMIT_INFRA_KEYWORDS exclusion).
+                if (hasUnits) {
+                    if (text.includes('תוספת') || text.includes('הרחבה') || text.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
+                    if (text.includes('הקמת') || text.includes('בניה') || text.includes('בנייה') || text.includes('רישוי בניה')) return PERMIT_CAT_BNIYA;
+                    return PERMIT_CAT_BNIYA;
+                }
+                if (text.includes('חפירה') || text.includes('דיפון') || text.includes('ביסוס')) return PERMIT_CAT_CHAFIRA;
+                if (text.includes('הריסה')) return PERMIT_CAT_HARISA;
+                if (text.includes('תוספת') || text.includes('הרחבה') || text.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
+                if (text.includes('שיפוץ') || text.includes('שינויים פנימיים') || text.includes('עיצוב')) return PERMIT_CAT_SHIPUTS;
+                if (text.includes('תשתית') || text.includes('כביש') || text.includes('רכבת')) return PERMIT_CAT_TASHTIT;
+                if (text.includes('בניה') || text.includes('בנייה') || text.includes('רישוי בניה')) return PERMIT_CAT_BNIYA;
+                return PERMIT_CAT_ACHER;
+            }
+            function getPermitCategoryLabel(cat) {
+                if (cat === PERMIT_CAT_BNIYA) return 'בנייה חדשה';
+                if (cat === PERMIT_CAT_TOSEFET) return 'תוספת';
+                if (cat === PERMIT_CAT_CHAFIRA) return 'חפירה ודיפון';
+                if (cat === PERMIT_CAT_HARISA) return 'הריסה';
+                if (cat === PERMIT_CAT_SHIPUTS) return 'שיפוץ';
+                if (cat === PERMIT_CAT_TAMA38) return 'תמ"א 38';
+                if (cat === PERMIT_CAT_TASHTIT) return 'תשתית';
+                return 'אחר';
+            }
+            function getPermitCategoryIcon(cat) {
+                if (cat === PERMIT_CAT_BNIYA) return '🏗️';
+                if (cat === PERMIT_CAT_TOSEFET) return '➕';
+                if (cat === PERMIT_CAT_CHAFIRA) return '⛏️';
+                if (cat === PERMIT_CAT_HARISA) return '💥';
+                if (cat === PERMIT_CAT_SHIPUTS) return '🔧';
+                if (cat === PERMIT_CAT_TAMA38) return '🏢';
+                if (cat === PERMIT_CAT_TASHTIT) return '🛣️';
+                return '📄';
+            }
+            const PERMIT_STAGES_ALL = [PERMIT_STAGE_PRE, PERMIT_STAGE_LIC, PERMIT_STAGE_EXEC, PERMIT_STAGE_DONE];
+            const PERMIT_CATS_ALL = [PERMIT_CAT_BNIYA, PERMIT_CAT_TOSEFET, PERMIT_CAT_CHAFIRA, PERMIT_CAT_HARISA, PERMIT_CAT_SHIPUTS, PERMIT_CAT_TAMA38, PERMIT_CAT_TASHTIT, PERMIT_CAT_ACHER];
             function getBestPermitStatus(permits) {
                 const priority = ['הופק', 'היתר בני', 'אושר', 'בביצוע', 'בנייה', 'נדונה', 'בתהליך', 'נפתח'];
                 let best = null;
@@ -8893,12 +9226,18 @@
                 html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
                     const sc = getPermitStatusColor(p.status);
+                    const stage = getPermitStage(p);
+                    const stageColor = getPermitStageColor(stage);
+                    const stageLabel = getPermitStageLabel(stage);
+                    const cat = classifyPermitCategory(p);
+                    const catLabel = getPermitCategoryLabel(cat);
+                    const catIcon = getPermitCategoryIcon(cat);
                     const unitsStr = p.units ? p.units + ' יח"ד' : '';
                     const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
                     const checked = inclusion[i];
                     const oKey = permitOverrideKey(p, i, scopeKey);
                     const u = Number(p.units) || 0;
-                    html += `<div class="permit-row" data-permit-units="${u}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
+                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
                     html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
                     html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
                     html += `</label>`;
@@ -8906,11 +9245,12 @@
                     html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
                     const permitUrl = p.file_number ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(p.file_number) + '&SystemCode=26400046' : '';
                     html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
-                    html += `<div style="display:flex;gap:4px;align-items:center">`;
+                    html += `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">`;
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
-                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px">${p.status || '-'}</span>`;
+                    html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
+                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
                     html += `</div></div>`;
-                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr}</div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catIcon} ${catLabel}</span></div>`;
                     if (p.request_description) {
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
@@ -10497,6 +10837,50 @@
                                 <span className="toolbar-label">דוחות</span>
                             </button>
 
+                            {/* ══ היתרים ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${(radiusMode || radiusCenter || showPermitsBySub || showPermitsGap) ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'permits' ? null : 'permits'); }}
+                                title="היתרים — ניתוח רדיוס, תת-שכונה, השוואה לתב&quot;ע"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <path d="M9 14l2 2 4-4"/>
+                                </svg>
+                                <span className="toolbar-label">{radiusMode ? 'בחר נקודה...' : 'היתרים ▾'}</span>
+                            </button>
+                            {activeDropdown === 'permits' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className={`toolbar-dropdown-item ${(radiusMode || radiusCenter) ? 'sub-active' : ''}`} data-tip="קליק על נקודה — היתרים ויח&quot;ד ברדיוס נבחר" onClick={() => {
+                                        if (radiusCenter) { setRadiusCenter(null); }
+                                        setRadiusMode(prev => !prev);
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" strokeDasharray="3 3"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="12" x2="20" y2="6"/></svg>
+                                        <span className="sub-label">{radiusMode ? 'בחר נקודה...' : 'רדיוס'}</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${showPermitsBySub ? 'sub-active' : ''}`} data-tip="פילוח שלב + יח&quot;ד לכל תת-שכונה" onClick={() => {
+                                        setPermitsBySubDrilldown(null);
+                                        setShowPermitsBySub(true);
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 12h6M9 16h6"/></svg>
+                                        <span className="sub-label">תת-שכונה</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${showPermitsGap ? 'sub-active' : ''}`} data-tip="פערים בין יח&quot;ד מאושרות ליח&quot;ד בהיתרים" onClick={() => {
+                                        setPermitsGapDrilldown(null);
+                                        setShowPermitsGap(true);
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                        <span className="sub-label">מול תב"ע</span>
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
                             {/* ══ ניתוח כללי ══ */}
                             <div style={{position:'relative'}}>
                             <button
@@ -11489,6 +11873,13 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }}>
+                                                <span className="report-icon">🏘️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים לפי תת-שכונה</span>
+                                                    <span className="report-desc">פילוח שלב + יח"ד לכל תת-שכונה</span>
+                                                </div>
+                                            </button>
                                             <div className="reports-menu-item" onClick={(e) => {
                                                 if (e.target.tagName === 'SELECT') return;
                                                 setShowReportsMenu(false);
@@ -11583,6 +11974,17 @@
                                                 <div className="report-text">
                                                     <span className="report-title">סיכום אזור נבחר</span>
                                                     <span className="report-desc">ציור פוליגון וסיכום תכניות בתוכו</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setRadiusCenter(null);
+                                                setRadiusMode(true);
+                                            }}>
+                                                <span className="report-icon">⊙</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים ברדיוס</span>
+                                                    <span className="report-desc">קליק על נקודה — סיכום היתרים ויח"ד ברדיוס נבחר</span>
                                                 </div>
                                             </button>
                                         </div>
@@ -11921,6 +12323,207 @@
                                             <div style={{flex:1}}></div>
                                             <div style={{fontSize:11,color:'#9ca3af',alignSelf:'center'}}>💡 לחצו על שורה לפרטי היתרים</div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* ── Permits-by-Sub-Neighborhood Report ── */}
+                    {showPermitsBySub && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans || !window.__allPermits) {
+                            return (
+                                <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                        <div className="units-header">
+                                            <h2>🏘️ היתרים לפי תת-שכונה</h2>
+                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                        </div>
+                                        <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים...</p></div></div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        // Aggregate: per sub_neighborhood × stage × {count, units, permits[]}
+                        const bySub = {}; // { subName: { stage: {count, units, permits[]}, total: ..., minahak: '' } }
+                        const seenTaba = new Set();
+                        gd.plans.features.forEach(f => {
+                            const p = f.properties || {};
+                            const taba = String(p.taba || '').trim();
+                            if (!taba || seenTaba.has(taba)) return;
+                            const planType = (p.plan_type || '').trim();
+                            if (planType === 'תשתיות' || planType === 'מוסתר') return;
+                            const permits = getPermitsForTaba(taba);
+                            if (permits.length === 0) return;
+                            seenTaba.add(taba);
+                            const sub = (p.sub_neighborhood || p.neighborhood || 'לא ידוע').trim() || 'לא ידוע';
+                            const minahak = (p.minahak || '').trim();
+                            if (!bySub[sub]) {
+                                bySub[sub] = { minahak, total: { count: 0, units: 0 }, plans: 0 };
+                                PERMIT_STAGES_ALL.forEach(st => bySub[sub][st] = { count: 0, units: 0, permits: [] });
+                            }
+                            bySub[sub].plans++;
+                            const planUnits = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add);
+                            const inclusion = getEffectivePermitInclusion(permits, 'plan:' + taba, planUnits);
+                            permits.forEach((perm, i) => {
+                                if (!inclusion[i]) return;
+                                const stage = getPermitStage(perm);
+                                const u = Number(perm.units) || 0;
+                                bySub[sub][stage].count++;
+                                bySub[sub][stage].units += u;
+                                bySub[sub][stage].permits.push({
+                                    file: perm.file_number || '',
+                                    status: perm.status || '',
+                                    date: perm.status_date || '',
+                                    units: u,
+                                    desc: perm.request_description || '',
+                                    cat: classifyPermitCategory(perm),
+                                    plan: p.plan_summary || p.plan_name || taba,
+                                    taba
+                                });
+                                bySub[sub].total.count++;
+                                bySub[sub].total.units += u;
+                            });
+                        });
+                        const subs = Object.entries(bySub)
+                            .map(([name, data]) => ({ name, ...data }))
+                            .filter(s => s.total.count > 0)
+                            .sort((a, b) => b.total.units - a.total.units);
+
+                        // Drilldown table
+                        if (permitsBySubDrilldown) {
+                            const { sub, stage } = permitsBySubDrilldown;
+                            const data = bySub[sub];
+                            const stagePermits = data && data[stage] ? data[stage].permits : [];
+                            return (
+                                <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(900px,95vw)'}}>
+                                        <div className="units-header">
+                                            <button className="units-back-btn" onClick={() => setPermitsBySubDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
+                                            <h2>{sub} — {getPermitStageLabel(stage)} ({stagePermits.length} היתרים, {data[stage].units} יח"ד)</h2>
+                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                        </div>
+                                        <div className="units-body" style={{padding:0}}>
+                                            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                                <thead>
+                                                    <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0}}>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תב"ע</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>היתר</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>סטטוס</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תאריך</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'left',borderBottom:'1px solid #333'}}>יח"ד</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>סוג</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תיאור</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {stagePermits.sort((a,b) => b.units - a.units).map((p, i) => (
+                                                        <tr key={i} style={{borderBottom:'1px solid #222'}}>
+                                                            <td style={{padding:'6px',color:'#aaa'}}>{p.plan}</td>
+                                                            <td style={{padding:'6px',direction:'ltr',color:'#5dade2'}}>{p.file}</td>
+                                                            <td style={{padding:'6px'}}>{p.status}</td>
+                                                            <td style={{padding:'6px',color:'#888'}}>{p.date}</td>
+                                                            <td style={{padding:'6px',textAlign:'left',fontWeight:'bold'}}>{p.units}</td>
+                                                            <td style={{padding:'6px'}}>{getPermitCategoryIcon(p.cat)} {getPermitCategoryLabel(p.cat)}</td>
+                                                            <td style={{padding:'6px',color:'#888',fontSize:11}}>{p.desc.substring(0, 80)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // Main table view
+                        function exportSubReport() {
+                            const cols = ['תת-שכונה', 'מינהל', 'תב"עות'].concat(PERMIT_STAGES_ALL.flatMap(st => [getPermitStageLabel(st) + ' היתרים', getPermitStageLabel(st) + ' יח"ד']), ['סה"כ היתרים', 'סה"כ יח"ד']);
+                            const rows = subs.map(s => [
+                                s.name, s.minahak, s.plans
+                            ].concat(PERMIT_STAGES_ALL.flatMap(st => [s[st].count, s[st].units]))
+                              .concat([s.total.count, s.total.units]));
+                            const csv = [cols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'היתרים_לפי_תת-שכונה.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        }
+                        function printSubReport() {
+                            const win = window.open('', '_blank');
+                            const rowsHtml = subs.map(s => '<tr><td>' + s.name + '</td><td>' + s.minahak + '</td><td>' + s.plans + '</td>' +
+                                PERMIT_STAGES_ALL.map(st => '<td>' + s[st].count + ' / ' + s[st].units + '</td>').join('') +
+                                '<td><b>' + s.total.count + '</b></td><td><b>' + s.total.units + '</b></td></tr>').join('');
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים לפי תת-שכונה</title>' +
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#9c27b0}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}</style></head><body>');
+                            win.document.write('<h2>היתרים לפי תת-שכונה — ' + new Date().toLocaleDateString('he-IL') + '</h2>');
+                            win.document.write('<table><thead><tr><th>תת-שכונה</th><th>מינהל</th><th>תב"עות</th>' +
+                                PERMIT_STAGES_ALL.map(st => '<th>' + getPermitStageLabel(st) + '<br>(היתרים / יח"ד)</th>').join('') +
+                                '<th>סה"כ היתרים</th><th>סה"כ יח"ד</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>');
+                            win.document.write('</body></html>');
+                            win.document.close(); win.print();
+                        }
+                        return (
+                            <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1100px,95vw)'}}>
+                                    <div className="units-header">
+                                        <h2>🏘️ היתרים לפי תת-שכונה ({subs.length} תת-שכונות)</h2>
+                                        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                                            <button onClick={exportSubReport} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
+                                            <button onClick={printSubReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                        </div>
+                                    </div>
+                                    <div className="units-body" style={{padding:0}}>
+                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                            <thead>
+                                                <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0,zIndex:1}}>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>מינהל</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>תב"עות</th>
+                                                    {PERMIT_STAGES_ALL.map(st => (
+                                                        <th key={st} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:getPermitStageColor(st)}}>{getPermitStageLabel(st)}<br/><span style={{fontSize:10,color:'#666'}}>היתרים / יח"ד</span></th>
+                                                    ))}
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה"כ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {subs.map(s => (
+                                                    <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
+                                                        <td style={{padding:'6px',fontWeight:'bold'}}>{s.name}</td>
+                                                        <td style={{padding:'6px',color:'#aaa',fontSize:11}}>{s.minahak}</td>
+                                                        <td style={{padding:'6px',textAlign:'center',color:'#888'}}>{s.plans}</td>
+                                                        {PERMIT_STAGES_ALL.map(st => {
+                                                            const cell = s[st];
+                                                            const empty = cell.count === 0;
+                                                            return (
+                                                                <td key={st} onClick={() => empty ? null : setPermitsBySubDrilldown({ sub: s.name, stage: st })}
+                                                                    style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#444':getPermitStageColor(st),background:empty?'transparent':'rgba(255,255,255,0.02)'}}
+                                                                    title={empty ? '' : 'הצג היתרים'}>
+                                                                    {empty ? '—' : (cell.count + ' / ' + cell.units)}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                        <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total.count} / {s.total.units}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                    <td style={{padding:'8px'}} colSpan={3}>סה"כ</td>
+                                                    {PERMIT_STAGES_ALL.map(st => {
+                                                        const total = subs.reduce((acc, s) => ({ count: acc.count + s[st].count, units: acc.units + s[st].units }), { count: 0, units: 0 });
+                                                        return <td key={st} style={{padding:'8px',textAlign:'center',color:getPermitStageColor(st)}}>{total.count} / {total.units}</td>;
+                                                    })}
+                                                    <td style={{padding:'8px',textAlign:'center',color:'#fff'}}>
+                                                        {subs.reduce((s, x) => s + x.total.count, 0)} / {subs.reduce((s, x) => s + x.total.units, 0)}
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
