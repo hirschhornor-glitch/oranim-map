@@ -11699,7 +11699,23 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 1000}}>
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPermitsGapDrilldown(null)}>→ חזרה</button>
-                                            <h2>📋 היתרים לתב"ע {row.plan_name}</h2>
+                                            <h2>📋 היתרים לתב"ע <span title="לחצו לזום לתב״ע במפה" style={{color:'#8ecae6',textDecoration:'underline',cursor:'pointer'}} onClick={() => {
+                                                const gd = geoDataRef.current;
+                                                let feat = row.feature;
+                                                if ((!feat || !feat.geometry) && gd && gd.plans) {
+                                                    feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === row.taba);
+                                                }
+                                                setShowPermitsGap(false); setPermitsGapDrilldown(null);
+                                                setTimeout(() => {
+                                                    const map = mapInstanceRef.current;
+                                                    if (!map || !feat || !feat.geometry) return;
+                                                    try {
+                                                        map.invalidateSize();
+                                                        const b = L.geoJSON(feat).getBounds();
+                                                        if (b.isValid()) map.fitBounds(b, { padding: [40,40], maxZoom: 17, animate: true });
+                                                    } catch(e) { console.warn('[permits-gap zoom] failed:', e); }
+                                                }, 150);
+                                            }}>{row.plan_name}</span> 🗺️</h2>
                                             <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body">
@@ -11776,27 +11792,6 @@
                                                     </button>
                                                     <span style={{fontSize:11,color:'#9ca3af',flex:1,textAlign:'left'}}>עמודה AP ב-GS ({row.reason ? 'מלא' : 'ריק'}). נשמר גם מקומית.</span>
                                                 </div>
-                                            </div>
-                                            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:14}}>
-                                                <button onClick={() => {
-                                                    // Resolve feature before closing modal (row reference may become stale)
-                                                    const gd = geoDataRef.current;
-                                                    let feat = row.feature;
-                                                    if ((!feat || !feat.geometry) && gd && gd.plans) {
-                                                        feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === row.taba);
-                                                    }
-                                                    setShowPermitsGap(false); setPermitsGapDrilldown(null);
-                                                    // Fit after overlay is gone so map has correct size
-                                                    setTimeout(() => {
-                                                        const map = mapInstanceRef.current;
-                                                        if (!map || !feat || !feat.geometry) return;
-                                                        try {
-                                                            map.invalidateSize();
-                                                            const b = L.geoJSON(feat).getBounds();
-                                                            if (b.isValid()) map.fitBounds(b, { padding: [40,40], maxZoom: 17, animate: true });
-                                                        } catch(e) { console.warn('[permits-gap zoom] failed:', e); }
-                                                    }, 150);
-                                                }} style={{background:'#4a69d1',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',cursor:'pointer',fontSize:13,fontWeight:600}}>🗺️ זום לתב"ע במפה</button>
                                             </div>
                                         </div>
                                     </div>
