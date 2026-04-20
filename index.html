@@ -11658,14 +11658,13 @@
                                             <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body">
-                                            <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20}}>
-                                                <div><strong>שם:</strong> {row.plan_summary || '—'}</div>
-                                                <div><strong>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong>סטטוס:</strong> {row.status_mavat || '—'}</div>
-                                                <div><strong>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}</div>
-                                                <div><strong>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#e94560',fontWeight:700} : {}}>{fmt(row.unitsInPermits)}</span></div>
-                                                <div><strong>פער:</strong> {fmt(row.gap)}</div>
-                                                {isOver(row) && <div style={{color:'#e94560',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
+                                            <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
+                                                <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
+                                                <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
+                                                <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
+                                                {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
                                             </div>
                                             <table className="units-table">
                                                 <thead>
