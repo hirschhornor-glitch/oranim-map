@@ -9011,38 +9011,40 @@
                 const rt = p.request_type || '';
                 const desc = p.request_description || '';
                 if (!rt && !desc) return PERMIT_CAT_ACHER;
-                // TAMA 38 wins regardless of where it appears
-                if (rt.includes('תמ"א 38') || rt.includes('תמא 38') || desc.includes('תמ"א 38') || desc.includes('תמא 38')) return PERMIT_CAT_TAMA38;
-                // Priority match on request_type (highest signal). When multi-valued
-                // (comma-separated), the first matching keyword in priority order wins —
-                // most-impactful first so e.g. "הריסה, בניה חדשה" → bniya_chadasha.
-                if (rt) {
-                    if (rt.includes('בניה חדשה') || rt.includes('בנייה חדשה') || rt.includes('בניין חדש')) return PERMIT_CAT_BNIYA;
-                    if (rt.includes('תוספת בניה') || rt.includes('תוספת בנייה') || rt.includes('הרחבה לבניין') || rt.includes('תוספת יח')) return PERMIT_CAT_TOSEFET;
-                    if (rt.includes('שימוש חורג')) return PERMIT_CAT_SHIMUSH;
-                    if (rt.includes('תוכנית שינויים') || rt.includes('שינויים ללא תוספת') || rt.includes('שינוי בפתחי')) return PERMIT_CAT_SHINUYIM;
-                    if (rt.includes('עבודות בדרכים')) return PERMIT_CAT_DRACHIM;
-                    if (rt.includes('חפירה ומילוי') || rt.includes('חפירה ודיפון')) return PERMIT_CAT_CHAFIRA;
-                    if (rt.includes('עבודות הריסה')) return PERMIT_CAT_HARISA;
-                    if (rt.includes('חידוש היתר') || rt.includes('הסרת סכנה') || rt.includes('מבנה ארעי') || rt.includes('מנ"ד')) return PERMIT_CAT_TACHZUKA;
-                    if (rt.includes('ממ"ד') || rt.includes('מחסן') || rt.includes('מרפסת') || rt.includes('גדר') || rt.includes('מעלית')) return PERMIT_CAT_MIVNE;
-                }
-                // Fallback: heuristic from description (covers the 58% with empty
-                // request_type). Real construction wins when units > 0 to avoid
-                // misclassifying pinui-binui demo+rebuild as harisa/chafira.
+                // Search both סוג בקשה (request_type) AND מהות הבקשה (request_description)
+                // — YK staff often put the actual category in either field, so we look at
+                // the combined text. Priority order = most-impactful first, so multi-valued
+                // permits like "הריסה, בניה חדשה" resolve to bniya_chadasha.
+                const text = rt + ' ' + desc;
+                if (text.includes('תמ"א 38') || text.includes('תמא 38')) return PERMIT_CAT_TAMA38;
+                if (text.includes('בניה חדשה') || text.includes('בנייה חדשה') || text.includes('בניין חדש')) return PERMIT_CAT_BNIYA;
+                if (text.includes('תוספת בניה') || text.includes('תוספת בנייה') || text.includes('הרחבה לבניין') || text.includes('תוספת יח')) return PERMIT_CAT_TOSEFET;
+                if (text.includes('שימוש חורג')) return PERMIT_CAT_SHIMUSH;
+                // Spelling variants: תוכנית / תכנית
+                if (text.includes('תוכנית שינויים') || text.includes('תכנית שינויים') || text.includes('שינויים ללא תוספת') || text.includes('שינוי בפתחי')) return PERMIT_CAT_SHINUYIM;
+                if (text.includes('עבודות בדרכים') || text.includes('הארכת רחוב') || text.includes('פתיחת רחוב')) return PERMIT_CAT_DRACHIM;
+                if (text.includes('חפירה ומילוי') || text.includes('חפירה ודיפון')) return PERMIT_CAT_CHAFIRA;
+                if (text.includes('עבודות הריסה')) return PERMIT_CAT_HARISA;
+                if (text.includes('חידוש היתר') || text.includes('הסרת סכנה') || text.includes('מבנה ארעי') || text.includes('מנ"ד')) return PERMIT_CAT_TACHZUKA;
+                if (text.includes('ממ"ד') || text.includes('מחסן') || text.includes('מרפסת') || text.includes('גדר') || text.includes('מעלית')) return PERMIT_CAT_MIVNE;
+                // Looser heuristic fallback for permits where neither field uses an
+                // official term. Stem-prefix matching handles Hebrew construct forms
+                // (הריס catches הריסה/הריסת, הרחב catches הרחבה/הרחבת, תוספ catches
+                // תוספת/תוספות). Real construction wins when units > 0.
                 const hasUnits = (Number(p.units) || 0) > 0;
                 if (hasUnits) {
-                    if (desc.includes('תוספת') || desc.includes('הרחבה') || desc.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
-                    if (desc.includes('הקמת') || desc.includes('בניה') || desc.includes('בנייה')) return PERMIT_CAT_BNIYA;
+                    if (text.includes('תוספ') || text.includes('הרחב') || text.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
+                    if (text.includes('הקמת') || text.includes('בניה') || text.includes('בנייה')) return PERMIT_CAT_BNIYA;
                     return PERMIT_CAT_BNIYA;
                 }
-                if (desc.includes('חפירה') || desc.includes('דיפון') || desc.includes('ביסוס')) return PERMIT_CAT_CHAFIRA;
-                if (desc.includes('הריסה')) return PERMIT_CAT_HARISA;
-                if (desc.includes('שימוש חורג')) return PERMIT_CAT_SHIMUSH;
-                if (desc.includes('שינויים פנימיים') || desc.includes('שינוי בפתחי')) return PERMIT_CAT_SHINUYIM;
-                if (desc.includes('כביש') || desc.includes('רכבת') || desc.includes('דרך')) return PERMIT_CAT_DRACHIM;
-                if (desc.includes('הסרת סכנה') || desc.includes('חידוש היתר')) return PERMIT_CAT_TACHZUKA;
-                if (desc.includes('ממ"ד') || desc.includes('מחסן') || desc.includes('מרפסת') || desc.includes('מעלית')) return PERMIT_CAT_MIVNE;
+                if (text.includes('חפירה') || text.includes('דיפון') || text.includes('ביסוס')) return PERMIT_CAT_CHAFIRA;
+                if (text.includes('הריס')) return PERMIT_CAT_HARISA;
+                if (text.includes('הרחב') || text.includes('תוספ')) return PERMIT_CAT_TOSEFET;
+                if (text.includes('בקשת שינויים')) return PERMIT_CAT_SHINUYIM;
+                if (text.includes('כביש') || text.includes('רכבת') || text.includes('דרך')) return PERMIT_CAT_DRACHIM;
+                // Non-residential construction (commercial/office/parking/utility) —
+                // no units field but the description describes a building project.
+                if (text.includes('הקמת') || text.includes('בניית') || text.includes('היתר בניה')) return PERMIT_CAT_BNIYA;
                 return PERMIT_CAT_ACHER;
             }
             function getPermitCategoryLabel(cat) {
