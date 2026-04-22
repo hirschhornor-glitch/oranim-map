@@ -5141,7 +5141,7 @@
                 }).filter(Boolean).join('');
                 const catHtml = Object.entries(catAgg).sort((a, b) => b[1].units - a[1].units).map(([cat, a]) => {
                     return '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px">' +
-                        '<span>' + getPermitCategoryIcon(cat) + ' ' + getPermitCategoryLabel(cat) + '</span>' +
+                        '<span>' + getPermitCategoryLabel(cat) + '</span>' +
                         '<span style="color:#aaa">' + a.count + ' · <b style="color:#fff">' + a.units + '</b> יח"ד</span></div>';
                 }).join('');
 
@@ -9060,19 +9060,6 @@
                 if (cat === PERMIT_CAT_TACHZUKA) return 'תחזוקה/בטיחות';
                 return 'אחר';
             }
-            function getPermitCategoryIcon(cat) {
-                if (cat === PERMIT_CAT_BNIYA)    return '🏗️';
-                if (cat === PERMIT_CAT_TOSEFET)  return '➕';
-                if (cat === PERMIT_CAT_HARISA)   return '💥';
-                if (cat === PERMIT_CAT_CHAFIRA)  return '⛏️';
-                if (cat === PERMIT_CAT_TAMA38)   return '🏢';
-                if (cat === PERMIT_CAT_SHINUYIM) return '📝';
-                if (cat === PERMIT_CAT_SHIMUSH)  return '⚠️';
-                if (cat === PERMIT_CAT_DRACHIM)  return '🛣️';
-                if (cat === PERMIT_CAT_MIVNE)    return '🚪';
-                if (cat === PERMIT_CAT_TACHZUKA) return '🔧';
-                return '📄';
-            }
             const PERMIT_STAGES_ALL = [PERMIT_STAGE_PRE, PERMIT_STAGE_LIC, PERMIT_STAGE_EXEC, PERMIT_STAGE_DONE];
             const PERMIT_CATS_ALL = [
                 PERMIT_CAT_BNIYA, PERMIT_CAT_TOSEFET, PERMIT_CAT_HARISA, PERMIT_CAT_CHAFIRA,
@@ -9277,7 +9264,6 @@
                     const stageLabel = getPermitStageLabel(stage);
                     const cat = classifyPermitCategory(p);
                     const catLabel = getPermitCategoryLabel(cat);
-                    const catIcon = getPermitCategoryIcon(cat);
                     const unitsStr = p.units ? p.units + ' יח"ד' : '';
                     const tamaStr = p.tama_type ? ` | ${p.tama_type}` : '';
                     const checked = inclusion[i];
@@ -9296,7 +9282,7 @@
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
                     html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
                     html += `</div></div>`;
-                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catIcon} ${catLabel}</span></div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
                     if (p.request_description) {
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
@@ -12483,7 +12469,7 @@
                                                             <td style={{padding:'6px',color:'#e0e0e0'}}>{p.status}</td>
                                                             <td style={{padding:'6px',color:'#c9c9d9'}}>{p.date}</td>
                                                             <td style={{padding:'6px',textAlign:'left',fontWeight:'bold',color:'#fff'}}>{p.units}</td>
-                                                            <td style={{padding:'6px',color:'#fff'}}>{getPermitCategoryIcon(p.cat)} <span style={{color:'#fff'}}>{getPermitCategoryLabel(p.cat)}</span></td>
+                                                            <td style={{padding:'6px',color:'#fff'}}>{getPermitCategoryLabel(p.cat)}</td>
                                                             <td style={{padding:'6px',color:'#c9c9d9',fontSize:11}}>{p.desc.substring(0, 80)}</td>
                                                         </tr>
                                                     ))}
@@ -12560,7 +12546,7 @@
                                                         textDecoration: on ? 'none' : 'line-through',
                                                         opacity: on ? 1 : 0.6
                                                     }}>
-                                                        {getPermitCategoryIcon(cat)} {getPermitCategoryLabel(cat)}
+                                                        {getPermitCategoryLabel(cat)}
                                                     </button>
                                                 );
                                             })}
