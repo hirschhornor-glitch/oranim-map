@@ -5105,7 +5105,8 @@
 
                 // Aggregate: total permits, total counted units, breakdown by stage and category
                 const allRows = [];
-                const stageAgg = { pre_licensing: { count: 0, units: 0 }, licensing: { count: 0, units: 0 }, in_construction: { count: 0, units: 0 }, done: { count: 0, units: 0 } };
+                const stageAgg = {};
+                PERMIT_STAGES_ALL.forEach(st => { stageAgg[st] = { count: 0, units: 0 }; });
                 const catAgg = {};
                 let totalPermits = 0, totalIncludedPermits = 0, totalIncludedUnits = 0;
                 function addPermit(p, included, scope) {
@@ -5115,7 +5116,8 @@
                     const cat = classifyPermitCategory(p);
                     const u = Number(p.units) || 0;
                     if (included) {
-                        if (stageAgg[stage]) { stageAgg[stage].count++; stageAgg[stage].units += u; }
+                        if (!stageAgg[stage]) stageAgg[stage] = { count: 0, units: 0 };
+                        stageAgg[stage].count++; stageAgg[stage].units += u;
                         if (!catAgg[cat]) catAgg[cat] = { count: 0, units: 0 };
                         catAgg[cat].count++; catAgg[cat].units += u;
                         totalIncludedUnits += u;
@@ -5131,18 +5133,21 @@
                 window.__radiusExportData = allRows;
 
                 function colorBox(c) { return '<span style="display:inline-block;width:10px;height:10px;background:' + c + ';border-radius:2px;margin-left:4px;vertical-align:middle"></span>'; }
+                // Each breakdown row carries a data-drill attribute; clicking it
+                // swaps in a drill-down table of underlying permits (file numbers,
+                // statuses, units etc).
                 const stageHtml = PERMIT_STAGES_ALL.map(st => {
                     const a = stageAgg[st];
                     if (!a || (a.count === 0 && a.units === 0)) return '';
                     const col = getPermitStageColor(st);
-                    return '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">' +
+                    return '<div data-drill="stage:' + st + '" style="display:flex;justify-content:space-between;padding:4px 6px;margin:0 -6px;font-size:12px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">' +
                         '<span>' + colorBox(col) + getPermitStageLabel(st) + '</span>' +
-                        '<span style="color:#aaa">' + a.count + ' היתרים · <b style="color:#fff">' + a.units + '</b> יח"ד</span></div>';
+                        '<span style="color:#aaa">' + a.count + ' היתרים · <b style="color:#fff">' + a.units + '</b> יח"ד <span style="color:#666">›</span></span></div>';
                 }).filter(Boolean).join('');
                 const catHtml = Object.entries(catAgg).sort((a, b) => b[1].units - a[1].units).map(([cat, a]) => {
-                    return '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px">' +
+                    return '<div data-drill="cat:' + cat + '" style="display:flex;justify-content:space-between;padding:3px 6px;margin:0 -6px;font-size:11px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">' +
                         '<span>' + getPermitCategoryLabel(cat) + '</span>' +
-                        '<span style="color:#aaa">' + a.count + ' · <b style="color:#fff">' + a.units + '</b> יח"ד</span></div>';
+                        '<span style="color:#aaa">' + a.count + ' · <b style="color:#fff">' + a.units + '</b> יח"ד <span style="color:#666">›</span></span></div>';
                 }).join('');
 
                 const div = document.createElement('div');
@@ -5175,17 +5180,75 @@
                 document.getElementById('radius-close-btn').addEventListener('click', () => {
                     setRadiusCenter(null);
                 });
-                const slider = document.getElementById('radius-input');
-                const numInput = document.getElementById('radius-input-num');
-                slider.addEventListener('input', e => { numInput.value = e.target.value; });
-                slider.addEventListener('change', e => { setRadiusMeters(Number(e.target.value)); });
-                numInput.addEventListener('change', e => {
-                    const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
-                    slider.value = v; setRadiusMeters(v);
+                // Stash the rendered HTML so the drill-down's "back" can restore it.
+                const summaryHtml = div.innerHTML;
+                // Delegated drill-down handler — swaps modal content with permit list
+                // when the user clicks a stage or category breakdown row.
+                div.addEventListener('click', (ev) => {
+                    const drillEl = ev.target.closest('[data-drill]');
+                    if (!drillEl) return;
+                    const [kind, key] = drillEl.dataset.drill.split(':');
+                    const matched = allRows.filter(r => r.included && (kind === 'stage' ? r.stage === key : r.cat === key));
+                    const title = kind === 'stage' ? getPermitStageLabel(key) : getPermitCategoryLabel(key);
+                    const sumUnits = matched.reduce((s, r) => s + (Number(r.units) || 0), 0);
+                    const rowsHtml = matched.sort((a, b) => b.units - a.units).map(r => {
+                        const stCol = getPermitStageColor(r.stage);
+                        const url = r.file ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(r.file) + '&SystemCode=26400046' : '';
+                        const fileCell = url
+                            ? '<a href="' + url + '" target="_blank" rel="noopener" style="color:#5dade2;direction:ltr;text-decoration:none">' + r.file + '</a>'
+                            : '<span style="color:#888;direction:ltr">' + (r.file || '-') + '</span>';
+                        const stageBadge = '<span style="background:' + stCol + '22;color:' + stCol + ';border:1px solid ' + stCol + ';padding:1px 6px;border-radius:8px;font-size:10px">' + getPermitStageLabel(r.stage) + '</span>';
+                        const catLabel = getPermitCategoryLabel(r.cat);
+                        return '<tr style="border-bottom:1px solid #222">' +
+                            '<td style="padding:5px 6px;color:#cfcfdf;font-size:11px">' + r.scope + '</td>' +
+                            '<td style="padding:5px 6px;font-size:11px">' + fileCell + '</td>' +
+                            '<td style="padding:5px 6px;text-align:left;color:#fff;font-weight:bold;font-size:12px">' + (r.units || '') + '</td>' +
+                            (kind === 'stage' ? '<td style="padding:5px 6px;color:#e0e0e0;font-size:11px">' + catLabel + '</td>' : '<td style="padding:5px 6px">' + stageBadge + '</td>') +
+                            '<td style="padding:5px 6px;color:#aaa;font-size:10px">' + r.date + '</td>' +
+                            '</tr>';
+                    }).join('');
+                    div.innerHTML =
+                        '<button id="radius-back-btn" style="background:none;border:none;color:#9c27b0;font-size:13px;cursor:pointer;padding:0 0 8px;font-family:inherit">← חזרה</button>' +
+                        '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '<h3 style="color:#9c27b0;margin:0 0 4px;font-size:15px">' + title + '</h3>' +
+                        '<div style="font-size:11px;color:#888;margin-bottom:10px">' + matched.length + ' היתרים · ' + sumUnits.toLocaleString() + ' יח"ד</div>' +
+                        '<div style="overflow-x:auto;max-height:60vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e0e0e0">' +
+                        '<thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' +
+                        '<th style="padding:6px;text-align:right">פרוייקט</th>' +
+                        '<th style="padding:6px;text-align:right">מס\' היתר</th>' +
+                        '<th style="padding:6px;text-align:left">יח"ד</th>' +
+                        (kind === 'stage' ? '<th style="padding:6px;text-align:right">סוג</th>' : '<th style="padding:6px;text-align:right">שלב</th>') +
+                        '<th style="padding:6px;text-align:right">תאריך</th>' +
+                        '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+                    document.getElementById('radius-back-btn').addEventListener('click', () => {
+                        div.innerHTML = summaryHtml;
+                        attachSummaryHandlers();
+                    });
+                    document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
                 });
-                document.getElementById('radius-export-csv').addEventListener('click', () => {
+                function attachSummaryHandlers() {
+                    document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
+                    const slider2 = document.getElementById('radius-input');
+                    const numInput2 = document.getElementById('radius-input-num');
+                    if (slider2) {
+                        slider2.addEventListener('input', e => { numInput2.value = e.target.value; });
+                        slider2.addEventListener('change', e => { setRadiusMeters(Number(e.target.value)); });
+                    }
+                    if (numInput2) {
+                        numInput2.addEventListener('change', e => {
+                            const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
+                            slider2.value = v; setRadiusMeters(v);
+                        });
+                    }
+                    const csvBtn = document.getElementById('radius-export-csv');
+                    if (csvBtn) csvBtn.addEventListener('click', exportRadiusCsv);
+                    const printBtn = document.getElementById('radius-print');
+                    if (printBtn) printBtn.addEventListener('click', printRadius);
+                }
+                function exportRadiusCsv() {
                     const rows = window.__radiusExportData || [];
-                    const title = document.getElementById('radius-result-title')?.textContent || 'היתרים ברדיוס';
+                    const titleEl = document.getElementById('radius-result-title');
+                    const title = (titleEl ? titleEl.textContent : '') || 'היתרים ברדיוס';
                     const cols = ['פרוייקט', 'מס\' היתר', 'סטטוס', 'שלב', 'סוג', 'תאריך', 'יח"ד', 'נכלל', 'תיאור'];
                     const csv = [cols.join(',')].concat(rows.map(r => [
                         r.scope, r.file, r.status, getPermitStageLabel(r.stage), getPermitCategoryLabel(r.cat),
@@ -5197,18 +5260,29 @@
                     a.href = url; a.download = title.replace(/\s+/g, '_') + '.csv';
                     document.body.appendChild(a); a.click(); a.remove();
                     URL.revokeObjectURL(url);
-                });
-                document.getElementById('radius-print').addEventListener('click', () => {
+                }
+                function printRadius() {
                     const el = document.getElementById('radius-select-result');
                     if (!el) return;
                     const win = window.open('', '_blank');
-                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + (document.getElementById('radius-result-title')?.textContent || 'היתרים ברדיוס') + '</title>');
+                    const titleEl = document.getElementById('radius-result-title');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + ((titleEl ? titleEl.textContent : '') || 'היתרים ברדיוס') + '</title>');
                     win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0}button,input{display:none!important}</style></head><body>');
                     win.document.write(el.innerHTML);
                     win.document.write('</body></html>');
                     win.document.close();
                     win.print();
+                }
+                const slider = document.getElementById('radius-input');
+                const numInput = document.getElementById('radius-input-num');
+                slider.addEventListener('input', e => { numInput.value = e.target.value; });
+                slider.addEventListener('change', e => { setRadiusMeters(Number(e.target.value)); });
+                numInput.addEventListener('change', e => {
+                    const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
+                    slider.value = v; setRadiusMeters(v);
                 });
+                document.getElementById('radius-export-csv').addEventListener('click', exportRadiusCsv);
+                document.getElementById('radius-print').addEventListener('click', printRadius);
             }, [radiusCenter, radiusMeters]);
 
             // ── Tree area: analyze plans inside polygon for tree-survey aggregation ──
@@ -6924,7 +6998,7 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf/tree
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
                                 if (treeModeRef.current) return;
@@ -7560,7 +7634,7 @@
                         style: () => ({ fillColor: '#8B4513', fillOpacity: 0.8, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 const allShavaz = findOverlappingShavaz(e.latlng);
                                 if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: false });
                                 openShavazPopup(allShavaz, e.latlng, 0);
@@ -8018,7 +8092,7 @@
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 const allShavaz = findOverlappingShavaz(e.latlng);
                                 if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: true });
                                 openShavazPopup(allShavaz, e.latlng, 0);
@@ -8076,7 +8150,7 @@
                         }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
                                     .setLatLng(layer.getLatLng())
                                     .setContent(buildShavazPopup(f.properties, true, false, null, true));
@@ -8217,7 +8291,7 @@
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
                             layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 // Build mosad popup (styled like plans popup)
                                 let html = '<div>';
                                 html += `<div class="popup-header" style="border-bottom:3px solid #27ae60"><div class="popup-header-title">${name}</div>`;
@@ -8291,7 +8365,7 @@
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
                             layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 const status = (p['סטטוס פרויקט'] || '').trim();
                                 const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
@@ -8719,7 +8793,7 @@
                             layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
                             // Click opens plan popup
                             layer.on('click', (e) => {
-                                if (areaModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current) return;
                                 const mapped = mapPlanProps(f.properties);
                                 const content = buildPlanPopup(mapped, { properties: mapped }, null);
                                 L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
@@ -8865,7 +8939,7 @@
                                 else if (emp > 0) tip += `<br><span style="font-size:10px">תעסוקה: ${emp.toLocaleString('he-IL')} מ"ר</span>`;
                                 layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
                                 layer.on('click', (e) => {
-                                    if (areaModeRef.current) return;
+                                    if (areaModeRef.current || radiusModeRef.current) return;
                                     const mapped = mapPlanProps(f.properties);
                                     const content = buildPlanPopup(mapped, { properties: mapped }, null);
                                     L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
@@ -13117,8 +13191,8 @@
                                                 title="לחץ לזום לתכנית"
                                             >
                                                 <td style={{padding:'6px 8px',textAlign:'right'}}>
-                                                    <div style={{color:'#e0e0e0',fontWeight:500}}>{p.plan_name_he || p.plan_summary || p.plan_name}</div>
-                                                    <div style={{color:'#666',fontSize:10}}>{p.plan_name}</div>
+                                                    <div style={{color:'#e0e0e0',fontWeight:500}}>{p.plan_summary || p.plan_name}</div>
+                                                    {p.plan_summary && <div style={{color:'#666',fontSize:10}}>{p.plan_name}</div>}
                                                 </td>
                                                 {cols.map(c => <td key={c.h} style={{textAlign:'center',padding:'6px 8px'}}>{c.get(p) ? Math.round(c.get(p)).toLocaleString('he-IL') : '-'}</td>)}
                                                 <td style={{textAlign:'center',padding:'6px 8px',fontSize:10}}>{p.status_mavat}</td>
