@@ -8931,56 +8931,39 @@
                 if (status.includes('נדונה') || status.includes('בתהליך')) return '#4ba1f0';
                 return '#5dade2';
             }
-            // ─── Permit lifecycle stages (4 stages, derived from raw status + heuristics) ──
-            // No "in_construction" field exists in source data, so we infer from request_type
-            // keywords (digging/demolition/prep work imply active work) and date math (issued
-            // permit between 6mo–3yr ago → likely under construction).
+            // ─── Permit lifecycle stages — purely status-driven (no heuristics) ──
+            // 4 stages mapped deterministically from the raw status field. Previously
+            // we tried to infer "in_construction" from request_type keywords and
+            // status_date age — that was unreliable and got removed. Now "issued"
+            // covers any permit that has been issued (we can't know from the data
+            // whether it's actually being built, so we don't guess).
             const PERMIT_STAGE_PRE = 'pre_licensing';
             const PERMIT_STAGE_LIC = 'licensing';
-            const PERMIT_STAGE_EXEC = 'in_construction';
+            const PERMIT_STAGE_ISSUED = 'issued';
             const PERMIT_STAGE_DONE = 'done';
-            const PERMIT_EXEC_KEYWORDS = ['חפירה', 'דיפון', 'הריסה', 'עבודות מקדימות', 'ביסוס'];
-            function parsePermitDate(s) {
-                if (!s) return null;
-                const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (!m) return null;
-                const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
-                return isNaN(d.getTime()) ? null : d;
-            }
+            // Kept for backward compat — older code references this as the third stage.
+            const PERMIT_STAGE_EXEC = PERMIT_STAGE_ISSUED;
             function getPermitStage(p) {
                 const s = (p && p.status || '').trim();
                 if (!s) return PERMIT_STAGE_PRE;
                 if (s.includes('נסגר') || s.includes('בוטל')) return PERMIT_STAGE_DONE;
-                // Issued permits — split by date heuristic + request type
-                if (s.includes('הופק') || s.includes('הוצא היתר')) {
-                    const rt = (p.request_type || '') + ' ' + (p.request_description || '');
-                    if (PERMIT_EXEC_KEYWORDS.some(kw => rt.includes(kw))) return PERMIT_STAGE_EXEC;
-                    const d = parsePermitDate(p.status_date);
-                    if (d) {
-                        const now = new Date();
-                        const monthsAgo = (now - d) / (1000 * 60 * 60 * 24 * 30.44);
-                        if (monthsAgo >= 6 && monthsAgo <= 36) return PERMIT_STAGE_EXEC;
-                        if (monthsAgo > 36) return PERMIT_STAGE_DONE;
-                    }
-                    return PERMIT_STAGE_EXEC;
-                }
+                if (s.includes('הופק') || s.includes('הוצא היתר')) return PERMIT_STAGE_ISSUED;
                 if (s.includes('היתר בני') || s.includes('בעתידה') || s.includes('בתוקף')) return PERMIT_STAGE_LIC;
                 if (s.includes('אושר') || s.includes('טיוטת')) return PERMIT_STAGE_LIC;
-                if (s.includes('בביצוע') || s.includes('בנייה')) return PERMIT_STAGE_EXEC;
                 if (s.includes('נדונה') || s.includes('בתהליך') || s.includes('נפתח') || s.includes('הגשה')) return PERMIT_STAGE_PRE;
                 return PERMIT_STAGE_PRE;
             }
             function getPermitStageLabel(stage) {
                 if (stage === PERMIT_STAGE_PRE) return 'טרום-רישוי';
                 if (stage === PERMIT_STAGE_LIC) return 'ברישוי';
-                if (stage === PERMIT_STAGE_EXEC) return 'בביצוע';
-                if (stage === PERMIT_STAGE_DONE) return 'גמור';
+                if (stage === PERMIT_STAGE_ISSUED) return 'הופק היתר';
+                if (stage === PERMIT_STAGE_DONE) return 'סגור/בוטל';
                 return stage;
             }
             function getPermitStageColor(stage) {
                 if (stage === PERMIT_STAGE_PRE) return '#f56e05';
                 if (stage === PERMIT_STAGE_LIC) return '#4ba1f0';
-                if (stage === PERMIT_STAGE_EXEC) return '#4a69d1';
+                if (stage === PERMIT_STAGE_ISSUED) return '#50d25a';
                 if (stage === PERMIT_STAGE_DONE) return '#888';
                 return '#5dade2';
             }
