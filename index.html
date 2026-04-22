@@ -5212,20 +5212,52 @@
                         '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                         '<h3 style="color:#9c27b0;margin:0 0 4px;font-size:15px">' + title + '</h3>' +
                         '<div style="font-size:11px;color:#888;margin-bottom:10px">' + matched.length + ' היתרים · ' + sumUnits.toLocaleString() + ' יח"ד</div>' +
-                        '<div style="overflow-x:auto;max-height:60vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e0e0e0">' +
+                        '<div style="overflow-x:auto;max-height:55vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e0e0e0">' +
                         '<thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' +
                         '<th style="padding:6px;text-align:right">פרוייקט</th>' +
                         '<th style="padding:6px;text-align:right">מס\' היתר</th>' +
                         '<th style="padding:6px;text-align:left">יח"ד</th>' +
                         (kind === 'stage' ? '<th style="padding:6px;text-align:right">סוג</th>' : '<th style="padding:6px;text-align:right">שלב</th>') +
                         '<th style="padding:6px;text-align:right">תאריך</th>' +
-                        '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+                        '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' +
+                        '<div style="border-top:1px solid #333;padding-top:10px;margin-top:8px;display:flex;gap:8px;justify-content:center">' +
+                        '<button id="radius-drill-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' +
+                        '<button id="radius-drill-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה / PDF</button>' +
+                        '</div>';
                     document.getElementById('radius-back-btn').addEventListener('click', () => {
                         div.innerHTML = summaryHtml;
                         attachSummaryHandlers();
                     });
                     document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
+                    document.getElementById('radius-drill-csv').addEventListener('click', () => exportDrillCsv(matched, title, kind));
+                    document.getElementById('radius-drill-print').addEventListener('click', () => printDrill(title, matched.length, sumUnits));
                 });
+                function exportDrillCsv(rows, title, kind) {
+                    const cols = ['פרוייקט', 'מס\' היתר', 'סטטוס', kind === 'stage' ? 'סוג' : 'שלב', 'תאריך', 'יח"ד', 'תיאור'];
+                    const csv = [cols.join(',')].concat(rows.map(r => [
+                        r.scope, r.file, r.status,
+                        kind === 'stage' ? getPermitCategoryLabel(r.cat) : getPermitStageLabel(r.stage),
+                        r.date, r.units, r.desc
+                    ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = ('היתרים_ברדיוס_' + title).replace(/[^\w\u0590-\u05FF]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                }
+                function printDrill(title, count, units) {
+                    const el = document.getElementById('radius-select-result');
+                    if (!el) return;
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים ברדיוס — ' + title + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0;margin:0 0 4px}button,input{display:none!important}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}a{color:#1a5276;text-decoration:none}</style>');
+                    win.document.write('</head><body>');
+                    win.document.write(el.innerHTML);
+                    win.document.write('</body></html>');
+                    win.document.close();
+                    win.print();
+                }
                 function attachSummaryHandlers() {
                     document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
                     const slider2 = document.getElementById('radius-input');
