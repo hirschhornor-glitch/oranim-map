@@ -3335,7 +3335,11 @@
             const [showPermitsBySub, setShowPermitsBySub] = useState(false);
             const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
             const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
-            const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set(['bniya_chadasha', 'tosefet', 'chafira_difun', 'harisa', 'shiputs', 'tama38', 'tashtit', 'acher']));
+            const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set([
+                'bniya_chadasha', 'tosefet', 'harisa', 'chafira_milui',
+                'tama38', 'shinuyim', 'shimush_chorech', 'drachim',
+                'mivne_nilve', 'tachzukah', 'acher'
+            ]));
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
@@ -8980,61 +8984,99 @@
                 if (stage === PERMIT_STAGE_DONE) return '#888';
                 return '#5dade2';
             }
-            // ─── Permit category (request type classification) ────────────────
-            const PERMIT_CAT_BNIYA = 'bniya_chadasha';
-            const PERMIT_CAT_TOSEFET = 'tosefet';
-            const PERMIT_CAT_CHAFIRA = 'chafira_difun';
-            const PERMIT_CAT_HARISA = 'harisa';
-            const PERMIT_CAT_SHIPUTS = 'shiputs';
-            const PERMIT_CAT_TAMA38 = 'tama38';
-            const PERMIT_CAT_TASHTIT = 'tashtit';
-            const PERMIT_CAT_ACHER = 'acher';
+            // ─── Permit category — aligned with YK official request_type taxonomy ─
+            // Categories derived from analyzing distinct values of request_type field
+            // in all_permits.json (211 non-empty out of 505 active permits, 57 distinct).
+            // Top YK official labels: "בניה חדשה / בניין חדש", "תוספת בניה / הרחבה
+            // לבניין קיים", "חפירה ומילוי", "עבודות בדרכים", "תמ"א 38 ...",
+            // "תוכנית שינויים", "רישוי בניה/עסקים - שימוש חורג", "עבודות הריסה",
+            // ממ"ד / מחסן / מרפסת / גדר / מעלית, "חידוש היתר", "הסרת סכנה",
+            // "מבנה ארעי / מנ"ד".
+            // For the 294 permits (58%) with empty request_type, we fall back to
+            // keyword heuristics on request_description.
+            const PERMIT_CAT_BNIYA    = 'bniya_chadasha';   // בניה חדשה / בניין חדש
+            const PERMIT_CAT_TOSEFET  = 'tosefet';          // תוספת בניה / הרחבה / תוספת יח"ד
+            const PERMIT_CAT_HARISA   = 'harisa';           // עבודות הריסה
+            const PERMIT_CAT_CHAFIRA  = 'chafira_milui';    // חפירה ומילוי (was חפירה ודיפון — wrong)
+            const PERMIT_CAT_TAMA38   = 'tama38';           // תמ"א 38 הריסה ובניה / תוספות
+            const PERMIT_CAT_SHINUYIM = 'shinuyim';         // תוכנית שינויים / שינויים בפתחים
+            const PERMIT_CAT_SHIMUSH  = 'shimush_chorech';  // רישוי בניה/עסקים — שימוש חורג
+            const PERMIT_CAT_DRACHIM  = 'drachim';          // עבודות בדרכים (was תשתית)
+            const PERMIT_CAT_MIVNE    = 'mivne_nilve';      // ממ"ד / מחסן / מרפסת / גדר / מעלית
+            const PERMIT_CAT_TACHZUKA = 'tachzukah';        // חידוש היתר / הסרת סכנה / מבנה ארעי
+            const PERMIT_CAT_ACHER    = 'acher';            // אחר
             function classifyPermitCategory(p) {
                 if (!p) return PERMIT_CAT_ACHER;
                 if (p.tama_type) return PERMIT_CAT_TAMA38;
-                const text = ((p.request_type || '') + ' ' + (p.request_description || '')).trim();
-                if (!text) return PERMIT_CAT_ACHER;
+                const rt = p.request_type || '';
+                const desc = p.request_description || '';
+                if (!rt && !desc) return PERMIT_CAT_ACHER;
+                // TAMA 38 wins regardless of where it appears
+                if (rt.includes('תמ"א 38') || rt.includes('תמא 38') || desc.includes('תמ"א 38') || desc.includes('תמא 38')) return PERMIT_CAT_TAMA38;
+                // Priority match on request_type (highest signal). When multi-valued
+                // (comma-separated), the first matching keyword in priority order wins —
+                // most-impactful first so e.g. "הריסה, בניה חדשה" → bniya_chadasha.
+                if (rt) {
+                    if (rt.includes('בניה חדשה') || rt.includes('בנייה חדשה') || rt.includes('בניין חדש')) return PERMIT_CAT_BNIYA;
+                    if (rt.includes('תוספת בניה') || rt.includes('תוספת בנייה') || rt.includes('הרחבה לבניין') || rt.includes('תוספת יח')) return PERMIT_CAT_TOSEFET;
+                    if (rt.includes('שימוש חורג')) return PERMIT_CAT_SHIMUSH;
+                    if (rt.includes('תוכנית שינויים') || rt.includes('שינויים ללא תוספת') || rt.includes('שינוי בפתחי')) return PERMIT_CAT_SHINUYIM;
+                    if (rt.includes('עבודות בדרכים')) return PERMIT_CAT_DRACHIM;
+                    if (rt.includes('חפירה ומילוי') || rt.includes('חפירה ודיפון')) return PERMIT_CAT_CHAFIRA;
+                    if (rt.includes('עבודות הריסה')) return PERMIT_CAT_HARISA;
+                    if (rt.includes('חידוש היתר') || rt.includes('הסרת סכנה') || rt.includes('מבנה ארעי') || rt.includes('מנ"ד')) return PERMIT_CAT_TACHZUKA;
+                    if (rt.includes('ממ"ד') || rt.includes('מחסן') || rt.includes('מרפסת') || rt.includes('גדר') || rt.includes('מעלית')) return PERMIT_CAT_MIVNE;
+                }
+                // Fallback: heuristic from description (covers the 58% with empty
+                // request_type). Real construction wins when units > 0 to avoid
+                // misclassifying pinui-binui demo+rebuild as harisa/chafira.
                 const hasUnits = (Number(p.units) || 0) > 0;
-                if (text.includes('תמ"א 38') || text.includes('תמא 38')) return PERMIT_CAT_TAMA38;
-                // Real construction takes precedence over prep-work keywords when units > 0:
-                // demo+rebuild and digging-with-units permits describe actual buildings, not
-                // standalone infrastructure work (matches the existing units>0 carve-out in
-                // PERMIT_INFRA_KEYWORDS exclusion).
                 if (hasUnits) {
-                    if (text.includes('תוספת') || text.includes('הרחבה') || text.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
-                    if (text.includes('הקמת') || text.includes('בניה') || text.includes('בנייה') || text.includes('רישוי בניה')) return PERMIT_CAT_BNIYA;
+                    if (desc.includes('תוספת') || desc.includes('הרחבה') || desc.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
+                    if (desc.includes('הקמת') || desc.includes('בניה') || desc.includes('בנייה')) return PERMIT_CAT_BNIYA;
                     return PERMIT_CAT_BNIYA;
                 }
-                if (text.includes('חפירה') || text.includes('דיפון') || text.includes('ביסוס')) return PERMIT_CAT_CHAFIRA;
-                if (text.includes('הריסה')) return PERMIT_CAT_HARISA;
-                if (text.includes('תוספת') || text.includes('הרחבה') || text.includes('סגירת מרפסת')) return PERMIT_CAT_TOSEFET;
-                if (text.includes('שיפוץ') || text.includes('שינויים פנימיים') || text.includes('עיצוב')) return PERMIT_CAT_SHIPUTS;
-                if (text.includes('תשתית') || text.includes('כביש') || text.includes('רכבת')) return PERMIT_CAT_TASHTIT;
-                if (text.includes('בניה') || text.includes('בנייה') || text.includes('רישוי בניה')) return PERMIT_CAT_BNIYA;
+                if (desc.includes('חפירה') || desc.includes('דיפון') || desc.includes('ביסוס')) return PERMIT_CAT_CHAFIRA;
+                if (desc.includes('הריסה')) return PERMIT_CAT_HARISA;
+                if (desc.includes('שימוש חורג')) return PERMIT_CAT_SHIMUSH;
+                if (desc.includes('שינויים פנימיים') || desc.includes('שינוי בפתחי')) return PERMIT_CAT_SHINUYIM;
+                if (desc.includes('כביש') || desc.includes('רכבת') || desc.includes('דרך')) return PERMIT_CAT_DRACHIM;
+                if (desc.includes('הסרת סכנה') || desc.includes('חידוש היתר')) return PERMIT_CAT_TACHZUKA;
+                if (desc.includes('ממ"ד') || desc.includes('מחסן') || desc.includes('מרפסת') || desc.includes('מעלית')) return PERMIT_CAT_MIVNE;
                 return PERMIT_CAT_ACHER;
             }
             function getPermitCategoryLabel(cat) {
-                if (cat === PERMIT_CAT_BNIYA) return 'בנייה חדשה';
-                if (cat === PERMIT_CAT_TOSEFET) return 'תוספת';
-                if (cat === PERMIT_CAT_CHAFIRA) return 'חפירה ודיפון';
-                if (cat === PERMIT_CAT_HARISA) return 'הריסה';
-                if (cat === PERMIT_CAT_SHIPUTS) return 'שיפוץ';
-                if (cat === PERMIT_CAT_TAMA38) return 'תמ"א 38';
-                if (cat === PERMIT_CAT_TASHTIT) return 'תשתית';
+                if (cat === PERMIT_CAT_BNIYA)    return 'בניה חדשה';
+                if (cat === PERMIT_CAT_TOSEFET)  return 'תוספת בניה';
+                if (cat === PERMIT_CAT_HARISA)   return 'הריסה';
+                if (cat === PERMIT_CAT_CHAFIRA)  return 'חפירה ומילוי';
+                if (cat === PERMIT_CAT_TAMA38)   return 'תמ"א 38';
+                if (cat === PERMIT_CAT_SHINUYIM) return 'תוכנית שינויים';
+                if (cat === PERMIT_CAT_SHIMUSH)  return 'שימוש חורג';
+                if (cat === PERMIT_CAT_DRACHIM)  return 'עבודות בדרכים';
+                if (cat === PERMIT_CAT_MIVNE)    return 'מבנה נלווה';
+                if (cat === PERMIT_CAT_TACHZUKA) return 'תחזוקה/בטיחות';
                 return 'אחר';
             }
             function getPermitCategoryIcon(cat) {
-                if (cat === PERMIT_CAT_BNIYA) return '🏗️';
-                if (cat === PERMIT_CAT_TOSEFET) return '➕';
-                if (cat === PERMIT_CAT_CHAFIRA) return '⛏️';
-                if (cat === PERMIT_CAT_HARISA) return '💥';
-                if (cat === PERMIT_CAT_SHIPUTS) return '🔧';
-                if (cat === PERMIT_CAT_TAMA38) return '🏢';
-                if (cat === PERMIT_CAT_TASHTIT) return '🛣️';
+                if (cat === PERMIT_CAT_BNIYA)    return '🏗️';
+                if (cat === PERMIT_CAT_TOSEFET)  return '➕';
+                if (cat === PERMIT_CAT_HARISA)   return '💥';
+                if (cat === PERMIT_CAT_CHAFIRA)  return '⛏️';
+                if (cat === PERMIT_CAT_TAMA38)   return '🏢';
+                if (cat === PERMIT_CAT_SHINUYIM) return '📝';
+                if (cat === PERMIT_CAT_SHIMUSH)  return '⚠️';
+                if (cat === PERMIT_CAT_DRACHIM)  return '🛣️';
+                if (cat === PERMIT_CAT_MIVNE)    return '🚪';
+                if (cat === PERMIT_CAT_TACHZUKA) return '🔧';
                 return '📄';
             }
             const PERMIT_STAGES_ALL = [PERMIT_STAGE_PRE, PERMIT_STAGE_LIC, PERMIT_STAGE_EXEC, PERMIT_STAGE_DONE];
-            const PERMIT_CATS_ALL = [PERMIT_CAT_BNIYA, PERMIT_CAT_TOSEFET, PERMIT_CAT_CHAFIRA, PERMIT_CAT_HARISA, PERMIT_CAT_SHIPUTS, PERMIT_CAT_TAMA38, PERMIT_CAT_TASHTIT, PERMIT_CAT_ACHER];
+            const PERMIT_CATS_ALL = [
+                PERMIT_CAT_BNIYA, PERMIT_CAT_TOSEFET, PERMIT_CAT_HARISA, PERMIT_CAT_CHAFIRA,
+                PERMIT_CAT_TAMA38, PERMIT_CAT_SHINUYIM, PERMIT_CAT_SHIMUSH, PERMIT_CAT_DRACHIM,
+                PERMIT_CAT_MIVNE, PERMIT_CAT_TACHZUKA, PERMIT_CAT_ACHER
+            ];
             function getBestPermitStatus(permits) {
                 const priority = ['הופק', 'היתר בני', 'אושר', 'בביצוע', 'בנייה', 'נדונה', 'בתהליך', 'נפתח'];
                 let best = null;
