@@ -12597,7 +12597,7 @@
                                                             return (
                                                                 <tr key={r.taba} style={{cursor:'pointer', ...(over ? {background:'#3a1a1a'} : {})}} onClick={() => { setReasonDraft(r.reason || ''); setPermitsGapDrilldown(r); }}>
                                                                     <td>{i+1}{over ? ' ⚠' : ''}</td>
-                                                                    <td style={{fontFamily:'monospace',whiteSpace:'nowrap',color:'#8ecae6',textDecoration:'underline'}}>{r.plan_name}</td>
+                                                                    <td style={{fontFamily:'monospace',color:'#8ecae6',textDecoration:'underline',lineHeight:1.4}}>{r.plan_names && r.plan_names.length > 1 ? r.plan_names.map((n, idx) => <div key={idx} style={{whiteSpace:'nowrap'}}>{n}{idx < r.plan_names.length - 1 ? ' +' : ''}</div>) : <span style={{whiteSpace:'nowrap'}}>{r.plan_name}</span>}</td>
                                                                     <td style={{fontSize:12}}>{r.plan_summary}</td>
                                                                     <td style={{fontSize:12,whiteSpace:'nowrap'}}>{r.minahak}</td>
                                                                     <td>{fmt(r.unitsAdd)}</td>
