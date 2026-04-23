@@ -12228,48 +12228,109 @@
                                 </div>
                             );
                         }
-                        const rows = [];
+                        // Step 1: collect candidates — one per taba, filter out תשתיות/מוסתר, only those with active permits
+                        const candidates = new Map(); // taba -> { props, feature, permits, unitsAdd }
                         const seenTaba = new Set();
                         gd.plans.features.forEach(f => {
                             const p = f.properties || {};
                             const taba = String(p.taba || '').trim();
-                            if (!taba) return;
-                            if (seenTaba.has(taba)) return;
+                            if (!taba || seenTaba.has(taba)) return;
                             seenTaba.add(taba);
-                            // Exclude infrastructure plans (light rail, etc) — they have no
-                            // residential units in the plan but many construction permits
-                            // attached, which would pollute the top of the report.
                             const planType = (p.plan_type || '').trim();
                             if (planType === 'תשתיות' || planType === 'מוסתר') return;
                             const permits = getPermitsForTaba(taba);
                             if (permits.length === 0) return;
-                            const unitsAdd = parseFloat(p.units_add) || 0;
-                            const scopeKey = 'plan:' + taba;
-                            const inclusion = getEffectivePermitInclusion(permits, scopeKey, unitsAdd);
-                            const unitsInPermits = permits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: parseFloat(p.units_add) || 0 });
+                        });
+
+                        // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
+                        const oMap = overlapMapRef.current;
+                        const clusterOf = new Map(); // taba -> clusterId (smallest-taba representative)
+                        const visited = new Set();
+                        candidates.forEach((_, taba) => {
+                            if (visited.has(taba)) return;
+                            // BFS over overlaps, restricted to candidates set
+                            const members = [];
+                            const queue = [taba];
+                            while (queue.length) {
+                                const t = queue.shift();
+                                if (visited.has(t)) continue;
+                                visited.add(t);
+                                members.push(t);
+                                const nbrs = oMap && oMap.get(t);
+                                if (nbrs) nbrs.forEach(nb => { if (!visited.has(nb) && candidates.has(nb)) queue.push(nb); });
+                            }
+                            // representative = primary plan (highest unitsAdd; tiebreak: smallest taba numerically)
+                            const rep = [...members].sort((a, b) => {
+                                const da = candidates.get(a).unitsAdd, db = candidates.get(b).unitsAdd;
+                                if (db !== da) return db - da;
+                                const na = parseInt(a, 10), nb = parseInt(b, 10);
+                                if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+                                return String(a).localeCompare(String(b));
+                            })[0];
+                            members.forEach(m => clusterOf.set(m, rep));
+                        });
+
+                        // Step 3: aggregate candidates into cluster rows
+                        const clusterBuckets = new Map(); // repTaba -> array of {taba, ...}
+                        candidates.forEach((v, taba) => {
+                            const rep = clusterOf.get(taba);
+                            if (!clusterBuckets.has(rep)) clusterBuckets.set(rep, []);
+                            clusterBuckets.get(rep).push({ taba, ...v });
+                        });
+
+                        const rows = [];
+                        clusterBuckets.forEach((members, repTaba) => {
+                            // Sort members: primary first, then by unitsAdd desc
+                            members.sort((a, b) => (a.taba === repTaba ? -1 : b.taba === repTaba ? 1 : (b.unitsAdd - a.unitsAdd)));
+                            const primary = members[0];
+                            const p = primary.props;
+                            // Merged permits — dedup by file_number (same permit might appear under multiple overlapping tabas)
+                            const permitByFn = new Map();
+                            const orphanPermits = []; // permits without file_number
+                            members.forEach(m => {
+                                m.permits.forEach(perm => {
+                                    const fn = perm.file_number;
+                                    if (fn) {
+                                        if (!permitByFn.has(fn)) permitByFn.set(fn, perm);
+                                    } else {
+                                        orphanPermits.push(perm);
+                                    }
+                                });
+                            });
+                            const mergedPermits = [...permitByFn.values(), ...orphanPermits];
+                            const unitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
+                            const tabas = members.map(m => m.taba);
+                            const planNames = members.map(m => m.props.plan_name || m.taba);
+                            const scopeKey = 'cluster:' + [...tabas].sort().join(',');
+                            const inclusion = getEffectivePermitInclusion(mergedPermits, scopeKey, unitsAdd);
+                            const unitsInPermits = mergedPermits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
-                            // gap = permits - plan: positive = permits exceed plan (interesting), negative = plan exceeds permits
                             const gap = unitsInPermits - unitsAdd;
                             const pctDone = unitsAdd > 0 ? (unitsInPermits / unitsAdd * 100) : 0;
                             const reasonFromGS = p.permit_growth_reason || p['סיבת חריגה'] || '';
                             const reasonLocal = (() => {
-                                try { return (JSON.parse(localStorage.getItem('oranim:permitGrowthReasons') || '{}'))[p.plan_name || taba] || ''; }
+                                try { return (JSON.parse(localStorage.getItem('oranim:permitGrowthReasons') || '{}'))[p.plan_name || primary.taba] || ''; }
                                 catch(e) { return ''; }
                             })();
                             const reason = reasonLocal || reasonFromGS;
                             rows.push({
-                                taba,
-                                plan_name: p.plan_name || taba,
+                                taba: primary.taba,            // primary taba (for dedup/drilldown key)
+                                tabas,                          // all tabas in cluster
+                                plan_name: planNames.join(' + '),
+                                plan_names: planNames,          // for drilldown detail
                                 plan_summary: p.plan_summary || p.plan_name_he || '',
                                 status_mavat: p.status_mavat || '',
                                 minahak: p.minahak || '',
                                 unitsAdd, unitsInPermits, gap, pctDone,
-                                permitCount: permits.length,
+                                permitCount: mergedPermits.length,
                                 countedPermits,
-                                permits,
+                                permits: mergedPermits,
                                 inclusion,
                                 scopeKey,
-                                feature: f,
+                                feature: primary.feature,
+                                members,                        // full per-plan details for drilldown
+                                isCluster: members.length > 1,
                                 reason,
                                 reasonFromGS,
                             });
@@ -12344,73 +12405,33 @@
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
                                             </div>
 
-                                            {/* Overlap cluster: plans spatially overlapping this one */}
-                                            {(() => {
-                                                const oMap = overlapMapRef.current;
-                                                if (!oMap || !oMap.size) return null;
-                                                const overlapTabas = oMap.get(row.taba);
-                                                if (!overlapTabas || overlapTabas.size === 0) return null;
-                                                const gd = geoDataRef.current;
-                                                const allPlans = gd && gd.plans ? gd.plans.features : [];
-                                                const cluster = [];
-                                                overlapTabas.forEach(t => {
-                                                    const rr = rows.find(x => x.taba === t);
-                                                    if (rr) {
-                                                        cluster.push({ taba: t, plan_name: rr.plan_name, plan_summary: rr.plan_summary, status_mavat: rr.status_mavat, unitsAdd: rr.unitsAdd, unitsInPermits: rr.unitsInPermits, permitCount: rr.permitCount, hasReport: true });
-                                                    } else {
-                                                        const f = allPlans.find(ff => String(ff.properties.taba || '').trim() === t);
-                                                        if (f) {
-                                                            const p = f.properties;
-                                                            cluster.push({ taba: t, plan_name: p.plan_name || t, plan_summary: p.plan_summary || p.plan_name_he || '', status_mavat: p.status_mavat || '', unitsAdd: parseFloat(p.units_add) || 0, unitsInPermits: 0, permitCount: 0, hasReport: false });
-                                                        }
-                                                    }
-                                                });
-                                                if (cluster.length === 0) return null;
-                                                // Cluster totals (this plan + overlapping ones)
-                                                const clusterTotal = {
-                                                    plans: cluster.length + 1,
-                                                    unitsAdd: cluster.reduce((s,c) => s + c.unitsAdd, 0) + row.unitsAdd,
-                                                    unitsInPermits: cluster.reduce((s,c) => s + c.unitsInPermits, 0) + row.unitsInPermits,
-                                                    permitCount: cluster.reduce((s,c) => s + c.permitCount, 0) + row.permitCount,
-                                                };
-                                                return (
-                                                    <div style={{marginBottom:14, padding:'10px 14px', background:'#1a1f2e', border:'1px solid #3a5a7a', borderRadius:8, fontSize:13, color:'#e0e0ff'}}>
-                                                        <div style={{fontWeight:700, color:'#8ecae6', marginBottom:8, display:'flex', alignItems:'center', gap:8}}>
-                                                            🔗 מקבץ תב"עות באותו מרחב ({cluster.length + 1})
-                                                            <span style={{fontSize:11, color:'#9ca3af', fontWeight:400}}>— סה"כ באזור: {fmt(clusterTotal.unitsAdd)} יח"ד מאושרות · {fmt(clusterTotal.unitsInPermits)} בהיתרים · {clusterTotal.permitCount} היתרים</span>
-                                                        </div>
-                                                        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                                                            {cluster.map(c => (
-                                                                <div key={c.taba} title={c.plan_summary || c.plan_name}
-                                                                    onClick={() => {
-                                                                        if (!c.hasReport) return;
-                                                                        const target = rows.find(x => x.taba === c.taba);
-                                                                        if (target) { setReasonDraft(target.reason || ''); setPermitsGapDrilldown(target); }
-                                                                    }}
-                                                                    style={{
-                                                                        padding:'6px 10px',
-                                                                        background: c.hasReport ? '#2a3f5a' : '#2a2a3a',
-                                                                        border: '1px solid ' + (c.hasReport ? '#4a69d1' : '#444'),
-                                                                        borderRadius:6,
-                                                                        cursor: c.hasReport ? 'pointer' : 'default',
-                                                                        fontSize:12,
-                                                                        opacity: c.hasReport ? 1 : 0.55,
-                                                                        display:'flex',
-                                                                        flexDirection:'column',
-                                                                        gap:2,
-                                                                    }}>
-                                                                    <div style={{fontFamily:'monospace',color: c.hasReport ? '#8ecae6' : '#aaa',fontWeight:600}}>{c.plan_name}</div>
-                                                                    <div style={{fontSize:11,color:'#aaa',maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.plan_summary || c.status_mavat || '—'}</div>
-                                                                    <div style={{fontSize:10,color: c.hasReport ? '#7ab' : '#777'}}>
-                                                                        {c.hasReport ? (fmt(c.unitsAdd) + ' יח"ד · ' + c.permitCount + ' היתרים') : (fmt(c.unitsAdd) + ' יח"ד · ללא היתרים פעילים')}
-                                                                    </div>
-                                                                </div>
+                                            {/* Cluster breakdown: when multiple plans merged, show per-plan contribution */}
+                                            {row.isCluster && (
+                                                <div style={{marginBottom:14, padding:'10px 14px', background:'#1a1f2e', border:'1px solid #3a5a7a', borderRadius:8, fontSize:12, color:'#e0e0ff'}}>
+                                                    <div style={{fontWeight:700, color:'#8ecae6', marginBottom:8}}>🔗 מקבץ של {row.members.length} תב"עות חופפות</div>
+                                                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                                        <thead>
+                                                            <tr style={{color:'#9ca3af',borderBottom:'1px solid #2a3f5a'}}>
+                                                                <th style={{textAlign:'right',padding:'4px'}}>תב"ע</th>
+                                                                <th style={{textAlign:'right',padding:'4px'}}>שם</th>
+                                                                <th style={{textAlign:'center',padding:'4px'}}>יח"ד מאושרות</th>
+                                                                <th style={{textAlign:'center',padding:'4px'}}>היתרים</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {row.members.map(m => (
+                                                                <tr key={m.taba} style={{borderBottom:'1px solid #22304a'}}>
+                                                                    <td style={{fontFamily:'monospace',padding:'4px',color:'#8ecae6'}}>{m.props.plan_name || m.taba}</td>
+                                                                    <td style={{padding:'4px',color:'#c0c0dd'}}>{m.props.plan_summary || m.props.plan_name_he || '—'}</td>
+                                                                    <td style={{textAlign:'center',padding:'4px'}}>{fmt(m.unitsAdd)}</td>
+                                                                    <td style={{textAlign:'center',padding:'4px'}}>{m.permits.length}</td>
+                                                                </tr>
                                                             ))}
-                                                        </div>
-                                                        <div style={{fontSize:10, color:'#777', marginTop:6}}>💡 לחיצה על תב"ע עם היתרים מעבירה לדוח שלה. תב"עות ללא היתרים מוצגות לידיעה בלבד.</div>
-                                                    </div>
-                                                );
-                                            })()}
+                                                        </tbody>
+                                                    </table>
+                                                    <div style={{fontSize:10, color:'#777', marginTop:6}}>💡 יח"ד בהיתרים וסכום חישוב — מאוחדים ברמת המקבץ (היתר שמופיע במספר תב"עות נספר פעם אחת).</div>
+                                                </div>
+                                            )}
 
                                             <table className="units-table">
                                                 <thead>
