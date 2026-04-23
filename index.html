@@ -3330,6 +3330,7 @@
             const [mimushTailOpen, setMimushTailOpen] = useState({}); // { minahak: true/false }
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
+            const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
@@ -8503,7 +8504,11 @@
                         pane: 'landusePane',
                         filter: f => {
                             const n = (f.properties.mavat_name || '').trim();
-                            return n !== '' && n !== 'NULL' && n !== 'null' && n !== 'None';
+                            if (n === '' || n === 'NULL' || n === 'null' || n === 'None') return false;
+                            // Exclude placeholder polygons that just reference an older plan —
+                            // they cover huge areas and hide everything else.
+                            if (n === 'יעוד עפ"י תכנית מאושרת אחרת' || n === 'יעוד עפ"י תכנית מאוש') return false;
+                            return true;
                         },
                         style: f => {
                             const name = (f.properties.mavat_name || '').trim();
@@ -10720,6 +10725,9 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, meetings: !prev.meetings}))}>
                                 <input type="checkbox" checked={planningTopics.meetings} onChange={() => {}} />
                                 <label style={{flex:1}}>תכניות עם ישיבה קרובה</label>
+                                <button className="layer-legend-btn" title="דוח ישיבות קרובות"
+                                    onClick={(e) => { e.stopPropagation(); setMeetingsReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             </div>)}
                         </div>
@@ -12137,6 +12145,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">הפקדות להתנגדויות</span>
                                                     <span className="report-desc">תכניות מופקדות לפי סמכות</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setMeetingsReport(true); }}>
+                                                <span className="report-icon">📅</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">ישיבות קרובות</span>
+                                                    <span className="report-desc">תכניות בדיון בוועדות הקרובות</span>
                                                 </div>
                                             </button>
                                         </div>
@@ -14308,6 +14323,140 @@
                                             });
                                             const csvContent = csvRows.join('\\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="הפקדות_להתנגדויות.csv";a.click()});<\/script>');
+                                            printWin.document.write('</body></html>');
+                                            printWin.document.close();
+                                            printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {meetingsReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const adminLayers2 = Object.values(LAYER_CONFIG).flatMap(g => g.layers).filter(l => l.minahak);
+                        const selectedMinahaks2 = adminLayers2.filter(l => layers[l.id]).map(l => l.minahak);
+                        const allAdminOn2 = adminLayers2.every(l => layers[l.id]);
+                        const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
+                        const meetings = window.__meetings || {};
+                        // Build rows: match meeting plan_id with plans in geojson
+                        const rows = [];
+                        gd.plans.features.forEach(f => {
+                            const pn = (f.properties.plan_name || '').trim();
+                            const mt = meetings[pn];
+                            if (!mt) return;
+                            if (!checkMinahak(f.properties)) return;
+                            rows.push({ ...f.properties, _meeting: mt });
+                        });
+                        // Also include meetings whose plan_id has no matching feature (edge case)
+                        Object.values(meetings).forEach(mt => {
+                            if (!rows.some(r => r.plan_name === mt.plan_id)) {
+                                rows.push({ plan_name: mt.plan_id, plan_summary: mt.plan_name, minahak: mt.minahak, _meeting: mt, _unmatched: true });
+                            }
+                        });
+                        // Sort by meeting date ascending (earliest first)
+                        rows.sort((a, b) => {
+                            const da = a._meeting.meeting_date.split('/'), db = b._meeting.meeting_date.split('/');
+                            const ta = da.length === 3 ? (da[2]+da[1]+da[0]) : '';
+                            const tb = db.length === 3 ? (db[2]+db[1]+db[0]) : '';
+                            return ta.localeCompare(tb);
+                        });
+                        return (
+                        <div className="units-overlay" onClick={() => setMeetingsReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(850px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                                <button className="units-close" onClick={() => setMeetingsReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128197; תכניות בדיון בוועדות הקרובות</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{rows.length} תכניות</p>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תאריך ישיבה</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>ועדה</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מטרת הדיון</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>סטטוס</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((p, i) => {
+                                                const mt = p._meeting;
+                                                const committee = mt.committee || 'מחוזית';
+                                                const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                                                return (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: p._unmatched ? 'default' : 'pointer'}} ref={el => { if (el && !p._unmatched) el.onclick = (e) => {
+                                                    e.stopPropagation();
+                                                    const gd = geoDataRef.current;
+                                                    if (!gd.plans || !mapInstanceRef.current) return;
+                                                    const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name);
+                                                    if (!feat || !feat.geometry) return;
+                                                    const coords = [];
+                                                    const g = feat.geometry;
+                                                    if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                                                    else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                                                    if (!coords.length) return;
+                                                    const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                                                    const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                                                    const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                                                    const props = JSON.parse(JSON.stringify(feat.properties));
+                                                    setMeetingsReport(false);
+                                                    setTimeout(() => {
+                                                        mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                                        setTimeout(() => {
+                                                            const mapped = mapPlanProps(props);
+                                                            const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                                            popup.openOn(mapInstanceRef.current);
+                                                            bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                                        }, 600);
+                                                    }, 100);
+                                                }; }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{mt.meeting_date}</td>
+                                                    <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{committeeLabel}</td>
+                                                    <td style={{padding:'4px',color: p._unmatched ? '#888' : '#64b5f6', textDecoration: p._unmatched ? 'none' : 'underline'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0',fontSize:11}}>{mt.purpose || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#f0f0f0',fontSize:11}}>{p._unmatched ? '-' : ((p.status_mavat||'-').trim())}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
+                                                </tr>);
+                                            })}
+                                        </tbody>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const printWin = window.open('', '_blank');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח ישיבות קרובות</title>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('</head><body>');
+                                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('</div>');
+                                            printWin.document.write('<div class="header"><h2>תכניות בדיון בוועדות הקרובות</h2>');
+                                            printWin.document.write('<p>' + rows.length + ' תכניות</p></div>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>תאריך ישיבה</th><th>ועדה</th><th>מספר תכנית</th><th>שם תכנית</th><th>מטרת הדיון</th><th>סטטוס</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            rows.forEach((p, i) => {
+                                                const mt = p._meeting;
+                                                const committee = mt.committee || 'מחוזית';
+                                                const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (mt.meeting_date||'-') + '</td><td>' + committeeLabel + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (mt.purpose||'-') + '</td><td>' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()) + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
+                                            });
+                                            printWin.document.write('</tbody></table>');
+                                            const csvRows = ['"#","תאריך ישיבה","ועדה","מספר תכנית","שם תכנית","מטרת הדיון","סטטוס","מינה\\"ק"'];
+                                            rows.forEach((p, i) => {
+                                                const mt = p._meeting;
+                                                const committee = mt.committee || 'מחוזית';
+                                                const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                                                csvRows.push('"' + (i+1) + '","' + (mt.meeting_date||'-') + '","' + committeeLabel + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (mt.purpose||'-').replace(/"/g,'""') + '","' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()).replace(/"/g,'""') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
+                                            });
+                                            const csvContent = csvRows.join('\\n');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="ישיבות_קרובות.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
                                             printWin.focus();
