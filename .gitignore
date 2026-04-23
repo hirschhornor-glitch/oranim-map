@@ -12,3 +12,7 @@ NEW_CONVERSATION_PROMPT.md
 
 # Tooling intermediate files (not used by the site)
 data/gmaps_lookup.json
+
+# Local backups (created by data-update scripts, not for deploy)
+*.bak
+*.bak_*
