@@ -3189,10 +3189,16 @@
 
         const TOPICS_LEGEND = [
             { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
-            { label: 'תכניות לעיבוי שטחים חומים', color: '#ff8c00', style: 'hatch' },
             { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
+            { label: 'תכניות עם ישיבה קרובה', color: '#ff8c00', style: 'outline' },
             { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
+        ];
+
+        const HIDDEN_PLANS_LEGEND = [
             { label: 'תכניות איחוד וחלוקה', color: '#00aa00', style: 'hatch' },
+            { label: 'תכניות תשתיות', color: '#9b59b6', style: 'solid' },
+            { label: 'תכניות 77/78', color: '#e74c3c', style: 'hatch' },
+            { label: 'תכניות שנגנזו', color: '#888', style: 'hatch' },
         ];
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -3259,8 +3265,8 @@
             const [addressLoading, setAddressLoading] = useState(false);
             const [planningTopics, setPlanningTopics] = useState({
                 overlapping: false,   // תבעות כפולות על אותו מרחב
-                densification: false, // תכניות לעיבוי שטחים חומים
                 objections: false,     // תכניות המופקדות להתנגדויות
+                meetings: false,       // תכניות עם ישיבה קרובה
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
                 archived: false,        // תכניות שנגנזו/נדחו
@@ -3736,8 +3742,9 @@
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
                 window.__masterPlanCompliance = {};
+                window.__meetings = {};
                 // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__masterPlanCompliance', 'data/master_plan_compliance.json']]);
+                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__masterPlanCompliance', 'data/master_plan_compliance.json'], ['__meetings', 'data/meetings.json']]);
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
                 Promise.all([
@@ -3761,6 +3768,24 @@
                         else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                         else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                         else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
+                        else if (key === '__meetings') {
+                            // Build lookup by plan_id. Keep only future meetings (date >= today).
+                            const idx = {};
+                            const arr = Array.isArray(data) ? data : [];
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            arr.forEach(m => {
+                                const pid = (m.plan_id || '').trim();
+                                if (!pid) return;
+                                const dp = (m.meeting_date || '').split('/');
+                                if (dp.length !== 3) return;
+                                const md = new Date(dp[2], dp[1]-1, dp[0]);
+                                if (isNaN(md.getTime()) || md < today) return;
+                                // Keep earliest future meeting per plan
+                                const cur = idx[pid];
+                                if (!cur || md < cur._d) { idx[pid] = { ...m, _d: md }; }
+                            });
+                            window.__meetings = idx;
+                        }
                         else if (data) { gd[key] = data; }
                     });
                     console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
@@ -6943,7 +6968,10 @@
                         if (!planInMinahak(f.properties)) return false;
                         const s = normalizeStatus((f.properties.status_mavat || '').trim());
                         if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                        if (s === 'הכנת הודעה 77/78') return false;
                         if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
+                        if (normalizePlanType(f.properties.plan_type || '') === 'איחוד וחלוקה') return false;
+                        if ((f.properties.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
                         // Filter already-implemented plans (no permits + date <= 2019)
                         const shk = window.__shouldHideKayam;
                         if (shk) {
@@ -6962,6 +6990,8 @@
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             if (s === 'הכנת הודעה 77/78') return false;
                             if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
+                            if (normalizePlanType(f.properties.plan_type || '') === 'איחוד וחלוקה') return false;
+                            if ((f.properties.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
                             // Filter already-implemented plans (no permits + date <= 2019)
                             const shk = window.__shouldHideKayam;
                             if (shk) {
@@ -7317,7 +7347,7 @@
                 }
 
                 // --- Topics overlay ---
-                if (gd.plans && (planningTopics.overlapping || planningTopics.densification || planningTopics.objections || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
+                if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
                     if (svgEl) {
@@ -7365,7 +7395,6 @@
                                 }
                                 return false;
                             })()) return true;
-                            if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 const isLocal = (p.authority || '').includes('מקומית');
                                 const endDate = p.objection_end_date || '';
@@ -7378,14 +7407,20 @@
                                 }
                                 return false;
                             }
+                            if (planningTopics.meetings) {
+                                const mt = (window.__meetings || {})[(p.plan_name || '').trim()];
+                                if (mt) return true;
+                            }
                             return false;
                         },
                         style: f => {
                             const p = f.properties;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
-                            if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים')
-                                return { color: '#ff8c00', weight: 2, fillOpacity: 0 };
+                            if (planningTopics.meetings) {
+                                const mt = (window.__meetings || {})[(p.plan_name || '').trim()];
+                                if (mt) return { color: '#ff8c00', weight: 3, fillOpacity: 0 };
+                            }
                             if (planningTopics.overlapping && (() => {
                                 const oMap = overlapMapRef.current;
                                 if (!oMap) return false;
@@ -7429,9 +7464,6 @@
                             })()) {
                                     el.setAttribute('fill', 'url(#hatch-blue)');
                                     el.setAttribute('fill-opacity', '1');
-                                } else if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') {
-                                    el.setAttribute('fill', 'url(#hatch-orange)');
-                                    el.setAttribute('fill-opacity', '1');
                                 }
                             });
                         }
@@ -7459,9 +7491,6 @@
                                 return false;
                             })()) {
                             el.setAttribute('fill', 'url(#hatch-blue)');
-                            el.setAttribute('fill-opacity', '1');
-                        } else if (planningTopics.densification && normalizePlanType(p.plan_type || '') === 'עיבוי שטחים חומים') {
-                            el.setAttribute('fill', 'url(#hatch-orange)');
                             el.setAttribute('fill-opacity', '1');
                         }
                     });
@@ -9619,6 +9648,20 @@
                     html += '</div>';
                 }
 
+                // ── Upcoming Meeting Banner ──
+                const upcomingMeeting = (window.__meetings || {})[(props.plan_name || '').trim()];
+                if (upcomingMeeting) {
+                    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const committee = upcomingMeeting.committee || 'מחוזית';
+                    const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                    html += '<div style="background:#ff8c00;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
+                    html += '<div style="font-weight:bold">ישיבה קרובה (' + esc(committeeLabel) + '): ' + esc(upcomingMeeting.meeting_date) + '</div>';
+                    if (upcomingMeeting.purpose) {
+                        html += '<div style="font-size:11px;margin-top:2px;opacity:0.95">' + esc(upcomingMeeting.purpose) + '</div>';
+                    }
+                    html += '</div>';
+                }
+
                 // ── Body ──
                 html += '<div class="popup-body" style="padding:8px 16px">';
 
@@ -10662,12 +10705,6 @@
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
-                                 title='תוכניות לעיבוי שטחים חומים - תוספת יח"ד בשטחים מאושרים'
-                                 onClick={() => setPlanningTopics(prev => ({...prev, densification: !prev.densification}))}>
-                                <input type="checkbox" checked={planningTopics.densification} onChange={() => {}} />
-                                <label>תכניות לעיבוי שטחים חומים</label>
-                            </div>
-                            <div className="layer-item"
                                  title='תוכניות בשלב הפקדה להתנגדויות'
                                  style={{display:'flex',alignItems:'center'}}
                                  onClick={() => setPlanningTopics(prev => ({...prev, objections: !prev.objections}))}>
@@ -10677,6 +10714,28 @@
                                     onClick={(e) => { e.stopPropagation(); setObjectionsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
+                            <div className="layer-item"
+                                 title='תכניות עם ישיבה קרובה בוועדה'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, meetings: !prev.meetings}))}>
+                                <input type="checkbox" checked={planningTopics.meetings} onChange={() => {}} />
+                                <label style={{flex:1}}>תכניות עם ישיבה קרובה</label>
+                            </div>
+                            </div>)}
+                        </div>
+
+                        <div className="sidebar-section">
+                            <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, hiddenPlans: !prev.hiddenPlans}))}
+                                 style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                    <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.hiddenPlans?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
+                                    <span>תכניות מוסתרות</span>
+                                </div>
+                                <button className="layer-legend-btn" title="מקרא תכניות מוסתרות"
+                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תכניות מוסתרות', items: HIDDEN_PLANS_LEGEND }); }}
+                                    style={{fontSize:'14px',margin:0}}>⋯</button>
+                            </div>
+                            {!collapsedGroups.hiddenPlans && (<div>
                             <div className="layer-item"
                                  title='תכניות תשתיות'
                                  onClick={() => setPlanningTopics(prev => ({...prev, infrastructure: !prev.infrastructure}))}>
