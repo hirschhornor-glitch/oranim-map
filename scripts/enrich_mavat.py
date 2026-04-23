@@ -50,30 +50,39 @@ EXTRACT_QUANT_JS = r"""
         m = text.match(/מבני ציבור\s*\(מ.?ר\)\s*([\d,]+)/); if (m) r.public_buildings_sqm = m[1].replace(/,/g, '');
 
         // Extract change + approved values from content
+        // Mavat text variants: "מצב מאושר", "המצב המאושר", "למצב המאושר*"
         if (ctext) {
             const changeMatch = ctext.match(/שינוי.*?([+-]?\s*[\d,.]+)/);
-            const approvedMatch = ctext.match(/מצב מאושר[^\d]*([+-]?\s*[\d,.]+)/);
+            // Match approved row: "המצב המאושר" (standalone row with value), NOT "שינוי למצב המאושר"
+            // Use a row-header pattern: "ה?מצב ה?מאושר\*?" followed by number, NOT preceded by "ל"
+            const approvedMatch = ctext.match(/(?:^|[^ל])ה?מצב\s+ה?מאושר\*?[^\d+-]*([+-]?\s*[\d,.]+)/);
             if (changeMatch) {
                 const changeVal = changeMatch[1].replace(/[\s,]/g, '');
                 if (text.includes('מגורים') && text.includes('יח')) {
                     if (!r.units_add) r.units_add = changeVal;
                 }
             }
+            const setApproved = (val) => {
+                if (text.includes('מסחר')) r.commerce_in = val;
+                if (text.match(/(תעסוקה|משרדים)/)) r.employment_in = val;
+            };
             if (approvedMatch) {
-                const approvedVal = approvedMatch[1].replace(/[\s,]/g, '');
-                if (text.includes('מסחר')) {
-                    r.commerce_in = approvedVal;
-                }
-                if (text.match(/(תעסוקה|משרדים)/)) {
-                    r.employment_in = approvedVal;
-                }
-            } else if (ctext.includes('מצב מאושר')) {
-                // "מצב מאושר" label exists but no number parsed → existing approved = 0
-                if (text.includes('מסחר')) {
-                    r.commerce_in = '0';
-                }
-                if (text.match(/(תעסוקה|משרדים)/)) {
-                    r.employment_in = '0';
+                setApproved(approvedMatch[1].replace(/[\s,]/g, ''));
+            } else {
+                // No standalone approved row → infer from title & change
+                // approved = title_num - change
+                const titleNumMatch = text.match(/\(מ.?ר\)\s*([\d,]+)/);
+                if (titleNumMatch && changeMatch) {
+                    const titleVal = parseFloat(titleNumMatch[1].replace(/,/g, '')) || 0;
+                    const changeValRaw = changeMatch[1].replace(/[\s,]/g, '');
+                    const changeVal = parseFloat(changeValRaw) || 0;
+                    const inferredApproved = titleVal - changeVal;
+                    if (inferredApproved >= 0) {
+                        setApproved(String(Math.round(inferredApproved)));
+                    }
+                } else if (ctext.match(/ה?מצב\s+ה?מאושר/)) {
+                    // Label exists but no number and no title/change → 0
+                    setApproved('0');
                 }
             }
         }
@@ -105,8 +114,18 @@ async def main():
     sys.stdout.reconfigure(encoding='utf-8')
 
     run_all = '--all' in sys.argv
+    plans_file = None
+    for i, a in enumerate(sys.argv):
+        if a == '--plans-file' and i + 1 < len(sys.argv):
+            plans_file = sys.argv[i + 1]
 
-    if run_all:
+    if plans_file:
+        # Targeted: read {plan_name: agam_id} pairs from JSON
+        print(f"Reading plans from {plans_file}...")
+        with open(plans_file, encoding='utf-8') as f:
+            pairs = json.load(f)
+        plans = [(pn, str(agam)) for pn, agam in pairs.items() if pn not in SKIP]
+    elif run_all:
         # Read all plans from Google Sheets
         print("Reading all plans from Google Sheets...")
         creds = Credentials.from_service_account_file(CREDS_FILE,
