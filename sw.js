@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
@@ -9,8 +9,8 @@ const STATIC_ASSETS = [
   './index.html',
   './manifest.json',
   './icons/favicon.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
+  './icons/icon-192-v2.png',
+  './icons/icon-512-v2.png',
 ];
 
 // CDN libraries to pre-cache (versioned URLs, rarely change)
