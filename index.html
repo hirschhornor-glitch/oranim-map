@@ -6856,6 +6856,48 @@
                     return selectedSubs.includes(n);
                 }
 
+                // Shared plan-visibility predicate — used by both the plans layer and
+                // the landuse_xplan layer so they stay in sync on show/hide rules.
+                function isPlanVisible(props) {
+                    if (!planInMinahak(props)) return false;
+                    const s = normalizeStatus((props.status_mavat || '').trim());
+                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                    if (s === 'הכנת הודעה 77/78') return false;
+                    if (['תשתיות','מוסתר'].includes(normalizePlanType(props.plan_type || ''))) return false;
+                    if (normalizePlanType(props.plan_type || '') === 'איחוד וחלוקה') return false;
+                    if ((props.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
+                    const shk = window.__shouldHideKayam;
+                    if (shk) {
+                        const t = String(props.taba || '').trim();
+                        if (t && shk(t)) return false;
+                    }
+                    const af = filters;
+                    const units = parseFloat(props.units_add) || 0;
+                    if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
+                    if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
+                    if (af.planTypes.length > 0) {
+                        const pt = normalizePlanType(props.plan_type || '');
+                        if (!af.planTypes.includes(pt)) return false;
+                    }
+                    if (af.statuses.length > 0) {
+                        const sg = getFilterStatusGroup(s);
+                        const stageVal = (props.stage || '').trim();
+                        const sgStage = getFilterStatusGroup(stageVal);
+                        if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
+                    }
+                    if (af.freeText) {
+                        const q = af.freeText.toLowerCase();
+                        const searchFields = [
+                            props.plan_summary || '',
+                            props.plan_name || '',
+                            props.architect || '',
+                            props.developer || '',
+                        ].join(' ').toLowerCase();
+                        if (!searchFields.includes(q)) return false;
+                    }
+                    return true;
+                }
+
                 // --- District outline + white mask outside (always on) ---
                 if (gd.district_oranim) {
                     // Create an inverted polygon: world bounds with district as hole
@@ -6986,48 +7028,7 @@
                         pane: 'plansPane',
                         renderer: L.svg({ pane: 'plansPane' }),
                         filter: f => {
-                            if (!planInMinahak(f.properties)) return false;
-                            const s = normalizeStatus((f.properties.status_mavat || '').trim());
-                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                            if (s === 'הכנת הודעה 77/78') return false;
-                            if (['תשתיות','מוסתר'].includes(normalizePlanType(f.properties.plan_type || ''))) return false;
-                            if (normalizePlanType(f.properties.plan_type || '') === 'איחוד וחלוקה') return false;
-                            if ((f.properties.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
-                            // Filter already-implemented plans (no permits + date <= 2019)
-                            const shk = window.__shouldHideKayam;
-                            if (shk) {
-                                const t = String(f.properties.taba || '').trim();
-                                if (t && shk(t)) return false;
-                            }
-                            // Advanced filters
-                            const af = filters;
-                            // Units range
-                            const units = parseFloat(f.properties.units_add) || 0;
-                            if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
-                            if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
-                            // Plan type filter
-                            if (af.planTypes.length > 0) {
-                                const pt = normalizePlanType(f.properties.plan_type || '');
-                                if (!af.planTypes.includes(pt)) return false;
-                            }
-                            // Status filter (check both status_mavat and stage field)
-                            if (af.statuses.length > 0) {
-                                const sg = getFilterStatusGroup(s);
-                                const stageVal = (f.properties.stage || '').trim();
-                                const sgStage = getFilterStatusGroup(stageVal);
-                                if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
-                            }
-                            // Free text search
-                            if (af.freeText) {
-                                const q = af.freeText.toLowerCase();
-                                const searchFields = [
-                                    f.properties.plan_summary || '',
-                                    f.properties.plan_name || '',
-                                    f.properties.architect || '',
-                                    f.properties.developer || '',
-                                ].join(' ').toLowerCase();
-                                if (!searchFields.includes(q)) return false;
-                            }
+                            if (!isPlanVisible(f.properties)) return false;
                             filteredPlanCount++;
                             return true;
                         },
@@ -8508,7 +8509,15 @@
                             // Exclude placeholder polygons that just reference an older plan —
                             // they cover huge areas and hide everything else.
                             if (n === 'יעוד עפ"י תכנית מאושרת אחרת' || n === 'יעוד עפ"י תכנית מאוש') return false;
-                            return true;
+                            // Apply the same visibility rules as the plans layer (minahak,
+                            // status, plan type, advanced filters) — landuse polygons should
+                            // only appear for plans that are themselves shown on the map.
+                            const pn = (f.properties.pl_number || '');
+                            if (!pn.includes('-')) return true;
+                            const taba = String(parseInt(pn.split('-')[1]));
+                            const planProps = (window.__planByTaba || {})[taba];
+                            if (!planProps) return false;
+                            return isPlanVisible(planProps);
                         },
                         style: f => {
                             const name = (f.properties.mavat_name || '').trim();
@@ -12334,6 +12343,75 @@
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
                                             </div>
+
+                                            {/* Overlap cluster: plans spatially overlapping this one */}
+                                            {(() => {
+                                                const oMap = overlapMapRef.current;
+                                                if (!oMap || !oMap.size) return null;
+                                                const overlapTabas = oMap.get(row.taba);
+                                                if (!overlapTabas || overlapTabas.size === 0) return null;
+                                                const gd = geoDataRef.current;
+                                                const allPlans = gd && gd.plans ? gd.plans.features : [];
+                                                const cluster = [];
+                                                overlapTabas.forEach(t => {
+                                                    const rr = rows.find(x => x.taba === t);
+                                                    if (rr) {
+                                                        cluster.push({ taba: t, plan_name: rr.plan_name, plan_summary: rr.plan_summary, status_mavat: rr.status_mavat, unitsAdd: rr.unitsAdd, unitsInPermits: rr.unitsInPermits, permitCount: rr.permitCount, hasReport: true });
+                                                    } else {
+                                                        const f = allPlans.find(ff => String(ff.properties.taba || '').trim() === t);
+                                                        if (f) {
+                                                            const p = f.properties;
+                                                            cluster.push({ taba: t, plan_name: p.plan_name || t, plan_summary: p.plan_summary || p.plan_name_he || '', status_mavat: p.status_mavat || '', unitsAdd: parseFloat(p.units_add) || 0, unitsInPermits: 0, permitCount: 0, hasReport: false });
+                                                        }
+                                                    }
+                                                });
+                                                if (cluster.length === 0) return null;
+                                                // Cluster totals (this plan + overlapping ones)
+                                                const clusterTotal = {
+                                                    plans: cluster.length + 1,
+                                                    unitsAdd: cluster.reduce((s,c) => s + c.unitsAdd, 0) + row.unitsAdd,
+                                                    unitsInPermits: cluster.reduce((s,c) => s + c.unitsInPermits, 0) + row.unitsInPermits,
+                                                    permitCount: cluster.reduce((s,c) => s + c.permitCount, 0) + row.permitCount,
+                                                };
+                                                return (
+                                                    <div style={{marginBottom:14, padding:'10px 14px', background:'#1a1f2e', border:'1px solid #3a5a7a', borderRadius:8, fontSize:13, color:'#e0e0ff'}}>
+                                                        <div style={{fontWeight:700, color:'#8ecae6', marginBottom:8, display:'flex', alignItems:'center', gap:8}}>
+                                                            🔗 מקבץ תב"עות באותו מרחב ({cluster.length + 1})
+                                                            <span style={{fontSize:11, color:'#9ca3af', fontWeight:400}}>— סה"כ באזור: {fmt(clusterTotal.unitsAdd)} יח"ד מאושרות · {fmt(clusterTotal.unitsInPermits)} בהיתרים · {clusterTotal.permitCount} היתרים</span>
+                                                        </div>
+                                                        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                                                            {cluster.map(c => (
+                                                                <div key={c.taba} title={c.plan_summary || c.plan_name}
+                                                                    onClick={() => {
+                                                                        if (!c.hasReport) return;
+                                                                        const target = rows.find(x => x.taba === c.taba);
+                                                                        if (target) { setReasonDraft(target.reason || ''); setPermitsGapDrilldown(target); }
+                                                                    }}
+                                                                    style={{
+                                                                        padding:'6px 10px',
+                                                                        background: c.hasReport ? '#2a3f5a' : '#2a2a3a',
+                                                                        border: '1px solid ' + (c.hasReport ? '#4a69d1' : '#444'),
+                                                                        borderRadius:6,
+                                                                        cursor: c.hasReport ? 'pointer' : 'default',
+                                                                        fontSize:12,
+                                                                        opacity: c.hasReport ? 1 : 0.55,
+                                                                        display:'flex',
+                                                                        flexDirection:'column',
+                                                                        gap:2,
+                                                                    }}>
+                                                                    <div style={{fontFamily:'monospace',color: c.hasReport ? '#8ecae6' : '#aaa',fontWeight:600}}>{c.plan_name}</div>
+                                                                    <div style={{fontSize:11,color:'#aaa',maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.plan_summary || c.status_mavat || '—'}</div>
+                                                                    <div style={{fontSize:10,color: c.hasReport ? '#7ab' : '#777'}}>
+                                                                        {c.hasReport ? (fmt(c.unitsAdd) + ' יח"ד · ' + c.permitCount + ' היתרים') : (fmt(c.unitsAdd) + ' יח"ד · ללא היתרים פעילים')}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div style={{fontSize:10, color:'#777', marginTop:6}}>💡 לחיצה על תב"ע עם היתרים מעבירה לדוח שלה. תב"עות ללא היתרים מוצגות לידיעה בלבד.</div>
+                                                    </div>
+                                                );
+                                            })()}
+
                                             <table className="units-table">
                                                 <thead>
                                                     <tr><th style={{width:60}}>נספר</th><th>מס' היתר</th><th>סטטוס</th><th>תאריך</th><th>יח"ד</th><th>סוג בקשה</th><th>תיאור</th></tr>
