@@ -3535,19 +3535,30 @@
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
-            // Assumptions: default set + per-minahak overrides. Each minahak's controls edit its own slot.
+            // Assumptions: default + per-minahak presets + per-minahak overrides.
+            // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
+            // and qualitative demographic knowledge per minahak.
             const PN_DEFAULT_ASSUMPTIONS = {
                 householdSize: 3.2,
                 haredi: 0,
                 religious: 0,
                 targetYear: 2040,
-                ageYearPctGeneral: 2.0,
+                ageYearPctGeneral: 2.2,   // Jerusalem avg from shnaton (ages 0-14 weighted)
                 ageYearPctHaredi: 3.0,
+            };
+            const PN_MINAHAK_PRESETS = {
+                'גינות העיר':        { householdSize: 2.8, haredi: 0.05, religious: 0.20, ageYearPctGeneral: 1.9, ageYearPctHaredi: 3.0, targetYear: 2040 },
+                'בית צפאפא':         { householdSize: 5.0, haredi: 0,    religious: 0,    ageYearPctGeneral: 3.0, ageYearPctHaredi: 3.0, targetYear: 2040 },
+                'גוננים':            { householdSize: 3.5, haredi: 0.15, religious: 0.30, ageYearPctGeneral: 2.2, ageYearPctHaredi: 3.0, targetYear: 2040 },
+                'בקעה רבתי':         { householdSize: 3.2, haredi: 0.02, religious: 0.20, ageYearPctGeneral: 2.0, ageYearPctHaredi: 3.0, targetYear: 2040 },
+                'מינהל מוסדי מלחה':  { householdSize: 3.2, haredi: 0,    religious: 0.10, ageYearPctGeneral: 2.0, ageYearPctHaredi: 3.0, targetYear: 2040 },
+                'א.ת. תלפיות':      { householdSize: 3.2, haredi: 0,    religious: 0.10, ageYearPctGeneral: 2.0, ageYearPctHaredi: 3.0, targetYear: 2040 },
             };
             const [publicNeedsAssumptionsMap, setPublicNeedsAssumptionsMap] = useState({ default: { ...PN_DEFAULT_ASSUMPTIONS }, perMinahak: {} });
             const getPNAssumptions = (minahak) => {
                 if (!minahak) return publicNeedsAssumptionsMap.default;
-                return publicNeedsAssumptionsMap.perMinahak[minahak] || publicNeedsAssumptionsMap.default;
+                if (publicNeedsAssumptionsMap.perMinahak[minahak]) return publicNeedsAssumptionsMap.perMinahak[minahak];
+                return PN_MINAHAK_PRESETS[minahak] || publicNeedsAssumptionsMap.default;
             };
             const hasPNOverride = (minahak) => !!(minahak && publicNeedsAssumptionsMap.perMinahak[minahak]);
             const updatePNAssumptions = (minahak, patch) => {
@@ -13737,6 +13748,7 @@
                                         <input type="number" min="1.5" max="5" step="0.1" value={ctrlAssumpt.ageYearPctHaredi} onChange={e => setA({ ageYearPctHaredi: parseFloat(e.target.value)||3 })} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
                                         <span style={{fontSize:10,color:'#888'}}>%</span>
                                     </div>
+                                    <div title="ערכי ברירת מחדל מבוססים על שנתון סטטיסטי ירושלים 2025 של מכון ירושלים — לוח ג/15 (אוכלוסייה לפי גיל) וידע דמוגרפי איכותני למינהלים" style={{fontSize:9,color:'#666',fontStyle:'italic',cursor:'help',marginRight:'auto'}}>ⓘ מקור: שנתון ירושלים 2025</div>
                                 </div>
                             );
                         };
