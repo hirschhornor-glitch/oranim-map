@@ -1101,6 +1101,188 @@
             .reports-menu-grid { grid-template-columns: 1fr; }
         }
 
+        /* Global (unified) search — Ctrl/Cmd+K or / to open */
+        .global-search-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10vh;
+            direction: rtl;
+        }
+        .global-search-modal {
+            width: min(640px, 92vw);
+            background: #15152b;
+            border: 1px solid #3a3a5a;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+        .global-search-input-wrap {
+            padding: 14px 16px;
+            border-bottom: 1px solid #2a2a4a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .global-search-input-wrap .gs-icon {
+            font-size: 18px;
+            color: #8a8aaa;
+        }
+        .global-search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e8e8ff;
+            font-size: 16px;
+            outline: none;
+            direction: rtl;
+            font-family: inherit;
+        }
+        .global-search-input::placeholder { color: #6a6a8a; }
+        .global-search-kbd {
+            font-size: 11px;
+            color: #8a8aaa;
+            background: #2a2a44;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: ui-monospace, monospace;
+        }
+        .global-search-hint {
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #8888aa;
+            background: #13132a;
+            border-bottom: 1px solid #2a2a44;
+        }
+        .global-search-hint b { color: #c5c5e8; font-weight: 600; }
+        .global-search-results {
+            overflow-y: auto;
+            max-height: calc(70vh - 110px);
+        }
+        .global-search-section {
+            padding: 6px 0;
+        }
+        .global-search-section-title {
+            padding: 8px 16px 4px;
+            font-size: 11px;
+            color: #8a8aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .global-search-item {
+            padding: 9px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d5d5ee;
+            transition: background 0.12s;
+            border-right: 3px solid transparent;
+        }
+        .global-search-item:hover { background: #20203a; }
+        .global-search-item.active {
+            background: #262648;
+            border-right-color: #e94560;
+        }
+        .global-search-item-icon {
+            font-size: 16px;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .global-search-item-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .global-search-item-title {
+            font-size: 13.5px;
+            color: #e8e8ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .global-search-item-sub {
+            font-size: 11px;
+            color: #9a9abb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .global-search-item-badge {
+            font-size: 10px;
+            color: #8a8aaa;
+            background: #2a2a44;
+            padding: 2px 7px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .global-search-empty {
+            padding: 26px 16px;
+            text-align: center;
+            color: #8a8aaa;
+            font-size: 13px;
+        }
+        .global-search-footer {
+            padding: 8px 14px;
+            border-top: 1px solid #2a2a4a;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #8a8aaa;
+        }
+        .global-search-footer span b {
+            color: #c5c5e8;
+            font-family: ui-monospace, monospace;
+            background: #2a2a44;
+            padding: 1px 5px;
+            border-radius: 3px;
+            border: 1px solid #3a3a5a;
+        }
+        .global-search-trigger {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 900;
+            background: rgba(21, 21, 43, 0.92);
+            border: 1px solid #3a3a5a;
+            color: #c5c5e8;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(6px);
+            direction: rtl;
+            font-family: inherit;
+        }
+        .global-search-trigger:hover { background: rgba(35, 35, 65, 0.96); border-color: #e94560; }
+        .global-search-trigger .gs-kbd {
+            font-size: 10px;
+            background: #2a2a44;
+            border: 1px solid #3a3a5a;
+            border-radius: 3px;
+            padding: 1px 5px;
+            color: #c5c5e8;
+            font-family: ui-monospace, monospace;
+        }
+        @media (max-width: 640px) {
+            .global-search-trigger { padding: 6px 10px; font-size: 11.5px; }
+            .global-search-trigger .gs-label-full { display: none; }
+        }
+
         /* Toolbar dropdown (shared) */
         .toolbar-dropdown {
             position: absolute;
@@ -3263,6 +3445,13 @@
             const [addressSearch, setAddressSearch] = useState('');
             const [addressResults, setAddressResults] = useState([]);
             const [addressLoading, setAddressLoading] = useState(false);
+            // Unified global search (Ctrl/Cmd+K or /)
+            const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+            const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+            const [globalSearchActive, setGlobalSearchActive] = useState(0);
+            const [globalAddrResults, setGlobalAddrResults] = useState([]);
+            const [globalAddrLoading, setGlobalAddrLoading] = useState(false);
+            const globalSearchInputRef = useRef(null);
             const [planningTopics, setPlanningTopics] = useState({
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 objections: false,     // תכניות המופקדות להתנגדויות
@@ -3342,6 +3531,18 @@
             const [showPermitsBySub, setShowPermitsBySub] = useState(false);
             const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
             const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
+            // Public Needs report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
+            const [showPublicNeeds, setShowPublicNeeds] = useState(false);
+            const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
+            const [publicNeedsAssumptions, setPublicNeedsAssumptions] = useState({
+                householdSize: 3.2,
+                haredi: 0,        // fraction 0-1
+                religious: 0,     // fraction 0-1 (informational; same quotas as mamlakhti)
+                targetYear: 2040, // 2030 | 2035 | 2040
+                ageYearPctGeneral: 2.0,  // % population per single age-year (general/mamlakhti)
+                ageYearPctHaredi: 3.0,   // % population per single age-year (haredi)
+            });
+            const [publicNeedsMinahakFilter, setPublicNeedsMinahakFilter] = useState('all');
             const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set([
                 'bniya_chadasha', 'tosefet', 'harisa', 'chafira_milui',
                 'tama38', 'shinuyim', 'shimush_chorech', 'drachim',
@@ -3499,6 +3700,65 @@
                 setPlanIndex(index);
                 console.log('[Search] Built plan index:', index.length, 'plans');
             }, [dataLoaded]);
+
+            // Global keyboard: Ctrl/Cmd+K or "/" to open unified search; Esc to close
+            useEffect(() => {
+                function onKey(e) {
+                    const t = e.target;
+                    const isEditable = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+                    if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        setGlobalSearchOpen(true);
+                        setGlobalSearchQuery('');
+                        setGlobalSearchActive(0);
+                        return;
+                    }
+                    if (e.key === '/' && !isEditable && !globalSearchOpen) {
+                        e.preventDefault();
+                        setGlobalSearchOpen(true);
+                        setGlobalSearchQuery('');
+                        setGlobalSearchActive(0);
+                        return;
+                    }
+                    if (e.key === 'Escape' && globalSearchOpen) {
+                        setGlobalSearchOpen(false);
+                    }
+                }
+                document.addEventListener('keydown', onKey);
+                return () => document.removeEventListener('keydown', onKey);
+            }, [globalSearchOpen]);
+
+            // Focus input when global search opens
+            useEffect(() => {
+                if (globalSearchOpen && globalSearchInputRef.current) {
+                    setTimeout(() => globalSearchInputRef.current && globalSearchInputRef.current.focus(), 20);
+                }
+            }, [globalSearchOpen]);
+
+            // Debounced address lookup inside global search
+            useEffect(() => {
+                if (!globalSearchOpen) return;
+                const q = globalSearchQuery.trim();
+                // only hit geocoder for Hebrew-text queries with length >= 3 and at least one non-digit letter
+                const hasLetter = /[א-ת]/.test(q);
+                if (q.length < 3 || !hasLetter) { setGlobalAddrResults([]); return; }
+                setGlobalAddrLoading(true);
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ' ירושלים')}&limit=4&countrycodes=il&accept-language=he`, { signal: ctrl.signal })
+                        .then(r => r.json())
+                        .then(data => {
+                            setGlobalAddrResults((data || []).map(d => ({
+                                name: d.display_name,
+                                lat: parseFloat(d.lat),
+                                lng: parseFloat(d.lon)
+                            })));
+                            setGlobalAddrLoading(false);
+                        })
+                        .catch(() => setGlobalAddrLoading(false));
+                }, 400);
+                return () => { clearTimeout(timer); ctrl.abort(); };
+            }, [globalSearchQuery, globalSearchOpen]);
 
             const mapRef = useRef(null);
             const mapInstanceRef = useRef(null);
@@ -6564,6 +6824,87 @@
                 { phase: 'licensing', thresholdMonths: 42, mimushPct: 30, extraMonths: 12, reason: 'רישוי מעל 3.5 שנה' },
             ];
 
+            // ══════════════════════════════════════════
+            // Public Needs — 2018 Ministry of Planning guide
+            // Type C (existing urban fabric) quotas only
+            // ══════════════════════════════════════════
+            const PUBLIC_NEEDS_SERVICES = [
+                {
+                    key: 'maon', label: 'מעון יום', icon: '👶',
+                    ageFrom: 0, ageTo: 3,           // 3 age-years
+                    participation: 0.5,              // 50%
+                    dunamPerClass: 1.0 / 3,          // 1.0 dunam per 3 classes
+                    streams: { mamlakhti: { classSize: 20 }, haredi_b: { classSize: 20 }, haredi_g: { classSize: 20 } },
+                },
+                {
+                    key: 'gan', label: 'גן ילדים', icon: '🎨',
+                    ageFrom: 3, ageTo: 6,            // 3 age-years
+                    participation: 1.0,
+                    dunamPerClass: 0.5,              // both streams
+                    streams: { mamlakhti: { classSize: 30 }, haredi_b: { classSize: 20 }, haredi_g: { classSize: 30 } },
+                },
+                {
+                    key: 'yesodi', label: 'בי"ס יסודי', icon: '🏫',
+                    ageFrom: 6, ageTo: 14,           // 8 age-years
+                    participation: 1.0,
+                    streams: {
+                        mamlakhti: { classSize: 27, dunamPerClass: 0.3 },  // type C
+                        haredi_b:  { classSize: 20, dunamPerClass: 0.2 },  // type C חרדי-בנים
+                        haredi_g:  { classSize: 27, dunamPerClass: 0.3 },  // type C חרדי-בנות
+                    },
+                },
+                {
+                    key: 'al_yesodi', label: 'בי"ס על-יסודי', icon: '🎓',
+                    ageFrom: 14, ageTo: 18,          // 4 age-years
+                    participation: 1.0,
+                    streams: {
+                        mamlakhti: { classSize: 27, dunamPerClass: 0.4 },
+                        haredi_b:  { classSize: 20, dunamPerClass: 0.3 },
+                        haredi_g:  { classSize: 27, dunamPerClass: 0.4 },
+                    },
+                },
+            ];
+            const PUBLIC_NEEDS_STREAMS = [
+                { key: 'mamlakhti', label: 'ממלכתי/ממ"ד', color: '#4CAF50' },
+                { key: 'haredi_b',  label: 'חרדי-בנים',   color: '#7b1fa2' },
+                { key: 'haredi_g',  label: 'חרדי-בנות',   color: '#c2185b' },
+            ];
+
+            // Compute class/dunam needs for a given (units, assumptions)
+            function computePublicNeeds(totalUnits, assumptions) {
+                const { householdSize, haredi, ageYearPctGeneral, ageYearPctHaredi } = assumptions;
+                const population = Math.max(0, totalUnits) * householdSize;
+                const haredi_frac = Math.max(0, Math.min(1, haredi));
+                const mam_frac = 1 - haredi_frac;
+                // Mixed age-year % (weighted)
+                const byService = {};
+                let totalDunam = 0, totalClasses = 0;
+                PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                    const ageSpan = svc.ageTo - svc.ageFrom;
+                    const children_mam = population * mam_frac * (ageYearPctGeneral / 100) * ageSpan * svc.participation;
+                    const children_hrd_total = population * haredi_frac * (ageYearPctHaredi / 100) * ageSpan * svc.participation;
+                    const children_hrd_b = children_hrd_total * 0.5;
+                    const children_hrd_g = children_hrd_total * 0.5;
+                    const calcStream = (streamKey, children) => {
+                        const s = svc.streams[streamKey];
+                        const classSize = s.classSize;
+                        const dpc = s.dunamPerClass !== undefined ? s.dunamPerClass : svc.dunamPerClass;
+                        const classes = children > 0 ? Math.ceil(children / classSize) : 0;
+                        const dunam = classes * dpc;
+                        return { children: Math.round(children * 10) / 10, classes, dunam: Math.round(dunam * 100) / 100, classSize, dunamPerClass: dpc };
+                    };
+                    const mam = calcStream('mamlakhti', children_mam);
+                    const hb  = calcStream('haredi_b',  children_hrd_b);
+                    const hg  = calcStream('haredi_g',  children_hrd_g);
+                    const totalClsSvc = mam.classes + hb.classes + hg.classes;
+                    const totalDunamSvc = mam.dunam + hb.dunam + hg.dunam;
+                    byService[svc.key] = { mam, haredi_b: hb, haredi_g: hg, totalClasses: totalClsSvc, totalDunam: Math.round(totalDunamSvc * 100) / 100 };
+                    totalClasses += totalClsSvc;
+                    totalDunam += totalDunamSvc;
+                });
+                return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+            }
+
             function getStageFromStatus(statusMavat, stage) {
                 const s = (statusMavat || '').trim();
                 const st = (stage || '').trim();
@@ -6769,6 +7110,21 @@
                 }
             }, [buildMimushData]);
 
+            const openPublicNeedsModal = useCallback(() => {
+                // Cache mimush data for reuse in the Public Needs table
+                window.__mimushData = buildMimushData();
+                // Ensure units data is loaded (populates unitsData state when ready)
+                if (!unitsData) {
+                    ensureUnitsData().then(() => {
+                        setShowPublicNeeds(true);
+                        setPublicNeedsDrilldown(null);
+                    });
+                } else {
+                    setShowPublicNeeds(true);
+                    setPublicNeedsDrilldown(null);
+                }
+            }, [buildMimushData, ensureUnitsData, unitsData]);
+
             // GeoJSON rendering: add/remove L.geoJSON layers based on state
             useEffect(() => {
                 const map = mapInstanceRef.current;
@@ -6860,6 +7216,9 @@
                 // the landuse_xplan layer so they stay in sync on show/hide rules.
                 function isPlanVisible(props) {
                     if (!planInMinahak(props)) return false;
+                    // Hide plans with no assigned minahak — their landuse polygons
+                    // tend to be very large (city-wide/reference areas) and mislead.
+                    if (!(props.minahak || '').trim()) return false;
                     const s = normalizeStatus((props.status_mavat || '').trim());
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                     if (s === 'הכנת הודעה 77/78') return false;
@@ -10356,6 +10715,140 @@
                 return [...permitMatches, ...planMatches].slice(0, 20);
             })();
 
+            // ── Unified global search: builds categorized results and handles selection ──
+            const globalSearchCategorized = (() => {
+                const q = globalSearchQuery.trim();
+                if (q.length < 1) return { plans: [], permits: [], addresses: [], layers: [], reports: [] };
+
+                // Reports registry (labels, icons, action keys)
+                const REPORTS = [
+                    { id: 'units',        title: 'סיכום יח"ד',              desc: 'טבלת יחידות דיור לפי מינהל וסטטוס', icon: '🏠' },
+                    { id: 'permits_gap',  title: 'היתרים מול תב"ע',         desc: 'פערים בין יח"ד מאושרות ליח"ד בהיתרים', icon: '📑' },
+                    { id: 'commerce',     title: 'סיכום מסחר ותעסוקה',      desc: 'שטחי מסחר ותעסוקה', icon: '🏪' },
+                    { id: 'mimush',       title: 'דוח מימוש',               desc: 'שלביות ביצוע', icon: '🚧' },
+                    { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
+                    { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
+                    { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
+                    { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
+                    { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
+                ];
+                // All toggleable layers
+                const ALL_LAYERS = [];
+                Object.values(LAYER_CONFIG).forEach(g => g.layers.forEach(l => {
+                    ALL_LAYERS.push({ id: l.id, name: l.name, desc: l.desc || '', group: g.title });
+                    (l.subLayers || []).forEach(sl => ALL_LAYERS.push({ id: sl.id, name: sl.name, desc: sl.desc || '', group: g.title }));
+                }));
+
+                // Plans & permits
+                const permitMatches = [];
+                const matchedTabas = new Set();
+                const allP = window.__allPermits || {};
+                const isPermitLike = /\d.*[\/\\].*\d/.test(q) || /^\d{4}\b/.test(q);
+                if (isPermitLike) {
+                    for (const taba of Object.keys(allP)) {
+                        if (permitMatches.length >= 8) break;
+                        const entry = allP[taba];
+                        if (!entry || !entry.permits) continue;
+                        const hit = entry.permits.find(p => p.file_number && p.file_number.includes(q));
+                        if (hit) {
+                            const plan = planIndex.find(pl => pl.ta === taba);
+                            if (plan && !matchedTabas.has(taba)) {
+                                matchedTabas.add(taba);
+                                permitMatches.push({ ...plan, _permitNum: hit.file_number, _permitStatus: hit.status || '' });
+                            }
+                        }
+                    }
+                }
+                const planMatches = planIndex
+                    .filter(p => !matchedTabas.has(p.ta) && ((p.t && p.t.includes(q)) || (p.n && p.n.includes(q))))
+                    .slice(0, 8);
+
+                // Layers (match on name)
+                const layerMatches = ALL_LAYERS
+                    .filter(l => l.name.includes(q) || l.id.includes(q.toLowerCase()))
+                    .slice(0, 5);
+
+                // Reports (match on title/desc)
+                const reportMatches = REPORTS
+                    .filter(r => r.title.includes(q) || r.desc.includes(q))
+                    .slice(0, 5);
+
+                return {
+                    plans: planMatches,
+                    permits: permitMatches,
+                    addresses: globalAddrResults,
+                    layers: layerMatches,
+                    reports: reportMatches,
+                };
+            })();
+
+            // Flatten into a single navigable list for arrow keys
+            const globalSearchFlat = (() => {
+                const c = globalSearchCategorized;
+                const flat = [];
+                c.permits.forEach(p => flat.push({ kind: 'permit', data: p }));
+                c.plans.forEach(p => flat.push({ kind: 'plan', data: p }));
+                c.addresses.forEach(a => flat.push({ kind: 'address', data: a }));
+                c.layers.forEach(l => flat.push({ kind: 'layer', data: l }));
+                c.reports.forEach(r => flat.push({ kind: 'report', data: r }));
+                return flat;
+            })();
+
+            const executeGlobalSearchItem = (item) => {
+                if (!item) return;
+                setGlobalSearchOpen(false);
+                setGlobalSearchQuery('');
+                const map = mapInstanceRef.current;
+                if (item.kind === 'plan' || item.kind === 'permit') {
+                    if (!map) return;
+                    const plan = item.data;
+                    map.setView(plan.c, 18);
+                    setTimeout(() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return;
+                        const match = gd.plans.features.find(f =>
+                            f.properties.plan_name === plan.n || f.properties.taba === plan.n
+                        );
+                        if (!match) return;
+                        const mapped = mapPlanProps(match.properties);
+                        const popup = L.popup({ maxWidth: popupMaxWidth(), minWidth: Math.min(300, window.innerWidth * 0.85), closeButton: true })
+                            .setLatLng(plan.c)
+                            .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                            .openOn(map);
+                        bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                    }, 400);
+                } else if (item.kind === 'address') {
+                    if (!map) return;
+                    const r = item.data;
+                    map.setView([r.lat, r.lng], 17);
+                    if (window.__addressMarker) map.removeLayer(window.__addressMarker);
+                    window.__addressMarker = L.marker([r.lat, r.lng], {
+                        icon: L.divIcon({
+                            className: '',
+                            html: '<div style="background:#e94560;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>',
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        })
+                    }).addTo(map);
+                    setTimeout(() => {
+                        if (window.__addressMarker) { map.removeLayer(window.__addressMarker); window.__addressMarker = null; }
+                    }, 10000);
+                } else if (item.kind === 'layer') {
+                    toggleLayer(item.data.id);
+                } else if (item.kind === 'report') {
+                    const id = item.data.id;
+                    if (id === 'units') setShowUnits(true);
+                    else if (id === 'permits_gap') { setPermitsGapDrilldown(null); setShowPermitsGap(true); }
+                    else if (id === 'commerce') setShowCommerceTable(true);
+                    else if (id === 'mimush') openMimushModal();
+                    else if (id === 'overlap') setOverlapReport(true);
+                    else if (id === 'objections') setObjectionsReport(true);
+                    else if (id === 'meetings') setMeetingsReport(true);
+                    else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
+                    else if (id === 'reports_menu') setShowReportsMenu(true);
+                }
+            };
+
             const handleSearchSelect = (plan) => {
                 const map = mapInstanceRef.current;
                 if (!map) return;
@@ -10393,6 +10886,161 @@
 
             return (
                 <>
+                    {/* Floating unified-search trigger (top of map) */}
+                    <button
+                        className="global-search-trigger"
+                        onClick={() => { setGlobalSearchOpen(true); setGlobalSearchQuery(''); setGlobalSearchActive(0); }}
+                        title="חיפוש אחוד — Ctrl+K או /"
+                    >
+                        <span>🔍</span>
+                        <span className="gs-label-full">חיפוש (תכנית, היתר, כתובת, שכבה, דוח)</span>
+                        <span className="gs-kbd">Ctrl K</span>
+                    </button>
+
+                    {/* Unified global-search modal */}
+                    {globalSearchOpen && (() => {
+                        const flat = globalSearchFlat;
+                        const active = Math.max(0, Math.min(globalSearchActive, flat.length - 1));
+                        const c = globalSearchCategorized;
+                        let idx = -1;
+                        const renderItem = (label, kind, node) => {
+                            idx += 1;
+                            const myIdx = idx;
+                            const isActive = myIdx === active;
+                            return (
+                                <div
+                                    key={kind + '-' + myIdx}
+                                    className={`global-search-item ${isActive ? 'active' : ''}`}
+                                    onMouseEnter={() => setGlobalSearchActive(myIdx)}
+                                    onClick={() => executeGlobalSearchItem(flat[myIdx])}
+                                >
+                                    {node}
+                                </div>
+                            );
+                        };
+                        return (
+                            <div className="global-search-overlay" onClick={() => setGlobalSearchOpen(false)}>
+                                <div className="global-search-modal" onClick={e => e.stopPropagation()}>
+                                    <div className="global-search-input-wrap">
+                                        <span className="gs-icon">🔍</span>
+                                        <input
+                                            ref={globalSearchInputRef}
+                                            className="global-search-input"
+                                            placeholder='חפש תכנית / מספר היתר / כתובת / שכבה / דוח...'
+                                            value={globalSearchQuery}
+                                            onChange={(e) => { setGlobalSearchQuery(e.target.value); setGlobalSearchActive(0); }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'ArrowDown') { e.preventDefault(); setGlobalSearchActive(i => Math.min(i + 1, flat.length - 1)); }
+                                                else if (e.key === 'ArrowUp') { e.preventDefault(); setGlobalSearchActive(i => Math.max(i - 1, 0)); }
+                                                else if (e.key === 'Enter') { e.preventDefault(); executeGlobalSearchItem(flat[active]); }
+                                                else if (e.key === 'Escape') { e.preventDefault(); setGlobalSearchOpen(false); }
+                                            }}
+                                        />
+                                        <span className="global-search-kbd">Esc</span>
+                                    </div>
+                                    {globalSearchQuery.trim().length === 0 ? (
+                                        <div className="global-search-hint">
+                                            הקלד <b>מספר תב"ע</b> · <b>מספר היתר</b> (2024/0527) · <b>שם רחוב</b> · <b>שם שכבה</b> · <b>שם דוח</b>
+                                        </div>
+                                    ) : (
+                                        <div className="global-search-hint">
+                                            {flat.length} תוצאות {globalAddrLoading ? '· מחפש כתובות...' : ''}
+                                        </div>
+                                    )}
+                                    <div className="global-search-results">
+                                        {globalSearchQuery.trim().length === 0 ? (
+                                            <div className="global-search-empty">התחל להקליד כדי לראות תוצאות</div>
+                                        ) : flat.length === 0 && !globalAddrLoading ? (
+                                            <div className="global-search-empty">לא נמצאו תוצאות</div>
+                                        ) : (
+                                            <>
+                                                {c.permits.length > 0 && (
+                                                    <div className="global-search-section">
+                                                        <div className="global-search-section-title">📑 היתרים</div>
+                                                        {c.permits.map(p => renderItem('permit', 'permit', (
+                                                            <>
+                                                                <span className="global-search-item-icon">📑</span>
+                                                                <div className="global-search-item-main">
+                                                                    <div className="global-search-item-title">{p._permitNum}{p._permitStatus ? ' · ' + p._permitStatus : ''}</div>
+                                                                    <div className="global-search-item-sub">{p.h || p.n} · תב"ע {p.ta}</div>
+                                                                </div>
+                                                                <span className="global-search-item-badge">היתר</span>
+                                                            </>
+                                                        )))}
+                                                    </div>
+                                                )}
+                                                {c.plans.length > 0 && (
+                                                    <div className="global-search-section">
+                                                        <div className="global-search-section-title">🗂 תכניות</div>
+                                                        {c.plans.map(p => renderItem('plan', 'plan', (
+                                                            <>
+                                                                <span className="global-search-item-icon">🗂</span>
+                                                                <div className="global-search-item-main">
+                                                                    <div className="global-search-item-title">{p.h || p.n}</div>
+                                                                    <div className="global-search-item-sub">{p.s ? (p.s + ' · ') : ''}{p.n}</div>
+                                                                </div>
+                                                                <span className="global-search-item-badge">תב"ע</span>
+                                                            </>
+                                                        )))}
+                                                    </div>
+                                                )}
+                                                {c.addresses.length > 0 && (
+                                                    <div className="global-search-section">
+                                                        <div className="global-search-section-title">📍 כתובות</div>
+                                                        {c.addresses.map(a => renderItem('address', 'address', (
+                                                            <>
+                                                                <span className="global-search-item-icon">📍</span>
+                                                                <div className="global-search-item-main">
+                                                                    <div className="global-search-item-title">{a.name.split(',').slice(0, 3).join(', ')}</div>
+                                                                    <div className="global-search-item-sub">{a.name}</div>
+                                                                </div>
+                                                                <span className="global-search-item-badge">כתובת</span>
+                                                            </>
+                                                        )))}
+                                                    </div>
+                                                )}
+                                                {c.layers.length > 0 && (
+                                                    <div className="global-search-section">
+                                                        <div className="global-search-section-title">🧩 שכבות (קליק לשינוי)</div>
+                                                        {c.layers.map(l => renderItem('layer', 'layer', (
+                                                            <>
+                                                                <span className="global-search-item-icon">🧩</span>
+                                                                <div className="global-search-item-main">
+                                                                    <div className="global-search-item-title">{l.name}</div>
+                                                                    <div className="global-search-item-sub">{l.group}{l.desc ? ' · ' + l.desc : ''}</div>
+                                                                </div>
+                                                                <span className="global-search-item-badge">{layers[l.id] ? 'דלוק' : 'כבוי'}</span>
+                                                            </>
+                                                        )))}
+                                                    </div>
+                                                )}
+                                                {c.reports.length > 0 && (
+                                                    <div className="global-search-section">
+                                                        <div className="global-search-section-title">📊 דוחות</div>
+                                                        {c.reports.map(r => renderItem('report', 'report', (
+                                                            <>
+                                                                <span className="global-search-item-icon">{r.icon}</span>
+                                                                <div className="global-search-item-main">
+                                                                    <div className="global-search-item-title">{r.title}</div>
+                                                                    <div className="global-search-item-sub">{r.desc}</div>
+                                                                </div>
+                                                                <span className="global-search-item-badge">דוח</span>
+                                                            </>
+                                                        )))}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="global-search-footer">
+                                        <span><b>↑↓</b> ניווט · <b>Enter</b> בחירה · <b>Esc</b> סגור</span>
+                                        <span>{flat.length > 0 ? `${active + 1}/${flat.length}` : ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* Mobile overlay — click to close sidebar */}
                     <div
                         className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
@@ -11073,6 +11721,31 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                                         <span className="sub-label">מול תב"ע</span>
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
+                            {/* ══ מבני ציבור ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${showPublicNeeds ? 'active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'public' ? null : 'public'); }}
+                                title="מבני ציבור — חישוב צרכים לפי מדריך מינהל התכנון"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M9 11h.01M12 11h.01M15 11h.01"/>
+                                </svg>
+                                <span className="toolbar-label">מבני ציבור ▾</span>
+                            </button>
+                            {activeDropdown === 'public' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className={`toolbar-dropdown-item ${showPublicNeeds ? 'sub-active' : ''}`} data-tip="חישוב כיתות ודונם לפי מדריך מינהל התכנון 2018" onClick={() => {
+                                        setActiveDropdown(null);
+                                        openPublicNeedsModal();
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                        <span className="sub-label">סיכום צרכים</span>
                                     </button>
                                 </div>
                             )}
@@ -12087,6 +12760,13 @@
                                                     <span className="report-desc">פילוח שלב + יח"ד לכל תת-שכונה</span>
                                                 </div>
                                             </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openPublicNeedsModal(); }}>
+                                                <span className="report-icon">🏫</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">צרכי ציבור לפי תת-שכונה</span>
+                                                    <span className="report-desc">חישוב כיתות ודונם לפי מדריך מינהל התכנון</span>
+                                                </div>
+                                            </button>
                                             <div className="reports-menu-item" onClick={(e) => {
                                                 if (e.target.tagName === 'SELECT') return;
                                                 setShowReportsMenu(false);
@@ -12876,6 +13556,333 @@
                                                     </td>
                                                 </tr>
                                             </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {showPublicNeeds && (() => {
+                        const gd = geoDataRef.current;
+                        const mimData = window.__mimushData || (buildMimushData && buildMimushData());
+                        if (!mimData) { window.__mimushData = buildMimushData(); }
+                        const mimD = window.__mimushData;
+                        if (!gd || !gd.plans || !unitsData || !mimD) {
+                            // Trigger loading of dependencies
+                            if (!unitsData && !unitsLoading) setTimeout(() => openUnitsModal && setShowUnits(false), 0);
+                            return (
+                                <div className="units-overlay" onClick={() => setShowPublicNeeds(false)}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                        <div className="units-header">
+                                            <h2>🏫 צרכי ציבור לפי תת-שכונה</h2>
+                                            <button className="units-close" onClick={() => setShowPublicNeeds(false)}>&times;</button>
+                                        </div>
+                                        <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים (יח״ד קיימות + מימוש)...</p><p style={{fontSize:11,color:'#888',marginTop:10}}>אם לא נטען תוך כמה שניות — פתח קודם את "סיכום יח״ד" ולאחר מכן את הדוח הזה.</p></div></div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        const assumpt = publicNeedsAssumptions;
+                        const targetYear = assumpt.targetYear;
+                        // Aggregate per sub-neighborhood
+                        const bySub = {};
+                        mimD.minahaks.forEach(m => {
+                            const mimSubs = mimD.bySub[m] || {};
+                            const unitsSubs = (unitsData.bySub[m]) || {};
+                            const allSubNames = new Set([...Object.keys(mimSubs), ...Object.keys(unitsSubs)]);
+                            allSubNames.forEach(sub => {
+                                if (sub === 'לא ידוע' || sub === 'אחר') return;
+                                const units_in = (unitsSubs[sub] && unitsSubs[sub].units_in) || 0;
+                                const units_new_2030 = (mimSubs[sub] && mimSubs[sub].byYear[2030]) || 0;
+                                const units_new_2035 = (mimSubs[sub] && mimSubs[sub].byYear[2035]) || 0;
+                                const units_new_2040 = (mimSubs[sub] && mimSubs[sub].byYear[2040]) || 0;
+                                const units_new_target = (mimSubs[sub] && mimSubs[sub].byYear[targetYear]) || 0;
+                                const total = units_in + units_new_target;
+                                const needs = computePublicNeeds(total, assumpt);
+                                bySub[sub] = {
+                                    minahak: m,
+                                    units_in: Math.round(units_in),
+                                    units_new_2030: Math.round(units_new_2030),
+                                    units_new_2035: Math.round(units_new_2035),
+                                    units_new_2040: Math.round(units_new_2040),
+                                    units_new_target: Math.round(units_new_target),
+                                    total_units: Math.round(total),
+                                    ...needs,
+                                };
+                            });
+                        });
+                        const subsAll = Object.entries(bySub)
+                            .map(([name, data]) => ({ name, ...data }))
+                            .filter(s => s.total_units > 0);
+                        const minahakOpts = Array.from(new Set(subsAll.map(s => s.minahak).filter(Boolean))).sort();
+                        const subs = (publicNeedsMinahakFilter === 'all'
+                            ? subsAll
+                            : subsAll.filter(s => s.minahak === publicNeedsMinahakFilter))
+                            .sort((a, b) => {
+                                const ma = (a.minahak || 'ת'), mb = (b.minahak || 'ת');
+                                if (ma !== mb) return ma.localeCompare(mb, 'he');
+                                return b.total_units - a.total_units;
+                            });
+
+                        // ── Drilldown view ──
+                        if (publicNeedsDrilldown) {
+                            const { sub } = publicNeedsDrilldown;
+                            const data = bySub[sub];
+                            if (!data) {
+                                return (
+                                    <div className="units-overlay" onClick={() => { setPublicNeedsDrilldown(null); }}>
+                                        <div className="units-modal" onClick={e => e.stopPropagation()}>
+                                            <div className="units-header">
+                                                <button className="units-back-btn" onClick={() => setPublicNeedsDrilldown(null)}>← חזור</button>
+                                                <h2>{sub}</h2>
+                                                <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsDrilldown(null); }}>&times;</button>
+                                            </div>
+                                            <div className="units-body"><div className="units-loading"><p>אין נתונים לתת-שכונה זו</p></div></div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div className="units-overlay" onClick={() => { setPublicNeedsDrilldown(null); }}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1000px,95vw)'}}>
+                                        <div className="units-header">
+                                            <button className="units-back-btn" onClick={() => setPublicNeedsDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
+                                            <h2>🏫 {sub} — פירוט צרכים ({targetYear})</h2>
+                                            <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsDrilldown(null); }}>&times;</button>
+                                        </div>
+                                        <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
+                                            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>יח״ד קיימות</div><div style={{fontSize:20,color:'#4ba1f0',fontWeight:'bold'}}>{data.units_in.toLocaleString()}</div></div>
+                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>תוספת עד {targetYear}</div><div style={{fontSize:20,color:'#4CAF50',fontWeight:'bold'}}>+{data.units_new_target.toLocaleString()}</div></div>
+                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>סה״כ יח״ד</div><div style={{fontSize:20,color:'#fff',fontWeight:'bold'}}>{data.total_units.toLocaleString()}</div></div>
+                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:20,color:'#f59e0b',fontWeight:'bold'}}>{data.population.toLocaleString()}</div></div>
+                                            </div>
+                                            <div style={{fontSize:11,color:'#888',marginBottom:10}}>
+                                                הנחות: גודל משק בית={assumpt.householdSize} · %חרדי={Math.round(assumpt.haredi*100)}% · שנתון כללי={assumpt.ageYearPctGeneral}% · שנתון חרדי={assumpt.ageYearPctHaredi}%
+                                            </div>
+                                            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
+                                                <thead>
+                                                    <tr style={{background:'#1a1a2e',color:'#aaa'}}>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שירות</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>זרם</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>גילאים</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>ילדים</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>גודל כיתה</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>כיתות</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>דונם/כיתה</th>
+                                                        <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>סה״כ דונם</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {PUBLIC_NEEDS_SERVICES.map(svc => {
+                                                        const s = data.byService[svc.key];
+                                                        return PUBLIC_NEEDS_STREAMS.map((stream, si) => {
+                                                            const sd = s[stream.key === 'mamlakhti' ? 'mam' : stream.key];
+                                                            if (sd.classes === 0 && si > 0) return null;
+                                                            return (
+                                                                <tr key={svc.key + '-' + stream.key} style={{borderBottom:'1px solid #222'}}>
+                                                                    {si === 0 ? <td rowSpan={PUBLIC_NEEDS_STREAMS.filter(st => data.byService[svc.key][st.key === 'mamlakhti' ? 'mam' : st.key].classes > 0 || st.key === 'mamlakhti').length} style={{padding:'6px',fontWeight:'bold',borderRight:'2px solid ' + stream.color}}>{svc.icon} {svc.label}</td> : null}
+                                                                    <td style={{padding:'6px',color:stream.color}}>{stream.label}</td>
+                                                                    {si === 0 ? <td rowSpan={PUBLIC_NEEDS_STREAMS.filter(st => data.byService[svc.key][st.key === 'mamlakhti' ? 'mam' : st.key].classes > 0 || st.key === 'mamlakhti').length} style={{padding:'6px',textAlign:'center',color:'#9ca3af'}}>{svc.ageFrom}-{svc.ageTo}</td> : null}
+                                                                    <td style={{padding:'6px',textAlign:'center'}}>{sd.children}</td>
+                                                                    <td style={{padding:'6px',textAlign:'center',color:'#9ca3af'}}>{sd.classSize}</td>
+                                                                    <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{sd.classes}</td>
+                                                                    <td style={{padding:'6px',textAlign:'center',color:'#9ca3af'}}>{sd.dunamPerClass.toFixed(2)}</td>
+                                                                    <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:sd.dunam > 0 ? '#4CAF50' : '#555'}}>{sd.dunam.toFixed(2)}</td>
+                                                                </tr>
+                                                            );
+                                                        });
+                                                    })}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                        <td colSpan={5} style={{padding:8}}>סה״כ</td>
+                                                        <td style={{padding:8,textAlign:'center',color:'#fff'}}>{data.totalClasses}</td>
+                                                        <td style={{padding:8}}></td>
+                                                        <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>{data.totalDunam.toFixed(2)} ד׳</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                            <div style={{marginTop:14,padding:10,background:'#1a1a2e',borderRadius:6,fontSize:11,color:'#aaa',lineHeight:1.6}}>
+                                                <b style={{color:'#e0e0ff'}}>הערות:</b>
+                                                <ul style={{margin:'6px 0',paddingRight:18}}>
+                                                    <li>החישוב מתבסס על מכסות <b>מרקם עירוני קיים (טיפוס C)</b> מהמדריך של מינהל התכנון (2018).</li>
+                                                    <li>מעון יום: 1.0 דונם ל-3 כיתות (השתתפות 50%); שאר השירותים 100% השתתפות.</li>
+                                                    <li>חלוקה שווה בין בנים/בנות בזרם החרדי; גדלי כיתה שונים בבנים (20) מול בנות (27).</li>
+                                                    <li>"יח״ד קיימות" מבוסס על נתון units_in של התב״עות (עשוי להחמיץ מבני מגורים שאינם כלולים בתב״ע כלשהי).</li>
+                                                    <li>"תוספת" מבוססת על {targetYear} בטבלת המימוש (יח״ד × אחוז מימוש משוקלל).</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // ── Main view ──
+                        function exportPNCsv() {
+                            const cols = ['תת-שכונה','מינהל','יח״ד קיימות','+2030','+2035','+2040','סה״כ ' + targetYear,'אוכלוסייה']
+                                .concat(PUBLIC_NEEDS_SERVICES.flatMap(s => [s.label + ' כיתות', s.label + ' דונם']))
+                                .concat(['סה״כ כיתות','סה״כ דונם']);
+                            const rows = subs.map(s => [
+                                s.name, s.minahak || '', s.units_in, s.units_new_2030, s.units_new_2035, s.units_new_2040, s.total_units, s.population
+                            ].concat(PUBLIC_NEEDS_SERVICES.flatMap(svc => {
+                                const sd = s.byService[svc.key];
+                                return [sd.totalClasses, sd.totalDunam];
+                            })).concat([s.totalClasses, s.totalDunam]));
+                            const csv = [cols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))).join('\n');
+                            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'צרכי_ציבור_' + targetYear + '.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        }
+                        function printPNReport() {
+                            const win = window.open('', '_blank');
+                            const hdr = ['<th>תת-שכונה</th><th>מינהל</th><th>קיימות</th><th>+' + targetYear + '</th><th>אוכלוסייה</th>']
+                                .concat(PUBLIC_NEEDS_SERVICES.map(s => '<th>' + s.label + '<br><span style="font-size:9px;color:#666">כיתות/דונם</span></th>'))
+                                .concat(['<th>סה״כ דונם</th>']).join('');
+                            const rowsHtml = subs.map(s => '<tr><td>' + s.name + '</td><td>' + (s.minahak||'') + '</td>' +
+                                '<td>' + s.units_in + '</td><td>' + s.units_new_target + '</td><td>' + s.population + '</td>' +
+                                PUBLIC_NEEDS_SERVICES.map(svc => {
+                                    const sd = s.byService[svc.key];
+                                    return '<td>' + sd.totalClasses + ' / ' + sd.totalDunam.toFixed(2) + '</td>';
+                                }).join('') +
+                                '<td><b>' + s.totalDunam.toFixed(2) + '</b></td></tr>').join('');
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>צרכי ציבור ' + targetYear + '</title>' +
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#0d47a1}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#eef}.params{background:#f7f7ff;padding:10px;margin:10px 0;border-radius:4px;font-size:11px}</style></head><body>');
+                            win.document.write('<h2>🏫 צרכי ציבור לפי תת-שכונה — אופק ' + targetYear + '</h2>');
+                            win.document.write('<div class="params">הנחות: גודל משק בית=<b>' + assumpt.householdSize + '</b> · %חרדי=<b>' + Math.round(assumpt.haredi*100) + '%</b> · שנתון כללי=<b>' + assumpt.ageYearPctGeneral + '%</b> · שנתון חרדי=<b>' + assumpt.ageYearPctHaredi + '%</b> · תאריך: ' + new Date().toLocaleDateString('he-IL') + '</div>');
+                            win.document.write('<table><thead><tr>' + hdr + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>');
+                            win.document.write('<p style="font-size:10px;color:#666;margin-top:14px">* מבוסס על מכסות "מרקם עירוני קיים (טיפוס C)" מהמדריך של מינהל התכנון, 2018.</p>');
+                            win.document.write('</body></html>');
+                            win.document.close(); win.print();
+                        }
+
+                        const yearOpts = [2030, 2035, 2040];
+                        const totalsFooter = subs.reduce((acc, s) => {
+                            acc.units_in += s.units_in; acc.units_new += s.units_new_target; acc.total_units += s.total_units; acc.population += s.population;
+                            PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                                acc.svc[svc.key] = acc.svc[svc.key] || { classes: 0, dunam: 0 };
+                                acc.svc[svc.key].classes += s.byService[svc.key].totalClasses;
+                                acc.svc[svc.key].dunam += s.byService[svc.key].totalDunam;
+                            });
+                            acc.totalDunam += s.totalDunam;
+                            return acc;
+                        }, { units_in: 0, units_new: 0, total_units: 0, population: 0, svc: {}, totalDunam: 0 });
+
+                        return (
+                            <div className="units-overlay" onClick={() => setShowPublicNeeds(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1300px,95vw)'}}>
+                                    <div className="units-header" style={{flexDirection:'column',alignItems:'stretch',gap:8}}>
+                                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                                            <h2 style={{margin:0,color:'#e0e0ff'}}>🏫 צרכי ציבור לפי תת-שכונה ({subs.length} שכונות · אופק {targetYear})</h2>
+                                            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                                                <select value={publicNeedsMinahakFilter} onChange={e => setPublicNeedsMinahakFilter(e.target.value)} style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'4px 8px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                                    <option value="all">כל המינהלים</option>
+                                                    {minahakOpts.map(m => <option key={m} value={m}>{m}</option>)}
+                                                </select>
+                                                <button onClick={exportPNCsv} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
+                                                <button onClick={printPNReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                                <button className="units-close" onClick={() => setShowPublicNeeds(false)}>&times;</button>
+                                            </div>
+                                        </div>
+                                        <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center',background:'#16162a',padding:'8px 10px',borderRadius:6}}>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>שנת יעד:</label>
+                                                {yearOpts.map(y => (
+                                                    <button key={y} onClick={() => setPublicNeedsAssumptions(a => ({ ...a, targetYear: y }))} style={{background: y === targetYear ? '#3a5a80' : 'transparent',color: y === targetYear ? '#fff' : '#888',border:'1px solid ' + (y === targetYear ? '#5a7a9a' : '#333'),padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>{y}</button>
+                                                ))}
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>גודל משק בית:</label>
+                                                <input type="range" min="2.5" max="6.0" step="0.1" value={assumpt.householdSize} onChange={e => setPublicNeedsAssumptions(a => ({...a, householdSize: parseFloat(e.target.value)}))} style={{width:110}} />
+                                                <span style={{fontSize:11,color:'#e0e0ff',minWidth:28,textAlign:'center',fontWeight:'bold'}}>{assumpt.householdSize.toFixed(1)}</span>
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>% חרדי:</label>
+                                                <input type="range" min="0" max="100" step="1" value={Math.round(assumpt.haredi*100)} onChange={e => setPublicNeedsAssumptions(a => ({...a, haredi: parseInt(e.target.value)/100}))} style={{width:110}} />
+                                                <span style={{fontSize:11,color:'#7b1fa2',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(assumpt.haredi*100)}%</span>
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>% דתי:</label>
+                                                <input type="range" min="0" max="100" step="1" value={Math.round(assumpt.religious*100)} onChange={e => setPublicNeedsAssumptions(a => ({...a, religious: parseInt(e.target.value)/100}))} style={{width:110}} />
+                                                <span style={{fontSize:11,color:'#2e7d32',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(assumpt.religious*100)}%</span>
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>שנתון כללי:</label>
+                                                <input type="number" min="1.5" max="4" step="0.1" value={assumpt.ageYearPctGeneral} onChange={e => setPublicNeedsAssumptions(a => ({...a, ageYearPctGeneral: parseFloat(e.target.value)||2}))} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
+                                                <span style={{fontSize:10,color:'#888'}}>%</span>
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                <label style={{fontSize:11,color:'#aaa'}}>שנתון חרדי:</label>
+                                                <input type="number" min="1.5" max="5" step="0.1" value={assumpt.ageYearPctHaredi} onChange={e => setPublicNeedsAssumptions(a => ({...a, ageYearPctHaredi: parseFloat(e.target.value)||3}))} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
+                                                <span style={{fontSize:10,color:'#888'}}>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
+                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
+                                            <thead>
+                                                <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0,zIndex:1}}>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תת-שכונה</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>מינהל</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4ba1f0'}}>יח״ד קיימות</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>+{targetYear}</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה״כ</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>אוכלוסייה</th>
+                                                    {PUBLIC_NEEDS_SERVICES.map(svc => (
+                                                        <th key={svc.key} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e0e0ff'}}>{svc.icon} {svc.label}<br/><span style={{fontSize:10,color:'#888'}}>כיתות / דונם</span></th>
+                                                    ))}
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>סה״כ דונם</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {subs.length === 0 ? (
+                                                    <tr><td colSpan={6 + PUBLIC_NEEDS_SERVICES.length + 1} style={{padding:20,textAlign:'center',color:'#888'}}>אין נתונים להצגה</td></tr>
+                                                ) : subs.map((s, idx) => {
+                                                    const prev = idx > 0 ? subs[idx - 1] : null;
+                                                    const minahakChanged = !prev || prev.minahak !== s.minahak;
+                                                    return (
+                                                        <tr key={s.name} style={{borderBottom:'1px solid #222',borderTop: minahakChanged && idx > 0 ? '2px solid #444' : 'none'}}>
+                                                            <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0',cursor:'pointer',textDecoration:'underline'}} onClick={() => setPublicNeedsDrilldown({ sub: s.name })}>{s.name}</td>
+                                                            <td style={{padding:'6px',color:'#9ca3af',fontSize:11}}>{s.minahak || '—'}</td>
+                                                            <td style={{padding:'6px',textAlign:'center',color:'#4ba1f0'}}>{s.units_in.toLocaleString()}</td>
+                                                            <td style={{padding:'6px',textAlign:'center',color:'#4CAF50'}}>+{s.units_new_target.toLocaleString()}</td>
+                                                            <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total_units.toLocaleString()}</td>
+                                                            <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{s.population.toLocaleString()}</td>
+                                                            {PUBLIC_NEEDS_SERVICES.map(svc => {
+                                                                const sd = s.byService[svc.key];
+                                                                const empty = sd.totalClasses === 0;
+                                                                return (
+                                                                    <td key={svc.key} onClick={() => empty ? null : setPublicNeedsDrilldown({ sub: s.name })}
+                                                                        style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#555':'#e0e0ff',background:empty?'transparent':'rgba(255,255,255,0.02)'}}>
+                                                                        {empty ? '—' : (sd.totalClasses + ' / ' + sd.totalDunam.toFixed(2))}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                            <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#4CAF50'}}>{s.totalDunam.toFixed(2)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                            {subs.length > 0 && (
+                                            <tfoot>
+                                                <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                    <td style={{padding:8}} colSpan={2}>סה״כ</td>
+                                                    <td style={{padding:8,textAlign:'center',color:'#4ba1f0'}}>{totalsFooter.units_in.toLocaleString()}</td>
+                                                    <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>+{totalsFooter.units_new.toLocaleString()}</td>
+                                                    <td style={{padding:8,textAlign:'center',color:'#fff'}}>{totalsFooter.total_units.toLocaleString()}</td>
+                                                    <td style={{padding:8,textAlign:'center',color:'#f59e0b'}}>{totalsFooter.population.toLocaleString()}</td>
+                                                    {PUBLIC_NEEDS_SERVICES.map(svc => (
+                                                        <td key={svc.key} style={{padding:8,textAlign:'center',color:'#e0e0ff'}}>{totalsFooter.svc[svc.key].classes} / {totalsFooter.svc[svc.key].dunam.toFixed(1)}</td>
+                                                    ))}
+                                                    <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>{totalsFooter.totalDunam.toFixed(2)}</td>
+                                                </tr>
+                                            </tfoot>
+                                            )}
                                         </table>
                                     </div>
                                 </div>
