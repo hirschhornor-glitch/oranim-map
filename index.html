@@ -4384,6 +4384,8 @@
                     const planSummary = p.plan_summary || p.plan_name_he || '';
                     const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
                     const unitsTotal = parseInt(p.units_total) || 0;
+                    const planMinahak = (p.minahak || '').trim();
+                    const presetHH = (PN_MINAHAK_PRESETS[planMinahak] && PN_MINAHAK_PRESETS[planMinahak].householdSize) || 3.5;
 
                     // Calculate open space from xplan within plan boundary
                     const geo = clickedFeature.geometry;
@@ -4497,9 +4499,9 @@
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
-                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):</div>' +
+                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (planMinahak && PN_MINAHAK_PRESETS[planMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + planMinahak + ')</span>' : '') + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
-                        '<input id="shatzaf-household" type="number" value="3.5" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
+                        '<input id="shatzaf-household" type="number" value="' + presetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
                         '<button id="shatzaf-calc" style="flex:1;padding:8px;background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
@@ -4599,6 +4601,21 @@
                             }
                         }
 
+                        // Standard comparison: 30-70 m² per household (guide 2018, type C)
+                        const sqmPerHH = unitsTotal > 0 ? (openSpaceArea / unitsTotal) : 0;
+                        let standardHtml = '';
+                        if (unitsTotal > 0 && openSpaceArea > 0) {
+                            const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
+                            const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
+                            const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
+                            standardHtml =
+                                '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
+                                '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>מ"ר למשק בית:</span><b style="color:#e0e0e0">' + sqmPerHH.toFixed(1) + '</b></div>' +
+                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>30-70 מ"ר</span></div>' +
+                                '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' +
+                                '</div>';
+                        }
+
                         resultDiv.innerHTML =
                             '<div style="border-top:1px solid #333;padding-top:12px">' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
@@ -4608,6 +4625,7 @@
                             '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
                             subCompareHtml +
                             '</div>' +
+                            standardHtml +
                             (unitsTotal === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>' : '') +
                             (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>' : '') +
                             '</div>';
@@ -4842,6 +4860,17 @@
                         });
                     }
 
+                    // Find parent minahak for this sub-neighborhood (via SUB_NORMALIZE)
+                    let subMinahak = null;
+                    const normSubName = SUB_NORMALIZE[subName] || subName;
+                    Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
+                        if (subMinahak) return;
+                        if (ss.includes(subName) || ss.includes(normSubName) || ss.some(s => (SUB_NORMALIZE[s] || s) === normSubName)) {
+                            subMinahak = m;
+                        }
+                    });
+                    const subPresetHH = (subMinahak && PN_MINAHAK_PRESETS[subMinahak] && PN_MINAHAK_PRESETS[subMinahak].householdSize) || 3.5;
+
                     // Show result dialog
                     const panel = document.createElement('div');
                     panel.id = 'shatzaf-panel';
@@ -4851,14 +4880,15 @@
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
                         '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + subName + '</h3>' +
                         '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
+                        (subMinahak ? '<div style="font-size:11px;margin-bottom:6px;color:#888">מינהל: ' + subMinahak + '</div>' : '') +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + totalUnitsIn.toLocaleString() + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד תוספת: <b>' + totalUnitsAdd.toLocaleString() + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">סה"כ יח"ד: <b>' + grandTotalUnits.toLocaleString() + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
-                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):</div>' +
+                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '') + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
-                        '<input id="shatzaf-household" type="number" value="3.5" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
+                        '<input id="shatzaf-household" type="number" value="' + subPresetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
                         '<button id="shatzaf-calc" style="flex:1;padding:8px;background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
@@ -4871,8 +4901,24 @@
                         const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
                         const totalPeople = grandTotalUnits * hh;
                         const sqmPerPerson = totalPeople > 0 ? (openSpaceArea / totalPeople) : 0;
+                        const sqmPerHH = grandTotalUnits > 0 ? (openSpaceArea / grandTotalUnits) : 0;
                         const resultDiv = document.getElementById('shatzaf-result');
                         resultDiv.style.display = 'block';
+
+                        // Standard: 30-70 m²/household (guide 2018, type C)
+                        let standardHtml = '';
+                        if (grandTotalUnits > 0 && openSpaceArea > 0) {
+                            const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
+                            const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
+                            const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
+                            standardHtml =
+                                '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
+                                '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>מ"ר למשק בית:</span><b style="color:#e0e0e0">' + sqmPerHH.toFixed(1) + '</b></div>' +
+                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>30-70 מ"ר</span></div>' +
+                                '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' +
+                                '</div>';
+                        }
+
                         resultDiv.innerHTML =
                             '<div style="border-top:1px solid #333;padding-top:12px">' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
@@ -4881,6 +4927,7 @@
                             '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' +
                             '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
                             '</div>' +
+                            standardHtml +
                             (grandTotalUnits === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד</div>' : '') +
                             (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ באזור</div>' : '') +
                             '</div>';
