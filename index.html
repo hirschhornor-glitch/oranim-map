@@ -3535,14 +3535,38 @@
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
-            const [publicNeedsAssumptions, setPublicNeedsAssumptions] = useState({
+            // Assumptions: default set + per-minahak overrides. Each minahak's controls edit its own slot.
+            const PN_DEFAULT_ASSUMPTIONS = {
                 householdSize: 3.2,
-                haredi: 0,        // fraction 0-1
-                religious: 0,     // fraction 0-1 (affects synagogue/mikve demand)
-                targetYear: 2040, // 2030 | 2035 | 2040
-                ageYearPctGeneral: 2.0,  // % population per single age-year (general/mamlakhti)
-                ageYearPctHaredi: 3.0,   // % population per single age-year (haredi)
-            });
+                haredi: 0,
+                religious: 0,
+                targetYear: 2040,
+                ageYearPctGeneral: 2.0,
+                ageYearPctHaredi: 3.0,
+            };
+            const [publicNeedsAssumptionsMap, setPublicNeedsAssumptionsMap] = useState({ default: { ...PN_DEFAULT_ASSUMPTIONS }, perMinahak: {} });
+            const getPNAssumptions = (minahak) => {
+                if (!minahak) return publicNeedsAssumptionsMap.default;
+                return publicNeedsAssumptionsMap.perMinahak[minahak] || publicNeedsAssumptionsMap.default;
+            };
+            const hasPNOverride = (minahak) => !!(minahak && publicNeedsAssumptionsMap.perMinahak[minahak]);
+            const updatePNAssumptions = (minahak, patch) => {
+                setPublicNeedsAssumptionsMap(prev => {
+                    if (!minahak) {
+                        return { ...prev, default: { ...prev.default, ...patch } };
+                    }
+                    const current = prev.perMinahak[minahak] || prev.default;
+                    return { ...prev, perMinahak: { ...prev.perMinahak, [minahak]: { ...current, ...patch } } };
+                });
+            };
+            const resetPNAssumptions = (minahak) => {
+                if (!minahak) return;
+                setPublicNeedsAssumptionsMap(prev => {
+                    const next = { ...prev.perMinahak };
+                    delete next[minahak];
+                    return { ...prev, perMinahak: next };
+                });
+            };
             const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set([
                 'bniya_chadasha', 'tosefet', 'harisa', 'chafira_milui',
                 'tama38', 'shinuyim', 'shimush_chorech', 'drachim',
@@ -13608,11 +13632,11 @@
                                 </div>
                             );
                         }
-                        const assumpt = publicNeedsAssumptions;
-                        const targetYear = assumpt.targetYear;
-                        // Build per-minahak data
+                        // Build per-minahak data — each minahak uses its OWN assumptions (falls back to default)
                         const byMinahak = {};
                         mimD.minahaks.forEach(m => {
+                            const mAssumpt = getPNAssumptions(m);
+                            const mTargetYear = mAssumpt.targetYear;
                             const mimSubs = mimD.bySub[m] || {};
                             const unitsSubs = (unitsData.bySub[m]) || {};
                             const allSubNames = new Set([...Object.keys(mimSubs), ...Object.keys(unitsSubs)]);
@@ -13620,10 +13644,10 @@
                             allSubNames.forEach(sub => {
                                 if (sub === 'לא ידוע' || sub === 'אחר') return;
                                 const units_in = (unitsSubs[sub] && unitsSubs[sub].units_in) || 0;
-                                const units_new_target = (mimSubs[sub] && mimSubs[sub].byYear[targetYear]) || 0;
+                                const units_new_target = (mimSubs[sub] && mimSubs[sub].byYear[mTargetYear]) || 0;
                                 const total = units_in + units_new_target;
                                 if (total === 0) return;
-                                const needs = computePublicNeeds(total, assumpt);
+                                const needs = computePublicNeeds(total, mAssumpt);
                                 subs.push({
                                     name: sub,
                                     units_in: Math.round(units_in),
@@ -13633,12 +13657,11 @@
                                 });
                             });
                             subs.sort((a, b) => b.total_units - a.total_units);
-                            // Minahak totals (aggregate residents)
                             const totalUnits = subs.reduce((s, x) => s + x.total_units, 0);
                             const totalIn = subs.reduce((s, x) => s + x.units_in, 0);
                             const totalNew = subs.reduce((s, x) => s + x.units_new_target, 0);
-                            const aggNeeds = computePublicNeeds(totalUnits, assumpt);
-                            const nonEdu = computeNeighborhoodProgramServices(totalUnits, assumpt);
+                            const aggNeeds = computePublicNeeds(totalUnits, mAssumpt);
+                            const nonEdu = computeNeighborhoodProgramServices(totalUnits, mAssumpt);
                             byMinahak[m] = {
                                 name: m,
                                 subs,
@@ -13649,47 +13672,60 @@
                                 byService: aggNeeds.byService,
                                 totalClasses: aggNeeds.totalClasses,
                                 nonEdu,
+                                assumpt: mAssumpt,
+                                targetYear: mTargetYear,
+                                hasOverride: hasPNOverride(m),
                             };
                         });
                         const minahakList = mimD.minahaks.filter(m => byMinahak[m] && byMinahak[m].total_units > 0);
 
-                        // ── Control Panel (used in all views) ──
+                        // ── Control Panel — parameterised by target (null = default / per-minahak name) ──
                         const yearOpts = [2030, 2035, 2040];
-                        const renderControls = () => (
-                            <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center',background:'#16162a',padding:'8px 10px',borderRadius:6}}>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>שנת יעד:</label>
-                                    {yearOpts.map(y => (
-                                        <button key={y} onClick={() => setPublicNeedsAssumptions(a => ({ ...a, targetYear: y }))} style={{background: y === targetYear ? '#3a5a80' : 'transparent',color: y === targetYear ? '#fff' : '#888',border:'1px solid ' + (y === targetYear ? '#5a7a9a' : '#333'),padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>{y}</button>
-                                    ))}
+                        const renderControls = (targetKey) => {
+                            const ctrlAssumpt = targetKey ? getPNAssumptions(targetKey) : publicNeedsAssumptionsMap.default;
+                            const setA = (patch) => updatePNAssumptions(targetKey, patch);
+                            const isOverride = targetKey && hasPNOverride(targetKey);
+                            return (
+                                <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center',background:'#16162a',padding:'8px 10px',borderRadius:6}}>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>{targetKey ? ('הגדרות ל' + targetKey + ':') : 'הגדרות ברירת מחדל:'}</label>
+                                        {isOverride && <span title="הגדרות מותאמות למינהל זה" style={{background:'#7b1fa2',color:'#fff',fontSize:9,padding:'1px 5px',borderRadius:8}}>מותאם</span>}
+                                        {isOverride && <button onClick={() => resetPNAssumptions(targetKey)} title="אפס להגדרות ברירת מחדל" style={{background:'transparent',color:'#aaa',border:'1px solid #555',padding:'1px 6px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>↺ איפוס</button>}
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>שנת יעד:</label>
+                                        {yearOpts.map(y => (
+                                            <button key={y} onClick={() => setA({ targetYear: y })} style={{background: y === ctrlAssumpt.targetYear ? '#3a5a80' : 'transparent',color: y === ctrlAssumpt.targetYear ? '#fff' : '#888',border:'1px solid ' + (y === ctrlAssumpt.targetYear ? '#5a7a9a' : '#333'),padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>{y}</button>
+                                        ))}
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>גודל משק בית:</label>
+                                        <input type="range" min="2.5" max="6.0" step="0.1" value={ctrlAssumpt.householdSize} onChange={e => setA({ householdSize: parseFloat(e.target.value) })} style={{width:110}} />
+                                        <span style={{fontSize:11,color:'#e0e0ff',minWidth:28,textAlign:'center',fontWeight:'bold'}}>{ctrlAssumpt.householdSize.toFixed(1)}</span>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>% חרדי:</label>
+                                        <input type="range" min="0" max="100" step="1" value={Math.round(ctrlAssumpt.haredi*100)} onChange={e => setA({ haredi: parseInt(e.target.value)/100 })} style={{width:110}} />
+                                        <span style={{fontSize:11,color:'#7b1fa2',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(ctrlAssumpt.haredi*100)}%</span>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>% דתי:</label>
+                                        <input type="range" min="0" max="100" step="1" value={Math.round(ctrlAssumpt.religious*100)} onChange={e => setA({ religious: parseInt(e.target.value)/100 })} style={{width:110}} />
+                                        <span style={{fontSize:11,color:'#2e7d32',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(ctrlAssumpt.religious*100)}%</span>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>שנתון כללי:</label>
+                                        <input type="number" min="1.5" max="4" step="0.1" value={ctrlAssumpt.ageYearPctGeneral} onChange={e => setA({ ageYearPctGeneral: parseFloat(e.target.value)||2 })} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
+                                        <span style={{fontSize:10,color:'#888'}}>%</span>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                        <label style={{fontSize:11,color:'#aaa'}}>שנתון חרדי:</label>
+                                        <input type="number" min="1.5" max="5" step="0.1" value={ctrlAssumpt.ageYearPctHaredi} onChange={e => setA({ ageYearPctHaredi: parseFloat(e.target.value)||3 })} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
+                                        <span style={{fontSize:10,color:'#888'}}>%</span>
+                                    </div>
                                 </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>גודל משק בית:</label>
-                                    <input type="range" min="2.5" max="6.0" step="0.1" value={assumpt.householdSize} onChange={e => setPublicNeedsAssumptions(a => ({...a, householdSize: parseFloat(e.target.value)}))} style={{width:110}} />
-                                    <span style={{fontSize:11,color:'#e0e0ff',minWidth:28,textAlign:'center',fontWeight:'bold'}}>{assumpt.householdSize.toFixed(1)}</span>
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>% חרדי:</label>
-                                    <input type="range" min="0" max="100" step="1" value={Math.round(assumpt.haredi*100)} onChange={e => setPublicNeedsAssumptions(a => ({...a, haredi: parseInt(e.target.value)/100}))} style={{width:110}} />
-                                    <span style={{fontSize:11,color:'#7b1fa2',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(assumpt.haredi*100)}%</span>
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>% דתי:</label>
-                                    <input type="range" min="0" max="100" step="1" value={Math.round(assumpt.religious*100)} onChange={e => setPublicNeedsAssumptions(a => ({...a, religious: parseInt(e.target.value)/100}))} style={{width:110}} />
-                                    <span style={{fontSize:11,color:'#2e7d32',minWidth:32,textAlign:'center',fontWeight:'bold'}}>{Math.round(assumpt.religious*100)}%</span>
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>שנתון כללי:</label>
-                                    <input type="number" min="1.5" max="4" step="0.1" value={assumpt.ageYearPctGeneral} onChange={e => setPublicNeedsAssumptions(a => ({...a, ageYearPctGeneral: parseFloat(e.target.value)||2}))} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
-                                    <span style={{fontSize:10,color:'#888'}}>%</span>
-                                </div>
-                                <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <label style={{fontSize:11,color:'#aaa'}}>שנתון חרדי:</label>
-                                    <input type="number" min="1.5" max="5" step="0.1" value={assumpt.ageYearPctHaredi} onChange={e => setPublicNeedsAssumptions(a => ({...a, ageYearPctHaredi: parseFloat(e.target.value)||3}))} style={{width:50,background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px',borderRadius:3,fontSize:11}} />
-                                    <span style={{fontSize:10,color:'#888'}}>%</span>
-                                </div>
-                            </div>
-                        );
+                            );
+                        };
 
                         // ── View 1: Cards grid (no minahak selected) ──
                         if (!publicNeedsMinahak && !publicNeedsDrilldown) {
@@ -13698,22 +13734,23 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1100px,95vw)'}}>
                                         <div className="units-header" style={{flexDirection:'column',alignItems:'stretch',gap:8}}>
                                             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-                                                <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ פרוגרמה שכונתית — בחר מינהל קהילתי (אופק {targetYear})</h2>
+                                                <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ פרוגרמה שכונתית — בחר מינהל קהילתי</h2>
                                                 <button className="units-close" onClick={() => setShowPublicNeeds(false)}>&times;</button>
                                             </div>
-                                            {renderControls()}
+                                            {renderControls(null)}
                                         </div>
                                         <div className="units-body" style={{padding:16,color:'#e0e0e0'}}>
                                             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
                                                 {minahakList.map(m => {
                                                     const d = byMinahak[m];
                                                     return (
-                                                        <div key={m} onClick={() => setPublicNeedsMinahak(m)} style={{background:'linear-gradient(135deg,#1d1d35 0%,#262648 100%)',border:'1px solid #3a3a5a',borderRadius:10,padding:16,cursor:'pointer',transition:'all 0.15s',boxShadow:'0 2px 8px rgba(0,0,0,0.3)'}} onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='#5a7a9a'; }} onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='#3a3a5a'; }}>
+                                                        <div key={m} onClick={() => setPublicNeedsMinahak(m)} style={{background:'linear-gradient(135deg,#1d1d35 0%,#262648 100%)',border:'1px solid ' + (d.hasOverride ? '#7b1fa2' : '#3a3a5a'),borderRadius:10,padding:16,cursor:'pointer',transition:'all 0.15s',boxShadow:'0 2px 8px rgba(0,0,0,0.3)',position:'relative'}} onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor= d.hasOverride ? '#9c4dc5' : '#5a7a9a'; }} onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor= d.hasOverride ? '#7b1fa2' : '#3a3a5a'; }}>
+                                                            {d.hasOverride && <span title="פרמטרים מותאמים למינהל זה" style={{position:'absolute',top:8,left:8,background:'#7b1fa2',color:'#fff',fontSize:9,padding:'2px 6px',borderRadius:8}}>מותאם</span>}
                                                             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
                                                                 <span style={{fontSize:28}}>🏘️</span>
                                                                 <div>
                                                                     <div style={{fontSize:16,fontWeight:'bold',color:'#e0e0ff'}}>{m}</div>
-                                                                    <div style={{fontSize:11,color:'#888'}}>{d.subs.length} תת-שכונות</div>
+                                                                    <div style={{fontSize:11,color:'#888'}}>{d.subs.length} תת-שכונות · אופק {d.targetYear}</div>
                                                                 </div>
                                                             </div>
                                                             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
@@ -13722,7 +13759,7 @@
                                                                     <div style={{fontSize:15,color:'#4ba1f0',fontWeight:'bold'}}>{d.units_in.toLocaleString()}</div>
                                                                 </div>
                                                                 <div style={{background:'rgba(76,175,80,0.1)',padding:'6px 8px',borderRadius:4}}>
-                                                                    <div style={{fontSize:10,color:'#888'}}>תוספת</div>
+                                                                    <div style={{fontSize:10,color:'#888'}}>תוספת ({d.targetYear})</div>
                                                                     <div style={{fontSize:15,color:'#4CAF50',fontWeight:'bold'}}>+{d.units_new_target.toLocaleString()}</div>
                                                                 </div>
                                                                 <div style={{background:'rgba(245,158,11,0.1)',padding:'6px 8px',borderRadius:4}}>
@@ -13780,13 +13817,13 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(900px,95vw)'}}>
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPublicNeedsDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
-                                            <h2>🏘️ {sub} — פירוט חישוב ({targetYear})</h2>
+                                            <h2>🏘️ {sub} — פירוט חישוב ({mData.targetYear})</h2>
                                             <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); setPublicNeedsDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
                                             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
                                                 <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>יח״ד קיימות</div><div style={{fontSize:20,color:'#4ba1f0',fontWeight:'bold'}}>{data.units_in.toLocaleString()}</div></div>
-                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>תוספת עד {targetYear}</div><div style={{fontSize:20,color:'#4CAF50',fontWeight:'bold'}}>+{data.units_new_target.toLocaleString()}</div></div>
+                                                <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>תוספת עד {mData.targetYear}</div><div style={{fontSize:20,color:'#4CAF50',fontWeight:'bold'}}>+{data.units_new_target.toLocaleString()}</div></div>
                                                 <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>סה״כ יח״ד</div><div style={{fontSize:20,color:'#fff',fontWeight:'bold'}}>{data.total_units.toLocaleString()}</div></div>
                                                 <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:20,color:'#f59e0b',fontWeight:'bold'}}>{data.population.toLocaleString()}</div></div>
                                             </div>
@@ -13833,7 +13870,7 @@
                                                     <li>החישוב מתבסס על נוסחאות המדריך של מינהל התכנון (2018) ברמת <b>תלמידים לכיתה</b>.</li>
                                                     <li>מעון יום: השתתפות 50%; שאר השירותים 100%.</li>
                                                     <li>חלוקה שווה בין בנים/בנות בזרם החרדי; גודל כיתה בחרדי-בנים = 20.</li>
-                                                    <li>"יח״ד קיימות" מבוסס על units_in של התב״עות; "תוספת" לפי טבלת המימוש ({targetYear}).</li>
+                                                    <li>"יח״ד קיימות" מבוסס על units_in של התב״עות; "תוספת" לפי טבלת המימוש ({mData.targetYear}).</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -13860,14 +13897,13 @@
                         }
 
                         function exportPNCsv() {
-                            const cols = ['תת-שכונה','יח״ד קיימות','תוספת ' + targetYear,'סה״כ','אוכלוסייה']
+                            const cols = ['תת-שכונה','יח״ד קיימות','תוספת ' + mData.targetYear,'סה״כ','אוכלוסייה']
                                 .concat(PUBLIC_NEEDS_SERVICES.map(s => s.label + ' כיתות'))
                                 .concat(['סה״כ כיתות']);
                             const rows = mData.subs.map(s => [
                                 s.name, s.units_in, s.units_new_target, s.total_units, s.population
                             ].concat(PUBLIC_NEEDS_SERVICES.map(svc => s.byService[svc.key].totalClasses))
                               .concat([s.totalClasses]));
-                            // Non-edu as separate section
                             rows.push([]);
                             rows.push(['--- שירותים נוספים (ברמת המינהל) ---']);
                             rows.push(['שירות','סף כניסה','בסיס חישוב','ערך בפועל','כמות נדרשת','הערה']);
@@ -13879,7 +13915,7 @@
                             const blob = new Blob(['\uFEFF' + header + '\n' + csv], { type: 'text/csv;charset=utf-8' });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
-                            a.href = url; a.download = 'פרוגרמה_' + mData.name + '_' + targetYear + '.csv';
+                            a.href = url; a.download = 'פרוגרמה_' + mData.name + '_' + mData.targetYear + '.csv';
                             document.body.appendChild(a); a.click(); a.remove();
                             URL.revokeObjectURL(url);
                         }
@@ -13892,8 +13928,8 @@
                             const nonEduRows = mData.nonEdu.map(s => '<tr><td>' + s.label + '</td><td>' + s.entry + '</td><td>' + s.basisValue + '</td><td><b>' + s.count + '</b></td><td>' + (s.note||'') + '</td></tr>').join('');
                             win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>פרוגרמה ' + mData.name + '</title>' +
                                 '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2,h3{color:#0d47a1}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#eef}.params{background:#f7f7ff;padding:10px;margin:10px 0;border-radius:4px;font-size:11px}</style></head><body>');
-                            win.document.write('<h2>🏘️ פרוגרמה שכונתית — ' + mData.name + ' (אופק ' + targetYear + ')</h2>');
-                            win.document.write('<div class="params">הנחות: גודל משק בית=<b>' + assumpt.householdSize + '</b> · %חרדי=<b>' + Math.round(assumpt.haredi*100) + '%</b> · %דתי=<b>' + Math.round(assumpt.religious*100) + '%</b> · אוכלוסייה צפויה=<b>' + mData.population.toLocaleString() + '</b></div>');
+                            win.document.write('<h2>🏘️ פרוגרמה שכונתית — ' + mData.name + ' (אופק ' + mData.targetYear + ')</h2>');
+                            win.document.write('<div class="params">הנחות: גודל משק בית=<b>' + mData.assumpt.householdSize + '</b> · %חרדי=<b>' + Math.round(mData.assumpt.haredi*100) + '%</b> · %דתי=<b>' + Math.round(mData.assumpt.religious*100) + '%</b> · אוכלוסייה צפויה=<b>' + mData.population.toLocaleString() + '</b></div>');
                             win.document.write('<h3>🎓 חינוך — כיתות נדרשות לפי תת-שכונה</h3>');
                             win.document.write('<table><thead><tr>' + eduHdr + '</tr></thead><tbody>' + eduRows + '</tbody></table>');
                             win.document.write('<h3>🏢 שירותים נוספים (ברמת המינהל)</h3>');
@@ -13912,7 +13948,8 @@
                                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
                                             <div style={{display:'flex',alignItems:'center',gap:8}}>
                                                 <button className="units-back-btn" onClick={() => setPublicNeedsMinahak(null)}>← מינהלים</button>
-                                                <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ {mData.name} — פרוגרמה שכונתית ({mData.subs.length} תת-שכונות · {targetYear})</h2>
+                                                <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ {mData.name} — פרוגרמה שכונתית ({mData.subs.length} תת-שכונות · אופק {mData.targetYear})</h2>
+                                                {mData.hasOverride && <span title="למינהל זה יש הגדרות פרמטרים מותאמות" style={{background:'#7b1fa2',color:'#fff',fontSize:9,padding:'2px 6px',borderRadius:8}}>פרמטרים מותאמים</span>}
                                             </div>
                                             <div style={{display:'flex',gap:8,alignItems:'center'}}>
                                                 <button onClick={exportPNCsv} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
@@ -13920,13 +13957,13 @@
                                                 <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
                                             </div>
                                         </div>
-                                        {renderControls()}
+                                        {renderControls(publicNeedsMinahak)}
                                     </div>
                                     <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
                                         {/* KPI strip */}
                                         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:16}}>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #4ba1f0'}}><div style={{fontSize:11,color:'#888'}}>יח״ד קיימות</div><div style={{fontSize:22,color:'#4ba1f0',fontWeight:'bold'}}>{mData.units_in.toLocaleString()}</div></div>
-                                            <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #4CAF50'}}><div style={{fontSize:11,color:'#888'}}>תוספת עד {targetYear}</div><div style={{fontSize:22,color:'#4CAF50',fontWeight:'bold'}}>+{mData.units_new_target.toLocaleString()}</div></div>
+                                            <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #4CAF50'}}><div style={{fontSize:11,color:'#888'}}>תוספת עד {mData.targetYear}</div><div style={{fontSize:22,color:'#4CAF50',fontWeight:'bold'}}>+{mData.units_new_target.toLocaleString()}</div></div>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #fff'}}><div style={{fontSize:11,color:'#888'}}>סה״כ יח״ד</div><div style={{fontSize:22,color:'#fff',fontWeight:'bold'}}>{mData.total_units.toLocaleString()}</div></div>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #f59e0b'}}><div style={{fontSize:11,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:22,color:'#f59e0b',fontWeight:'bold'}}>{mData.population.toLocaleString()}</div></div>
                                         </div>
@@ -13938,7 +13975,7 @@
                                                 <tr style={{background:'#1a1a2e',color:'#aaa'}}>
                                                     <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4ba1f0'}}>יח״ד קיימות</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>+{targetYear}</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>+{mData.targetYear}</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה״כ</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>אוכלוסייה</th>
                                                     {PUBLIC_NEEDS_SERVICES.map(svc => (
