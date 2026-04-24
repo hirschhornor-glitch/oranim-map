@@ -4601,8 +4601,9 @@
                             }
                         }
 
-                        // Standard comparison: 30-70 m² per household (guide 2018, type C)
+                        // Standard comparison: 30-70 m²/HH → convert to m²/person for display
                         const sqmPerHH = unitsTotal > 0 ? (openSpaceArea / unitsTotal) : 0;
+                        const minPerPerson = 30 / hh, maxPerPerson = 70 / hh;
                         let standardHtml = '';
                         if (unitsTotal > 0 && openSpaceArea > 0) {
                             const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
@@ -4610,8 +4611,7 @@
                             const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
                             standardHtml =
                                 '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
-                                '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>מ"ר למשק בית:</span><b style="color:#e0e0e0">' + sqmPerHH.toFixed(1) + '</b></div>' +
-                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>30-70 מ"ר</span></div>' +
+                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' +
                                 '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' +
                                 '</div>';
                         }
@@ -4905,7 +4905,8 @@
                         const resultDiv = document.getElementById('shatzaf-result');
                         resultDiv.style.display = 'block';
 
-                        // Standard: 30-70 m²/household (guide 2018, type C)
+                        // Standard: 30-70 m²/HH → shown as per-person range
+                        const minPerPerson = 30 / hh, maxPerPerson = 70 / hh;
                         let standardHtml = '';
                         if (grandTotalUnits > 0 && openSpaceArea > 0) {
                             const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
@@ -4913,8 +4914,7 @@
                             const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
                             standardHtml =
                                 '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
-                                '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>מ"ר למשק בית:</span><b style="color:#e0e0e0">' + sqmPerHH.toFixed(1) + '</b></div>' +
-                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>30-70 מ"ר</span></div>' +
+                                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' +
                                 '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' +
                                 '</div>';
                         }
@@ -13690,76 +13690,6 @@
                                 </div>
                             );
                         }
-                        // Cached per-minahak שצ"פ computation (doesn't change with assumptions — expensive)
-                        function computeMinahakShatzaf(minahakName) {
-                            const cache = window.__pnShatzafCache = window.__pnShatzafCache || {};
-                            if (cache[minahakName] !== undefined) return cache[minahakName];
-                            const targetSet = new Set();
-                            (MINAHAK_SUBS[minahakName] || []).forEach(s => {
-                                targetSet.add(s);
-                                targetSet.add(SUB_NORMALIZE[s] || s);
-                            });
-                            if (!gd.sub_neighborhoods) { cache[minahakName] = 0; return 0; }
-                            // Find sub_neighborhood polygons belonging to this minahak (match via SUB_NORMALIZE both ways)
-                            const subPolys = gd.sub_neighborhoods.features.filter(f => {
-                                const raw = f.properties.schn_nama || '';
-                                const norm = SUB_NORMALIZE[raw] || raw;
-                                return targetSet.has(raw) || targetSet.has(norm);
-                            });
-                            if (subPolys.length === 0) { cache[minahakName] = 0; return 0; }
-                            let totalArea = 0;
-                            const openSpaceFeatures = [];
-                            // Use yiud_karka_kayam (has Descr field) + landuse_xplan (uses mavat_name)
-                            if (gd.yiud_karka_kayam) {
-                                gd.yiud_karka_kayam.features.forEach(f => {
-                                    const name = (f.properties.Descr || '').trim();
-                                    if (!name) return;
-                                    const group = getLanduseGroup(name);
-                                    if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                                    openSpaceFeatures.push(f);
-                                });
-                            }
-                            if (gd.landuse_xplan) {
-                                gd.landuse_xplan.features.forEach(f => {
-                                    const name = (f.properties.mavat_name || f.properties.Descr || '').trim();
-                                    if (!name) return;
-                                    const group = getLanduseGroup(name);
-                                    if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                                    openSpaceFeatures.push(f);
-                                });
-                            }
-                            // For each open-space centroid, check if inside any of the minahak's sub polygons
-                            const countedIds = new Set();
-                            openSpaceFeatures.forEach((f, fi) => {
-                                let fCoords;
-                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
-                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
-                                else return;
-                                let cx = 0, cy = 0, n = 0;
-                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
-                                cx /= n; cy /= n;
-                                for (const sub of subPolys) {
-                                    let subCoords;
-                                    if (sub.geometry.type === 'Polygon') subCoords = sub.geometry.coordinates[0];
-                                    else if (sub.geometry.type === 'MultiPolygon') subCoords = sub.geometry.coordinates[0][0];
-                                    else continue;
-                                    let inside = false;
-                                    for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
-                                        const [xi, yi] = subCoords[i], [xj, yj] = subCoords[j];
-                                        if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
-                                            inside = !inside;
-                                    }
-                                    if (inside && !countedIds.has(fi)) {
-                                        countedIds.add(fi);
-                                        totalArea += getFeatureArea(f);
-                                        break;
-                                    }
-                                }
-                            });
-                            cache[minahakName] = Math.round(totalArea);
-                            return cache[minahakName];
-                        }
-
                         // Build per-minahak data — each minahak uses its OWN assumptions (falls back to default)
                         const byMinahak = {};
                         const normSub = (n) => SUB_NORMALIZE[n] || n;
@@ -13801,10 +13731,6 @@
                             const totalNew = subs.reduce((s, x) => s + x.units_new_target, 0);
                             const aggNeeds = computePublicNeeds(totalUnits, mAssumpt);
                             const nonEdu = computeNeighborhoodProgramServices(totalUnits, mAssumpt);
-                            const shatzafArea = computeMinahakShatzaf(m);
-                            const totalHouseholds = totalUnits; // ≈ 1 household per unit
-                            const shatzafPerPerson = aggNeeds.population > 0 ? (shatzafArea / aggNeeds.population) : 0;
-                            const shatzafPerHH = totalHouseholds > 0 ? (shatzafArea / totalHouseholds) : 0;
                             byMinahak[m] = {
                                 name: m,
                                 subs,
@@ -13815,9 +13741,6 @@
                                 byService: aggNeeds.byService,
                                 totalClasses: aggNeeds.totalClasses,
                                 nonEdu,
-                                shatzafArea,
-                                shatzafPerPerson,
-                                shatzafPerHH,
                                 assumpt: mAssumpt,
                                 targetYear: mTargetYear,
                                 hasOverride: hasPNOverride(m),
@@ -14163,29 +14086,6 @@
                                                 })}
                                             </tbody>
                                         </table>
-
-                                        {/* ── שצ"פ לנפש ── */}
-                                        <h3 style={{margin:'16px 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🌳 שצ"פ — שטח ציבורי פתוח</h3>
-                                        {(() => {
-                                            const shatzaf_hh = mData.shatzafPerHH;
-                                            const shatzaf_nefesh = mData.shatzafPerPerson;
-                                            const minStandardHH = 30, maxStandardHH = 70;   // גrokde 2018, type C
-                                            const status = shatzaf_hh >= maxStandardHH ? 'gold' : shatzaf_hh >= minStandardHH ? 'ok' : 'deficit';
-                                            const statusLabel = status === 'gold' ? '✓ מעל הטווח המומלץ' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
-                                            const statusColor = status === 'gold' ? '#4CAF50' : status === 'ok' ? '#4CAF50' : '#ef5350';
-                                            const deficitHH = shatzaf_hh < minStandardHH ? Math.round((minStandardHH - shatzaf_hh) * mData.total_units) : 0;
-                                            return (
-                                                <div>
-                                                    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:10}}>
-                                                        <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>שצ"פ קיים</div><div style={{fontSize:18,color:'#66bb6a',fontWeight:'bold'}}>{mData.shatzafArea.toLocaleString()} מ"ר</div><div style={{fontSize:10,color:'#666'}}>{(mData.shatzafArea/1000).toFixed(1)} דונם</div></div>
-                                                        <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>מ"ר לנפש</div><div style={{fontSize:18,color:'#66bb6a',fontWeight:'bold'}}>{shatzaf_nefesh.toFixed(1)}</div><div style={{fontSize:10,color:'#666'}}>({mData.population.toLocaleString()} נפשות)</div></div>
-                                                        <div style={{background:'#1a1a2e',padding:10,borderRadius:6}}><div style={{fontSize:10,color:'#888'}}>מ"ר למשק בית</div><div style={{fontSize:18,color:'#66bb6a',fontWeight:'bold'}}>{shatzaf_hh.toFixed(1)}</div><div style={{fontSize:10,color:'#666'}}>תקן: 30-70 מ"ר</div></div>
-                                                        <div style={{background:'#1a1a2e',padding:10,borderRadius:6,borderRight:'3px solid ' + statusColor}}><div style={{fontSize:10,color:'#888'}}>סטטוס</div><div style={{fontSize:15,color:statusColor,fontWeight:'bold',marginTop:4}}>{statusLabel}</div>{deficitHH > 0 && <div style={{fontSize:10,color:'#ef5350',marginTop:4}}>חסר ~{deficitHH.toLocaleString()} מ"ר</div>}</div>
-                                                    </div>
-                                                    <div style={{fontSize:10,color:'#666',marginBottom:10}}>מבוסס על שכבת "ייעודי קרקע" (landuse_xplan) — שטחים פתוחים, יער/חקלאי בתוך תחום המינהל. תקן: 30-70 מ"ר למשק בית (מדריך מינהל התכנון 2018, מרקם עירוני קיים).</div>
-                                                </div>
-                                            );
-                                        })()}
 
                                         <div style={{marginTop:14,padding:10,background:'#1a1a2e',borderRadius:6,fontSize:11,color:'#888',lineHeight:1.6}}>
                                             <b style={{color:'#aaa'}}>הערות:</b> ספי כניסה וגדלי מוסדות מבוססים על מדריך מינהל התכנון (2018), מרקם עירוני קיים. "מתחת לסף" = המינהל טרם הגיע לגודל המינימלי להצדקת המתקן. לחץ על שם תת-שכונה לפירוט חישוב החינוך.
