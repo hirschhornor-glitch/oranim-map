@@ -6896,17 +6896,17 @@
 
             // Non-education services (neighborhood level). Thresholds approximate 2018 guide.
             const NEIGHBORHOOD_PROGRAM_SERVICES = [
-                { key: 'tipat_chalav',   label: 'טיפת חלב',        icon: '🤱', basis: 'residents',          per: 5000,  entry: 3000,  note: 'תחנה לבריאות המשפחה' },
-                { key: 'clinic',         label: 'מרפאה שכונתית',    icon: '🏥', basis: 'residents',          per: 10000, entry: 5000,  note: 'קופת חולים' },
-                { key: 'matnas',         label: 'מתנ"ס',           icon: '🏢', basis: 'residents',          per: 10000, entry: 5000,  note: 'מרכז קהילתי' },
-                { key: 'welfare_dept',   label: 'לשכת רווחה',       icon: '🤝', basis: 'residents',          per: 25000, entry: 10000, note: 'מחלקה לשירותים חברתיים' },
-                { key: 'noar_club',      label: 'מועדון נוער',      icon: '🎮', basis: 'residents',          per: 4000,  entry: 2500  },
-                { key: 'elderly_club',   label: 'מועדון קשיש',      icon: '👴', basis: 'elderly',            per: 2000,  entry: 300,   note: 'לאזרחים ותיקים' },
-                { key: 'elderly_day',    label: 'מרכז יום לקשיש',   icon: '🪑', basis: 'frail_elderly',      per: 200,   entry: 100,   note: 'תשושי גוף/נפש' },
-                { key: 'synagogue',      label: 'בית כנסת',        icon: '🕍', basis: 'religious_hh',       per: 300,   entry: 150,   note: 'לפי אוכלוסייה דתית/חרדית' },
-                { key: 'mikve',          label: 'מקווה טהרה',      icon: '💧', basis: 'religious_hh',       per: 1500,  entry: 500,   note: 'לנשים' },
-                { key: 'sport_hall',     label: 'אולם ספורט',      icon: '⛹️', basis: 'residents',          per: 20000, entry: 10000, note: '500-800 מ"ר' },
-                { key: 'library',        label: 'ספרייה שכונתית',  icon: '📚', basis: 'residents',          per: 15000, entry: 5000   },
+                { key: 'tipat_chalav',   label: 'טיפת חלב',        basis: 'residents',     per: 5000,  entry: 3000,  note: 'תחנה לבריאות המשפחה' },
+                { key: 'clinic',         label: 'מרפאה שכונתית',    basis: 'residents',     per: 10000, entry: 5000,  note: 'קופת חולים' },
+                { key: 'matnas',         label: 'מתנ"ס',           basis: 'residents',     per: 10000, entry: 5000,  note: 'מרכז קהילתי' },
+                { key: 'welfare_dept',   label: 'לשכת רווחה',       basis: 'residents',     per: 25000, entry: 10000, note: 'מחלקה לשירותים חברתיים' },
+                { key: 'noar_club',      label: 'מועדון נוער',      basis: 'residents',     per: 4000,  entry: 2500  },
+                { key: 'elderly_club',   label: 'מועדון קשיש',      basis: 'elderly',       per: 2000,  entry: 300,   note: 'לאזרחים ותיקים' },
+                { key: 'elderly_day',    label: 'מרכז יום לקשיש',   basis: 'frail_elderly', per: 200,   entry: 100,   note: 'תשושי גוף/נפש' },
+                { key: 'synagogue',      label: 'בית כנסת',        basis: 'religious_hh',  per: 300,   entry: 150,   note: 'לפי אוכלוסייה דתית/חרדית' },
+                { key: 'mikve',          label: 'מקווה טהרה',      basis: 'religious_hh',  per: 1500,  entry: 500,   note: 'לנשים' },
+                { key: 'sport_hall',     label: 'אולם ספורט',      basis: 'residents',     per: 20000, entry: 10000, note: '500-800 מ"ר' },
+                { key: 'library',        label: 'ספרייה שכונתית',  basis: 'residents',     per: 15000, entry: 5000   },
             ];
 
             function computeNeighborhoodProgramServices(totalUnits, assumptions) {
@@ -14015,7 +14015,7 @@
                                                     const belowEntry = s.basisValue < s.entry;
                                                     return (
                                                         <tr key={s.key} style={{borderBottom:'1px solid #222',opacity: belowEntry ? 0.55 : 1}}>
-                                                            <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0ff'}}>{s.icon} {s.label}</td>
+                                                            <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0ff'}}>{s.label}</td>
                                                             <td style={{padding:'6px',color:'#9ca3af',fontSize:11}}>{basisLabels[s.basis] || s.basis}</td>
                                                             <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{s.basisValue.toLocaleString()}</td>
                                                             <td style={{padding:'6px',textAlign:'center',color:'#9ca3af'}}>{s.entry.toLocaleString()}</td>
