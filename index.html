@@ -2328,6 +2328,7 @@
             landuse_xplan: 'data/landuse_xplan.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
+            education_shanaton: 'data/education_shanaton.geojson',
             master_plan_moshavot: 'data/master_plan_moshavot.geojson',
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
@@ -2461,6 +2462,7 @@
                 layers: [
                     { id: 'mosadot_shchuna', name: 'מוסדות חינוך', desc: 'פרטי המוסדות בשכונה - מצב קיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
+                    { id: 'education_shanaton', name: 'מסגרות חינוך (שנתון)', desc: 'מסגרות חינוך משנתון מנח"י — 317 מוסדות, מקובץ לפי כתובת', on: false },
                 ]
             },
             master_plans: {
@@ -7026,6 +7028,72 @@
                 return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
             }
 
+            // Existing education classes from education_shanaton, grouped by sub-neighborhood.
+            // Returns { subName: { ganim_count, gan_special_count, yesodi_count, yesodi_classes, alyesodi_count, alyesodi_classes, special_classes, total_classes, students } }
+            function computeExistingEduPerSub(gd) {
+                const out = {};
+                if (!gd || !gd.education_shanaton || !gd.sub_neighborhoods) return out;
+                const subs = gd.sub_neighborhoods.features;
+                const ringHit = (lng, lat, ring) => {
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi)) inside = !inside;
+                    }
+                    return inside;
+                };
+                const inGeom = (lng, lat, g) => {
+                    if (!g) return false;
+                    if (g.type === 'Polygon') return ringHit(lng, lat, g.coordinates[0]) && !g.coordinates.slice(1).some(h => ringHit(lng, lat, h));
+                    if (g.type === 'MultiPolygon') {
+                        for (const poly of g.coordinates) {
+                            if (ringHit(lng, lat, poly[0]) && !poly.slice(1).some(h => ringHit(lng, lat, h))) return true;
+                        }
+                    }
+                    return false;
+                };
+                gd.education_shanaton.features.forEach(f => {
+                    const c = f.geometry && f.geometry.coordinates;
+                    if (!c) return;
+                    const lng = c[0], lat = c[1];
+                    let subName = null;
+                    for (const s of subs) {
+                        if (inGeom(lng, lat, s.geometry)) {
+                            const raw = s.properties.schn_nama;
+                            subName = (typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[raw]) || raw;
+                            break;
+                        }
+                    }
+                    if (!subName) return;
+                    if (!out[subName]) out[subName] = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0 };
+                    const o = out[subName];
+                    f.properties.institutions.forEach(inst => {
+                        const t = inst.type;
+                        const studs = inst.students || 0;
+                        o.students += studs;
+                        if (t === 'גן') { o.ganim_count++; o.total_classes++; }
+                        else if (t === 'גן חינוך מיוחד') { o.gan_special_count++; o.total_classes++; o.special_classes++; }
+                        else if (t === 'יסודי' || t === 'יסודי/תיכון') {
+                            o.yesodi_count++;
+                            const k = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0);
+                            const c2 = k > 0 ? k : Math.max(1, Math.round(studs / 27));
+                            o.yesodi_classes += c2;
+                            o.special_classes += (inst.kitot_mekadmot || 0);
+                            o.total_classes += c2;
+                        }
+                        else if (t === 'תיכון' || t === 'חטיבה' || t === 'אולפנה' || t === 'מדרשייה' || t === 'ישיבה') {
+                            o.alyesodi_count++;
+                            const k = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0);
+                            const c2 = k > 0 ? k : Math.max(1, Math.round(studs / 28));
+                            o.alyesodi_classes += c2;
+                            o.special_classes += (inst.kitot_mekadmot || 0);
+                            o.total_classes += c2;
+                        }
+                    });
+                });
+                return out;
+            }
+
             function getStageFromStatus(statusMavat, stage) {
                 const s = (statusMavat || '').trim();
                 const st = (stage || '').trim();
@@ -8951,6 +9019,76 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.sara_march_2026 = saraLayer;
+                }
+
+                // --- Education Shanaton (institutions from manhi yearbook, grouped by address) ---
+                if (layers['education_shanaton'] && gd.education_shanaton) {
+                    const shanatonClean = { ...gd.education_shanaton, features: gd.education_shanaton.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const TYPE_COLOR = {
+                        'גן': '#7ec8e3', 'גן חינוך מיוחד': '#ffeb3b', 'מעון': '#e0c3fc',
+                        'יסודי': '#90ee90', 'יסודי/תיכון': '#a5d6a7', 'תיכון': '#ffb6a3',
+                        'חטיבה': '#ffd180', 'אולפנה': '#f8bbd0', 'מדרשייה': '#ce93d8',
+                        'ישיבה': '#bcaaa4', 'תלמוד תורה': '#cfd8dc', 'אחר': '#d0d0d0'
+                    };
+                    const shanatonLayer = L.geoJSON(shanatonClean, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties;
+                            const cnt = p.institutions_count || 1;
+                            const primaryType = p.primary_type || (p.institutions[0] || {}).type || 'אחר';
+                            const fill = TYPE_COLOR[primaryType] || TYPE_COLOR['אחר'];
+                            const size = cnt > 1 ? 22 : 16;
+                            const html = `<div style="background:${fill};border:1.5px solid #333;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#222;box-shadow:0 1px 3px rgba(0,0,0,0.3)">${cnt > 1 ? cnt : ''}</div>`;
+                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'edu-shanaton-icon', iconSize: [size, size], iconAnchor: [size/2, size/2] }) });
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current) return;
+                                const cnt = p.institutions_count || 1;
+                                const headerTitle = cnt > 1 ? `${cnt} מסגרות חינוך` : (p.institutions[0] && p.institutions[0].name) || 'מסגרת חינוך';
+                                const isSchool = (t) => t === 'יסודי' || t === 'יסודי/תיכון' || t === 'תיכון' || t === 'חטיבה' || t === 'אולפנה' || t === 'מדרשייה' || t === 'ישיבה' || t === 'תלמוד תורה';
+                                const TYPE_DOT = { 'גן': '#7ec8e3', 'גן חינוך מיוחד': '#ffeb3b', 'מעון': '#e0c3fc', 'יסודי': '#90ee90', 'יסודי/תיכון': '#a5d6a7', 'תיכון': '#ffb6a3', 'חטיבה': '#ffd180', 'אולפנה': '#f8bbd0', 'מדרשייה': '#ce93d8', 'ישיבה': '#bcaaa4', 'תלמוד תורה': '#cfd8dc', 'אחר': '#d0d0d0' };
+                                // Type breakdown for header summary
+                                const typeBreakdown = {};
+                                p.institutions.forEach(i => { typeBreakdown[i.type] = (typeBreakdown[i.type] || 0) + 1; });
+                                const breakdownChips = Object.entries(typeBreakdown).sort((a,b) => b[1]-a[1])
+                                    .map(([t,n]) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.07);font-size:11px;margin:2px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${TYPE_DOT[t]||'#888'}"></span>${n} ${t}</span>`).join('');
+                                let html = '<div style="font-family:inherit">';
+                                html += `<div class="popup-header" style="border-bottom:3px solid #4a90e2;position:sticky;top:0;background:inherit;z-index:1"><div class="popup-header-title">${headerTitle}</div>`;
+                                html += `<div class="popup-header-subtitle" style="opacity:0.85">${p.address || ''}${cnt > 1 ? ' · סה"כ ' + p.total_students + ' תלמידים' : ''}</div>`;
+                                if (cnt > 1) html += `<div style="padding:4px 0 2px">${breakdownChips}</div>`;
+                                html += '</div>';
+                                // Compact list (scrollable when long)
+                                html += `<div style="max-height:340px;overflow-y:auto;padding:4px 0">`;
+                                p.institutions.forEach((inst, i) => {
+                                    const dot = TYPE_DOT[inst.type] || '#888';
+                                    const meta = [];
+                                    if (inst.pikuach) meta.push(inst.pikuach);
+                                    if (inst.students != null) meta.push(`${inst.students} תלמידים`);
+                                    if (isSchool(inst.type)) {
+                                        const kreg = inst.kitot_regilot || 0, kmek = inst.kitot_mekadmot || 0, ktot = kreg + kmek;
+                                        if (ktot > 0) meta.push(`${ktot} כיתות${kmek ? ` (${kmek} חמ"ד)` : ''}`);
+                                    }
+                                    const showName = cnt > 1;
+                                    html += `<div style="padding:6px 14px${i < p.institutions.length-1 ? ';border-bottom:1px solid rgba(255,255,255,0.08)' : ''}">`;
+                                    if (showName) {
+                                        html += `<div style="display:flex;align-items:flex-start;gap:6px;font-size:12.5px;line-height:1.35;font-weight:600">`;
+                                        html += `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></span>`;
+                                        html += `<span style="flex:1">${inst.name || ''}</span></div>`;
+                                        html += `<div style="font-size:11px;opacity:0.85;margin:2px 0 0 15px"><span style="display:inline-block;background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:8px;margin-left:4px">${inst.type}</span>${meta.map(m => ` · ${m}`).join('')}</div>`;
+                                    } else {
+                                        // Single institution: show type/pikuach/students/kitot inline only
+                                        html += `<div style="font-size:12px;line-height:1.5"><span style="display:inline-block;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:8px;margin-left:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dot};margin-left:5px"></span>${inst.type}</span>${meta.map(m => ` · ${m}`).join('')}</div>`;
+                                    }
+                                    html += `</div>`;
+                                });
+                                html += '</div></div>';
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.education_shanaton = shanatonLayer;
                 }
 
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
@@ -13700,6 +13838,7 @@
                             );
                         }
                         // Build per-minahak data — each minahak uses its OWN assumptions (falls back to default)
+                        const existingEduBySub = computeExistingEduPerSub(gd);
                         const byMinahak = {};
                         const normSub = (n) => SUB_NORMALIZE[n] || n;
                         mimD.minahaks.forEach(m => {
@@ -13733,6 +13872,7 @@
                                     units_new_target: Math.round(vals.units_new_target),
                                     total_units: Math.round(total),
                                     ...needs,
+                                    existingEdu: existingEduBySub[sub] || null,
                                 });
                             });
                             subs.sort((a, b) => b.total_units - a.total_units);
@@ -13949,6 +14089,29 @@
                                 s.name, s.units_in, s.units_new_target, s.total_units, s.population
                             ].concat(PUBLIC_NEEDS_SERVICES.map(svc => s.byService[svc.key].totalClasses))
                               .concat([s.totalClasses]));
+                            // Existing edu balance section — only in "existing" mode
+                            const subsWithEdu = mData.subs.filter(s => s.existingEdu);
+                            if (subsWithEdu.length && mData.targetYear === 'existing') {
+                                rows.push([]);
+                                rows.push(['--- מאזן חינוך — קיים מול נדרש (כיתות) ---']);
+                                rows.push(['תת-שכונה','מעון נדרש','גן קיים','גן נדרש','גן פער','יסודי קיים','יסודי נדרש','יסודי פער','על-יסודי קיים','על-יסודי נדרש','על-יסודי פער','חמ"ד מקדמות','תלמידים (קיים)']);
+                                let tot = { ge:0, gr:0, ye:0, yr:0, ae:0, ar:0, mr:0, sp:0, st:0 };
+                                mData.subs.forEach(s => {
+                                    const e = s.existingEdu;
+                                    if (!e) {
+                                        rows.push([s.name, s.byService.maon.totalClasses, '—', s.byService.gan.totalClasses, '—', '—', s.byService.yesodi.totalClasses, '—', '—', s.byService.al_yesodi.totalClasses, '—', '—', '—']);
+                                        tot.gr += s.byService.gan.totalClasses; tot.yr += s.byService.yesodi.totalClasses; tot.ar += s.byService.al_yesodi.totalClasses; tot.mr += s.byService.maon.totalClasses;
+                                        return;
+                                    }
+                                    const ge = e.ganim_count + e.gan_special_count, gr = s.byService.gan.totalClasses;
+                                    const ye = e.yesodi_classes, yr = s.byService.yesodi.totalClasses;
+                                    const ae = e.alyesodi_classes, ar = s.byService.al_yesodi.totalClasses;
+                                    rows.push([s.name, s.byService.maon.totalClasses, ge, gr, ge-gr, ye, yr, ye-yr, ae, ar, ae-ar, e.special_classes, e.students]);
+                                    tot.ge += ge; tot.gr += gr; tot.ye += ye; tot.yr += yr; tot.ae += ae; tot.ar += ar;
+                                    tot.mr += s.byService.maon.totalClasses; tot.sp += e.special_classes; tot.st += e.students;
+                                });
+                                rows.push(['סה"כ מינהל', tot.mr, tot.ge, tot.gr, tot.ge-tot.gr, tot.ye, tot.yr, tot.ye-tot.yr, tot.ae, tot.ar, tot.ae-tot.ar, tot.sp, tot.st]);
+                            }
                             rows.push([]);
                             rows.push(['--- שירותים נוספים (ברמת המינהל) ---']);
                             rows.push(['שירות','סף כניסה','בסיס חישוב','ערך בפועל','כמות נדרשת','הערה']);
@@ -13977,6 +14140,42 @@
                             win.document.write('<div class="params">הנחות: גודל משק בית=<b>' + mData.assumpt.householdSize + '</b> · %חרדי=<b>' + Math.round(mData.assumpt.haredi*100) + '%</b> · %דתי=<b>' + Math.round(mData.assumpt.religious*100) + '%</b> · אוכלוסייה צפויה=<b>' + mData.population.toLocaleString() + '</b></div>');
                             win.document.write('<h3>🎓 חינוך — כיתות נדרשות לפי תת-שכונה</h3>');
                             win.document.write('<table><thead><tr>' + eduHdr + '</tr></thead><tbody>' + eduRows + '</tbody></table>');
+                            // Existing edu balance — only in "existing" mode
+                            const _subsWithEdu = mData.subs.filter(s => s.existingEdu);
+                            if (_subsWithEdu.length && mData.targetYear === 'existing') {
+                                const fmtDelta = (d, r) => {
+                                    if (r === 0) return d > 0 ? '<span style="color:#2e7d32">+' + d + '</span>' : String(d);
+                                    const ratio = d / r;
+                                    const c = ratio >= 0 ? '#2e7d32' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#c62828';
+                                    return '<span style="color:' + c + ';font-weight:bold">' + (d>=0?'+':'') + d + '</span>';
+                                };
+                                let tot = { ge:0, gr:0, ye:0, yr:0, ae:0, ar:0, sp:0 };
+                                let balanceRows = '';
+                                mData.subs.forEach(s => {
+                                    const e = s.existingEdu;
+                                    if (!e) {
+                                        balanceRows += '<tr><td>' + s.name + '</td><td colspan="9" style="color:#aaa;font-size:10px">אין נתונים בשנתון</td></tr>';
+                                        return;
+                                    }
+                                    const ge = e.ganim_count + e.gan_special_count, gr = s.byService.gan.totalClasses;
+                                    const ye = e.yesodi_classes, yr = s.byService.yesodi.totalClasses;
+                                    const ae = e.alyesodi_classes, ar = s.byService.al_yesodi.totalClasses;
+                                    balanceRows += '<tr><td>' + s.name + '</td>' +
+                                        '<td>' + ge + '</td><td>' + gr + '</td><td>' + fmtDelta(ge-gr, gr) + '</td>' +
+                                        '<td>' + ye + '</td><td>' + yr + '</td><td>' + fmtDelta(ye-yr, yr) + '</td>' +
+                                        '<td>' + ae + '</td><td>' + ar + '</td><td>' + fmtDelta(ae-ar, ar) + '</td>' +
+                                        '<td>' + e.special_classes + '</td>' +
+                                        '<td>' + e.students.toLocaleString() + '</td></tr>';
+                                    tot.ge += ge; tot.gr += gr; tot.ye += ye; tot.yr += yr; tot.ae += ae; tot.ar += ar; tot.sp += e.special_classes;
+                                });
+                                balanceRows += '<tr style="background:#eee;font-weight:bold"><td>סה"כ מינהל</td>' +
+                                    '<td>' + tot.ge + '</td><td>' + tot.gr + '</td><td>' + fmtDelta(tot.ge-tot.gr, tot.gr) + '</td>' +
+                                    '<td>' + tot.ye + '</td><td>' + tot.yr + '</td><td>' + fmtDelta(tot.ye-tot.yr, tot.yr) + '</td>' +
+                                    '<td>' + tot.ae + '</td><td>' + tot.ar + '</td><td>' + fmtDelta(tot.ae-tot.ar, tot.ar) + '</td>' +
+                                    '<td>' + tot.sp + '</td><td>—</td></tr>';
+                                win.document.write('<h3>🏫 מאזן חינוך — קיים מול נדרש (מנתוני שנתון מנח"י)</h3>');
+                                win.document.write('<table><thead><tr><th rowspan="2">תת-שכונה</th><th colspan="3">גני ילדים</th><th colspan="3">יסודי</th><th colspan="3">על-יסודי</th><th rowspan="2">חמ"ד מקדמות</th><th rowspan="2">תלמידים</th></tr><tr><th>קיים</th><th>נדרש</th><th>פער</th><th>קיים</th><th>נדרש</th><th>פער</th><th>קיים</th><th>נדרש</th><th>פער</th></tr></thead><tbody>' + balanceRows + '</tbody></table>');
+                            }
                             win.document.write('<h3>🏢 שירותים נוספים (ברמת המינהל)</h3>');
                             win.document.write('<table><thead><tr><th>שירות</th><th>סף כניסה</th><th>בסיס חישוב</th><th>כמות נדרשת</th><th>הערה</th></tr></thead><tbody>' + nonEduRows + '</tbody></table>');
                             win.document.write('<p style="font-size:10px;color:#666">* מבוסס על מכסות מרקם עירוני קיים (טיפוס C), מדריך מינהל התכנון, 2018.</p>');
@@ -14065,6 +14264,145 @@
                                                 </tr>
                                             </tfoot>
                                         </table>
+
+                                        {/* Existing education classes from שנתון מנח"י + delta vs required — only in "existing" mode */}
+                                        {mData.targetYear === 'existing' && (() => {
+                                            const subsWithEdu = mData.subs.filter(s => s.existingEdu);
+                                            if (!subsWithEdu.length) return null;
+                                            // Helper: existing classes by service key
+                                            const existingByKey = (e) => ({
+                                                gan: (e.ganim_count || 0) + (e.gan_special_count || 0),
+                                                yesodi: e.yesodi_classes || 0,
+                                                al_yesodi: e.alyesodi_classes || 0,
+                                                maon: null, // no existing data for maon
+                                            });
+                                            // Color for delta value (existing - required)
+                                            const deltaColor = (delta, required) => {
+                                                if (required === 0) return delta > 0 ? '#4CAF50' : '#888';
+                                                const ratio = delta / required;
+                                                if (ratio >= 0) return '#4CAF50';        // surplus / balanced
+                                                if (ratio >= -0.2) return '#f59e0b';     // mild deficit (≤20%)
+                                                if (ratio >= -0.5) return '#ef6c00';     // medium deficit (20-50%)
+                                                return '#e53935';                         // severe deficit (>50%)
+                                            };
+                                            const deltaRowBg = (delta, required) => {
+                                                if (required === 0) return 'transparent';
+                                                const ratio = delta / required;
+                                                if (ratio >= 0) return 'rgba(76,175,80,0.07)';
+                                                if (ratio >= -0.2) return 'rgba(245,158,11,0.07)';
+                                                if (ratio >= -0.5) return 'rgba(239,108,0,0.10)';
+                                                return 'rgba(229,57,53,0.13)';
+                                            };
+                                            // Format a comparison cell: "existing/required (delta)"
+                                            const compCell = (existing, required, key) => {
+                                                if (existing === null) {
+                                                    return <span style={{color:'#666'}}>—<span style={{fontSize:9,color:'#888',display:'block'}}>נדרש: {required}</span></span>;
+                                                }
+                                                const delta = existing - required;
+                                                const c = deltaColor(delta, required);
+                                                return (
+                                                    <span>
+                                                        <b style={{color:'#e0e0e0'}}>{existing}</b>
+                                                        <span style={{color:'#666'}}> / </span>
+                                                        <span style={{color:'#aaa'}}>{required}</span>
+                                                        <span style={{display:'block',fontSize:11,color:c,fontWeight:'bold',marginTop:2}}>
+                                                            {delta >= 0 ? '+' : ''}{delta}
+                                                        </span>
+                                                    </span>
+                                                );
+                                            };
+
+                                            // Aggregate per-sub deltas
+                                            const SVCS = [
+                                                { key: 'maon',      label: 'מעון',      color: '#e0c3fc' },
+                                                { key: 'gan',       label: 'גני ילדים', color: '#7ec8e3' },
+                                                { key: 'yesodi',    label: 'יסודי',     color: '#90ee90' },
+                                                { key: 'al_yesodi', label: 'על-יסודי',  color: '#ffb6a3' },
+                                            ];
+                                            const tot = subsWithEdu.reduce((acc, s) => {
+                                                const e = s.existingEdu;
+                                                acc.ganim_count += e.ganim_count;
+                                                acc.gan_special_count += e.gan_special_count;
+                                                acc.yesodi_classes += e.yesodi_classes;
+                                                acc.alyesodi_classes += e.alyesodi_classes;
+                                                acc.special_classes += e.special_classes;
+                                                acc.students += e.students;
+                                                return acc;
+                                            }, { ganim_count: 0, gan_special_count: 0, yesodi_classes: 0, alyesodi_classes: 0, special_classes: 0, students: 0 });
+                                            const totRequired = { gan: 0, yesodi: 0, al_yesodi: 0, maon: 0 };
+                                            mData.subs.forEach(s => {
+                                                ['gan','yesodi','al_yesodi','maon'].forEach(k => {
+                                                    totRequired[k] += s.byService[k].totalClasses;
+                                                });
+                                            });
+                                            const totExisting = { gan: tot.ganim_count + tot.gan_special_count, yesodi: tot.yesodi_classes, al_yesodi: tot.alyesodi_classes, maon: null };
+                                            const totalDelta = (totExisting.gan - totRequired.gan) + (totExisting.yesodi - totRequired.yesodi) + (totExisting.al_yesodi - totRequired.al_yesodi);
+
+                                            return (
+                                                <>
+                                                    <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏫 מאזן חינוך — קיים מול נדרש <span style={{fontSize:11,color:'#888',fontWeight:'normal'}}>(שנתון מנח"י vs טבלה לעיל · קיים / נדרש = פער)</span></h3>
+                                                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginBottom:14}}>
+                                                        <thead>
+                                                            <tr style={{background:'#1a1a2e',color:'#aaa'}}>
+                                                                <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
+                                                                {SVCS.map(svc => (
+                                                                    <th key={svc.key} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:svc.color}}>{svc.label}</th>
+                                                                ))}
+                                                                <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>תלמידים<br/><span style={{fontSize:9,color:'#888'}}>(קיים)</span></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {mData.subs.map(s => {
+                                                                const e = s.existingEdu;
+                                                                if (!e) return (
+                                                                    <tr key={s.name} style={{borderBottom:'1px solid #222',opacity:0.45}}>
+                                                                        <td style={{padding:'6px',color:'#888'}}>{s.name}</td>
+                                                                        <td colSpan={SVCS.length + 1} style={{padding:'6px',textAlign:'center',color:'#555',fontSize:11}}>אין נתונים בשנתון</td>
+                                                                    </tr>
+                                                                );
+                                                                const ex = existingByKey(e);
+                                                                return (
+                                                                    <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
+                                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
+                                                                        {SVCS.map(svc => (
+                                                                            <td key={svc.key} style={{padding:'4px 6px',textAlign:'center',background:deltaRowBg(((ex[svc.key]||0) - s.byService[svc.key].totalClasses), s.byService[svc.key].totalClasses)}}>
+                                                                                {compCell(ex[svc.key], s.byService[svc.key].totalClasses, svc.key)}
+                                                                            </td>
+                                                                        ))}
+                                                                        <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{e.students.toLocaleString()}</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                                <td style={{padding:8}}>סה"כ מינהל</td>
+                                                                {SVCS.map(svc => {
+                                                                    const ex = totExisting[svc.key];
+                                                                    const req = totRequired[svc.key];
+                                                                    if (ex === null) return <td key={svc.key} style={{padding:8,textAlign:'center',color:'#888'}}>— / {req}</td>;
+                                                                    const delta = ex - req;
+                                                                    return (
+                                                                        <td key={svc.key} style={{padding:6,textAlign:'center',background:deltaRowBg(delta, req)}}>
+                                                                            <b style={{color:'#fff'}}>{ex}</b><span style={{color:'#666'}}> / </span><span style={{color:'#aaa'}}>{req}</span>
+                                                                            <span style={{display:'block',fontSize:11,color:deltaColor(delta, req),marginTop:2}}>{delta >= 0 ? '+' : ''}{delta}</span>
+                                                                        </td>
+                                                                    );
+                                                                })}
+                                                                <td style={{padding:8,textAlign:'center',color:'#f59e0b'}}>{tot.students.toLocaleString()}</td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                    <div style={{marginBottom:18,fontSize:11,color:'#888',display:'flex',gap:14,flexWrap:'wrap'}}>
+                                                        <span><b style={{color:'#4CAF50'}}>■</b> עודף / מאוזן</span>
+                                                        <span><b style={{color:'#f59e0b'}}>■</b> חוסר קל (עד 20%)</span>
+                                                        <span><b style={{color:'#ef6c00'}}>■</b> חוסר בינוני (20-50%)</span>
+                                                        <span><b style={{color:'#e53935'}}>■</b> חוסר חמור (מעל 50%)</span>
+                                                        <span style={{marginRight:'auto',fontStyle:'italic'}}>חמ"ד (כיתות מקדמות) במוסדות הקיימים: {tot.special_classes}</span>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
 
                                         {/* Non-education section (minahak level) */}
                                         <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏢 שירותים נוספים — ברמת המינהל (לפי אוכלוסייה כוללת)</h3>
