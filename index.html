@@ -3536,6 +3536,7 @@
             // Neighborhood Program report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
+            const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
             // Assumptions: default + per-minahak presets + per-minahak overrides.
             // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
@@ -7065,14 +7066,21 @@
                         }
                     }
                     if (!subName) return;
-                    if (!out[subName]) out[subName] = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0 };
+                    if (!out[subName]) out[subName] = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
                     const o = out[subName];
                     f.properties.institutions.forEach(inst => {
                         const t = inst.type;
                         const studs = inst.students || 0;
                         o.students += studs;
-                        if (t === 'גן') { o.ganim_count++; o.total_classes++; }
-                        else if (t === 'גן חינוך מיוחד') { o.gan_special_count++; o.total_classes++; o.special_classes++; }
+                        const baseInfo = { name: inst.name, type: t, students: studs, address: f.properties.address, semel: inst.semel_chinuch, pikuach: inst.pikuach };
+                        if (t === 'גן') {
+                            o.ganim_count++; o.total_classes++;
+                            o.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs });
+                        }
+                        else if (t === 'גן חינוך מיוחד') {
+                            o.gan_special_count++; o.total_classes++; o.special_classes++;
+                            o.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs, special: true });
+                        }
                         else if (t === 'יסודי' || t === 'יסודי/תיכון') {
                             o.yesodi_count++;
                             const k = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0);
@@ -7080,6 +7088,7 @@
                             o.yesodi_classes += c2;
                             o.special_classes += (inst.kitot_mekadmot || 0);
                             o.total_classes += c2;
+                            o.byKey.yesodi.push({ ...baseInfo, classes: c2, avg: c2 ? Math.round(studs / c2) : 0, classes_estimated: !(k > 0), special_classes: inst.kitot_mekadmot || 0 });
                         }
                         else if (t === 'תיכון' || t === 'חטיבה' || t === 'אולפנה' || t === 'מדרשייה' || t === 'ישיבה') {
                             o.alyesodi_count++;
@@ -7088,6 +7097,7 @@
                             o.alyesodi_classes += c2;
                             o.special_classes += (inst.kitot_mekadmot || 0);
                             o.total_classes += c2;
+                            o.byKey.al_yesodi.push({ ...baseInfo, classes: c2, avg: c2 ? Math.round(studs / c2) : 0, classes_estimated: !(k > 0), special_classes: inst.kitot_mekadmot || 0 });
                         }
                     });
                 });
@@ -14361,16 +14371,68 @@
                                                                     </tr>
                                                                 );
                                                                 const ex = existingByKey(e);
+                                                                const isOpen = balanceDrilldown && balanceDrilldown.sub === s.name;
                                                                 return (
-                                                                    <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
+                                                                    <React.Fragment key={s.name}>
+                                                                    <tr style={{borderBottom:'1px solid #222'}}>
                                                                         <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
-                                                                        {SVCS.map(svc => (
-                                                                            <td key={svc.key} style={{padding:'4px 6px',textAlign:'center',background:deltaRowBg(((ex[svc.key]||0) - s.byService[svc.key].totalClasses), s.byService[svc.key].totalClasses)}}>
-                                                                                {compCell(ex[svc.key], s.byService[svc.key].totalClasses, svc.key)}
-                                                                            </td>
-                                                                        ))}
+                                                                        {SVCS.map(svc => {
+                                                                            const list = (e.byKey && e.byKey[svc.key]) || [];
+                                                                            const clickable = list.length > 0;
+                                                                            const isThisOpen = isOpen && balanceDrilldown.svcKey === svc.key;
+                                                                            return (
+                                                                                <td key={svc.key} onClick={() => clickable && setBalanceDrilldown(isThisOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'4px 6px',textAlign:'center',background:deltaRowBg(((ex[svc.key]||0) - s.byService[svc.key].totalClasses), s.byService[svc.key].totalClasses),cursor:clickable?'pointer':'default',outline:isThisOpen?'2px solid #4a90e2':'none'}} title={clickable ? 'לחץ לרשימה' : ''}>
+                                                                                    {compCell(ex[svc.key], s.byService[svc.key].totalClasses, svc.key)}
+                                                                                </td>
+                                                                            );
+                                                                        })}
                                                                         <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{e.students.toLocaleString()}</td>
                                                                     </tr>
+                                                                    {isOpen && (() => {
+                                                                        const svcKey = balanceDrilldown.svcKey;
+                                                                        const list = (e.byKey && e.byKey[svcKey]) || [];
+                                                                        const svcLabel = (SVCS.find(x => x.key === svcKey) || {}).label || svcKey;
+                                                                        const totStud = list.reduce((a,x)=>a+(x.students||0),0);
+                                                                        const totCls = list.reduce((a,x)=>a+(x.classes||0),0);
+                                                                        const avg = totCls ? Math.round(totStud/totCls) : 0;
+                                                                        return (
+                                                                            <tr>
+                                                                                <td colSpan={SVCS.length + 2} style={{padding:'8px 12px 14px 12px',background:'rgba(74,144,226,0.06)',borderBottom:'1px solid #222'}}>
+                                                                                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+                                                                                        <span style={{fontSize:12,color:'#aaa'}}>📋 <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svcLabel} ({list.length} מוסדות · {totCls} כיתות · {totStud.toLocaleString()} תלמידים · ממוצע {avg}/כיתה)</span>
+                                                                                        <button onClick={() => setBalanceDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
+                                                                                    </div>
+                                                                                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
+                                                                                        <thead>
+                                                                                            <tr style={{color:'#888'}}>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שם המוסד</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>כתובת</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>סוג</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>פיקוח</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>תלמידים</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>כיתות</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>ממוצע/כיתה</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            {list.sort((a,b) => (b.students||0)-(a.students||0)).map((it, idx) => (
+                                                                                                <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
+                                                                                                    <td style={{padding:'3px 6px'}}>{it.name}</td>
+                                                                                                    <td style={{padding:'3px 6px',color:'#888'}}>{it.address}</td>
+                                                                                                    <td style={{padding:'3px 6px',textAlign:'center'}}>{it.type}{it.special ? ' ⓢ' : ''}</td>
+                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{it.pikuach || '—'}</td>
+                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{it.students || '—'}</td>
+                                                                                                    <td style={{padding:'3px 6px',textAlign:'center'}}>{it.classes}{it.classes_estimated ? <span title="אומדן מתלמידים/27" style={{fontSize:9,color:'#f59e0b'}}> ~</span> : ''}{it.special_classes ? <span style={{fontSize:9,color:'#ce93d8'}}> ({it.special_classes} חמ"ד)</span> : ''}</td>
+                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#9cd1ff'}}>{it.avg || '—'}</td>
+                                                                                                </tr>
+                                                                                            ))}
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })()}
+                                                                    </React.Fragment>
                                                                 );
                                                             })}
                                                         </tbody>
@@ -16037,6 +16099,7 @@
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תאריך ישיבה</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שעה</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>ועדה</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
@@ -16078,6 +16141,7 @@
                                                 }; }}>
                                                     <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{mt.meeting_date}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffa726',fontSize:11}}>{mt.meeting_time || '-'}</td>
                                                     <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{committeeLabel}</td>
                                                     <td style={{padding:'4px',color: p._unmatched ? '#888' : '#64b5f6', textDecoration: p._unmatched ? 'none' : 'underline'}}>{p.plan_name || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
@@ -16101,20 +16165,20 @@
                                             printWin.document.write('</div>');
                                             printWin.document.write('<div class="header"><h2>תכניות בדיון בוועדות הקרובות</h2>');
                                             printWin.document.write('<p>' + rows.length + ' תכניות</p></div>');
-                                            printWin.document.write('<table><thead><tr><th>#</th><th>תאריך ישיבה</th><th>ועדה</th><th>מספר תכנית</th><th>שם תכנית</th><th>מטרת הדיון</th><th>סטטוס</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>תאריך ישיבה</th><th>שעה</th><th>ועדה</th><th>מספר תכנית</th><th>שם תכנית</th><th>מטרת הדיון</th><th>סטטוס</th><th>מינה"ק</th></tr></thead><tbody>');
                                             rows.forEach((p, i) => {
                                                 const mt = p._meeting;
                                                 const committee = mt.committee || 'מחוזית';
                                                 const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
-                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (mt.meeting_date||'-') + '</td><td>' + committeeLabel + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (mt.purpose||'-') + '</td><td>' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()) + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (mt.meeting_date||'-') + '</td><td>' + (mt.meeting_time||'-') + '</td><td>' + committeeLabel + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (mt.purpose||'-') + '</td><td>' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()) + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
                                             });
                                             printWin.document.write('</tbody></table>');
-                                            const csvRows = ['"#","תאריך ישיבה","ועדה","מספר תכנית","שם תכנית","מטרת הדיון","סטטוס","מינה\\"ק"'];
+                                            const csvRows = ['"#","תאריך ישיבה","שעה","ועדה","מספר תכנית","שם תכנית","מטרת הדיון","סטטוס","מינה\\"ק"'];
                                             rows.forEach((p, i) => {
                                                 const mt = p._meeting;
                                                 const committee = mt.committee || 'מחוזית';
                                                 const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
-                                                csvRows.push('"' + (i+1) + '","' + (mt.meeting_date||'-') + '","' + committeeLabel + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (mt.purpose||'-').replace(/"/g,'""') + '","' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()).replace(/"/g,'""') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
+                                                csvRows.push('"' + (i+1) + '","' + (mt.meeting_date||'-') + '","' + (mt.meeting_time||'-') + '","' + committeeLabel + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (mt.purpose||'-').replace(/"/g,'""') + '","' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()).replace(/"/g,'""') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
                                             });
                                             const csvContent = csvRows.join('\\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="ישיבות_קרובות.csv";a.click()});<\/script>');
