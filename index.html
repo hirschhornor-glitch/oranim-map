@@ -2333,7 +2333,115 @@
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
             master_plan_arnona: 'data/master_plan_arnona.geojson',
+            buildings: 'data/buildings.geojson',
         };
+
+        // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
+        // for buildings whose centroid falls inside a closed polygon (lng,lat ring).
+        function sumExistingUnitsInPolygon(polygonLngLat, buildings) {
+            if (!buildings || !buildings.features || !polygonLngLat || polygonLngLat.length < 3) return 0;
+            function pip(pt, ring) {
+                const x = pt[0], y = pt[1];
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1];
+                    const xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+            let sum = 0;
+            const feats = buildings.features;
+            for (let i = 0; i < feats.length; i++) {
+                const c = feats[i].geometry && feats[i].geometry.coordinates;
+                if (!c) continue;
+                if (pip(c, polygonLngLat)) sum += (feats[i].properties && feats[i].properties.units) || 0;
+            }
+            return sum;
+        }
+
+        // Aggregate education_shanaton institutions matching a filter — returns same
+        // shape as computeExistingEduPerSub's per-sub block (ganim_count, yesodi_classes, etc.).
+        function aggregateEduFeatures(matchedFeatures) {
+            const out = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
+            matchedFeatures.forEach(f => {
+                (f.properties.institutions || []).forEach(inst => {
+                    const t = inst.type;
+                    const studs = inst.students || 0;
+                    out.students += studs;
+                    const baseInfo = { name: inst.name, type: t, students: studs, address: f.properties.address, semel: inst.semel_chinuch, pikuach: inst.pikuach };
+                    if (t === 'גן') {
+                        out.ganim_count++; out.total_classes++;
+                        out.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs });
+                    } else if (t === 'גן חינוך מיוחד') {
+                        out.gan_special_count++; out.total_classes++; out.special_classes++;
+                        out.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs, special: true });
+                    } else if (t === 'יסודי' || t === 'יסודי/תיכון') {
+                        out.yesodi_count++;
+                        const k = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0);
+                        const c2 = k > 0 ? k : Math.max(1, Math.round(studs / 27));
+                        out.yesodi_classes += c2;
+                        out.special_classes += (inst.kitot_mekadmot || 0);
+                        out.total_classes += c2;
+                        out.byKey.yesodi.push({ ...baseInfo, classes: c2, avg: c2 ? Math.round(studs / c2) : 0, classes_estimated: !(k > 0), special_classes: inst.kitot_mekadmot || 0 });
+                    } else if (t === 'תיכון' || t === 'חטיבה' || t === 'אולפנה' || t === 'מדרשייה' || t === 'ישיבה') {
+                        out.alyesodi_count++;
+                        const k = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0);
+                        const c2 = k > 0 ? k : Math.max(1, Math.round(studs / 28));
+                        out.alyesodi_classes += c2;
+                        out.special_classes += (inst.kitot_mekadmot || 0);
+                        out.total_classes += c2;
+                        out.byKey.al_yesodi.push({ ...baseInfo, classes: c2, avg: c2 ? Math.round(studs / c2) : 0, classes_estimated: !(k > 0), special_classes: inst.kitot_mekadmot || 0 });
+                    }
+                });
+            });
+            return out;
+        }
+
+        function eduFeaturesInPolygon(polygonLngLat, gd) {
+            if (!gd || !gd.education_shanaton || !polygonLngLat || polygonLngLat.length < 3) return [];
+            const ring = polygonLngLat;
+            function pip(pt) {
+                const x = pt[0], y = pt[1];
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1];
+                    const xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+            return gd.education_shanaton.features.filter(f => {
+                const c = f.geometry && f.geometry.coordinates;
+                return c && pip(c);
+            });
+        }
+
+        function eduFeaturesInRadius(centerLatLng, radiusMeters, gd) {
+            if (!gd || !gd.education_shanaton || !centerLatLng) return [];
+            return gd.education_shanaton.features.filter(f => {
+                const c = f.geometry && f.geometry.coordinates;
+                if (!c) return false;
+                return centerLatLng.distanceTo(L.latLng(c[1], c[0])) <= radiusMeters;
+            });
+        }
+
+        // Sum of existing housing units within a circle (center latlng + radius meters).
+        function sumExistingUnitsInRadius(centerLatLng, radiusMeters, buildings) {
+            if (!buildings || !buildings.features || !centerLatLng) return 0;
+            let sum = 0;
+            const feats = buildings.features;
+            for (let i = 0; i < feats.length; i++) {
+                const c = feats[i].geometry && feats[i].geometry.coordinates;
+                if (!c) continue;
+                if (centerLatLng.distanceTo(L.latLng(c[1], c[0])) <= radiusMeters) {
+                    sum += (feats[i].properties && feats[i].properties.units) || 0;
+                }
+            }
+            return sum;
+        }
 
         // Map Hebrew property names to English aliases used by popup builders
         // Point-in-polygon: ray casting on a Leaflet polygon layer
@@ -3487,6 +3595,11 @@
             const treeModeRef = useRef(false);
             const [treeAreaActive, setTreeAreaActive] = useState(false); // true when polygon draw is for trees
             const treeAreaActiveRef = useRef(false);
+            // Programa-direct mode: when true, area/radius selection bypasses the regular plans/permits modal
+            // and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
+            const programaAreaActiveRef = useRef(false);
+            const programaRadiusActiveRef = useRef(false);
+            const [programaActive, setProgramaActive] = useState(null); // null | 'area' | 'radius' — for toolbar UI state
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -5409,17 +5522,66 @@
                 if (ref.marker) { try { map.removeLayer(ref.marker); } catch(e) {} ref.marker = null; }
                 const prev = document.getElementById('radius-select-result');
                 if (prev) prev.remove();
+                const prevProg = document.getElementById('programa-result');
+                if (prevProg && programaRadiusActiveRef.current) prevProg.remove();
                 if (!radiusCenter) return;
+                const isPrograma = programaRadiusActiveRef.current;
                 ref.circle = L.circle(radiusCenter, {
-                    radius: radiusMeters, color: '#9c27b0', weight: 2,
-                    fillColor: '#9c27b0', fillOpacity: 0.10, dashArray: '6,4'
+                    radius: radiusMeters, color: isPrograma ? '#7b6cf0' : '#9c27b0', weight: 2,
+                    fillColor: isPrograma ? '#7b6cf0' : '#9c27b0', fillOpacity: 0.10, dashArray: '6,4'
                 }).addTo(map);
                 ref.marker = L.circleMarker(radiusCenter, {
-                    radius: 4, color: '#9c27b0', fillColor: '#9c27b0', fillOpacity: 1
+                    radius: 4, color: isPrograma ? '#7b6cf0' : '#9c27b0', fillColor: isPrograma ? '#7b6cf0' : '#9c27b0', fillOpacity: 1
                 }).addTo(map);
 
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return;
+
+                // Programa-direct path: bypass permits aggregation, sum existing + planned units inside circle
+                if (isPrograma) {
+                    const candidatePlans = [];
+                    const seenTaba = new Set();
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties || {};
+                        const taba = String(p.taba || '').trim();
+                        if (taba && seenTaba.has(taba)) return;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let coords;
+                        try {
+                            if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                            else return;
+                        } catch (ex) { return; }
+                        if (!coords || !coords.length) return;
+                        let cx = 0, cy = 0, n = 0;
+                        for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                        if (n === 0) return;
+                        if (radiusCenter.distanceTo(L.latLng(cy / n, cx / n)) > radiusMeters) return;
+                        if (taba) seenTaba.add(taba);
+                        candidatePlans.push({
+                            taba, plan_name: p.plan_name, plan_name_he: p.plan_name_he, plan_summary: p.plan_summary,
+                            units_add: parseFloat(p.units_add) || 0,
+                            units_total: parseInt(p.units_total) || 0,
+                            status_mavat: p.status_mavat, stage: p.stage, mavat_date: p.mavat_date,
+                        });
+                    });
+                    candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+                    const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
+                    const eduFeats = eduFeaturesInRadius(radiusCenter, radiusMeters, gd);
+                    renderProgramaModal({
+                        existingUnits,
+                        candidatePlans,
+                        eduFeats,
+                        scopeLabel: 'רדיוס ' + radiusMeters + 'מ',
+                        parentModalId: null,
+                        radiusInfo: { value: radiusMeters, onChange: (m) => setRadiusMeters(m) },
+                    });
+                    return;
+                }
 
                 // Find plans whose centroid lies within the radius
                 function polyCentroid(geom) {
@@ -5512,6 +5674,8 @@
 
                 window.__radiusExportData = allRows;
 
+                const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
+
                 function colorBox(c) { return '<span style="display:inline-block;width:10px;height:10px;background:' + c + ';border-radius:2px;margin-left:4px;vertical-align:middle"></span>'; }
                 // Each breakdown row carries a data-drill attribute; clicking it
                 // swaps in a drill-down table of underlying permits (file numbers,
@@ -5547,6 +5711,7 @@
                     '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + totalProjects + '</div><div style="font-size:11px;color:#aaa">פרוייקטים</div></div>' +
                     '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#5dade2">' + totalIncludedPermits + '</div><div style="font-size:11px;color:#aaa">היתרים פעילים</div><div style="font-size:9px;color:#666">מתוך ' + totalPermits + '</div></div>' +
                     '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#4CAF50">' + totalIncludedUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד מצטברות</div></div>' +
+                    '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים ברדיוס (לפי שכבת מבנים עירונית)"><div style="font-size:26px;font-weight:bold;color:#FFB347">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div>' +
                     '</div>' +
                     (stageHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח שלב:</div>' + stageHtml + '</div>' : '') +
                     (catHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סוג:</div>' + catHtml + '</div>' : '') +
@@ -5827,6 +5992,434 @@
                 if (window.__treePanelAttach) window.__treePanelAttach(panel);
             }, [areaFinished]);
 
+            // ── Programa report — DOM modal triggered from area-select / radius-select ──
+            // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
+            // arbitrary scope (polygon or circle) using default assumptions. Sources:
+            //   existing units → buildings layer (NUM_APTS_C sum)
+            //   planned units → sum of plans.units_add for plans whose centroid is in scope
+            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo }) {
+                candidatePlans = candidatePlans || [];
+                if (!window.__programaUserAssumptions) {
+                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
+                }
+                const assumpt = window.__programaUserAssumptions;
+                const tY = assumpt.targetYear;
+
+                // Apply target-year mimush filter to candidate plans
+                let plannedUnits = 0;
+                const plansInScope = [];
+                candidatePlans.forEach(p => {
+                    if (tY === 'existing') {
+                        plansInScope.push({ ...p, contributingUnits: 0 });
+                        return;
+                    }
+                    const m = calcMimush(p);
+                    if (!m) { plansInScope.push({ ...p, contributingUnits: 0 }); return; }
+                    if (m.estimatedYear > tY) {
+                        plansInScope.push({ ...p, contributingUnits: 0, mimushPct: m.mimushPct, estimatedYear: m.estimatedYear });
+                        return;
+                    }
+                    const u = (parseInt(p.units_total) || parseInt(p.units_add) || 0);
+                    const w = u * m.mimushPct / 100;
+                    plannedUnits += w;
+                    plansInScope.push({ ...p, contributingUnits: Math.round(w), mimushPct: m.mimushPct, estimatedYear: m.estimatedYear });
+                });
+                plannedUnits = Math.round(plannedUnits);
+
+                const totalUnits = existingUnits + plannedUnits;
+                const needs = computePublicNeeds(totalUnits, assumpt);
+                const nonEdu = computeNeighborhoodProgramServices(totalUnits, assumpt);
+                const existingEdu = aggregateEduFeatures(eduFeats || []);
+                const hasExistingEdu = (eduFeats || []).length > 0;
+
+                // Closure for re-rendering after assumption tweaks
+                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo });
+
+                // Build education table — rows = service, cols = stream
+                const eduRows = PUBLIC_NEEDS_SERVICES.map(svc => {
+                    const sd = needs.byService[svc.key];
+                    return '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#bbb">' + svc.ageFrom + '–' + svc.ageTo + '</td>' +
+                        '<td style="padding:6px;text-align:center">' + sd.mam.classes + '</td>' +
+                        '<td style="padding:6px;text-align:center">' + sd.haredi_b.classes + '</td>' +
+                        '<td style="padding:6px;text-align:center">' + sd.haredi_g.classes + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:#4CAF50">' + sd.totalClasses + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + sd.totalDunam.toFixed(1) + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                // Existing-vs-required (only if any edu features matched)
+                const SVCS = [
+                    { key: 'maon', label: 'מעון' },
+                    { key: 'gan', label: 'גני ילדים' },
+                    { key: 'yesodi', label: 'יסודי' },
+                    { key: 'al_yesodi', label: 'על-יסודי' },
+                ];
+                const existingByKey = {
+                    gan: existingEdu.ganim_count + existingEdu.gan_special_count,
+                    yesodi: existingEdu.yesodi_classes,
+                    al_yesodi: existingEdu.alyesodi_classes,
+                    maon: null,
+                };
+                const balanceRows = SVCS.map(svc => {
+                    const ex = existingByKey[svc.key];
+                    const req = needs.byService[svc.key].totalClasses;
+                    const delta = ex === null ? null : ex - req;
+                    let color = '#888';
+                    if (delta !== null) {
+                        if (req === 0) color = delta > 0 ? '#4CAF50' : '#888';
+                        else {
+                            const ratio = delta / req;
+                            color = ratio >= 0 ? '#4CAF50' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#e53935';
+                        }
+                    }
+                    return '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#e0e0e0;font-weight:bold">' + (ex === null ? '—' : ex) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + req + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + color + '">' + (delta === null ? '—' : (delta >= 0 ? '+' : '') + delta) + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                // Non-edu services
+                const nonEduRows = nonEdu.map(svc => {
+                    const basisLabels = { residents: 'תושבים', elderly: 'בני 65+', frail_elderly: 'תשושים', religious_hh: 'משק"ב דתי/חרדי' };
+                    return '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#bbb;font-size:11px">' + (basisLabels[svc.basis] || svc.basis) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + svc.basisValue.toLocaleString() + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa;font-size:11px">1 / ' + svc.per.toLocaleString() + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (svc.count > 0 ? '#4CAF50' : '#666') + '">' + (svc.count || '—') + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                const prev = document.getElementById('programa-result');
+                if (prev) prev.remove();
+                const div = document.createElement('div');
+                div.id = 'programa-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(26,26,46,0.98);color:#e0e0e0;padding:20px;border-radius:14px;border:2px solid #7b6cf0;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #333">' +
+                        '<div style="display:flex;align-items:center;gap:10px">' +
+                            (parentModalId ? '<button id="programa-back" style="background:none;border:none;color:#7b6cf0;font-size:13px;cursor:pointer;padding:0;font-family:inherit">← חזרה</button>' : '') +
+                            '<h3 id="programa-title" contenteditable="true" style="margin:0;color:#e0e0ff;font-size:16px;outline:none">🏘️ פרוגרמה — ' + scopeLabel + '</h3>' +
+                        '</div>' +
+                        '<button id="programa-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    (radiusInfo ?
+                        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#1a1a2e;border-radius:6px">' +
+                            '<label style="font-size:12px;color:#aaa">רדיוס:</label>' +
+                            '<input id="programa-radius-input" type="range" min="50" max="3000" step="50" value="' + radiusInfo.value + '" style="flex:1">' +
+                            '<input id="programa-radius-num" type="number" min="50" max="3000" step="50" value="' + radiusInfo.value + '" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">' +
+                            '<span style="font-size:11px;color:#888">מטר</span>' +
+                        '</div>'
+                    : '') +
+                    // Assumptions controls bar (year + sliders) — same fields as sub-neighborhood פרוגרמה
+                    '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>' +
+                            ['existing', 2030, 2035, 2040].map(y => {
+                                const lbl = y === 'existing' ? 'מצב קיים' : y;
+                                const sel = (tY === y);
+                                return '<button data-pa-year="' + y + '" style="background:' + (sel ? '#3a5a80' : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? '#5a7a9a' : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
+                            }).join('') +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>' +
+                            '<input id="pa-hh" type="range" min="2.5" max="6.0" step="0.1" value="' + assumpt.householdSize + '" style="width:90px">' +
+                            '<span style="font-size:11px;color:#e0e0ff;min-width:24px;text-align:center;font-weight:bold">' + assumpt.householdSize.toFixed(1) + '</span>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% חרדי:</label>' +
+                            '<input id="pa-haredi" type="range" min="0" max="100" step="1" value="' + Math.round(assumpt.haredi*100) + '" style="width:90px">' +
+                            '<span style="font-size:11px;color:#7b1fa2;min-width:30px;text-align:center;font-weight:bold">' + Math.round(assumpt.haredi*100) + '%</span>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% דתי:</label>' +
+                            '<input id="pa-religious" type="range" min="0" max="100" step="1" value="' + Math.round(assumpt.religious*100) + '" style="width:90px">' +
+                            '<span style="font-size:11px;color:#2e7d32;min-width:30px;text-align:center;font-weight:bold">' + Math.round(assumpt.religious*100) + '%</span>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון כללי:</label>' +
+                            '<input id="pa-age-gen" type="number" min="1.5" max="4" step="0.1" value="' + assumpt.ageYearPctGeneral + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' +
+                            '<span style="font-size:10px;color:#888">%</span>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון חרדי:</label>' +
+                            '<input id="pa-age-hrd" type="number" min="1.5" max="5" step="0.1" value="' + assumpt.ageYearPctHaredi + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' +
+                            '<span style="font-size:10px;color:#888">%</span>' +
+                        '</div>' +
+                        '<button id="pa-reset" title="איפוס להגדרות ברירת מחדל" style="background:transparent;color:#888;border:1px solid #444;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">↺ איפוס</button>' +
+                    '</div>' +
+                    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">' +
+                        '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #5dade2"><div style="font-size:10px;color:#888">יח"ד קיימות</div><div style="font-size:20px;color:#5dade2;font-weight:bold">' + existingUnits.toLocaleString() + '</div></div>' +
+                        '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #4CAF50"><div style="font-size:10px;color:#888">תוספת מתוכננת</div><div style="font-size:20px;color:#4CAF50;font-weight:bold">+' + plannedUnits.toLocaleString() + '</div></div>' +
+                        '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #fff"><div style="font-size:10px;color:#888">סה"כ יח"ד</div><div style="font-size:20px;color:#fff;font-weight:bold">' + totalUnits.toLocaleString() + '</div></div>' +
+                        '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #f59e0b"><div style="font-size:10px;color:#888">אוכלוסייה מוערכת</div><div style="font-size:20px;color:#f59e0b;font-weight:bold">' + needs.population.toLocaleString() + '</div></div>' +
+                    '</div>' +
+                    (plansInScope.length ?
+                        '<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור (' + plansInScope.length + (tY !== 'existing' ? ' · ' + plansInScope.filter(p => p.contributingUnits > 0).length + ' תורמות לאופק ' + tY : '') + '):</b> ' +
+                        plansInScope.slice(0, 30).map(p => {
+                            const contrib = p.contributingUnits > 0;
+                            return '<span style="color:' + (contrib ? '#fff' : '#bdb6e8') + ';direction:ltr;display:inline-block;' + (contrib ? 'font-weight:bold' : '') + '">' + (p.taba || '?') + '</span>';
+                        }).join(' · ') +
+                        (plansInScope.length > 30 ? ' <span style="color:#666">…+' + (plansInScope.length - 30) + '</span>' : '') +
+                        '</div>'
+                    : '') +
+                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🎓 חינוך — כיתות נדרשות</h4>' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
+                        '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                            '<th style="padding:6px;text-align:right">שירות</th>' +
+                            '<th style="padding:6px;text-align:center">גילאים</th>' +
+                            '<th style="padding:6px;text-align:center">ממלכתי</th>' +
+                            '<th style="padding:6px;text-align:center">חרדי-ב</th>' +
+                            '<th style="padding:6px;text-align:center">חרדי-ג</th>' +
+                            '<th style="padding:6px;text-align:center;color:#4CAF50">סה"כ כיתות</th>' +
+                            '<th style="padding:6px;text-align:center">דונם</th>' +
+                        '</tr></thead><tbody>' + eduRows +
+                        '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
+                            '<td style="padding:6px" colspan="5">סה"כ</td>' +
+                            '<td style="padding:6px;text-align:center;color:#4CAF50">' + needs.totalClasses + '</td>' +
+                            '<td style="padding:6px;text-align:center;color:#aaa">' + needs.totalDunam.toFixed(1) + '</td>' +
+                        '</tr>' +
+                        '</tbody></table>' +
+                    (hasExistingEdu ?
+                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 קיים מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(שנתון מנח"י באזור הנבחר · ' + (eduFeats || []).length + ' כתובות חינוך)</span></h4>' +
+                        '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
+                            '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                                '<th style="padding:6px;text-align:right">שירות</th>' +
+                                '<th style="padding:6px;text-align:center">קיים</th>' +
+                                '<th style="padding:6px;text-align:center">נדרש</th>' +
+                                '<th style="padding:6px;text-align:center">פער</th>' +
+                            '</tr></thead><tbody>' + balanceRows +
+                            '<tr style="background:#1a1a2e;color:#aaa;font-size:10px"><td colspan="4" style="padding:6px">תלמידים בכתובות שנפלו באזור: <b style="color:#f59e0b">' + existingEdu.students.toLocaleString() + '</b></td></tr>' +
+                        '</tbody></table>'
+                    : '') +
+                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים</h4>' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
+                        '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                            '<th style="padding:6px;text-align:right">שירות</th>' +
+                            '<th style="padding:6px;text-align:center">בסיס חישוב</th>' +
+                            '<th style="padding:6px;text-align:center">כמות בסיס</th>' +
+                            '<th style="padding:6px;text-align:center">מנה</th>' +
+                            '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>' +
+                        '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' +
+                    '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">הנחות: ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' + Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · שנתון כללי ' + assumpt.ageYearPctGeneral + '%</div>' +
+                    '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
+                        '<button id="programa-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' +
+                        '<button id="programa-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+                document.getElementById('programa-close').addEventListener('click', () => div.remove());
+                if (parentModalId) {
+                    document.getElementById('programa-back').addEventListener('click', () => div.remove());
+                }
+                document.getElementById('programa-csv').addEventListener('click', () => {
+                    const title = document.getElementById('programa-title')?.textContent || 'פרוגרמה';
+                    const lines = [];
+                    lines.push(['מדד','ערך'].join(','));
+                    lines.push(['יח"ד קיימות', existingUnits].join(','));
+                    lines.push(['תוספת מתוכננת', plannedUnits].join(','));
+                    lines.push(['סה"כ יח"ד', totalUnits].join(','));
+                    lines.push(['אוכלוסייה', needs.population].join(','));
+                    lines.push('');
+                    lines.push(['חינוך','גילאים','ממלכתי','חרדי-ב','חרדי-ג','סה"כ כיתות','דונם'].join(','));
+                    PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                        const sd = needs.byService[svc.key];
+                        lines.push([svc.label, svc.ageFrom + '-' + svc.ageTo, sd.mam.classes, sd.haredi_b.classes, sd.haredi_g.classes, sd.totalClasses, sd.totalDunam.toFixed(1)].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                    });
+                    lines.push(['','','','','','סה"כ', needs.totalClasses, needs.totalDunam.toFixed(1)].join(','));
+                    if (hasExistingEdu) {
+                        lines.push('');
+                        lines.push(['קיים מול נדרש','קיים','נדרש','פער'].join(','));
+                        SVCS.forEach(svc => {
+                            const ex = existingByKey[svc.key];
+                            const req = needs.byService[svc.key].totalClasses;
+                            const delta = ex === null ? '' : ex - req;
+                            lines.push([svc.label, ex === null ? '' : ex, req, delta].join(','));
+                        });
+                    }
+                    lines.push('');
+                    lines.push(['שירות','בסיס','כמות','מנה','נדרש'].join(','));
+                    nonEdu.forEach(svc => {
+                        lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                    });
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+                document.getElementById('programa-print').addEventListener('click', async () => {
+                    const title = document.getElementById('programa-title')?.textContent || 'פרוגרמה';
+                    // Try to capture the map (selection circle/polygon should be visible) — best-effort
+                    let mapImg = '';
+                    try {
+                        const mapEl = mapInstanceRef.current && mapInstanceRef.current.getContainer();
+                        if (mapEl && window.html2canvas) {
+                            // Briefly hide the modal so it doesn't cover the map in the screenshot
+                            const prevDisplay = div.style.display;
+                            div.style.display = 'none';
+                            await new Promise(r => setTimeout(r, 100));
+                            const canvas = await window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
+                            div.style.display = prevDisplay;
+                            mapImg = canvas.toDataURL('image/jpeg', 0.85);
+                        }
+                    } catch (e) { console.warn('[Programa] map capture failed', e); }
+
+                    const yearLabel = (tY === 'existing') ? 'מצב קיים' : 'אופק ' + tY;
+                    const plansList = plansInScope.map(p => {
+                        const taba = p.taba || '';
+                        const summary = p.plan_summary || p.plan_name_he || p.plan_name || '';
+                        const status = p.status_mavat || '';
+                        const u = (parseInt(p.units_total) || parseInt(p.units_add) || 0);
+                        const contrib = p.contributingUnits || 0;
+                        const m = p.mimushPct != null ? p.mimushPct + '%' : '—';
+                        const ey = p.estimatedYear || '—';
+                        return '<tr><td style="padding:4px 6px;direction:ltr;text-align:left;font-weight:bold">' + taba + '</td>' +
+                               '<td style="padding:4px 6px">' + summary + '</td>' +
+                               '<td style="padding:4px 6px;font-size:10px;color:#666">' + status + '</td>' +
+                               '<td style="padding:4px 6px;text-align:center">' + u + '</td>' +
+                               '<td style="padding:4px 6px;text-align:center;color:#666">' + m + '</td>' +
+                               '<td style="padding:4px 6px;text-align:center;color:#666">' + ey + '</td>' +
+                               '<td style="padding:4px 6px;text-align:center;color:#1a5276;font-weight:bold">' + (contrib > 0 ? '+' + contrib : '—') + '</td></tr>';
+                    }).join('');
+                    const assumptFooter = '<div style="font-size:11px;color:#555;margin-top:14px;padding:8px;background:#f5f5f5;border-radius:4px"><b>הנחות חישוב:</b> ' +
+                        yearLabel + ' · ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' +
+                        Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · ' +
+                        'שנתון כללי ' + assumpt.ageYearPctGeneral + '% · שנתון חרדי ' + assumpt.ageYearPctHaredi + '%</div>';
+
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#7b6cf0;margin:0 0 8px}h4{color:#1a5276;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button,input[type=range],input[type=number]{display:none!important}.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.kpi-strip>div{background:#f4f4ff;border-right:3px solid #7b6cf0;padding:8px;border-radius:4px}</style></head><body>');
+                    win.document.write('<h3>' + title + '</h3>');
+                    if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
+                    if (plansList) {
+                        win.document.write('<h4>תכניות באזור הנבחר (' + plansInScope.length + ' תכניות, אופק: ' + yearLabel + ')</h4>');
+                        win.document.write('<table><thead><tr><th style="text-align:left">תב"ע</th><th>שם תכנית</th><th>סטטוס</th><th>סה"כ יח"ד</th><th>מימוש</th><th>אופק</th><th style="text-align:left">תרומה לאופק</th></tr></thead><tbody>' + plansList + '</tbody></table>');
+                    }
+                    // Append the modal contents (KPIs + tables) — already styled
+                    win.document.write(div.innerHTML);
+                    win.document.write(assumptFooter);
+                    win.document.write('</body></html>');
+                    win.document.close();
+                    win.print();
+                });
+
+                // Wire radius slider (only present if radiusInfo passed)
+                if (radiusInfo) {
+                    const sl = document.getElementById('programa-radius-input');
+                    const num = document.getElementById('programa-radius-num');
+                    let pendingTimer = null;
+                    const apply = (v) => {
+                        const clamped = Math.max(50, Math.min(3000, Number(v) || 500));
+                        if (sl) sl.value = clamped;
+                        if (num) num.value = clamped;
+                        if (pendingTimer) clearTimeout(pendingTimer);
+                        pendingTimer = setTimeout(() => radiusInfo.onChange(clamped), 60);
+                    };
+                    if (sl) {
+                        sl.addEventListener('input', e => { if (num) num.value = e.target.value; });
+                        sl.addEventListener('change', e => apply(e.target.value));
+                    }
+                    if (num) {
+                        num.addEventListener('change', e => apply(e.target.value));
+                    }
+                }
+
+                // Wire assumption controls
+                div.querySelectorAll('[data-pa-year]').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const y = b.dataset.paYear;
+                        assumpt.targetYear = (y === 'existing') ? 'existing' : Number(y);
+                        reRender();
+                    });
+                });
+                const hh = document.getElementById('pa-hh');
+                if (hh) hh.addEventListener('change', e => { assumpt.householdSize = parseFloat(e.target.value) || 3.2; reRender(); });
+                const hr = document.getElementById('pa-haredi');
+                if (hr) hr.addEventListener('change', e => { assumpt.haredi = (parseInt(e.target.value) || 0) / 100; reRender(); });
+                const re = document.getElementById('pa-religious');
+                if (re) re.addEventListener('change', e => { assumpt.religious = (parseInt(e.target.value) || 0) / 100; reRender(); });
+                const ag = document.getElementById('pa-age-gen');
+                if (ag) ag.addEventListener('change', e => { assumpt.ageYearPctGeneral = parseFloat(e.target.value) || 2.2; reRender(); });
+                const ah = document.getElementById('pa-age-hrd');
+                if (ah) ah.addEventListener('change', e => { assumpt.ageYearPctHaredi = parseFloat(e.target.value) || 3.0; reRender(); });
+                const rst = document.getElementById('pa-reset');
+                if (rst) rst.addEventListener('click', () => {
+                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
+                    reRender();
+                });
+            }
+
+            // ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3 || !programaAreaActiveRef.current) return;
+                programaAreaActiveRef.current = false;
+                setProgramaActive(null);
+                window.__programaHandledArea = true;
+
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
+                function pip(pt, ring) {
+                    const x = pt[0], y = pt[1];
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi))
+                            inside = !inside;
+                    }
+                    return inside;
+                }
+
+                const gd = geoDataRef.current || {};
+                const candidatePlans = [];
+                if (gd.plans) {
+                    const seenTaba = new Set();
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties || {};
+                        const taba = String(p.taba || '').trim();
+                        if (taba && seenTaba.has(taba)) return;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                        const geom = f.geometry;
+                        if (!geom || !geom.coordinates) return;
+                        let coords;
+                        try {
+                            if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                            else return;
+                        } catch (ex) { return; }
+                        if (!coords || !coords.length) return;
+                        let cx = 0, cy = 0, n = 0;
+                        for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                        if (n === 0) return;
+                        if (pip([cx / n, cy / n], polyCoords)) {
+                            if (taba) seenTaba.add(taba);
+                            candidatePlans.push({
+                                taba, plan_name: p.plan_name, plan_name_he: p.plan_name_he, plan_summary: p.plan_summary,
+                                units_add: parseFloat(p.units_add) || 0,
+                                units_total: parseInt(p.units_total) || 0,
+                                status_mavat: p.status_mavat, stage: p.stage, mavat_date: p.mavat_date,
+                            });
+                        }
+                    });
+                }
+                candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+                const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+                const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
+                renderProgramaModal({
+                    existingUnits,
+                    candidatePlans,
+                    eduFeats,
+                    scopeLabel: 'אזור נבחר',
+                    parentModalId: null,
+                });
+
+                // Clean up drawing layers
+                const r = areaRef.current;
+                const map = mapInstanceRef.current;
+                if (map && r) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); }
+                if (r) { r.points = []; r.markers = []; r.polygon = null; }
+            }, [areaFinished]);
+
             // ── Area select: analyze results when drawing is finished ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3) return;
@@ -5834,6 +6427,7 @@
                 if (landuseCompareModeRef.current === 'area') return;
                 if (window.__landuseHandledArea) { window.__landuseHandledArea = false; return; }
                 if (window.__treeHandledArea) { window.__treeHandledArea = false; return; }
+                if (window.__programaHandledArea) { window.__programaHandledArea = false; return; }
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return;
 
@@ -5901,6 +6495,7 @@
                 const totalPlanUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
                 const totalTamaUnits = tamaInside.reduce((s, p) => s + (parseFloat(p.units_tose) || 0), 0);
                 const totalUnits = totalPlanUnits + totalTamaUnits;
+                const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
 
                 // Status breakdown (plans only, with merged approved)
                 const byStatus = {};
@@ -5945,7 +6540,8 @@
                     '<div style="display:flex;gap:24px;margin-bottom:14px">' +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות תב"ע</div></div>' +
                     (tamaInside.length > 0 ? '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#FF9800">' + tamaInside.length + '</div><div style="font-size:11px;color:#aaa">תמ"א 38</div></div>' : '') +
-                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div></div>' +
+                    '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div>' +
+                    '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים בשטח (לפי שכבת מבנים עירונית)"><div style="font-size:28px;font-weight:bold;color:#5dade2">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div></div>' +
                     (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') +
                     (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '') +
                     '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
@@ -11961,17 +12557,19 @@
                                     <polyline points="14 2 14 8 20 8"/>
                                     <path d="M9 14l2 2 4-4"/>
                                 </svg>
-                                <span className="toolbar-label">{radiusMode ? 'בחר נקודה...' : 'היתרים ▾'}</span>
+                                <span className="toolbar-label">{(radiusMode && !programaRadiusActiveRef.current) ? 'בחר נקודה...' : 'היתרים ▾'}</span>
                             </button>
                             {activeDropdown === 'permits' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className={`toolbar-dropdown-item ${(radiusMode || radiusCenter) ? 'sub-active' : ''}`} data-tip="קליק על נקודה — היתרים ויח&quot;ד ברדיוס נבחר" onClick={() => {
+                                    <button className={`toolbar-dropdown-item ${((radiusMode && !programaRadiusActiveRef.current) || radiusCenter) ? 'sub-active' : ''}`} data-tip="קליק על נקודה — היתרים ויח&quot;ד ברדיוס נבחר" onClick={() => {
                                         if (radiusCenter) { setRadiusCenter(null); }
+                                        // Switching to permits-radius mode: clear the programa flag so the radius effect renders the permits modal
+                                        if (programaRadiusActiveRef.current) { programaRadiusActiveRef.current = false; setProgramaActive(null); }
                                         setRadiusMode(prev => !prev);
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" strokeDasharray="3 3"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="12" x2="20" y2="6"/></svg>
-                                        <span className="sub-label">{radiusMode ? 'בחר נקודה...' : 'רדיוס'}</span>
+                                        <span className="sub-label">{(radiusMode && !programaRadiusActiveRef.current) ? 'בחר נקודה...' : 'רדיוס'}</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${showPermitsBySub ? 'sub-active' : ''}`} data-tip="פילוח שלב + יח&quot;ד לכל תת-שכונה" onClick={() => {
                                         setPermitsBySubDrilldown(null);
@@ -12003,7 +12601,7 @@
                                 <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M9 11h.01M12 11h.01M15 11h.01"/>
                                 </svg>
-                                <span className="toolbar-label">מבני ציבור ▾</span>
+                                <span className="toolbar-label">{(areaMode && programaAreaActiveRef.current) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : (radiusMode && programaRadiusActiveRef.current) ? 'בחר נקודה...' : 'מבני ציבור ▾'}</span>
                             </button>
                             {activeDropdown === 'public' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
@@ -12013,6 +12611,46 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                                         <span className="sub-label">פרוגרמה שכונתית</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${(programaActive === 'area' || (areaMode && programaAreaActiveRef.current)) ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה — פרוגרמה לפי יח״ד קיימות + מתוכננות" onClick={() => {
+                                        setActiveDropdown(null);
+                                        if (areaMode && programaAreaActiveRef.current) {
+                                            const r = areaRef.current;
+                                            if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); setProgramaActive(null); }
+                                            else {
+                                                const map = mapInstanceRef.current;
+                                                if (map) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); map.getContainer().classList.remove('measuring'); }
+                                                r.points = []; r.markers = []; r.polygon = null; setAreaMode(false); programaAreaActiveRef.current = false; setProgramaActive(null);
+                                            }
+                                        } else {
+                                            setAreaFinished(null);
+                                            const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
+                                            const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
+                                            programaAreaActiveRef.current = true;
+                                            setProgramaActive('area');
+                                            setAreaMode(true);
+                                        }
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/></svg>
+                                        <span className="sub-label">{(areaMode && programaAreaActiveRef.current) ? 'סיום' : 'אזור'}</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${(programaActive === 'radius' || (radiusMode && programaRadiusActiveRef.current)) ? 'sub-active' : ''}`} data-tip="קליק על המפה — פרוגרמה לפי רדיוס נבחר" onClick={() => {
+                                        setActiveDropdown(null);
+                                        const prev = document.getElementById('programa-result'); if (prev) prev.remove();
+                                        const prev2 = document.getElementById('radius-select-result'); if (prev2) prev2.remove();
+                                        if (radiusMode && programaRadiusActiveRef.current) {
+                                            programaRadiusActiveRef.current = false;
+                                            setProgramaActive(null);
+                                            setRadiusMode(false);
+                                        } else {
+                                            setRadiusCenter(null);
+                                            programaRadiusActiveRef.current = true;
+                                            setProgramaActive('radius');
+                                            setRadiusMode(true);
+                                        }
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                                        <span className="sub-label">{(radiusMode && programaRadiusActiveRef.current) ? 'בחר נקודה...' : 'רדיוס'}</span>
                                     </button>
                                 </div>
                             )}
@@ -12030,12 +12668,12 @@
                                     <rect x="14" y="14" width="7" height="7" rx="1" />
                                     <path d="M10 7h4M7 10v4M14 17h-4M17 14v-4" />
                                 </svg>
-                                <span className="toolbar-label">{areaMode ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'ניתוח ▾'}</span>
+                                <span className="toolbar-label">{(areaMode && !programaAreaActiveRef.current) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'ניתוח ▾'}</span>
                             </button>
                             {activeDropdown === 'analysis' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className={`toolbar-dropdown-item ${areaMode ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה לניתוח תכניות בתוכו" onClick={() => {
-                                        if (areaMode) {
+                                    <button className={`toolbar-dropdown-item ${(areaMode && !programaAreaActiveRef.current) ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה לניתוח תכניות בתוכו" onClick={() => {
+                                        if (areaMode && !programaAreaActiveRef.current) {
                                             const r = areaRef.current;
                                             if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); }
                                             else {
@@ -12044,6 +12682,8 @@
                                                 r.points = []; r.markers = []; r.polygon = null; setAreaMode(false);
                                             }
                                         } else {
+                                            // Switching to plans-area mode: clear programa flag so polygon completion shows the plans modal, not programa
+                                            if (programaAreaActiveRef.current) { programaAreaActiveRef.current = false; setProgramaActive(null); }
                                             setAreaFinished(null);
                                             const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
                                             setAreaMode(true);
@@ -12051,7 +12691,7 @@
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
-                                        <span className="sub-label">{areaMode ? 'סיום' : 'אזור'}</span>
+                                        <span className="sub-label">{(areaMode && !programaAreaActiveRef.current) ? 'סיום' : 'אזור'}</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${landuseCompareMode ? 'sub-active' : ''}`} data-tip="השוואת ייעודי קרקע נכנס-יוצא בתכנית" onClick={() => {
                                         if (landuseCompareMode) { setLanduseCompareMode(null); setActiveDropdown(null); }
@@ -13187,7 +13827,12 @@
                             if (planType === 'תשתיות' || planType === 'מוסתר') return;
                             const permits = getPermitsForTaba(taba);
                             if (permits.length === 0) return;
-                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: parseFloat(p.units_add) || 0 });
+                            // Use units_total (סה״כ יח״ד מתוכננות בתב״ע) as the basis for permit comparison —
+                            // permits are issued for the full project (especially in התחדשות עירונית/פינוי-בינוי
+                            // where existing units are demolished), not just for the net addition.
+                            // Fall back to units_add if units_total is missing/zero.
+                            const unitsTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: unitsTotal });
                         });
 
                         // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
