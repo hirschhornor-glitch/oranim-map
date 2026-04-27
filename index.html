@@ -3495,7 +3495,7 @@
 
         // תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
         // מקבלות plan_type='מוסתר' ולכן מסוננות מכל החישובים, הסטטיסטיקות והשכבות
-        const SKIP_PLAN_IDS = new Set(['101-0262717']);
+        const SKIP_PLAN_IDS = new Set(['101-0262717', '101-0564583']);
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
@@ -4234,21 +4234,48 @@
                         const ptIdx = headers.findIndex(h => h === 'plan_type');
                         const nameIdx = headers.findIndex(h => h === 'plan_name');
                         const objEndIdx = headers.findIndex(h => h === 'objection_end_date');
+                        const hfSqmIdx = headers.findIndex(h => h === 'hafrash_sqm');
+                        const hfPrgIdx = headers.findIndex(h => h === 'hafrash_prg');
+                        // GS-editable fields that should override the GeoJSON value when set
+                        const GS_OVERRIDE_FIELDS = [
+                            'units_total','units_in','units_add',
+                            'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog',
+                            'shatzap_in','shatzap_out',
+                            'commerce_in','commerce_out',
+                            'employment','hotels','rental','conditional_housing',
+                            'plan_summary'
+                        ];
+                        const gsOverrideIdx = {};
+                        GS_OVERRIDE_FIELDS.forEach(k => { gsOverrideIdx[k] = headers.findIndex(h => h === k); });
                         if (ptIdx >= 0 && nameIdx >= 0) {
                             const csvMap = {};
                             for (let i = 1; i < rows.length; i++) {
                                 if (!rows[i].trim()) continue;
                                 const cols = parseCSVRow(rows[i]);
-                                if (cols[nameIdx]) csvMap[cols[nameIdx]] = {
-                                    plan_type: cols[ptIdx] || '',
-                                    objection_end_date: objEndIdx >= 0 ? (cols[objEndIdx] || '') : '',
-                                };
+                                if (cols[nameIdx]) {
+                                    const entry = {
+                                        plan_type: cols[ptIdx] || '',
+                                        objection_end_date: objEndIdx >= 0 ? (cols[objEndIdx] || '') : '',
+                                        hafrash_sqm: hfSqmIdx >= 0 ? (cols[hfSqmIdx] || '') : '',
+                                        hafrash_prg: hfPrgIdx >= 0 ? (cols[hfPrgIdx] || '') : '',
+                                    };
+                                    GS_OVERRIDE_FIELDS.forEach(k => {
+                                        const idx = gsOverrideIdx[k];
+                                        entry[k] = idx >= 0 ? (cols[idx] || '') : '';
+                                    });
+                                    csvMap[cols[nameIdx]] = entry;
+                                }
                             }
                             gd.plans.features.forEach(f => {
                                 const pn = f.properties.plan_name;
                                 if (pn && csvMap[pn]) {
                                     if (csvMap[pn].plan_type) f.properties.plan_type = csvMap[pn].plan_type;
                                     if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
+                                    if (csvMap[pn].hafrash_sqm) f.properties.hafrash_sqm = csvMap[pn].hafrash_sqm;
+                                    if (csvMap[pn].hafrash_prg) f.properties.hafrash_prg = csvMap[pn].hafrash_prg;
+                                    GS_OVERRIDE_FIELDS.forEach(k => {
+                                        if (csvMap[pn][k]) f.properties[k] = csvMap[pn][k];
+                                    });
                                 }
                             });
                             console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
@@ -4302,6 +4329,28 @@
                         });
                     }
                     window.__planByTaba = planByTaba;
+
+                    // Build per-lot hafrash lookup from GS hafrash_prg
+                    // Format: "מגרש N - use (sqm) ; מגרש M - use (sqm)"
+                    // Result: {taba: {lotNum: {use, sqm, sourceText}}}
+                    const hafrashByTabaLot = {};
+                    const HAFRASH_LOT_RE = /^מגרש\s+(\d+)\s*[-–]?\s*(.+?)\s*\((\d+)\)\s*$/;
+                    for (const taba in planByTaba) {
+                        const prg = (planByTaba[taba].hafrash_prg || '').trim();
+                        if (!prg) continue;
+                        const parts = prg.split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
+                        for (const part of parts) {
+                            const m = part.match(HAFRASH_LOT_RE);
+                            if (!m) continue;
+                            const lotNum = m[1];
+                            const use = m[2].trim();
+                            const sqm = parseInt(m[3]);
+                            if (!hafrashByTabaLot[taba]) hafrashByTabaLot[taba] = {};
+                            hafrashByTabaLot[taba][lotNum] = { use, sqm, sourceText: part };
+                        }
+                    }
+                    window.__hafrashByTabaLot = hafrashByTabaLot;
+
                     function shouldHideKayam(taba) {
                         if (!kayamTabaSet.has(taba)) return false;
                         const plan = planByTaba[taba];
@@ -9315,9 +9364,20 @@
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
                     const SHAVAZ_CODES = new Set([400, 410, 450, 460]);
+                    const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604, 1670]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code),
+                        filter: f => {
+                            if (SHAVAZ_CODES.has(f.properties.mavat_code)) return true;
+                            if (!HAFRASHAH_CODES_FOR_SHAVAZ.has(f.properties.mavat_code)) return false;
+                            // HAFRASHAH-coded lot: include in future_shavaz only when plan has per-lot data
+                            // and this lot is NOT one of the listed plots (it's a "spare" public lot)
+                            const plNum = String(f.properties.pl_number || '');
+                            const taba = plNum.includes('-') ? String(parseInt(plNum.split('-')[1])) : plNum;
+                            const lotNum = String(f.properties.num || '');
+                            const lookup = window.__hafrashByTabaLot || {};
+                            return !!(lookup[taba] && !lookup[taba][lotNum]);
+                        },
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -9340,21 +9400,54 @@
                             ? gd.district_oranim.features[0].geometry.coordinates[0][0]
                             : gd.district_oranim.features[0].geometry.coordinates[0])
                         : null;
-                    const hafrashah = gd.landuse_xplan.features.filter(f => {
-                        if (!HAFRASHAH_CODES.has(f.properties.mavat_code)) return false;
+                    const hafrashLookup = window.__hafrashByTabaLot || {};
+                    const tabaFromPlNum = (plNum) => {
+                        const s = String(plNum || '');
+                        return s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
+                    };
+                    const inDistrict = (f) => {
                         if (!distRing) return true;
-                        // Check centroid inside district
                         const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
                         const cx = ring.reduce((s,c) => s+c[0], 0) / ring.length;
                         const cy = ring.reduce((s,c) => s+c[1], 0) / ring.length;
                         return pointInPolygon([cx, cy], distRing);
+                    };
+                    const hafrashah = gd.landuse_xplan.features.filter(f => {
+                        const taba = tabaFromPlNum(f.properties.pl_number);
+                        const lotNum = String(f.properties.num || '');
+                        const planHasLotData = !!hafrashLookup[taba];
+                        const inGsHafrash = planHasLotData && !!hafrashLookup[taba][lotNum];
+                        const isHafrashCode = HAFRASHAH_CODES.has(f.properties.mavat_code);
+                        // If GS has per-lot details for this plan, only show those specific lots
+                        // (HAFRASHAH-coded lots not listed are "spare" public lots → handled by future_shavaz)
+                        if (planHasLotData) {
+                            if (!inGsHafrash) return false;
+                        } else {
+                            if (!isHafrashCode) return false;
+                        }
+                        return inDistrict(f);
                     });
-                    // Convert polygons to centroid points
-                    const pointFeatures = hafrashah.map(f => {
-                        const ring = f.geometry.type === 'MultiPolygon'
-                            ? f.geometry.coordinates[0][0]
-                            : f.geometry.coordinates[0];
-                        // Signed-area centroid — more accurate than bbox center for concave polygons
+                    // Fallback: plans with hafrash_sqm > 0 in GS but no per-lot data and no HAFRASHAH-coded feature
+                    // → put one marker on the plan's largest residential/mixed-use lot
+                    const RESIDENTIAL_MIXED_CODES = new Set([10, 20, 60, 100, 140, 145, 290, 1000, 1050, 1311, 1321, 1420, 1470]);
+                    const coveredTabas = new Set(hafrashah.map(f => tabaFromPlNum(f.properties.pl_number)));
+                    const planByTaba = window.__planByTaba || {};
+                    for (const taba in planByTaba) {
+                        if (coveredTabas.has(taba)) continue;
+                        const sqm = parseFloat(planByTaba[taba].hafrash_sqm) || 0;
+                        if (sqm <= 0) continue;
+                        const candidates = gd.landuse_xplan.features.filter(f => {
+                            return tabaFromPlNum(f.properties.pl_number) === taba
+                                && RESIDENTIAL_MIXED_CODES.has(f.properties.mavat_code)
+                                && inDistrict(f);
+                        });
+                        if (!candidates.length) continue;
+                        candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
+                        hafrashah.push(candidates[0]);
+                    }
+                    // Find an interior point: signed-area centroid if inside polygon, else
+                    // a grid sample maximizing min distance to any edge (pole of inaccessibility)
+                    const polygonInteriorPoint = (ring) => {
                         let cx = 0, cy = 0, signedArea = 0;
                         for (let i = 0; i < ring.length - 1; i++) {
                             const a = ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
@@ -9363,13 +9456,54 @@
                             cy += (ring[i][1] + ring[i+1][1]) * a;
                         }
                         signedArea *= 0.5;
-                        let centroid;
-                        if (Math.abs(signedArea) < 1e-10) {
-                            centroid = [ring[0][0], ring[0][1]];
-                        } else {
-                            centroid = [cx / (6 * signedArea), cy / (6 * signedArea)];
+                        const centroid = Math.abs(signedArea) < 1e-10
+                            ? [ring[0][0], ring[0][1]]
+                            : [cx / (6 * signedArea), cy / (6 * signedArea)];
+                        if (pointInPolygon(centroid, ring)) return centroid;
+                        // Fallback: scan a 12×12 grid inside bbox, pick point with max min-edge-distance
+                        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                        for (const p of ring) {
+                            if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
+                            if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
                         }
-                        return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: centroid } };
+                        const N = 12;
+                        let bestPt = centroid, bestDist = -1;
+                        for (let i = 1; i < N; i++) {
+                            for (let j = 1; j < N; j++) {
+                                const px = minX + (maxX - minX) * i / N;
+                                const py = minY + (maxY - minY) * j / N;
+                                if (!pointInPolygon([px, py], ring)) continue;
+                                let minD = Infinity;
+                                for (let k = 0; k < ring.length - 1; k++) {
+                                    const dx = ring[k+1][0] - ring[k][0];
+                                    const dy = ring[k+1][1] - ring[k][1];
+                                    const len2 = dx*dx + dy*dy;
+                                    const t = len2 > 0 ? ((px - ring[k][0]) * dx + (py - ring[k][1]) * dy) / len2 : 0;
+                                    const tc = Math.max(0, Math.min(1, t));
+                                    const ex = ring[k][0] + tc * dx;
+                                    const ey = ring[k][1] + tc * dy;
+                                    const d = Math.hypot(px - ex, py - ey);
+                                    if (d < minD) minD = d;
+                                }
+                                if (minD > bestDist) { bestDist = minD; bestPt = [px, py]; }
+                            }
+                        }
+                        return bestPt;
+                    };
+                    // Convert polygons to interior points
+                    const pointFeatures = hafrashah.map(f => {
+                        const ring = f.geometry.type === 'MultiPolygon'
+                            ? f.geometry.coordinates[0][0]
+                            : f.geometry.coordinates[0];
+                        const centroid = polygonInteriorPoint(ring);
+                        const taba = tabaFromPlNum(f.properties.pl_number);
+                        const lotNum = String(f.properties.num || '');
+                        const lotData = hafrashLookup[taba] && hafrashLookup[taba][lotNum];
+                        const planProps = (window.__planByTaba || {})[taba] || {};
+                        const enrichedProps = lotData
+                            ? { ...f.properties, _hafrash_lot_use: lotData.use, _hafrash_lot_sqm: lotData.sqm }
+                            : { ...f.properties, hafrash_sqm: planProps.hafrash_sqm || '', hafrash_prg: planProps.hafrash_prg || '' };
+                        return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: centroid } };
                     });
                     const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
@@ -11183,12 +11317,20 @@
                 }
                 // Hafrashah enrichment data from מטלות יזם
                 if (isHafrashah) {
-                    const hfSqm = cleanNull(props.hafrash_sqm);
-                    const hfPrg = cleanNull(props.hafrash_prg);
-                    if (hfSqm || hfPrg) {
-                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה</div>';
-                        if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
-                        if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                    const lotUse = cleanNull(props._hafrash_lot_use);
+                    const lotSqm = cleanNull(props._hafrash_lot_sqm);
+                    if (lotUse || lotSqm) {
+                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (מגרש זה)</div>';
+                        if (lotUse) html += `<div class="popup-row"><span class="popup-row-label">שימוש</span><span class="popup-row-value">${lotUse}</span></div>`;
+                        if (lotSqm) html += `<div class="popup-row"><span class="popup-row-label">מ"ר</span><span class="popup-row-value">${parseInt(lotSqm).toLocaleString()}</span></div>`;
+                    } else {
+                        const hfSqm = cleanNull(props.hafrash_sqm);
+                        const hfPrg = cleanNull(props.hafrash_prg);
+                        if (hfSqm || hfPrg) {
+                            html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (תכנית)</div>';
+                            if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
+                            if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                        }
                     }
                 }
                 html += '</div>';
