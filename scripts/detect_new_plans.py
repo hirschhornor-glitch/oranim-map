@@ -51,6 +51,7 @@ EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT", "Or_hi@jerusalem.muni.il")
 
 # XPLAN API
 XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
+XPLAN_BLUE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 MAX_PER_REQUEST = 1000
 
 # Output files
@@ -587,23 +588,46 @@ def update_sheets(new_plans):
 
 # ─── Step 5: Update plans.geojson ────────────────────────────────────────────
 
-def create_plan_geometry(features):
+def fetch_blue_line(pl_number):
+    """Fetch plan boundary (blue line) from XPLAN layer 1 - captures full plan extent."""
+    params = {
+        'where': f"pl_number='{pl_number}'",
+        'outFields': 'pl_number',
+        'returnGeometry': 'true',
+        'f': 'geojson',
+        'outSR': '4326',
+    }
+    try:
+        resp = _SESSION.get(XPLAN_BLUE_URL, params=params, timeout=60, verify=False)
+        resp.raise_for_status()
+        return resp.json().get('features', [])
+    except Exception:
+        return []
+
+
+def create_plan_geometry(features, pl_number=None):
     """Union all feature geometries for a plan into a single MultiPolygon.
+    Also includes blue line (plan boundary from layer 1) to capture full plan extent.
     Features should already be in WGS84."""
-    if not features:
+    if not features and not pl_number:
         return None
 
-    if len(features) == 1:
-        return features[0].get('geometry')
-
-    # Combine all geometries into a MultiPolygon
     all_coords = []
-    for feat in features:
+    for feat in (features or []):
         geom = feat.get('geometry', {})
         if geom.get('type') == 'Polygon':
             all_coords.append(geom['coordinates'])
         elif geom.get('type') == 'MultiPolygon':
             all_coords.extend(geom['coordinates'])
+
+    # Add blue line (plan boundary) to preserve full extent
+    if pl_number:
+        for feat in fetch_blue_line(pl_number):
+            geom = feat.get('geometry', {})
+            if geom.get('type') == 'Polygon':
+                all_coords.append(geom['coordinates'])
+            elif geom.get('type') == 'MultiPolygon':
+                all_coords.extend(geom['coordinates'])
 
     if not all_coords:
         return None
@@ -635,7 +659,7 @@ def update_geojson(new_plans, push_to_github=False):
     for norm, info in plans_to_add.items():
         md = info.get('mavat_details', {})
         agam_id = info['mp_ids'][0] if info['mp_ids'] else ''
-        geometry = create_plan_geometry(info['features'])
+        geometry = create_plan_geometry(info['features'], info.get('pl_number'))
         if not geometry:
             continue
 
