@@ -3493,6 +3493,10 @@
             { label: 'תכניות שנגנזו', color: '#888', style: 'hatch' },
         ];
 
+        // תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
+        // מקבלות plan_type='מוסתר' ולכן מסוננות מכל החישובים, הסטטיסטיקות והשכבות
+        const SKIP_PLAN_IDS = new Set(['101-0262717']);
+
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
@@ -3711,6 +3715,7 @@
             const [permitsGapSort, setPermitsGapSort] = useState({ col: 'gap', dir: 'desc' });
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
+            const [permitsGapIncludeConditional, setPermitsGapIncludeConditional] = useState(false);
             const [reasonDraft, setReasonDraft] = useState('');
             const [reasonSaving, setReasonSaving] = useState(false);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
@@ -4248,6 +4253,15 @@
                             });
                             console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
                         }
+                    }
+
+                    // Force-hide specific plans (overrides plan_type from CSV/GeoJSON)
+                    if (gd.plans && gd.plans.features) {
+                        gd.plans.features.forEach(f => {
+                            if (SKIP_PLAN_IDS.has(f.properties.plan_name)) {
+                                f.properties.plan_type = 'מוסתר';
+                            }
+                        });
                     }
 
                     // --- Filter already-implemented plans from future layers ---
@@ -13831,8 +13845,10 @@
                             // permits are issued for the full project (especially in התחדשות עירונית/פינוי-בינוי
                             // where existing units are demolished), not just for the net addition.
                             // Fall back to units_add if units_total is missing/zero.
-                            const unitsTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
-                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: unitsTotal });
+                            const baseTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
+                            const conditional = parseFloat(p.conditional_housing) || 0;
+                            const unitsTotal = baseTotal + (permitsGapIncludeConditional ? conditional : 0);
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: unitsTotal, conditional });
                         });
 
                         // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
@@ -13892,6 +13908,7 @@
                             });
                             const mergedPermits = [...permitByFn.values(), ...orphanPermits];
                             const unitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
+                            const conditionalSum = members.reduce((s, m) => s + (m.conditional || 0), 0);
                             const tabas = members.map(m => m.taba);
                             const planNames = members.map(m => m.props.plan_name || m.taba);
                             const scopeKey = 'cluster:' + [...tabas].sort().join(',');
@@ -13915,6 +13932,7 @@
                                 status_mavat: p.status_mavat || '',
                                 minahak: p.minahak || '',
                                 unitsAdd, unitsInPermits, gap, pctDone,
+                                conditional: conditionalSum,
                                 permitCount: mergedPermits.length,
                                 countedPermits,
                                 permits: mergedPermits,
@@ -13991,7 +14009,7 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={permitsGapIncludeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{permitsGapIncludeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
@@ -14148,6 +14166,10 @@
                                                     return <option key={m} value={m}>{m} ({c})</option>;
                                                 })}
                                             </select>
+                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות">
+                                                <input type="checkbox" checked={permitsGapIncludeConditional} onChange={e => setPermitsGapIncludeConditional(e.target.checked)} style={{cursor:'pointer'}} />
+                                                כלול יח"ד מותנות
+                                            </label>
                                         </div>
                                         <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                     </div>
