@@ -4261,7 +4261,7 @@
                                     };
                                     GS_OVERRIDE_FIELDS.forEach(k => {
                                         const idx = gsOverrideIdx[k];
-                                        entry[k] = idx >= 0 ? (cols[idx] || '') : '';
+                                        if (idx >= 0) entry[k] = cols[idx] || '';
                                     });
                                     csvMap[cols[nameIdx]] = entry;
                                 }
@@ -4273,8 +4273,9 @@
                                     if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
                                     if (csvMap[pn].hafrash_sqm) f.properties.hafrash_sqm = csvMap[pn].hafrash_sqm;
                                     if (csvMap[pn].hafrash_prg) f.properties.hafrash_prg = csvMap[pn].hafrash_prg;
+                                    // GS is authoritative for these fields — blanks in GS clear the GeoJSON value
                                     GS_OVERRIDE_FIELDS.forEach(k => {
-                                        if (csvMap[pn][k]) f.properties[k] = csvMap[pn][k];
+                                        if (csvMap[pn][k] !== undefined) f.properties[k] = csvMap[pn][k];
                                     });
                                 }
                             });
@@ -9363,8 +9364,9 @@
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
-                    const SHAVAZ_CODES = new Set([400, 410, 450, 460]);
-                    const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604, 1670]);
+                    // 1670 = שטחים פתוחים ומבנים ומוסדות ציבור — always treated as standalone shavaz, not הפרשה מבונה
+                    const SHAVAZ_CODES = new Set([400, 410, 450, 460, 1670]);
+                    const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
                         filter: f => {
@@ -9392,7 +9394,8 @@
                 }
 
                 // --- Hafrashah from landuse_xplan (mixed-use parcels with public buildings) ---
-                const HAFRASHAH_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604, 1670]);
+                // 1670 (שטחים פתוחים ומבנים ומוסדות ציבור) intentionally excluded — handled by future_shavaz
+                const HAFRASHAH_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                 if (layers['hafrashah_future'] && gd.landuse_xplan) {
                     // Get district ring for spatial filtering
                     const distRing = gd.district_oranim && gd.district_oranim.features[0]
