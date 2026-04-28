@@ -2399,6 +2399,65 @@
             return out;
         }
 
+        // Granular parser keys aligned with PUBLIC_NEEDS_SERVICES (edu) + NEIGHBORHOOD_PROGRAM_SERVICES (other).
+        const PARSER_KEYS = ['maon','gan','yesodi','al_yesodi','tipat_chalav','clinic','matnas','welfare_dept','noar_club','elderly_club','elderly_day','synagogue','mikve','sport_hall','library'];
+
+        // Parse a free-text shavatz/hafrash description (cols S=out / Q=in / AR=hafrash).
+        // Returns { counts: {key→int}, uncategorizedSqm }.
+        // Recognizes:
+        //   • "N כיתות [type]" → adds N classes to that type (e.g., "9 כיתות מעון" → maon += 9)
+        //   • "N בתי ספר על יסודיים - M כיתות" → al_yesodi += M (כיתות wins over בתי ספר count)
+        //   • "N בתי כנסת" → synagogue += N (no כיתות → use leading count)
+        //   • Single-item without numbers → counts as 1
+        //   • Generic "מבנים ומוסדות ציבור (5000)" → adds 5000 to uncategorizedSqm
+        function parseFacilitiesFromText(text) {
+            const counts = {}; PARSER_KEYS.forEach(k => counts[k] = 0);
+            let uncategorizedSqm = 0;
+            if (!text || !text.trim()) return { counts, uncategorizedSqm };
+            const items = text.split(/[;,]/);
+            for (const raw of items) {
+                const t = (raw || '').trim();
+                if (!t) continue;
+                // sqm in parentheses (possibly followed by 'מ"ר') — used for generic items
+                const sqmMatch = t.match(/\(\s*([\d,]+(?:\.\d+)?)\s*(?:מ"ר|מ״ר|מר)?\s*\)/);
+                const sqm = sqmMatch ? parseFloat(sqmMatch[1].replace(/,/g, '')) : 0;
+                // "N כיתות" — explicit class count (highest priority)
+                const classesMatch = t.match(/(\d+)\s*כיתות?/);
+                const explicitClasses = classesMatch ? parseInt(classesMatch[1]) : 0;
+                // Leading "N " — number of facilities (e.g., "2 בתי כנסת")
+                const leadMatch = t.match(/^(\d+)\s/);
+                const leadCount = leadMatch ? parseInt(leadMatch[1]) : 0;
+                const count = explicitClasses || leadCount || 1;
+                let matched = false;
+                // Education — al_yesodi (longer/more-specific phrases first)
+                if (/(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/.test(t)) { counts.al_yesodi += count; matched = true; }
+                else if (/(מעון|מעונות יום|פעוטון)/.test(t)) { counts.maon += count; matched = true; }
+                else if (/(גן ילדים|גני ילדים|גנון|גן חינוך)/.test(t) || /(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/.test(t)) { counts.gan += count; matched = true; }
+                else if (/(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/.test(t)) { counts.yesodi += count; matched = true; }
+                // Religious
+                else if (/(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת|בית כנסת)/.test(t)) { counts.synagogue += count; matched = true; }
+                else if (/(מקווה|מקוואות)/.test(t)) { counts.mikve += count; matched = true; }
+                // Community / culture
+                else if (/(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/.test(t)) { counts.matnas += count; matched = true; }
+                else if (/(ספרייה|ספריה)/.test(t)) { counts.library += count; matched = true; }
+                // Sports
+                else if (/(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/.test(t)) { counts.sport_hall += count; matched = true; }
+                // Health
+                else if (/(טיפת חלב|תחנת בריאות)/.test(t)) { counts.tipat_chalav += count; matched = true; }
+                else if (/(מרפאה|קופת חולים)/.test(t)) { counts.clinic += count; matched = true; }
+                // Welfare
+                else if (/(לשכת רווחה|מחלקה לשירותים חברתיים)/.test(t)) { counts.welfare_dept += count; matched = true; }
+                else if (/(מועדון נוער|מועדונית|מרכז נוער)/.test(t)) { counts.noar_club += count; matched = true; }
+                else if (/(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/.test(t)) { counts.elderly_club += count; matched = true; }
+                else if (/(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/.test(t)) { counts.elderly_day += count; matched = true; }
+                // Uncategorized generic public buildings — accumulate sqm
+                if (!matched && /(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
+                    uncategorizedSqm += sqm;
+                }
+            }
+            return { counts, uncategorizedSqm };
+        }
+
         function eduFeaturesInPolygon(polygonLngLat, gd) {
             if (!gd || !gd.education_shanaton || !polygonLngLat || polygonLngLat.length < 3) return [];
             const ring = polygonLngLat;
@@ -4243,7 +4302,7 @@
                             'shatzap_in','shatzap_out',
                             'commerce_in','commerce_out',
                             'employment','hotels','rental','conditional_housing',
-                            'plan_summary'
+                            'plan_summary','plan_name_he','architect','developer'
                         ];
                         const gsOverrideIdx = {};
                         GS_OVERRIDE_FIELDS.forEach(k => { gsOverrideIdx[k] = headers.findIndex(h => h === k); });
@@ -5631,6 +5690,11 @@
                             units_add: parseFloat(p.units_add) || 0,
                             units_total: parseInt(p.units_total) || 0,
                             status_mavat: p.status_mavat, stage: p.stage, mavat_date: p.mavat_date,
+                            shavatz_out_prog: p.shavatz_out_prog || '',
+                            shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+                            hafrash_prg: p.hafrash_prg || '',
+                            hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+                            shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
                         });
                     });
                     candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
@@ -6092,9 +6156,45 @@
 
                 const totalUnits = existingUnits + plannedUnits;
                 const needs = computePublicNeeds(totalUnits, assumpt);
+                // Current-state needs (existing units only) — used for "כיום" delta when targetYear != 'existing'
+                const currentNeeds = computePublicNeeds(existingUnits, assumpt);
                 const nonEdu = computeNeighborhoodProgramServices(totalUnits, assumpt);
                 const existingEdu = aggregateEduFeatures(eduFeats || []);
                 const hasExistingEdu = (eduFeats || []).length > 0;
+                const showFutureBalance = (tY !== 'existing');
+
+                // Plans contributing to the horizon — parse facility text from S+AR (added) and Q (demolished)
+                const contributingPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null && p.estimatedYear <= tY).map(p => {
+                    const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
+                    const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
+                    const facQ = parseFacilitiesFromText(p.shavatz_in_prog || '');
+                    const addedCounts = {}; const demolishCounts = {};
+                    PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; demolishCounts[k] = facQ.counts[k]; });
+                    return {
+                        ...p,
+                        rawClassCounts: addedCounts,
+                        rawDemolishCounts: demolishCounts,
+                        rawUncatSqm: facS.uncategorizedSqm + facAR.uncategorizedSqm,
+                        rawDemolishUncatSqm: facQ.uncategorizedSqm,
+                        weightedShavatzInSqm: Math.round((p.shavatz_in_sqm || 0) * (p.mimushPct || 0) / 100),
+                    };
+                });
+                // Aggregate: apply mimushPct at the sum level, then round to integer
+                const plannedClasses = {}; PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
+                const demolishedClasses = {}; PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
+                let plannedUncatSqm = 0;
+                contributingPlans.forEach(p => {
+                    const pct = (p.mimushPct || 0) / 100;
+                    PARSER_KEYS.forEach(k => {
+                        plannedClasses[k] += p.rawClassCounts[k] * pct;
+                        demolishedClasses[k] += p.rawDemolishCounts[k] * pct;
+                    });
+                    plannedUncatSqm += p.rawUncatSqm * pct;
+                });
+                PARSER_KEYS.forEach(k => { plannedClasses[k] = Math.round(plannedClasses[k]); demolishedClasses[k] = Math.round(demolishedClasses[k]); });
+                plannedUncatSqm = Math.round(plannedUncatSqm);
+                const totalShavatzInSqm = contributingPlans.reduce((s, p) => s + p.weightedShavatzInSqm, 0);
+                const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
 
                 // Closure for re-rendering after assumption tweaks
                 const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo });
@@ -6126,25 +6226,91 @@
                     al_yesodi: existingEdu.alyesodi_classes,
                     maon: null,
                 };
+                function deltaColor(delta, req) {
+                    if (delta === null) return '#888';
+                    if (req === 0) return delta > 0 ? '#4CAF50' : '#888';
+                    const ratio = delta / req;
+                    return ratio >= 0 ? '#4CAF50' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#e53935';
+                }
+                // Existing-balance rows (only used when targetYear === 'existing')
                 const balanceRows = SVCS.map(svc => {
                     const ex = existingByKey[svc.key];
-                    const req = needs.byService[svc.key].totalClasses;
-                    const delta = ex === null ? null : ex - req;
-                    let color = '#888';
-                    if (delta !== null) {
-                        if (req === 0) color = delta > 0 ? '#4CAF50' : '#888';
-                        else {
-                            const ratio = delta / req;
-                            color = ratio >= 0 ? '#4CAF50' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#e53935';
-                        }
-                    }
+                    const reqNow = currentNeeds.byService[svc.key].totalClasses;
+                    const dNow = ex === null ? null : ex - reqNow;
                     return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#e0e0e0;font-weight:bold">' + (ex === null ? '—' : ex) + '</td>' +
-                        '<td style="padding:6px;text-align:center;color:#aaa">' + req + '</td>' +
-                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + color + '">' + (delta === null ? '—' : (delta >= 0 ? '+' : '') + delta) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + reqNow + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(dNow, reqNow) + '">' + (dNow === null ? '—' : (dNow >= 0 ? '+' : '') + dNow) + '</td>' +
                         '</tr>';
                 }).join('');
+
+                // Unified balance services: edu (with קיים from שנתון) + community/welfare/religion (no קיים data)
+                const BALANCE_SERVICES = [
+                    { key: 'maon',         label: 'מעון',           kind: 'edu',     unit: 'כיתות' },
+                    { key: 'gan',          label: 'גני ילדים',     kind: 'edu',     unit: 'כיתות' },
+                    { key: 'yesodi',       label: 'יסודי',          kind: 'edu',     unit: 'כיתות' },
+                    { key: 'al_yesodi',    label: 'על-יסודי',       kind: 'edu',     unit: 'כיתות' },
+                    { key: 'tipat_chalav', label: 'טיפת חלב',       kind: 'service', unit: 'תחנות' },
+                    { key: 'clinic',       label: 'מרפאה שכונתית', kind: 'service', unit: 'מרפאות' },
+                    { key: 'matnas',       label: 'מתנ"ס/מרכז קהילתי', kind: 'service', unit: 'מרכזים' },
+                    { key: 'welfare_dept', label: 'לשכת רווחה',     kind: 'service', unit: 'לשכות' },
+                    { key: 'noar_club',    label: 'מועדון נוער',    kind: 'service', unit: 'מועדונים' },
+                    { key: 'elderly_club', label: 'מועדון קשיש',    kind: 'service', unit: 'מועדונים' },
+                    { key: 'elderly_day',  label: 'מרכז יום לקשיש', kind: 'service', unit: 'מרכזים' },
+                    { key: 'synagogue',    label: 'בית כנסת',       kind: 'service', unit: 'בתי כנסת' },
+                    { key: 'mikve',        label: 'מקווה טהרה',     kind: 'service', unit: 'מקוואות' },
+                    { key: 'sport_hall',   label: 'אולם ספורט',     kind: 'service', unit: 'אולמות' },
+                    { key: 'library',      label: 'ספרייה שכונתית', kind: 'service', unit: 'ספריות' },
+                ];
+                // Build map of required-counts by key from non-edu services (computeNeighborhoodProgramServices returns array)
+                const nonEduReqByKey = {};
+                nonEdu.forEach(s => { nonEduReqByKey[s.key] = s.count; });
+
+                function getServiceCounts(svc) {
+                    const exGross = (svc.kind === 'edu') ? existingByKey[svc.key] : null; // existing — only edu has data from שנתון
+                    const demolished = demolishedClasses[svc.key] || 0;
+                    // For edu (have קיים): existing_net = שנתון - להריסה. For non-edu: existing is unknown (-) but if Q has text we infer the demolish makes existing < 0 (deficit before plans).
+                    let exNet;
+                    if (exGross !== null) {
+                        exNet = exGross - demolished;
+                    } else if (demolished > 0) {
+                        // No שנתון data for this category, but Q says it had some that's being demolished
+                        exNet = -demolished; // shows the loss
+                    } else {
+                        exNet = null;
+                    }
+                    const planned = plannedClasses[svc.key] || 0;
+                    const proposed = (exNet === null ? 0 : exNet) + planned;
+                    const required = (svc.kind === 'edu')
+                        ? needs.byService[svc.key].totalClasses
+                        : (nonEduReqByKey[svc.key] || 0);
+                    const delta = proposed - required;
+                    return { exGross, demolished, exNet, planned, proposed, required, delta };
+                }
+
+                // Future-balance rows: per-service "מוצע" vs "נדרש"
+                const futureBalanceRows = BALANCE_SERVICES.map(svc => {
+                    const c = getServiceCounts(svc);
+                    const exDisplay = c.exNet === null
+                        ? '—'
+                        : (c.exGross !== null && c.demolished > 0)
+                            ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>'
+                            : (c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet);
+                    return '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)">' + (c.planned > 0 ? '+' + c.planned : '—') + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:#fff">' + c.proposed + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + c.required + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(c.delta, c.required) + '">' + (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta) + '</td>' +
+                        '</tr>';
+                }).join('');
+                const totalProposedClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).proposed, 0);
+                const totalRequiredClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).required, 0);
+                const totalGapClasses = totalProposedClasses - totalRequiredClasses;
+                const totalExistingNet = BALANCE_SERVICES.reduce((s, svc) => { const c = getServiceCounts(svc); return s + (c.exNet || 0); }, 0);
+                const totalDemolished = BALANCE_SERVICES.reduce((s, svc) => s + (demolishedClasses[svc.key] || 0), 0);
 
                 // Non-edu services
                 const nonEduRows = nonEdu.map(svc => {
@@ -6242,8 +6408,36 @@
                             '<td style="padding:6px;text-align:center;color:#aaa">' + needs.totalDunam.toFixed(1) + '</td>' +
                         '</tr>' +
                         '</tbody></table>' +
-                    (hasExistingEdu ?
-                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 קיים מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(שנתון מנח"י באזור הנבחר · ' + (eduFeats || []).length + ' כתובות חינוך)</span></h4>' +
+                    // === BALANCE TABLE === branches by horizon
+                    (showFutureBalance ?
+                        // Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
+                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(אופק ' + tY + ' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR · משוקלל %מימוש)</span></h4>' +
+                        '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
+                            '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                                '<th style="padding:6px;text-align:right">שירות</th>' +
+                                '<th style="padding:6px;text-align:center">קיים</th>' +
+                                '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות (S+AR) משוקלל %מימוש">+ מתוכנן</th>' +
+                                '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' +
+                                '<th style="padding:6px;text-align:center">נדרש ' + tY + '</th>' +
+                                '<th style="padding:6px;text-align:center">פער</th>' +
+                            '</tr></thead><tbody>' + futureBalanceRows +
+                            '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
+                                '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' +
+                                '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:#7b6cf0">+' + BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0) + '</td>' +
+                                '<td id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות">' + totalProposedClasses + ' ›</td>' +
+                                '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:' + deltaColor(totalGapClasses, totalRequiredClasses) + '">' + (totalGapClasses >= 0 ? '+' : '') + totalGapClasses + '</td>' +
+                            '</tr>' +
+                            '<tr style="background:#0f0f24;border-top:1px dashed #555">' +
+                                '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' +
+                                '<td colspan="4" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold">' + plannedUncatSqm.toLocaleString() + ' מ"ר</td>' +
+                            '</tr>' +
+                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז Q: כיתות שנהרסות מנותחות מטקסט שב"צ_in (Q) ומופחתות מ"קיים". סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b> + <b>' + totalShavatzInSqm.toLocaleString() + ' מ"ר</b> בערך כספי. נתוני "קיים" מ-שנתון מנח"י זמינים רק לחינוך.</td></tr>' +
+                        '</tbody></table>'
+                    : (hasExistingEdu ?
+                        // Existing: classes-based balance using שנתון מנח"י
+                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 קיים מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(שנתון מנח"י באזור · ' + (eduFeats || []).length + ' כתובות חינוך · בכיתות)</span></h4>' +
                         '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
                             '<thead><tr style="background:#1a1a2e;color:#aaa">' +
                                 '<th style="padding:6px;text-align:right">שירות</th>' +
@@ -6253,7 +6447,8 @@
                             '</tr></thead><tbody>' + balanceRows +
                             '<tr style="background:#1a1a2e;color:#aaa;font-size:10px"><td colspan="4" style="padding:6px">תלמידים בכתובות שנפלו באזור: <b style="color:#f59e0b">' + existingEdu.students.toLocaleString() + '</b></td></tr>' +
                         '</tbody></table>'
-                    : '') +
+                    : '')) +
+                    // (Per-plan classes drilldown is available via the "מוצע" cell click — no inline duplicate table needed.)
                     '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים</h4>' +
                     '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
                         '<thead><tr style="background:#1a1a2e;color:#aaa">' +
@@ -6288,14 +6483,31 @@
                         lines.push([svc.label, svc.ageFrom + '-' + svc.ageTo, sd.mam.classes, sd.haredi_b.classes, sd.haredi_g.classes, sd.totalClasses, sd.totalDunam.toFixed(1)].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                     });
                     lines.push(['','','','','','סה"כ', needs.totalClasses, needs.totalDunam.toFixed(1)].join(','));
-                    if (hasExistingEdu) {
+                    if (showFutureBalance) {
+                        lines.push('');
+                        lines.push(['מאזן עתידי (אופק ' + tY + ')','קיים שנתון','להריסה Q','קיים נטו','+ מתוכנן S+AR','= מוצע','נדרש','פער'].join(','));
+                        BALANCE_SERVICES.forEach(svc => {
+                            const c = getServiceCounts(svc);
+                            lines.push([svc.label, c.exGross === null ? '' : c.exGross, c.demolished, c.exNet === null ? '' : c.exNet, c.planned, c.proposed, c.required, c.delta].join(','));
+                        });
+                        lines.push(['סה"כ', BALANCE_SERVICES.reduce((s, svc) => s + (existingByKey[svc.key] || 0), 0), totalDemolished, totalExistingNet, BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0), totalProposedClasses, totalRequiredClasses, totalGapClasses].join(','));
+                        lines.push(['שטחי ציבור שטרם נקבע ייעוד (מ"ר משוקלל)','','','','','','', plannedUncatSqm].join(','));
+                        lines.push(['Q שב"צ קיים להריסה (מ"ר משוקלל, אינפורמטיבי)','','','','','','', totalShavatzInSqm].join(','));
+                        lines.push('');
+                        const PARSER_LBLS = { maon:'מעון', gan:'גן', yesodi:'יסודי', al_yesodi:'על-יסודי', tipat_chalav:'טיפת חלב', clinic:'מרפאה', matnas:'מתנ"ס', welfare_dept:'רווחה', noar_club:'מועדון נוער', elderly_club:'מועדון קשיש', elderly_day:'מרכז יום קשיש', synagogue:'בית כנסת', mikve:'מקווה', sport_hall:'אולם ספורט', library:'ספרייה' };
+                        lines.push(['תב"ע','% מימוש','אופק','שב"צ נכנס Q (טקסט)','שב"צ יוצא S (טקסט)','הפרשה AR (טקסט)', ...PARSER_KEYS.map(k => '+' + PARSER_LBLS[k]), ...PARSER_KEYS.map(k => '−' + PARSER_LBLS[k]), 'טרם נקבע (מ"ר גולמי)','להריסה Q (מ"ר משוקלל)'].join(','));
+                        contributingPlans.forEach(p => {
+                            const r = p.rawClassCounts; const d = p.rawDemolishCounts;
+                            lines.push([p.taba, p.mimushPct, p.estimatedYear, p.shavatz_in_prog || '', p.shavatz_out_prog || '', p.hafrash_prg || '', ...PARSER_KEYS.map(k => r[k] || 0), ...PARSER_KEYS.map(k => d[k] || 0), p.rawUncatSqm || 0, p.weightedShavatzInSqm || 0].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        });
+                    } else if (hasExistingEdu) {
                         lines.push('');
                         lines.push(['קיים מול נדרש','קיים','נדרש','פער'].join(','));
                         SVCS.forEach(svc => {
                             const ex = existingByKey[svc.key];
-                            const req = needs.byService[svc.key].totalClasses;
-                            const delta = ex === null ? '' : ex - req;
-                            lines.push([svc.label, ex === null ? '' : ex, req, delta].join(','));
+                            const reqNow = currentNeeds.byService[svc.key].totalClasses;
+                            const dNow = ex === null ? '' : ex - reqNow;
+                            lines.push([svc.label, ex === null ? '' : ex, reqNow, dNow].join(','));
                         });
                     }
                     lines.push('');
@@ -6385,6 +6597,80 @@
                     if (num) {
                         num.addEventListener('change', e => apply(e.target.value));
                     }
+                }
+
+                // Wire drilldown on "מוצע" cell — class breakdown per plan + source (S/AR text)
+                const proposedCell = document.getElementById('programa-proposed-cell');
+                if (proposedCell) {
+                    proposedCell.addEventListener('click', () => {
+                        const oldDrill = document.getElementById('programa-drilldown');
+                        if (oldDrill) { oldDrill.remove(); return; }
+                        // Build per-plan rows; show only granular columns where ANY contributing plan has a non-zero count.
+                        const SVC_LABELS = {
+                            maon: 'מעון', gan: 'גן', yesodi: 'יסודי', al_yesodi: 'על-יסודי',
+                            tipat_chalav: 'טיפת חלב', clinic: 'מרפאה', matnas: 'מתנ"ס',
+                            welfare_dept: 'רווחה', noar_club: 'מועדון נוער',
+                            elderly_club: 'מועדון קשיש', elderly_day: 'מרכז יום קשיש',
+                            synagogue: 'בית כנסת', mikve: 'מקווה', sport_hall: 'אולם ספורט', library: 'ספרייה'
+                        };
+                        const items = [];
+                        contributingPlans.forEach(p => {
+                            const added = p.rawClassCounts;
+                            const dem = p.rawDemolishCounts;
+                            const totalAdded = PARSER_KEYS.reduce((s, k) => s + (added[k] || 0), 0);
+                            const totalDem = PARSER_KEYS.reduce((s, k) => s + (dem[k] || 0), 0);
+                            if (totalAdded === 0 && totalDem === 0 && (p.rawUncatSqm || 0) === 0 && (p.weightedShavatzInSqm || 0) === 0) return;
+                            items.push({ ...p, classTotalRaw: totalAdded, demolishTotalRaw: totalDem });
+                        });
+                        items.sort((a, b) => (b.classTotalRaw + b.demolishTotalRaw) - (a.classTotalRaw + a.demolishTotalRaw));
+                        // Only render columns with any non-zero (added or demolished) across plans
+                        const SVC_KEYS = PARSER_KEYS.filter(k => items.some(p => (p.rawClassCounts[k] || 0) > 0 || (p.rawDemolishCounts[k] || 0) > 0));
+                        const showUncatCol = items.some(p => (p.rawUncatSqm || 0) > 0);
+                        const drill = document.createElement('div');
+                        drill.id = 'programa-drilldown';
+                        drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1100px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+                        const headerCols = SVC_KEYS.map(k => '<th style="padding:5px;text-align:center;color:#bdb6e8">' + SVC_LABELS[k] + '</th>').join('') +
+                            (showUncatCol ? '<th style="padding:5px;text-align:center;color:#f59e0b" title="שטחי ציבור גנריים — בתיאום אגף מבני ציבור">טרם נקבע (מ"ר)</th>' : '');
+                        const rows = items.map(p => {
+                            const added = p.rawClassCounts;
+                            const dem = p.rawDemolishCounts;
+                            const cells = SVC_KEYS.map(k => {
+                                const a = added[k] || 0;
+                                const d = dem[k] || 0;
+                                if (a === 0 && d === 0) return '<td style="padding:5px;text-align:center;color:#444">—</td>';
+                                const parts = [];
+                                if (a > 0) parts.push('<span style="color:#7b6cf0">+' + a + '</span>');
+                                if (d > 0) parts.push('<span style="color:#e57373">−' + d + '</span>');
+                                return '<td style="padding:5px;text-align:center">' + parts.join(' / ') + '</td>';
+                            }).join('') + (showUncatCol ? '<td style="padding:5px;text-align:center;color:' + ((p.rawUncatSqm || 0) > 0 ? '#f59e0b' : '#444') + '">' + ((p.rawUncatSqm || 0) > 0 ? p.rawUncatSqm.toLocaleString() : '—') + '</td>' : '');
+                            const descParts = [];
+                            if ((p.shavatz_in_prog || '').trim()) descParts.push('<b style="color:#e57373">Q (להריסה):</b> ' + p.shavatz_in_prog);
+                            if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S (יוצא):</b> ' + p.shavatz_out_prog);
+                            if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR (הפרשה):</b> ' + p.hafrash_prg);
+                            const desc = descParts.join('<br>');
+                            return '<tr style="border-bottom:1px solid #222">' +
+                                '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">' + p.taba + '</td>' +
+                                '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.mimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' +
+                                '<td style="padding:5px 6px;color:#aaa;font-size:10px;vertical-align:top;max-width:340px">' + (desc || '<span style="color:#555">—</span>') + '</td>' +
+                                cells +
+                                '</tr>';
+                        }).join('');
+                        drill.innerHTML =
+                            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
+                                '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע (כיתות) — אופק ' + tY + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' +
+                                '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                            '</div>' +
+                            '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' +
+                                '<th style="padding:5px;text-align:right">תב"ע</th>' +
+                                '<th style="padding:5px;text-align:right">תכנית</th>' +
+                                '<th style="padding:5px;text-align:right">תיאור (S+AR)</th>' +
+                                headerCols +
+                            '</tr></thead><tbody>' + rows +
+                            '</tbody></table></div>' +
+                            '<div style="font-size:10px;color:#888;margin-top:10px">ערכים בכל תא: <span style="color:#7b6cf0">+N (תוספת מ-S/AR)</span> / <span style="color:#e57373">−N (הריסה מ-Q)</span> — ספירה גולמית שלמה. ה-%מימוש מוחל רק על סכום הקטגוריה הכוללת ומעוגל למספר שלם.</div>';
+                        document.body.appendChild(drill);
+                        document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+                    });
                 }
 
                 // Wire assumption controls
