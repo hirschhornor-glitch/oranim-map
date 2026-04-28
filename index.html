@@ -2458,6 +2458,57 @@
             return { counts, uncategorizedSqm };
         }
 
+        // Returns true if [lng,lat] (or {lng,lat}) point is inside any feature polygon of layer (e.g. minahak_gonen)
+        function pointInLayer(pt, layer) {
+            if (!layer || !layer.features) return false;
+            const lng = (pt && pt.lng != null) ? pt.lng : pt[0];
+            const lat = (pt && pt.lat != null) ? pt.lat : pt[1];
+            function ringHit(ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1];
+                    const xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+            for (const f of layer.features) {
+                const g = f.geometry; if (!g) continue;
+                if (g.type === 'Polygon') { if (ringHit(g.coordinates[0])) return true; }
+                else if (g.type === 'MultiPolygon') {
+                    for (const poly of g.coordinates) { if (ringHit(poly[0])) return true; }
+                }
+            }
+            return false;
+        }
+
+        // Filter education_shanaton features whose point lies inside the given plan geometry.
+        function eduFeaturesInPlanGeometry(planGeom, eduFeats) {
+            if (!planGeom || !planGeom.coordinates || !eduFeats) return [];
+            function ringHit(lng, lat, ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1];
+                    const xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+            function inGeom(lng, lat) {
+                if (planGeom.type === 'Polygon') return ringHit(lng, lat, planGeom.coordinates[0]);
+                if (planGeom.type === 'MultiPolygon') {
+                    for (const poly of planGeom.coordinates) { if (ringHit(lng, lat, poly[0])) return true; }
+                }
+                return false;
+            }
+            return eduFeats.filter(f => {
+                const c = f.geometry && f.geometry.coordinates;
+                return c && inGeom(c[0], c[1]);
+            });
+        }
+
         function eduFeaturesInPolygon(polygonLngLat, gd) {
             if (!gd || !gd.education_shanaton || !polygonLngLat || polygonLngLat.length < 3) return [];
             const ring = polygonLngLat;
@@ -5695,18 +5746,23 @@
                             hafrash_prg: p.hafrash_prg || '',
                             hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
                             shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+                            shavatz_in_prog: p.shavatz_in_prog || '',
+                            geometry: f.geometry,
+                            minahak: p.minahak || '',
                         });
                     });
                     candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
                     const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
                     const eduFeats = eduFeaturesInRadius(radiusCenter, radiusMeters, gd);
+                    const inGonen = pointInLayer({ lat: radiusCenter.lat, lng: radiusCenter.lng }, gd.minahak_gonen);
                     renderProgramaModal({
                         existingUnits,
                         candidatePlans,
                         eduFeats,
-                        scopeLabel: 'רדיוס ' + radiusMeters + 'מ',
+                        scopeLabel: 'רדיוס ' + radiusMeters + 'מ' + (inGonen ? ' · גוננים' : ''),
                         parentModalId: null,
                         radiusInfo: { value: radiusMeters, onChange: (m) => setRadiusMeters(m) },
+                        inGonen,
                     });
                     return;
                 }
@@ -6125,12 +6181,16 @@
             // arbitrary scope (polygon or circle) using default assumptions. Sources:
             //   existing units → buildings layer (NUM_APTS_C sum)
             //   planned units → sum of plans.units_add for plans whose centroid is in scope
-            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo }) {
+            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen }) {
                 candidatePlans = candidatePlans || [];
                 if (!window.__programaUserAssumptions) {
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
                 }
                 const assumpt = window.__programaUserAssumptions;
+                // Future-horizon balance is currently restricted to מינהק גוננים. Force 'existing' elsewhere.
+                if (!inGonen && assumpt.targetYear !== 'existing') {
+                    assumpt.targetYear = 'existing';
+                }
                 const tY = assumpt.targetYear;
 
                 // Apply target-year mimush filter to candidate plans
@@ -6163,19 +6223,25 @@
                 const hasExistingEdu = (eduFeats || []).length > 0;
                 const showFutureBalance = (tY !== 'existing');
 
-                // Plans contributing to the horizon — parse facility text from S+AR (added) and Q (demolished)
+                // Plans contributing to the horizon — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions
                 const contributingPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null && p.estimatedYear <= tY).map(p => {
                     const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
                     const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
-                    const facQ = parseFacilitiesFromText(p.shavatz_in_prog || '');
-                    const addedCounts = {}; const demolishCounts = {};
-                    PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; demolishCounts[k] = facQ.counts[k]; });
+                    const addedCounts = {};
+                    PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; });
+                    // Spatial demolish: edu_shanaton features whose point falls inside the plan polygon
+                    const eduInside = eduFeaturesInPlanGeometry(p.geometry, eduFeats || []);
+                    const eduAgg = aggregateEduFeatures(eduInside);
+                    const demolishCounts = {}; PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
+                    demolishCounts.gan = eduAgg.ganim_count + eduAgg.gan_special_count;
+                    demolishCounts.yesodi = eduAgg.yesodi_classes;
+                    demolishCounts.al_yesodi = eduAgg.alyesodi_classes;
                     return {
                         ...p,
                         rawClassCounts: addedCounts,
                         rawDemolishCounts: demolishCounts,
+                        rawDemolishEduInside: eduInside, // for drilldown reference
                         rawUncatSqm: facS.uncategorizedSqm + facAR.uncategorizedSqm,
-                        rawDemolishUncatSqm: facQ.uncategorizedSqm,
                         weightedShavatzInSqm: Math.round((p.shavatz_in_sqm || 0) * (p.mimushPct || 0) / 100),
                     };
                 });
@@ -6197,7 +6263,7 @@
                 const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
 
                 // Closure for re-rendering after assumption tweaks
-                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo });
+                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen });
 
                 // Build education table — rows = service, cols = stream
                 const eduRows = PUBLIC_NEEDS_SERVICES.map(svc => {
@@ -6348,11 +6414,14 @@
                     // Assumptions controls bar (year + sliders) — same fields as sub-neighborhood פרוגרמה
                     '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>' +
-                            ['existing', 2030, 2035, 2040].map(y => {
-                                const lbl = y === 'existing' ? 'מצב קיים' : y;
-                                const sel = (tY === y);
-                                return '<button data-pa-year="' + y + '" style="background:' + (sel ? '#3a5a80' : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? '#5a7a9a' : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
-                            }).join('') +
+                            (inGonen ?
+                                ['existing', 2030, 2035, 2040].map(y => {
+                                    const lbl = y === 'existing' ? 'מצב קיים' : y;
+                                    const sel = (tY === y);
+                                    return '<button data-pa-year="' + y + '" style="background:' + (sel ? '#3a5a80' : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? '#5a7a9a' : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
+                                }).join('')
+                            : '<span style="font-size:11px;color:#888;padding:3px 9px">מצב קיים</span><span title="אופק עתידי לפי %מימוש זמין כרגע רק במינהק גוננים" style="color:#666;font-size:10px;font-style:italic">(אופק עתידי 2030/35/40 — זמין כרגע רק במינהק גוננים)</span>'
+                            ) +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>' +
                             '<input id="pa-hh" type="range" min="2.5" max="6.0" step="0.1" value="' + assumpt.householdSize + '" style="width:90px">' +
@@ -6433,7 +6502,7 @@
                                 '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' +
                                 '<td colspan="4" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold">' + plannedUncatSqm.toLocaleString() + ' מ"ר</td>' +
                             '</tr>' +
-                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז Q: כיתות שנהרסות מנותחות מטקסט שב"צ_in (Q) ומופחתות מ"קיים". סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b> + <b>' + totalShavatzInSqm.toLocaleString() + ' מ"ר</b> בערך כספי. נתוני "קיים" מ-שנתון מנח"י זמינים רק לחינוך.</td></tr>' +
+                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>.</td></tr>' +
                         '</tbody></table>'
                     : (hasExistingEdu ?
                         // Existing: classes-based balance using שנתון מנח"י
@@ -6644,7 +6713,16 @@
                                 return '<td style="padding:5px;text-align:center">' + parts.join(' / ') + '</td>';
                             }).join('') + (showUncatCol ? '<td style="padding:5px;text-align:center;color:' + ((p.rawUncatSqm || 0) > 0 ? '#f59e0b' : '#444') + '">' + ((p.rawUncatSqm || 0) > 0 ? p.rawUncatSqm.toLocaleString() : '—') + '</td>' : '');
                             const descParts = [];
-                            if ((p.shavatz_in_prog || '').trim()) descParts.push('<b style="color:#e57373">Q (להריסה):</b> ' + p.shavatz_in_prog);
+                            // Spatial demolish — list edu institutions inside this plan's polygon
+                            if (p.rawDemolishEduInside && p.rawDemolishEduInside.length) {
+                                const names = [];
+                                p.rawDemolishEduInside.forEach(ef => {
+                                    (ef.properties.institutions || []).forEach(inst => {
+                                        names.push((inst.name || '?') + ' (' + (inst.type || '?') + ')');
+                                    });
+                                });
+                                if (names.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + names.join('; '));
+                            }
                             if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S (יוצא):</b> ' + p.shavatz_out_prog);
                             if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR (הפרשה):</b> ' + p.hafrash_prg);
                             const desc = descParts.join('<br>');
@@ -6755,12 +6833,18 @@
                 candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
                 const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
                 const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
+                // Use polygon centroid to detect minahak
+                let centX = 0, centY = 0; const n = polyCoords.length - 1;
+                for (let i = 0; i < n; i++) { centX += polyCoords[i][0]; centY += polyCoords[i][1]; }
+                centX /= n; centY /= n;
+                const inGonen = pointInLayer([centX, centY], gd.minahak_gonen);
                 renderProgramaModal({
                     existingUnits,
                     candidatePlans,
                     eduFeats,
-                    scopeLabel: 'אזור נבחר',
+                    scopeLabel: 'אזור נבחר' + (inGonen ? ' · גוננים' : ''),
                     parentModalId: null,
+                    inGonen,
                 });
 
                 // Clean up drawing layers
