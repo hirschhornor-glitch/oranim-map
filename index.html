@@ -8901,9 +8901,9 @@
                             })()) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 const isLocal = String(p.authority || '').includes('מקומית');
-                                const endDate = p.objection_end_date || '';
+                                const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
                                 const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
-                                if (isLocal && endFuture) return true;
+                                if (endFuture) return true;
                                 if (p.has_objection_btn) {
                                     const md = (p.mavat_date || '').split('/');
                                     if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); if (sd < co) return false; }
@@ -17042,11 +17042,10 @@
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
                             const p = f.properties;
-                            const isLocal = String(p.authority || '').includes('מקומית');
-                            const endDate = p.objection_end_date || '';
+                            const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
                             const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
                             let show = false;
-                            if (isLocal && endFuture) show = true;
+                            if (endFuture) show = true;
                             if (!show && p.has_objection_btn) {
                                 const md = (p.mavat_date || '').split('/');
                                 if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); show = sd >= co; }
