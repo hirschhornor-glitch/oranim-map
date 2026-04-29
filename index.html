@@ -3605,7 +3605,17 @@
 
         // תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
         // מקבלות plan_type='מוסתר' ולכן מסוננות מכל החישובים, הסטטיסטיקות והשכבות
-        const SKIP_PLAN_IDS = new Set(['101-0262717', '101-0564583']);
+        const SKIP_PLAN_IDS = new Set([
+            '101-0262717',
+            '101-0564583',
+            '101-0402925',
+            '101-0406504',
+            '101-0433359',
+            '101-0740555',
+            '101-0306944',
+            '101-0326751',
+            '101-0415976',
+        ]);
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
@@ -6193,9 +6203,13 @@
                 }
                 const tY = assumpt.targetYear;
 
-                // Apply target-year mimush filter to candidate plans
+                // Apply target-year mimush filter to candidate plans.
+                // tY === 'existing' → only existing units, no plans contribute
+                // tY === 'full'     → all plans included at 100% mimush, no year cutoff
+                // tY === 2030/35/40 → plans with estimatedYear ≤ tY contribute their units_total × mimushPct
                 let plannedUnits = 0;
                 const plansInScope = [];
+                const isFull = (tY === 'full');
                 candidatePlans.forEach(p => {
                     if (tY === 'existing') {
                         plansInScope.push({ ...p, contributingUnits: 0 });
@@ -6203,14 +6217,15 @@
                     }
                     const m = calcMimush(p);
                     if (!m) { plansInScope.push({ ...p, contributingUnits: 0 }); return; }
-                    if (m.estimatedYear > tY) {
+                    if (!isFull && m.estimatedYear > tY) {
                         plansInScope.push({ ...p, contributingUnits: 0, mimushPct: m.mimushPct, estimatedYear: m.estimatedYear });
                         return;
                     }
                     const u = (parseInt(p.units_total) || parseInt(p.units_add) || 0);
-                    const w = u * m.mimushPct / 100;
+                    const effectivePct = isFull ? 100 : m.mimushPct;
+                    const w = u * effectivePct / 100;
                     plannedUnits += w;
-                    plansInScope.push({ ...p, contributingUnits: Math.round(w), mimushPct: m.mimushPct, estimatedYear: m.estimatedYear });
+                    plansInScope.push({ ...p, contributingUnits: Math.round(w), mimushPct: effectivePct, estimatedYear: m.estimatedYear, isFullMimush: isFull });
                 });
                 plannedUnits = Math.round(plannedUnits);
 
@@ -6224,7 +6239,7 @@
                 const showFutureBalance = (tY !== 'existing');
 
                 // Plans contributing to the horizon — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions
-                const contributingPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null && p.estimatedYear <= tY).map(p => {
+                const contributingPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null && (isFull || p.estimatedYear <= tY)).map(p => {
                     const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
                     const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
                     const addedCounts = {};
@@ -6415,12 +6430,14 @@
                     '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>' +
                             (inGonen ?
-                                ['existing', 2030, 2035, 2040].map(y => {
-                                    const lbl = y === 'existing' ? 'מצב קיים' : y;
+                                ['existing', 2030, 2035, 2040, 'full'].map(y => {
+                                    const lbl = y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : y;
                                     const sel = (tY === y);
-                                    return '<button data-pa-year="' + y + '" style="background:' + (sel ? '#3a5a80' : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? '#5a7a9a' : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
+                                    const accent = y === 'full' ? '#7b6cf0' : '#5a7a9a';
+                                    const accentBg = y === 'full' ? '#3a2a6a' : '#3a5a80';
+                                    return '<button data-pa-year="' + y + '" style="background:' + (sel ? accentBg : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? accent : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
                                 }).join('')
-                            : '<span style="font-size:11px;color:#888;padding:3px 9px">מצב קיים</span><span title="אופק עתידי לפי %מימוש זמין כרגע רק במינהק גוננים" style="color:#666;font-size:10px;font-style:italic">(אופק עתידי 2030/35/40 — זמין כרגע רק במינהק גוננים)</span>'
+                            : '<span style="font-size:11px;color:#888;padding:3px 9px">מצב קיים</span><span title="אופק עתידי לפי %מימוש זמין כרגע רק במינהק גוננים" style="color:#666;font-size:10px;font-style:italic">(אופק עתידי / 100% מימוש — זמין כרגע רק במינהק גוננים)</span>'
                             ) +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>' +
@@ -6452,7 +6469,7 @@
                         '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #f59e0b"><div style="font-size:10px;color:#888">אוכלוסייה מוערכת</div><div style="font-size:20px;color:#f59e0b;font-weight:bold">' + needs.population.toLocaleString() + '</div></div>' +
                     '</div>' +
                     (plansInScope.length ?
-                        '<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור (' + plansInScope.length + (tY !== 'existing' ? ' · ' + plansInScope.filter(p => p.contributingUnits > 0).length + ' תורמות לאופק ' + tY : '') + '):</b> ' +
+                        '<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור (' + plansInScope.length + (tY !== 'existing' ? ' · ' + plansInScope.filter(p => p.contributingUnits > 0).length + ' תורמות' + (tY === 'full' ? ' (100% מימוש)' : ' לאופק ' + tY) : '') + '):</b> ' +
                         plansInScope.slice(0, 30).map(p => {
                             const contrib = p.contributingUnits > 0;
                             return '<span style="color:' + (contrib ? '#fff' : '#bdb6e8') + ';direction:ltr;display:inline-block;' + (contrib ? 'font-weight:bold' : '') + '">' + (p.taba || '?') + '</span>';
@@ -6480,14 +6497,14 @@
                     // === BALANCE TABLE === branches by horizon
                     (showFutureBalance ?
                         // Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
-                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(אופק ' + tY + ' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR · משוקלל %מימוש)</span></h4>' +
+                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(' + (tY === 'full' ? '100% מימוש · כל התב"עות נכללות ללא סינון שנה' : 'אופק ' + tY + ' · משוקלל %מימוש') + ' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR פחות הריסות מ-Q)</span></h4>' +
                         '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
                             '<thead><tr style="background:#1a1a2e;color:#aaa">' +
                                 '<th style="padding:6px;text-align:right">שירות</th>' +
                                 '<th style="padding:6px;text-align:center">קיים</th>' +
                                 '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות (S+AR) משוקלל %מימוש">+ מתוכנן</th>' +
                                 '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' +
-                                '<th style="padding:6px;text-align:center">נדרש ' + tY + '</th>' +
+                                '<th style="padding:6px;text-align:center">נדרש' + (tY === 'full' ? '' : ' ' + tY) + '</th>' +
                                 '<th style="padding:6px;text-align:center">פער</th>' +
                             '</tr></thead><tbody>' + futureBalanceRows +
                             '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
@@ -6608,7 +6625,7 @@
                         }
                     } catch (e) { console.warn('[Programa] map capture failed', e); }
 
-                    const yearLabel = (tY === 'existing') ? 'מצב קיים' : 'אופק ' + tY;
+                    const yearLabel = (tY === 'existing') ? 'מצב קיים' : (tY === 'full') ? '100% מימוש (כל התב"עות)' : 'אופק ' + tY;
                     const plansList = plansInScope.map(p => {
                         const taba = p.taba || '';
                         const summary = p.plan_summary || p.plan_name_he || p.plan_name || '';
@@ -6735,7 +6752,7 @@
                         }).join('');
                         drill.innerHTML =
                             '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
-                                '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע (כיתות) — אופק ' + tY + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' +
+                                '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע (כיתות) — ' + (tY === 'full' ? '100% מימוש' : 'אופק ' + tY) + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' +
                                 '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                             '</div>' +
                             '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' +
@@ -6755,7 +6772,7 @@
                 div.querySelectorAll('[data-pa-year]').forEach(b => {
                     b.addEventListener('click', () => {
                         const y = b.dataset.paYear;
-                        assumpt.targetYear = (y === 'existing') ? 'existing' : Number(y);
+                        assumpt.targetYear = (y === 'existing' || y === 'full') ? y : Number(y);
                         reRender();
                     });
                 });
@@ -13077,7 +13094,7 @@
                             {/* ══ היתרים ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${(radiusMode || radiusCenter || showPermitsBySub || showPermitsGap) ? 'active' : ''}`}
+                                className={`toolbar-btn ${(((radiusMode || radiusCenter) && !programaRadiusActiveRef.current) || showPermitsBySub || showPermitsGap) ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'permits' ? null : 'permits'); }}
                                 title="היתרים — ניתוח רדיוס, תת-שכונה, השוואה לתב&quot;ע"
                             >
