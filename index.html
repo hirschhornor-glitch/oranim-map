@@ -9001,11 +9001,11 @@
                                 return false;
                             })()) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
-                                const isLocal = String(p.authority || '').includes('מקומית');
+                                const hasBtn = p.has_objection_btn === true || String(p.has_objection_btn).toUpperCase() === 'TRUE';
                                 const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
                                 const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
                                 if (endFuture) return true;
-                                if (p.has_objection_btn) {
+                                if (hasBtn) {
                                     const md = (p.mavat_date || '').split('/');
                                     if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); if (sd < co) return false; }
                                     return true;
@@ -11406,7 +11406,8 @@
                             if (end >= new Date()) objectionStillOpen = true;
                         }
                     }
-                    if (!objectionStillOpen && props.has_objection_btn) {
+                    const hasBtnPopup = props.has_objection_btn === true || String(props.has_objection_btn).toUpperCase() === 'TRUE';
+                    if (!objectionStillOpen && hasBtnPopup) {
                         const md = (props.mavat_date || '').split('/');
                         if (md.length === 3) {
                             const statusDate = new Date(md[2], md[1]-1, md[0]);
@@ -17143,11 +17144,12 @@
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
                             const p = f.properties;
+                            const hasBtn = p.has_objection_btn === true || String(p.has_objection_btn).toUpperCase() === 'TRUE';
                             const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
                             const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
                             let show = false;
                             if (endFuture) show = true;
-                            if (!show && p.has_objection_btn) {
+                            if (!show && hasBtn) {
                                 const md = (p.mavat_date || '').split('/');
                                 if (md.length === 3) { const sd = new Date(md[2], md[1]-1, md[0]); const co = new Date(); co.setDate(co.getDate() - 60); show = sd >= co; }
                                 else show = true;
