@@ -3594,6 +3594,7 @@
             { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
             { label: 'תכניות עם ישיבה קרובה', color: '#ff8c00', style: 'outline' },
             { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
+            { label: 'פרוייקטים עם דירות להשכרה', color: '#16a085', style: 'outline' },
         ];
 
         const HIDDEN_PLANS_LEGEND = [
@@ -3694,7 +3695,8 @@
                 plan7778: false,         // תכניות בהודעה 77/78
                 archived: false,        // תכניות שנגנזו/נדחו
                 shavaz_demolition: false, // מבני ציבור להריסה במסגרת התחדשות עירונית
-                consolidation: false     // תכניות איחוד וחלוקה
+                consolidation: false,    // תכניות איחוד וחלוקה
+                rental: false            // פרוייקטים עם דירות להשכרה
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -4422,23 +4424,30 @@
                     }
                     window.__kayamTabaSet = kayamTabaSet;
 
-                    // Correct stale units_add: when units_total + units_in are known,
-                    // trust them over a possibly-stale stored units_add (e.g. 2500 vs 2000).
+                    // Fold rental (יח"ד להשכרה) into units_total and recompute units_add.
+                    // Per product spec: total units = raw units_total + rental; tospah = total - units_in.
+                    // The raw rental remains accessible via p.rental as a breakdown.
                     if (gd.plans && gd.plans.features) {
-                        let fixedCount = 0;
+                        let foldedCount = 0;
                         for (const f of gd.plans.features) {
                             const p = f.properties;
-                            const total = parseFloat(p.units_total) || 0;
-                            if (total <= 0) continue;
+                            const rawTotal = parseFloat(p.units_total) || 0;
+                            const rental = parseFloat(p.rental) || 0;
                             const inn = parseFloat(p.units_in) || 0;
-                            const stored = parseFloat(p.units_add) || 0;
-                            const expected = Math.max(total - inn, 0);
-                            if (Math.abs(stored - expected) >= 1) {
-                                p.units_add = expected;
-                                fixedCount++;
+                            if (rawTotal > 0 || rental > 0) {
+                                const effTotal = rawTotal + rental;
+                                p.units_total = effTotal;
+                                p.units_add = Math.max(effTotal - inn, 0);
+                                if (rental > 0) foldedCount++;
+                            } else {
+                                const storedAdd = parseFloat(p.units_add) || 0;
+                                if (rental > 0 || storedAdd > 0) {
+                                    p.units_add = storedAdd + rental;
+                                    if (rental > 0) foldedCount++;
+                                }
                             }
                         }
-                        if (fixedCount > 0) console.log(`[Units] Corrected units_add on ${fixedCount} plans (used units_total - units_in)`);
+                        if (foldedCount > 0) console.log(`[Units] Folded rental into ${foldedCount} plans (units_total/units_add now include rental)`);
                     }
 
                     // Build plan lookup by taba for kayam filter conditions
@@ -9195,6 +9204,43 @@
                     geoLayersRef.current.consolidation = consolidationLayer;
                 }
 
+                // --- Rental layer (פרוייקטים עם דירות להשכרה) ---
+                if (gd.plans && planningTopics.rental) {
+                    const rentalLayer = L.geoJSON(gd.plans, {
+                        pane: 'topicsPane',
+                        renderer: L.svg({ pane: 'topicsPane' }),
+                        filter: f => {
+                            if (!planInMinahak(f.properties)) return false;
+                            const shk = window.__shouldHideKayam;
+                            if (shk) {
+                                const t = String(f.properties.taba || '').trim();
+                                if (t && shk(t)) return false;
+                            }
+                            return (parseFloat(f.properties.rental) || 0) > 0;
+                        },
+                        style: () => ({ color: '#16a085', weight: 2.5, fillOpacity: 0 }),
+                        onEachFeature: (f, layer) => {
+                            const r = parseFloat(f.properties.rental) || 0;
+                            if (r > 0) {
+                                layer.bindTooltip(
+                                    '<div style="color:#16a085;font-size:8pt;font-weight:bold;font-family:Assistant,sans-serif">' + Math.round(r) + ' יח"ד להשכרה</div>',
+                                    { permanent: true, direction: 'center', className: 'rental-label', opacity: 0.95 }
+                                );
+                            }
+                            layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
+                            layer.on('click', () => {
+                                const mapped = mapPlanProps(f.properties);
+                                const popup = L.popup({ maxWidth: popupMaxWidth() })
+                                    .setLatLng(layer.getBounds().getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.rental = rentalLayer;
+                }
+
                 // --- Shavaz demolition overlay (public buildings overlapping active plans) ---
                 if (planningTopics.shavaz_demolition && gd.shavaz_kayam && gd.plans) {
                     const activePlans = gd.plans.features.filter(f => {
@@ -11441,6 +11487,8 @@
                 html += '<div class="popup-body" style="padding:8px 16px">';
 
                 // Section: יח"ד
+                // Note: units_total here is already the EFFECTIVE total (raw + rental) — applied at parse time.
+                // The rental field remains preserved as a breakdown ("מתוכם שכירות").
                 const uIn = v(props.units_in);
                 const uOut = v(props.units_total);
                 if (uIn != null || uOut != null) {
@@ -11460,7 +11508,7 @@
                     if (cond || rent || htl) {
                         html += '<div class="popup-sub-row">';
                         if (cond) html += `מותנה: <span>${cond}</span>`;
-                        if (rent) html += `${cond ? ' | ' : ''}שכירות: <span>${rent}</span>`;
+                        if (rent) html += `${cond ? ' | ' : ''}מתוכם שכירות: <span>${rent}</span>`;
                         if (htl) html += `${(cond || rent) ? ' | ' : ''}מלונאות: <span>${htl}</span>`;
                         html += '</div>';
                     }
@@ -12795,6 +12843,12 @@
                                 <button className="layer-legend-btn" title="דוח ישיבות קרובות"
                                     onClick={(e) => { e.stopPropagation(); setMeetingsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='פרוייקטים עם דירות להשכרה (יח"ד להשכרה > 0)'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, rental: !prev.rental}))}>
+                                <input type="checkbox" checked={planningTopics.rental} onChange={() => {}} />
+                                <label>פרוייקטים עם דירות להשכרה</label>
                             </div>
                             </div>)}
                         </div>
