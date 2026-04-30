@@ -9012,7 +9012,7 @@
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 const hasBtn = p.has_objection_btn === true || String(p.has_objection_btn).toUpperCase() === 'TRUE';
                                 const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
-                                const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
+                                const endFuture = endDate && (() => { const pts = endDate.split('/'); if (pts.length !== 3) return false; const today = new Date(); today.setHours(0,0,0,0); return new Date(pts[2], pts[1]-1, pts[0]) >= today; })();
                                 if (endFuture) return true;
                                 if (hasBtn) {
                                     const md = (p.mavat_date || '').split('/');
@@ -11449,7 +11449,8 @@
                         const parts = dateOnly.split('/');
                         if (parts.length === 3) {
                             const end = new Date(parts[2], parts[1]-1, parts[0]);
-                            if (end >= new Date()) objectionStillOpen = true;
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            if (end >= today) objectionStillOpen = true;
                         }
                     }
                     const hasBtnPopup = props.has_objection_btn === true || String(props.has_objection_btn).toUpperCase() === 'TRUE';
@@ -17200,7 +17201,7 @@
                             const p = f.properties;
                             const hasBtn = p.has_objection_btn === true || String(p.has_objection_btn).toUpperCase() === 'TRUE';
                             const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
-                            const endFuture = endDate && (() => { const pts = endDate.split('/'); return pts.length === 3 && new Date(pts[2], pts[1]-1, pts[0]) >= new Date(); })();
+                            const endFuture = endDate && (() => { const pts = endDate.split('/'); if (pts.length !== 3) return false; const today = new Date(); today.setHours(0,0,0,0); return new Date(pts[2], pts[1]-1, pts[0]) >= today; })();
                             let show = false;
                             if (endFuture) show = true;
                             if (!show && hasBtn) {
