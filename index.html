@@ -430,9 +430,9 @@
         }
 
         .permit-detail-header {
-            background: linear-gradient(135deg, #2d1a3e, #3d1a2e);
+            background: linear-gradient(135deg, #0D47A1, #1976D2);
             padding: 14px 16px 10px;
-            border-bottom: 2px solid #e94560;
+            border-bottom: 2px solid #5DADE2;
         }
 
         .leaflet-popup-close-button {
@@ -2333,6 +2333,8 @@
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
             master_plan_arnona: 'data/master_plan_arnona.geojson',
+            master_plan_gonenim: 'data/master_plan_gonenim.geojson',
+            master_plan_talpiot: 'data/master_plan_talpiot.geojson',
             buildings: 'data/buildings.geojson',
         };
 
@@ -2690,6 +2692,8 @@
                     { id: 'master_plan_rasko', name: 'רסקו – גבעת הורדים', desc: 'תכנית אב רסקו — גבול, מתחמי גובה (A-G), מבני ומתחמי שימור', on: false },
                     { id: 'master_plan_baka', name: 'בקעה', desc: 'תכנית אב בקעה — גבול, גובה מבנים, מרקמים, דרגות שימור', on: false },
                     { id: 'master_plan_arnona', name: 'ארנונה', desc: 'תכנית אב ארנונה — גבול, מתחמי קומות, מבנים + שימור', on: false },
+                    { id: 'master_plan_gonenim', name: 'גוננים', desc: 'תכנית אב גוננים — שלד התחדשות עירונית (~867 ד׳, 286 יעודי קרקע); מקור: jergisng', on: false },
+                    { id: 'master_plan_talpiot', name: 'תלפיות', desc: 'תכנית אב מתחם תלפיות — הסבת תעשייה למעורב (~1,171 ד׳, 168 יעודי קרקע); מקור: jergisng', on: false },
                 ]
             },
         };
@@ -2834,6 +2838,70 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
+        };
+
+        // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
+        // Four families with internal shades preserving information.
+        // NOTE: yiud_karka palette (LANDUSE_COLORS below) intentionally untouched.
+
+        const COMMERCE_PALETTE = {
+            pure_commerce:      '#7B1FA2',
+            pure_employment:    '#4A148C',
+            offices:            '#9C27B0',
+            mixed_commerce_emp: '#8E24AA',
+            mixed_with_resid:   '#CE93D8',
+            special_commerce:   '#6A1B9A',
+            popup_header_grad:  'linear-gradient(135deg, #4A148C, #7B1FA2)',
+            popup_bg:           '#1a0d2e',
+            popup_label:        '#ce93d8',
+            badge_bg:           '#7B1FA2',
+            kpi_accent:         '#9C27B0',
+        };
+        const COMMERCE_HEATMAP = ['#f3e5f5','#e1bee7','#ce93d8','#ba68c8','#9c27b0','#7b1fa2','#6a1b9a','#4a148c'];
+
+        const PUBLIC_PALETTE = {
+            shavaz_kayam_fill:     '#8B4513',
+            shavaz_kayam_stroke:   '#5C2E0A',
+            shavaz_future_fill:    '#D2B48C',
+            shavaz_future_stroke:  '#C4956A',
+            edu_mamlachti:         '#8D6E63',
+            edu_mamlachti_dati:    '#5D4037',
+            edu_aravi:             '#4E342E',
+            edu_haredi:            '#3E2723',
+            edu_status_existing:   '#A1887F',
+            edu_status_authorized: '#BCAAA4',
+            edu_status_no_auth:    '#D7CCC8',
+            prog_kpi_accent:       '#6D4C41',
+            prog_popup_header:     'linear-gradient(135deg, #5C2E0A, #8B4513)',
+            prog_badge_bg:         '#8B4513',
+            prog_analysis_stroke:  '#8B4513',
+        };
+
+        const PERMITS_PALETTE = {
+            pre_licensing:      '#90CAF9',
+            licensing:          '#42A5F5',
+            in_construction:    '#1976D2',
+            done:               '#90A4AE',
+            tama38_marker:      '#5DADE2',
+            radius_circle:      '#1565C0',
+            radius_program_mode:'#5C6BC0',
+            popup_header_grad:  'linear-gradient(135deg, #0D47A1, #1976D2)',
+            popup_bg:           '#0a1929',
+            popup_label:        '#90CAF9',
+            badge_bg:           '#1976D2',
+        };
+
+        const OPEN_SPACE_PALETTE = {
+            shatzaf_title:          '#388E3C',
+            shatzaf_button:         '#2E7D32',
+            hover_highlight:        '#66BB6A',
+            status_adequate:        '#388E3C',
+            status_deficit:         '#C62828',
+            master_plan_open_space: '#66BB6A',
+            open_space_analysis:    '#388E3C',
+            popup_header_grad:      'linear-gradient(135deg, #1B5E20, #388E3C)',
+            popup_bg:               '#0d1f0d',
+            popup_label:            '#A5D6A7',
         };
 
         // Landuse colors - from XPLAN/MAVAT and Jerusalem municipality GIS
@@ -3270,8 +3338,8 @@
                     const diffVal = r.diff;
                     const diffColor = diffVal > 0 ? '#4CAF50' : diffVal < 0 ? '#e94560' : '#888';
                     const GROUP_COLORS = {
-                        'מגורים': '#ffdf7f', 'מסחר': '#adadad', 'תעשיה/תעסוקה': '#cc66cc',
-                        'מוסדות ציבור': '#cc9966', 'שטחים פתוחים': '#7fff7f',
+                        'מגורים': '#ffdf7f', 'מסחר': COMMERCE_PALETTE.pure_commerce, 'תעשיה/תעסוקה': COMMERCE_PALETTE.pure_employment,
+                        'מוסדות ציבור': PUBLIC_PALETTE.prog_kpi_accent, 'שטחים פתוחים': '#7fff7f',
                         'דרכים/תחבורה': '#ff003f', 'מתקנים הנדסיים': '#7f7fff',
                         'יער/חקלאי': '#00cc33', 'תיירות/מלונאות': '#ff7f9f'
                     };
@@ -3508,11 +3576,11 @@
         }
 
         const STAGE_COLORS = {
-            'ג-רישוי בתהליך': '#4ba1f0',
-            'ג-רישוי  בתהליך': '#4ba1f0',
-            'ד-היתר בנייה': '#4b85e0',
-            'ה-בבנייה': '#4a69d1',
-            'ו-גמר בנייה': '#494cc2',
+            'ג-רישוי בתהליך': PERMITS_PALETTE.pre_licensing,
+            'ג-רישוי  בתהליך': PERMITS_PALETTE.pre_licensing,
+            'ד-היתר בנייה': PERMITS_PALETTE.licensing,
+            'ה-בבנייה': PERMITS_PALETTE.in_construction,
+            'ו-גמר בנייה': PERMITS_PALETTE.done,
         };
 
         const PLANS_LEGEND = [
@@ -3525,10 +3593,10 @@
         ];
 
         const PERMITS_LEGEND = [
-            { label: 'ג-רישוי בתהליך', color: '#4ba1f0' },
-            { label: 'ד-היתר בנייה', color: '#4b85e0' },
-            { label: 'ה-בבנייה', color: '#4a69d1' },
-            { label: 'ו-גמר בנייה', color: '#494cc2' },
+            { label: 'ג-רישוי בתהליך', color: PERMITS_PALETTE.pre_licensing },
+            { label: 'ד-היתר בנייה', color: PERMITS_PALETTE.licensing },
+            { label: 'ה-בבנייה', color: PERMITS_PALETTE.in_construction },
+            { label: 'ו-גמר בנייה', color: PERMITS_PALETTE.done },
         ];
 
         const TAMA38_LEGEND = [
@@ -3545,14 +3613,14 @@
             { label: 'גני ילדים', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 1,17 17,17" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
             { label: 'מעון יום', style: 'svg', svg: '<svg width="18" height="18"><polygon points="9,1 17,9 9,17 1,9" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
             { label: 'היקף: פיקוח', style: 'header' },
-            { label: 'ממלכתי', color: '#0d47a1' },
-            { label: 'ממלכתי דתי', color: '#d63384' },
-            { label: 'ערבי', color: '#7b1fa2' },
-            { label: 'חרדי', color: '#1a1a2e' },
+            { label: 'ממלכתי', color: PUBLIC_PALETTE.edu_mamlachti },
+            { label: 'ממלכתי דתי', color: PUBLIC_PALETTE.edu_mamlachti_dati },
+            { label: 'ערבי', color: PUBLIC_PALETTE.edu_aravi },
+            { label: 'חרדי', color: PUBLIC_PALETTE.edu_haredi },
             { label: 'מילוי: סטטוס', style: 'header' },
-            { label: 'קיים', color: '#4CAF50' },
-            { label: 'הרשאה מלאה/חלקית', color: '#f1c40f' },
-            { label: 'אין הרשאה', color: '#e74c3c' },
+            { label: 'קיים', color: PUBLIC_PALETTE.edu_status_existing },
+            { label: 'הרשאה מלאה/חלקית', color: PUBLIC_PALETTE.edu_status_authorized },
+            { label: 'אין הרשאה', color: PUBLIC_PALETTE.edu_status_no_auth },
         ];
 
         const MASTER_PLAN_LEGEND = [
@@ -3583,10 +3651,10 @@
         ];
 
         const SHAVAZ_LEGEND = [
-            { label: 'מבני ציבור קיים', color: '#8B4513' },
-            { label: 'מבני ציבור עתידי', color: '#D2B48C' },
-            { label: 'מגרשי ספורט', color: '#4CAF50' },
-            { label: 'הפרשה מבונה עתידי', color: '#9C27B0' },
+            { label: 'מבני ציבור קיים', color: PUBLIC_PALETTE.shavaz_kayam_fill },
+            { label: 'מבני ציבור עתידי', color: PUBLIC_PALETTE.shavaz_future_fill },
+            { label: 'מגרשי ספורט', color: PUBLIC_PALETTE.prog_kpi_accent },
+            { label: 'הפרשה מבונה עתידי', color: PUBLIC_PALETTE.shavaz_future_stroke },
         ];
 
         const TOPICS_LEGEND = [
@@ -4811,7 +4879,7 @@
                     panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + planDisplay + '</h3>' +
+                        '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + planDisplay + '</h3>' +
                         '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
                         (subNeighName ? '<div style="font-size:11px;margin-bottom:6px;color:#888">שכונה: ' + subNeighName + '</div>' : '') +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
@@ -4820,7 +4888,7 @@
                         '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (planMinahak && PN_MINAHAK_PRESETS[planMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + planMinahak + ')</span>' : '') + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
                         '<input id="shatzaf-household" type="number" value="' + presetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
-                        '<button id="shatzaf-calc" style="flex:1;padding:8px;background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
+                        '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
 
@@ -4926,7 +4994,7 @@
                         if (unitsTotal > 0 && openSpaceArea > 0) {
                             const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
                             const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
-                            const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
+                            const statusColor = status === 'deficit' ? OPEN_SPACE_PALETTE.status_deficit : OPEN_SPACE_PALETTE.status_adequate;
                             standardHtml =
                                 '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
                                 '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' +
@@ -5004,7 +5072,7 @@
                     if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
                     if (found) {
                         subHoverLayer = L.geoJSON(found, {
-                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.1, dashArray: '' }
+                            style: { color: OPEN_SPACE_PALETTE.hover_highlight, weight: 3, fillColor: OPEN_SPACE_PALETTE.hover_highlight, fillOpacity: 0.1, dashArray: '' }
                         }).addTo(map);
                         // Show tooltip with name
                         subHoverLayer.bindTooltip(found.properties.schn_nama, { sticky: true, direction: 'top', className: 'landuse-tooltip' }).openTooltip();
@@ -5025,7 +5093,7 @@
                         map.getContainer().classList.remove('measuring');
                         // Draw selected polygon
                         subSelectedLayer = L.geoJSON(found, {
-                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.15, dashArray: '' }
+                            style: { color: OPEN_SPACE_PALETTE.shatzaf_button, weight: 3, fillColor: OPEN_SPACE_PALETTE.hover_highlight, fillOpacity: 0.15, dashArray: '' }
                         }).addTo(map);
                         calculateSubNeighborhoodShatzaf(found.properties.schn_nama);
                     }
@@ -5196,7 +5264,7 @@
 
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + subName + '</h3>' +
+                        '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + subName + '</h3>' +
                         '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
                         (subMinahak ? '<div style="font-size:11px;margin-bottom:6px;color:#888">מינהל: ' + subMinahak + '</div>' : '') +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + totalUnitsIn.toLocaleString() + '</b></div>' +
@@ -5207,7 +5275,7 @@
                         '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '') + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
                         '<input id="shatzaf-household" type="number" value="' + subPresetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
-                        '<button id="shatzaf-calc" style="flex:1;padding:8px;background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
+                        '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
 
@@ -5229,7 +5297,7 @@
                         if (grandTotalUnits > 0 && openSpaceArea > 0) {
                             const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
                             const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
-                            const statusColor = status === 'deficit' ? '#ef5350' : '#4CAF50';
+                            const statusColor = status === 'deficit' ? OPEN_SPACE_PALETTE.status_deficit : OPEN_SPACE_PALETTE.status_adequate;
                             standardHtml =
                                 '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' +
                                 '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' +
@@ -5546,7 +5614,7 @@
                     if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
                     if (found) {
                         treeSubHoverLayer = L.geoJSON(found, {
-                            style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.1, dashArray: '' }
+                            style: { color: OPEN_SPACE_PALETTE.hover_highlight, weight: 3, fillColor: OPEN_SPACE_PALETTE.hover_highlight, fillOpacity: 0.1, dashArray: '' }
                         }).addTo(map);
                         treeSubHoverLayer.bindTooltip(found.properties.schn_nama, { sticky: true, direction: 'top', className: 'landuse-tooltip' }).openTooltip();
                     }
@@ -5567,7 +5635,7 @@
                     container.classList.remove('measuring');
                     if (treeSubSelectedLayer) map.removeLayer(treeSubSelectedLayer);
                     treeSubSelectedLayer = L.geoJSON(found, {
-                        style: { color: '#4CAF50', weight: 3, fillColor: '#4CAF50', fillOpacity: 0.15, dashArray: '' }
+                        style: { color: OPEN_SPACE_PALETTE.shatzaf_button, weight: 3, fillColor: OPEN_SPACE_PALETTE.hover_highlight, fillOpacity: 0.15, dashArray: '' }
                     }).addTo(map);
                     let subCoords;
                     try {
@@ -5720,11 +5788,11 @@
                 if (!radiusCenter) return;
                 const isPrograma = programaRadiusActiveRef.current;
                 ref.circle = L.circle(radiusCenter, {
-                    radius: radiusMeters, color: isPrograma ? '#7b6cf0' : '#9c27b0', weight: 2,
-                    fillColor: isPrograma ? '#7b6cf0' : '#9c27b0', fillOpacity: 0.10, dashArray: '6,4'
+                    radius: radiusMeters, color: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle, weight: 2,
+                    fillColor: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle, fillOpacity: 0.10, dashArray: '6,4'
                 }).addTo(map);
                 ref.marker = L.circleMarker(radiusCenter, {
-                    radius: 4, color: isPrograma ? '#7b6cf0' : '#9c27b0', fillColor: isPrograma ? '#7b6cf0' : '#9c27b0', fillOpacity: 1
+                    radius: 4, color: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle, fillColor: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle, fillOpacity: 1
                 }).addTo(map);
 
                 const gd = geoDataRef.current;
@@ -5899,10 +5967,10 @@
 
                 const div = document.createElement('div');
                 div.id = 'radius-select-result';
-                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:24px;border-radius:14px;border:2px solid #9c27b0;direction:rtl;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+                div.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:24px;border-radius:14px;border:2px solid ${PERMITS_PALETTE.radius_circle};direction:rtl;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif`;
                 const totalProjects = planMatches.length + tamaMatches.length;
                 div.innerHTML = '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
-                    '<h3 id="radius-result-title" contenteditable="true" style="color:#9c27b0;margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה">היתרים ברדיוס</h3>' +
+                    `<h3 id="radius-result-title" contenteditable="true" style="color:${PERMITS_PALETTE.radius_circle};margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה">היתרים ברדיוס</h3>` +
                     '<div style="font-size:11px;color:#888;margin-bottom:10px">מרכז: ' + radiusCenter.lat.toFixed(5) + ', ' + radiusCenter.lng.toFixed(5) + '</div>' +
                     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px;background:#1a1a2e;border-radius:6px">' +
                     '<label style="font-size:12px;color:#aaa">רדיוס:</label>' +
@@ -7444,11 +7512,11 @@
                         legendHtml += '<span style="font-weight:bold;color:#555">חינוך:</span>';
                         legendHtml += '<span>●יסודי</span> <span>■על-יסודי</span> <span>▲גני</span> <span>◆מעון</span>';
                         legendHtml += '<span style="margin-right:6px">|</span>';
-                        legendHtml += '<span style="color:#0d47a1">■</span>ממלכתי <span style="color:#d63384">■</span>דתי <span style="color:#7b1fa2">■</span>ערבי <span style="color:#1a1a2e">■</span>חרדי';
+                        legendHtml += `<span style="color:${PUBLIC_PALETTE.edu_mamlachti}">■</span>ממלכתי <span style="color:${PUBLIC_PALETTE.edu_mamlachti_dati}">■</span>דתי <span style="color:${PUBLIC_PALETTE.edu_aravi}">■</span>ערבי <span style="color:${PUBLIC_PALETTE.edu_haredi}">■</span>חרדי`;
                         legendHtml += '<span style="margin-right:6px">|</span>';
-                        legendHtml += `<span style="width:10px;height:10px;background:#4CAF50;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>קיים `;
-                        legendHtml += `<span style="width:10px;height:10px;background:#f1c40f;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>הרשאה `;
-                        legendHtml += `<span style="width:10px;height:10px;background:#e74c3c;display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>אין הרשאה`;
+                        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_existing};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>קיים `;
+                        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_authorized};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>הרשאה `;
+                        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_no_auth};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>אין הרשאה`;
                         legendHtml += '</div></div>';
                     }
 
@@ -8744,9 +8812,9 @@
                             const landuseActive = layers['landuse_xplan'];
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
-                            const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona'].filter(k => layers[k]);
+                            const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].filter(k => layers[k]);
                             if (activeMpKeys.length > 0) {
-                                const MP_NAME_BY_KEY = { master_plan_moshavot:'מושבות', master_plan_rasko:'רסקו', master_plan_baka:'בקעה', master_plan_arnona:'ארנונה' };
+                                const MP_NAME_BY_KEY = { master_plan_moshavot:'מושבות', master_plan_rasko:'רסקו', master_plan_baka:'בקעה', master_plan_arnona:'ארנונה', master_plan_gonenim:'גוננים', master_plan_talpiot:'תלפיות' };
                                 const activeMpNames = new Set(activeMpKeys.map(k => MP_NAME_BY_KEY[k]));
                                 const c = (window.__masterPlanCompliance || {})[f.properties.plan_name];
                                 if (c && activeMpNames.has(c.mp_match)) {
@@ -9452,8 +9520,8 @@
                     const sportKayamLayer = L.geoJSON(gd.sport_kayam, {
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 6, fillColor: '#4CAF50', fillOpacity: 0.9,
-                            color: '#1a7a3a', weight: 2
+                            radius: 6, fillColor: PUBLIC_PALETTE.prog_kpi_accent, fillOpacity: 0.9,
+                            color: PUBLIC_PALETTE.shavaz_kayam_stroke, weight: 2
                         }),
                         onEachFeature: (f, layer) => {
                             const name = f.properties.name || f.properties.type || 'מגרש ספורט';
@@ -9469,6 +9537,8 @@
                     master_plan_rasko:    { color: '#1976d2', label: 'תכנית אב רסקו' },
                     master_plan_baka:     { color: '#388e3c', label: 'תכנית אב בקעה' },
                     master_plan_arnona:   { color: '#e65100', label: 'תכנית אב ארנונה' },
+                    master_plan_gonenim:  { color: '#c2185b', label: 'תכנית אב גוננים' },
+                    master_plan_talpiot:  { color: '#00838f', label: 'תכנית אב מתחם תלפיות' },
                 };
                 const ZONE_FILL_COLORS = {
                     A: '#ef5350', B: '#42a5f5', C: '#66bb6a', D: '#ffa726',
@@ -9489,7 +9559,7 @@
                     'שטח ציבורי': '#c5e1a5',
                 };
                 function buildMasterPlanPopup(p) {
-                    const skip = new Set(['feature_type', 'plan_short']);
+                    const skip = new Set(['feature_type', 'plan_short', 'plane_name']);
                     const labels = {
                         plan_name: 'שם תכנית', plan_number: 'מס תכנית', plan_year: 'שנה',
                         area_dunam: 'שטח (דונם)', plan_type: 'סוג', architect: 'אדריכל',
@@ -9512,6 +9582,7 @@
                         merkam: 'מרקם', conservation_grade: 'דרגת שימור', grade_meaning: 'משמעות',
                         sog: 'סוג / שימור', conservation_level: 'רמת שימור',
                         focus_id: 'מס׳ מוקד', description: 'תיאור', conservation_type: 'סוג שימור',
+                        land_use: 'יעוד קרקע', num_of_hel: 'חלקה', Layer: 'שכבה', sug: 'סוג תכנית', number: 'מס׳ תכנית',
                         is_strict: 'מחמיר', tama38_units_realistic: 'יח״ד תמ״א 38 (ריאלי)',
                         pinui_binui_units_realistic: 'יח״ד פינוי-בינוי (ריאלי)',
                         related_tba: 'תב״עות קשורות', area_description: 'תיאור אזור',
@@ -9524,10 +9595,10 @@
                             const val = (typeof v === 'boolean') ? (v ? 'כן' : 'לא') : v;
                             return `<div style="margin:2px 0"><b>${label}:</b> ${val}</div>`;
                         }).join('');
-                    const heading = p.plan_name || p.zone_name || p.merkam || p.conservation_grade ||
+                    const heading = p.plan_name || p.zone_name || p.merkam || p.conservation_grade || p.land_use ||
                         ({boundary: 'גבול תכנית', subzone: 'תת-מתחם', building_height: 'גובה מבנה',
                           texture: 'מרקם', conservation_point: 'מבנה לשימור', conservation: 'שימור',
-                          special_focus: 'מוקד מיוחד'}[p.feature_type] || 'פרטים');
+                          special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע'}[p.feature_type] || 'פרטים');
                     return `<div style="font-family:Assistant;direction:rtl;max-width:300px">` +
                         `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
                         rows + `</div>`;
@@ -9542,7 +9613,7 @@
                         return '#ef6c00';
                     }
                     const text = (props.character || props.sog || props.merkam || props['אזור'] ||
-                                  props.conservation_type || props.zone_name || '').trim();
+                                  props.conservation_type || props.zone_name || props.land_use || '').trim();
                     if (!text) return '#bdbdbd';
                     if (/מחמיר|שימור מלא/.test(text)) return '#b71c1c';                                     // strict preservation
                     if (/שימור מרקמי|מרקם היסטורי לשימור|מתחם לשימור|מתחם שימור/.test(text)) return '#fbc02d'; // texture preservation
@@ -9550,8 +9621,8 @@
                     if (/אזור לא לציפוף/.test(text)) return '#90caf9';                                        // no-densification
                     if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';                       // urban renewal
                     if (/שצ"?פ|שטח ציבורי פתוח|שטח פרטי פטוח|שטח פרטי פתוח/.test(text)) return '#66bb6a';      // open public space
-                    if (/מבני ציבור|שב"?צ|מוסדות/.test(text)) return '#2e7d32';                              // public buildings
-                    if (/חזית מסחר|מסחרי|מסחר/.test(text)) return '#6d4c41';                                  // commercial frontage
+                    if (/מבני ציבור|שב"?צ|מוסדות/.test(text)) return PUBLIC_PALETTE.prog_kpi_accent;            // public buildings
+                    if (/חזית מסחר|מסחרי|מסחר/.test(text)) return COMMERCE_PALETTE.pure_commerce;                // commercial frontage
                     if (/דרך|שביל|תנועה|מיתון/.test(text)) return '#757575';                                  // road/path
                     if (/אזורי ליבה|ללא תוספת|תכנית מאושרת/.test(text)) return '#9e9e9e';                     // approved core
                     if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';                    // building zone
@@ -9567,9 +9638,11 @@
                     master_plan_rasko: 'רסקו',
                     master_plan_baka: 'בקעה',
                     master_plan_arnona: 'ארנונה',
+                    master_plan_gonenim: 'גוננים',
+                    master_plan_talpiot: 'תלפיות',
                 };
                 // Feature types we display at zone level (NOT individual buildings)
-                const ZONE_FEATURE_TYPES = new Set(['boundary', 'subzone', 'special_focus', 'texture', 'conservation']);
+                const ZONE_FEATURE_TYPES = new Set(['boundary', 'subzone', 'special_focus', 'texture', 'conservation', 'landuse']);
                 const COMPLIANCE_FILL = { violation: '#d32f2f', warning: '#f57c00', ok: '#43a047' };
 
                 function buildMasterPlanLayer(layerKey, geojson) {
@@ -9880,7 +9953,7 @@
                     group.__tamaCount = tamaInside.length;
                     return group;
                 }
-                ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona'].forEach(key => {
+                ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot'].forEach(key => {
                     if (layers[key] && gd[key]) {
                         geoLayersRef.current[key] = buildMasterPlanLayer(key, gd[key]);
                     }
@@ -10036,7 +10109,7 @@
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-                            radius: 5, fillColor: '#9C27B0', fillOpacity: 0.8, color: '#6A1B9A', weight: 1
+                            radius: 5, fillColor: PUBLIC_PALETTE.shavaz_future_stroke, fillOpacity: 0.8, color: PUBLIC_PALETTE.shavaz_kayam_fill, weight: 1
                         }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', () => {
@@ -10057,7 +10130,7 @@
                 // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
                 // Fill = status: yellow=existing/authorized, red=no authorization
-                const pikuachStrokes = { 'ממלכתי': '#0d47a1', 'ממלכתי דתי': '#d63384', 'ערבי': '#7b1fa2', 'חרדי': '#1a1a2e' };
+                const pikuachStrokes = { 'ממלכתי': PUBLIC_PALETTE.edu_mamlachti, 'ממלכתי דתי': PUBLIC_PALETTE.edu_mamlachti_dati, 'ערבי': PUBLIC_PALETTE.edu_aravi, 'חרדי': PUBLIC_PALETTE.edu_haredi };
                 const eduSz = zoomLevel >= 17 ? 18 : 14;
                 function eduIcon(sugMosad, pikuach, fill, label) {
                     const stroke = pikuachStrokes[pikuach] || '#555';
@@ -10175,7 +10248,7 @@
                         filter: f => f.geometry && passesEduFilter(getSugMosad(f.properties), getPikuach(f.properties)),
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
-                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), '#4CAF50', p['שם מוסד']) });
+                            return L.marker(latlng, { icon: eduIcon(getSugMosad(p), getPikuach(p), PUBLIC_PALETTE.edu_status_existing, p['שם מוסד']) });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
@@ -10184,7 +10257,7 @@
                                 if (areaModeRef.current || radiusModeRef.current) return;
                                 // Build mosad popup (styled like plans popup)
                                 let html = '<div>';
-                                html += `<div class="popup-header" style="border-bottom:3px solid #27ae60"><div class="popup-header-title">${name}</div>`;
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${PUBLIC_PALETTE.shavaz_kayam_fill}"><div class="popup-header-title">${name}</div>`;
                                 if (p['כתובת'] && p['כתובת'] !== 'None') html += `<div class="popup-header-subtitle">${p['כתובת']}</div>`;
                                 html += '</div>';
                                 html += '<div class="popup-body" style="padding:8px 16px">';
@@ -10219,7 +10292,7 @@
                                         const sHarsha = (sp['סטטוס הרשאה'] || '').trim();
                                         const isN = sStatus.includes('נמסר');
                                         const hasA = sHarsha.includes('מלאה') || sHarsha.includes('חלקית');
-                                        const hdrColor = isN ? '#388E3C' : hasA ? '#d4ac0d' : '#c0392b';
+                                        const hdrColor = isN ? PUBLIC_PALETTE.edu_mamlachti_dati : hasA ? PUBLIC_PALETTE.shavaz_future_stroke : PUBLIC_PALETTE.shavaz_future_fill;
                                         html += `<div class="popup-header" style="border-bottom:3px solid ${hdrColor}"><div class="popup-header-title" style="font-size:13px">${sp['שם הפרויקט'] || ''}</div></div>`;
                                         html += '<div class="popup-body" style="padding:6px 16px">';
                                         if (sStatus) html += `<div class="popup-row"><span class="popup-label">סטטוס</span><span class="popup-value">${sStatus}</span></div>`;
@@ -10248,7 +10321,7 @@
                             const isNimsar = status.includes('נמסר');
                             const harsha = (p['סטטוס הרשאה'] || '').trim();
                             const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
-                            const fill = isNimsar ? '#4CAF50' : hasAuth ? '#f1c40f' : '#e74c3c';
+                            const fill = isNimsar ? PUBLIC_PALETTE.edu_status_existing : hasAuth ? PUBLIC_PALETTE.edu_status_authorized : PUBLIC_PALETTE.edu_status_no_auth;
                             return L.marker(latlng, { icon: eduIcon(getSugMosadSara(p), getPikuach(p), fill, p['שם הפרויקט']) });
                         },
                         onEachFeature: (f, layer) => {
@@ -10260,7 +10333,7 @@
                                 const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
                                 const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
-                                const headerColor = isNimsar ? '#388E3C' : hasAuth ? '#d4ac0d' : '#c0392b';
+                                const headerColor = isNimsar ? PUBLIC_PALETTE.edu_mamlachti_dati : hasAuth ? PUBLIC_PALETTE.shavaz_future_stroke : PUBLIC_PALETTE.shavaz_future_fill;
                                 let html = '<div>';
                                 html += `<div class="popup-header" style="border-bottom:3px solid ${headerColor}"><div class="popup-header-title">${name}</div>`;
                                 const summary = [p['שכונה'], p['סוג מוסד'], p['מס כיתות בפרויקט'] ? p['מס כיתות בפרויקט'] + ' כיתות' : ''].filter(v => v && v !== 'None').join(' · ');
@@ -10795,14 +10868,14 @@
                         return 0;
                     }
                     const commerceColors = [
-                        [0,    '#edf8fb'],
-                        [50,   '#bfd3e6'],
-                        [200,  '#9ebcda'],
-                        [500,  '#8c96c6'],
-                        [1000, '#8c6bb1'],
-                        [2000, '#88419d'],
-                        [5000, '#6e016b'],
-                        [10000,'#4d004b']
+                        [0,     COMMERCE_HEATMAP[0]],
+                        [50,    COMMERCE_HEATMAP[1]],
+                        [200,   COMMERCE_HEATMAP[2]],
+                        [500,   COMMERCE_HEATMAP[3]],
+                        [1000,  COMMERCE_HEATMAP[4]],
+                        [2000,  COMMERCE_HEATMAP[5]],
+                        [5000,  COMMERCE_HEATMAP[6]],
+                        [10000, COMMERCE_HEATMAP[7]]
                     ];
                     function commerceToColor(d) {
                         for (let i = commerceColors.length - 1; i >= 0; i--) {
@@ -10846,9 +10919,9 @@
                                 const areaDunam = areaSqm / 1000;
                                 // Existing landuse: show area as density (sqm commerce per dunam = full coverage)
                                 return {
-                                    fillColor: '#8c96c6',
+                                    fillColor: COMMERCE_PALETTE.mixed_commerce_emp,
                                     fillOpacity: 0.55,
-                                    color: '#4a4a8a',
+                                    color: COMMERCE_PALETTE.pure_employment,
                                     weight: 2.5,
                                     dashArray: null
                                 };
@@ -11007,11 +11080,11 @@
                 return stage;
             }
             function getPermitStageColor(stage) {
-                if (stage === PERMIT_STAGE_PRE) return '#f56e05';
-                if (stage === PERMIT_STAGE_LIC) return '#4ba1f0';
-                if (stage === PERMIT_STAGE_ISSUED) return '#50d25a';
-                if (stage === PERMIT_STAGE_DONE) return '#888';
-                return '#5dade2';
+                if (stage === PERMIT_STAGE_PRE) return PERMITS_PALETTE.pre_licensing;
+                if (stage === PERMIT_STAGE_LIC) return PERMITS_PALETTE.licensing;
+                if (stage === PERMIT_STAGE_ISSUED) return PERMITS_PALETTE.in_construction;
+                if (stage === PERMIT_STAGE_DONE) return PERMITS_PALETTE.done;
+                return PERMITS_PALETTE.tama38_marker;
             }
             // ─── Permit category — aligned with YK official request_type taxonomy ─
             // Categories derived from analyzing distinct values of request_type field
@@ -11649,7 +11722,7 @@
                     const cmOutNum = Number(cmOut) || 0;
                     const empNum = Number(emp) || 0;
                     const totalOut = cmOutNum + empNum;
-                    html += '<div class="popup-section-title">מסחר ותעסוקה</div>';
+                    html += `<div class="popup-section-title" style="color:${COMMERCE_PALETTE.popup_label};border-top-color:${COMMERCE_PALETTE.pure_commerce}">מסחר ותעסוקה</div>`;
                     html += '<div class="popup-pair">';
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${cmIn ? fmt(cmIn) : '-'}</span></div>`;
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${totalOut > 0 ? fmt(totalOut) : '-'}</span></div>`;
@@ -12096,7 +12169,7 @@
                         if (!f) return;
                         // Trigger the same renderer used by the master plan TBA polygon click,
                         // by simulating a click on the matching layer in the active master plan group
-                        const mpKey = { 'מושבות':'master_plan_moshavot','רסקו':'master_plan_rasko','בקעה':'master_plan_baka','ארנונה':'master_plan_arnona' }[c.mp_match];
+                        const mpKey = { 'מושבות':'master_plan_moshavot','רסקו':'master_plan_rasko','בקעה':'master_plan_baka','ארנונה':'master_plan_arnona','גוננים':'master_plan_gonenim','תלפיות':'master_plan_talpiot' }[c.mp_match];
                         const grp = mpKey && geoLayersRef.current[mpKey];
                         if (grp && grp.__plansLayer) {
                             grp.__plansLayer.eachLayer(sub => {
@@ -12818,6 +12891,8 @@
                                                             master_plan_rasko:    'רסקו',
                                                             master_plan_baka:     'בקעה',
                                                             master_plan_arnona:   'ארנונה',
+                                                            master_plan_gonenim:  'גוננים',
+                                                            master_plan_talpiot:  'תלפיות',
                                                         };
                                                         setMasterPlanReport(NAME_BY_ID[layer.id] || layer.name);
                                                     }}
@@ -13721,7 +13796,7 @@
                         </div>
 
                         {/* Master plan compliance disclaimer — shown when any master plan layer is active */}
-                        {['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona'].some(k => layers[k]) && (
+                        {['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].some(k => layers[k]) && (
                             <div style={{
                                 position:'absolute', bottom:14, left:'50%', transform:'translateX(-50%)',
                                 zIndex:1001, maxWidth:'min(720px, 92vw)',
@@ -13768,15 +13843,15 @@
                                 borderRadius:10, padding:'12px 16px', direction:'rtl',
                                 border:'1px solid #2a2a4a', maxWidth:300
                             }}>
-                                <div style={{color:'#8c6bb1',fontWeight:'bold',fontSize:13,marginBottom:6}}>מסחר ותעסוקה</div>
+                                <div style={{color:COMMERCE_PALETTE.popup_label,fontWeight:'bold',fontSize:13,marginBottom:6}}>מסחר ותעסוקה</div>
                                 <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על פוליגון לפרטים</div>
                                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
                                     <div style={{display:'flex',alignItems:'center',gap:4}}>
-                                        <div style={{width:18,height:12,borderRadius:3,background:'#8c96c6',border:'2px solid #4a4a8a'}}></div>
+                                        <div style={{width:18,height:12,borderRadius:3,background:COMMERCE_PALETTE.mixed_commerce_emp,border:'2px solid '+COMMERCE_PALETTE.pure_employment}}></div>
                                         <span style={{color:'#ccc',fontSize:10}}>קיים</span>
                                     </div>
                                     <div style={{display:'flex',alignItems:'center',gap:4}}>
-                                        <div style={{width:18,height:12,borderRadius:3,background:'#8c6bb1',border:'2px dashed #50d25a'}}></div>
+                                        <div style={{width:18,height:12,borderRadius:3,background:COMMERCE_PALETTE.pure_commerce,border:'2px dashed #50d25a'}}></div>
                                         <span style={{color:'#ccc',fontSize:10}}>עתידי (קו = סטטוס)</span>
                                     </div>
                                 </div>
@@ -16154,7 +16229,7 @@
                                                 </thead>
                                                 <tbody>
                                                     {/* ── נכנס ── */}
-                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:'#8899bb',fontWeight:700,fontSize:12,background:'rgba(60,60,100,0.3)',borderTop:'2px solid #3a3a6a',letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
+                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:COMMERCE_PALETTE.mixed_with_resid,fontWeight:700,fontSize:12,background:'rgba(206,147,216,0.12)',borderTop:'2px solid '+COMMERCE_PALETTE.mixed_with_resid,letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
                                                     <tr>
                                                         <td>מסחר</td>
                                                         {subs.map(s => {
@@ -16164,7 +16239,7 @@
                                                         })}
                                                     </tr>
                                                     {/* ── יוצא ── */}
-                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:'#8c6bb1',fontWeight:700,fontSize:12,background:'rgba(140,107,177,0.15)',borderTop:'3px solid #8c6bb1',letterSpacing:'1px'}}>
+                                                    <tr><td colSpan={subs.length + 1} style={{padding:'6px 12px',color:COMMERCE_PALETTE.popup_label,fontWeight:700,fontSize:12,background:'rgba(123,31,162,0.18)',borderTop:'3px solid '+COMMERCE_PALETTE.pure_commerce,letterSpacing:'1px'}}>
                                                         <div style={{display:'flex',alignItems:'center',gap:12}}>
                                                             <span>יוצא (מ"ר)</span>
                                                             <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
@@ -16251,7 +16326,7 @@
                                             </thead>
                                             <tbody>
                                                 {/* ── נכנס ── */}
-                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:'#8899bb',fontWeight:700,fontSize:12,background:'rgba(60,60,100,0.3)',borderTop:'2px solid #3a3a6a',letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
+                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:COMMERCE_PALETTE.mixed_with_resid,fontWeight:700,fontSize:12,background:'rgba(206,147,216,0.12)',borderTop:'2px solid '+COMMERCE_PALETTE.mixed_with_resid,letterSpacing:'1px'}}>נכנס (מ"ר)</td></tr>
                                                 <tr>
                                                     <td>מסחר</td>
                                                     {ms.map(m => {
@@ -16261,7 +16336,7 @@
                                                     })}
                                                 </tr>
                                                 {/* ── יוצא ── */}
-                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:'#8c6bb1',fontWeight:700,fontSize:12,background:'rgba(140,107,177,0.15)',borderTop:'3px solid #8c6bb1',letterSpacing:'1px'}}>
+                                                <tr><td colSpan={ms.length + 1} style={{padding:'6px 12px',color:COMMERCE_PALETTE.popup_label,fontWeight:700,fontSize:12,background:'rgba(123,31,162,0.18)',borderTop:'3px solid '+COMMERCE_PALETTE.pure_commerce,letterSpacing:'1px'}}>
                                                     <div style={{display:'flex',alignItems:'center',gap:12}}>
                                                         <span>יוצא (מ"ר)</span>
                                                         <button className={`units-toggle-btn ${commerceExpanded === 'status' ? 'active' : ''}`}
@@ -16581,6 +16656,8 @@
                                         'רסקו':    'master_plan_rasko',
                                         'בקעה':    'master_plan_baka',
                                         'ארנונה':  'master_plan_arnona',
+                                        'גוננים':  'master_plan_gonenim',
+                                        'תלפיות':  'master_plan_talpiot',
                                     };
                                     const mpLayerKey = LAYER_BY_NAME[masterPlanReport];
                                     const mpFc = mpLayerKey && gd[mpLayerKey];
