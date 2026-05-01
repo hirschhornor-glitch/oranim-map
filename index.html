@@ -6636,28 +6636,39 @@
                 const hasExistingEdu = (eduFeats || []).length > 0;
                 const showFutureBalance = (tY !== 'existing');
 
-                // Plans contributing to the horizon — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions
-                const contributingPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null && (isFull || p.estimatedYear <= tY)).map(p => {
+                // ALL plans in scope — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions.
+                // Stored separately from the per-horizon filter so cross-horizon drilldowns can reference any plan.
+                const allParsedPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null).map(p => {
                     const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
                     const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
                     const addedCounts = {};
                     PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; });
-                    // Spatial demolish: edu_shanaton features whose point falls inside the plan polygon
                     const eduInside = eduFeaturesInPlanGeometry(p.geometry, eduFeats || []);
                     const eduAgg = aggregateEduFeatures(eduInside);
                     const demolishCounts = {}; PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
                     demolishCounts.gan = eduAgg.ganim_count + eduAgg.gan_special_count;
                     demolishCounts.yesodi = eduAgg.yesodi_classes;
                     demolishCounts.al_yesodi = eduAgg.alyesodi_classes;
+                    // realMimushPct = the actual rate (not the isFull override). Used in cross-horizon drilldown.
                     return {
                         ...p,
+                        realMimushPct: (p.isFullMimush ? null : p.mimushPct), // null if was overridden by isFull — recompute via calcMimush at drilldown
                         rawClassCounts: addedCounts,
                         rawDemolishCounts: demolishCounts,
-                        rawDemolishEduInside: eduInside, // for drilldown reference
+                        rawDemolishEduInside: eduInside,
                         rawUncatSqm: facS.uncategorizedSqm + facAR.uncategorizedSqm,
                         weightedShavatzInSqm: Math.round((p.shavatz_in_sqm || 0) * (p.mimushPct || 0) / 100),
                     };
                 });
+                // Resolve realMimushPct for plans where it's null (came from isFull view): re-call calcMimush
+                allParsedPlans.forEach(p => {
+                    if (p.realMimushPct == null) {
+                        const m = calcMimush(p);
+                        if (m) p.realMimushPct = m.mimushPct;
+                    }
+                });
+                // Current-horizon contributors (used for the live aggregation)
+                const contributingPlans = allParsedPlans.filter(p => isFull || p.estimatedYear <= tY);
                 // Aggregate: apply mimushPct at the sum level, then round to integer
                 const plannedClasses = {}; PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
                 const demolishedClasses = {}; PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
@@ -6768,7 +6779,8 @@
                     return { exGross, demolished, exNet, planned, proposed, required, delta };
                 }
 
-                // Future-balance rows: per-service "מוצע" vs "נדרש"
+                // Future-balance rows: per-service "מוצע" vs "נדרש". The "= מוצע" cell is clickable
+                // (data-svc-drill) — opens a per-service cross-horizon drilldown.
                 const futureBalanceRows = BALANCE_SERVICES.map(svc => {
                     const c = getServiceCounts(svc);
                     const exDisplay = c.exNet === null
@@ -6776,15 +6788,21 @@
                         : (c.exGross !== null && c.demolished > 0)
                             ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>'
                             : (c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet);
+                    const proposedClickable = c.proposed > 0 || c.planned > 0 || c.demolished > 0;
                     return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)">' + (c.planned > 0 ? '+' + c.planned : '—') + '</td>' +
-                        '<td style="padding:6px;text-align:center;font-weight:bold;color:#fff">' + c.proposed + '</td>' +
+                        '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + c.proposed + (proposedClickable ? ' ›' : '') + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#aaa">' + c.required + '</td>' +
                         '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(c.delta, c.required) + '">' + (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta) + '</td>' +
                         '</tr>';
                 }).join('');
+                // Top "uncategorized public area" row — appears above per-service rows, clickable for drilldown
+                const uncatTopRow = '<tr style="background:#0f0f24;border-bottom:1px solid #555">' +
+                    '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' +
+                    '<td colspan="4" data-svc-drill="__uncat__" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות לשטח גנרי (כולל אופקים אחרים)">' + plannedUncatSqm.toLocaleString() + ' מ"ר ›</td>' +
+                    '</tr>';
                 const totalProposedClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).proposed, 0);
                 const totalRequiredClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).required, 0);
                 const totalGapClasses = totalProposedClasses - totalRequiredClasses;
@@ -6904,7 +6922,7 @@
                                 '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' +
                                 '<th style="padding:6px;text-align:center">נדרש' + (tY === 'full' ? '' : ' ' + tY) + '</th>' +
                                 '<th style="padding:6px;text-align:center">פער</th>' +
-                            '</tr></thead><tbody>' + futureBalanceRows +
+                            '</tr></thead><tbody>' + uncatTopRow + futureBalanceRows +
                             '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
                                 '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' +
                                 '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' +
@@ -6913,11 +6931,7 @@
                                 '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' +
                                 '<td style="padding:8px;text-align:center;color:' + deltaColor(totalGapClasses, totalRequiredClasses) + '">' + (totalGapClasses >= 0 ? '+' : '') + totalGapClasses + '</td>' +
                             '</tr>' +
-                            '<tr style="background:#0f0f24;border-top:1px dashed #555">' +
-                                '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' +
-                                '<td colspan="4" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold">' + plannedUncatSqm.toLocaleString() + ' מ"ר</td>' +
-                            '</tr>' +
-                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>.</td></tr>' +
+                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>. לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.</td></tr>' +
                         '</tbody></table>'
                     : (hasExistingEdu ?
                         // Existing: classes-based balance using שנתון מנח"י
@@ -7083,13 +7097,156 @@
                     }
                 }
 
-                // Wire drilldown on "מוצע" cell — class breakdown per plan + source (S/AR text)
+                // ── Drilldown on the balance table ──
+                // Cells with `data-svc-drill="<svcKey>"` open a per-service drilldown showing each contributing
+                // plan's gross count and the weighted contribution at each horizon (existing/2030/35/40/full).
+                // The total cell (id="programa-proposed-cell") opens the wide all-categories drilldown.
+                // The "__uncat__" key drills into the generic m² uncategorized public area row.
+                const SVC_LABELS_FULL = {
+                    maon: 'מעון', gan: 'גני ילדים', yesodi: 'יסודי', al_yesodi: 'על-יסודי',
+                    tipat_chalav: 'טיפת חלב', clinic: 'מרפאה שכונתית', matnas: 'מתנ"ס/מרכז קהילתי',
+                    welfare_dept: 'לשכת רווחה', noar_club: 'מועדון נוער',
+                    elderly_club: 'מועדון קשיש', elderly_day: 'מרכז יום לקשיש',
+                    synagogue: 'בית כנסת', mikve: 'מקווה טהרה', sport_hall: 'אולם ספורט', library: 'ספרייה שכונתית'
+                };
+                const HORIZONS = [2030, 2035, 2040, 'full'];
+
+                function eduNamesFor(p) {
+                    const names = [];
+                    if (p.rawDemolishEduInside && p.rawDemolishEduInside.length) {
+                        p.rawDemolishEduInside.forEach(ef => {
+                            (ef.properties.institutions || []).forEach(inst => {
+                                names.push((inst.name || '?') + ' (' + (inst.type || '?') + ')');
+                            });
+                        });
+                    }
+                    return names;
+                }
+
+                // Compute a plan's weighted contribution to a category at a given horizon (rounded per-plan).
+                // For uncategorized: uses rawUncatSqm. For class category: uses rawClassCounts[svcKey].
+                function planContribAtHorizon(p, svcKey, horizon) {
+                    const isUncat = svcKey === '__uncat__';
+                    const raw = isUncat ? (p.rawUncatSqm || 0) : (p.rawClassCounts[svcKey] || 0);
+                    if (raw === 0) return 0;
+                    const isF = horizon === 'full';
+                    if (!isF && p.estimatedYear > horizon) return 0;
+                    const pct = isF ? 1 : ((p.realMimushPct || 0) / 100);
+                    const w = raw * pct;
+                    return isUncat ? Math.round(w) : Math.round(w * 10) / 10;
+                }
+
+                function planDemolishAtHorizon(p, svcKey, horizon) {
+                    if (svcKey === '__uncat__') return 0;
+                    const raw = p.rawDemolishCounts[svcKey] || 0;
+                    if (raw === 0) return 0;
+                    const isF = horizon === 'full';
+                    if (!isF && p.estimatedYear > horizon) return 0;
+                    const pct = isF ? 1 : ((p.realMimushPct || 0) / 100);
+                    return Math.round(raw * pct * 10) / 10;
+                }
+
+                function openServiceDrilldown(svcKey) {
+                    const oldDrill = document.getElementById('programa-drilldown');
+                    if (oldDrill) oldDrill.remove();
+                    const isUncat = svcKey === '__uncat__';
+                    const svcLabel = isUncat ? 'שטח ציבורי גנרי (טרם נקבע ייעוד)' : (SVC_LABELS_FULL[svcKey] || svcKey);
+                    const unit = isUncat ? 'מ"ר' : 'כיתות';
+                    // Filter ALL plans in scope (not just current-horizon contributors) that have any non-zero raw count for this category
+                    const items = allParsedPlans.filter(p => {
+                        if (isUncat) return (p.rawUncatSqm || 0) > 0;
+                        return (p.rawClassCounts[svcKey] || 0) > 0 || (p.rawDemolishCounts[svcKey] || 0) > 0;
+                    }).map(p => {
+                        const rawAdd = isUncat ? (p.rawUncatSqm || 0) : (p.rawClassCounts[svcKey] || 0);
+                        const rawDem = isUncat ? 0 : (p.rawDemolishCounts[svcKey] || 0);
+                        const perH = {}; HORIZONS.forEach(h => { perH[h] = { add: planContribAtHorizon(p, svcKey, h), dem: planDemolishAtHorizon(p, svcKey, h) }; });
+                        return { p, rawAdd, rawDem, perH };
+                    });
+                    // Sort by raw contribution desc
+                    items.sort((a, b) => (b.rawAdd + b.rawDem) - (a.rawAdd + a.rawDem));
+                    // Per-horizon totals (weighted)
+                    const horTotals = {};
+                    HORIZONS.forEach(h => {
+                        const sumA = items.reduce((s, it) => s + it.perH[h].add, 0);
+                        const sumD = items.reduce((s, it) => s + it.perH[h].dem, 0);
+                        horTotals[h] = { add: Math.round(sumA * 10) / 10, dem: Math.round(sumD * 10) / 10 };
+                    });
+                    const isCurrent = (h) => (h === tY) || (h === 'full' && tY === 'full');
+                    const horHeaderCol = (h) => {
+                        const lbl = h === 'full' ? '100% מימוש' : 'אופק ' + h;
+                        const cur = isCurrent(h);
+                        return '<th colspan="2" style="padding:5px;text-align:center;color:' + (cur ? '#fff' : '#bdb6e8') + ';background:' + (cur ? 'rgba(123,108,240,0.20)' : 'transparent') + ';border:' + (cur ? '1px solid #7b6cf0' : 'none') + '">' + lbl + (cur ? ' ✓' : '') + '</th>';
+                    };
+                    const horSubHeader = (h) => {
+                        const cur = isCurrent(h);
+                        const bg = cur ? 'background:rgba(123,108,240,0.10);' : '';
+                        return '<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px;' + bg + '">+ תוספת</th>' +
+                               '<th style="padding:4px;text-align:center;color:#e57373;font-size:10px;' + bg + (isUncat ? 'display:none' : '') + '">− להריסה</th>';
+                    };
+                    const cellPair = (val, color, h) => {
+                        const cur = isCurrent(h);
+                        const bg = cur ? 'background:rgba(123,108,240,0.07);' : '';
+                        return '<td style="padding:4px;text-align:center;color:' + (val > 0 ? color : '#444') + ';font-weight:' + (val > 0 ? 'bold' : 'normal') + ';' + bg + '">' + (val > 0 ? (color === '#e57373' ? '−' : '+') + val.toLocaleString() : '—') + '</td>';
+                    };
+                    const rows = items.map(it => {
+                        const p = it.p;
+                        const eduNames = eduNamesFor(p);
+                        const descParts = [];
+                        if (!isUncat && eduNames.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + eduNames.join('; '));
+                        if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S:</b> ' + p.shavatz_out_prog);
+                        if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR:</b> ' + p.hafrash_prg);
+                        return '<tr style="border-bottom:1px solid #222">' +
+                            '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">' + p.taba + '</td>' +
+                            '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.realMimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' +
+                            '<td style="padding:5px 6px;color:#aaa;font-size:9px;vertical-align:top;max-width:280px">' + (descParts.join('<br>') || '<span style="color:#555">—</span>') + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#7b6cf0;font-weight:bold">' + (it.rawAdd > 0 ? '+' + it.rawAdd.toLocaleString() : '—') + '</td>' +
+                            (isUncat ? '' : '<td style="padding:5px 6px;text-align:center;color:#e57373;font-weight:bold">' + (it.rawDem > 0 ? '−' + it.rawDem : '—') + '</td>') +
+                            HORIZONS.map(h => cellPair(it.perH[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(it.perH[h].dem, '#e57373', h))).join('') +
+                            '</tr>';
+                    }).join('');
+                    const totalRow =
+                        '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #7b6cf0">' +
+                            '<td colspan="3" style="padding:6px;color:#fff">סה"כ משוקלל</td>' +
+                            '<td style="padding:6px;text-align:center;color:#7b6cf0">+' + items.reduce((s, it) => s + it.rawAdd, 0).toLocaleString() + '</td>' +
+                            (isUncat ? '' : '<td style="padding:6px;text-align:center;color:#e57373">−' + items.reduce((s, it) => s + it.rawDem, 0) + '</td>') +
+                            HORIZONS.map(h => cellPair(horTotals[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(horTotals[h].dem, '#e57373', h))).join('') +
+                        '</tr>';
+                    const drill = document.createElement('div');
+                    drill.id = 'programa-drilldown';
+                    drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1300px,98vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+                    drill.innerHTML =
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
+                            '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' +
+                            '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '</div>' +
+                        '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead>' +
+                            '<tr style="background:#1a1a2e;color:#aaa">' +
+                                '<th rowspan="2" style="padding:5px;text-align:right">תב"ע</th>' +
+                                '<th rowspan="2" style="padding:5px;text-align:right">תכנית</th>' +
+                                '<th rowspan="2" style="padding:5px;text-align:right">תיאור (S/AR)</th>' +
+                                '<th colspan="' + (isUncat ? 1 : 2) + '" style="padding:5px;text-align:center;color:#bdb6e8">גולמי</th>' +
+                                HORIZONS.map(horHeaderCol).join('') +
+                            '</tr>' +
+                            '<tr style="background:#1a1a2e;color:#aaa">' +
+                                '<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px">+ תוספת</th>' +
+                                (isUncat ? '' : '<th style="padding:4px;text-align:center;color:#e57373;font-size:10px">− להריסה</th>') +
+                                HORIZONS.map(horSubHeader).join('') +
+                            '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>' +
+                            '<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.</div>';
+                    document.body.appendChild(drill);
+                    document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+                }
+                // Wire all drill cells (per-service + uncategorized)
+                div.querySelectorAll('[data-svc-drill]').forEach(cell => {
+                    cell.addEventListener('click', () => openServiceDrilldown(cell.dataset.svcDrill));
+                });
+
+                // Wire drilldown on the TOTAL "מוצע" cell — all-categories breakdown per plan (existing wide view)
                 const proposedCell = document.getElementById('programa-proposed-cell');
                 if (proposedCell) {
                     proposedCell.addEventListener('click', () => {
                         const oldDrill = document.getElementById('programa-drilldown');
                         if (oldDrill) { oldDrill.remove(); return; }
-                        // Build per-plan rows; show only granular columns where ANY contributing plan has a non-zero count.
                         const SVC_LABELS = {
                             maon: 'מעון', gan: 'גן', yesodi: 'יסודי', al_yesodi: 'על-יסודי',
                             tipat_chalav: 'טיפת חלב', clinic: 'מרפאה', matnas: 'מתנ"ס',
@@ -7107,14 +7264,13 @@
                             items.push({ ...p, classTotalRaw: totalAdded, demolishTotalRaw: totalDem });
                         });
                         items.sort((a, b) => (b.classTotalRaw + b.demolishTotalRaw) - (a.classTotalRaw + a.demolishTotalRaw));
-                        // Only render columns with any non-zero (added or demolished) across plans
                         const SVC_KEYS = PARSER_KEYS.filter(k => items.some(p => (p.rawClassCounts[k] || 0) > 0 || (p.rawDemolishCounts[k] || 0) > 0));
                         const showUncatCol = items.some(p => (p.rawUncatSqm || 0) > 0);
                         const drill = document.createElement('div');
                         drill.id = 'programa-drilldown';
                         drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1100px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
                         const headerCols = SVC_KEYS.map(k => '<th style="padding:5px;text-align:center;color:#bdb6e8">' + SVC_LABELS[k] + '</th>').join('') +
-                            (showUncatCol ? '<th style="padding:5px;text-align:center;color:#f59e0b" title="שטחי ציבור גנריים — בתיאום אגף מבני ציבור">טרם נקבע (מ"ר)</th>' : '');
+                            (showUncatCol ? '<th style="padding:5px;text-align:center;color:#f59e0b">טרם נקבע (מ"ר)</th>' : '');
                         const rows = items.map(p => {
                             const added = p.rawClassCounts;
                             const dem = p.rawDemolishCounts;
@@ -7127,30 +7283,21 @@
                                 if (d > 0) parts.push('<span style="color:#e57373">−' + d + '</span>');
                                 return '<td style="padding:5px;text-align:center">' + parts.join(' / ') + '</td>';
                             }).join('') + (showUncatCol ? '<td style="padding:5px;text-align:center;color:' + ((p.rawUncatSqm || 0) > 0 ? '#f59e0b' : '#444') + '">' + ((p.rawUncatSqm || 0) > 0 ? p.rawUncatSqm.toLocaleString() : '—') + '</td>' : '');
+                            const eduNames = eduNamesFor(p);
                             const descParts = [];
-                            // Spatial demolish — list edu institutions inside this plan's polygon
-                            if (p.rawDemolishEduInside && p.rawDemolishEduInside.length) {
-                                const names = [];
-                                p.rawDemolishEduInside.forEach(ef => {
-                                    (ef.properties.institutions || []).forEach(inst => {
-                                        names.push((inst.name || '?') + ' (' + (inst.type || '?') + ')');
-                                    });
-                                });
-                                if (names.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + names.join('; '));
-                            }
-                            if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S (יוצא):</b> ' + p.shavatz_out_prog);
-                            if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR (הפרשה):</b> ' + p.hafrash_prg);
-                            const desc = descParts.join('<br>');
+                            if (eduNames.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + eduNames.join('; '));
+                            if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S:</b> ' + p.shavatz_out_prog);
+                            if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR:</b> ' + p.hafrash_prg);
                             return '<tr style="border-bottom:1px solid #222">' +
                                 '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">' + p.taba + '</td>' +
                                 '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.mimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' +
-                                '<td style="padding:5px 6px;color:#aaa;font-size:10px;vertical-align:top;max-width:340px">' + (desc || '<span style="color:#555">—</span>') + '</td>' +
+                                '<td style="padding:5px 6px;color:#aaa;font-size:10px;vertical-align:top;max-width:340px">' + (descParts.join('<br>') || '<span style="color:#555">—</span>') + '</td>' +
                                 cells +
                                 '</tr>';
                         }).join('');
                         drill.innerHTML =
                             '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
-                                '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע (כיתות) — ' + (tY === 'full' ? '100% מימוש' : 'אופק ' + tY) + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' +
+                                '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע — כל הקטגוריות (' + (tY === 'full' ? '100% מימוש' : 'אופק ' + tY) + ') <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' +
                                 '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                             '</div>' +
                             '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' +
@@ -7160,7 +7307,7 @@
                                 headerCols +
                             '</tr></thead><tbody>' + rows +
                             '</tbody></table></div>' +
-                            '<div style="font-size:10px;color:#888;margin-top:10px">ערכים בכל תא: <span style="color:#7b6cf0">+N (תוספת מ-S/AR)</span> / <span style="color:#e57373">−N (הריסה מ-Q)</span> — ספירה גולמית שלמה. ה-%מימוש מוחל רק על סכום הקטגוריה הכוללת ומעוגל למספר שלם.</div>';
+                            '<div style="font-size:10px;color:#888;margin-top:10px">לפירוט פר-קטגוריה כולל השוואה בין אופקים — לחץ על תא "= מוצע" של שורה ספציפית בטבלת המאזן הראשית.</div>';
                         document.body.appendChild(drill);
                         document.getElementById('drill-close').addEventListener('click', () => drill.remove());
                     });
