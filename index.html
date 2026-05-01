@@ -2307,6 +2307,10 @@
             return bestPt; // [lat, lng]
         }
 
+        // Bump when data files change to invalidate browser/SW caches.
+        // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
+        const APP_VERSION = '2026-05-01';
+
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
             tama38: 'data/tama38.geojson',
@@ -4348,7 +4352,7 @@
                 // Heaviest files (11 MB+) are deferred — fetched in the background
                 // after the map is interactive. Used for existing-landuse popup info
                 // and for the ייעודי קרקע קיים layer (off by default).
-                const DEFERRED_FILES = ['yiud_karka_kayam'];
+                const DEFERRED_FILES = ['yiud_karka_kayam', 'roads', 'buildings'];
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !DEFERRED_FILES.includes(k));
                 const deferredEntries = Object.entries(GEOJSON_FILES).filter(([k]) => DEFERRED_FILES.includes(k));
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
@@ -4359,13 +4363,22 @@
                 window.__tama38TreeSurveys = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
-                // Add permit JSONs to the entries so they load together with geojson
-                var allEntries = entries.concat([['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__masterPlanCompliance', 'data/master_plan_compliance.json'], ['__meetings', 'data/meetings.json']]);
+                // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
+                // popup-time globals and aren't needed for initial render.
+                var allEntries = entries;
+                const STAGE2_JSONS = [
+                    ['__allPermits', 'data/all_permits.json'],
+                    ['__tama38Permits', 'data/tama38_permits.json'],
+                    ['__treeSurveys', 'data/tree_surveys.json'],
+                    ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'],
+                    ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
+                    ['__meetings', 'data/meetings.json'],
+                ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
                 Promise.all([
                     Promise.all(allEntries.map(([key, url]) =>
-                        fetch(url + '?v=' + Date.now()).then(r => r.json()).then(data => {
+                        fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
                             doneCount++;
                             setLoadProgress({ done: doneCount, total: allEntries.length });
                             return [key, data];
@@ -4379,32 +4392,8 @@
                 ]).then(([geoResults, csvText]) => {
                     const gd = {};
                     geoResults.forEach(([key, data]) => {
-                        if (key === '__allPermits') { window.__allPermits = data || {}; }
-                        else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
-                        else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
-                        else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
-                        else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
-                        else if (key === '__meetings') {
-                            // Build lookup by plan_id. Keep only future meetings (date >= today).
-                            const idx = {};
-                            const arr = Array.isArray(data) ? data : [];
-                            const today = new Date(); today.setHours(0,0,0,0);
-                            arr.forEach(m => {
-                                const pid = (m.plan_id || '').trim();
-                                if (!pid) return;
-                                const dp = (m.meeting_date || '').split('/');
-                                if (dp.length !== 3) return;
-                                const md = new Date(dp[2], dp[1]-1, dp[0]);
-                                if (isNaN(md.getTime()) || md < today) return;
-                                // Keep earliest future meeting per plan
-                                const cur = idx[pid];
-                                if (!cur || md < cur._d) { idx[pid] = { ...m, _d: md }; }
-                            });
-                            window.__meetings = idx;
-                        }
-                        else if (data) { gd[key] = data; }
+                        if (data) gd[key] = data;
                     });
-                    console.log('[Permits] all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
                     // Merge CSV plan_type into GeoJSON features
                     if (csvText && gd.plans) {
                         // CSV parser that handles quoted fields
@@ -4592,22 +4581,57 @@
                     window.__geoDataForLanduse = gd; // expose for landuse comparison
 
                     // Compute overlap map once (taba -> overlapping tabas).
-                    // Heavy (O(n²) bbox + geometry check) but runs once.
-                    try {
-                        const t0 = performance.now();
-                        overlapMapRef.current = computeOverlapMap(gd.plans ? gd.plans.features : []);
-                        console.log(`[Overlap] Built map: ${overlapMapRef.current.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
-                    } catch (e) {
-                        console.warn('[Overlap] computation failed:', e);
-                        overlapMapRef.current = new Map();
-                    }
+                    // Heavy (O(n²) bbox + geometry check) — deferred so first paint isn't blocked.
+                    overlapMapRef.current = new Map();
+                    setTimeout(() => {
+                        try {
+                            const t0 = performance.now();
+                            overlapMapRef.current = computeOverlapMap(gd.plans ? gd.plans.features : []);
+                            console.log(`[Overlap] Built map: ${overlapMapRef.current.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
+                        } catch (e) {
+                            console.warn('[Overlap] computation failed:', e);
+                            overlapMapRef.current = new Map();
+                        }
+                    }, 0);
 
                     setDataLoaded(true);
                     setLoading(false);
 
+                    // Stage 2: permit/tree/meeting JSONs — feed window.__ globals used only by popups.
+                    // Loaded after first paint so the map is interactive ASAP.
+                    Promise.all(STAGE2_JSONS.map(([key, url]) =>
+                        fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
+                    )).then(results => {
+                        results.forEach(([key, data]) => {
+                            if (key === '__allPermits') { window.__allPermits = data || {}; }
+                            else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
+                            else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
+                            else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
+                            else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
+                            else if (key === '__meetings') {
+                                // Build lookup by plan_id. Keep only future meetings (date >= today).
+                                const idx = {};
+                                const arr = Array.isArray(data) ? data : [];
+                                const today = new Date(); today.setHours(0,0,0,0);
+                                arr.forEach(m => {
+                                    const pid = (m.plan_id || '').trim();
+                                    if (!pid) return;
+                                    const dp = (m.meeting_date || '').split('/');
+                                    if (dp.length !== 3) return;
+                                    const md = new Date(dp[2], dp[1]-1, dp[0]);
+                                    if (isNaN(md.getTime()) || md < today) return;
+                                    const cur = idx[pid];
+                                    if (!cur || md < cur._d) { idx[pid] = { ...m, _d: md }; }
+                                });
+                                window.__meetings = idx;
+                            }
+                        });
+                        console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
+                    });
+
                     // Deferred load: big files fetched after interactive to keep first paint fast
                     deferredEntries.forEach(([key, url]) => {
-                        fetch(url + '?v=' + Date.now())
+                        fetch(url + '?v=' + APP_VERSION)
                             .then(r => r.json())
                             .then(data => {
                                 if (!data) return;
