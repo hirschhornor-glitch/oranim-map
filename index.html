@@ -5100,198 +5100,276 @@
                 }
                 container.addEventListener('click', onShatzafSubDomClick, true);
 
-                function calculateSubNeighborhoodShatzaf(subName) {
+                // ── Radius mode: click sets center, draws 500m circle, opens modal ──
+                function onShatzafRadiusDomClick(e) {
+                    if (shatzafModeRef.current !== 'radius') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const radiusMeters = 500; // default; user can change in modal slider
+                    if (window.__shatzafRadiusCircle) { try { map.removeLayer(window.__shatzafRadiusCircle); } catch(e) {} }
+                    window.__shatzafRadiusCircle = L.circle(pt, {
+                        radius: radiusMeters,
+                        color: OPEN_SPACE_PALETTE.shatzaf_button,
+                        weight: 3,
+                        fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+                        fillOpacity: 0.15
+                    }).addTo(map);
+                    window.__shatzafRadiusCenter = pt;
+                    window.__shatzafRadiusValue = radiusMeters;
+                    shatzafModeRef.current = null;
+                    setShatzafMode(false);
+                    map.getContainer().classList.remove('measuring');
+                    calculateShatzafForRadius(pt, radiusMeters);
+                }
+                container.addEventListener('click', onShatzafRadiusDomClick, true);
+
+                // ── Area mode: click adds vertex, double-click finalizes ──
+                let shatzafAreaPts = [];
+                let shatzafAreaPreviewLayer = null;
+                function redrawShatzafAreaPreview() {
+                    if (shatzafAreaPreviewLayer) { try { map.removeLayer(shatzafAreaPreviewLayer); } catch(e) {} shatzafAreaPreviewLayer = null; }
+                    if (shatzafAreaPts.length >= 2) {
+                        shatzafAreaPreviewLayer = L.polyline(shatzafAreaPts, {
+                            color: OPEN_SPACE_PALETTE.shatzaf_button,
+                            weight: 2,
+                            dashArray: '4,4'
+                        }).addTo(map);
+                    }
+                }
+                function onShatzafAreaDomClick(e) {
+                    if (shatzafModeRef.current !== 'area') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    shatzafAreaPts.push(pt);
+                    redrawShatzafAreaPreview();
+                }
+                function onShatzafAreaDomDblClick(e) {
+                    if (shatzafModeRef.current !== 'area') return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (shatzafAreaPts.length < 3) return;
+                    if (shatzafAreaPreviewLayer) { try { map.removeLayer(shatzafAreaPreviewLayer); } catch(e) {} shatzafAreaPreviewLayer = null; }
+                    if (window.__shatzafAreaPolygon) { try { map.removeLayer(window.__shatzafAreaPolygon); } catch(e) {} }
+                    window.__shatzafAreaPolygon = L.polygon(shatzafAreaPts, {
+                        color: OPEN_SPACE_PALETTE.shatzaf_button,
+                        weight: 3,
+                        fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+                        fillOpacity: 0.15
+                    }).addTo(map);
+                    const finalPts = shatzafAreaPts.slice();
+                    shatzafAreaPts = [];
+                    shatzafModeRef.current = null;
+                    setShatzafMode(false);
+                    map.getContainer().classList.remove('measuring');
+                    calculateShatzafForArea(finalPts);
+                }
+                container.addEventListener('click', onShatzafAreaDomClick, true);
+                container.addEventListener('dblclick', onShatzafAreaDomDblClick, true);
+
+                // ── Generic shatzaf scope renderer ──
+                // Used by sub/radius/area modes. Receives a scope object and renders the modal.
+                // scope = {
+                //   scopeKey: 'sub'|'radius'|'area',     for state isolation if needed
+                //   label: string,                        title text
+                //   polyCoords: [[lng,lat],...],          PIP polygon (closed)
+                //   existingUnits: number,                pre-computed
+                //   defaultHH: number,
+                //   subMinahak: string|null,              for "default to" hint label
+                //   onClose: () => void                   cleanup callback
+                // }
+                function renderShatzafForScope(scope) {
                     const gd = window.__geoDataForLanduse || {};
-                    const subFeature = gd.sub_neighborhoods.features.find(f => f.properties.schn_nama === subName);
-                    if (!subFeature) return;
+                    const polyCoords = scope.polyCoords;
+                    if (!polyCoords || polyCoords.length < 3) return;
 
-                    let subCoords;
-                    try {
-                        if (subFeature.geometry.type === 'Polygon') subCoords = subFeature.geometry.coordinates[0];
-                        else if (subFeature.geometry.type === 'MultiPolygon') subCoords = subFeature.geometry.coordinates[0][0];
-                    } catch(ex) { return; }
-                    if (!subCoords) return;
+                    if (!window.__shatzafAssumptions) window.__shatzafAssumptions = { targetYear: 'existing' };
+                    const assumpt = window.__shatzafAssumptions;
+                    const targetYear = assumpt.targetYear;
+                    const isFull = (targetYear === 'full');
 
-                    // Ensure units data is loaded, then proceed
-                    (window.__unitsData ? Promise.resolve(window.__unitsData) : new Promise(resolve => {
-                        window.__unitsDataCallbacks = window.__unitsDataCallbacks || [];
-                        window.__unitsDataCallbacks.push(resolve);
-                        if (!window.__unitsFetching) {
-                            window.__unitsFetching = true;
-                            fetchUnitsDataInternal();
+                    function pip(cx, cy) {
+                        let inside = false;
+                        for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+                            const xi = polyCoords[i][0], yi = polyCoords[i][1];
+                            const xj = polyCoords[j][0], yj = polyCoords[j][1];
+                            if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                inside = !inside;
                         }
-                    })).then(ud => {
-                    let totalUnitsIn = 0;
-                    let totalUnitsAdd = 0;
-                    if (ud && ud.bySub) {
-                        // Find which minahak this sub belongs to
-                        let parentMinahak = null;
-                        Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
-                            if (subs.includes(subName)) parentMinahak = m;
-                        });
-                        // Collect all sub names that map to the same geojson polygon via SUB_NORMALIZE
-                        const allSubNames = new Set([subName]);
-                        if (parentMinahak) {
-                            // If this sub covers the whole minahak (single sub or main sub), sum all subs of that minahak
-                            const minahakSubs = MINAHAK_SUBS[parentMinahak] || [];
-                            // Check how many distinct geojson polygons this minahak has
-                            const gd2 = window.__geoDataForLanduse || {};
-                            const geojsonNames = new Set();
-                            if (gd2.sub_neighborhoods) {
-                                gd2.sub_neighborhoods.features.forEach(f => {
-                                    const nm = f.properties.schn_nama || '';
-                                    const normalized = SUB_NORMALIZE[nm] || nm;
-                                    if (minahakSubs.some(s => s === nm || s === normalized || (SUB_NORMALIZE[s] || s) === normalized)) {
-                                        geojsonNames.add(nm);
-                                    }
-                                });
-                            }
-                            // If only one geojson polygon for this minahak, sum all CSV sub names
-                            if (geojsonNames.size <= 1) {
-                                minahakSubs.forEach(s => { allSubNames.add(s); allSubNames.add(SUB_NORMALIZE[s] || s); });
-                                allSubNames.add(parentMinahak);
-                            }
-                        }
-                        Object.keys(ud.bySub).forEach(minahak => {
-                            const subs = ud.bySub[minahak];
-                            Object.keys(subs).forEach(s => {
-                                if (allSubNames.has(s)) {
-                                    totalUnitsIn += subs[s].units_in || 0;
-                                    totalUnitsAdd += subs[s].units_add || 0;
-                                }
-                            });
+                        return inside;
+                    }
+                    function centroidOf(geom) {
+                        try {
+                            let coords;
+                            if (geom.type === 'Polygon') coords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];
+                            else return null;
+                            let cx = 0, cy = 0, n = 0;
+                            for (const c of coords) { cx += c[0]; cy += c[1]; n++; }
+                            return n > 0 ? [cx/n, cy/n] : null;
+                        } catch(ex) { return null; }
+                    }
+
+                    // 1) Plans + planMimushMap (centroid PIP)
+                    const planMimushMap = new Map();
+                    let plannedUnitsWeighted = 0;
+                    let totalUnitsAddPotential = 0;
+                    let activePlanCount = 0;
+                    if (targetYear !== 'existing' && gd.plans && gd.plans.features) {
+                        gd.plans.features.forEach(f => {
+                            const c = centroidOf(f.geometry);
+                            if (!c || !pip(c[0], c[1])) return;
+                            const props = f.properties || {};
+                            const m = calcMimush(props);
+                            if (!m) return;
+                            const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
+                            if (u <= 0) return;
+                            totalUnitsAddPotential += u;
+                            if (!isFull && m.estimatedYear > targetYear) return;
+                            const pct = isFull ? 100 : m.mimushPct;
+                            plannedUnitsWeighted += u * pct / 100;
+                            const planName = (props.plan_name || '').trim();
+                            if (planName) planMimushMap.set(planName, pct);
+                            activePlanCount++;
                         });
                     }
-                    const grandTotalUnits = totalUnitsIn + totalUnitsAdd;
+                    plannedUnitsWeighted = Math.round(plannedUnitsWeighted);
+                    const grandTotalUnits = scope.existingUnits + plannedUnitsWeighted;
 
-                    // Calculate open space: xplan first, kayam as fallback
+                    // 2) Open space supply: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
                     let openSpaceArea = 0;
+                    let xplanWeightedArea = 0;
                     const openSpaceNames = [];
-                    // Try xplan
                     if (gd.landuse_xplan) {
                         gd.landuse_xplan.features.forEach(f => {
+                            const planRef = (f.properties.pl_number || '').trim();
+                            if (!planMimushMap.has(planRef)) return;
                             const name = (f.properties.mavat_name || '').trim();
                             if (!name) return;
                             const group = getLanduseGroup(name);
                             if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                            try {
-                                let fCoords;
-                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
-                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
-                                else return;
-                                let cx = 0, cy = 0, n = 0;
-                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
-                                cx /= n; cy /= n;
-                                let inside = false;
-                                for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
-                                    const [xi, yi] = subCoords[i], [xj, yj] = subCoords[j];
-                                    if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
-                                        inside = !inside;
-                                }
-                                if (inside) {
-                                    openSpaceArea += getFeatureArea(f);
-                                    if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
-                                }
-                            } catch(ex) {}
+                            const c = centroidOf(f.geometry);
+                            if (!c || !pip(c[0], c[1])) return;
+                            const pct = planMimushMap.get(planRef) / 100;
+                            const weighted = getFeatureArea(f) * pct;
+                            openSpaceArea += weighted;
+                            xplanWeightedArea += weighted;
+                            if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
                         });
                     }
-                    // Fallback to kayam
                     if (gd.yiud_karka_kayam) {
                         gd.yiud_karka_kayam.features.forEach(f => {
                             const name = (f.properties.Descr || '').trim();
                             if (!name) return;
                             const group = getLanduseGroup(name);
                             if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                            try {
-                                let fCoords;
-                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
-                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
-                                else return;
-                                let cx = 0, cy = 0, n = 0;
-                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
-                                cx /= n; cy /= n;
-                                // Only add kayam if not already covered by xplan in this area
-                                let coveredByXplan = false;
-                                if (gd.landuse_xplan) {
-                                    gd.landuse_xplan.features.forEach(xf => {
-                                        if (coveredByXplan) return;
-                                        try {
-                                            let xCoords;
-                                            if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];
-                                            else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];
-                                            else return;
-                                            let xInside = false;
-                                            for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
-                                                const [xi, yi] = xCoords[i], [xj, yj] = xCoords[j];
-                                                if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
-                                                    xInside = !xInside;
-                                            }
-                                            if (xInside) coveredByXplan = true;
-                                        } catch(ex) {}
-                                    });
-                                }
-                                if (!coveredByXplan) {
-                                    let inside = false;
-                                    for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
-                                        const [xi, yi] = subCoords[i], [xj, yj] = subCoords[j];
-                                        if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
-                                            inside = !inside;
-                                    }
-                                    if (inside) {
-                                        openSpaceArea += getFeatureArea(f);
-                                        if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
-                                    }
-                                }
-                            } catch(ex) {}
+                            const c = centroidOf(f.geometry);
+                            if (!c || !pip(c[0], c[1])) return;
+                            // kayam blocked only by ACTIVE xplan (existing → no blocks; future → only active plans)
+                            let coveredByXplan = false;
+                            if (planMimushMap.size > 0 && gd.landuse_xplan) {
+                                gd.landuse_xplan.features.forEach(xf => {
+                                    if (coveredByXplan) return;
+                                    const xRef = (xf.properties.pl_number || '').trim();
+                                    if (!planMimushMap.has(xRef)) return;
+                                    try {
+                                        let xCoords;
+                                        if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];
+                                        else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];
+                                        else return;
+                                        let xInside = false;
+                                        for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
+                                            const xi = xCoords[i][0], yi = xCoords[i][1];
+                                            const xj = xCoords[j][0], yj = xCoords[j][1];
+                                            if ((yi > c[1]) !== (yj > c[1]) && c[0] < (xj - xi) * (c[1] - yi) / (yj - yi) + xi)
+                                                xInside = !xInside;
+                                        }
+                                        if (xInside) coveredByXplan = true;
+                                    } catch(ex) {}
+                                });
+                            }
+                            if (coveredByXplan) return;
+                            openSpaceArea += getFeatureArea(f);
+                            if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
                         });
                     }
 
-                    // Find parent minahak for this sub-neighborhood (via SUB_NORMALIZE)
-                    let subMinahak = null;
-                    const normSubName = SUB_NORMALIZE[subName] || subName;
-                    Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
-                        if (subMinahak) return;
-                        if (ss.includes(subName) || ss.includes(normSubName) || ss.some(s => (SUB_NORMALIZE[s] || s) === normSubName)) {
-                            subMinahak = m;
-                        }
-                    });
-                    const subPresetHH = (subMinahak && PN_MINAHAK_PRESETS[subMinahak] && PN_MINAHAK_PRESETS[subMinahak].householdSize) || 3.5;
+                    // 3) Render modal
+                    const existingPanel = document.getElementById('shatzaf-panel');
+                    if (existingPanel) existingPanel.remove();
 
-                    // Show result dialog
+                    const horizonOpts = ['existing', 2030, 2035, 2040, 'full'];
+                    const horizonLabel = (y) => y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : String(y);
+                    const horizonButtonsHtml = horizonOpts.map(y => {
+                        const sel = (targetYear === y);
+                        const bg = sel ? OPEN_SPACE_PALETTE.shatzaf_button : 'transparent';
+                        const color = sel ? '#fff' : '#888';
+                        const border = sel ? OPEN_SPACE_PALETTE.shatzaf_title : '#333';
+                        return '<button data-shatzaf-year="' + y + '" style="background:' + bg + ';color:' + color + ';border:1px solid ' + border + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + horizonLabel(y) + '</button>';
+                    }).join('');
+
+                    const savedHH = (typeof assumpt.householdSize === 'number') ? assumpt.householdSize : scope.defaultHH;
+                    const subMinahak = scope.subMinahak;
+
                     const panel = document.createElement('div');
                     panel.id = 'shatzaf-panel';
                     panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(360px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
 
                     panel.innerHTML =
                         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                        '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + subName + '</h3>' +
+                        '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + scope.label + '</h3>' +
                         '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
                         (subMinahak ? '<div style="font-size:11px;margin-bottom:6px;color:#888">מינהל: ' + subMinahak + '</div>' : '') +
-                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + totalUnitsIn.toLocaleString() + '</b></div>' +
-                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד תוספת: <b>' + totalUnitsAdd.toLocaleString() + '</b></div>' +
+                        '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px;padding:6px 8px;background:#16162a;border-radius:6px">' +
+                            '<span style="font-size:11px;color:#aaa;margin-left:4px">אופק:</span>' + horizonButtonsHtml +
+                        '</div>' +
+                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + scope.existingUnits.toLocaleString() + '</b></div>' +
+                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד מתוכננות (' + horizonLabel(targetYear) + '): <b>' + plannedUnitsWeighted.toLocaleString() + '</b>' +
+                            (targetYear !== 'existing' && totalUnitsAddPotential > 0 ? ' <span style="font-size:10px;color:#888">(מתוך ' + totalUnitsAddPotential.toLocaleString() + ' פוטנציאל)</span>' : '') +
+                        '</div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">סה"כ יח"ד: <b>' + grandTotalUnits.toLocaleString() + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
+                        (targetYear !== 'existing' && xplanWeightedArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🌳 שצ"פ עתידי משוקלל: ' + (xplanWeightedArea/1000).toFixed(1) + ' דונם (מתוך ה-' + (openSpaceArea/1000).toFixed(1) + ' דונם)</div>' : '') +
+                        (targetYear !== 'existing' && activePlanCount > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏗️ תורמות לאופק: ' + activePlanCount + ' תכניות</div>' : '') +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
                         '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '') + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
-                        '<input id="shatzaf-household" type="number" value="' + subPresetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
+                        '<input id="shatzaf-household" type="number" value="' + savedHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
                         '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
                         '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
                     document.body.appendChild(panel);
 
+                    // Horizon buttons → re-render with new targetYear (same scope)
+                    panel.querySelectorAll('[data-shatzaf-year]').forEach(btn => {
+                        btn.onclick = () => {
+                            const raw = btn.getAttribute('data-shatzaf-year');
+                            const y = (raw === 'existing' || raw === 'full') ? raw : Number(raw);
+                            const hhInput = document.getElementById('shatzaf-household');
+                            if (hhInput) {
+                                const v = parseFloat(hhInput.value);
+                                if (!isNaN(v) && v > 0) assumpt.householdSize = v;
+                            }
+                            assumpt.targetYear = y;
+                            renderShatzafForScope(scope);
+                        };
+                    });
+
                     document.getElementById('shatzaf-close').onclick = () => {
                         panel.remove();
-                        if (subSelectedLayer) { map.removeLayer(subSelectedLayer); subSelectedLayer = null; }
+                        if (scope.onClose) scope.onClose();
                     };
                     document.getElementById('shatzaf-calc').onclick = () => {
                         const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
+                        assumpt.householdSize = hh;
                         const totalPeople = grandTotalUnits * hh;
                         const sqmPerPerson = totalPeople > 0 ? (openSpaceArea / totalPeople) : 0;
                         const sqmPerHH = grandTotalUnits > 0 ? (openSpaceArea / grandTotalUnits) : 0;
                         const resultDiv = document.getElementById('shatzaf-result');
                         resultDiv.style.display = 'block';
 
-                        // Standard: 30-70 m²/HH → shown as per-person range
                         const minPerPerson = 30 / hh, maxPerPerson = 70 / hh;
                         let standardHtml = '';
                         if (grandTotalUnits > 0 && openSpaceArea > 0) {
@@ -5312,6 +5390,7 @@
                             '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' +
                             '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' +
                             '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' +
+                            '<div style="font-size:10px;color:#888;margin-top:4px">אופק: ' + horizonLabel(targetYear) + '</div>' +
                             '</div>' +
                             standardHtml +
                             (grandTotalUnits === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד</div>' : '') +
@@ -5319,15 +5398,166 @@
                             '</div>';
                     };
                     document.getElementById('shatzaf-calc').click();
-                    }); // end .then(ud =>
+                }
+
+                // ── Sub-neighborhood entry: click on a sub polygon → uses sub polygon + CSV existing units ──
+                function calculateSubNeighborhoodShatzaf(subName, opts) {
+                    const gd = window.__geoDataForLanduse || {};
+                    const subFeature = gd.sub_neighborhoods.features.find(f => f.properties.schn_nama === subName);
+                    if (!subFeature) return;
+                    let subCoords;
+                    try {
+                        if (subFeature.geometry.type === 'Polygon') subCoords = subFeature.geometry.coordinates[0];
+                        else if (subFeature.geometry.type === 'MultiPolygon') subCoords = subFeature.geometry.coordinates[0][0];
+                    } catch(ex) { return; }
+                    if (!subCoords) return;
+
+                    if (opts && typeof opts.targetYear !== 'undefined') {
+                        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = { targetYear: 'existing' };
+                        window.__shatzafAssumptions.targetYear = opts.targetYear;
+                    }
+
+                    // Find parent minahak for this sub
+                    let subMinahak = null;
+                    const normSubName = SUB_NORMALIZE[subName] || subName;
+                    Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
+                        if (subMinahak) return;
+                        if (ss.includes(subName) || ss.includes(normSubName) || ss.some(s => (SUB_NORMALIZE[s] || s) === normSubName)) {
+                            subMinahak = m;
+                        }
+                    });
+                    const subPresetHH = (subMinahak && PN_MINAHAK_PRESETS[subMinahak] && PN_MINAHAK_PRESETS[subMinahak].householdSize) || 3.5;
+
+                    (window.__unitsData ? Promise.resolve(window.__unitsData) : new Promise(resolve => {
+                        window.__unitsDataCallbacks = window.__unitsDataCallbacks || [];
+                        window.__unitsDataCallbacks.push(resolve);
+                        if (!window.__unitsFetching) {
+                            window.__unitsFetching = true;
+                            fetchUnitsDataInternal();
+                        }
+                    })).then(ud => {
+                        let totalUnitsIn = 0;
+                        if (ud && ud.bySub) {
+                            let parentMinahak = null;
+                            Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
+                                if (subs.includes(subName)) parentMinahak = m;
+                            });
+                            const allSubNames = new Set([subName]);
+                            if (parentMinahak) {
+                                const minahakSubs = MINAHAK_SUBS[parentMinahak] || [];
+                                const gd2 = window.__geoDataForLanduse || {};
+                                const geojsonNames = new Set();
+                                if (gd2.sub_neighborhoods) {
+                                    gd2.sub_neighborhoods.features.forEach(f => {
+                                        const nm = f.properties.schn_nama || '';
+                                        const normalized = SUB_NORMALIZE[nm] || nm;
+                                        if (minahakSubs.some(s => s === nm || s === normalized || (SUB_NORMALIZE[s] || s) === normalized)) {
+                                            geojsonNames.add(nm);
+                                        }
+                                    });
+                                }
+                                if (geojsonNames.size <= 1) {
+                                    minahakSubs.forEach(s => { allSubNames.add(s); allSubNames.add(SUB_NORMALIZE[s] || s); });
+                                    allSubNames.add(parentMinahak);
+                                }
+                            }
+                            Object.keys(ud.bySub).forEach(minahak => {
+                                const subs = ud.bySub[minahak];
+                                Object.keys(subs).forEach(s => {
+                                    if (allSubNames.has(s)) {
+                                        totalUnitsIn += subs[s].units_in || 0;
+                                    }
+                                });
+                            });
+                        }
+                        renderShatzafForScope({
+                            scopeKey: 'sub',
+                            label: subName,
+                            polyCoords: subCoords,
+                            existingUnits: totalUnitsIn,
+                            defaultHH: subPresetHH,
+                            subMinahak,
+                            onClose: () => {
+                                if (subSelectedLayer) { map.removeLayer(subSelectedLayer); subSelectedLayer = null; }
+                            }
+                        });
+                    });
+                }
+
+                // ── Radius entry: center + radius → circle polygon + buildings existing units ──
+                function calculateShatzafForRadius(centerLatLng, radiusMeters, opts) {
+                    const gd = window.__geoDataForLanduse || {};
+                    if (opts && typeof opts.targetYear !== 'undefined') {
+                        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = { targetYear: 'existing' };
+                        window.__shatzafAssumptions.targetYear = opts.targetYear;
+                    }
+                    // Approximate circle as 64-vertex polygon
+                    const N = 64;
+                    const polyCoords = [];
+                    const latRad = centerLatLng.lat * Math.PI / 180;
+                    for (let i = 0; i <= N; i++) {
+                        const angle = (i / N) * 2 * Math.PI;
+                        const dLat = (radiusMeters * Math.cos(angle)) / 111320;
+                        const dLng = (radiusMeters * Math.sin(angle)) / (111320 * Math.cos(latRad));
+                        polyCoords.push([centerLatLng.lng + dLng, centerLatLng.lat + dLat]);
+                    }
+                    const existingUnits = sumExistingUnitsInRadius(centerLatLng, radiusMeters, gd.buildings);
+                    renderShatzafForScope({
+                        scopeKey: 'radius',
+                        label: 'רדיוס ' + Math.round(radiusMeters) + ' מטר',
+                        polyCoords,
+                        existingUnits,
+                        defaultHH: 3.5,
+                        subMinahak: null,
+                        onClose: () => {
+                            if (window.__shatzafRadiusCircle) {
+                                try { map.removeLayer(window.__shatzafRadiusCircle); } catch(e) {}
+                                window.__shatzafRadiusCircle = null;
+                            }
+                        }
+                    });
+                }
+
+                // ── Area entry: drawn polygon (latlngs) → buildings existing units ──
+                function calculateShatzafForArea(latlngs, opts) {
+                    const gd = window.__geoDataForLanduse || {};
+                    if (opts && typeof opts.targetYear !== 'undefined') {
+                        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = { targetYear: 'existing' };
+                        window.__shatzafAssumptions.targetYear = opts.targetYear;
+                    }
+                    const polyCoords = latlngs.map(ll => [ll.lng, ll.lat]);
+                    if (polyCoords.length < 3) return;
+                    const first = polyCoords[0], last = polyCoords[polyCoords.length - 1];
+                    if (first[0] !== last[0] || first[1] !== last[1]) polyCoords.push([first[0], first[1]]);
+                    const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+                    renderShatzafForScope({
+                        scopeKey: 'area',
+                        label: 'אזור נבחר',
+                        polyCoords,
+                        existingUnits,
+                        defaultHH: 3.5,
+                        subMinahak: null,
+                        onClose: () => {
+                            if (window.__shatzafAreaPolygon) {
+                                try { map.removeLayer(window.__shatzafAreaPolygon); } catch(e) {}
+                                window.__shatzafAreaPolygon = null;
+                            }
+                        }
+                    });
                 }
 
                 return () => {
                     container.removeEventListener('click', onShatzafDomClick, true);
                     container.removeEventListener('click', onShatzafSubDomClick, true);
+                    container.removeEventListener('click', onShatzafRadiusDomClick, true);
+                    container.removeEventListener('click', onShatzafAreaDomClick, true);
+                    container.removeEventListener('dblclick', onShatzafAreaDomDblClick, true);
                     container.removeEventListener('mousemove', onShatzafSubMouseMove);
                     if (subHoverLayer) { map.removeLayer(subHoverLayer); subHoverLayer = null; }
                     if (subSelectedLayer) { map.removeLayer(subSelectedLayer); subSelectedLayer = null; }
+                    if (shatzafAreaPreviewLayer) { try { map.removeLayer(shatzafAreaPreviewLayer); } catch(e) {} }
+                    if (window.__shatzafRadiusCircle) { try { map.removeLayer(window.__shatzafRadiusCircle); } catch(e) {} window.__shatzafRadiusCircle = null; }
+                    if (window.__shatzafAreaPolygon) { try { map.removeLayer(window.__shatzafAreaPolygon); } catch(e) {} window.__shatzafAreaPolygon = null; }
                 };
             }, [dataLoaded]); // Run once when data loaded
 
@@ -13580,7 +13810,7 @@
                                     <path d="M12 2C9 5 7 8 7 12a5 5 0 0 0 10 0c0-4-2-7-5-10z" />
                                     <line x1="12" y1="12" x2="12" y2="22" />
                                 </svg>
-                                <span className="toolbar-label">{(treeAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : shatzafMode === 'plan' ? 'בחר תכנית...' : (treeMode === 'sub' || shatzafMode === 'sub') ? 'בחר שכונה...' : 'שטחים ירוקים ▾'}</span>
+                                <span className="toolbar-label">{(treeAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : shatzafMode === 'plan' ? 'בחר תכנית...' : (treeMode === 'sub' || shatzafMode === 'sub') ? 'בחר שכונה...' : shatzafMode === 'radius' ? 'בחר נקודת מרכז...' : shatzafMode === 'area' ? 'ציור פוליגון... (דאבל-קליק לסיום)' : 'שטחים ירוקים ▾'}</span>
                             </button>
                             {activeDropdown === 'green' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
@@ -13658,6 +13888,24 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l5-4 5 4v14"/><path d="M19 21V11l-4-3"/></svg>
                                         <span className="sub-label">שכונה</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${shatzafMode === 'radius' ? 'sub-active' : ''}`} data-tip="לחיצה על המפה תקבע מרכז עיגול ברדיוס 500מ׳ לחישוב שצ&quot;פ" onClick={() => {
+                                        treeModeRef.current = false; setTreeMode(false);
+                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        shatzafModeRef.current = 'radius'; setShatzafMode('radius'); setActiveDropdown(null);
+                                        mapInstanceRef.current?.getContainer().classList.add('measuring');
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2" fill="currentColor"/><line x1="12" y1="12" x2="21" y2="12"/></svg>
+                                        <span className="sub-label">רדיוס</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${shatzafMode === 'area' ? 'sub-active' : ''}`} data-tip="ציור פוליגון על המפה לחישוב שצ&quot;פ באזור (קליק לקודקוד, דאבל-קליק לסיום)" onClick={() => {
+                                        treeModeRef.current = false; setTreeMode(false);
+                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        shatzafModeRef.current = 'area'; setShatzafMode('area'); setActiveDropdown(null);
+                                        mapInstanceRef.current?.getContainer().classList.add('measuring');
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2 L22 8 L19 20 L5 20 L2 8 Z"/><circle cx="12" cy="2" r="1.5" fill="currentColor"/><circle cx="22" cy="8" r="1.5" fill="currentColor"/><circle cx="19" cy="20" r="1.5" fill="currentColor"/><circle cx="5" cy="20" r="1.5" fill="currentColor"/><circle cx="2" cy="8" r="1.5" fill="currentColor"/></svg>
+                                        <span className="sub-label">אזור</span>
                                     </button>
                                 </div>
                             )}
