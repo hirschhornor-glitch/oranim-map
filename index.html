@@ -6195,6 +6195,97 @@
                 if (window.__treePanelAttach) window.__treePanelAttach(panel);
             }, [areaFinished]);
 
+            // ── Open the rich programa modal scoped to a sub-neighborhood polygon ──
+            // Looks up sub by name (with SUB_NORMALIZE alias support), builds candidatePlans + edu features,
+            // and reuses renderProgramaModal. Used from the minahak-level פרוגרמה drilldown.
+            function openProgramaForSubPolygon(subName) {
+                const gd = geoDataRef.current || {};
+                if (!gd.sub_neighborhoods) { console.warn('[Programa] no sub_neighborhoods layer'); return; }
+                // Find sub feature: try exact match, then via normalized alias
+                const wanted = (typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[subName]) || subName;
+                let subF = gd.sub_neighborhoods.features.find(f => {
+                    const nm = f.properties.schn_nama || '';
+                    if (nm === subName || nm === wanted) return true;
+                    const norm = (typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[nm]) || nm;
+                    return norm === subName || norm === wanted;
+                });
+                if (!subF) { console.warn('[Programa] sub not found:', subName); return; }
+                let coords;
+                if (subF.geometry.type === 'Polygon') coords = subF.geometry.coordinates[0];
+                else if (subF.geometry.type === 'MultiPolygon') coords = subF.geometry.coordinates[0][0];
+                if (!coords || coords.length < 3) return;
+                const polyCoords = coords.slice();
+                if (polyCoords[0][0] !== polyCoords[polyCoords.length - 1][0] || polyCoords[0][1] !== polyCoords[polyCoords.length - 1][1]) polyCoords.push(polyCoords[0]);
+                function pip(pt, ring) {
+                    const x = pt[0], y = pt[1]; let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+                    }
+                    return inside;
+                }
+                // Determine if the sub's centroid is inside Gonen minahak (for future-horizon eligibility)
+                let cx = 0, cy = 0, n = 0;
+                for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                cx /= n; cy /= n;
+                let inGonen = false;
+                if (gd.minahak_gonen && gd.minahak_gonen.features) {
+                    for (const gf of gd.minahak_gonen.features) {
+                        const g = gf.geometry; if (!g || !g.coordinates) continue;
+                        if (g.type === 'Polygon' && pip([cx, cy], g.coordinates[0])) { inGonen = true; break; }
+                        if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) { if (pip([cx, cy], poly[0])) { inGonen = true; break; } } if (inGonen) break; }
+                    }
+                }
+                // Collect plans whose centroid is inside the sub polygon
+                const candidatePlans = [];
+                if (gd.plans) {
+                    const seen = new Set();
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties || {};
+                        const taba = String(p.taba || '').trim();
+                        if (taba && seen.has(taba)) return;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                        const geom = f.geometry; if (!geom || !geom.coordinates) return;
+                        let pcoords;
+                        try {
+                            if (geom.type === 'Polygon') pcoords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') pcoords = geom.coordinates[0][0];
+                            else return;
+                        } catch(ex) { return; }
+                        if (!pcoords || !pcoords.length) return;
+                        let pcx = 0, pcy = 0, pn = 0;
+                        for (const c of pcoords) { if (c && c.length >= 2) { pcx += c[0]; pcy += c[1]; pn++; } }
+                        if (pn === 0) return;
+                        if (pip([pcx / pn, pcy / pn], polyCoords)) {
+                            if (taba) seen.add(taba);
+                            candidatePlans.push({
+                                taba, plan_name: p.plan_name, plan_name_he: p.plan_name_he, plan_summary: p.plan_summary,
+                                units_add: parseFloat(p.units_add) || 0, units_total: parseInt(p.units_total) || 0,
+                                status_mavat: p.status_mavat, stage: p.stage, mavat_date: p.mavat_date,
+                                shavatz_out_prog: p.shavatz_out_prog || '', shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+                                hafrash_prg: p.hafrash_prg || '', hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+                                shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+                                shavatz_in_prog: p.shavatz_in_prog || '',
+                                geometry: f.geometry,
+                            });
+                        }
+                    });
+                }
+                candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+                const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+                const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
+                renderProgramaModal({
+                    existingUnits, candidatePlans, eduFeats,
+                    scopeLabel: 'תת-שכונה: ' + subName,
+                    parentModalId: 'units-modal-public-needs',
+                    inGonen,
+                });
+            }
+            // Expose to window for use from React-rendered click handlers in the minahak modal
+            window.__openProgramaForSubPolygon = openProgramaForSubPolygon;
+
             // ── Programa report — DOM modal triggered from area-select / radius-select ──
             // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
             // arbitrary scope (polygon or circle) using default assumptions. Sources:
@@ -15496,7 +15587,10 @@
                                             <tbody>
                                                 {mData.subs.map(s => (
                                                     <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
-                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0',cursor:'pointer',textDecoration:'underline'}} onClick={() => setPublicNeedsDrilldown({ sub: s.name })}>{s.name}</td>
+                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0',cursor:'pointer'}} title="קליק לפירוט (חינוך) | קליק על 🏘️ לפרוגרמה רחבה" onClick={() => setPublicNeedsDrilldown({ sub: s.name })}>
+                                                            <span style={{textDecoration:'underline'}}>{s.name}</span>
+                                                            <button title="פתח פרוגרמה מלאה לתת-שכונה (Q קיזוז + 100% מימוש + שירותים מורחבים)" onClick={(e) => { e.stopPropagation(); window.__openProgramaForSubPolygon && window.__openProgramaForSubPolygon(s.name); }} style={{marginRight:6,background:'#7b6cf0',color:'#fff',border:'none',padding:'1px 6px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>🏘️ פרוגרמה ›</button>
+                                                        </td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#4ba1f0'}}>{s.units_in.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#4CAF50'}}>+{s.units_new_target.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total_units.toLocaleString()}</td>
