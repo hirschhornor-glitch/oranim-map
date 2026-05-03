@@ -3688,6 +3688,15 @@
             '101-0306944',
             '101-0326751',
             '101-0415976',
+            '101-0113381',
+            '101-0098897',
+            '101-0054676',
+            '101-0068593',
+            '101-0059576',
+            '101-0060434',
+            '101-0055293',
+            '101-0095612',
+            '101-0571190',
         ]);
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
@@ -9984,6 +9993,9 @@
                         sog: 'סוג / שימור', conservation_level: 'רמת שימור',
                         focus_id: 'מס׳ מוקד', description: 'תיאור', conservation_type: 'סוג שימור',
                         land_use: 'יעוד קרקע', num_of_hel: 'חלקה', Layer: 'שכבה', sug: 'סוג תכנית', number: 'מס׳ תכנית',
+                        max_floors_base: 'מקס׳ קומות (בסיס)', coverage_pct_max: 'תכסית מקס׳ (%)',
+                        employment_max_sqm: 'תעסוקה מקס׳ (מ״ר)', commerce_extra_sqm: 'מסחר ייעודי (מ״ר)',
+                        realization_cap_2040_pct: 'תקרת מימוש 2040 (%)',
                         is_strict: 'מחמיר', tama38_units_realistic: 'יח״ד תמ״א 38 (ריאלי)',
                         pinui_binui_units_realistic: 'יח״ד פינוי-בינוי (ריאלי)',
                         related_tba: 'תב״עות קשורות', area_description: 'תיאור אזור',
@@ -10061,6 +10073,9 @@
                         style: f => {
                             const ft = f.properties.feature_type;
                             if (ft === 'boundary') {
+                                if (f.properties.hide_outline) {
+                                    return { opacity: 0, fillOpacity: 0, weight: 0 };
+                                }
                                 return { color: cfg.color, weight: 3, fillOpacity: 0, dashArray: '6,4' };
                             }
                             const c = masterPlanThemeColor(f.properties);
