@@ -10472,7 +10472,13 @@
                         m.addTo(tamaLayer);
                     });
 
-                    const group = L.layerGroup([zoneLayer, plansLayer, tamaLayer]).addTo(map);
+                    // Honor the user's TBA / TAMA-38 layer toggles — when off, don't draw
+                    // the compliance-colored plans on top of the master plan, so the
+                    // landuse polygons underneath are visible.
+                    const layerGroupChildren = [zoneLayer];
+                    if (layers['plans']) layerGroupChildren.push(plansLayer);
+                    if (layers['tama38']) layerGroupChildren.push(tamaLayer);
+                    const group = L.layerGroup(layerGroupChildren).addTo(map);
                     // Stash the inner plansLayer so popup actions can find sublayers by plan_name
                     group.__plansLayer = plansLayer;
                     group.__tamaCount = tamaInside.length;
