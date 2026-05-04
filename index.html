@@ -6618,6 +6618,104 @@
             // Expose to window for use from React-rendered click handlers in the minahak modal
             window.__openProgramaForSubPolygon = openProgramaForSubPolygon;
 
+            // Minahak Hebrew name → geojson layer key (matches dataFiles)
+            const MINAHAK_HEB_TO_LAYER = {
+                'בית צפאפא': 'minahak_beit_tzfafa',
+                'גוננים': 'minahak_gonen',
+                'בקעה רבתי': 'minahak_baka',
+                'גינות העיר': 'minahak_ganot',
+                'מינהל מוסדי מלחה': 'minahak_malha',
+                'א.ת. תלפיות': 'minahak_talpiot',
+            };
+
+            // Same as openProgramaForSubPolygon but scoped to an entire minahak (multi-polygon-safe).
+            function openProgramaForMinahakPolygon(minahakName) {
+                const gd = geoDataRef.current || {};
+                const layerKey = MINAHAK_HEB_TO_LAYER[minahakName];
+                if (!layerKey || !gd[layerKey] || !gd[layerKey].features) {
+                    console.warn('[Programa] no minahak layer for', minahakName);
+                    return;
+                }
+                const layer = gd[layerKey];
+                const allRings = [];
+                for (const f of layer.features) {
+                    const g = f.geometry;
+                    if (!g || !g.coordinates) continue;
+                    if (g.type === 'Polygon') allRings.push(g.coordinates[0]);
+                    else if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) allRings.push(poly[0]); }
+                }
+                if (!allRings.length) return;
+                function pip(pt, ring) {
+                    const x = pt[0], y = pt[1]; let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+                    }
+                    return inside;
+                }
+                function pipAny(pt) { for (const r of allRings) { if (pip(pt, r)) return true; } return false; }
+                const inGonen = (minahakName === 'גוננים');
+                const candidatePlans = [];
+                if (gd.plans) {
+                    const seen = new Set();
+                    gd.plans.features.forEach(f => {
+                        const p = f.properties || {};
+                        const taba = String(p.taba || '').trim();
+                        if (taba && seen.has(taba)) return;
+                        const s = normalizeStatus((p.status_mavat || '').trim());
+                        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                        if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                        const geom = f.geometry; if (!geom || !geom.coordinates) return;
+                        let pcoords;
+                        try {
+                            if (geom.type === 'Polygon') pcoords = geom.coordinates[0];
+                            else if (geom.type === 'MultiPolygon') pcoords = geom.coordinates[0][0];
+                            else return;
+                        } catch(ex) { return; }
+                        if (!pcoords || !pcoords.length) return;
+                        let pcx = 0, pcy = 0, pn = 0;
+                        for (const c of pcoords) { if (c && c.length >= 2) { pcx += c[0]; pcy += c[1]; pn++; } }
+                        if (pn === 0) return;
+                        if (pipAny([pcx / pn, pcy / pn])) {
+                            if (taba) seen.add(taba);
+                            candidatePlans.push({
+                                taba, plan_name: p.plan_name, plan_name_he: p.plan_name_he, plan_summary: p.plan_summary,
+                                units_add: parseFloat(p.units_add) || 0, units_total: parseInt(p.units_total) || 0,
+                                status_mavat: p.status_mavat, stage: p.stage, mavat_date: p.mavat_date,
+                                shavatz_out_prog: p.shavatz_out_prog || '', shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+                                hafrash_prg: p.hafrash_prg || '', hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+                                shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+                                shavatz_in_prog: p.shavatz_in_prog || '',
+                                geometry: f.geometry,
+                            });
+                        }
+                    });
+                }
+                candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+                let existingUnits = 0;
+                for (const r of allRings) existingUnits += sumExistingUnitsInPolygon(r, gd.buildings);
+                let eduFeats = [];
+                const seenEduIds = new Set();
+                for (const r of allRings) {
+                    const e = eduFeaturesInPolygon(r, gd);
+                    if (Array.isArray(e)) {
+                        for (const f of e) {
+                            const id = f && f.properties && (f.properties.semel_chinuch || f.properties.id || JSON.stringify(f.geometry && f.geometry.coordinates));
+                            if (id && seenEduIds.has(id)) continue;
+                            if (id) seenEduIds.add(id);
+                            eduFeats.push(f);
+                        }
+                    }
+                }
+                renderProgramaModal({
+                    existingUnits, candidatePlans, eduFeats,
+                    scopeLabel: 'מינהל: ' + minahakName,
+                    parentModalId: 'units-modal-public-needs',
+                    inGonen,
+                });
+            }
+            window.__openProgramaForMinahakPolygon = openProgramaForMinahakPolygon;
+
             // ── Programa report — DOM modal triggered from area-select / radius-select ──
             // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
             // arbitrary scope (polygon or circle) using default assumptions. Sources:
@@ -6629,10 +6727,6 @@
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
                 }
                 const assumpt = window.__programaUserAssumptions;
-                // Future-horizon balance is currently restricted to מינהק גוננים. Force 'existing' elsewhere.
-                if (!inGonen && assumpt.targetYear !== 'existing') {
-                    assumpt.targetYear = 'existing';
-                }
                 const tY = assumpt.targetYear;
 
                 // Apply target-year mimush filter to candidate plans.
@@ -6815,6 +6909,8 @@
 
                 // Future-balance rows: per-service "מוצע" vs "נדרש". The "= מוצע" cell is clickable
                 // (data-svc-drill) — opens a per-service cross-horizon drilldown.
+                const proposedWip = !inGonen;
+                const wipCell = '<span style="color:#d4a574;font-size:10px;font-style:italic" title="חישוב פירוט המוסדות המוצעים פר-תב\'ע מאומת כרגע רק בגוננים — בעבודה לשאר המינהלים">🚧 בעבודה</span>';
                 const futureBalanceRows = BALANCE_SERVICES.map(svc => {
                     const c = getServiceCounts(svc);
                     const exDisplay = c.exNet === null
@@ -6822,14 +6918,14 @@
                         : (c.exGross !== null && c.demolished > 0)
                             ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>'
                             : (c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet);
-                    const proposedClickable = c.proposed > 0 || c.planned > 0 || c.demolished > 0;
+                    const proposedClickable = !proposedWip && (c.proposed > 0 || c.planned > 0 || c.demolished > 0);
                     return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)">' + (c.planned > 0 ? '+' + c.planned : '—') + '</td>' +
-                        '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + c.proposed + (proposedClickable ? ' ›' : '') + '</td>' +
+                        '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + (proposedWip ? wipCell : (c.proposed + (proposedClickable ? ' ›' : ''))) + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#aaa">' + c.required + '</td>' +
-                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(c.delta, c.required) + '">' + (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta) + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (proposedWip ? '#666' : deltaColor(c.delta, c.required)) + '">' + (proposedWip ? '—' : (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta)) + '</td>' +
                         '</tr>';
                 }).join('');
                 // Top "uncategorized public area" row — appears above per-service rows, clickable for drilldown
@@ -6879,16 +6975,13 @@
                     // Assumptions controls bar (year + sliders) — same fields as sub-neighborhood פרוגרמה
                     '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>' +
-                            (inGonen ?
-                                ['existing', 2030, 2035, 2040, 'full'].map(y => {
-                                    const lbl = y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : y;
-                                    const sel = (tY === y);
-                                    const accent = y === 'full' ? '#7b6cf0' : '#5a7a9a';
-                                    const accentBg = y === 'full' ? '#3a2a6a' : '#3a5a80';
-                                    return '<button data-pa-year="' + y + '" style="background:' + (sel ? accentBg : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? accent : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
-                                }).join('')
-                            : '<span style="font-size:11px;color:#888;padding:3px 9px">מצב קיים</span><span title="אופק עתידי לפי %מימוש זמין כרגע רק במינהק גוננים" style="color:#666;font-size:10px;font-style:italic">(אופק עתידי / 100% מימוש — זמין כרגע רק במינהק גוננים)</span>'
-                            ) +
+                            ['existing', 2030, 2035, 2040, 'full'].map(y => {
+                                const lbl = y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : y;
+                                const sel = (tY === y);
+                                const accent = y === 'full' ? '#7b6cf0' : '#5a7a9a';
+                                const accentBg = y === 'full' ? '#3a2a6a' : '#3a5a80';
+                                return '<button data-pa-year="' + y + '" style="background:' + (sel ? accentBg : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? accent : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
+                            }).join('') +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>' +
                             '<input id="pa-hh" type="range" min="2.5" max="6.0" step="0.1" value="' + assumpt.householdSize + '" style="width:90px">' +
@@ -6961,9 +7054,9 @@
                                 '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' +
                                 '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' +
                                 '<td style="padding:8px;text-align:center;color:#7b6cf0">+' + BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0) + '</td>' +
-                                '<td id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות">' + totalProposedClasses + ' ›</td>' +
+                                '<td' + (proposedWip ? ' style="padding:8px;text-align:center;color:#d4a574"' : ' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"') + '>' + (proposedWip ? wipCell : (totalProposedClasses + ' ›')) + '</td>' +
                                 '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' +
-                                '<td style="padding:8px;text-align:center;color:' + deltaColor(totalGapClasses, totalRequiredClasses) + '">' + (totalGapClasses >= 0 ? '+' : '') + totalGapClasses + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:' + (proposedWip ? '#666' : deltaColor(totalGapClasses, totalRequiredClasses)) + '">' + (proposedWip ? '—' : ((totalGapClasses >= 0 ? '+' : '') + totalGapClasses)) + '</td>' +
                             '</tr>' +
                             '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>. לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.</td></tr>' +
                         '</tbody></table>'
@@ -15827,19 +15920,18 @@
                         const normSub = (n) => SUB_NORMALIZE[n] || n;
                         mimD.minahaks.forEach(m => {
                             const mAssumpt = getPNAssumptions(m);
-                            // Future-horizon calculation is currently validated only for גוננים.
-                            // For other minahaks, force 'existing' until the WIP feature is ready.
-                            const mTargetYear = m === 'גוננים' ? mAssumpt.targetYear : 'existing';
+                            const mTargetYear = mAssumpt.targetYear;
                             const isExisting = mTargetYear === 'existing';
                             const mimSubs = mimD.bySub[m] || {};
                             const unitsSubs = (unitsData.bySub[m]) || {};
                             // Aggregate by normalized sub-name to merge duplicates (e.g. "עמק רפאים - המושבה הגרמנית" + "המושבה הגרמנית")
                             const aggregated = {}; // { normalizedName: { units_in, units_new_target } }
+                            const isFull = mTargetYear === 'full';
                             Object.keys(mimSubs).forEach(raw => {
                                 const n = normSub(raw);
                                 if (n === 'לא ידוע' || n === 'אחר') return;
                                 if (!aggregated[n]) aggregated[n] = { units_in: 0, units_new_target: 0 };
-                                if (!isExisting) aggregated[n].units_new_target += (mimSubs[raw].byYear[mTargetYear]) || 0;
+                                if (!isExisting) aggregated[n].units_new_target += isFull ? (mimSubs[raw].total || 0) : (mimSubs[raw].byYear[mTargetYear] || 0);
                             });
                             Object.keys(unitsSubs).forEach(raw => {
                                 const n = normSub(raw);
@@ -15885,8 +15977,8 @@
                         const minahakList = mimD.minahaks.filter(m => byMinahak[m] && byMinahak[m].total_units > 0);
 
                         // ── Control Panel — parameterised by target (null = default / per-minahak name) ──
-                        const yearOpts = ['existing', 2030, 2035, 2040];
-                        const yearLabel = (y) => y === 'existing' ? 'מצב קיים' : y;
+                        const yearOpts = ['existing', 2030, 2035, 2040, 'full'];
+                        const yearLabel = (y) => y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : y;
                         const renderControls = (targetKey) => {
                             const ctrlAssumpt = targetKey ? getPNAssumptions(targetKey) : publicNeedsAssumptionsMap.default;
                             const setA = (patch) => updatePNAssumptions(targetKey, patch);
@@ -15905,7 +15997,7 @@
                                                 <button key={y} onClick={() => setA({ targetYear: y })} style={{background: y === ctrlAssumpt.targetYear ? '#3a5a80' : 'transparent',color: y === ctrlAssumpt.targetYear ? '#fff' : '#888',border:'1px solid ' + (y === ctrlAssumpt.targetYear ? '#5a7a9a' : '#333'),padding:'3px 9px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>{yearLabel(y)}</button>
                                             ))}
                                         </div>
-                                        <span style={{fontSize:9,color:'#666',fontStyle:'italic'}}>{ctrlAssumpt.targetYear === 'existing' ? 'יח״ד קיימות בלבד (ללא תוספת מתוכננת)' : 'תוספת לפי טבלת אחוזי מימוש אפריל 2026'}</span>
+                                        <span style={{fontSize:9,color:'#666',fontStyle:'italic'}}>{ctrlAssumpt.targetYear === 'existing' ? 'יח״ד קיימות בלבד (ללא תוספת מתוכננת)' : ctrlAssumpt.targetYear === 'full' ? '100% מימוש — כל התב״עות נכללות במלוא היח״ד' : 'תוספת לפי טבלת אחוזי מימוש אפריל 2026'}</span>
                                     </div>
                                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                                         <label style={{fontSize:11,color:'#aaa'}}>גודל משק בית:</label>
@@ -16179,6 +16271,11 @@
                                             <div style={{display:'flex',alignItems:'center',gap:8}}>
                                                 <button className="units-back-btn" onClick={() => setPublicNeedsMinahak(null)}>← מינהלים</button>
                                                 <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ {mData.name} — פרוגרמה שכונתית ({mData.subs.length} תת-שכונות · {yearLabel(mData.targetYear)})</h2>
+                                                <button onClick={() => window.__openProgramaForMinahakPolygon && window.__openProgramaForMinahakPolygon(mData.name)}
+                                                    title="פתח פרוגרמה מלאה למינהל (מאזן ציבור עתידי — קיים מול נדרש פר-קטגוריה)"
+                                                    style={{background:'#7b6cf0',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>
+                                                    🏘️ מאזן למינהל ›
+                                                </button>
                                                 {mData.hasOverride && <span title="למינהל זה יש הגדרות פרמטרים מותאמות" style={{background:'#7b1fa2',color:'#fff',fontSize:9,padding:'2px 6px',borderRadius:8}}>פרמטרים מותאמים</span>}
                                             </div>
                                             <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -16190,15 +16287,10 @@
                                         {renderControls(publicNeedsMinahak)}
                                     </div>
                                     <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
-                                        {publicNeedsMinahak !== 'גוננים' && (
-                                            <div style={{background:'#3a2a1a',border:'1px solid #d4a574',color:'#f4d4a0',padding:'8px 12px',borderRadius:6,marginBottom:12,fontSize:12}}>
-                                                🚧 <b>חישוב התוספת המוצעת בעבודה</b> — כעת מוצג מצב קיים בלבד. אופקים עתידיים (2030/2035/2040) ו-100% מימוש זמינים כרגע רק למינהל גוננים.
-                                            </div>
-                                        )}
                                         {/* KPI strip */}
                                         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:16}}>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #4ba1f0'}}><div style={{fontSize:11,color:'#888'}}>יח״ד קיימות</div><div style={{fontSize:22,color:'#4ba1f0',fontWeight:'bold'}}>{mData.units_in.toLocaleString()}</div></div>
-                                            <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid ' + (mData.targetYear === 'existing' ? '#555' : '#4CAF50')}}><div style={{fontSize:11,color:'#888'}}>{mData.targetYear === 'existing' ? 'תוספת מתוכננת' : 'תוספת עד ' + mData.targetYear}</div><div style={{fontSize:22,color: mData.targetYear === 'existing' ? '#666' : '#4CAF50',fontWeight:'bold'}}>{mData.targetYear === 'existing' ? '—' : '+' + mData.units_new_target.toLocaleString()}</div></div>
+                                            <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid ' + (mData.targetYear === 'existing' ? '#555' : '#4CAF50')}}><div style={{fontSize:11,color:'#888'}}>{mData.targetYear === 'existing' ? 'תוספת מתוכננת' : mData.targetYear === 'full' ? 'תוספת ב-100% מימוש' : 'תוספת עד ' + mData.targetYear}</div><div style={{fontSize:22,color: mData.targetYear === 'existing' ? '#666' : '#4CAF50',fontWeight:'bold'}}>{mData.targetYear === 'existing' ? '—' : '+' + mData.units_new_target.toLocaleString()}</div></div>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #fff'}}><div style={{fontSize:11,color:'#888'}}>סה״כ יח״ד</div><div style={{fontSize:22,color:'#fff',fontWeight:'bold'}}>{mData.total_units.toLocaleString()}</div></div>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #f59e0b'}}><div style={{fontSize:11,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:22,color:'#f59e0b',fontWeight:'bold'}}>{mData.population.toLocaleString()}</div></div>
                                         </div>
@@ -16210,7 +16302,7 @@
                                                 <tr style={{background:'#1a1a2e',color:'#aaa'}}>
                                                     <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4ba1f0'}}>יח״ד קיימות</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>{mData.targetYear === 'existing' ? 'תוספת' : '+' + mData.targetYear}</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>{mData.targetYear === 'existing' ? 'תוספת' : mData.targetYear === 'full' ? '+100% מימוש' : '+' + mData.targetYear}</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה״כ</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>אוכלוסייה</th>
                                                     {PUBLIC_NEEDS_SERVICES.map(svc => (
