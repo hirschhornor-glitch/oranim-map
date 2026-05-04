@@ -10046,12 +10046,13 @@
                 }
                 // Thematic color palette — same color for the same theme across ALL master plans
                 // (e.g. "שימור מחמיר" is dark red whether it's in Moshavot or Baka)
-                // Israeli planning תשריט-style palette: residential=yellow scale,
-                // commerce=red, employment=purple, public=brown, open space=green,
-                // roads=gray scale, conservation=orange, renewal=violet.
+                // Standard Israeli planning תשריט palette — vivid printed-map colors:
+                // residential = yellow→orange→red scale by intensity, commerce = strong red,
+                // employment = vivid purple, public buildings = saddle brown, open space = bright green,
+                // roads = gray scale by status, conservation = orange, renewal = violet.
                 function masterPlanThemeColor(props) {
                     const ft = props.feature_type;
-                    if (ft === 'special_focus') return '#ffeb3b';
+                    if (ft === 'special_focus') return '#ffea00';
                     if (ft === 'conservation') {
                         if (props.is_strict || (props.conservation_type || '').includes('מחמיר')) return '#b71c1c';
                         return '#ef6c00';
@@ -10060,75 +10061,75 @@
                                   props.conservation_type || props.zone_name || props.land_use || '').trim();
                     if (!text) return '#bdbdbd';
 
-                    // Conservation (highest priority; can appear in residential)
+                    // Conservation (highest priority)
                     if (/מחמיר|שימור מלא/.test(text)) return '#b71c1c';
                     if (/אזור שימור מרקמי|שימור מרקמי|מרקם היסטורי לשימור|מתחם לשימור|מתחם שימור/.test(text)) return '#e6c84d';
                     if (/אזור שימור/.test(text)) return '#d9a85b';
                     if (/שימור/.test(text)) return '#ef6c00';
 
                     // Roads (gray scale by status)
-                    if (/דרך מאושרת/.test(text)) return '#7a7a7a';
-                    if (/דרך מוצעת/.test(text)) return '#bdbdbd';
-                    if (/דרך משולבת/.test(text)) return '#9a9a9a';
-                    if (/דרך עם הנחיות מיוחדות/.test(text)) return '#888888';
-                    if (/דרך לביטול/.test(text)) return '#ddd6c8';
-                    if (/שטח לדרך/.test(text)) return '#a8a8a8';
-                    if (/^שביל$|^שביל\b|מיתון תנועה/.test(text)) return '#cccccc';
-                    if (/^דרך\b/.test(text)) return '#888888';
+                    if (/דרך מאושרת/.test(text)) return '#6e6e6e';
+                    if (/דרך מוצעת/.test(text)) return '#b8b8b8';
+                    if (/דרך משולבת/.test(text)) return '#909090';
+                    if (/דרך עם הנחיות מיוחדות/.test(text)) return '#7a7a7a';
+                    if (/דרך לביטול/.test(text)) return '#e8e0d0';
+                    if (/שטח לדרך/.test(text)) return '#a0a0a0';
+                    if (/^שביל$|^שביל\b|מיתון תנועה/.test(text)) return '#d0d0d0';
+                    if (/^דרך\b/.test(text)) return '#7a7a7a';
                     if (/מסילה|טיפול נופי|רכבת/.test(text)) return '#5e4a3e';
 
-                    // Public open space (green scale)
-                    if (/פארק רובעי|פארק עירוני|טיילת/.test(text)) return '#3e9c4a';
-                    if (/שצ"?פ|שטח ציבורי פתוח/.test(text)) return '#7ec97e';
-                    if (/שטח פרטי פתוח/.test(text)) return '#b5d99f';
-                    if (/שטח נוף פתוח/.test(text)) return '#9bc97d';
+                    // Public open space — strong green
+                    if (/פארק רובעי|פארק עירוני|טיילת/.test(text)) return '#2e8b3e';
+                    if (/שצ"?פ|שטח ציבורי פתוח/.test(text)) return '#5cc56a';
+                    if (/שטח פרטי פתוח/.test(text)) return '#9fd687';
+                    if (/שטח נוף פתוח/.test(text)) return '#7ec070';
 
-                    // Public buildings — earthy brown
-                    if (/מבני ציבור|שב"?צ|מבנים ומוסדות ציבור|מוסדות חינוך|מוסדות/.test(text)) return '#a06340';
+                    // Public buildings — saddle brown (standard תשריט convention)
+                    if (/מבני ציבור|שב"?צ|מבנים ומוסדות ציבור|מוסדות חינוך|מוסדות/.test(text)) return '#a06030';
 
                     // Cemetery
-                    if (/בית עלמין/.test(text)) return '#4a4a4a';
+                    if (/בית עלמין/.test(text)) return '#3a3a3a';
 
                     // Special points
-                    if (/תחנת דלק/.test(text)) return '#ff6b35';
-                    if (/מתקנים הנדסיים/.test(text)) return '#9a9a9a';
-                    if (/כיכר עירונית/.test(text)) return '#e8d18a';
-                    if (/עיצוב מיוחד|מדרחוב/.test(text)) return '#f4d27a';
+                    if (/תחנת דלק/.test(text)) return '#ff5722';
+                    if (/מתקנים הנדסיים/.test(text)) return '#909090';
+                    if (/כיכר עירונית/.test(text)) return '#e8c878';
+                    if (/עיצוב מיוחד|מדרחוב/.test(text)) return '#f0c060';
 
-                    // Mixed-use (residential + commerce/employment) — pinks/violets
-                    if (/מגורים מסחר ומבנים/.test(text)) return '#c97a99';
-                    if (/מגורים ומבנים/.test(text)) return '#c98e6e';
-                    if (/מגורים מסחר ותעסוקה/.test(text)) return '#a06096';
-                    if (/מגורים ומסחר/.test(text)) return '#cc6680';
+                    // Mixed-use — pink/magenta range
+                    if (/מגורים מסחר ומבנים/.test(text)) return '#d65a8a';
+                    if (/מגורים ומבנים/.test(text)) return '#c87858';
+                    if (/מגורים מסחר ותעסוקה/.test(text)) return '#a04088';
+                    if (/מגורים ומסחר/.test(text)) return '#e64570';
 
-                    // Commerce — red
-                    if (/חזית מסחר/.test(text)) return '#a53030';
-                    if (/^מסחר$|מסחר ומתקנים/.test(text)) return '#cc3333';
+                    // Commerce — vivid red (standard תשריט)
+                    if (/חזית מסחר/.test(text)) return '#a02020';
+                    if (/^מסחר$|מסחר ומתקנים/.test(text)) return '#d32f2f';
 
-                    // Employment — purple/olive
-                    if (/תעסוקה ותעשייה/.test(text)) return '#7a684e';
-                    if (/תעסוקה ומסחר|מסחר.*תעסוקה|תעסוקה.*מסחר/.test(text)) return '#88609c';
-                    if (/^תעסוקה$|תעסוקה\b/.test(text)) return '#7a5f9c';
+                    // Employment / industrial — vivid purple
+                    if (/תעסוקה ותעשייה/.test(text)) return '#6a4d8a';
+                    if (/תעסוקה ומסחר|מסחר.*תעסוקה|תעסוקה.*מסחר/.test(text)) return '#7e3f9e';
+                    if (/^תעסוקה$|תעסוקה\b/.test(text)) return '#6e3a9a';
 
-                    // Residential — yellow scale by intensity
-                    if (/אזור מגורים א\b|אזור מגורים א'/.test(text)) return '#fff5a0';     // low-density
-                    if (/אזור מגורים ב/.test(text)) return '#ffd84d';                       // mid
-                    if (/אזור מגורים ג/.test(text)) return '#ffa64d';                       // higher
-                    if (/אזור מגורים ד/.test(text)) return '#ff7043';                       // highest
-                    if (/מגורים מיוחד|דיור מיוחד/.test(text)) return '#ffc266';
+                    // Residential — yellow→orange→red scale by intensity
+                    if (/אזור מגורים א\b|אזור מגורים א'/.test(text)) return '#fff09c';     // light yellow (low-density)
+                    if (/אזור מגורים ב/.test(text)) return '#ffd400';                       // bright yellow
+                    if (/אזור מגורים ג/.test(text)) return '#ff8c1a';                       // orange (high)
+                    if (/אזור מגורים ד/.test(text)) return '#e64a19';                       // red-orange (highest)
+                    if (/מגורים מיוחד|דיור מיוחד/.test(text)) return '#ffb84d';
 
                     // Urban renewal / housing complexes
-                    if (/אזור לא לציפוף/.test(text)) return '#90caf9';
+                    if (/אזור לא לציפוף/.test(text)) return '#7eb3e3';
                     if (/שיכונים והתחדשות|שכונים והתחדשות/.test(text)) return '#9b59b6';
                     if (/התחדשות עירונית באזור שימור/.test(text)) return '#bf6090';
                     if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';
 
                     // Generic patterns
-                    if (/אזורי ליבה|תכנית מאושרת|ללא תוספת/.test(text)) return '#a8a8a8';
+                    if (/אזורי ליבה|תכנית מאושרת|ללא תוספת/.test(text)) return '#9a9a9a';
                     if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';
-                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffeb3b';
+                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffea00';
                     if (/תוספת מתונה|עיבוי מרקם/.test(text)) return '#ffb74d';
-                    if (/מגורים/.test(text)) return '#fff263';                              // residential default
+                    if (/מגורים/.test(text)) return '#ffe600';                              // residential default — pure yellow
 
                     return '#bdbdbd';
                 }
@@ -10169,10 +10170,12 @@
                                 if (f.properties.hide_outline) {
                                     return { opacity: 0, fillOpacity: 0, weight: 0 };
                                 }
-                                return { color: cfg.color, weight: 3, fillOpacity: 0, dashArray: '6,4' };
+                                // fillOpacity 0.001 — invisible but still clickable, so clicks on
+                                // gaps between landuse polygons trigger the master-plan boundary popup.
+                                return { color: cfg.color, weight: 3, fillOpacity: 0.001, fillColor: cfg.color, dashArray: '6,4' };
                             }
                             const c = masterPlanThemeColor(f.properties);
-                            return { color: c, weight: 1, fillColor: c, fillOpacity: 0.85 };
+                            return { color: c, weight: 1, fillColor: c, fillOpacity: 0.92 };
                         },
                         // Points (red dots: plots permitted to add residential without demolition)
                         pointToLayer: (f, latlng) => {
