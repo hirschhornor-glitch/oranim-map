@@ -6606,7 +6606,22 @@
                     });
                 }
                 candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
-                const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+                let existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+                // Fallback for areas where buildings.geojson has no coverage (e.g. Arab neighborhoods)
+                if (existingUnits === 0 && window.__unitsData && window.__unitsData.bySub) {
+                    const wantedSub = (typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[subName]) || subName;
+                    for (const m of Object.keys(window.__unitsData.bySub)) {
+                        const subs = window.__unitsData.bySub[m] || {};
+                        for (const s of Object.keys(subs)) {
+                            const ns = (typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[s]) || s;
+                            if ((s === subName || s === wantedSub || ns === subName || ns === wantedSub) && (subs[s].units_in || 0) > 0) {
+                                existingUnits = subs[s].units_in;
+                                break;
+                            }
+                        }
+                        if (existingUnits > 0) break;
+                    }
+                }
                 const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
                 renderProgramaModal({
                     existingUnits, candidatePlans, eduFeats,
@@ -6694,6 +6709,10 @@
                 candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
                 let existingUnits = 0;
                 for (const r of allRings) existingUnits += sumExistingUnitsInPolygon(r, gd.buildings);
+                // Fallback for minahaks where buildings.geojson has no coverage
+                if (existingUnits === 0 && window.__unitsData && window.__unitsData.byMinahak && window.__unitsData.byMinahak[minahakName]) {
+                    existingUnits = window.__unitsData.byMinahak[minahakName].units_in || 0;
+                }
                 let eduFeats = [];
                 const seenEduIds = new Set();
                 for (const r of allRings) {
@@ -16169,7 +16188,7 @@
                               .concat([s.totalClasses]));
                             // Existing edu balance section — only in "existing" mode
                             const subsWithEdu = mData.subs.filter(s => s.existingEdu);
-                            if (subsWithEdu.length && mData.targetYear === 'existing') {
+                            if (subsWithEdu.length) {
                                 rows.push([]);
                                 rows.push(['--- מאזן חינוך — קיים מול נדרש (כיתות) ---']);
                                 rows.push(['תת-שכונה','מעון נדרש','גן קיים','גן נדרש','גן פער','יסודי קיים','יסודי נדרש','יסודי פער','על-יסודי קיים','על-יסודי נדרש','על-יסודי פער','חמ"ד מקדמות','תלמידים (קיים)']);
@@ -16220,7 +16239,7 @@
                             win.document.write('<table><thead><tr>' + eduHdr + '</tr></thead><tbody>' + eduRows + '</tbody></table>');
                             // Existing edu balance — only in "existing" mode
                             const _subsWithEdu = mData.subs.filter(s => s.existingEdu);
-                            if (_subsWithEdu.length && mData.targetYear === 'existing') {
+                            if (_subsWithEdu.length) {
                                 const fmtDelta = (d, r) => {
                                     if (r === 0) return d > 0 ? '<span style="color:#2e7d32">+' + d + '</span>' : String(d);
                                     const ratio = d / r;
@@ -16351,8 +16370,8 @@
                                             </tfoot>
                                         </table>
 
-                                        {/* Existing education classes from שנתון מנח"י + delta vs required — only in "existing" mode */}
-                                        {mData.targetYear === 'existing' && (() => {
+                                        {/* Existing education classes from שנתון מנח"י + delta vs required — shown at all horizons */}
+                                        {(() => {
                                             const subsWithEdu = mData.subs.filter(s => s.existingEdu);
                                             if (!subsWithEdu.length) return null;
                                             // Helper: existing classes by service key
