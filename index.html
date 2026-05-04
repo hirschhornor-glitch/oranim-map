@@ -3728,6 +3728,7 @@
             'עמק רפאים-המושבה הגרמנית': 'המושבה הגרמנית',
             'קוממיות - טלביה': 'טלביה',
             'קריית שמואל': 'קרית שמואל',
+            'בית צפאפא': 'בית צפאפא,שרפת',
         };
 
         const CENTER = [31.7530, 35.2100];
@@ -8338,6 +8339,9 @@
                         'גינות העיר': {
                             'המושבה הגרמנית': 1293, 'המושבה היוונית': 1055, 'ניות': 788, 'טלביה': 2511,
                             'קטמון הישנה': 4343, 'קרית שמואל': 3423, 'רחביה': 3156,
+                        },
+                        'בית צפאפא': {
+                            'בית צפאפא,שרפת': 4262,
                         },
                     };
                     Object.entries(fixedSubUnitsIn).forEach(([m, subs]) => {
@@ -15823,7 +15827,9 @@
                         const normSub = (n) => SUB_NORMALIZE[n] || n;
                         mimD.minahaks.forEach(m => {
                             const mAssumpt = getPNAssumptions(m);
-                            const mTargetYear = mAssumpt.targetYear;
+                            // Future-horizon calculation is currently validated only for גוננים.
+                            // For other minahaks, force 'existing' until the WIP feature is ready.
+                            const mTargetYear = m === 'גוננים' ? mAssumpt.targetYear : 'existing';
                             const isExisting = mTargetYear === 'existing';
                             const mimSubs = mimD.bySub[m] || {};
                             const unitsSubs = (unitsData.bySub[m]) || {};
@@ -16184,6 +16190,11 @@
                                         {renderControls(publicNeedsMinahak)}
                                     </div>
                                     <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
+                                        {publicNeedsMinahak !== 'גוננים' && (
+                                            <div style={{background:'#3a2a1a',border:'1px solid #d4a574',color:'#f4d4a0',padding:'8px 12px',borderRadius:6,marginBottom:12,fontSize:12}}>
+                                                🚧 <b>חישוב התוספת המוצעת בעבודה</b> — כעת מוצג מצב קיים בלבד. אופקים עתידיים (2030/2035/2040) ו-100% מימוש זמינים כרגע רק למינהל גוננים.
+                                            </div>
+                                        )}
                                         {/* KPI strip */}
                                         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:16}}>
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #4ba1f0'}}><div style={{fontSize:11,color:'#888'}}>יח״ד קיימות</div><div style={{fontSize:22,color:'#4ba1f0',fontWeight:'bold'}}>{mData.units_in.toLocaleString()}</div></div>
