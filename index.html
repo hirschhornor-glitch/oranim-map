@@ -2697,7 +2697,7 @@
                     { id: 'master_plan_baka', name: 'בקעה', desc: 'תכנית אב בקעה — גבול, גובה מבנים, מרקמים, דרגות שימור', on: false },
                     { id: 'master_plan_arnona', name: 'ארנונה', desc: 'תכנית אב ארנונה — גבול, מתחמי קומות, מבנים + שימור', on: false },
                     { id: 'master_plan_gonenim', name: 'גוננים', desc: 'תכנית אב גוננים — שלד התחדשות עירונית (~867 ד׳, 286 יעודי קרקע); מקור: jergisng', on: false },
-                    { id: 'master_plan_talpiot', name: 'תלפיות', desc: 'תכנית אב מתחם תלפיות — הסבת תעשייה למעורב (~1,171 ד׳, 168 יעודי קרקע); מקור: jergisng', on: false },
+                    { id: 'master_plan_talpiot', name: 'א.ת. תלפיות', desc: 'תכנית אב א.ת. תלפיות — הסבת תעשייה למעורב, גרסת 2021 (~881 ד׳, 96 יעודי קרקע); מקור: jergisng + ArcGIS Online', on: false },
                 ]
             },
         };
@@ -9948,7 +9948,7 @@
                     master_plan_baka:     { color: '#388e3c', label: 'תכנית אב בקעה' },
                     master_plan_arnona:   { color: '#e65100', label: 'תכנית אב ארנונה' },
                     master_plan_gonenim:  { color: '#c2185b', label: 'תכנית אב גוננים' },
-                    master_plan_talpiot:  { color: '#00838f', label: 'תכנית אב מתחם תלפיות' },
+                    master_plan_talpiot:  { color: '#00838f', label: 'תכנית אב א.ת. תלפיות' },
                 };
                 const ZONE_FILL_COLORS = {
                     A: '#ef5350', B: '#42a5f5', C: '#66bb6a', D: '#ffa726',
@@ -9968,8 +9968,8 @@
                     'שטח ציבורי פתוח מאושר': '#a5d6a7',
                     'שטח ציבורי': '#c5e1a5',
                 };
-                function buildMasterPlanPopup(p) {
-                    const skip = new Set(['feature_type', 'plan_short', 'plane_name']);
+                function buildMasterPlanPopup(p, planMeta) {
+                    const skip = new Set(['feature_type', 'plan_short', 'plane_name', 'hide_outline']);
                     const labels = {
                         plan_name: 'שם תכנית', plan_number: 'מס תכנית', plan_year: 'שנה',
                         area_dunam: 'שטח (דונם)', plan_type: 'סוג', architect: 'אדריכל',
@@ -10012,12 +10012,40 @@
                         ({boundary: 'גבול תכנית', subzone: 'תת-מתחם', building_height: 'גובה מבנה',
                           texture: 'מרקם', conservation_point: 'מבנה לשימור', conservation: 'שימור',
                           special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע'}[p.feature_type] || 'פרטים');
-                    return `<div style="font-family:Assistant;direction:rtl;max-width:300px">` +
+
+                    // For non-boundary features, append plan-level meta (rules approved for this area)
+                    let planBlock = '';
+                    if (planMeta && p.feature_type !== 'boundary') {
+                        const planFields = [
+                            'plan_name', 'plan_short', 'plan_year', 'adopted_date', 'plan_type',
+                            'area_dunam', 'existing_units_total', 'realistic_units',
+                            'sub_zones', 'central_axis', 'main_commercial',
+                            'max_floors', 'max_floors_base', 'far_pct', 'far_pct_max', 'coverage_pct', 'coverage_pct_max',
+                            'employment_max_sqm', 'commerce_extra_sqm', 'realization_cap_2040_pct',
+                            'small_units_pct', 'related_tba', 'review_trigger', 'description',
+                        ];
+                        const planSkip = new Set(['feature_type', 'plan_short', 'plane_name', 'hide_outline']);
+                        const planRows = planFields
+                            .filter(k => !planSkip.has(k) && planMeta[k] !== undefined && planMeta[k] !== null && planMeta[k] !== '')
+                            .map(k => {
+                                const label = labels[k] || k;
+                                const v = planMeta[k];
+                                const val = (typeof v === 'boolean') ? (v ? 'כן' : 'לא') : v;
+                                return `<div style="margin:2px 0;font-size:12px;color:#444"><b>${label}:</b> ${val}</div>`;
+                            }).join('');
+                        if (planRows) {
+                            planBlock = `<div style="margin-top:10px;padding-top:8px;border-top:1px dashed #999"><b style="color:#555;font-size:12px">📋 מטא-דאטה של תכנית האב — מאושר לאזור:</b></div>` + planRows;
+                        }
+                    }
+                    return `<div style="font-family:Assistant;direction:rtl;max-width:340px">` +
                         `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
-                        rows + `</div>`;
+                        rows + planBlock + `</div>`;
                 }
                 // Thematic color palette — same color for the same theme across ALL master plans
                 // (e.g. "שימור מחמיר" is dark red whether it's in Moshavot or Baka)
+                // Israeli planning תשריט-style palette: residential=yellow scale,
+                // commerce=red, employment=purple, public=brown, open space=green,
+                // roads=gray scale, conservation=orange, renewal=violet.
                 function masterPlanThemeColor(props) {
                     const ft = props.feature_type;
                     if (ft === 'special_focus') return '#ffeb3b';
@@ -10028,20 +10056,77 @@
                     const text = (props.character || props.sog || props.merkam || props['אזור'] ||
                                   props.conservation_type || props.zone_name || props.land_use || '').trim();
                     if (!text) return '#bdbdbd';
-                    if (/מחמיר|שימור מלא/.test(text)) return '#b71c1c';                                     // strict preservation
-                    if (/שימור מרקמי|מרקם היסטורי לשימור|מתחם לשימור|מתחם שימור/.test(text)) return '#fbc02d'; // texture preservation
-                    if (/שימור/.test(text)) return '#ef6c00';                                                // general preservation
-                    if (/אזור לא לציפוף/.test(text)) return '#90caf9';                                        // no-densification
-                    if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';                       // urban renewal
-                    if (/שצ"?פ|שטח ציבורי פתוח|שטח פרטי פטוח|שטח פרטי פתוח/.test(text)) return '#66bb6a';      // open public space
-                    if (/מבני ציבור|שב"?צ|מוסדות/.test(text)) return PUBLIC_PALETTE.prog_kpi_accent;            // public buildings
-                    if (/חזית מסחר|מסחרי|מסחר/.test(text)) return COMMERCE_PALETTE.pure_commerce;                // commercial frontage
-                    if (/דרך|שביל|תנועה|מיתון/.test(text)) return '#757575';                                  // road/path
-                    if (/אזורי ליבה|ללא תוספת|תכנית מאושרת/.test(text)) return '#9e9e9e';                     // approved core
-                    if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';                    // building zone
-                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffeb3b';                             // special
-                    if (/תוספת מתונה|עיבוי מרקם/.test(text)) return '#ffb74d';                                // moderate addition
-                    if (/מגורים/.test(text)) return '#80cbc4';                                                // residential default
+
+                    // Conservation (highest priority; can appear in residential)
+                    if (/מחמיר|שימור מלא/.test(text)) return '#b71c1c';
+                    if (/אזור שימור מרקמי|שימור מרקמי|מרקם היסטורי לשימור|מתחם לשימור|מתחם שימור/.test(text)) return '#e6c84d';
+                    if (/אזור שימור/.test(text)) return '#d9a85b';
+                    if (/שימור/.test(text)) return '#ef6c00';
+
+                    // Roads (gray scale by status)
+                    if (/דרך מאושרת/.test(text)) return '#7a7a7a';
+                    if (/דרך מוצעת/.test(text)) return '#bdbdbd';
+                    if (/דרך משולבת/.test(text)) return '#9a9a9a';
+                    if (/דרך עם הנחיות מיוחדות/.test(text)) return '#888888';
+                    if (/דרך לביטול/.test(text)) return '#ddd6c8';
+                    if (/שטח לדרך/.test(text)) return '#a8a8a8';
+                    if (/^שביל$|^שביל\b|מיתון תנועה/.test(text)) return '#cccccc';
+                    if (/^דרך\b/.test(text)) return '#888888';
+                    if (/מסילה|טיפול נופי|רכבת/.test(text)) return '#5e4a3e';
+
+                    // Public open space (green scale)
+                    if (/פארק רובעי|פארק עירוני|טיילת/.test(text)) return '#3e9c4a';
+                    if (/שצ"?פ|שטח ציבורי פתוח/.test(text)) return '#7ec97e';
+                    if (/שטח פרטי פתוח/.test(text)) return '#b5d99f';
+                    if (/שטח נוף פתוח/.test(text)) return '#9bc97d';
+
+                    // Public buildings — earthy brown
+                    if (/מבני ציבור|שב"?צ|מבנים ומוסדות ציבור|מוסדות חינוך|מוסדות/.test(text)) return '#a06340';
+
+                    // Cemetery
+                    if (/בית עלמין/.test(text)) return '#4a4a4a';
+
+                    // Special points
+                    if (/תחנת דלק/.test(text)) return '#ff6b35';
+                    if (/מתקנים הנדסיים/.test(text)) return '#9a9a9a';
+                    if (/כיכר עירונית/.test(text)) return '#e8d18a';
+                    if (/עיצוב מיוחד|מדרחוב/.test(text)) return '#f4d27a';
+
+                    // Mixed-use (residential + commerce/employment) — pinks/violets
+                    if (/מגורים מסחר ומבנים/.test(text)) return '#c97a99';
+                    if (/מגורים ומבנים/.test(text)) return '#c98e6e';
+                    if (/מגורים מסחר ותעסוקה/.test(text)) return '#a06096';
+                    if (/מגורים ומסחר/.test(text)) return '#cc6680';
+
+                    // Commerce — red
+                    if (/חזית מסחר/.test(text)) return '#a53030';
+                    if (/^מסחר$|מסחר ומתקנים/.test(text)) return '#cc3333';
+
+                    // Employment — purple/olive
+                    if (/תעסוקה ותעשייה/.test(text)) return '#7a684e';
+                    if (/תעסוקה ומסחר|מסחר.*תעסוקה|תעסוקה.*מסחר/.test(text)) return '#88609c';
+                    if (/^תעסוקה$|תעסוקה\b/.test(text)) return '#7a5f9c';
+
+                    // Residential — yellow scale by intensity
+                    if (/אזור מגורים א\b|אזור מגורים א'/.test(text)) return '#fff5a0';     // low-density
+                    if (/אזור מגורים ב/.test(text)) return '#ffd84d';                       // mid
+                    if (/אזור מגורים ג/.test(text)) return '#ffa64d';                       // higher
+                    if (/אזור מגורים ד/.test(text)) return '#ff7043';                       // highest
+                    if (/מגורים מיוחד|דיור מיוחד/.test(text)) return '#ffc266';
+
+                    // Urban renewal / housing complexes
+                    if (/אזור לא לציפוף/.test(text)) return '#90caf9';
+                    if (/שיכונים והתחדשות|שכונים והתחדשות/.test(text)) return '#9b59b6';
+                    if (/התחדשות עירונית באזור שימור/.test(text)) return '#bf6090';
+                    if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';
+
+                    // Generic patterns
+                    if (/אזורי ליבה|תכנית מאושרת|ללא תוספת/.test(text)) return '#a8a8a8';
+                    if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';
+                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffeb3b';
+                    if (/תוספת מתונה|עיבוי מרקם/.test(text)) return '#ffb74d';
+                    if (/מגורים/.test(text)) return '#fff263';                              // residential default
+
                     return '#bdbdbd';
                 }
 
@@ -10068,6 +10153,11 @@
                         features: geojson.features.filter(f => ZONE_FEATURE_TYPES.has(f.properties.feature_type))
                     };
 
+                    // Capture plan-level metadata from the boundary feature so we can append
+                    // it to popups of zone-level features (landuse / subzone / texture).
+                    const boundaryFeat = geojson.features.find(f => (f.properties || {}).feature_type === 'boundary');
+                    const planMeta = boundaryFeat ? boundaryFeat.properties : null;
+
                     const zoneLayer = L.geoJSON(zoneFc, {
                         pane: 'masterPlanPane',
                         style: f => {
@@ -10082,8 +10172,8 @@
                             return { color: c, weight: 1, fillColor: c, fillOpacity: 0.85 };
                         },
                         onEachFeature: (f, lyr) => {
-                            const html = buildMasterPlanPopup(f.properties);
-                            lyr.bindPopup(html, { maxWidth: 320 });
+                            const html = buildMasterPlanPopup(f.properties, planMeta);
+                            lyr.bindPopup(html, { maxWidth: 360 });
                         }
                     });
 
