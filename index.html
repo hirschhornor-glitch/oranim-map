@@ -10391,7 +10391,6 @@
                         return '';
                     };
 
-                    const boundaryFeat = (geojson.features || []).find(ff => ff.properties.feature_type === 'boundary');
                     const boundaryGeom = boundaryFeat ? boundaryFeat.geometry : null;
                     const consPts = (geojson.features || [])
                         .filter(ff => ff.properties.feature_type === 'conservation_point' && ff.geometry && ff.geometry.coordinates);
