@@ -9998,6 +9998,7 @@
                         realization_cap_2040_pct: 'תקרת מימוש 2040 (%)',
                         mtchm_num: 'מתחם מס׳', mtchm_location: 'מיקום המתחם',
                         mtchm_related_tba: 'תב״עות קשורות במתחם', red_dot_rule: 'כלל נקודה אדומה',
+                        red_dot_id: 'נקודה אדומה מס׳', red_dot_count: 'נקודות אדומות (סה״כ)', rule: 'כלל',
                         is_strict: 'מחמיר', tama38_units_realistic: 'יח״ד תמ״א 38 (ריאלי)',
                         pinui_binui_units_realistic: 'יח״ד פינוי-בינוי (ריאלי)',
                         related_tba: 'תב״עות קשורות', area_description: 'תיאור אזור',
@@ -10142,7 +10143,7 @@
                     master_plan_talpiot: 'תלפיות',
                 };
                 // Feature types we display at zone level (NOT individual buildings)
-                const ZONE_FEATURE_TYPES = new Set(['boundary', 'subzone', 'special_focus', 'texture', 'conservation', 'landuse']);
+                const ZONE_FEATURE_TYPES = new Set(['boundary', 'subzone', 'special_focus', 'texture', 'conservation', 'landuse', 'red_dot']);
                 const COMPLIANCE_FILL = { violation: '#d32f2f', warning: '#f57c00', ok: '#43a047' };
 
                 function buildMasterPlanLayer(layerKey, geojson) {
@@ -10172,6 +10173,20 @@
                             }
                             const c = masterPlanThemeColor(f.properties);
                             return { color: c, weight: 1, fillColor: c, fillOpacity: 0.85 };
+                        },
+                        // Points (red dots: plots permitted to add residential without demolition)
+                        pointToLayer: (f, latlng) => {
+                            if (f.properties.feature_type === 'red_dot') {
+                                return L.circleMarker(latlng, {
+                                    pane: 'masterPlanPane',
+                                    radius: 7,
+                                    color: '#ffffff',
+                                    weight: 2,
+                                    fillColor: '#e60000',
+                                    fillOpacity: 1,
+                                });
+                            }
+                            return L.circleMarker(latlng, { radius: 4 });
                         },
                         onEachFeature: (f, lyr) => {
                             const html = buildMasterPlanPopup(f.properties, planMeta);
