@@ -71,10 +71,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 3: Stale-while-revalidate for data files
-  // Serves cached version instantly, fetches fresh in background for next visit
+  // Strategy 3: Network-first for data files
+  // Always fetch fresh when online; fall back to cache only when offline.
+  // Avoids serving stale GeoJSON updates (plan statuses, has_objection_btn, etc.) on PWA.
   if (url.pathname.includes('/data/') && (url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json') || url.pathname.endsWith('.js'))) {
-    event.respondWith(staleWhileRevalidate(event.request, DATA_CACHE));
+    event.respondWith(networkFirst(event.request, DATA_CACHE));
     return;
   }
 
