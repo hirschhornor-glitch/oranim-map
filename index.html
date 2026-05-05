@@ -3735,6 +3735,19 @@
             'בית צפאפא': 'בית צפאפא,שרפת',
         };
 
+        // Reverse map: canonical sub-name → canonical minahak name. Used to correct misattributed subs
+        // (e.g. plans tagged "גוננים" but the sub is actually קרית שמואל → reattribute to גינות העיר).
+        const SUB_TO_MINAHAK = (() => {
+            const m = {};
+            Object.entries(MINAHAK_SUBS).forEach(([minahak, subs]) => {
+                subs.forEach(sub => {
+                    const norm = SUB_NORMALIZE[sub] || sub;
+                    m[norm] = minahak;
+                });
+            });
+            return m;
+        })();
+
         const CENTER = [31.7530, 35.2100];
         const DEFAULT_ZOOM = 15;
 
@@ -3862,6 +3875,7 @@
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
+            const [plannedDrilldown, setPlannedDrilldown] = useState(null); // { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
             // Assumptions: default + per-minahak presets + per-minahak overrides.
             // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
@@ -6857,11 +6871,18 @@
 
                 // ALL plans in scope — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions.
                 // Stored separately from the per-horizon filter so cross-horizon drilldowns can reference any plan.
+                // Track S (שב"צ יוצא) and AR (הפרשה מבונה) separately for the per-cell breakdown.
                 const allParsedPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null).map(p => {
                     const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
                     const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
+                    const addedCountsS = {};
+                    const addedCountsAR = {};
                     const addedCounts = {};
-                    PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; });
+                    PARSER_KEYS.forEach(k => {
+                        addedCountsS[k] = facS.counts[k];
+                        addedCountsAR[k] = facAR.counts[k];
+                        addedCounts[k] = addedCountsS[k] + addedCountsAR[k];
+                    });
                     const eduInside = eduFeaturesInPlanGeometry(p.geometry, eduFeats || []);
                     const eduAgg = aggregateEduFeatures(eduInside);
                     const demolishCounts = {}; PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
@@ -6873,6 +6894,8 @@
                         ...p,
                         realMimushPct: (p.isFullMimush ? null : p.mimushPct), // null if was overridden by isFull — recompute via calcMimush at drilldown
                         rawClassCounts: addedCounts,
+                        rawClassCountsS: addedCountsS,
+                        rawClassCountsAR: addedCountsAR,
                         rawDemolishCounts: demolishCounts,
                         rawDemolishEduInside: eduInside,
                         rawUncatSqm: facS.uncategorizedSqm + facAR.uncategorizedSqm,
@@ -6890,17 +6913,26 @@
                 const contributingPlans = allParsedPlans.filter(p => isFull || p.estimatedYear <= tY);
                 // Aggregate: apply mimushPct at the sum level, then round to integer
                 const plannedClasses = {}; PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
+                const plannedClassesS = {}; PARSER_KEYS.forEach(k => plannedClassesS[k] = 0);
+                const plannedClassesAR = {}; PARSER_KEYS.forEach(k => plannedClassesAR[k] = 0);
                 const demolishedClasses = {}; PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
                 let plannedUncatSqm = 0;
                 contributingPlans.forEach(p => {
                     const pct = (p.mimushPct || 0) / 100;
                     PARSER_KEYS.forEach(k => {
                         plannedClasses[k] += p.rawClassCounts[k] * pct;
+                        plannedClassesS[k] += p.rawClassCountsS[k] * pct;
+                        plannedClassesAR[k] += p.rawClassCountsAR[k] * pct;
                         demolishedClasses[k] += p.rawDemolishCounts[k] * pct;
                     });
                     plannedUncatSqm += p.rawUncatSqm * pct;
                 });
-                PARSER_KEYS.forEach(k => { plannedClasses[k] = Math.round(plannedClasses[k]); demolishedClasses[k] = Math.round(demolishedClasses[k]); });
+                PARSER_KEYS.forEach(k => {
+                    plannedClasses[k] = Math.round(plannedClasses[k]);
+                    plannedClassesS[k] = Math.round(plannedClassesS[k]);
+                    plannedClassesAR[k] = Math.round(plannedClassesAR[k]);
+                    demolishedClasses[k] = Math.round(demolishedClasses[k]);
+                });
                 plannedUncatSqm = Math.round(plannedUncatSqm);
                 const totalShavatzInSqm = contributingPlans.reduce((s, p) => s + p.weightedShavatzInSqm, 0);
                 const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
@@ -7002,20 +7034,29 @@
                 // (data-svc-drill) — opens a per-service cross-horizon drilldown.
                 const proposedWip = !inGonen;
                 const wipCell = '<span style="color:#d4a574;font-size:10px;font-style:italic" title="חישוב פירוט המוסדות המוצעים פר-תב\'ע מאומת כרגע רק בגוננים — בעבודה לשאר המינהלים">🚧 בעבודה</span>';
+                // Helper: planned-cell content. Format: "+N" with "S/AR" breakdown below (e.g. "+12" then "3 / 8").
+                const _plannedCellHtml = (planned, plannedS, plannedAR) => {
+                    if (planned <= 0) return '—';
+                    if (plannedS > 0 || plannedAR > 0) return '+' + planned + '<div style="font-size:9px;color:#a59ad6">' + plannedS + ' / ' + plannedAR + '</div>';
+                    return '+' + planned;
+                };
                 const futureBalanceRows = BALANCE_SERVICES.map(svc => {
                     const c = getServiceCounts(svc);
+                    const planS = plannedClassesS[svc.key] || 0;
+                    const planAR = plannedClassesAR[svc.key] || 0;
                     const exDisplay = c.exNet === null
                         ? '—'
                         : (c.exGross !== null && c.demolished > 0)
                             ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>'
                             : (c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet);
                     const proposedClickable = !proposedWip && (c.proposed > 0 || c.planned > 0 || c.demolished > 0);
+                    const plannedClickable = !proposedWip && c.planned > 0;
                     return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' +
-                        '<td style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)">' + (c.planned > 0 ? '+' + c.planned : '—') + '</td>' +
+                        '<td' + (plannedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#7b6cf0;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות"' : ' style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)"') + '>' + _plannedCellHtml(c.planned, planS, planAR) + '</td>' +
                         '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + (proposedWip ? wipCell : (c.proposed + (proposedClickable ? ' ›' : ''))) + '</td>' +
-                        '<td style="padding:6px;text-align:center;color:#aaa">' + c.required + '</td>' +
+                        '<td' + (svc.kind === 'edu' && c.required > 0 ? ' data-req-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#aaa;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט חישוב כיתות נדרשות (גילאים, אוכלוסייה, גודל כיתה)"' : ' style="padding:6px;text-align:center;color:#aaa"') + '>' + c.required + '</td>' +
                         '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (proposedWip ? '#666' : deltaColor(c.delta, c.required)) + '">' + (proposedWip ? '—' : (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta)) + '</td>' +
                         '</tr>';
                 }).join('');
@@ -7051,7 +7092,7 @@
                     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #333">' +
                         '<div style="display:flex;align-items:center;gap:10px">' +
                             (parentModalId ? '<button id="programa-back" style="background:none;border:none;color:#7b6cf0;font-size:13px;cursor:pointer;padding:0;font-family:inherit">← חזרה</button>' : '') +
-                            '<h3 id="programa-title" contenteditable="true" style="margin:0;color:#e0e0ff;font-size:16px;outline:none">🏘️ פרוגרמה — ' + scopeLabel + '</h3>' +
+                            '<h3 id="programa-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:16px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text">🏘️ פרוגרמה — ' + scopeLabel + '</h3>' +
                         '</div>' +
                         '<button id="programa-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                     '</div>' +
@@ -7106,28 +7147,13 @@
                         '<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור (' + plansInScope.length + (tY !== 'existing' ? ' · ' + plansInScope.filter(p => p.contributingUnits > 0).length + ' תורמות' + (tY === 'full' ? ' (100% מימוש)' : ' לאופק ' + tY) : '') + '):</b> ' +
                         plansInScope.slice(0, 30).map(p => {
                             const contrib = p.contributingUnits > 0;
-                            return '<span style="color:' + (contrib ? '#fff' : '#bdb6e8') + ';direction:ltr;display:inline-block;' + (contrib ? 'font-weight:bold' : '') + '">' + (p.taba || '?') + '</span>';
+                            return '<a href="#" data-zoom-taba="' + (p.taba || '') + '" style="color:' + (contrib ? '#fff' : '#bdb6e8') + ';direction:ltr;display:inline-block;text-decoration:underline;' + (contrib ? 'font-weight:bold' : '') + '" title="לחץ לזום לתב\'ע">' + (p.taba || '?') + '</a>';
                         }).join(' · ') +
                         (plansInScope.length > 30 ? ' <span style="color:#666">…+' + (plansInScope.length - 30) + '</span>' : '') +
                         '</div>'
                     : '') +
-                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🎓 חינוך — כיתות נדרשות</h4>' +
-                    '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
-                        '<thead><tr style="background:#1a1a2e;color:#aaa">' +
-                            '<th style="padding:6px;text-align:right">שירות</th>' +
-                            '<th style="padding:6px;text-align:center">גילאים</th>' +
-                            '<th style="padding:6px;text-align:center">ממלכתי</th>' +
-                            '<th style="padding:6px;text-align:center">חרדי-ב</th>' +
-                            '<th style="padding:6px;text-align:center">חרדי-ג</th>' +
-                            '<th style="padding:6px;text-align:center;color:#4CAF50">סה"כ כיתות</th>' +
-                            '<th style="padding:6px;text-align:center">דונם</th>' +
-                        '</tr></thead><tbody>' + eduRows +
-                        '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
-                            '<td style="padding:6px" colspan="5">סה"כ</td>' +
-                            '<td style="padding:6px;text-align:center;color:#4CAF50">' + needs.totalClasses + '</td>' +
-                            '<td style="padding:6px;text-align:center;color:#aaa">' + needs.totalDunam.toFixed(1) + '</td>' +
-                        '</tr>' +
-                        '</tbody></table>' +
+                    // (Standalone chinuch-required table removed — same info available by clicking on a "נדרש" cell in the balance table below.) +
+                    '' +
                     // === BALANCE TABLE === branches by horizon
                     (showFutureBalance ?
                         // Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
@@ -7136,7 +7162,7 @@
                             '<thead><tr style="background:#1a1a2e;color:#aaa">' +
                                 '<th style="padding:6px;text-align:right">שירות</th>' +
                                 '<th style="padding:6px;text-align:center">קיים</th>' +
-                                '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות (S+AR) משוקלל %מימוש">+ מתוכנן</th>' +
+                                '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות משוקלל %מימוש">+ מתוכנן<div style="font-size:9px;color:#a59ad6;font-weight:normal">שב"צ / הפרשה מבונה</div></th>' +
                                 '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' +
                                 '<th style="padding:6px;text-align:center">נדרש' + (tY === 'full' ? '' : ' ' + tY) + '</th>' +
                                 '<th style="padding:6px;text-align:center">פער</th>' +
@@ -7144,7 +7170,12 @@
                             '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
                                 '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' +
                                 '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' +
-                                '<td style="padding:8px;text-align:center;color:#7b6cf0">+' + BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0) + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:#7b6cf0">' + (() => {
+                                    const tp = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0);
+                                    const tpS = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesS[svc.key] || 0), 0);
+                                    const tpAR = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesAR[svc.key] || 0), 0);
+                                    return _plannedCellHtml(tp, tpS, tpAR);
+                                })() + '</td>' +
                                 '<td' + (proposedWip ? ' style="padding:8px;text-align:center;color:#d4a574"' : ' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"') + '>' + (proposedWip ? wipCell : (totalProposedClasses + ' ›')) + '</td>' +
                                 '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' +
                                 '<td style="padding:8px;text-align:center;color:' + (proposedWip ? '#666' : deltaColor(totalGapClasses, totalRequiredClasses)) + '">' + (proposedWip ? '—' : ((totalGapClasses >= 0 ? '+' : '') + totalGapClasses)) + '</td>' +
@@ -7184,6 +7215,31 @@
                 if (parentModalId) {
                     document.getElementById('programa-back').addEventListener('click', () => div.remove());
                 }
+                // Wire taba zoom links in the "תכניות באזור" header strip
+                div.querySelectorAll('a[data-zoom-taba]').forEach(a => {
+                    a.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const taba = a.dataset.zoomTaba;
+                        const map = mapInstanceRef.current;
+                        if (!map || !gd.plans) return;
+                        const feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === String(taba).trim());
+                        if (!feat) return;
+                        try {
+                            const layer = L.geoJSON(feat);
+                            const bounds = layer.getBounds();
+                            map.fitBounds(bounds, { padding: [60,60], maxZoom: 18 });
+                            setTimeout(() => {
+                                const mapped = mapPlanProps(feat.properties);
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), closeButton: true })
+                                    .setLatLng(bounds.getCenter())
+                                    .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                                    .openOn(map);
+                                bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                            }, 400);
+                        } catch (err) { console.warn('zoom to plan failed', err); }
+                        div.remove();
+                    });
+                });
                 document.getElementById('programa-csv').addEventListener('click', () => {
                     const title = document.getElementById('programa-title')?.textContent || 'פרוגרמה';
                     const lines = [];
@@ -7341,7 +7397,7 @@
                     return names;
                 }
 
-                // Compute a plan's weighted contribution to a category at a given horizon (rounded per-plan).
+                // Compute a plan's weighted contribution to a category at a given horizon (rounded to integer).
                 // For uncategorized: uses rawUncatSqm. For class category: uses rawClassCounts[svcKey].
                 function planContribAtHorizon(p, svcKey, horizon) {
                     const isUncat = svcKey === '__uncat__';
@@ -7350,8 +7406,7 @@
                     const isF = horizon === 'full';
                     if (!isF && p.estimatedYear > horizon) return 0;
                     const pct = isF ? 1 : ((p.realMimushPct || 0) / 100);
-                    const w = raw * pct;
-                    return isUncat ? Math.round(w) : Math.round(w * 10) / 10;
+                    return Math.round(raw * pct);
                 }
 
                 function planDemolishAtHorizon(p, svcKey, horizon) {
@@ -7361,7 +7416,7 @@
                     const isF = horizon === 'full';
                     if (!isF && p.estimatedYear > horizon) return 0;
                     const pct = isF ? 1 : ((p.realMimushPct || 0) / 100);
-                    return Math.round(raw * pct * 10) / 10;
+                    return Math.round(raw * pct);
                 }
 
                 function openServiceDrilldown(svcKey) {
@@ -7382,12 +7437,12 @@
                     });
                     // Sort by raw contribution desc
                     items.sort((a, b) => (b.rawAdd + b.rawDem) - (a.rawAdd + a.rawDem));
-                    // Per-horizon totals (weighted)
+                    // Per-horizon totals (weighted, rounded to integer)
                     const horTotals = {};
                     HORIZONS.forEach(h => {
                         const sumA = items.reduce((s, it) => s + it.perH[h].add, 0);
                         const sumD = items.reduce((s, it) => s + it.perH[h].dem, 0);
-                        horTotals[h] = { add: Math.round(sumA * 10) / 10, dem: Math.round(sumD * 10) / 10 };
+                        horTotals[h] = { add: Math.round(sumA), dem: Math.round(sumD) };
                     });
                     const isCurrent = (h) => (h === tY) || (h === 'full' && tY === 'full');
                     const horHeaderCol = (h) => {
@@ -7411,10 +7466,10 @@
                         const eduNames = eduNamesFor(p);
                         const descParts = [];
                         if (!isUncat && eduNames.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + eduNames.join('; '));
-                        if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S:</b> ' + p.shavatz_out_prog);
-                        if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR:</b> ' + p.hafrash_prg);
+                        if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">שב"צ:</b> ' + p.shavatz_out_prog);
+                        if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">הפרשה מבונה:</b> ' + p.hafrash_prg);
                         return '<tr style="border-bottom:1px solid #222">' +
-                            '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">' + p.taba + '</td>' +
+                            '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top"><a href="#" data-zoom-taba="' + p.taba + '" style="color:#bdb6e8;text-decoration:underline" title="לחץ לזום לתב\'ע">' + p.taba + '</a></td>' +
                             '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.realMimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' +
                             '<td style="padding:5px 6px;color:#aaa;font-size:9px;vertical-align:top;max-width:280px">' + (descParts.join('<br>') || '<span style="color:#555">—</span>') + '</td>' +
                             '<td style="padding:5px 6px;text-align:center;color:#7b6cf0;font-weight:bold">' + (it.rawAdd > 0 ? '+' + it.rawAdd.toLocaleString() : '—') + '</td>' +
@@ -7433,15 +7488,17 @@
                     drill.id = 'programa-drilldown';
                     drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1300px,98vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
                     drill.innerHTML =
-                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
-                            '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' +
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333;gap:10px">' +
+                            '<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text;flex:1">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' +
+                            '<button id="drill-csv" title="ייצוא ל-CSV" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 CSV</button>' +
+                            '<button id="drill-print" title="הדפסה" style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">🖨️ הדפסה</button>' +
                             '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                         '</div>' +
-                        '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead>' +
+                        '<div style="overflow-x:auto"><table id="drill-table" style="width:100%;border-collapse:collapse;font-size:11px"><thead>' +
                             '<tr style="background:#1a1a2e;color:#aaa">' +
                                 '<th rowspan="2" style="padding:5px;text-align:right">תב"ע</th>' +
                                 '<th rowspan="2" style="padding:5px;text-align:right">תכנית</th>' +
-                                '<th rowspan="2" style="padding:5px;text-align:right">תיאור (S/AR)</th>' +
+                                '<th rowspan="2" style="padding:5px;text-align:right">תיאור (שב"צ / הפרשה מבונה)</th>' +
                                 '<th colspan="' + (isUncat ? 1 : 2) + '" style="padding:5px;text-align:center;color:#bdb6e8">גולמי</th>' +
                                 HORIZONS.map(horHeaderCol).join('') +
                             '</tr>' +
@@ -7453,10 +7510,129 @@
                             '<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.</div>';
                     document.body.appendChild(drill);
                     document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+
+                    // Wire CSV export
+                    document.getElementById('drill-csv').addEventListener('click', () => {
+                        const title = document.getElementById('drill-title')?.textContent || ('פירוט מוצע — ' + svcLabel);
+                        const lines = [];
+                        const horLabels = HORIZONS.map(h => h === 'full' ? '100% מימוש' : 'אופק ' + h);
+                        const hdrCols = ['תב"ע','שם תכנית','%מימוש','שנה','תיאור (שב"צ)','תיאור (הפרשה מבונה)','גולמי + תוספת'];
+                        if (!isUncat) hdrCols.push('גולמי − להריסה');
+                        horLabels.forEach(hl => {
+                            hdrCols.push(hl + ' + תוספת');
+                            if (!isUncat) hdrCols.push(hl + ' − להריסה');
+                        });
+                        lines.push(hdrCols.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        items.forEach(it => {
+                            const p = it.p;
+                            const row = [p.taba, p.plan_summary || '', p.realMimushPct || 0, p.estimatedYear || '', p.shavatz_out_prog || '', p.hafrash_prg || '', it.rawAdd];
+                            if (!isUncat) row.push(it.rawDem);
+                            HORIZONS.forEach(h => { row.push(it.perH[h].add); if (!isUncat) row.push(it.perH[h].dem); });
+                            lines.push(row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        });
+                        const totRow = ['סה"כ משוקלל','','','','','',items.reduce((s,it)=>s+it.rawAdd,0)];
+                        if (!isUncat) totRow.push(items.reduce((s,it)=>s+it.rawDem,0));
+                        HORIZONS.forEach(h => { totRow.push(horTotals[h].add); if (!isUncat) totRow.push(horTotals[h].dem); });
+                        lines.push(totRow.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = title.replace(/[^\w֐-׿]+/g,'_').slice(0,80) + '.csv';
+                        document.body.appendChild(a); a.click(); a.remove();
+                        URL.revokeObjectURL(url);
+                    });
+                    // Wire print
+                    document.getElementById('drill-print').addEventListener('click', () => {
+                        const title = document.getElementById('drill-title')?.textContent || ('פירוט מוצע — ' + svcLabel);
+                        const tableHtml = document.getElementById('drill-table').outerHTML;
+                        const win = window.open('', '_blank');
+                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' +
+                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#0d47a1;font-size:14px}table{width:100%;border-collapse:collapse;font-size:10px;margin-top:10px}th,td{border:1px solid #ccc;padding:3px;text-align:center}th{background:#eef}a{color:#0d47a1;text-decoration:none}</style>' +
+                            '</head><body><h2>' + title + '</h2>' + tableHtml + '</body></html>');
+                        win.document.close(); win.print();
+                    });
+                    // Wire taba zoom links — find plan in gd.plans and zoom + open popup
+                    drill.querySelectorAll('a[data-zoom-taba]').forEach(a => {
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const taba = a.dataset.zoomTaba;
+                            const map = mapInstanceRef.current;
+                            if (!map || !gd.plans) return;
+                            const feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === String(taba).trim());
+                            if (!feat) { console.warn('plan not found:', taba); return; }
+                            try {
+                                const layer = L.geoJSON(feat);
+                                const bounds = layer.getBounds();
+                                map.fitBounds(bounds, { padding: [60,60], maxZoom: 18 });
+                                setTimeout(() => {
+                                    const mapped = mapPlanProps(feat.properties);
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), closeButton: true })
+                                        .setLatLng(bounds.getCenter())
+                                        .setContent(buildPlanPopup(mapped, { properties: mapped }))
+                                        .openOn(map);
+                                    bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                                }, 400);
+                            } catch (err) { console.warn('zoom to plan failed', err); }
+                            drill.remove();
+                            div.remove(); // close the parent programa modal too so the map is visible
+                        });
+                    });
                 }
                 // Wire all drill cells (per-service + uncategorized)
                 div.querySelectorAll('[data-svc-drill]').forEach(cell => {
                     cell.addEventListener('click', () => openServiceDrilldown(cell.dataset.svcDrill));
+                });
+
+                // "Required" cell drilldown — shows the public-needs computation per service (children, class size, dunam)
+                function openRequiredDrilldown(svcKey) {
+                    const oldDrill = document.getElementById('programa-drilldown');
+                    if (oldDrill) oldDrill.remove();
+                    const svcDef = (typeof PUBLIC_NEEDS_SERVICES !== 'undefined') ? PUBLIC_NEEDS_SERVICES.find(s => s.key === svcKey) : null;
+                    const svcLabel = svcDef ? svcDef.label : svcKey;
+                    const sd = needs.byService[svcKey];
+                    if (!sd) return;
+                    const ageRange = svcDef ? (svcDef.ageFrom + '–' + svcDef.ageTo) : '';
+                    const fmt = (v) => (v == null ? '—' : v);
+                    const streamRow = (label, x) => '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;color:#e0e0ff">' + label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + fmt(x.children) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + fmt(x.classSize) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#4CAF50;font-weight:bold">' + fmt(x.classes) + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + (x.dunamPerClass != null ? x.dunamPerClass.toFixed(2) : '—') + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + (x.dunam != null ? x.dunam.toFixed(2) : '—') + '</td>' +
+                        '</tr>';
+                    const drill = document.createElement('div');
+                    drill.id = 'programa-drilldown';
+                    drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #4CAF50;direction:rtl;width:min(720px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+                    drill.innerHTML =
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' +
+                            '<h3 style="margin:0;color:#e0e0ff;font-size:14px">🎓 פירוט חישוב כיתות נדרשות — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(גילאים ' + ageRange + ' · ' + needs.population.toLocaleString() + ' תושבים · ' + Math.round(assumpt.haredi*100) + '% חרדי, ' + Math.round(assumpt.religious*100) + '% דתי)</span></h3>' +
+                            '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '</div>' +
+                        '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#1a1a2e;color:#aaa">' +
+                            '<th style="padding:6px;text-align:right">זרם</th>' +
+                            '<th style="padding:6px;text-align:center">ילדים בגיל הרלוונטי</th>' +
+                            '<th style="padding:6px;text-align:center">גודל כיתה</th>' +
+                            '<th style="padding:6px;text-align:center;color:#4CAF50">כיתות</th>' +
+                            '<th style="padding:6px;text-align:center">דונם/כיתה</th>' +
+                            '<th style="padding:6px;text-align:center">סה"כ דונם</th>' +
+                        '</tr></thead><tbody>' +
+                            streamRow('ממלכתי', sd.mam) +
+                            streamRow('חרדי-ב (בנים)', sd.haredi_b) +
+                            streamRow('חרדי-ג (בנות)', sd.haredi_g) +
+                            '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
+                                '<td style="padding:8px" colspan="3">סה"כ</td>' +
+                                '<td style="padding:8px;text-align:center;color:#4CAF50">' + sd.totalClasses + '</td>' +
+                                '<td></td>' +
+                                '<td style="padding:8px;text-align:center;color:#aaa">' + sd.totalDunam.toFixed(2) + '</td>' +
+                            '</tr>' +
+                        '</tbody></table>' +
+                        '<div style="margin-top:10px;font-size:10px;color:#888">חישוב: <i>אוכלוסייה × אחוז זרם × אחוז שנתון × גודל גיל × אחוז השתתפות / גודל כיתה</i> (עיגול כלפי מעלה).</div>';
+                    document.body.appendChild(drill);
+                    document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+                }
+                div.querySelectorAll('[data-req-drill]').forEach(cell => {
+                    cell.addEventListener('click', () => openRequiredDrilldown(cell.dataset.reqDrill));
                 });
 
                 // Wire drilldown on the TOTAL "מוצע" cell — all-categories breakdown per plan (existing wide view)
@@ -16225,7 +16401,11 @@
                                 if (taba) _seenTaba.add(taba);
                                 const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
                                 const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
-                                const addedCounts = {}; PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; });
+                                // Track S (שב"צ יוצא) and AR (הפרשה מבונה) separately so the UI can split planned cells.
+                                const addedCountsS = {}; PARSER_KEYS.forEach(k => { addedCountsS[k] = facS.counts[k]; });
+                                const addedCountsAR = {}; PARSER_KEYS.forEach(k => { addedCountsAR[k] = facAR.counts[k]; });
+                                const addedCounts = {}; PARSER_KEYS.forEach(k => { addedCounts[k] = addedCountsS[k] + addedCountsAR[k]; });
+                                const uncategorizedSqm = (facS.uncategorizedSqm || 0) + (facAR.uncategorizedSqm || 0);
                                 const eduInside = eduFeaturesInPlanGeometry(geom, _eduFeatsAll);
                                 const eduAgg = aggregateEduFeatures(eduInside);
                                 const demolishCounts = {}; PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
@@ -16233,7 +16413,7 @@
                                 demolishCounts.yesodi = eduAgg.yesodi_classes;
                                 demolishCounts.al_yesodi = eduAgg.alyesodi_classes;
                                 _planMeta.push({
-                                    taba, subName, addedCounts, demolishCounts,
+                                    taba, subName, addedCounts, addedCountsS, addedCountsAR, uncategorizedSqm, demolishCounts,
                                     mimushPct: mim.mimushPct, estimatedYear: mim.estimatedYear,
                                     plan_summary: p.plan_summary || p.plan_name_he || p.plan_name || '',
                                 });
@@ -16272,26 +16452,59 @@
                             // Aggregate by normalized sub-name to merge duplicates (e.g. "עמק רפאים - המושבה הגרמנית" + "המושבה הגרמנית")
                             const aggregated = {}; // { normalizedName: { units_in, units_new_target } }
                             const isFull = mTargetYear === 'full';
+                            // Reattribute misclassified subs: if a sub belongs to a different minahak per MINAHAK_SUBS,
+                            // skip it here (it'll appear in its correct minahak instead). Subs not in SUB_TO_MINAHAK keep their original minahak.
+                            const belongsHere = (n) => {
+                                const canonical = SUB_TO_MINAHAK[n];
+                                return !canonical || canonical === m;
+                            };
                             Object.keys(mimSubs).forEach(raw => {
                                 const n = normSub(raw);
                                 if (n === 'לא ידוע' || n === 'אחר') return;
+                                if (!belongsHere(n)) return;
                                 if (!aggregated[n]) aggregated[n] = { units_in: 0, units_new_target: 0 };
                                 if (!isExisting) aggregated[n].units_new_target += isFull ? (mimSubs[raw].total || 0) : (mimSubs[raw].byYear[mTargetYear] || 0);
                             });
                             Object.keys(unitsSubs).forEach(raw => {
                                 const n = normSub(raw);
                                 if (n === 'לא ידוע' || n === 'אחר') return;
+                                if (!belongsHere(n)) return;
                                 if (!aggregated[n]) aggregated[n] = { units_in: 0, units_new_target: 0 };
                                 aggregated[n].units_in += (unitsSubs[raw].units_in) || 0;
+                            });
+                            // Also: subs that belong to THIS minahak but appear under a different one in the source data —
+                            // pull them in here (so e.g. גינות העיר gets קרית שמואל even if some plans tagged it as גוננים).
+                            Object.entries(mimD.bySub).forEach(([otherM, otherSubs]) => {
+                                if (otherM === m) return;
+                                Object.keys(otherSubs).forEach(raw => {
+                                    const n = normSub(raw);
+                                    if (SUB_TO_MINAHAK[n] !== m) return;
+                                    if (!aggregated[n]) aggregated[n] = { units_in: 0, units_new_target: 0 };
+                                    if (!isExisting) aggregated[n].units_new_target += isFull ? (otherSubs[raw].total || 0) : (otherSubs[raw].byYear[mTargetYear] || 0);
+                                });
+                            });
+                            Object.entries(unitsData.bySub).forEach(([otherM, otherSubs]) => {
+                                if (otherM === m) return;
+                                Object.keys(otherSubs).forEach(raw => {
+                                    const n = normSub(raw);
+                                    if (SUB_TO_MINAHAK[n] !== m) return;
+                                    if (!aggregated[n]) aggregated[n] = { units_in: 0, units_new_target: 0 };
+                                    aggregated[n].units_in += (otherSubs[raw].units_in) || 0;
+                                });
                             });
                             const subs = [];
                             Object.entries(aggregated).forEach(([sub, vals]) => {
                                 const total = vals.units_in + vals.units_new_target;
                                 if (total === 0) return;
                                 const needs = computePublicNeeds(total, mAssumpt);
-                                // Per-sub planned/demolished classes — sum across plans whose centroid lies in this sub
+                                // Per-sub planned/demolished classes — sum across plans whose centroid lies in this sub.
+                                // Track S (שב"צ יוצא) and AR (הפרשה מבונה) separately for the UI breakdown.
                                 const plannedClasses = {}; PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
+                                const plannedClassesS = {}; PARSER_KEYS.forEach(k => plannedClassesS[k] = 0);
+                                const plannedClassesAR = {}; PARSER_KEYS.forEach(k => plannedClassesAR[k] = 0);
                                 const demolishedClasses = {}; PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
+                                let plannedUncategorizedSqm = 0;
+                                const subContributingPlans = []; // { taba, plan_summary, mimushPct, estimatedYear, contributesTo: [keys] }
                                 if (!isExisting) {
                                     _planMeta.forEach(pm => {
                                         if (pm.subName !== sub) return;
@@ -16299,10 +16512,33 @@
                                         const pct = isFull ? 1 : (pm.mimushPct / 100);
                                         PARSER_KEYS.forEach(k => {
                                             plannedClasses[k] += pm.addedCounts[k] * pct;
+                                            plannedClassesS[k] += pm.addedCountsS[k] * pct;
+                                            plannedClassesAR[k] += pm.addedCountsAR[k] * pct;
                                             demolishedClasses[k] += pm.demolishCounts[k] * pct;
                                         });
+                                        plannedUncategorizedSqm += (pm.uncategorizedSqm || 0) * pct;
+                                        // Plans that actually contribute facilities, demolitions, or uncategorized sqm
+                                        const hasAny = PARSER_KEYS.some(k => pm.addedCounts[k] > 0 || pm.demolishCounts[k] > 0) || pm.uncategorizedSqm > 0;
+                                        if (hasAny) {
+                                            const contributesTo = PARSER_KEYS.filter(k => pm.addedCounts[k] > 0 || pm.demolishCounts[k] > 0);
+                                            subContributingPlans.push({
+                                                taba: pm.taba, plan_summary: pm.plan_summary,
+                                                mimushPct: pm.mimushPct, estimatedYear: pm.estimatedYear,
+                                                effectivePct: isFull ? 100 : pm.mimushPct,
+                                                addedCounts: pm.addedCounts, addedCountsS: pm.addedCountsS, addedCountsAR: pm.addedCountsAR,
+                                                demolishCounts: pm.demolishCounts,
+                                                uncategorizedSqm: pm.uncategorizedSqm || 0,
+                                                contributesTo,
+                                            });
+                                        }
                                     });
-                                    PARSER_KEYS.forEach(k => { plannedClasses[k] = Math.round(plannedClasses[k]); demolishedClasses[k] = Math.round(demolishedClasses[k]); });
+                                    PARSER_KEYS.forEach(k => {
+                                        plannedClasses[k] = Math.round(plannedClasses[k]);
+                                        plannedClassesS[k] = Math.round(plannedClassesS[k]);
+                                        plannedClassesAR[k] = Math.round(plannedClassesAR[k]);
+                                        demolishedClasses[k] = Math.round(demolishedClasses[k]);
+                                    });
+                                    plannedUncategorizedSqm = Math.round(plannedUncategorizedSqm);
                                 }
                                 // Per-sub non-edu required (re-run service computation on this sub's units)
                                 const subNonEdu = computeNeighborhoodProgramServices(total, mAssumpt);
@@ -16316,7 +16552,11 @@
                                     ...needs,
                                     existingEdu: existingEduBySub[sub] || null,
                                     plannedClasses,
+                                    plannedClassesS,
+                                    plannedClassesAR,
                                     demolishedClasses,
+                                    plannedUncategorizedSqm,
+                                    contributingPlans: subContributingPlans,
                                     existingByService: _shavazBySubKey[sub] || {},
                                     nonEduRequiredByKey,
                                     nonEduRequiredFull: subNonEdu,
@@ -16332,7 +16572,11 @@
                             // Computed at full precision and rounded at the end (so the minahak total row matches renderProgramaModal's totals).
                             const subNamesInMinahak = new Set(subs.map(x => x.name));
                             const minahakPlanned = {}; PARSER_KEYS.forEach(k => minahakPlanned[k] = 0);
+                            const minahakPlannedS = {}; PARSER_KEYS.forEach(k => minahakPlannedS[k] = 0);
+                            const minahakPlannedAR = {}; PARSER_KEYS.forEach(k => minahakPlannedAR[k] = 0);
                             const minahakDemolished = {}; PARSER_KEYS.forEach(k => minahakDemolished[k] = 0);
+                            let minahakUncategorizedSqm = 0;
+                            const minahakContributingPlans = [];
                             if (!isExisting) {
                                 _planMeta.forEach(pm => {
                                     if (!subNamesInMinahak.has(pm.subName)) return;
@@ -16340,10 +16584,30 @@
                                     const pct = isFull ? 1 : (pm.mimushPct / 100);
                                     PARSER_KEYS.forEach(k => {
                                         minahakPlanned[k] += pm.addedCounts[k] * pct;
+                                        minahakPlannedS[k] += pm.addedCountsS[k] * pct;
+                                        minahakPlannedAR[k] += pm.addedCountsAR[k] * pct;
                                         minahakDemolished[k] += pm.demolishCounts[k] * pct;
                                     });
+                                    minahakUncategorizedSqm += (pm.uncategorizedSqm || 0) * pct;
+                                    const hasAny = PARSER_KEYS.some(k => pm.addedCounts[k] > 0 || pm.demolishCounts[k] > 0) || pm.uncategorizedSqm > 0;
+                                    if (hasAny) {
+                                        minahakContributingPlans.push({
+                                            taba: pm.taba, plan_summary: pm.plan_summary, subName: pm.subName,
+                                            mimushPct: pm.mimushPct, estimatedYear: pm.estimatedYear,
+                                            effectivePct: isFull ? 100 : pm.mimushPct,
+                                            addedCounts: pm.addedCounts, addedCountsS: pm.addedCountsS, addedCountsAR: pm.addedCountsAR,
+                                            demolishCounts: pm.demolishCounts, uncategorizedSqm: pm.uncategorizedSqm || 0,
+                                            contributesTo: PARSER_KEYS.filter(k => pm.addedCounts[k] > 0 || pm.demolishCounts[k] > 0),
+                                        });
+                                    }
                                 });
-                                PARSER_KEYS.forEach(k => { minahakPlanned[k] = Math.round(minahakPlanned[k]); minahakDemolished[k] = Math.round(minahakDemolished[k]); });
+                                PARSER_KEYS.forEach(k => {
+                                    minahakPlanned[k] = Math.round(minahakPlanned[k]);
+                                    minahakPlannedS[k] = Math.round(minahakPlannedS[k]);
+                                    minahakPlannedAR[k] = Math.round(minahakPlannedAR[k]);
+                                    minahakDemolished[k] = Math.round(minahakDemolished[k]);
+                                });
+                                minahakUncategorizedSqm = Math.round(minahakUncategorizedSqm);
                             }
                             // Minahak-level existing non-edu by service key (sum across subs in this minahak)
                             const minahakExistingByService = {}; PARSER_KEYS.forEach(k => minahakExistingByService[k] = 0);
@@ -16364,7 +16628,11 @@
                                 nonEdu,
                                 nonEduRequiredByKey,
                                 plannedClasses: minahakPlanned,
+                                plannedClassesS: minahakPlannedS,
+                                plannedClassesAR: minahakPlannedAR,
                                 demolishedClasses: minahakDemolished,
+                                plannedUncategorizedSqm: minahakUncategorizedSqm,
+                                contributingPlans: minahakContributingPlans,
                                 existingByService: minahakExistingByService,
                                 assumpt: mAssumpt,
                                 targetYear: mTargetYear,
@@ -16774,11 +17042,6 @@
                                             <div style={{display:'flex',alignItems:'center',gap:8}}>
                                                 <button className="units-back-btn" onClick={() => setPublicNeedsMinahak(null)}>← מינהלים</button>
                                                 <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ {mData.name} — פרוגרמה שכונתית ({mData.subs.length} תת-שכונות · {yearLabel(mData.targetYear)})</h2>
-                                                <button onClick={() => window.__openProgramaForMinahakPolygon && window.__openProgramaForMinahakPolygon(mData.name)}
-                                                    title="פתח פרוגרמה מלאה למינהל (מאזן ציבור עתידי — קיים מול נדרש פר-קטגוריה)"
-                                                    style={{background:'#7b6cf0',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>
-                                                    🏘️ מאזן למינהל ›
-                                                </button>
                                                 {mData.hasOverride && <span title="למינהל זה יש הגדרות פרמטרים מותאמות" style={{background:'#7b1fa2',color:'#fff',fontSize:9,padding:'2px 6px',borderRadius:8}}>פרמטרים מותאמים</span>}
                                             </div>
                                             <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -16798,7 +17061,7 @@
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #f59e0b'}}><div style={{fontSize:11,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:22,color:'#f59e0b',fontWeight:'bold'}}>{mData.population.toLocaleString()}</div></div>
                                         </div>
 
-                                        {/* ── Sub-units summary strip (replaces old required-only education table; keeps core info per sub) ── */}
+                                        {/* ── Sub-units summary strip (sub-units & population only, no class counts here — per user request) ── */}
                                         <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏘️ תת-שכונות במינהל</h3>
                                         <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginBottom:24}}>
                                             <thead>
@@ -16808,8 +17071,6 @@
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>{mData.targetYear === 'existing' ? 'תוספת' : mData.targetYear === 'full' ? '+100% מימוש' : '+' + mData.targetYear}</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה״כ</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>אוכלוסייה</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e0e0ff'}}>סה״כ כיתות נדרשות</th>
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -16820,10 +17081,6 @@
                                                         <td style={{padding:'6px',textAlign:'center',color:'#4CAF50'}}>+{s.units_new_target.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total_units.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{s.population.toLocaleString()}</td>
-                                                        <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#4CAF50'}}>{s.totalClasses}</td>
-                                                        <td style={{padding:'6px',textAlign:'center'}}>
-                                                            <button title="פתח פרוגרמה מלאה לתת-שכונה (Q קיזוז + 100% מימוש + שירותים מורחבים)" onClick={() => window.__openProgramaForSubPolygon && window.__openProgramaForSubPolygon(s.name)} style={{background:'#7b6cf0',color:'#fff',border:'none',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>🏘️ פרוגרמה ›</button>
-                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -16834,8 +17091,6 @@
                                                     <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>+{mData.units_new_target.toLocaleString()}</td>
                                                     <td style={{padding:8,textAlign:'center',color:'#fff'}}>{mData.total_units.toLocaleString()}</td>
                                                     <td style={{padding:8,textAlign:'center',color:'#f59e0b'}}>{mData.population.toLocaleString()}</td>
-                                                    <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>{mData.totalClasses}</td>
-                                                    <td></td>
                                                 </tr>
                                             </tfoot>
                                         </table>
@@ -16940,8 +17195,17 @@
                                             const fmtSigned = (v) => (v >= 0 ? '+' : '') + v;
                                             const showFuture = !isExisting;
 
+                                            // Helper: planned cell content. Format: "+N" with "S/AR" breakdown below (e.g. "+12" then "3 / 8").
+                                            const _plannedCell = (planned, plannedS, plannedAR) => {
+                                                if (planned === 0) return '+0';
+                                                if (plannedS > 0 || plannedAR > 0) return <>+{planned}<div style={{fontSize:9,color:'#a59ad6'}}>{plannedS} / {plannedAR}</div></>;
+                                                return '+' + planned;
+                                            };
+
                                             const renderBalanceTable = (svc) => {
                                                 const mc = getMinahakCounts(svc);
+                                                const mcPlannedS = (mData.plannedClassesS && mData.plannedClassesS[svc.key]) || 0;
+                                                const mcPlannedAR = (mData.plannedClassesAR && mData.plannedClassesAR[svc.key]) || 0;
                                                 return (
                                                     <details key={svc.key} open={svc.kind === 'edu'} style={{marginBottom:8,background:'#16162a',borderRadius:6,padding:'4px 8px',border:'1px solid #2a2a44'}}>
                                                         <summary style={{cursor:'pointer',padding:'6px 4px',color:svc.kind==='edu'?'#e0e0ff':'#d4a87a',fontSize:13,listStyle:'revert',display:'list-item',userSelect:'none'}}>
@@ -16971,7 +17235,7 @@
                                                                 <tr style={{background:'#1a1a2e',color:'#aaa'}}>
                                                                     <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
                                                                     <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>קיים</th>
-                                                                    {showFuture && <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#7b6cf0'}}>+ מתוכנן</th>}
+                                                                    {showFuture && <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#7b6cf0'}}>+ מתוכנן<div style={{fontSize:9,color:'#a59ad6',fontWeight:'normal'}}>שב"צ / הפרשה מבונה</div></th>}
                                                                     {showFuture && <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>= מוצע</th>}
                                                                     <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>נדרש</th>
                                                                     <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>פער</th>
@@ -16980,25 +17244,34 @@
                                                             <tbody>
                                                                 {mData.subs.map(s => {
                                                                     const c = getCounts(s, svc);
-                                                                    const isOpen = svc.kind === 'edu' && balanceDrilldown && balanceDrilldown.sub === s.name && balanceDrilldown.svcKey === svc.key;
+                                                                    const cPlannedS = (s.plannedClassesS && s.plannedClassesS[svc.key]) || 0;
+                                                                    const cPlannedAR = (s.plannedClassesAR && s.plannedClassesAR[svc.key]) || 0;
+                                                                    const isExOpen = svc.kind === 'edu' && balanceDrilldown && balanceDrilldown.sub === s.name && balanceDrilldown.svcKey === svc.key;
+                                                                    const isPlOpen = plannedDrilldown && plannedDrilldown.sub === s.name && plannedDrilldown.svcKey === svc.key;
                                                                     const eduList = (svc.kind === 'edu' && s.existingEdu && s.existingEdu.byKey) ? (s.existingEdu.byKey[svc.key] || []) : [];
-                                                                    const clickable = svc.kind === 'edu' && eduList.length > 0;
+                                                                    const clickableEx = svc.kind === 'edu' && eduList.length > 0;
+                                                                    const planList = (s.contributingPlans || []).filter(p => p.addedCounts[svc.key] > 0 || p.demolishCounts[svc.key] > 0);
+                                                                    const clickablePl = showFuture && planList.length > 0;
                                                                     return (
                                                                         <React.Fragment key={s.name}>
                                                                         <tr style={{borderBottom:'1px solid #222',background:deltaRowBg(c.delta, c.required)}}>
-                                                                            <td onClick={() => clickable && setBalanceDrilldown(isOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'6px',color:'#e0e0e0',cursor:clickable?'pointer':'default',outline:isOpen?'2px solid #4a90e2':'none'}} title={clickable ? 'לחץ לרשימת מוסדות' : ''}>
-                                                                                {clickable ? <span style={{textDecoration:'underline'}}>{s.name}</span> : s.name}
+                                                                            <td onClick={() => clickableEx && setBalanceDrilldown(isExOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'6px',color:'#e0e0e0',cursor:clickableEx?'pointer':'default',outline:isExOpen?'2px solid #4a90e2':'none'}} title={clickableEx ? 'לחץ לרשימת מוסדות קיימים' : ''}>
+                                                                                {clickableEx ? <span style={{textDecoration:'underline'}}>{s.name}</span> : s.name}
                                                                             </td>
                                                                             <td style={{padding:'6px',textAlign:'center',color:c.exGross===null?'#666':'#bdb6e8'}}>
                                                                                 {c.exGross === null ? '—' : c.exGross}
                                                                                 {c.demolished > 0 && <div style={{fontSize:9,color:'#e57373'}}>-{c.demolished} להריסה</div>}
                                                                             </td>
-                                                                            {showFuture && <td style={{padding:'6px',textAlign:'center',color:'#7b6cf0'}}>+{c.planned}</td>}
+                                                                            {showFuture && (
+                                                                                <td onClick={() => clickablePl && setPlannedDrilldown(isPlOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'6px',textAlign:'center',color:'#7b6cf0',cursor:clickablePl?'pointer':'default',textDecoration:clickablePl?'underline dashed':'none',outline:isPlOpen?'2px solid #7b6cf0':'none'}} title={clickablePl ? 'לחץ לרשימת תכניות תורמות' : ''}>
+                                                                                    {_plannedCell(c.planned, cPlannedS, cPlannedAR)}
+                                                                                </td>
+                                                                            )}
                                                                             {showFuture && <td style={{padding:'6px',textAlign:'center',color:'#fff',fontWeight:'bold'}}>{c.exNet === null ? c.planned : c.proposed}</td>}
                                                                             <td style={{padding:'6px',textAlign:'center',color:'#aaa'}}>{c.required}</td>
                                                                             <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:deltaColor(c.delta, c.required)}}>{fmtSigned(c.delta)}</td>
                                                                         </tr>
-                                                                        {isOpen && (() => {
+                                                                        {isExOpen && (() => {
                                                                             const list = eduList;
                                                                             const totStud = list.reduce((a,x)=>a+(x.students||0),0);
                                                                             const totCls = list.reduce((a,x)=>a+(x.classes||0),0);
@@ -17008,7 +17281,7 @@
                                                                                 <tr>
                                                                                     <td colSpan={colSpanN} style={{padding:'8px 12px 14px 12px',background:'rgba(74,144,226,0.06)',borderBottom:'1px solid #222'}}>
                                                                                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-                                                                                            <span style={{fontSize:12,color:'#aaa'}}>📋 <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svc.label} ({list.length} מוסדות · {totCls} כיתות · {totStud.toLocaleString()} תלמידים · ממוצע {avg}/כיתה)</span>
+                                                                                            <span style={{fontSize:12,color:'#aaa'}}>📋 <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svc.label} (קיים: {list.length} מוסדות · {totCls} כיתות · {totStud.toLocaleString()} תלמידים · ממוצע {avg}/כיתה)</span>
                                                                                             <button onClick={() => setBalanceDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
                                                                                         </div>
                                                                                         <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
@@ -17039,6 +17312,47 @@
                                                                                 </tr>
                                                                             );
                                                                         })()}
+                                                                        {isPlOpen && (() => {
+                                                                            const colSpanN = showFuture ? 6 : 4;
+                                                                            const sorted = [...planList].sort((a,b) => (b.addedCounts[svc.key] - a.addedCounts[svc.key]));
+                                                                            return (
+                                                                                <tr>
+                                                                                    <td colSpan={colSpanN} style={{padding:'8px 12px 14px 12px',background:'rgba(123,108,240,0.07)',borderBottom:'1px solid #222'}}>
+                                                                                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+                                                                                            <span style={{fontSize:12,color:'#aaa'}}>🏗️ <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svc.label} (תכניות תורמות: {planList.length})</span>
+                                                                                            <button onClick={() => setPlannedDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
+                                                                                        </div>
+                                                                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
+                                                                                            <thead><tr style={{color:'#888'}}>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תב"ע</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שם התכנית</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>%מימוש</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>אופק</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#7b6cf0'}}>+ מתוכנן (גולמי)</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>שב"צ S</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>הפרשה AR</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e57373'}}>− להריסה</th>
+                                                                                            </tr></thead>
+                                                                                            <tbody>
+                                                                                                {sorted.map((p, idx) => (
+                                                                                                    <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
+                                                                                                        <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{p.taba}</td>
+                                                                                                        <td style={{padding:'3px 6px',color:'#aaa'}}>{(p.plan_summary || '').slice(0, 60)}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{p.effectivePct}%</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{p.estimatedYear}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#7b6cf0'}}>+{p.addedCounts[svc.key]}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#a59ad6'}}>{p.addedCountsS[svc.key] || '—'}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#a59ad6'}}>{p.addedCountsAR[svc.key] || '—'}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#e57373'}}>{p.demolishCounts[svc.key] ? '−' + p.demolishCounts[svc.key] : '—'}</td>
+                                                                                                    </tr>
+                                                                                                ))}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                        <div style={{marginTop:6,fontSize:10,color:'#777',fontStyle:'italic'}}>"+ מתוכנן (גולמי)" = הסכום הגולמי בתב"ע. בטבלה למעלה מוצג הסכום משוקלל לפי %מימוש.</div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            );
+                                                                        })()}
                                                                         </React.Fragment>
                                                                     );
                                                                 })}
@@ -17050,7 +17364,7 @@
                                                                         {mc.exGross === null ? '—' : mc.exGross}
                                                                         {mc.demolished > 0 && <span style={{fontSize:10,color:'#e57373'}}> (-{mc.demolished})</span>}
                                                                     </td>
-                                                                    {showFuture && <td style={{padding:8,textAlign:'center',color:'#7b6cf0'}}>+{mc.planned}</td>}
+                                                                    {showFuture && <td style={{padding:8,textAlign:'center',color:'#7b6cf0'}}>{_plannedCell(mc.planned, mcPlannedS, mcPlannedAR)}</td>}
                                                                     {showFuture && <td style={{padding:8,textAlign:'center',color:'#fff'}}>{mc.exNet === null ? mc.planned : mc.proposed}</td>}
                                                                     <td style={{padding:8,textAlign:'center',color:'#aaa'}}>{mc.required}</td>
                                                                     <td style={{padding:8,textAlign:'center',color:deltaColor(mc.delta, mc.required)}}>{fmtSigned(mc.delta)}</td>
@@ -17060,6 +17374,12 @@
                                                     </details>
                                                 );
                                             };
+
+                                            // Pre-compute uncategorized sqm summary (per sub + minahak total)
+                                            const uncatTotal = mData.plannedUncategorizedSqm || 0;
+                                            const uncatBySub = mData.subs.map(s => ({ name: s.name, sqm: s.plannedUncategorizedSqm || 0 })).filter(x => x.sqm > 0);
+                                            // Contributing plans: total list with effective contributions
+                                            const allContrib = mData.contributingPlans || [];
 
                                             return (
                                                 <>
@@ -17075,10 +17395,84 @@
                                                         <span><b style={{color:'#ef6c00'}}>■</b> חוסר בינוני (20-50%)</span>
                                                         <span><b style={{color:'#e53935'}}>■</b> חוסר חמור (מעל 50%)</span>
                                                     </div>
-                                                    <div style={{margin:'12px 0 6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #8D6E63',paddingRight:8}}>🎓 חינוך</div>
-                                                    {BALANCE_SERVICES.filter(svc => svc.kind === 'edu').map(svc => renderBalanceTable(svc))}
-                                                    <div style={{margin:'14px 0 6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #C4956A',paddingRight:8}}>🏥 שירותים נוספים</div>
-                                                    {BALANCE_SERVICES.filter(svc => svc.kind === 'service').map(svc => renderBalanceTable(svc))}
+
+                                                    {/* Pre-balance: uncategorized sqm + contributing plans (panels visible only when there's content) */}
+                                                    {showFuture && uncatTotal > 0 && (
+                                                        <details open style={{marginBottom:8,background:'#16162a',borderRadius:6,padding:'4px 8px',border:'1px solid #2a2a44'}}>
+                                                            <summary style={{cursor:'pointer',padding:'6px 4px',color:'#d4a574',fontSize:13,userSelect:'none'}}>
+                                                                <span style={{fontWeight:'bold'}}>🚧 שטחים שטרם נקבע ייעודם</span>
+                                                                <span style={{fontSize:11,fontWeight:'normal',color:'#888',marginRight:10}}>(מתב"עות תורמות, מ"ר משוקלל לפי %מימוש · "מבנים ומוסדות ציבור" כללי): <b style={{color:'#d4a574'}}>{uncatTotal.toLocaleString()} מ"ר</b></span>
+                                                            </summary>
+                                                            {uncatBySub.length > 0 && (
+                                                                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginTop:6}}>
+                                                                    <thead>
+                                                                        <tr style={{background:'#1a1a2e',color:'#aaa'}}>
+                                                                            <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
+                                                                            <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#d4a574'}}>מ"ר טרם-נקבעו</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {uncatBySub.map(x => (
+                                                                            <tr key={x.name} style={{borderBottom:'1px solid #222'}}>
+                                                                                <td style={{padding:'6px',color:'#e0e0e0'}}>{x.name}</td>
+                                                                                <td style={{padding:'6px',textAlign:'center',color:'#d4a574'}}>{x.sqm.toLocaleString()}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                    <tfoot>
+                                                                        <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                                            <td style={{padding:8}}>סה"כ מינהל</td>
+                                                                            <td style={{padding:8,textAlign:'center',color:'#d4a574'}}>{uncatTotal.toLocaleString()}</td>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            )}
+                                                        </details>
+                                                    )}
+
+                                                    {showFuture && allContrib.length > 0 && (
+                                                        <details style={{marginBottom:14,background:'#16162a',borderRadius:6,padding:'4px 8px',border:'1px solid #2a2a44'}}>
+                                                            <summary style={{cursor:'pointer',padding:'6px 4px',color:'#7b6cf0',fontSize:13,userSelect:'none'}}>
+                                                                <span style={{fontWeight:'bold'}}>🏗️ תכניות תורמות למאזן ({allContrib.length})</span>
+                                                                <span style={{fontSize:11,fontWeight:'normal',color:'#888',marginRight:10}}>(לחץ להרחבה — תב"ע + %מימוש + שנת השלמה)</span>
+                                                            </summary>
+                                                            <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#e0e0e0',marginTop:6}}>
+                                                                <thead>
+                                                                    <tr style={{background:'#1a1a2e',color:'#aaa'}}>
+                                                                        <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תב"ע</th>
+                                                                        <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>שם התכנית</th>
+                                                                        <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
+                                                                        <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>%מימוש</th>
+                                                                        <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>אופק</th>
+                                                                        <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תורם ל-</th>
+                                                                        <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#d4a574'}}>טרם-נקבע (מ"ר)</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {[...allContrib].sort((a,b) => (b.effectivePct || 0) - (a.effectivePct || 0)).map((p, idx) => (
+                                                                        <tr key={idx} style={{borderBottom:'1px solid #222'}}>
+                                                                            <td style={{padding:'4px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{p.taba}</td>
+                                                                            <td style={{padding:'4px 6px',color:'#aaa'}}>{(p.plan_summary || '').slice(0, 50)}</td>
+                                                                            <td style={{padding:'4px 6px',color:'#888'}}>{p.subName}</td>
+                                                                            <td style={{padding:'4px 6px',textAlign:'center',color:'#f59e0b'}}>{p.effectivePct}%</td>
+                                                                            <td style={{padding:'4px 6px',textAlign:'center',color:'#aaa'}}>{p.estimatedYear}</td>
+                                                                            <td style={{padding:'4px 6px',color:'#7b6cf0',fontSize:10}}>{p.contributesTo.length === 0 ? '—' : p.contributesTo.map(k => (BALANCE_SERVICES.find(x=>x.key===k)||{}).label || k).join(', ')}</td>
+                                                                            <td style={{padding:'4px 6px',textAlign:'center',color:'#d4a574'}}>{p.uncategorizedSqm > 0 ? Math.round(p.uncategorizedSqm).toLocaleString() : '—'}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </details>
+                                                    )}
+
+                                                    <details open style={{marginBottom:8}}>
+                                                        <summary style={{cursor:'pointer',padding:'6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #8D6E63',paddingRight:8,userSelect:'none'}}>🎓 חינוך — סגירה/פתיחה אחת לכולם</summary>
+                                                        {BALANCE_SERVICES.filter(svc => svc.kind === 'edu').map(svc => renderBalanceTable(svc))}
+                                                    </details>
+                                                    <details open style={{marginBottom:8}}>
+                                                        <summary style={{cursor:'pointer',padding:'6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #C4956A',paddingRight:8,userSelect:'none'}}>🏥 שירותים נוספים — סגירה/פתיחה אחת לכולם</summary>
+                                                        {BALANCE_SERVICES.filter(svc => svc.kind === 'service').map(svc => renderBalanceTable(svc))}
+                                                    </details>
                                                 </>
                                             );
                                         })()}
