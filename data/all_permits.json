@@ -4464,9 +4464,23 @@
     "error": ""
   },
   "721902": {
-    "permits": [],
+    "permits": [
+      {
+        "file_number": "2022/0547.00",
+        "status": "נדונה בועדת ערר",
+        "status_date": "06/07/2025",
+        "request_type": "תמ\"א 38 הריסה ובניה",
+        "request_description": "הריסת מבנה קיים ובניית בנין חדש בין 10 קומות ו13 יח\"ד מעל קומות חניה ומסחר בהתאם לתמ\"א 38/2 ותב\"ע",
+        "units": 13,
+        "units_source": "manual",
+        "tama_type": "38/2",
+        "filtered": false,
+        "source": "manual"
+      }
+    ],
     "scraped_at": "2026-04-15T23:49:52.519035",
-    "permit_count": 0,
+    "manual_added_at": "2026-05-04",
+    "permit_count": 1,
     "error": ""
   },
   "621318": {
