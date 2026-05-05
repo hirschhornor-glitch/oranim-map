@@ -4462,20 +4462,34 @@
                     return planByTaba;
                 }
                 const HAFRASH_LOT_RE = /^מגרש\s+(\d+)\s*[-–]?\s*(.+?)\s*\((\d+)\)\s*$/;
+                const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)\s*$/;
                 function rebuildHafrashLookup(planByTaba) {
+                    // Items without "מגרש N -" prefix are carry-over to the most recent lot.
+                    // Result: {taba: {lotNum: [{use, sqm}, ...]}}
                     const hafrashByTabaLot = {};
                     for (const taba in planByTaba) {
                         const prg = (planByTaba[taba].hafrash_prg || '').trim();
                         if (!prg) continue;
                         const parts = prg.split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
+                        let currentLot = null;
                         for (const part of parts) {
-                            const m = part.match(HAFRASH_LOT_RE);
-                            if (!m) continue;
-                            const lotNum = m[1];
-                            const use = m[2].trim();
-                            const sqm = parseInt(m[3]);
+                            let lotNum = null, use = null, sqm = null;
+                            const mLot = part.match(HAFRASH_LOT_RE);
+                            if (mLot) {
+                                lotNum = mLot[1];
+                                use = mLot[2].trim();
+                                sqm = parseInt(mLot[3]);
+                                currentLot = lotNum;
+                            } else {
+                                const mUse = part.match(HAFRASH_USE_RE);
+                                if (!mUse || !currentLot) continue;
+                                lotNum = currentLot;
+                                use = mUse[1].trim();
+                                sqm = parseInt(mUse[2]);
+                            }
                             if (!hafrashByTabaLot[taba]) hafrashByTabaLot[taba] = {};
-                            hafrashByTabaLot[taba][lotNum] = { use, sqm, sourceText: part };
+                            if (!hafrashByTabaLot[taba][lotNum]) hafrashByTabaLot[taba][lotNum] = [];
+                            hafrashByTabaLot[taba][lotNum].push({ use, sqm });
                         }
                     }
                     window.__hafrashByTabaLot = hafrashByTabaLot;
@@ -10806,10 +10820,10 @@
                         const centroid = polygonInteriorPoint(ring);
                         const taba = tabaFromPlNum(f.properties.pl_number);
                         const lotNum = String(f.properties.num || '');
-                        const lotData = hafrashLookup[taba] && hafrashLookup[taba][lotNum];
+                        const lotEntries = hafrashLookup[taba] && hafrashLookup[taba][lotNum];
                         const planProps = (window.__planByTaba || {})[taba] || {};
-                        const enrichedProps = lotData
-                            ? { ...f.properties, _hafrash_lot_use: lotData.use, _hafrash_lot_sqm: lotData.sqm }
+                        const enrichedProps = (lotEntries && lotEntries.length)
+                            ? { ...f.properties, _hafrash_lot_entries: lotEntries }
                             : { ...f.properties, hafrash_sqm: planProps.hafrash_sqm || '', hafrash_prg: planProps.hafrash_prg || '' };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: centroid } };
                     });
@@ -12629,12 +12643,18 @@
                 }
                 // Hafrashah enrichment data from מטלות יזם
                 if (isHafrashah) {
-                    const lotUse = cleanNull(props._hafrash_lot_use);
-                    const lotSqm = cleanNull(props._hafrash_lot_sqm);
-                    if (lotUse || lotSqm) {
+                    const lotEntries = Array.isArray(props._hafrash_lot_entries) ? props._hafrash_lot_entries : null;
+                    if (lotEntries && lotEntries.length) {
                         html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (מגרש זה)</div>';
-                        if (lotUse) html += `<div class="popup-row"><span class="popup-row-label">שימוש</span><span class="popup-row-value">${lotUse}</span></div>`;
-                        if (lotSqm) html += `<div class="popup-row"><span class="popup-row-label">מ"ר</span><span class="popup-row-value">${parseInt(lotSqm).toLocaleString()}</span></div>`;
+                        let total = 0;
+                        for (const e of lotEntries) {
+                            const sqm = parseInt(e.sqm) || 0;
+                            total += sqm;
+                            html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${sqm.toLocaleString()} מ"ר</span></div>`;
+                        }
+                        if (lotEntries.length > 1) {
+                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
+                        }
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
                         const hfPrg = cleanNull(props.hafrash_prg);
