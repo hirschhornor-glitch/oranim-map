@@ -18113,8 +18113,8 @@
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{p.mavat_date || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ef5350'}}>{p.objection_end_date || '-'}</td>
-                                                    <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{(p.authority || '-').trim()}</td>
-                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
+                                                    <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{String(p.authority || '-').trim()}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{String(p.minahak || '-').trim()}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
