@@ -9695,8 +9695,28 @@
                                 return false;
                             })()) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
-                                // Show only plans whose objection-end date is today or in the future
-                                const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
+                                // Show only plans whose effective objection-end date is today or in the future.
+                                // For ועדה מחוזית: fall back to (mavat_date + 60 days) when no stored date,
+                                // or override a stored date that's before mavat_date (stale). Mirrors the popup logic.
+                                let endDate = (p.objection_end_date || '').split(' ')[0].trim();
+                                const isDistrict = String(p.authority || '').includes('מחוזית');
+                                if (isDistrict) {
+                                    const md = (p.mavat_date || '').split('/');
+                                    if (md.length === 3) {
+                                        const mavDate = new Date(md[2], md[1]-1, md[0]);
+                                        if (!isNaN(mavDate.getTime())) {
+                                            let useCalc = !endDate;
+                                            if (endDate) {
+                                                const sp = endDate.split('/');
+                                                if (sp.length === 3 && new Date(sp[2], sp[1]-1, sp[0]) < mavDate) useCalc = true;
+                                            }
+                                            if (useCalc) {
+                                                const end = new Date(mavDate); end.setDate(end.getDate() + 60);
+                                                endDate = `${String(end.getDate()).padStart(2,'0')}/${String(end.getMonth()+1).padStart(2,'0')}/${end.getFullYear()}`;
+                                            }
+                                        }
+                                    }
+                                }
                                 if (!endDate) return false;
                                 const pts = endDate.split('/');
                                 if (pts.length !== 3) return false;
@@ -18038,8 +18058,28 @@
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
                             const p = f.properties;
-                            // Show only plans whose objection-end date is today or in the future
-                            const endDate = (p.objection_end_date || '').replace(' (מחושב)','').trim();
+                            // Show only plans whose effective objection-end date is today or in the future.
+                            // For ועדה מחוזית: fall back to (mavat_date + 60 days) when no stored date,
+                            // or override a stored date that's before mavat_date (stale). Mirrors the popup logic.
+                            let endDate = (p.objection_end_date || '').split(' ')[0].trim();
+                            const isDistrict = String(p.authority || '').includes('מחוזית');
+                            if (isDistrict) {
+                                const md = (p.mavat_date || '').split('/');
+                                if (md.length === 3) {
+                                    const mavDate = new Date(md[2], md[1]-1, md[0]);
+                                    if (!isNaN(mavDate.getTime())) {
+                                        let useCalc = !endDate;
+                                        if (endDate) {
+                                            const sp = endDate.split('/');
+                                            if (sp.length === 3 && new Date(sp[2], sp[1]-1, sp[0]) < mavDate) useCalc = true;
+                                        }
+                                        if (useCalc) {
+                                            const end = new Date(mavDate); end.setDate(end.getDate() + 60);
+                                            endDate = `${String(end.getDate()).padStart(2,'0')}/${String(end.getMonth()+1).padStart(2,'0')}/${end.getFullYear()}`;
+                                        }
+                                    }
+                                }
+                            }
                             if (!endDate) return false;
                             const pts = endDate.split('/');
                             if (pts.length !== 3) return false;
