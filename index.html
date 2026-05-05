@@ -219,8 +219,8 @@
             --shavaz-row-border: #5a3d2a;
             --shavaz-label-color: #d4a87a;
             --shavaz-header-bg: linear-gradient(135deg, #C4956A, #D2B48C);
-            --shavaz-title-color: #2e1a0e;
-            --shavaz-subtitle-color: #4a2e1a;
+            --shavaz-title-color: #fff;
+            --shavaz-subtitle-color: #2e1a0e;
         }
         .shavaz-future-popup .leaflet-popup-tip { background: #3d2a1a !important; }
         .shavaz-popup .popup-header { background: var(--shavaz-header-bg); }
@@ -4461,38 +4461,52 @@
                     window.__planByTaba = planByTaba;
                     return planByTaba;
                 }
-                const HAFRASH_LOT_RE = /^מגרש\s+(\d+)\s*[-–]?\s*(.+?)\s*\((\d+)\)\s*$/;
-                const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)\s*$/;
-                function rebuildHafrashLookup(planByTaba) {
-                    // Items without "מגרש N -" prefix are carry-over to the most recent lot.
-                    // Result: {taba: {lotNum: [{use, sqm}, ...]}}
-                    const hafrashByTabaLot = {};
+                const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+(\d+)\s*[-–]\s*(.*)$/;
+                // Match the FIRST (sqm) — ignore any trailing (...) which is usually a manual total/sum.
+                const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)(?:\s*\(\d+\))*\s*$/;
+                const HAFRASH_LOT_DUP_RE = /^מגרש\s+\d+\s*[-–]?\s*/;
+                // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
+                // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
+                // Result: {taba: {lotNum: [{use, sqm}, ...]}}
+                function parsePrgByLot(planByTaba, fieldName) {
+                    const result = {};
                     for (const taba in planByTaba) {
-                        const prg = (planByTaba[taba].hafrash_prg || '').trim();
+                        const prg = (planByTaba[taba][fieldName] || '').trim();
                         if (!prg) continue;
                         const parts = prg.split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
                         let currentLot = null;
                         for (const part of parts) {
-                            let lotNum = null, use = null, sqm = null;
-                            const mLot = part.match(HAFRASH_LOT_RE);
+                            let remainder = part;
+                            const mLot = part.match(HAFRASH_LOT_PREFIX_RE);
                             if (mLot) {
-                                lotNum = mLot[1];
-                                use = mLot[2].trim();
-                                sqm = parseInt(mLot[3]);
-                                currentLot = lotNum;
-                            } else {
-                                const mUse = part.match(HAFRASH_USE_RE);
-                                if (!mUse || !currentLot) continue;
-                                lotNum = currentLot;
-                                use = mUse[1].trim();
-                                sqm = parseInt(mUse[2]);
+                                currentLot = mLot[1];
+                                remainder = mLot[2].trim();
                             }
-                            if (!hafrashByTabaLot[taba]) hafrashByTabaLot[taba] = {};
-                            if (!hafrashByTabaLot[taba][lotNum]) hafrashByTabaLot[taba][lotNum] = [];
-                            hafrashByTabaLot[taba][lotNum].push({ use, sqm });
+                            if (!currentLot) continue;
+                            const subs = remainder.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+                            for (const sub of subs) {
+                                const m = sub.match(HAFRASH_USE_RE);
+                                if (!m) continue;
+                                let use = m[1].trim()
+                                    .replace(HAFRASH_LOT_DUP_RE, '')
+                                    .trim()
+                                    .replace(/^\*|\*$/g, '')
+                                    .trim()
+                                    .replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '')
+                                    .trim();
+                                const sqm = parseInt(m[2]);
+                                if (!use) continue;
+                                if (!result[taba]) result[taba] = {};
+                                if (!result[taba][currentLot]) result[taba][currentLot] = [];
+                                result[taba][currentLot].push({ use, sqm });
+                            }
                         }
                     }
-                    window.__hafrashByTabaLot = hafrashByTabaLot;
+                    return result;
+                }
+                function rebuildHafrashLookup(planByTaba) {
+                    window.__hafrashByTabaLot = parsePrgByLot(planByTaba, 'hafrash_prg');
+                    window.__shavatzByTabaLot = parsePrgByLot(planByTaba, 'shavatz_out_prog');
                 }
                 function extractAvailablePlanTypes(gd) {
                     if (!gd.plans || !gd.plans.features) return;
@@ -9392,7 +9406,8 @@
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                             const statusColor = STATUS_COLORS[status] || '#888';
                             const isSatellite = basemap === 'satellite';
-                            const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
+                            const futureShavazActive = layers['future_shavaz'] || layers['hafrashah_future'];
+                            const shavazActive = layers['shavaz_kayam'] || futureShavazActive;
                             const landuseActive = layers['landuse_xplan'];
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
@@ -9409,6 +9424,9 @@
                             if (landuseActive) {
                                 return { color: statusColor, weight: 2.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
                             }
+                            if (futureShavazActive) {
+                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                            }
                             if (shavazActive) {
                                 return { color: statusColor, weight: 1.5, fillColor: fillColor, fillOpacity: 0.07, dashArray: '4,2' };
                             }
@@ -9421,6 +9439,8 @@
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
                                 if (treeModeRef.current) return;
+                                // When future shavaz / hafrashah layers are on, suppress plan popup entirely.
+                                if (layersRef.current['future_shavaz'] || layersRef.current['hafrashah_future']) return;
                                 // When shavaz is active, try to open shavaz popup first
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 if (shavazOn) {
@@ -10065,22 +10085,40 @@
                     geoLayersRef.current.shavaz_demolition = demolitionLayer;
                 }
 
+                // Helper: enrich future_shavaz feature properties with shavatz_out_prog lot entries
+                function enrichFutureShavazProps(props) {
+                    if (!props || !props.pl_number) return props;
+                    if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) return props;
+                    const pn = String(props.pl_number);
+                    const taba = pn.includes('-') ? String(parseInt(pn.split('-')[1])) : pn;
+                    const lotNum = String(props.num || '');
+                    const lookup = window.__shavatzByTabaLot || {};
+                    const entries = lookup[taba] && lookup[taba][lotNum];
+                    if (entries && entries.length) {
+                        return { ...props, _hafrash_lot_entries: entries };
+                    }
+                    return props;
+                }
                 // Helper: find all overlapping shavaz features at a click point
                 function findOverlappingShavaz(clickLatLng) {
                     const allShavaz = [];
-                    const checkLayer = (layerGroup, isFut) => {
-                        if (!layerGroup) return;
-                        layerGroup.eachLayer(sl => {
-                            if (!sl.feature || !sl.getBounds) return;
-                            try {
-                                if (!sl.getBounds().contains(clickLatLng)) return;
-                                const contains = leafletPip(sl, clickLatLng);
-                                if (contains) allShavaz.push({ properties: sl.feature.properties, isFuture: isFut });
-                            } catch(ex) {}
-                        });
+                    const visit = (sl, isFut) => {
+                        if (sl.eachLayer && !sl.feature) {
+                            sl.eachLayer(child => visit(child, isFut));
+                            return;
+                        }
+                        if (!sl.feature || !sl.getBounds) return;
+                        try {
+                            if (!sl.getBounds().contains(clickLatLng)) return;
+                            const contains = leafletPip(sl, clickLatLng);
+                            if (contains) {
+                                const props = isFut ? enrichFutureShavazProps(sl.feature.properties) : sl.feature.properties;
+                                allShavaz.push({ properties: props, isFuture: isFut });
+                            }
+                        } catch(ex) {}
                     };
-                    checkLayer(geoLayersRef.current.shavaz_kayam, false);
-                    checkLayer(geoLayersRef.current.future_shavaz, true);
+                    if (geoLayersRef.current.shavaz_kayam) visit(geoLayersRef.current.shavaz_kayam, false);
+                    if (geoLayersRef.current.future_shavaz) visit(geoLayersRef.current.future_shavaz, true);
                     return allShavaz;
                 }
 
@@ -10703,13 +10741,125 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current) return;
+                                L.DomEvent.stopPropagation(e);
                                 const allShavaz = findOverlappingShavaz(e.latlng);
-                                if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: true });
+                                // Move the clicked feature (matched by pl_number+num) to the front
+                                const clickedKey = String(f.properties.pl_number || '') + '|' + String(f.properties.num || '');
+                                const idx = allShavaz.findIndex(s => (String(s.properties.pl_number || '') + '|' + String(s.properties.num || '')) === clickedKey);
+                                if (idx > 0) {
+                                    const [first] = allShavaz.splice(idx, 1);
+                                    allShavaz.unshift(first);
+                                } else if (idx < 0) {
+                                    allShavaz.unshift({ properties: enrichFutureShavazProps(f.properties), isFuture: true });
+                                }
                                 openShavazPopup(allShavaz, e.latlng, 0);
                             });
                         }
-                    }).addTo(map);
-                    geoLayersRef.current.future_shavaz = futureShavazLayer;
+                    });
+                    // Fallback markers: plans with shavatz_out_sqm > 0 but no future_shavaz polygon coverage
+                    // (e.g. lot mentioned in shavatz_out_prog doesn't exist as a polygon in landuse_xplan).
+                    // Place a brown circle marker on the plan's largest residential/mixed-use lot.
+                    const tabaFromPlNumFs = (plNum) => {
+                        const s = String(plNum || '');
+                        return s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
+                    };
+                    const RESIDENTIAL_MIXED_CODES_FS = new Set([10, 20, 60, 100, 140, 145, 290, 1000, 1050, 1311, 1321, 1420, 1470, 1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
+                    const coveredTabasFs = new Set();
+                    gd.landuse_xplan.features.forEach(f => {
+                        const c = f.properties.mavat_code;
+                        if (SHAVAZ_CODES.has(c) || HAFRASHAH_CODES_FOR_SHAVAZ.has(c)) {
+                            coveredTabasFs.add(tabaFromPlNumFs(f.properties.pl_number));
+                        }
+                    });
+                    const fallbackFeatures = [];
+                    const planByTabaFs = window.__planByTaba || {};
+                    for (const taba in planByTabaFs) {
+                        if (coveredTabasFs.has(taba)) continue;
+                        const sqm = parseFloat(planByTabaFs[taba].shavatz_out_sqm) || 0;
+                        if (sqm <= 0) continue;
+                        const candidates = gd.landuse_xplan.features.filter(f =>
+                            tabaFromPlNumFs(f.properties.pl_number) === taba
+                            && RESIDENTIAL_MIXED_CODES_FS.has(f.properties.mavat_code)
+                        );
+                        if (!candidates.length) continue;
+                        candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
+                        fallbackFeatures.push(candidates[0]);
+                    }
+                    // Convert fallback polygons to interior points (reuse polygonInteriorPoint defined in hafrashah block — define a local one here too)
+                    const fsInteriorPoint = (ring) => {
+                        let cx = 0, cy = 0, signedArea = 0;
+                        for (let i = 0; i < ring.length - 1; i++) {
+                            const a = ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
+                            signedArea += a;
+                            cx += (ring[i][0] + ring[i+1][0]) * a;
+                            cy += (ring[i][1] + ring[i+1][1]) * a;
+                        }
+                        signedArea *= 0.5;
+                        if (Math.abs(signedArea) < 1e-10) return [ring[0][0], ring[0][1]];
+                        const c = [cx / (6 * signedArea), cy / (6 * signedArea)];
+                        if (pointInPolygon(c, ring)) return c;
+                        let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
+                        for (const p of ring) {
+                            if (p[0] < mnX) mnX = p[0]; if (p[0] > mxX) mxX = p[0];
+                            if (p[1] < mnY) mnY = p[1]; if (p[1] > mxY) mxY = p[1];
+                        }
+                        return [(mnX + mxX) / 2, (mnY + mxY) / 2];
+                    };
+                    // Parse shavatz_out_prog using same format as hafrash_prg
+                    const parseShavatzProg = (prg) => {
+                        const out = [];
+                        if (!prg) return out;
+                        const parts = String(prg).split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
+                        let curLot = null;
+                        const LOT_RE = /^מגרש\s+(\d+)\s*[-–]\s*(.*)$/;
+                        const USE_RE = /^(.+?)\s*\((\d+)\)\s*$/;
+                        const DUP_RE = /^מגרש\s+\d+\s*[-–]?\s*/;
+                        for (const part of parts) {
+                            let rem = part;
+                            const ml = part.match(LOT_RE);
+                            if (ml) { curLot = ml[1]; rem = ml[2].trim(); }
+                            if (!curLot) continue;
+                            const subs = rem.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+                            for (const s of subs) {
+                                const mu = s.match(USE_RE);
+                                if (!mu) continue;
+                                const use = mu[1].trim().replace(DUP_RE, '').trim().replace(/^\*|\*$/g, '').trim();
+                                const sqm = parseInt(mu[2]);
+                                if (use) out.push({ use, sqm });
+                            }
+                        }
+                        return out;
+                    };
+                    const fbPoints = fallbackFeatures.map(f => {
+                        const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                        const c = fsInteriorPoint(ring);
+                        const taba = tabaFromPlNumFs(f.properties.pl_number);
+                        const planProps = planByTabaFs[taba] || {};
+                        const entries = parseShavatzProg(planProps.shavatz_out_prog);
+                        const enrichedProps = entries.length
+                            ? { ...f.properties, _hafrash_lot_entries: entries, pl_name: planProps.plan_name_he || f.properties.pl_name }
+                            : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', pl_name: planProps.plan_name_he || f.properties.pl_name };
+                        return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: c } };
+                    });
+                    const fallbackLayer = L.geoJSON({ type: 'FeatureCollection', features: fbPoints }, {
+                        pane: 'shavazPane',
+                        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            radius: 5, fillColor: '#D2B48C', fillOpacity: 0.8, color: '#8B4513', weight: 1
+                        }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current) return;
+                                L.DomEvent.stopPropagation(e);
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup shavaz-popup shavaz-future-popup' })
+                                    .setLatLng(layer.getLatLng())
+                                    .setContent(buildShavazPopup(f.properties, true, false, null, true));
+                                popup.openOn(map);
+                                bindShavazPopupEvents(popup, f.properties, layer.getLatLng(), null, [{ properties: f.properties, isFuture: true }], 0);
+                            });
+                        }
+                    });
+                    const combined = L.featureGroup([futureShavazLayer, fallbackLayer]).addTo(map);
+                    geoLayersRef.current.future_shavaz = combined;
                 }
 
                 // --- Hafrashah from landuse_xplan (mixed-use parcels with public buildings) ---
@@ -10767,8 +10917,8 @@
                         candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
                         hafrashah.push(candidates[0]);
                     }
-                    // Find an interior point: signed-area centroid if inside polygon, else
-                    // a grid sample maximizing min distance to any edge (pole of inaccessibility)
+                    // Polygon center: signed-area centroid (true center of mass).
+                    // Falls back to bbox center if the centroid lands outside the polygon.
                     const polygonInteriorPoint = (ring) => {
                         let cx = 0, cy = 0, signedArea = 0;
                         for (let i = 0; i < ring.length - 1; i++) {
@@ -10782,35 +10932,12 @@
                             ? [ring[0][0], ring[0][1]]
                             : [cx / (6 * signedArea), cy / (6 * signedArea)];
                         if (pointInPolygon(centroid, ring)) return centroid;
-                        // Fallback: scan a 12×12 grid inside bbox, pick point with max min-edge-distance
                         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
                         for (const p of ring) {
                             if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
                             if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
                         }
-                        const N = 12;
-                        let bestPt = centroid, bestDist = -1;
-                        for (let i = 1; i < N; i++) {
-                            for (let j = 1; j < N; j++) {
-                                const px = minX + (maxX - minX) * i / N;
-                                const py = minY + (maxY - minY) * j / N;
-                                if (!pointInPolygon([px, py], ring)) continue;
-                                let minD = Infinity;
-                                for (let k = 0; k < ring.length - 1; k++) {
-                                    const dx = ring[k+1][0] - ring[k][0];
-                                    const dy = ring[k+1][1] - ring[k][1];
-                                    const len2 = dx*dx + dy*dy;
-                                    const t = len2 > 0 ? ((px - ring[k][0]) * dx + (py - ring[k][1]) * dy) / len2 : 0;
-                                    const tc = Math.max(0, Math.min(1, t));
-                                    const ex = ring[k][0] + tc * dx;
-                                    const ey = ring[k][1] + tc * dy;
-                                    const d = Math.hypot(px - ex, py - ey);
-                                    if (d < minD) minD = d;
-                                }
-                                if (minD > bestDist) { bestDist = minD; bestPt = [px, py]; }
-                            }
-                        }
-                        return bestPt;
+                        return [(minX + maxX) / 2, (minY + maxY) / 2];
                     };
                     // Convert polygons to interior points
                     const pointFeatures = hafrashah.map(f => {
@@ -10834,8 +10961,9 @@
                             radius: 5, fillColor: PUBLIC_PALETTE.shavaz_future_stroke, fillOpacity: 0.8, color: PUBLIC_PALETTE.shavaz_kayam_fill, weight: 1
                         }),
                         onEachFeature: (f, layer) => {
-                            layer.on('click', () => {
+                            layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current) return;
+                                L.DomEvent.stopPropagation(e);
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
                                     .setLatLng(layer.getLatLng())
                                     .setContent(buildShavazPopup(f.properties, true, false, null, true));
@@ -12550,7 +12678,15 @@
                 if (isXplan) {
                     // landuse_xplan source
                     title = cleanNull(props.pl_name) || cleanNull(props.mavat_name) || 'שב"צ עתידי';
-                    subtitle = cleanNull(props.mavat_name) || '';
+                    // Subtitle by lot type: pure shavaz polygons → "שטח למבני ציבור"; HAFRASHAH-coded
+                    // (residential mixed-use with public allocation inside) → "הפרשה מבונה"
+                    const PUBLIC_SHAVAZ_CODES = new Set([400, 410, 450, 460, 1670]);
+                    const HAFRASHAH_LOT_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
+                    const code = parseInt(props.mavat_code);
+                    if (PUBLIC_SHAVAZ_CODES.has(code)) subtitle = 'שטח למבני ציבור';
+                    else if (HAFRASHAH_LOT_CODES.has(code)) subtitle = 'הפרשה מבונה';
+                    else if (isHafrashah) subtitle = 'הפרשה מבונה';
+                    else subtitle = cleanNull(props.mavat_name) || '';
                     // Extract taba from pl_number: "101-0095612" → "95612"
                     const plNum = cleanNull(props.pl_number);
                     taba = plNum && plNum.includes('-') ? String(parseInt(plNum.split('-')[1])) : plNum;
@@ -12632,20 +12768,20 @@
                 if (serviceType) {
                     html += `<div class="popup-row"><span class="popup-row-label">סוג שירות</span><span class="popup-row-value">${serviceType}</span></div>`;
                 }
-                if (!isHafrashah) {
+                const hasLotEntries = Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length > 0;
+                if (!isHafrashah && !hasLotEntries) {
                     html += `<div class="popup-row"><span class="popup-row-label">שטח מגרש</span><span class="popup-row-value">${lotAreaDunam} דונם</span></div>`;
                 }
-                if (isFuture) {
+                if (isFuture && !isHafrashah && !hasLotEntries) {
                     html += `<div class="popup-row"><span class="popup-row-label">מ"ר בנוי</span><span class="popup-row-value">${builtDisplay}</span></div>`;
                 }
-                if (isFuture && formattedUses.length) {
+                if (isFuture && !isHafrashah && !hasLotEntries && formattedUses.length) {
                     html += `<div class="popup-row"><span class="popup-row-label">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
-                // Hafrashah enrichment data from מטלות יזם
-                if (isHafrashah) {
+                // Lot entries — from hafrash_prg or shavatz_out_prog (matched by taba+lot)
+                if (isHafrashah || hasLotEntries) {
                     const lotEntries = Array.isArray(props._hafrash_lot_entries) ? props._hafrash_lot_entries : null;
                     if (lotEntries && lotEntries.length) {
-                        html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (מגרש זה)</div>';
                         let total = 0;
                         for (const e of lotEntries) {
                             const sqm = parseInt(e.sqm) || 0;
@@ -12673,8 +12809,8 @@
                     return pt === taba || pt === tabaNum;
                 });
                 if (hasPlan) {
-                    html += '<div class="popup-footer" style="flex-direction:row">';
-                    html += `<button class="popup-icon-btn" data-action="jump-to-plan" data-taba="${taba}" title="לתב״ע">🏠</button>`;
+                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end">';
+                    html += `<button class="popup-btn-permit" data-action="jump-to-plan" data-taba="${taba}">לתב״ע ←</button>`;
                     html += '</div>';
                 }
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
@@ -12790,7 +12926,7 @@
                         else shavazIdx = (shavazIdx - 1 + allShavaz.length) % allShavaz.length;
                         const entry = allShavaz[shavazIdx];
                         const navInfo = { current: shavazIdx, total: allShavaz.length };
-                        popup.options.className = shavazPopupClass(entry.isFuture);
+                        popup.options.className = 'plan-popup shavaz-popup ' + (entry.isFuture ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
                         popup.setContent(buildShavazPopup(entry.properties, entry.isFuture, !!originPlanProps, navInfo));
                         shavazProps = entry.properties;
                         return;
@@ -12929,7 +13065,8 @@
                             // Store current plan props for back navigation
                             const currentPlanProps = allFeatures[currentIdx] ? allFeatures[currentIdx].properties : null;
                             const navInfo = shavazFeatures.length > 1 ? { current: 0, total: shavazFeatures.length } : null;
-                            popup.options.className = shavazPopupClass(sf.isFuture != null ? sf.isFuture : !!(originShavazProps && (originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME)));
+                            const _sfFut = sf.isFuture != null ? sf.isFuture : !!(originShavazProps && (originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME));
+                            popup.options.className = 'plan-popup shavaz-popup ' + (_sfFut ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
                             popup.setContent(buildShavazPopup(sf.properties, sf.isFuture, true, navInfo));
                             bindShavazPopupEvents(popup, sf.properties, popup.getLatLng(), currentPlanProps, shavazFeatures, 0);
                             setLayers(prev => ({ ...prev, shavaz_kayam: true, future_shavaz: true }));
@@ -12938,9 +13075,10 @@
                     }
                     if (permitBtn && permitBtn.dataset.action === 'back-to-shavaz' && originShavazProps) {
                         ev.stopPropagation();
-                        const fut = !!(originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME);
-                        popup.options.className = shavazPopupClass(fut);
-                        popup.setContent(buildShavazPopup(originShavazProps, fut, false));
+                        const isHafrashah = Array.isArray(originShavazProps._hafrash_lot_entries) || !!originShavazProps.pl_number;
+                        const fut = isHafrashah || !!(originShavazProps.Mavat_Status || originShavazProps.MAVAT_NAME);
+                        popup.options.className = 'plan-popup shavaz-popup ' + (fut ? 'shavaz-future-popup' : 'shavaz-kayam-popup');
+                        popup.setContent(buildShavazPopup(originShavazProps, fut, false, null, isHafrashah));
                         bindShavazPopupEvents(popup, originShavazProps, popup.getLatLng(), null, null, 0);
                         return;
                     }
@@ -16018,6 +16156,113 @@
                         const existingEduBySub = computeExistingEduPerSub(gd);
                         const byMinahak = {};
                         const normSub = (n) => SUB_NORMALIZE[n] || n;
+
+                        // ── Pre-compute sub-polygon lookup + per-plan + per-shavaz_kayam metadata ──
+                        // This is shared across all minahaks (depends only on geometry, not on minahak assumptions).
+                        // Allows attributing plans/shavaz to a specific sub once, then aggregating per (minahak, sub, targetYear).
+                        const _subPolygonByName = {};
+                        if (gd.sub_neighborhoods) {
+                            gd.sub_neighborhoods.features.forEach(f => {
+                                const raw = f.properties && f.properties.schn_nama;
+                                if (!raw) return;
+                                const n = normSub(raw);
+                                if (n === 'לא ידוע' || n === 'אחר') return;
+                                if (!_subPolygonByName[n]) _subPolygonByName[n] = f.geometry;
+                            });
+                        }
+                        const _ringHit = (lng, lat, ring) => {
+                            let inside = false;
+                            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi)) inside = !inside;
+                            }
+                            return inside;
+                        };
+                        const _inGeom = (lng, lat, g) => {
+                            if (!g) return false;
+                            if (g.type === 'Polygon') return _ringHit(lng, lat, g.coordinates[0]);
+                            if (g.type === 'MultiPolygon') {
+                                for (const poly of g.coordinates) { if (_ringHit(lng, lat, poly[0])) return true; }
+                            }
+                            return false;
+                        };
+                        const _findSubByCentroid = (lng, lat) => {
+                            for (const sn in _subPolygonByName) {
+                                if (_inGeom(lng, lat, _subPolygonByName[sn])) return sn;
+                            }
+                            return null;
+                        };
+                        const _ringCentroid = (ring) => {
+                            let cx = 0, cy = 0, cn = 0;
+                            for (const c of ring) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; cn++; } }
+                            return cn === 0 ? null : [cx / cn, cy / cn];
+                        };
+                        // Per-plan metadata: sub attribution + facility counts + demolish counts + mimush
+                        const _eduFeatsAll = (gd.education_shanaton && gd.education_shanaton.features) || [];
+                        const _planMeta = [];
+                        if (gd.plans) {
+                            const _seenTaba = new Set();
+                            gd.plans.features.forEach(f => {
+                                const p = f.properties || {};
+                                const taba = String(p.taba || '').trim();
+                                if (taba && _seenTaba.has(taba)) return;
+                                const s = normalizeStatus((p.status_mavat || '').trim());
+                                if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                                if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                                const geom = f.geometry; if (!geom || !geom.coordinates) return;
+                                let pcoords;
+                                try {
+                                    if (geom.type === 'Polygon') pcoords = geom.coordinates[0];
+                                    else if (geom.type === 'MultiPolygon') pcoords = geom.coordinates[0][0];
+                                    else return;
+                                } catch(ex) { return; }
+                                const ctr = _ringCentroid(pcoords || []);
+                                if (!ctr) return;
+                                const subName = _findSubByCentroid(ctr[0], ctr[1]);
+                                if (!subName) return;
+                                const mim = calcMimush(p);
+                                if (!mim) return;
+                                if (taba) _seenTaba.add(taba);
+                                const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
+                                const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
+                                const addedCounts = {}; PARSER_KEYS.forEach(k => { addedCounts[k] = facS.counts[k] + facAR.counts[k]; });
+                                const eduInside = eduFeaturesInPlanGeometry(geom, _eduFeatsAll);
+                                const eduAgg = aggregateEduFeatures(eduInside);
+                                const demolishCounts = {}; PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
+                                demolishCounts.gan = eduAgg.ganim_count + eduAgg.gan_special_count;
+                                demolishCounts.yesodi = eduAgg.yesodi_classes;
+                                demolishCounts.al_yesodi = eduAgg.alyesodi_classes;
+                                _planMeta.push({
+                                    taba, subName, addedCounts, demolishCounts,
+                                    mimushPct: mim.mimushPct, estimatedYear: mim.estimatedYear,
+                                    plan_summary: p.plan_summary || p.plan_name_he || p.plan_name || '',
+                                });
+                            });
+                        }
+                        // Per-shavaz_kayam: sub attribution + service-key classification (קיים non-edu)
+                        const _shavazBySubKey = {}; // { subName: { svcKey: count } }
+                        if (gd.shavaz_kayam) {
+                            gd.shavaz_kayam.features.forEach(f => {
+                                const g = f.geometry; if (!g) return;
+                                let coords;
+                                if (g.type === 'Polygon') coords = g.coordinates[0];
+                                else if (g.type === 'MultiPolygon') coords = g.coordinates[0][0];
+                                else return;
+                                const ctr = _ringCentroid(coords || []);
+                                if (!ctr) return;
+                                const subName = _findSubByCentroid(ctr[0], ctr[1]);
+                                if (!subName) return;
+                                const bt = (f.properties && f.properties.building_type) || '';
+                                if (!bt) return;
+                                const parsed = parseFacilitiesFromText(bt);
+                                let matchedKey = null;
+                                for (const k of PARSER_KEYS) { if (parsed.counts[k] > 0) { matchedKey = k; break; } }
+                                if (!matchedKey) return;
+                                if (!_shavazBySubKey[subName]) _shavazBySubKey[subName] = {};
+                                _shavazBySubKey[subName][matchedKey] = (_shavazBySubKey[subName][matchedKey] || 0) + 1;
+                            });
+                        }
+
                         mimD.minahaks.forEach(m => {
                             const mAssumpt = getPNAssumptions(m);
                             const mTargetYear = mAssumpt.targetYear;
@@ -16044,6 +16289,25 @@
                                 const total = vals.units_in + vals.units_new_target;
                                 if (total === 0) return;
                                 const needs = computePublicNeeds(total, mAssumpt);
+                                // Per-sub planned/demolished classes — sum across plans whose centroid lies in this sub
+                                const plannedClasses = {}; PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
+                                const demolishedClasses = {}; PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
+                                if (!isExisting) {
+                                    _planMeta.forEach(pm => {
+                                        if (pm.subName !== sub) return;
+                                        if (!isFull && pm.estimatedYear > mTargetYear) return;
+                                        const pct = isFull ? 1 : (pm.mimushPct / 100);
+                                        PARSER_KEYS.forEach(k => {
+                                            plannedClasses[k] += pm.addedCounts[k] * pct;
+                                            demolishedClasses[k] += pm.demolishCounts[k] * pct;
+                                        });
+                                    });
+                                    PARSER_KEYS.forEach(k => { plannedClasses[k] = Math.round(plannedClasses[k]); demolishedClasses[k] = Math.round(demolishedClasses[k]); });
+                                }
+                                // Per-sub non-edu required (re-run service computation on this sub's units)
+                                const subNonEdu = computeNeighborhoodProgramServices(total, mAssumpt);
+                                const nonEduRequiredByKey = {};
+                                subNonEdu.forEach(s2 => { nonEduRequiredByKey[s2.key] = s2.count; });
                                 subs.push({
                                     name: sub,
                                     units_in: Math.round(vals.units_in),
@@ -16051,6 +16315,11 @@
                                     total_units: Math.round(total),
                                     ...needs,
                                     existingEdu: existingEduBySub[sub] || null,
+                                    plannedClasses,
+                                    demolishedClasses,
+                                    existingByService: _shavazBySubKey[sub] || {},
+                                    nonEduRequiredByKey,
+                                    nonEduRequiredFull: subNonEdu,
                                 });
                             });
                             subs.sort((a, b) => b.total_units - a.total_units);
@@ -16059,6 +16328,30 @@
                             const totalNew = subs.reduce((s, x) => s + x.units_new_target, 0);
                             const aggNeeds = computePublicNeeds(totalUnits, mAssumpt);
                             const nonEdu = computeNeighborhoodProgramServices(totalUnits, mAssumpt);
+                            // Minahak-level totals for planned/demolished — sum across all attributed plans (matches מאזן למינהל logic exactly).
+                            // Computed at full precision and rounded at the end (so the minahak total row matches renderProgramaModal's totals).
+                            const subNamesInMinahak = new Set(subs.map(x => x.name));
+                            const minahakPlanned = {}; PARSER_KEYS.forEach(k => minahakPlanned[k] = 0);
+                            const minahakDemolished = {}; PARSER_KEYS.forEach(k => minahakDemolished[k] = 0);
+                            if (!isExisting) {
+                                _planMeta.forEach(pm => {
+                                    if (!subNamesInMinahak.has(pm.subName)) return;
+                                    if (!isFull && pm.estimatedYear > mTargetYear) return;
+                                    const pct = isFull ? 1 : (pm.mimushPct / 100);
+                                    PARSER_KEYS.forEach(k => {
+                                        minahakPlanned[k] += pm.addedCounts[k] * pct;
+                                        minahakDemolished[k] += pm.demolishCounts[k] * pct;
+                                    });
+                                });
+                                PARSER_KEYS.forEach(k => { minahakPlanned[k] = Math.round(minahakPlanned[k]); minahakDemolished[k] = Math.round(minahakDemolished[k]); });
+                            }
+                            // Minahak-level existing non-edu by service key (sum across subs in this minahak)
+                            const minahakExistingByService = {}; PARSER_KEYS.forEach(k => minahakExistingByService[k] = 0);
+                            subs.forEach(x => {
+                                Object.entries(x.existingByService || {}).forEach(([k, v]) => { minahakExistingByService[k] = (minahakExistingByService[k] || 0) + v; });
+                            });
+                            const nonEduRequiredByKey = {};
+                            nonEdu.forEach(s2 => { nonEduRequiredByKey[s2.key] = s2.count; });
                             byMinahak[m] = {
                                 name: m,
                                 subs,
@@ -16069,6 +16362,10 @@
                                 byService: aggNeeds.byService,
                                 totalClasses: aggNeeds.totalClasses,
                                 nonEdu,
+                                nonEduRequiredByKey,
+                                plannedClasses: minahakPlanned,
+                                demolishedClasses: minahakDemolished,
+                                existingByService: minahakExistingByService,
                                 assumpt: mAssumpt,
                                 targetYear: mTargetYear,
                                 hasOverride: hasPNOverride(m),
@@ -16260,41 +16557,86 @@
                         }
 
                         function exportPNCsv() {
-                            const cols = ['תת-שכונה','יח״ד קיימות', mData.targetYear === 'existing' ? 'תוספת' : 'תוספת ' + mData.targetYear,'סה״כ','אוכלוסייה']
-                                .concat(PUBLIC_NEEDS_SERVICES.map(s => s.label + ' כיתות'))
-                                .concat(['סה״כ כיתות']);
-                            const rows = mData.subs.map(s => [
-                                s.name, s.units_in, s.units_new_target, s.total_units, s.population
-                            ].concat(PUBLIC_NEEDS_SERVICES.map(svc => s.byService[svc.key].totalClasses))
-                              .concat([s.totalClasses]));
-                            // Existing edu balance section — only in "existing" mode
-                            const subsWithEdu = mData.subs.filter(s => s.existingEdu);
-                            if (subsWithEdu.length) {
+                            // Sub-units summary — kept compact at top
+                            const cols = ['תת-שכונה','יח״ד קיימות', mData.targetYear === 'existing' ? 'תוספת' : 'תוספת ' + mData.targetYear,'סה״כ יח״ד','אוכלוסייה','סה״כ כיתות נדרשות'];
+                            const rows = mData.subs.map(s => [s.name, s.units_in, s.units_new_target, s.total_units, s.population, s.totalClasses]);
+                            // Unified future-balance per service (15 services) — same definition as renderProgramaModal
+                            const _BAL = [
+                                { key: 'maon',         label: 'מעון',           kind: 'edu' },
+                                { key: 'gan',          label: 'גני ילדים',     kind: 'edu' },
+                                { key: 'yesodi',       label: 'יסודי',          kind: 'edu' },
+                                { key: 'al_yesodi',    label: 'על-יסודי',       kind: 'edu' },
+                                { key: 'tipat_chalav', label: 'טיפת חלב',       kind: 'service' },
+                                { key: 'clinic',       label: 'מרפאה שכונתית', kind: 'service' },
+                                { key: 'matnas',       label: 'מתנ"ס',         kind: 'service' },
+                                { key: 'welfare_dept', label: 'לשכת רווחה',     kind: 'service' },
+                                { key: 'noar_club',    label: 'מועדון נוער',    kind: 'service' },
+                                { key: 'elderly_club', label: 'מועדון קשיש',    kind: 'service' },
+                                { key: 'elderly_day',  label: 'מרכז יום לקשיש', kind: 'service' },
+                                { key: 'synagogue',    label: 'בית כנסת',       kind: 'service' },
+                                { key: 'mikve',        label: 'מקווה טהרה',     kind: 'service' },
+                                { key: 'sport_hall',   label: 'אולם ספורט',     kind: 'service' },
+                                { key: 'library',      label: 'ספרייה שכונתית', kind: 'service' },
+                            ];
+                            const _subEx = (s, svc) => {
+                                if (svc.kind === 'edu') {
+                                    const e = s.existingEdu; if (!e) return null;
+                                    if (svc.key === 'gan') return (e.ganim_count || 0) + (e.gan_special_count || 0);
+                                    if (svc.key === 'yesodi') return e.yesodi_classes || 0;
+                                    if (svc.key === 'al_yesodi') return e.alyesodi_classes || 0;
+                                    return null;
+                                }
+                                return (s.existingByService && s.existingByService[svc.key]) || 0;
+                            };
+                            const _subReq = (s, svc) => svc.kind === 'edu'
+                                ? s.byService[svc.key].totalClasses
+                                : ((s.nonEduRequiredByKey && s.nonEduRequiredByKey[svc.key]) || 0);
+                            const _minEx = (svc) => {
+                                if (svc.kind === 'edu') {
+                                    if (svc.key === 'maon') return null;
+                                    let any = false, total = 0;
+                                    mData.subs.forEach(s => {
+                                        if (!s.existingEdu) return;
+                                        any = true;
+                                        const e = s.existingEdu;
+                                        if (svc.key === 'gan') total += (e.ganim_count || 0) + (e.gan_special_count || 0);
+                                        else if (svc.key === 'yesodi') total += e.yesodi_classes || 0;
+                                        else if (svc.key === 'al_yesodi') total += e.alyesodi_classes || 0;
+                                    });
+                                    return any ? total : null;
+                                }
+                                return (mData.existingByService && mData.existingByService[svc.key]) || 0;
+                            };
+                            const _minReq = (svc) => svc.kind === 'edu'
+                                ? mData.byService[svc.key].totalClasses
+                                : ((mData.nonEduRequiredByKey && mData.nonEduRequiredByKey[svc.key]) || 0);
+                            _BAL.forEach(svc => {
                                 rows.push([]);
-                                rows.push(['--- מאזן חינוך — קיים מול נדרש (כיתות) ---']);
-                                rows.push(['תת-שכונה','מעון נדרש','גן קיים','גן נדרש','גן פער','יסודי קיים','יסודי נדרש','יסודי פער','על-יסודי קיים','על-יסודי נדרש','על-יסודי פער','חמ"ד מקדמות','תלמידים (קיים)']);
-                                let tot = { ge:0, gr:0, ye:0, yr:0, ae:0, ar:0, mr:0, sp:0, st:0 };
+                                rows.push(['--- ' + (svc.kind === 'edu' ? '🎓 ' : '🏥 ') + svc.label + ' ---']);
+                                rows.push(['תת-שכונה','קיים','להריסה','קיים נטו','+ מתוכנן','= מוצע','נדרש','פער']);
                                 mData.subs.forEach(s => {
-                                    const e = s.existingEdu;
-                                    if (!e) {
-                                        rows.push([s.name, s.byService.maon.totalClasses, '—', s.byService.gan.totalClasses, '—', '—', s.byService.yesodi.totalClasses, '—', '—', s.byService.al_yesodi.totalClasses, '—', '—', '—']);
-                                        tot.gr += s.byService.gan.totalClasses; tot.yr += s.byService.yesodi.totalClasses; tot.ar += s.byService.al_yesodi.totalClasses; tot.mr += s.byService.maon.totalClasses;
-                                        return;
-                                    }
-                                    const ge = e.ganim_count + e.gan_special_count, gr = s.byService.gan.totalClasses;
-                                    const ye = e.yesodi_classes, yr = s.byService.yesodi.totalClasses;
-                                    const ae = e.alyesodi_classes, ar = s.byService.al_yesodi.totalClasses;
-                                    rows.push([s.name, s.byService.maon.totalClasses, ge, gr, ge-gr, ye, yr, ye-yr, ae, ar, ae-ar, e.special_classes, e.students]);
-                                    tot.ge += ge; tot.gr += gr; tot.ye += ye; tot.yr += yr; tot.ae += ae; tot.ar += ar;
-                                    tot.mr += s.byService.maon.totalClasses; tot.sp += e.special_classes; tot.st += e.students;
+                                    const exG = _subEx(s, svc);
+                                    const dem = (s.demolishedClasses && s.demolishedClasses[svc.key]) || 0;
+                                    const exN = exG !== null ? (exG - dem) : (dem > 0 ? -dem : null);
+                                    const pl = (s.plannedClasses && s.plannedClasses[svc.key]) || 0;
+                                    const prop = (exN === null ? 0 : exN) + pl;
+                                    const req = _subReq(s, svc);
+                                    rows.push([s.name, exG === null ? '—' : exG, dem, exN === null ? '—' : exN, pl, prop, req, prop - req]);
                                 });
-                                rows.push(['סה"כ מינהל', tot.mr, tot.ge, tot.gr, tot.ge-tot.gr, tot.ye, tot.yr, tot.ye-tot.yr, tot.ae, tot.ar, tot.ae-tot.ar, tot.sp, tot.st]);
-                            }
+                                const mExG = _minEx(svc);
+                                const mDem = (mData.demolishedClasses && mData.demolishedClasses[svc.key]) || 0;
+                                const mExN = mExG !== null ? (mExG - mDem) : (mDem > 0 ? -mDem : null);
+                                const mPl = (mData.plannedClasses && mData.plannedClasses[svc.key]) || 0;
+                                const mProp = (mExN === null ? 0 : mExN) + mPl;
+                                const mReq = _minReq(svc);
+                                rows.push(['סה"כ מינהל', mExG === null ? '—' : mExG, mDem, mExN === null ? '—' : mExN, mPl, mProp, mReq, mProp - mReq]);
+                            });
+                            // Reference: thresholds & basis for non-edu services
                             rows.push([]);
-                            rows.push(['--- שירותים נוספים (ברמת המינהל) ---']);
-                            rows.push(['שירות','סף כניסה','בסיס חישוב','ערך בפועל','כמות נדרשת','הערה']);
+                            rows.push(['--- פירוט בסיס חישוב — שירותים נוספים (ברמת המינהל) ---']);
+                            rows.push(['שירות','סף כניסה','בסיס חישוב','ערך בפועל','1 ל-','כמות נדרשת','הערה']);
                             mData.nonEdu.forEach(s => {
-                                rows.push([s.label, s.entry, s.basis, s.basisValue, s.count, s.note || '']);
+                                rows.push([s.label, s.entry, s.basis, s.basisValue, s.per, s.count, s.note || '']);
                             });
                             const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\n');
                             const header = cols.map(v => '"' + v + '"').join(',');
@@ -16308,53 +16650,114 @@
                         function printPNReport() {
                             const win = window.open('', '_blank');
                             const eduHdr = '<th>תת-שכונה</th><th>יח״ד</th><th>אוכ.</th>' + PUBLIC_NEEDS_SERVICES.map(s => '<th>' + s.label + '</th>').join('') + '<th>סה״כ</th>';
-                            const eduRows = mData.subs.map(s => '<tr><td>' + s.name + '</td><td>' + s.total_units + '</td><td>' + s.population + '</td>' +
+                            const eduRows_unused = mData.subs.map(s => '<tr><td>' + s.name + '</td><td>' + s.total_units + '</td><td>' + s.population + '</td>' +
                                 PUBLIC_NEEDS_SERVICES.map(svc => '<td>' + s.byService[svc.key].totalClasses + '</td>').join('') +
                                 '<td><b>' + s.totalClasses + '</b></td></tr>').join('');
                             const nonEduRows = mData.nonEdu.map(s => '<tr><td>' + s.label + '</td><td>' + s.entry + '</td><td>' + s.basisValue + '</td><td><b>' + s.count + '</b></td><td>' + (s.note||'') + '</td></tr>').join('');
+                            // Compact sub-units summary (replaces verbose chinuch table)
+                            const subSummaryRows = mData.subs.map(s => '<tr><td>' + s.name + '</td><td>' + s.units_in.toLocaleString() + '</td><td>+' + s.units_new_target.toLocaleString() + '</td><td><b>' + s.total_units.toLocaleString() + '</b></td><td>' + s.population.toLocaleString() + '</td><td><b>' + s.totalClasses + '</b></td></tr>').join('');
+                            // Unified balance per service
+                            const _BAL_PR = [
+                                { key: 'maon', label: 'מעון', kind: 'edu' },
+                                { key: 'gan', label: 'גני ילדים', kind: 'edu' },
+                                { key: 'yesodi', label: 'יסודי', kind: 'edu' },
+                                { key: 'al_yesodi', label: 'על-יסודי', kind: 'edu' },
+                                { key: 'tipat_chalav', label: 'טיפת חלב', kind: 'service' },
+                                { key: 'clinic', label: 'מרפאה שכונתית', kind: 'service' },
+                                { key: 'matnas', label: 'מתנ"ס', kind: 'service' },
+                                { key: 'welfare_dept', label: 'לשכת רווחה', kind: 'service' },
+                                { key: 'noar_club', label: 'מועדון נוער', kind: 'service' },
+                                { key: 'elderly_club', label: 'מועדון קשיש', kind: 'service' },
+                                { key: 'elderly_day', label: 'מרכז יום לקשיש', kind: 'service' },
+                                { key: 'synagogue', label: 'בית כנסת', kind: 'service' },
+                                { key: 'mikve', label: 'מקווה טהרה', kind: 'service' },
+                                { key: 'sport_hall', label: 'אולם ספורט', kind: 'service' },
+                                { key: 'library', label: 'ספרייה שכונתית', kind: 'service' },
+                            ];
+                            const _exFor = (s, svc) => {
+                                if (svc.kind === 'edu') {
+                                    const e = s.existingEdu; if (!e) return null;
+                                    if (svc.key === 'gan') return (e.ganim_count || 0) + (e.gan_special_count || 0);
+                                    if (svc.key === 'yesodi') return e.yesodi_classes || 0;
+                                    if (svc.key === 'al_yesodi') return e.alyesodi_classes || 0;
+                                    return null;
+                                }
+                                return (s.existingByService && s.existingByService[svc.key]) || 0;
+                            };
+                            const _reqFor = (s, svc) => svc.kind === 'edu'
+                                ? s.byService[svc.key].totalClasses
+                                : ((s.nonEduRequiredByKey && s.nonEduRequiredByKey[svc.key]) || 0);
+                            const _mExFor = (svc) => {
+                                if (svc.kind === 'edu') {
+                                    if (svc.key === 'maon') return null;
+                                    let any = false, total = 0;
+                                    mData.subs.forEach(s => {
+                                        if (!s.existingEdu) return;
+                                        any = true; const e = s.existingEdu;
+                                        if (svc.key === 'gan') total += (e.ganim_count || 0) + (e.gan_special_count || 0);
+                                        else if (svc.key === 'yesodi') total += e.yesodi_classes || 0;
+                                        else if (svc.key === 'al_yesodi') total += e.alyesodi_classes || 0;
+                                    });
+                                    return any ? total : null;
+                                }
+                                return (mData.existingByService && mData.existingByService[svc.key]) || 0;
+                            };
+                            const _mReqFor = (svc) => svc.kind === 'edu'
+                                ? mData.byService[svc.key].totalClasses
+                                : ((mData.nonEduRequiredByKey && mData.nonEduRequiredByKey[svc.key]) || 0);
+                            const _showFuture = mData.targetYear !== 'existing';
+                            const _fmtSigned = (v) => (v >= 0 ? '+' : '') + v;
+                            const _gapColor = (d, r) => {
+                                if (r === 0) return d > 0 ? '#2e7d32' : '#999';
+                                const ratio = d / r;
+                                if (ratio >= 0) return '#2e7d32';
+                                if (ratio >= -0.2) return '#f59e0b';
+                                if (ratio >= -0.5) return '#ef6c00';
+                                return '#c62828';
+                            };
+                            const balanceTablesHtml = _BAL_PR.map(svc => {
+                                const subRows = mData.subs.map(s => {
+                                    const exG = _exFor(s, svc);
+                                    const dem = (s.demolishedClasses && s.demolishedClasses[svc.key]) || 0;
+                                    const exN = exG !== null ? (exG - dem) : (dem > 0 ? -dem : null);
+                                    const pl = (s.plannedClasses && s.plannedClasses[svc.key]) || 0;
+                                    const prop = (exN === null ? 0 : exN) + pl;
+                                    const req = _reqFor(s, svc);
+                                    const gap = prop - req;
+                                    const exCell = exG === null ? '—' : (exG + (dem > 0 ? ' <span style="color:#c62828;font-size:9px">(-' + dem + ')</span>' : ''));
+                                    let cells = '<td>' + s.name + '</td><td>' + exCell + '</td>';
+                                    if (_showFuture) cells += '<td>+' + pl + '</td><td><b>' + (exN === null ? pl : prop) + '</b></td>';
+                                    cells += '<td>' + req + '</td><td style="color:' + _gapColor(gap, req) + ';font-weight:bold">' + _fmtSigned(gap) + '</td>';
+                                    return '<tr>' + cells + '</tr>';
+                                }).join('');
+                                const mExG = _mExFor(svc);
+                                const mDem = (mData.demolishedClasses && mData.demolishedClasses[svc.key]) || 0;
+                                const mExN = mExG !== null ? (mExG - mDem) : (mDem > 0 ? -mDem : null);
+                                const mPl = (mData.plannedClasses && mData.plannedClasses[svc.key]) || 0;
+                                const mProp = (mExN === null ? 0 : mExN) + mPl;
+                                const mReq = _mReqFor(svc);
+                                const mGap = mProp - mReq;
+                                const mExCell = mExG === null ? '—' : (mExG + (mDem > 0 ? ' <span style="color:#c62828;font-size:9px">(-' + mDem + ')</span>' : ''));
+                                let totCells = '<td><b>סה"כ מינהל</b></td><td><b>' + mExCell + '</b></td>';
+                                if (_showFuture) totCells += '<td><b>+' + mPl + '</b></td><td><b>' + (mExN === null ? mPl : mProp) + '</b></td>';
+                                totCells += '<td><b>' + mReq + '</b></td><td style="color:' + _gapColor(mGap, mReq) + ';font-weight:bold">' + _fmtSigned(mGap) + '</td>';
+                                let hdr = '<th>תת-שכונה</th><th>קיים</th>';
+                                if (_showFuture) hdr += '<th>+ מתוכנן</th><th>= מוצע</th>';
+                                hdr += '<th>נדרש</th><th>פער</th>';
+                                return '<h4 style="margin:12px 0 4px 0;color:' + (svc.kind === 'edu' ? '#5d4037' : '#8b4513') + '">' + (svc.kind === 'edu' ? '🎓' : '🏥') + ' ' + svc.label + '</h4>' +
+                                    '<table><thead><tr>' + hdr + '</tr></thead><tbody>' + subRows + '<tr style="background:#eef;font-weight:bold">' + totCells + '</tr></tbody></table>';
+                            }).join('');
                             win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>פרוגרמה ' + mData.name + '</title>' +
-                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2,h3{color:#0d47a1}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#eef}.params{background:#f7f7ff;padding:10px;margin:10px 0;border-radius:4px;font-size:11px}</style></head><body>');
-                            win.document.write('<h2>🏘️ פרוגרמה שכונתית — ' + mData.name + ' (' + (mData.targetYear === 'existing' ? 'מצב קיים' : 'אופק ' + mData.targetYear) + ')</h2>');
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2,h3,h4{color:#0d47a1}h4{font-size:12px;margin-bottom:4px}table{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:10px}th,td{border:1px solid #ccc;padding:4px;text-align:center}th{background:#eef}.params{background:#f7f7ff;padding:10px;margin:10px 0;border-radius:4px;font-size:11px}</style></head><body>');
+                            const _yearLabel = mData.targetYear === 'existing' ? 'מצב קיים' : mData.targetYear === 'full' ? '100% מימוש' : 'אופק ' + mData.targetYear;
+                            win.document.write('<h2>🏘️ פרוגרמה שכונתית — ' + mData.name + ' (' + _yearLabel + ')</h2>');
                             win.document.write('<div class="params">הנחות: גודל משק בית=<b>' + mData.assumpt.householdSize + '</b> · %חרדי=<b>' + Math.round(mData.assumpt.haredi*100) + '%</b> · %דתי=<b>' + Math.round(mData.assumpt.religious*100) + '%</b> · אוכלוסייה צפויה=<b>' + mData.population.toLocaleString() + '</b></div>');
-                            win.document.write('<h3>🎓 חינוך — כיתות נדרשות לפי תת-שכונה</h3>');
-                            win.document.write('<table><thead><tr>' + eduHdr + '</tr></thead><tbody>' + eduRows + '</tbody></table>');
-                            // Existing edu balance — only in "existing" mode
-                            const _subsWithEdu = mData.subs.filter(s => s.existingEdu);
-                            if (_subsWithEdu.length) {
-                                const fmtDelta = (d, r) => {
-                                    if (r === 0) return d > 0 ? '<span style="color:#2e7d32">+' + d + '</span>' : String(d);
-                                    const ratio = d / r;
-                                    const c = ratio >= 0 ? '#2e7d32' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#c62828';
-                                    return '<span style="color:' + c + ';font-weight:bold">' + (d>=0?'+':'') + d + '</span>';
-                                };
-                                let tot = { ge:0, gr:0, ye:0, yr:0, ae:0, ar:0, sp:0 };
-                                let balanceRows = '';
-                                mData.subs.forEach(s => {
-                                    const e = s.existingEdu;
-                                    if (!e) {
-                                        balanceRows += '<tr><td>' + s.name + '</td><td colspan="9" style="color:#aaa;font-size:10px">אין נתונים בשנתון</td></tr>';
-                                        return;
-                                    }
-                                    const ge = e.ganim_count + e.gan_special_count, gr = s.byService.gan.totalClasses;
-                                    const ye = e.yesodi_classes, yr = s.byService.yesodi.totalClasses;
-                                    const ae = e.alyesodi_classes, ar = s.byService.al_yesodi.totalClasses;
-                                    balanceRows += '<tr><td>' + s.name + '</td>' +
-                                        '<td>' + ge + '</td><td>' + gr + '</td><td>' + fmtDelta(ge-gr, gr) + '</td>' +
-                                        '<td>' + ye + '</td><td>' + yr + '</td><td>' + fmtDelta(ye-yr, yr) + '</td>' +
-                                        '<td>' + ae + '</td><td>' + ar + '</td><td>' + fmtDelta(ae-ar, ar) + '</td>' +
-                                        '<td>' + e.special_classes + '</td>' +
-                                        '<td>' + e.students.toLocaleString() + '</td></tr>';
-                                    tot.ge += ge; tot.gr += gr; tot.ye += ye; tot.yr += yr; tot.ae += ae; tot.ar += ar; tot.sp += e.special_classes;
-                                });
-                                balanceRows += '<tr style="background:#eee;font-weight:bold"><td>סה"כ מינהל</td>' +
-                                    '<td>' + tot.ge + '</td><td>' + tot.gr + '</td><td>' + fmtDelta(tot.ge-tot.gr, tot.gr) + '</td>' +
-                                    '<td>' + tot.ye + '</td><td>' + tot.yr + '</td><td>' + fmtDelta(tot.ye-tot.yr, tot.yr) + '</td>' +
-                                    '<td>' + tot.ae + '</td><td>' + tot.ar + '</td><td>' + fmtDelta(tot.ae-tot.ar, tot.ar) + '</td>' +
-                                    '<td>' + tot.sp + '</td><td>—</td></tr>';
-                                win.document.write('<h3>🏫 מאזן חינוך — קיים מול נדרש (מנתוני שנתון מנח"י)</h3>');
-                                win.document.write('<table><thead><tr><th rowspan="2">תת-שכונה</th><th colspan="3">גני ילדים</th><th colspan="3">יסודי</th><th colspan="3">על-יסודי</th><th rowspan="2">חמ"ד מקדמות</th><th rowspan="2">תלמידים</th></tr><tr><th>קיים</th><th>נדרש</th><th>פער</th><th>קיים</th><th>נדרש</th><th>פער</th><th>קיים</th><th>נדרש</th><th>פער</th></tr></thead><tbody>' + balanceRows + '</tbody></table>');
-                            }
-                            win.document.write('<h3>🏢 שירותים נוספים (ברמת המינהל)</h3>');
+                            win.document.write('<h3>🏘️ תת-שכונות במינהל</h3>');
+                            win.document.write('<table><thead><tr><th>תת-שכונה</th><th>יח״ד קיימות</th><th>תוספת</th><th>סה״כ יח״ד</th><th>אוכ.</th><th>סה״כ כיתות נדרשות</th></tr></thead><tbody>' + subSummaryRows + '</tbody></table>');
+                            win.document.write('<h3>🏫 מאזן עתידי לפי תת-שכונה — קיים / מתוכנן / מוצע / נדרש</h3>');
+                            win.document.write(balanceTablesHtml);
+                            // Reference: thresholds & basis for non-edu services (kept for printout context)
+                            win.document.write('<h3>📐 פירוט בסיס חישוב — שירותים נוספים (ברמת המינהל)</h3>');
                             win.document.write('<table><thead><tr><th>שירות</th><th>סף כניסה</th><th>בסיס חישוב</th><th>כמות נדרשת</th><th>הערה</th></tr></thead><tbody>' + nonEduRows + '</tbody></table>');
                             win.document.write('<p style="font-size:10px;color:#666">* מבוסס על מכסות מרקם עירוני קיים (טיפוס C), מדריך מינהל התכנון, 2018.</p>');
                             win.document.write('</body></html>');
@@ -16395,8 +16798,8 @@
                                             <div style={{background:'#1a1a2e',padding:12,borderRadius:8,borderRight:'4px solid #f59e0b'}}><div style={{fontSize:11,color:'#888'}}>אוכלוסייה מוערכת</div><div style={{fontSize:22,color:'#f59e0b',fontWeight:'bold'}}>{mData.population.toLocaleString()}</div></div>
                                         </div>
 
-                                        {/* Education section */}
-                                        <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🎓 חינוך — כיתות נדרשות לכל תת-שכונה</h3>
+                                        {/* ── Sub-units summary strip (replaces old required-only education table; keeps core info per sub) ── */}
+                                        <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏘️ תת-שכונות במינהל</h3>
                                         <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginBottom:24}}>
                                             <thead>
                                                 <tr style={{background:'#1a1a2e',color:'#aaa'}}>
@@ -16405,34 +16808,22 @@
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>{mData.targetYear === 'existing' ? 'תוספת' : mData.targetYear === 'full' ? '+100% מימוש' : '+' + mData.targetYear}</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>סה״כ</th>
                                                     <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>אוכלוסייה</th>
-                                                    {PUBLIC_NEEDS_SERVICES.map(svc => (
-                                                        <th key={svc.key} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e0e0ff'}}>{svc.label}<br/><span style={{fontSize:10,color:'#888'}}>כיתות</span></th>
-                                                    ))}
-                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#4CAF50'}}>סה״כ כיתות</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e0e0ff'}}>סה״כ כיתות נדרשות</th>
+                                                    <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333'}}></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {mData.subs.map(s => (
                                                     <tr key={s.name} style={{borderBottom:'1px solid #222'}}>
-                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0',cursor:'pointer'}} title="קליק לפירוט (חינוך) | קליק על 🏘️ לפרוגרמה רחבה" onClick={() => setPublicNeedsDrilldown({ sub: s.name })}>
-                                                            <span style={{textDecoration:'underline'}}>{s.name}</span>
-                                                            <button title="פתח פרוגרמה מלאה לתת-שכונה (Q קיזוז + 100% מימוש + שירותים מורחבים)" onClick={(e) => { e.stopPropagation(); window.__openProgramaForSubPolygon && window.__openProgramaForSubPolygon(s.name); }} style={{marginRight:6,background:'#7b6cf0',color:'#fff',border:'none',padding:'1px 6px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>🏘️ פרוגרמה ›</button>
-                                                        </td>
+                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#4ba1f0'}}>{s.units_in.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#4CAF50'}}>+{s.units_new_target.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total_units.toLocaleString()}</td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{s.population.toLocaleString()}</td>
-                                                        {PUBLIC_NEEDS_SERVICES.map(svc => {
-                                                            const sd = s.byService[svc.key];
-                                                            const empty = sd.totalClasses === 0;
-                                                            return (
-                                                                <td key={svc.key} onClick={() => empty ? null : setPublicNeedsDrilldown({ sub: s.name })}
-                                                                    style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#555':'#e0e0ff',background:empty?'transparent':'rgba(255,255,255,0.02)'}}>
-                                                                    {empty ? '—' : sd.totalClasses}
-                                                                </td>
-                                                            );
-                                                        })}
                                                         <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#4CAF50'}}>{s.totalClasses}</td>
+                                                        <td style={{padding:'6px',textAlign:'center'}}>
+                                                            <button title="פתח פרוגרמה מלאה לתת-שכונה (Q קיזוז + 100% מימוש + שירותים מורחבים)" onClick={() => window.__openProgramaForSubPolygon && window.__openProgramaForSubPolygon(s.name)} style={{background:'#7b6cf0',color:'#fff',border:'none',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>🏘️ פרוגרמה ›</button>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -16443,33 +16834,26 @@
                                                     <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>+{mData.units_new_target.toLocaleString()}</td>
                                                     <td style={{padding:8,textAlign:'center',color:'#fff'}}>{mData.total_units.toLocaleString()}</td>
                                                     <td style={{padding:8,textAlign:'center',color:'#f59e0b'}}>{mData.population.toLocaleString()}</td>
-                                                    {PUBLIC_NEEDS_SERVICES.map(svc => (
-                                                        <td key={svc.key} style={{padding:8,textAlign:'center',color:'#e0e0ff'}}>{mData.byService[svc.key].totalClasses}</td>
-                                                    ))}
                                                     <td style={{padding:8,textAlign:'center',color:'#4CAF50'}}>{mData.totalClasses}</td>
+                                                    <td></td>
                                                 </tr>
                                             </tfoot>
                                         </table>
 
-                                        {/* Existing education classes from שנתון מנח"י + delta vs required — shown at all horizons */}
+                                        {/* ── Unified future balance: per-service tables with 5 columns (קיים | + מתוכנן | = מוצע | נדרש | פער) ── */}
                                         {(() => {
-                                            const subsWithEdu = mData.subs.filter(s => s.existingEdu);
-                                            if (!subsWithEdu.length) return null;
-                                            // Helper: existing classes by service key
-                                            const existingByKey = (e) => ({
-                                                gan: (e.ganim_count || 0) + (e.gan_special_count || 0),
-                                                yesodi: e.yesodi_classes || 0,
-                                                al_yesodi: e.alyesodi_classes || 0,
-                                                maon: null, // no existing data for maon
-                                            });
-                                            // Color for delta value (existing - required)
+                                            const tY = mData.targetYear;
+                                            const isExisting = tY === 'existing';
+                                            const isFull = tY === 'full';
+                                            const horizonLabel = isExisting ? 'מצב קיים' : isFull ? '100% מימוש (כל התב"עות)' : 'אופק ' + tY;
+
                                             const deltaColor = (delta, required) => {
                                                 if (required === 0) return delta > 0 ? '#4CAF50' : '#888';
                                                 const ratio = delta / required;
-                                                if (ratio >= 0) return '#4CAF50';        // surplus / balanced
-                                                if (ratio >= -0.2) return '#f59e0b';     // mild deficit (≤20%)
-                                                if (ratio >= -0.5) return '#ef6c00';     // medium deficit (20-50%)
-                                                return '#e53935';                         // severe deficit (>50%)
+                                                if (ratio >= 0) return '#4CAF50';
+                                                if (ratio >= -0.2) return '#f59e0b';
+                                                if (ratio >= -0.5) return '#ef6c00';
+                                                return '#e53935';
                                             };
                                             const deltaRowBg = (delta, required) => {
                                                 if (required === 0) return 'transparent';
@@ -16479,108 +16863,156 @@
                                                 if (ratio >= -0.5) return 'rgba(239,108,0,0.10)';
                                                 return 'rgba(229,57,53,0.13)';
                                             };
-                                            // Format a comparison cell: "existing/required (delta)"
-                                            const compCell = (existing, required, key) => {
-                                                if (existing === null) {
-                                                    return <span style={{color:'#666'}}>—<span style={{fontSize:9,color:'#888',display:'block'}}>נדרש: {required}</span></span>;
+
+                                            // 15 services — same definition as BALANCE_SERVICES in renderProgramaModal (so totals can be cross-checked).
+                                            const BALANCE_SERVICES = [
+                                                { key: 'maon',         label: 'מעון',           kind: 'edu',     unit: 'כיתות' },
+                                                { key: 'gan',          label: 'גני ילדים',     kind: 'edu',     unit: 'כיתות' },
+                                                { key: 'yesodi',       label: 'יסודי',          kind: 'edu',     unit: 'כיתות' },
+                                                { key: 'al_yesodi',    label: 'על-יסודי',       kind: 'edu',     unit: 'כיתות' },
+                                                { key: 'tipat_chalav', label: 'טיפת חלב',       kind: 'service', unit: 'תחנות' },
+                                                { key: 'clinic',       label: 'מרפאה שכונתית', kind: 'service', unit: 'מרפאות' },
+                                                { key: 'matnas',       label: 'מתנ"ס/מרכז קהילתי', kind: 'service', unit: 'מרכזים' },
+                                                { key: 'welfare_dept', label: 'לשכת רווחה',     kind: 'service', unit: 'לשכות' },
+                                                { key: 'noar_club',    label: 'מועדון נוער',    kind: 'service', unit: 'מועדונים' },
+                                                { key: 'elderly_club', label: 'מועדון קשיש',    kind: 'service', unit: 'מועדונים' },
+                                                { key: 'elderly_day',  label: 'מרכז יום לקשיש', kind: 'service', unit: 'מרכזים' },
+                                                { key: 'synagogue',    label: 'בית כנסת',       kind: 'service', unit: 'בתי כנסת' },
+                                                { key: 'mikve',        label: 'מקווה טהרה',     kind: 'service', unit: 'מקוואות' },
+                                                { key: 'sport_hall',   label: 'אולם ספורט',     kind: 'service', unit: 'אולמות' },
+                                                { key: 'library',      label: 'ספרייה שכונתית', kind: 'service', unit: 'ספריות' },
+                                            ];
+
+                                            // Per-sub × service: returns { exGross, demolished, exNet, planned, proposed, required, delta }.
+                                            // Mirrors getServiceCounts() in renderProgramaModal (line 6972) so per-sub rows match the מאזן למינהל formula.
+                                            const getCounts = (s, svc) => {
+                                                let exGross;
+                                                if (svc.kind === 'edu') {
+                                                    const e = s.existingEdu;
+                                                    if (!e) exGross = null;
+                                                    else if (svc.key === 'gan') exGross = (e.ganim_count || 0) + (e.gan_special_count || 0);
+                                                    else if (svc.key === 'yesodi') exGross = e.yesodi_classes || 0;
+                                                    else if (svc.key === 'al_yesodi') exGross = e.alyesodi_classes || 0;
+                                                    else exGross = null; // maon — no שנתון coverage
+                                                } else {
+                                                    exGross = (s.existingByService && s.existingByService[svc.key]) || 0;
                                                 }
-                                                const delta = existing - required;
-                                                const c = deltaColor(delta, required);
-                                                return (
-                                                    <span>
-                                                        <b style={{color:'#e0e0e0'}}>{existing}</b>
-                                                        <span style={{color:'#666'}}> / </span>
-                                                        <span style={{color:'#aaa'}}>{required}</span>
-                                                        <span style={{display:'block',fontSize:11,color:c,fontWeight:'bold',marginTop:2}}>
-                                                            {delta >= 0 ? '+' : ''}{delta}
-                                                        </span>
-                                                    </span>
-                                                );
+                                                const demolished = (s.demolishedClasses && s.demolishedClasses[svc.key]) || 0;
+                                                const exNet = exGross !== null ? (exGross - demolished) : (demolished > 0 ? -demolished : null);
+                                                const planned = (s.plannedClasses && s.plannedClasses[svc.key]) || 0;
+                                                const proposed = (exNet === null ? 0 : exNet) + planned;
+                                                const required = svc.kind === 'edu'
+                                                    ? s.byService[svc.key].totalClasses
+                                                    : ((s.nonEduRequiredByKey && s.nonEduRequiredByKey[svc.key]) || 0);
+                                                return { exGross, demolished, exNet, planned, proposed, required, delta: proposed - required };
+                                            };
+                                            // Minahak total — uses pre-computed mData.{plannedClasses,demolishedClasses,existingByService}
+                                            // (full precision, matches renderProgramaModal totals to avoid sub-level rounding drift).
+                                            const getMinahakCounts = (svc) => {
+                                                let exGross;
+                                                if (svc.kind === 'edu') {
+                                                    let g = 0, y = 0, ay = 0; let anyEdu = false;
+                                                    mData.subs.forEach(s => {
+                                                        if (!s.existingEdu) return;
+                                                        anyEdu = true;
+                                                        g += (s.existingEdu.ganim_count || 0) + (s.existingEdu.gan_special_count || 0);
+                                                        y += s.existingEdu.yesodi_classes || 0;
+                                                        ay += s.existingEdu.alyesodi_classes || 0;
+                                                    });
+                                                    if (svc.key === 'maon') exGross = null;
+                                                    else if (!anyEdu) exGross = null;
+                                                    else if (svc.key === 'gan') exGross = g;
+                                                    else if (svc.key === 'yesodi') exGross = y;
+                                                    else exGross = ay; // al_yesodi
+                                                } else {
+                                                    exGross = (mData.existingByService && mData.existingByService[svc.key]) || 0;
+                                                }
+                                                const demolished = (mData.demolishedClasses && mData.demolishedClasses[svc.key]) || 0;
+                                                const exNet = exGross !== null ? (exGross - demolished) : (demolished > 0 ? -demolished : null);
+                                                const planned = (mData.plannedClasses && mData.plannedClasses[svc.key]) || 0;
+                                                const proposed = (exNet === null ? 0 : exNet) + planned;
+                                                const required = svc.kind === 'edu'
+                                                    ? mData.byService[svc.key].totalClasses
+                                                    : ((mData.nonEduRequiredByKey && mData.nonEduRequiredByKey[svc.key]) || 0);
+                                                return { exGross, demolished, exNet, planned, proposed, required, delta: proposed - required };
                                             };
 
-                                            // Aggregate per-sub deltas
-                                            const SVCS = [
-                                                { key: 'maon',      label: 'מעון',      color: '#e0c3fc' },
-                                                { key: 'gan',       label: 'גני ילדים', color: '#7ec8e3' },
-                                                { key: 'yesodi',    label: 'יסודי',     color: '#90ee90' },
-                                                { key: 'al_yesodi', label: 'על-יסודי',  color: '#ffb6a3' },
-                                            ];
-                                            const tot = subsWithEdu.reduce((acc, s) => {
-                                                const e = s.existingEdu;
-                                                acc.ganim_count += e.ganim_count;
-                                                acc.gan_special_count += e.gan_special_count;
-                                                acc.yesodi_classes += e.yesodi_classes;
-                                                acc.alyesodi_classes += e.alyesodi_classes;
-                                                acc.special_classes += e.special_classes;
-                                                acc.students += e.students;
-                                                return acc;
-                                            }, { ganim_count: 0, gan_special_count: 0, yesodi_classes: 0, alyesodi_classes: 0, special_classes: 0, students: 0 });
-                                            const totRequired = { gan: 0, yesodi: 0, al_yesodi: 0, maon: 0 };
-                                            mData.subs.forEach(s => {
-                                                ['gan','yesodi','al_yesodi','maon'].forEach(k => {
-                                                    totRequired[k] += s.byService[k].totalClasses;
-                                                });
-                                            });
-                                            const totExisting = { gan: tot.ganim_count + tot.gan_special_count, yesodi: tot.yesodi_classes, al_yesodi: tot.alyesodi_classes, maon: null };
-                                            const totalDelta = (totExisting.gan - totRequired.gan) + (totExisting.yesodi - totRequired.yesodi) + (totExisting.al_yesodi - totRequired.al_yesodi);
+                                            const fmtSigned = (v) => (v >= 0 ? '+' : '') + v;
+                                            const showFuture = !isExisting;
 
-                                            return (
-                                                <>
-                                                    <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏫 מאזן חינוך — קיים מול נדרש <span style={{fontSize:11,color:'#888',fontWeight:'normal'}}>(שנתון מנח"י vs טבלה לעיל · קיים / נדרש = פער)</span></h3>
-                                                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginBottom:14}}>
-                                                        <thead>
-                                                            <tr style={{background:'#1a1a2e',color:'#aaa'}}>
-                                                                <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
-                                                                {SVCS.map(svc => (
-                                                                    <th key={svc.key} style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:svc.color}}>{svc.label}</th>
-                                                                ))}
-                                                                <th style={{padding:'8px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#f59e0b'}}>תלמידים<br/><span style={{fontSize:9,color:'#888'}}>(קיים)</span></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {mData.subs.map(s => {
-                                                                const e = s.existingEdu;
-                                                                if (!e) return (
-                                                                    <tr key={s.name} style={{borderBottom:'1px solid #222',opacity:0.45}}>
-                                                                        <td style={{padding:'6px',color:'#888'}}>{s.name}</td>
-                                                                        <td colSpan={SVCS.length + 1} style={{padding:'6px',textAlign:'center',color:'#555',fontSize:11}}>אין נתונים בשנתון</td>
-                                                                    </tr>
-                                                                );
-                                                                const ex = existingByKey(e);
-                                                                const isOpen = balanceDrilldown && balanceDrilldown.sub === s.name;
-                                                                return (
-                                                                    <React.Fragment key={s.name}>
-                                                                    <tr style={{borderBottom:'1px solid #222'}}>
-                                                                        <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
-                                                                        {SVCS.map(svc => {
-                                                                            const list = (e.byKey && e.byKey[svc.key]) || [];
-                                                                            const clickable = list.length > 0;
-                                                                            const isThisOpen = isOpen && balanceDrilldown.svcKey === svc.key;
+                                            const renderBalanceTable = (svc) => {
+                                                const mc = getMinahakCounts(svc);
+                                                return (
+                                                    <details key={svc.key} open={svc.kind === 'edu'} style={{marginBottom:8,background:'#16162a',borderRadius:6,padding:'4px 8px',border:'1px solid #2a2a44'}}>
+                                                        <summary style={{cursor:'pointer',padding:'6px 4px',color:svc.kind==='edu'?'#e0e0ff':'#d4a87a',fontSize:13,listStyle:'revert',display:'list-item',userSelect:'none'}}>
+                                                            <span style={{fontWeight:'bold'}}>{svc.kind === 'edu' ? '🎓' : '🏥'} {svc.label}</span>
+                                                            <span style={{fontSize:11,fontWeight:'normal',color:'#888',marginRight:10}}>
+                                                                {showFuture && (
+                                                                    <>
+                                                                        <span style={{color:'#bdb6e8'}}>קיים {mc.exNet !== null ? mc.exNet : '—'}</span>
+                                                                        <span style={{color:'#666'}}> · </span>
+                                                                        <span style={{color:'#7b6cf0'}}>+{mc.planned} מתוכנן</span>
+                                                                        <span style={{color:'#666'}}> · </span>
+                                                                        <span style={{color:'#fff'}}>= {mc.proposed} מוצע</span>
+                                                                        <span style={{color:'#666'}}> / </span>
+                                                                    </>
+                                                                )}
+                                                                <span style={{color:'#aaa'}}>{mc.required} נדרש</span>
+                                                                {showFuture && mc.required > 0 && (
+                                                                    <>
+                                                                        <span style={{color:'#666'}}> · </span>
+                                                                        <span style={{color:deltaColor(mc.delta, mc.required),fontWeight:'bold'}}>פער {fmtSigned(mc.delta)}</span>
+                                                                    </>
+                                                                )}
+                                                            </span>
+                                                        </summary>
+                                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginTop:6}}>
+                                                            <thead>
+                                                                <tr style={{background:'#1a1a2e',color:'#aaa'}}>
+                                                                    <th style={{padding:'6px',textAlign:'right',borderBottom:'1px solid #333'}}>תת-שכונה</th>
+                                                                    <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>קיים</th>
+                                                                    {showFuture && <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#7b6cf0'}}>+ מתוכנן</th>}
+                                                                    {showFuture && <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333',color:'#fff'}}>= מוצע</th>}
+                                                                    <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>נדרש</th>
+                                                                    <th style={{padding:'6px',textAlign:'center',borderBottom:'1px solid #333'}}>פער</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {mData.subs.map(s => {
+                                                                    const c = getCounts(s, svc);
+                                                                    const isOpen = svc.kind === 'edu' && balanceDrilldown && balanceDrilldown.sub === s.name && balanceDrilldown.svcKey === svc.key;
+                                                                    const eduList = (svc.kind === 'edu' && s.existingEdu && s.existingEdu.byKey) ? (s.existingEdu.byKey[svc.key] || []) : [];
+                                                                    const clickable = svc.kind === 'edu' && eduList.length > 0;
+                                                                    return (
+                                                                        <React.Fragment key={s.name}>
+                                                                        <tr style={{borderBottom:'1px solid #222',background:deltaRowBg(c.delta, c.required)}}>
+                                                                            <td onClick={() => clickable && setBalanceDrilldown(isOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'6px',color:'#e0e0e0',cursor:clickable?'pointer':'default',outline:isOpen?'2px solid #4a90e2':'none'}} title={clickable ? 'לחץ לרשימת מוסדות' : ''}>
+                                                                                {clickable ? <span style={{textDecoration:'underline'}}>{s.name}</span> : s.name}
+                                                                            </td>
+                                                                            <td style={{padding:'6px',textAlign:'center',color:c.exGross===null?'#666':'#bdb6e8'}}>
+                                                                                {c.exGross === null ? '—' : c.exGross}
+                                                                                {c.demolished > 0 && <div style={{fontSize:9,color:'#e57373'}}>-{c.demolished} להריסה</div>}
+                                                                            </td>
+                                                                            {showFuture && <td style={{padding:'6px',textAlign:'center',color:'#7b6cf0'}}>+{c.planned}</td>}
+                                                                            {showFuture && <td style={{padding:'6px',textAlign:'center',color:'#fff',fontWeight:'bold'}}>{c.exNet === null ? c.planned : c.proposed}</td>}
+                                                                            <td style={{padding:'6px',textAlign:'center',color:'#aaa'}}>{c.required}</td>
+                                                                            <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:deltaColor(c.delta, c.required)}}>{fmtSigned(c.delta)}</td>
+                                                                        </tr>
+                                                                        {isOpen && (() => {
+                                                                            const list = eduList;
+                                                                            const totStud = list.reduce((a,x)=>a+(x.students||0),0);
+                                                                            const totCls = list.reduce((a,x)=>a+(x.classes||0),0);
+                                                                            const avg = totCls ? Math.round(totStud/totCls) : 0;
+                                                                            const colSpanN = showFuture ? 6 : 4;
                                                                             return (
-                                                                                <td key={svc.key} onClick={() => clickable && setBalanceDrilldown(isThisOpen ? null : { sub: s.name, svcKey: svc.key })} style={{padding:'4px 6px',textAlign:'center',background:deltaRowBg(((ex[svc.key]||0) - s.byService[svc.key].totalClasses), s.byService[svc.key].totalClasses),cursor:clickable?'pointer':'default',outline:isThisOpen?'2px solid #4a90e2':'none'}} title={clickable ? 'לחץ לרשימה' : ''}>
-                                                                                    {compCell(ex[svc.key], s.byService[svc.key].totalClasses, svc.key)}
-                                                                                </td>
-                                                                            );
-                                                                        })}
-                                                                        <td style={{padding:'6px',textAlign:'center',color:'#f59e0b'}}>{e.students.toLocaleString()}</td>
-                                                                    </tr>
-                                                                    {isOpen && (() => {
-                                                                        const svcKey = balanceDrilldown.svcKey;
-                                                                        const list = (e.byKey && e.byKey[svcKey]) || [];
-                                                                        const svcLabel = (SVCS.find(x => x.key === svcKey) || {}).label || svcKey;
-                                                                        const totStud = list.reduce((a,x)=>a+(x.students||0),0);
-                                                                        const totCls = list.reduce((a,x)=>a+(x.classes||0),0);
-                                                                        const avg = totCls ? Math.round(totStud/totCls) : 0;
-                                                                        return (
-                                                                            <tr>
-                                                                                <td colSpan={SVCS.length + 2} style={{padding:'8px 12px 14px 12px',background:'rgba(74,144,226,0.06)',borderBottom:'1px solid #222'}}>
-                                                                                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-                                                                                        <span style={{fontSize:12,color:'#aaa'}}>📋 <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svcLabel} ({list.length} מוסדות · {totCls} כיתות · {totStud.toLocaleString()} תלמידים · ממוצע {avg}/כיתה)</span>
-                                                                                        <button onClick={() => setBalanceDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
-                                                                                    </div>
-                                                                                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
-                                                                                        <thead>
-                                                                                            <tr style={{color:'#888'}}>
+                                                                                <tr>
+                                                                                    <td colSpan={colSpanN} style={{padding:'8px 12px 14px 12px',background:'rgba(74,144,226,0.06)',borderBottom:'1px solid #222'}}>
+                                                                                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+                                                                                            <span style={{fontSize:12,color:'#aaa'}}>📋 <b style={{color:'#e0e0ff'}}>{s.name}</b> — {svc.label} ({list.length} מוסדות · {totCls} כיתות · {totStud.toLocaleString()} תלמידים · ממוצע {avg}/כיתה)</span>
+                                                                                            <button onClick={() => setBalanceDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
+                                                                                        </div>
+                                                                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
+                                                                                            <thead><tr style={{color:'#888'}}>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שם המוסד</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>כתובת</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>סוג</th>
@@ -16588,63 +17020,73 @@
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>תלמידים</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>כיתות</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>ממוצע/כיתה</th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody>
-                                                                                            {list.sort((a,b) => (b.students||0)-(a.students||0)).map((it, idx) => (
-                                                                                                <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
-                                                                                                    <td style={{padding:'3px 6px'}}>{it.name}</td>
-                                                                                                    <td style={{padding:'3px 6px',color:'#888'}}>{it.address}</td>
-                                                                                                    <td style={{padding:'3px 6px',textAlign:'center'}}>{it.type}{it.special ? ' ⓢ' : ''}</td>
-                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{it.pikuach || '—'}</td>
-                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{it.students || '—'}</td>
-                                                                                                    <td style={{padding:'3px 6px',textAlign:'center'}}>{it.classes}{it.classes_estimated ? <span title="אומדן מתלמידים/27" style={{fontSize:9,color:'#f59e0b'}}> ~</span> : ''}{it.special_classes ? <span style={{fontSize:9,color:'#ce93d8'}}> ({it.special_classes} חמ"ד)</span> : ''}</td>
-                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#9cd1ff'}}>{it.avg || '—'}</td>
-                                                                                                </tr>
-                                                                                            ))}
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </td>
-                                                                            </tr>
-                                                                        );
-                                                                    })()}
-                                                                    </React.Fragment>
-                                                                );
-                                                            })}
-                                                        </tbody>
-                                                        <tfoot>
-                                                            <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
-                                                                <td style={{padding:8}}>סה"כ מינהל</td>
-                                                                {SVCS.map(svc => {
-                                                                    const ex = totExisting[svc.key];
-                                                                    const req = totRequired[svc.key];
-                                                                    if (ex === null) return <td key={svc.key} style={{padding:8,textAlign:'center',color:'#888'}}>— / {req}</td>;
-                                                                    const delta = ex - req;
-                                                                    return (
-                                                                        <td key={svc.key} style={{padding:6,textAlign:'center',background:deltaRowBg(delta, req)}}>
-                                                                            <b style={{color:'#fff'}}>{ex}</b><span style={{color:'#666'}}> / </span><span style={{color:'#aaa'}}>{req}</span>
-                                                                            <span style={{display:'block',fontSize:11,color:deltaColor(delta, req),marginTop:2}}>{delta >= 0 ? '+' : ''}{delta}</span>
-                                                                        </td>
+                                                                                            </tr></thead>
+                                                                                            <tbody>
+                                                                                                {list.sort((a,b) => (b.students||0)-(a.students||0)).map((it, idx) => (
+                                                                                                    <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
+                                                                                                        <td style={{padding:'3px 6px'}}>{it.name}</td>
+                                                                                                        <td style={{padding:'3px 6px',color:'#888'}}>{it.address}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center'}}>{it.type}{it.special ? ' ⓢ' : ''}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{it.pikuach || '—'}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{it.students || '—'}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center'}}>{it.classes}{it.classes_estimated ? <span title="אומדן מתלמידים/27" style={{fontSize:9,color:'#f59e0b'}}> ~</span> : ''}{it.special_classes ? <span style={{fontSize:9,color:'#ce93d8'}}> ({it.special_classes} חמ"ד)</span> : ''}</td>
+                                                                                                        <td style={{padding:'3px 6px',textAlign:'center',color:'#9cd1ff'}}>{it.avg || '—'}</td>
+                                                                                                    </tr>
+                                                                                                ))}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            );
+                                                                        })()}
+                                                                        </React.Fragment>
                                                                     );
                                                                 })}
-                                                                <td style={{padding:8,textAlign:'center',color:'#f59e0b'}}>{tot.students.toLocaleString()}</td>
-                                                            </tr>
-                                                        </tfoot>
-                                                    </table>
-                                                    <div style={{marginBottom:18,fontSize:11,color:'#888',display:'flex',gap:14,flexWrap:'wrap'}}>
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
+                                                                    <td style={{padding:8}}>סה"כ מינהל</td>
+                                                                    <td style={{padding:8,textAlign:'center',color:mc.exGross===null?'#888':'#bdb6e8'}}>
+                                                                        {mc.exGross === null ? '—' : mc.exGross}
+                                                                        {mc.demolished > 0 && <span style={{fontSize:10,color:'#e57373'}}> (-{mc.demolished})</span>}
+                                                                    </td>
+                                                                    {showFuture && <td style={{padding:8,textAlign:'center',color:'#7b6cf0'}}>+{mc.planned}</td>}
+                                                                    {showFuture && <td style={{padding:8,textAlign:'center',color:'#fff'}}>{mc.exNet === null ? mc.planned : mc.proposed}</td>}
+                                                                    <td style={{padding:8,textAlign:'center',color:'#aaa'}}>{mc.required}</td>
+                                                                    <td style={{padding:8,textAlign:'center',color:deltaColor(mc.delta, mc.required)}}>{fmtSigned(mc.delta)}</td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </details>
+                                                );
+                                            };
+
+                                            return (
+                                                <>
+                                                    <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>
+                                                        🏫 מאזן עתידי לפי תת-שכונה — קיים / מתוכנן / מוצע / נדרש
+                                                        <span style={{fontSize:11,color:'#888',fontWeight:'normal',marginRight:8}}>
+                                                            ({horizonLabel}{!isExisting ? (isFull ? '' : ' · משוקלל %מימוש') : ''} · קיים: שנתון מנח"י (חינוך) + מבני ציבור קיים (אחר) · מתוכנן: תב"עות S+AR · להריסה: חיתוך תב"ע × שנתון)
+                                                        </span>
+                                                    </h3>
+                                                    <div style={{marginBottom:10,fontSize:11,color:'#888',display:'flex',gap:14,flexWrap:'wrap'}}>
                                                         <span><b style={{color:'#4CAF50'}}>■</b> עודף / מאוזן</span>
                                                         <span><b style={{color:'#f59e0b'}}>■</b> חוסר קל (עד 20%)</span>
                                                         <span><b style={{color:'#ef6c00'}}>■</b> חוסר בינוני (20-50%)</span>
                                                         <span><b style={{color:'#e53935'}}>■</b> חוסר חמור (מעל 50%)</span>
-                                                        <span style={{marginRight:'auto',fontStyle:'italic'}}>חמ"ד (כיתות מקדמות) במוסדות הקיימים: {tot.special_classes}</span>
                                                     </div>
+                                                    <div style={{margin:'12px 0 6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #8D6E63',paddingRight:8}}>🎓 חינוך</div>
+                                                    {BALANCE_SERVICES.filter(svc => svc.kind === 'edu').map(svc => renderBalanceTable(svc))}
+                                                    <div style={{margin:'14px 0 6px 0',fontSize:13,color:'#e0e0ff',fontWeight:'bold',borderRight:'3px solid #C4956A',paddingRight:8}}>🏥 שירותים נוספים</div>
+                                                    {BALANCE_SERVICES.filter(svc => svc.kind === 'service').map(svc => renderBalanceTable(svc))}
                                                 </>
                                             );
                                         })()}
 
-                                        {/* Non-education section (minahak level) */}
-                                        <h3 style={{margin:'0 0 8px 0',fontSize:14,color:'#e0e0ff'}}>🏢 שירותים נוספים — ברמת המינהל (לפי אוכלוסייה כוללת)</h3>
-                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
+                                        {/* Non-education thresholds reference (collapsible) — shows the basis (residents/elderly/etc.) and entry threshold for each service */}
+                                        <details style={{marginTop:14,background:'#16162a',borderRadius:6,padding:'4px 8px',border:'1px solid #2a2a44'}}>
+                                            <summary style={{cursor:'pointer',padding:'6px 4px',color:'#aaa',fontSize:13,userSelect:'none'}}>📐 פירוט בסיס חישוב וספי כניסה — שירותים נוספים <span style={{fontSize:11,color:'#666',fontWeight:'normal'}}>(לחץ להרחבה)</span></summary>
+                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0',marginTop:8}}>
                                             <thead>
                                                 <tr style={{background:'#1a1a2e',color:'#aaa'}}>
                                                     <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שירות</th>
@@ -16673,6 +17115,7 @@
                                                 })}
                                             </tbody>
                                         </table>
+                                        </details>
 
                                         <div style={{marginTop:14,padding:10,background:'#1a1a2e',borderRadius:6,fontSize:11,color:'#888',lineHeight:1.6}}>
                                             <b style={{color:'#aaa'}}>הערות:</b> ספי כניסה וגדלי מוסדות מבוססים על מדריך מינהל התכנון (2018), מרקם עירוני קיים. "מתחת לסף" = המינהל טרם הגיע לגודל המינימלי להצדקת המתקן. לחץ על שם תת-שכונה לפירוט חישוב החינוך.
