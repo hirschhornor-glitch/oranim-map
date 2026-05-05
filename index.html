@@ -11,15 +11,19 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://docs.google.com">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
-    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -4362,7 +4366,13 @@
                 // Heaviest files (11 MB+) are deferred — fetched in the background
                 // after the map is interactive. Used for existing-landuse popup info
                 // and for the ייעודי קרקע קיים layer (off by default).
-                const DEFERRED_FILES = ['yiud_karka_kayam', 'roads', 'buildings'];
+                // All these layers are off by default (on:false) — no need to block first paint on them.
+                const DEFERRED_FILES = [
+                    'yiud_karka_kayam', 'roads', 'buildings',
+                    'landuse_xplan',
+                    'master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka',
+                    'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot',
+                ];
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !DEFERRED_FILES.includes(k));
                 const deferredEntries = Object.entries(GEOJSON_FILES).filter(([k]) => DEFERRED_FILES.includes(k));
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
@@ -4386,138 +4396,61 @@
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
-                Promise.all([
-                    Promise.all(allEntries.map(([key, url]) =>
-                        fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
-                            doneCount++;
-                            setLoadProgress({ done: doneCount, total: allEntries.length });
-                            return [key, data];
-                        }).catch(() => {
-                            doneCount++;
-                            setLoadProgress({ done: doneCount, total: allEntries.length });
-                            return [key, null];
-                        })
-                    )),
-                    fetch(sheetUrl).then(r => r.text()).catch(() => '')
-                ]).then(([geoResults, csvText]) => {
-                    const gd = {};
-                    geoResults.forEach(([key, data]) => {
-                        if (data) gd[key] = data;
-                    });
-                    // Merge CSV plan_type into GeoJSON features
-                    if (csvText && gd.plans) {
-                        // CSV parser that handles quoted fields
-                        function parseCSVRow(row) {
-                            const cols = []; let cur = '', inQ = false;
-                            for (let i = 0; i < row.length; i++) {
-                                const c = row[i];
-                                if (c === '"') { inQ = !inQ; }
-                                else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-                                else { cur += c; }
-                            }
-                            cols.push(cur.trim());
-                            return cols;
-                        }
-                        const rows = csvText.split('\n');
-                        const headers = parseCSVRow(rows[0]);
-                        const ptIdx = headers.findIndex(h => h === 'plan_type');
-                        const nameIdx = headers.findIndex(h => h === 'plan_name');
-                        const objEndIdx = headers.findIndex(h => h === 'objection_end_date');
-                        const hfSqmIdx = headers.findIndex(h => h === 'hafrash_sqm');
-                        const hfPrgIdx = headers.findIndex(h => h === 'hafrash_prg');
-                        // GS-editable fields that should override the GeoJSON value when set
-                        const GS_OVERRIDE_FIELDS = [
-                            'units_total','units_in','units_add',
-                            'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog',
-                            'shatzap_in','shatzap_out',
-                            'commerce_in','commerce_out',
-                            'employment','hotels','rental','conditional_housing',
-                            'plan_summary','plan_name_he','architect','developer'
-                        ];
-                        const gsOverrideIdx = {};
-                        GS_OVERRIDE_FIELDS.forEach(k => { gsOverrideIdx[k] = headers.findIndex(h => h === k); });
-                        if (ptIdx >= 0 && nameIdx >= 0) {
-                            const csvMap = {};
-                            for (let i = 1; i < rows.length; i++) {
-                                if (!rows[i].trim()) continue;
-                                const cols = parseCSVRow(rows[i]);
-                                if (cols[nameIdx]) {
-                                    const entry = {
-                                        plan_type: cols[ptIdx] || '',
-                                        objection_end_date: objEndIdx >= 0 ? (cols[objEndIdx] || '') : '',
-                                        hafrash_sqm: hfSqmIdx >= 0 ? (cols[hfSqmIdx] || '') : '',
-                                        hafrash_prg: hfPrgIdx >= 0 ? (cols[hfPrgIdx] || '') : '',
-                                    };
-                                    GS_OVERRIDE_FIELDS.forEach(k => {
-                                        const idx = gsOverrideIdx[k];
-                                        if (idx >= 0) entry[k] = cols[idx] || '';
-                                    });
-                                    csvMap[cols[nameIdx]] = entry;
-                                }
-                            }
-                            gd.plans.features.forEach(f => {
-                                const pn = f.properties.plan_name;
-                                if (pn && csvMap[pn]) {
-                                    if (csvMap[pn].plan_type) f.properties.plan_type = csvMap[pn].plan_type;
-                                    if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
-                                    if (csvMap[pn].hafrash_sqm) f.properties.hafrash_sqm = csvMap[pn].hafrash_sqm;
-                                    if (csvMap[pn].hafrash_prg) f.properties.hafrash_prg = csvMap[pn].hafrash_prg;
-                                    // GS is authoritative for these fields — blanks in GS clear the GeoJSON value
-                                    GS_OVERRIDE_FIELDS.forEach(k => {
-                                        if (csvMap[pn][k] !== undefined) f.properties[k] = csvMap[pn][k];
-                                    });
-                                }
-                            });
-                            console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
-                        }
-                    }
 
-                    // Force-hide specific plans (overrides plan_type from CSV/GeoJSON)
-                    if (gd.plans && gd.plans.features) {
-                        gd.plans.features.forEach(f => {
-                            if (SKIP_PLAN_IDS.has(f.properties.plan_name)) {
-                                f.properties.plan_type = 'מוסתר';
-                            }
-                        });
+                // === Helpers used in both Stage 1 and Stage 2 (CSV) ===
+                function parseCSVRow(row) {
+                    const cols = []; let cur = '', inQ = false;
+                    for (let i = 0; i < row.length; i++) {
+                        const c = row[i];
+                        if (c === '"') { inQ = !inQ; }
+                        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+                        else { cur += c; }
                     }
-
-                    // --- Filter already-implemented plans from future layers ---
-                    const kayamTabaSet = new Set();
-                    if (gd.yiud_karka_kayam && gd.yiud_karka_kayam.features) {
-                        gd.yiud_karka_kayam.features.forEach(f => {
-                            const t = String(f.properties.TABA || '').trim();
-                            if (t) kayamTabaSet.add(t);
-                        });
+                    cols.push(cur.trim());
+                    return cols;
+                }
+                const GS_OVERRIDE_FIELDS = [
+                    'units_total','units_in','units_add',
+                    'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog',
+                    'shatzap_in','shatzap_out',
+                    'commerce_in','commerce_out',
+                    'employment','hotels','rental','conditional_housing',
+                    'plan_summary','plan_name_he','architect','developer'
+                ];
+                // Snapshot raw GeoJSON values (units_total/rental) so rental fold can be
+                // re-run idempotently after CSV overrides arrive.
+                function snapshotRentalSources(gd) {
+                    if (!gd.plans || !gd.plans.features) return;
+                    for (const f of gd.plans.features) {
+                        const p = f.properties;
+                        if (p._units_total_raw === undefined) p._units_total_raw = p.units_total;
+                        if (p._rental_raw === undefined) p._rental_raw = p.rental;
                     }
-                    window.__kayamTabaSet = kayamTabaSet;
-
-                    // Fold rental (יח"ד להשכרה) into units_total and recompute units_add.
-                    // Per product spec: total units = raw units_total + rental; tospah = total - units_in.
-                    // The raw rental remains accessible via p.rental as a breakdown.
-                    if (gd.plans && gd.plans.features) {
-                        let foldedCount = 0;
-                        for (const f of gd.plans.features) {
-                            const p = f.properties;
-                            const rawTotal = parseFloat(p.units_total) || 0;
-                            const rental = parseFloat(p.rental) || 0;
-                            const inn = parseFloat(p.units_in) || 0;
-                            if (rawTotal > 0 || rental > 0) {
-                                const effTotal = rawTotal + rental;
-                                p.units_total = effTotal;
-                                p.units_add = Math.max(effTotal - inn, 0);
+                }
+                function foldRental(gd) {
+                    if (!gd.plans || !gd.plans.features) return;
+                    let foldedCount = 0;
+                    for (const f of gd.plans.features) {
+                        const p = f.properties;
+                        const rawTotal = parseFloat(p._units_total_raw ?? p.units_total) || 0;
+                        const rental = parseFloat(p._rental_raw ?? p.rental) || 0;
+                        const inn = parseFloat(p.units_in) || 0;
+                        if (rawTotal > 0 || rental > 0) {
+                            const effTotal = rawTotal + rental;
+                            p.units_total = effTotal;
+                            p.units_add = Math.max(effTotal - inn, 0);
+                            if (rental > 0) foldedCount++;
+                        } else {
+                            const storedAdd = parseFloat(p.units_add) || 0;
+                            if (rental > 0 || storedAdd > 0) {
+                                p.units_add = storedAdd + rental;
                                 if (rental > 0) foldedCount++;
-                            } else {
-                                const storedAdd = parseFloat(p.units_add) || 0;
-                                if (rental > 0 || storedAdd > 0) {
-                                    p.units_add = storedAdd + rental;
-                                    if (rental > 0) foldedCount++;
-                                }
                             }
                         }
-                        if (foldedCount > 0) console.log(`[Units] Folded rental into ${foldedCount} plans (units_total/units_add now include rental)`);
                     }
-
-                    // Build plan lookup by taba for kayam filter conditions
+                    if (foldedCount > 0) console.log(`[Units] Folded rental into ${foldedCount} plans`);
+                }
+                function rebuildPlanByTaba(gd) {
                     const planByTaba = {};
                     if (gd.plans && gd.plans.features) {
                         gd.plans.features.forEach(f => {
@@ -4526,12 +4459,11 @@
                         });
                     }
                     window.__planByTaba = planByTaba;
-
-                    // Build per-lot hafrash lookup from GS hafrash_prg
-                    // Format: "מגרש N - use (sqm) ; מגרש M - use (sqm)"
-                    // Result: {taba: {lotNum: {use, sqm, sourceText}}}
+                    return planByTaba;
+                }
+                const HAFRASH_LOT_RE = /^מגרש\s+(\d+)\s*[-–]?\s*(.+?)\s*\((\d+)\)\s*$/;
+                function rebuildHafrashLookup(planByTaba) {
                     const hafrashByTabaLot = {};
-                    const HAFRASH_LOT_RE = /^מגרש\s+(\d+)\s*[-–]?\s*(.+?)\s*\((\d+)\)\s*$/;
                     for (const taba in planByTaba) {
                         const prg = (planByTaba[taba].hafrash_prg || '').trim();
                         if (!prg) continue;
@@ -4547,51 +4479,150 @@
                         }
                     }
                     window.__hafrashByTabaLot = hafrashByTabaLot;
-
-                    function shouldHideKayam(taba) {
-                        if (!kayamTabaSet.has(taba)) return false;
-                        const plan = planByTaba[taba];
-                        if (!plan) return true; // no plan data, hide
-                        const hasPermit = (plan.stage || '').trim() !== '';
-                        const dateStr = plan.mavat_date || '';
-                        const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
-                        const isOld = year > 0 && year <= 2019;
-                        return !hasPermit && isOld;
+                }
+                function extractAvailablePlanTypes(gd) {
+                    if (!gd.plans || !gd.plans.features) return;
+                    const types = new Set();
+                    gd.plans.features.forEach(f => {
+                        const pt = normalizePlanType(f.properties.plan_type || '');
+                        if (pt && pt !== 'תשתיות') types.add(pt);
+                    });
+                    setAvailablePlanTypes([...types].sort());
+                }
+                function applyCSVEnrichment(gd, csvText) {
+                    if (!csvText || !gd.plans) return;
+                    const rows = csvText.split('\n');
+                    const headers = parseCSVRow(rows[0]);
+                    const ptIdx = headers.findIndex(h => h === 'plan_type');
+                    const nameIdx = headers.findIndex(h => h === 'plan_name');
+                    const objEndIdx = headers.findIndex(h => h === 'objection_end_date');
+                    const hfSqmIdx = headers.findIndex(h => h === 'hafrash_sqm');
+                    const hfPrgIdx = headers.findIndex(h => h === 'hafrash_prg');
+                    const gsOverrideIdx = {};
+                    GS_OVERRIDE_FIELDS.forEach(k => { gsOverrideIdx[k] = headers.findIndex(h => h === k); });
+                    if (ptIdx < 0 || nameIdx < 0) return;
+                    const csvMap = {};
+                    for (let i = 1; i < rows.length; i++) {
+                        if (!rows[i].trim()) continue;
+                        const cols = parseCSVRow(rows[i]);
+                        if (cols[nameIdx]) {
+                            const entry = {
+                                plan_type: cols[ptIdx] || '',
+                                objection_end_date: objEndIdx >= 0 ? (cols[objEndIdx] || '') : '',
+                                hafrash_sqm: hfSqmIdx >= 0 ? (cols[hfSqmIdx] || '') : '',
+                                hafrash_prg: hfPrgIdx >= 0 ? (cols[hfPrgIdx] || '') : '',
+                            };
+                            GS_OVERRIDE_FIELDS.forEach(k => {
+                                const idx = gsOverrideIdx[k];
+                                if (idx >= 0) entry[k] = cols[idx] || '';
+                            });
+                            csvMap[cols[nameIdx]] = entry;
+                        }
                     }
-                    window.__shouldHideKayam = shouldHideKayam;
+                    gd.plans.features.forEach(f => {
+                        const pn = f.properties.plan_name;
+                        if (pn && csvMap[pn]) {
+                            if (csvMap[pn].plan_type) f.properties.plan_type = csvMap[pn].plan_type;
+                            if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
+                            if (csvMap[pn].hafrash_sqm) f.properties.hafrash_sqm = csvMap[pn].hafrash_sqm;
+                            if (csvMap[pn].hafrash_prg) f.properties.hafrash_prg = csvMap[pn].hafrash_prg;
+                            // GS is authoritative — blanks clear the GeoJSON value.
+                            // Update the _raw snapshots too so future foldRental calls reflect CSV truth.
+                            GS_OVERRIDE_FIELDS.forEach(k => {
+                                if (csvMap[pn][k] !== undefined) {
+                                    f.properties[k] = csvMap[pn][k];
+                                    if (k === 'units_total') f.properties._units_total_raw = csvMap[pn][k];
+                                    else if (k === 'rental') f.properties._rental_raw = csvMap[pn][k];
+                                }
+                            });
+                        }
+                    });
+                    console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
+                }
+                function shouldHideKayam(taba) {
+                    const set = window.__kayamTabaSet;
+                    if (!set || !set.has(taba)) return false;
+                    const plan = window.__planByTaba ? window.__planByTaba[taba] : null;
+                    if (!plan) return true; // no plan data, hide
+                    const hasPermit = (plan.stage || '').trim() !== '';
+                    const dateStr = plan.mavat_date || '';
+                    const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+                    const isOld = year > 0 && year <= 2019;
+                    return !hasPermit && isOld;
+                }
+                window.__shouldHideKayam = shouldHideKayam;
+                window.__kayamTabaSet = new Set();
+                window.__planByTaba = {};
+                window.__hafrashByTabaLot = {};
+                // Apply kayam-based filter to landuse_xplan + future_shavaz.
+                // Idempotent: re-clones from a stashed _origFeatures so it can be re-run when
+                // either the kayam set or the target layer arrives later.
+                function applyKayamFilter() {
+                    const gd = geoDataRef.current;
+                    if (!gd) return;
+                    const set = window.__kayamTabaSet;
+                    if (!set || set.size === 0) return;
+                    if (gd.landuse_xplan && gd.landuse_xplan.features) {
+                        if (!gd.landuse_xplan._origFeatures) gd.landuse_xplan._origFeatures = gd.landuse_xplan.features;
+                        const orig = gd.landuse_xplan._origFeatures;
+                        const filtered = orig.filter(f => {
+                            const pn = (f.properties.pl_number || '');
+                            if (!pn || !pn.includes('-')) return true;
+                            const taba = String(parseInt(pn.split('-')[1]));
+                            return !shouldHideKayam(taba);
+                        });
+                        gd.landuse_xplan = { ...gd.landuse_xplan, features: filtered, _origFeatures: orig };
+                        console.log('[Filter] landuse_xplan:', orig.length, '->', filtered.length, 'features');
+                    }
+                    if (gd.future_shavaz && gd.future_shavaz.features) {
+                        if (!gd.future_shavaz._origFeatures) gd.future_shavaz._origFeatures = gd.future_shavaz.features;
+                        const orig = gd.future_shavaz._origFeatures;
+                        const filtered = orig.filter(f => {
+                            const t = String(f.properties.TABA || '').trim();
+                            return !t || !shouldHideKayam(t);
+                        });
+                        gd.future_shavaz = { ...gd.future_shavaz, features: filtered, _origFeatures: orig };
+                        console.log('[Filter] future_shavaz:', orig.length, '->', filtered.length, 'features');
+                    }
+                }
 
-                    if (gd.landuse_xplan && gd.landuse_xplan.features && kayamTabaSet.size > 0) {
-                        const beforeCount = gd.landuse_xplan.features.length;
-                        gd.landuse_xplan = {
-                            ...gd.landuse_xplan,
-                            features: gd.landuse_xplan.features.filter(f => {
-                                const pn = (f.properties.pl_number || '');
-                                if (!pn || !pn.includes('-')) return true;
-                                const taba = String(parseInt(pn.split('-')[1]));
-                                return !shouldHideKayam(taba);
-                            })
-                        };
-                        console.log('[Filter] landuse_xplan:', beforeCount, '->', gd.landuse_xplan.features.length, 'features (removed', beforeCount - gd.landuse_xplan.features.length, 'already-implemented)');
+                // === Stage 1: GeoJSON only — render the map ASAP ===
+                Promise.all(allEntries.map(([key, url]) =>
+                    fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
+                        doneCount++;
+                        setLoadProgress({ done: doneCount, total: allEntries.length });
+                        return [key, data];
+                    }).catch(() => {
+                        doneCount++;
+                        setLoadProgress({ done: doneCount, total: allEntries.length });
+                        return [key, null];
+                    })
+                )).then(geoResults => {
+                    const gd = {};
+                    geoResults.forEach(([key, data]) => {
+                        if (data) gd[key] = data;
+                    });
+
+                    // Force-hide specific plans (instant; not CSV-dependent)
+                    if (gd.plans && gd.plans.features) {
+                        gd.plans.features.forEach(f => {
+                            if (SKIP_PLAN_IDS.has(f.properties.plan_name)) {
+                                f.properties.plan_type = 'מוסתר';
+                            }
+                        });
                     }
 
-                    if (gd.future_shavaz && gd.future_shavaz.features && kayamTabaSet.size > 0) {
-                        const beforeCount = gd.future_shavaz.features.length;
-                        gd.future_shavaz = {
-                            ...gd.future_shavaz,
-                            features: gd.future_shavaz.features.filter(f => {
-                                const t = String(f.properties.TABA || '').trim();
-                                return !t || !shouldHideKayam(t);
-                            })
-                        };
-                        console.log('[Filter] future_shavaz:', beforeCount, '->', gd.future_shavaz.features.length, 'features (removed', beforeCount - gd.future_shavaz.features.length, 'already-implemented)');
-                    }
-                    // --- End filter ---
+                    // Initial fold/lookup pass on raw GeoJSON values; re-run after CSV.
+                    snapshotRentalSources(gd);
+                    foldRental(gd);
+                    const planByTaba = rebuildPlanByTaba(gd);
+                    rebuildHafrashLookup(planByTaba);
+                    extractAvailablePlanTypes(gd);
 
                     geoDataRef.current = gd;
-                    window.__geoDataForLanduse = gd; // expose for landuse comparison
+                    window.__geoDataForLanduse = gd;
 
-                    // Compute overlap map once (taba -> overlapping tabas).
-                    // Heavy (O(n²) bbox + geometry check) — deferred so first paint isn't blocked.
+                    // Compute overlap map once — heavy O(n²); deferred so first paint isn't blocked.
                     overlapMapRef.current = new Map();
                     setTimeout(() => {
                         try {
@@ -4606,9 +4637,21 @@
 
                     setDataLoaded(true);
                     setLoading(false);
+                    console.log('[GeoJSON] Stage 1 loaded:', Object.keys(gd).join(', '));
 
-                    // Stage 2: permit/tree/meeting JSONs — feed window.__ globals used only by popups.
-                    // Loaded after first paint so the map is interactive ASAP.
+                    // === Stage 2a: Google Sheets CSV — enrichment, post-paint ===
+                    fetch(sheetUrl).then(r => r.text()).catch(() => '').then(csvText => {
+                        if (!csvText) return;
+                        applyCSVEnrichment(gd, csvText);
+                        foldRental(gd); // re-run with CSV-overridden values
+                        const pbt = rebuildPlanByTaba(gd);
+                        rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
+                        extractAvailablePlanTypes(gd); // CSV may add/change plan_type values
+                        applyKayamFilter(); // re-apply if landuse_xplan + kayamTabaSet are ready
+                        setDeferredTick(t => t + 1);
+                    });
+
+                    // === Stage 2b: permit/tree/meeting JSONs ===
                     Promise.all(STAGE2_JSONS.map(([key, url]) =>
                         fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => [key, data]).catch(() => [key, null])
                     )).then(results => {
@@ -4639,7 +4682,7 @@
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
                     });
 
-                    // Deferred load: big files fetched after interactive to keep first paint fast
+                    // === Stage 2c: deferred big GeoJSONs ===
                     deferredEntries.forEach(([key, url]) => {
                         fetch(url + '?v=' + APP_VERSION)
                             .then(r => r.json())
@@ -4647,21 +4690,22 @@
                                 if (!data) return;
                                 geoDataRef.current[key] = data;
                                 window.__geoDataForLanduse = geoDataRef.current;
+                                // Build kayam taba set when its source layer arrives
+                                if (key === 'yiud_karka_kayam' && data.features) {
+                                    const set = new Set();
+                                    data.features.forEach(f => {
+                                        const t = String(f.properties.TABA || '').trim();
+                                        if (t) set.add(t);
+                                    });
+                                    window.__kayamTabaSet = set;
+                                }
+                                // Re-apply kayam filter — handles both orderings (yiud first or target first)
+                                applyKayamFilter();
                                 setDeferredTick(t => t + 1);
                                 console.log(`[GeoJSON] Deferred loaded: ${key} (${data.features ? data.features.length : '?'} features)`);
                             })
                             .catch(e => console.warn(`[GeoJSON] Deferred ${key} failed:`, e));
                     });
-                    // Extract unique plan types for filter
-                    if (gd.plans && gd.plans.features) {
-                        const types = new Set();
-                        gd.plans.features.forEach(f => {
-                            const pt = normalizePlanType(f.properties.plan_type || '');
-                            if (pt && pt !== 'תשתיות') types.add(pt);
-                        });
-                        setAvailablePlanTypes([...types].sort());
-                    }
-                    console.log('[GeoJSON] Loaded:', Object.keys(gd).join(', '));
                 });
 
                 return () => { map.remove(); mapInstanceRef.current = null; };
