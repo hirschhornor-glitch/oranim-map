@@ -4467,19 +4467,25 @@
     "permits": [
       {
         "file_number": "2022/0547.00",
-        "status": "נדונה בועדת ערר",
-        "status_date": "06/07/2025",
+        "status": "הופק-הוצא היתר בניה",
+        "status_date": "05/05/2026",
         "request_type": "תמ\"א 38 הריסה ובניה",
         "request_description": "הריסת מבנה קיים ובניית בנין חדש בין 10 קומות ו13 יח\"ד מעל קומות חניה ומסחר בהתאם לתמ\"א 38/2 ותב\"ע",
         "units": 13,
         "units_source": "manual",
         "tama_type": "38/2",
         "filtered": false,
-        "source": "manual"
+        "source": "manual",
+        "yk_status": "נדונה בועדת ערר",
+        "yk_status_date": "06/07/2025",
+        "field_observation": true,
+        "field_observation_date": "2026-05-05",
+        "field_observation_note": "עבודות בנייה בעיצומן בשטח (YK עדיין מציין נדונה בועדת ערר — מאחר את המציאות)"
       }
     ],
     "scraped_at": "2026-04-15T23:49:52.519035",
     "manual_added_at": "2026-05-04",
+    "manual_status_override": "2026-05-05",
     "permit_count": 1,
     "error": ""
   },
