@@ -16273,8 +16273,11 @@
                             const permits = getPermitsForTaba(taba);
                             if (permits.length === 0) return;
                             seenTaba.add(taba);
-                            const sub = (p.sub_neighborhood || p.neighborhood || 'לא ידוע').trim() || 'לא ידוע';
-                            const minahak = (p.minahak || '').trim();
+                            const subRaw = (p.sub_neighborhood || p.neighborhood || 'לא ידוע').trim() || 'לא ידוע';
+                            const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                            // Override stale CSV minahak from canonical SUB_TO_MINAHAK
+                            // (e.g. גבעת השקד plans tagged בית צפאפא → גוננים).
+                            const minahak = (SUB_TO_MINAHAK[sub] || (p.minahak || '').trim());
                             if (!bySub[sub]) {
                                 bySub[sub] = { minahak, total: { count: 0, units: 0 }, plans: 0 };
                                 PERMIT_STAGES_ALL.forEach(st => bySub[sub][st] = { count: 0, units: 0, permits: [] });
