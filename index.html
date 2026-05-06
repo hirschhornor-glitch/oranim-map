@@ -3706,10 +3706,10 @@
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
-            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'גבעת השקד', 'טנטור'],
+            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'טנטור'],
             'בקעה רבתי': ['תלפיות ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות'],
             'גבעת המטוס': ['גבעת המטוס'],
-            'גוננים': ['גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
+            'גוננים': ['גבעת השקד', 'גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
             'גינות העיר': ['המושבה הגרמנית', 'המושבה היוונית', 'ניות', 'טלביה', 'קטמון הישנה', 'קרית שמואל', 'רחביה'],
             'מינהל מוסדי מלחה': ['מרכז ספורט מנחת - מלחה'],
         };
@@ -10657,7 +10657,9 @@
                         style: f => {
                             const c = compliance[f.properties.plan_name];
                             const fc = COMPLIANCE_FILL[c.mp_status] || '#9e9e9e';
-                            return { color: '#111', weight: 1.5, fillColor: fc, fillOpacity: 0.95, dashArray: '' };
+                            // Outline-only — preserves visibility of underlying landuse zone colors.
+                            // Compliance status is conveyed by the border color (red/orange/green).
+                            return { color: fc, weight: 3, fillColor: fc, fillOpacity: 0.15, dashArray: '' };
                         },
                         onEachFeature: (f, lyr) => {
                             const c = compliance[f.properties.plan_name];
