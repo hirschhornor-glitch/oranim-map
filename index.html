@@ -3713,7 +3713,7 @@
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
         const MINAHAK_SUBS = {
             'א.ת. תלפיות': ['א.ת. תלפיות', 'איתרי', 'תלפיות - תעשייה ומסחר'],
-            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'טנטור'],
+            'בית צפאפא': ['בית צפאפא', 'בית צפאפא,שרפת', 'טנטור', 'גבעת המטוס - בעלות ערבית'],
             'בקעה רבתי': ['תלפיות ארנונה', 'בקעה', 'גבעת חנניה - אבו תור', 'מקור חיים', 'מתחם הרכבת', 'צפון תלפיות', 'שיכוני תלפיות'],
             'גבעת המטוס': ['גבעת המטוס'],
             'גוננים': ['גבעת השקד', 'גוננים א-ו', 'פת', 'קטמונים', 'רסקו'],
@@ -8694,8 +8694,13 @@
                             }
                         }
 
-                        // Per sub-neighborhood breakdown
-                        const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        // Per sub-neighborhood breakdown.
+                        // Fallback: when sub_neighborhood is empty/אחר, attribute
+                        // the plan to a sub named after its minahak (e.g. בית צפאפא
+                        // minahak with empty sub → "בית צפאפא"), so the report
+                        // doesn't accumulate a noisy "אחר" column.
+                        let subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
+                        if (!subRaw || subRaw === 'אחר' || subRaw === 'לא ידוע') subRaw = m || 'אחר';
                         const sub = SUB_NORMALIZE[subRaw] || subRaw;
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].units_in += inVal;
