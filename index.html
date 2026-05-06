@@ -2350,6 +2350,7 @@
             givat_hamatos_jewish: 'data/givat_hamatos_jewish_plots.geojson',
             givat_hamatos_christian: 'data/givat_hamatos_christian_plots.geojson',
             givat_hamatos_unknown: 'data/givat_hamatos_unknown_plots.geojson',
+            easements: 'data/easements.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -2652,6 +2653,7 @@
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
+                    { id: 'easements', name: 'זיקות הנאה', desc: 'תכניות עם זיקת הנאה — הפרדה גרפית בין רכב/הולכי רגל', on: false },
                 ]
             },
             infrastructure: {
@@ -2713,13 +2715,14 @@
             givat_hamatos_ownerships: {
                 title: 'גבעת המטוס - בעלויות',
                 layers: [
-                    { id: 'givat_hamatos_arab_armenian', name: 'בעלות ערבית + ארמנית', desc: 'מגרשים בבעלות משפחות ערביות וארמניות מתוך מק/14295 (40 מגרשים, 413 יח״ד)', on: false },
-                    { id: 'givat_hamatos_state',         name: 'בעלות מדינה ורשויות',    desc: 'מדינת ישראל ורשות הפיתוח (13 מגרשים, 329 יח״ד)', on: false },
-                    { id: 'givat_hamatos_companies',     name: 'בעלות חברות פרטיות',     desc: 'פסגות ירושלים בע״מ, הולדינגס בע״מ ועוד (11 מגרשים, 182 יח״ד)', on: false },
-                    { id: 'givat_hamatos_jewish',        name: 'בעלות יהודית פרטית',     desc: 'משפחות יהודיות פרטיות (13 מגרשים, 139 יח״ד)', on: false },
-                    { id: 'givat_hamatos_christian',     name: 'כנסיות נוצריות אירופיות',  desc: 'מוסדות נוצריים אירופיים, כולל אוונגליסטיים (3 מגרשים, 136 יח״ד)', on: false },
-                    { id: 'givat_hamatos_unknown',       name: 'לא ידוע / לבדיקה',         desc: 'מגרשים לא מסווגים או דורשים בדיקה ידנית (19 מגרשים, 182 יח״ד)', on: false },
-                    { id: 'givat_hamatos_show_ownership_outline', name: '🎨 הצג מתאר לפי בעלות', desc: 'כשפעיל - קו המתאר של כל מגרש מקבל את צבע סוג הבעלות (במקום מתאר תב"ע סטנדרטי)', on: false },
+                    { id: 'givat_hamatos_arab_armenian', name: 'בעלות ערבית + ארמנית', desc: 'מגרשים בבעלות משפחות ערביות וארמניות מתוך מק/14295 (34 מגרשים, 366 יח״ד)', on: false },
+                    { id: 'givat_hamatos_state',         name: 'בעלות מדינה ורשויות',    desc: 'מדינת ישראל ורשות הפיתוח (8 מגרשים, 235 יח״ד)', on: false },
+                    { id: 'givat_hamatos_companies',     name: 'בעלות חברות פרטיות',     desc: 'פסגות ירושלים בע״מ, הולדינגס בע״מ ועוד (5 מגרשים, 92 יח״ד)', on: false },
+                    { id: 'givat_hamatos_jewish',        name: 'בעלות יהודית פרטית',     desc: 'משפחות יהודיות פרטיות (10 מגרשים, 91 יח״ד)', on: false },
+                    { id: 'givat_hamatos_christian',     name: 'כנסיות נוצריות אירופיות',  desc: 'מוסדות נוצריים אירופיים, כולל אוונגליסטיים (2 מגרשים, 72 יח״ד)', on: false },
+                    { id: 'givat_hamatos_unknown',       name: 'לא ידוע / לבדיקה',         desc: 'מגרשים לא מסווגים או דורשים בדיקה ידנית (15 מגרשים, 158 יח״ד)', on: false },
+                    // Inline toggle rendered on the group title row, not as a regular layer item.
+                    { id: 'givat_hamatos_show_ownership_outline', name: '🎨 הצג מתאר לפי בעלות', desc: 'כשפעיל - קו המתאר של כל מגרש מקבל את צבע סוג הבעלות', on: false, hiddenFromList: true },
                 ]
             },
         };
@@ -11971,6 +11974,48 @@
                     geoLayersRef.current.rakal = rakalLayer;
                 }
 
+                // --- Easements (זיקות הנאה) ---
+                if (layers['easements'] && gd.easements) {
+                    const EASEMENT_STYLES = {
+                        'לרכב':            { color: '#1d4ed8', fillColor: '#3b82f6', dashArray: null,   weight: 2, fillOpacity: 0.35 },
+                        'להולכי רגל':       { color: '#15803d', fillColor: '#22c55e', dashArray: '6,4', weight: 2, fillOpacity: 0.35 },
+                        'לרכב והולכי רגל':  { color: '#6d28d9', fillColor: '#8b5cf6', dashArray: '6,4', weight: 2, fillOpacity: 0.35 },
+                        'אחר':             { color: '#a16207', fillColor: '#facc15', dashArray: null,   weight: 2, fillOpacity: 0.30 },
+                        'default':         { color: '#4b5563', fillColor: '#9ca3af', dashArray: '2,3', weight: 2, fillOpacity: 0.25 },
+                    };
+                    const easementsLayer = L.geoJSON(gd.easements, {
+                        style: f => EASEMENT_STYLES[f.properties.easement_type] || EASEMENT_STYLES.default,
+                        onEachFeature: (f, lyr) => {
+                            const p = f.properties || {};
+                            const typeLabel = p.easement_type || 'לא מסווג';
+                            const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                            const easementsArr = Array.isArray(p.easements) ? p.easements : [];
+                            const itemsHtml = easementsArr.map(e => {
+                                const parts = [];
+                                parts.push('ID ' + escape(e.id_zikot));
+                                if (e.megrash) parts.push('מגרש ' + escape(e.megrash));
+                                if (e.sug) parts.push(escape(e.sug));
+                                else parts.push('<span style="color:#888">לא מסווג</span>');
+                                return '<li style="margin:2px 0">' + parts.join(' · ') + '</li>';
+                            }).join('');
+                            const mavatLink = p.mavat_url
+                                ? ' <a href="' + escape(p.mavat_url) + '" target="_blank" style="color:#1d4ed8">(Mavat)</a>'
+                                : '';
+                            const html =
+                                '<div class="popup-header" style="background:linear-gradient(90deg,#4b5563,#6b7280);color:#fff;padding:6px 10px;font-weight:bold">זיקת הנאה — ' + escape(p.plan_name_he || p.pl_number || '') + '</div>' +
+                                '<div class="popup-body" style="padding:8px 10px;direction:rtl;text-align:right">' +
+                                    '<div class="popup-row"><b>תכנית:</b> ' + escape(p.pl_number || '') + mavatLink + '</div>' +
+                                    '<div class="popup-row"><b>מנהל:</b> ' + escape(p.minahak || '') + '</div>' +
+                                    '<div class="popup-row"><b>סוג מצרפי:</b> ' + escape(typeLabel) + '</div>' +
+                                    '<div class="popup-row"><b>מס\' זיקות בתכנית:</b> ' + escape(p.easement_count) + '</div>' +
+                                    '<div class="popup-row"><b>פירוט:</b><ul style="margin:4px 16px 0 0;padding:0">' + itemsHtml + '</ul></div>' +
+                                '</div>';
+                            lyr.bindPopup(html, { maxWidth: 360 });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.easements = easementsLayer;
+                }
+
                 // --- Stations (colored by rakal line) ---
                 if (layers['stations'] && gd.stations) {
                     // Build line lookup from rakal data for station coloring
@@ -14113,9 +14158,22 @@
                                                 onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תכניות אב', items: MASTER_PLAN_LEGEND }); }}
                                                 style={{fontSize:'14px',margin:0}}>⋯</button>
                                         )}
+                                        {groupKey === 'givat_hamatos_ownerships' && (
+                                            <label
+                                                title="כשפעיל — קו המתאר של כל מגרש מקבל את צבע סוג הבעלות (במקום מתאר תב״ע סטנדרטי)"
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:'normal',color:'#aaa',cursor:'pointer'}}>
+                                                <input type="checkbox"
+                                                    checked={layers['givat_hamatos_show_ownership_outline'] || false}
+                                                    onChange={() => toggleLayer('givat_hamatos_show_ownership_outline')}
+                                                    style={{margin:0}}
+                                                />
+                                                🎨 צבעי בעלות
+                                            </label>
+                                        )}
                                     </div>
                                     )}
-                                    {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.map(layer => (
+                                    {!collapsedGroups[groupKey] && !group.titleToggle && group.layers.filter(l => !l.hiddenFromList).map(layer => (
                                         <div key={layer.id}>
                                         <div className="layer-item"
                                              title={layer.desc || ''}>
