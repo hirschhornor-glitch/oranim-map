@@ -210,7 +210,7 @@
             --shavaz-label-color: #c4956a;
             --shavaz-header-bg: linear-gradient(135deg, #5C2E0A, #8B4513);
             --shavaz-title-color: #fff;
-            --shavaz-subtitle-color: #c4956a;
+            --shavaz-subtitle-color: #fff;
         }
         .shavaz-kayam-popup .leaflet-popup-tip { background: #2e1a0e !important; }
         .shavaz-future-popup .leaflet-popup-content-wrapper {
@@ -220,7 +220,7 @@
             --shavaz-label-color: #d4a87a;
             --shavaz-header-bg: linear-gradient(135deg, #C4956A, #D2B48C);
             --shavaz-title-color: #fff;
-            --shavaz-subtitle-color: #2e1a0e;
+            --shavaz-subtitle-color: #fff;
         }
         .shavaz-future-popup .leaflet-popup-tip { background: #3d2a1a !important; }
         .shavaz-popup .popup-header { background: var(--shavaz-header-bg); }
@@ -4475,13 +4475,20 @@
                     window.__planByTaba = planByTaba;
                     return planByTaba;
                 }
-                const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+(\d+)\s*[-–]\s*(.*)$/;
+                // Lot prefix accepts alphanumeric codes: "מגרש 201", "מגרש 201A", "מגרש r505"
+                const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+([\dא-תA-Za-z]+)\s*[-–]\s*(.*)$/;
                 // Match the FIRST (sqm) — ignore any trailing (...) which is usually a manual total/sum.
                 const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)(?:\s*\(\d+\))*\s*$/;
-                const HAFRASH_LOT_DUP_RE = /^מגרש\s+\d+\s*[-–]?\s*/;
+                // Fallback A: "<use> - N כיתות [(sqm)]" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
+                const HAFRASH_USE_CLASSES_TRAILING_RE = /^(.+?)\s*[-–]\s*(\d+)\s*כיתות?\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+                // Fallback B: "N כיתות <use> [(sqm)]" (e.g., "9 כיתות מעון")
+                const HAFRASH_USE_CLASSES_LEADING_RE = /^(\d+)\s*כיתות?\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+                // Fallback C: lead count "N <items>" (e.g., "2 בתי כנסת")
+                const HAFRASH_USE_LEAD_RE = /^(\d+)\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+                const HAFRASH_LOT_DUP_RE = /^מגרש\s+[\dא-תA-Za-z]+\s*[-–]?\s*/;
                 // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
                 // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
-                // Result: {taba: {lotNum: [{use, sqm}, ...]}}
+                // Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
                 function parsePrgByLot(planByTaba, fieldName) {
                     const result = {};
                     for (const taba in planByTaba) {
@@ -4499,20 +4506,51 @@
                             if (!currentLot) continue;
                             const subs = remainder.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
                             for (const sub of subs) {
-                                const m = sub.match(HAFRASH_USE_RE);
-                                if (!m) continue;
-                                let use = m[1].trim()
-                                    .replace(HAFRASH_LOT_DUP_RE, '')
-                                    .trim()
-                                    .replace(/^\*|\*$/g, '')
-                                    .trim()
-                                    .replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '')
-                                    .trim();
-                                const sqm = parseInt(m[2]);
-                                if (!use) continue;
+                                // Strip leading "מגרש N -" duplicate prefix that sometimes appears inside a sub-entry.
+                                const cleaned = sub.replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim();
+                                if (!cleaned) continue;
+                                let entry = null;
+                                // 1) Standard "use (sqm)" — most common in hafrash_prg
+                                const m = cleaned.match(HAFRASH_USE_RE);
+                                if (m) {
+                                    const use = m[1].trim().replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim()
+                                        .replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                                    if (use) entry = { use, sqm: parseInt(m[2]) };
+                                }
+                                // 2A) Trailing-classes "<use> - N כיתות" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
+                                if (!entry) {
+                                    const mt = cleaned.match(HAFRASH_USE_CLASSES_TRAILING_RE);
+                                    if (mt) {
+                                        // Strip leading numeric count from use (redundant with כיתות count)
+                                        const use = mt[1].trim().replace(/^\d+\s+/, '').trim();
+                                        if (use) entry = { use, count: parseInt(mt[2]), unit: 'כיתות' };
+                                    }
+                                }
+                                // 2B) Leading-classes "N כיתות <use>" (e.g., "9 כיתות מעון")
+                                if (!entry) {
+                                    const mc = cleaned.match(HAFRASH_USE_CLASSES_LEADING_RE);
+                                    if (mc) {
+                                        const use = mc[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                                        if (use) entry = { use, count: parseInt(mc[1]), unit: 'כיתות' };
+                                    }
+                                }
+                                // 3) Lead count "N <items>" (e.g., "2 בתי כנסת (16250)")
+                                if (!entry) {
+                                    const ml = cleaned.match(HAFRASH_USE_LEAD_RE);
+                                    if (ml) {
+                                        const use = ml[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                                        if (use) entry = { use, count: parseInt(ml[1]), unit: 'יחידות' };
+                                    }
+                                }
+                                // 4) Plain use without count or sqm (e.g., "מקווה", "מועדון נוער")
+                                if (!entry) {
+                                    const use = cleaned.replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                                    if (use) entry = { use, count: 1, unit: '' };
+                                }
+                                if (!entry) continue;
                                 if (!result[taba]) result[taba] = {};
                                 if (!result[taba][currentLot]) result[taba][currentLot] = [];
-                                result[taba][currentLot].push({ use, sqm });
+                                result[taba][currentLot].push(entry);
                             }
                         }
                     }
@@ -12954,15 +12992,26 @@
                 if (isFuture && !isHafrashah && !hasLotEntries && formattedUses.length) {
                     html += `<div class="popup-row"><span class="popup-row-label">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
-                // Lot entries — from hafrash_prg or shavatz_out_prog (matched by taba+lot)
+                // Lot entries — from hafrash_prg or shavatz_out_prog (matched by taba+lot).
+                // Each entry has either {use, sqm} (sqm-based) or {use, count, unit} (e.g., "9 כיתות מעון").
                 if (isHafrashah || hasLotEntries) {
                     const lotEntries = Array.isArray(props._hafrash_lot_entries) ? props._hafrash_lot_entries : null;
                     if (lotEntries && lotEntries.length) {
                         let total = 0;
                         for (const e of lotEntries) {
-                            const sqm = parseInt(e.sqm) || 0;
-                            total += sqm;
-                            html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${sqm.toLocaleString()} מ"ר</span></div>`;
+                            let valueDisplay;
+                            if (e.sqm != null) {
+                                const sqm = parseInt(e.sqm) || 0;
+                                total += sqm;
+                                valueDisplay = sqm.toLocaleString() + ' מ"ר';
+                            } else if (e.count != null && e.unit) {
+                                valueDisplay = e.count + ' ' + e.unit;
+                            } else if (e.count != null) {
+                                valueDisplay = e.count.toLocaleString();
+                            } else {
+                                valueDisplay = '';
+                            }
+                            html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
                         }
                         if (lotEntries.length > 1) {
                             html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
