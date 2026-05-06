@@ -10443,16 +10443,17 @@
                 }
 
                 // --- Givat HaMatos ownership layers (plan מק/14295 = 101-0979336) ---
-                // Each layer is one ownership category; styled like an approved TABA
-                // (dashed border, fill color from the per-category palette below) with
-                // per-plot "+N יח״ד" labels matching the plans layer label format.
-                const GH_OWNERSHIP_COLORS = {
-                    givat_hamatos_arab_armenian: '#50d25a', // green = TABA-approved (kept original)
-                    givat_hamatos_state:         '#1976d2', // blue
-                    givat_hamatos_companies:     '#ff9800', // orange
-                    givat_hamatos_jewish:        '#ffd54f', // gold
-                    givat_hamatos_christian:     '#8e44ad', // purple
-                    givat_hamatos_unknown:       '#9e9e9e', // gray
+                // All layers share a green TABA-approved fill; the outline color
+                // distinguishes the ownership category. Per-plot "+N יח״ד" labels
+                // match the plans layer label format.
+                const GH_FILL = STATUS_COLORS['אישור'] || '#50d25a';
+                const GH_OUTLINE_COLORS = {
+                    givat_hamatos_arab_armenian: '#1b5e20', // dark green
+                    givat_hamatos_state:         '#0d47a1', // dark blue
+                    givat_hamatos_companies:     '#e65100', // dark orange
+                    givat_hamatos_jewish:        '#bf8a00', // dark gold/amber
+                    givat_hamatos_christian:     '#4a148c', // dark purple
+                    givat_hamatos_unknown:       '#424242', // dark gray
                 };
                 const GH_FAMILY_LABELS = {
                     arab_muslim:               'ערבי-מוסלמי',
@@ -10468,16 +10469,16 @@
                     unknown:                   'לא ידוע',
                     needs_review:              'דורש בדיקה',
                 };
-                Object.keys(GH_OWNERSHIP_COLORS).forEach(layerId => {
+                Object.keys(GH_OUTLINE_COLORS).forEach(layerId => {
                     if (!layers[layerId] || !gd[layerId]) return;
-                    const fillColor = GH_OWNERSHIP_COLORS[layerId];
+                    const outlineColor = GH_OUTLINE_COLORS[layerId];
                     const ghLayer = L.geoJSON(gd[layerId], {
                         style: () => {
                             const isSat = basemap === 'satellite';
                             return {
-                                color: 'rgba(67,67,227,1)',
-                                weight: 1.5,
-                                fillColor: fillColor,
+                                color: outlineColor,
+                                weight: 2,
+                                fillColor: GH_FILL,
                                 fillOpacity: isSat ? 1 : opacity * 0.3,
                                 dashArray: '4,2',
                             };
