@@ -3876,6 +3876,7 @@
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
             const [plannedDrilldown, setPlannedDrilldown] = useState(null); // { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
+            const [uncatDrilldown, setUncatDrilldown] = useState(null); // sub name or null — for uncategorized sqm panel
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
             // Assumptions: default + per-minahak presets + per-minahak overrides.
             // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
@@ -17461,12 +17462,58 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                        {uncatBySub.map(x => (
-                                                                            <tr key={x.name} style={{borderBottom:'1px solid #222'}}>
-                                                                                <td style={{padding:'6px',color:'#e0e0e0'}}>{x.name}</td>
-                                                                                <td style={{padding:'6px',textAlign:'center',color:'#d4a574'}}>{x.sqm.toLocaleString()}</td>
-                                                                            </tr>
-                                                                        ))}
+                                                                        {uncatBySub.map(x => {
+                                                                            const sub = mData.subs.find(s => s.name === x.name);
+                                                                            const planList = (sub && sub.contributingPlans || []).filter(p => (p.uncategorizedSqm || 0) > 0);
+                                                                            const isOpen = uncatDrilldown === x.name;
+                                                                            const clickable = planList.length > 0;
+                                                                            return (
+                                                                                <React.Fragment key={x.name}>
+                                                                                    <tr style={{borderBottom:'1px solid #222'}}>
+                                                                                        <td style={{padding:'6px',color:'#e0e0e0'}}>{x.name}</td>
+                                                                                        <td onClick={() => clickable && setUncatDrilldown(isOpen ? null : x.name)} style={{padding:'6px',textAlign:'center',color:'#d4a574',cursor:clickable?'pointer':'default',textDecoration:clickable?'underline dashed':'none',outline:isOpen?'2px solid #d4a574':'none'}} title={clickable ? 'לחץ לרשימת תכניות תורמות' : ''}>
+                                                                                            {x.sqm.toLocaleString()}{clickable ? ' ›' : ''}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    {isOpen && (
+                                                                                        <tr>
+                                                                                            <td colSpan={2} style={{padding:'8px 12px 14px 12px',background:'rgba(212,165,116,0.08)',borderBottom:'1px solid #222'}}>
+                                                                                                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+                                                                                                    <span style={{fontSize:12,color:'#aaa'}}>🏗️ <b style={{color:'#e0e0ff'}}>{x.name}</b> — שטחים שטרם נקבע ייעודם ({planList.length} תכניות)</span>
+                                                                                                    <button onClick={() => setUncatDrilldown(null)} style={{background:'transparent',border:'1px solid #555',color:'#aaa',padding:'2px 8px',borderRadius:4,cursor:'pointer',fontSize:11}}>סגור ✕</button>
+                                                                                                </div>
+                                                                                                <table style={{width:'100%',borderCollapse:'collapse',fontSize:11.5,color:'#d0d0d0'}}>
+                                                                                                    <thead><tr style={{color:'#888'}}>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>תב"ע</th>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'right',borderBottom:'1px solid #333'}}>שם התכנית</th>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>%מימוש</th>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>אופק</th>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>מ"ר גולמי</th>
+                                                                                                        <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#d4a574'}}>מ"ר משוקלל</th>
+                                                                                                    </tr></thead>
+                                                                                                    <tbody>
+                                                                                                        {[...planList].sort((a,b) => (b.uncategorizedSqm || 0) - (a.uncategorizedSqm || 0)).map((p, idx) => {
+                                                                                                            const gross = Math.round(p.uncategorizedSqm || 0);
+                                                                                                            const weighted = Math.round((p.uncategorizedSqm || 0) * ((p.effectivePct || 0) / 100));
+                                                                                                            return (
+                                                                                                                <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
+                                                                                                                    <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{p.taba}</td>
+                                                                                                                    <td style={{padding:'3px 6px',color:'#aaa'}}>{(p.plan_summary || '').slice(0, 60)}</td>
+                                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{p.effectivePct}%</td>
+                                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{p.estimatedYear}</td>
+                                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#888'}}>{gross.toLocaleString()}</td>
+                                                                                                                    <td style={{padding:'3px 6px',textAlign:'center',color:'#d4a574',fontWeight:'bold'}}>{weighted.toLocaleString()}</td>
+                                                                                                                </tr>
+                                                                                                            );
+                                                                                                        })}
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    )}
+                                                                                </React.Fragment>
+                                                                            );
+                                                                        })}
                                                                     </tbody>
                                                                     <tfoot>
                                                                         <tr style={{background:'#1a1a2e',fontWeight:'bold'}}>
