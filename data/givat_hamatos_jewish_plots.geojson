@@ -1,0 +1,708 @@
+{
+ "type": "FeatureCollection",
+ "name": "givat_hamatos_jewish_plots",
+ "crs": {
+  "type": "name",
+  "properties": {
+   "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+  }
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.20633173005122,
+       31.739961934023032
+      ],
+      [
+       35.206098569840776,
+       31.740040500836848
+      ],
+      [
+       35.20598364800255,
+       31.73980488050284
+      ],
+      [
+       35.20621403011479,
+       31.739722818379168
+      ],
+      [
+       35.20633173005122,
+       31.739961934023032
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 21,
+    "plot_num": "107",
+    "matched_xplan_num": "107",
+    "area_sqm_table": 654,
+    "designation_table": "מגורים",
+    "units_yachd": 6,
+    "owners": "שעיה יוסף; בני דוד",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.20661465904568,
+       31.739941152636206
+      ],
+      [
+       35.20664174727295,
+       31.74001980309415
+      ],
+      [
+       35.206674738848086,
+       31.740096788630595
+      ],
+      [
+       35.206713495531616,
+       31.740171787284336
+      ],
+      [
+       35.206485691883096,
+       31.74025293579021
+      ],
+      [
+       35.20633173005122,
+       31.739961934023032
+      ],
+      [
+       35.206398743066245,
+       31.73993935254619
+      ],
+      [
+       35.20654421676851,
+       31.739890332996954
+      ],
+      [
+       35.20656981747628,
+       31.739946420198212
+      ],
+      [
+       35.20661465904568,
+       31.739941152636206
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 22,
+    "plot_num": "106A",
+    "matched_xplan_num": "1061",
+    "area_sqm_table": 780,
+    "designation_table": "מגורים",
+    "units_yachd": 7,
+    "owners": "שעיה יוסף; בני דוד",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.206485691883096,
+       31.74025293579021
+      ],
+      [
+       35.20624414790632,
+       31.74033897570477
+      ],
+      [
+       35.206098569840776,
+       31.740040500836848
+      ],
+      [
+       35.20633173005122,
+       31.739961934023032
+      ],
+      [
+       35.206485691883096,
+       31.74025293579021
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 23,
+    "plot_num": "106B",
+    "matched_xplan_num": "1062",
+    "area_sqm_table": 846,
+    "designation_table": "מגורים",
+    "units_yachd": 8,
+    "owners": "שעיה יוסף; בני דוד",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.20664539312547,
+       31.74053176774046
+      ],
+      [
+       35.2063790595383,
+       31.740621514933988
+      ],
+      [
+       35.20633079401984,
+       31.740516623727945
+      ],
+      [
+       35.20624414790632,
+       31.74033897570477
+      ],
+      [
+       35.206485691883096,
+       31.74025293579021
+      ],
+      [
+       35.20664539312547,
+       31.74053176774046
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 24,
+    "plot_num": "106C",
+    "matched_xplan_num": "1063",
+    "area_sqm_table": 882,
+    "designation_table": "מגורים",
+    "units_yachd": 8,
+    "owners": "שעיה יוסף; בני דוד",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.205460098270734,
+       31.737750977101474
+      ],
+      [
+       35.205438337811096,
+       31.738057038836978
+      ],
+      [
+       35.20494348921487,
+       31.738031342959786
+      ],
+      [
+       35.20496609441107,
+       31.737885404205848
+      ],
+      [
+       35.204990691806145,
+       31.737726599688205
+      ],
+      [
+       35.205460098270734,
+       31.737750977101474
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 25,
+    "plot_num": "127A",
+    "matched_xplan_num": "1271",
+    "area_sqm_table": 588,
+    "designation_table": "מגורים",
+    "units_yachd": 7,
+    "owners": "שעיה יוסף; בני דוד",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.218377414665184,
+       31.742651533939284
+      ],
+      [
+       35.21837743908022,
+       31.74281386623606
+      ],
+      [
+       35.21826135279615,
+       31.742813878933582
+      ],
+      [
+       35.2182613285836,
+       31.742651546636726
+      ],
+      [
+       35.218377414665184,
+       31.742651533939284
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 27,
+    "plot_num": "124",
+    "matched_xplan_num": "124",
+    "area_sqm_table": 2452,
+    "designation_table": "מגורים",
+    "units_yachd": 30,
+    "owners": "הקרן הקיימת לישראל",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "KKL - excluded",
+    "mavat_name": "מגורים",
+    "mavat_code": 10,
+    "legal_area_xplan": 0.198,
+    "pl_number": "151-0347427"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.218419627785735,
+       31.74265152929582
+      ],
+      [
+       35.21853571386722,
+       31.742651516454163
+      ],
+      [
+       35.21853573855838,
+       31.742813848750846
+      ],
+      [
+       35.2184196522744,
+       31.742813861592555
+      ],
+      [
+       35.218419627785735,
+       31.74265152929582
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 28,
+    "plot_num": "125",
+    "matched_xplan_num": "125",
+    "area_sqm_table": 994,
+    "designation_table": "מגורים",
+    "units_yachd": 9,
+    "owners": "הקרן הקיימת לישראל",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "KKL - excluded",
+    "mavat_name": "מגורים",
+    "mavat_code": 10,
+    "legal_area_xplan": 0.198,
+    "pl_number": "151-0347427"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.204026638597675,
+       31.73850515415793
+      ],
+      [
+       35.20377825058087,
+       31.73853440552734
+      ],
+      [
+       35.20373048220339,
+       31.738233551026127
+      ],
+      [
+       35.204013735819885,
+       31.738200494060052
+      ],
+      [
+       35.204026638597675,
+       31.73850515415793
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 29,
+    "plot_num": "122",
+    "matched_xplan_num": "122",
+    "area_sqm_table": 2012,
+    "designation_table": "מגורים",
+    "units_yachd": 26,
+    "owners": "הקרן הקיימת לישראל",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "KKL - excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.218145269179814,
+       31.742831928446964
+      ],
+      [
+       35.21826135548645,
+       31.742831915855188
+      ],
+      [
+       35.21826137969921,
+       31.742994248147447
+      ],
+      [
+       35.218145293190084,
+       31.742994260739305
+      ],
+      [
+       35.218145269179814,
+       31.742831928446964
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 30,
+    "plot_num": "131",
+    "matched_xplan_num": "131",
+    "area_sqm_table": 1005,
+    "designation_table": "מגורים",
+    "units_yachd": 9,
+    "owners": "הקרן הקיימת לישראל",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "KKL - excluded",
+    "mavat_name": "מגורים",
+    "mavat_code": 10,
+    "legal_area_xplan": 0.198,
+    "pl_number": "151-0347427"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.204056246474096,
+       31.73884983102394
+      ],
+      [
+       35.20383285305238,
+       31.738875902647862
+      ],
+      [
+       35.20377825058087,
+       31.73853440552734
+      ],
+      [
+       35.204026638597675,
+       31.73850515415793
+      ],
+      [
+       35.204056246474096,
+       31.73884983102394
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 31,
+    "plot_num": "121",
+    "matched_xplan_num": "121",
+    "area_sqm_table": 901,
+    "designation_table": "מגורים",
+    "units_yachd": 8,
+    "owners": "הקרן הקיימת לישראל",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "KKL - excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.20674627656952,
+       31.7349099016911
+      ],
+      [
+       35.206446878719284,
+       31.735061332456723
+      ],
+      [
+       35.20635209561245,
+       31.73490170519764
+      ],
+      [
+       35.20634889824136,
+       31.734902019089905
+      ],
+      [
+       35.206321737410924,
+       31.734851270759233
+      ],
+      [
+       35.20649866989653,
+       31.734778764833795
+      ],
+      [
+       35.206637932596074,
+       31.73472169535245
+      ],
+      [
+       35.206688436554785,
+       31.734817340759232
+      ],
+      [
+       35.20674627656952,
+       31.7349099016911
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 49,
+    "plot_num": "152",
+    "matched_xplan_num": "152",
+    "area_sqm_table": 811,
+    "designation_table": "מגורים",
+    "units_yachd": 8,
+    "owners": "ימיני סוהרב",
+    "family_type": "jewish_persian",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "medium",
+    "notes": "Persian/Iranian Jewish",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.206985411717575,
+       31.739010944960295
+      ],
+      [
+       35.20693004613351,
+       31.73905077884262
+      ],
+      [
+       35.2068780036874,
+       31.73909376098214
+      ],
+      [
+       35.20682953025547,
+       31.73913969026637
+      ],
+      [
+       35.20676222286163,
+       31.739055052333892
+      ],
+      [
+       35.20670200174257,
+       31.738966599424497
+      ],
+      [
+       35.20664916343125,
+       31.73887476713475
+      ],
+      [
+       35.20660396646687,
+       31.738780001883228
+      ],
+      [
+       35.206723305497164,
+       31.738742535230067
+      ],
+      [
+       35.206985411717575,
+       31.739010944960295
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 50,
+    "plot_num": "38",
+    "matched_xplan_num": "38",
+    "area_sqm_table": 708,
+    "designation_table": "מגורים",
+    "units_yachd": 8,
+    "owners": "ישר שמשון דדיש; ישר רחל; מנשה; זהו שלמה",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "high",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       35.20829996392174,
+       31.735714525689588
+      ],
+      [
+       35.20840980258229,
+       31.736052599485568
+      ],
+      [
+       35.20830444687765,
+       31.736071041938242
+      ],
+      [
+       35.20827332768162,
+       31.73607648824521
+      ],
+      [
+       35.2082435509737,
+       31.736086975828965
+      ],
+      [
+       35.208122135349356,
+       31.73571315842361
+      ],
+      [
+       35.20829996392174,
+       31.735714525689588
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "row_num": 69,
+    "plot_num": "55",
+    "matched_xplan_num": "55",
+    "area_sqm_table": 660,
+    "designation_table": "מגורים",
+    "units_yachd": 5,
+    "owners": "אילן עניר נריה",
+    "family_type": "jewish_israeli",
+    "ownership_category": "jewish",
+    "ownership_label": "יהודי פרטי",
+    "confidence": "medium",
+    "notes": "Excluded",
+    "mavat_name": "מגורים ב'",
+    "mavat_code": 60,
+    "legal_area_xplan": 0,
+    "pl_number": "101-0979336"
+   }
+  }
+ ]
+}

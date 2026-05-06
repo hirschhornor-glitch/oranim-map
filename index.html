@@ -2345,6 +2345,11 @@
             master_plan_talpiot: 'data/master_plan_talpiot.geojson',
             buildings: 'data/buildings.geojson',
             givat_hamatos_arab_armenian: 'data/givat_hamatos_arab_armenian_plots.geojson',
+            givat_hamatos_state: 'data/givat_hamatos_state_plots.geojson',
+            givat_hamatos_companies: 'data/givat_hamatos_companies_plots.geojson',
+            givat_hamatos_jewish: 'data/givat_hamatos_jewish_plots.geojson',
+            givat_hamatos_christian: 'data/givat_hamatos_christian_plots.geojson',
+            givat_hamatos_unknown: 'data/givat_hamatos_unknown_plots.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -2705,10 +2710,15 @@
                     { id: 'master_plan_talpiot', name: 'א.ת. תלפיות', desc: 'תכנית אב א.ת. תלפיות — הסבת תעשייה למעורב, גרסת 2021 (~881 ד׳, 96 יעודי קרקע); מקור: jergisng + ArcGIS Online', on: false },
                 ]
             },
-            allocations: {
-                title: 'הקצאות איחוד וחלוקה',
+            givat_hamatos_ownerships: {
+                title: 'גבעת המטוס - בעלויות',
                 layers: [
-                    { id: 'givat_hamatos_arab_armenian', name: 'גבעת המטוס - בעלות ערבית', desc: 'מגרשים בבעלות משפחות ערביות וארמניות מתוך טבלת איחוד וחלוקה מק/14295 (40 מגרשים, 413 יח״ד מתוכננות)', on: false },
+                    { id: 'givat_hamatos_arab_armenian', name: 'בעלות ערבית + ארמנית', desc: 'מגרשים בבעלות משפחות ערביות וארמניות מתוך מק/14295 (40 מגרשים, 413 יח״ד)', on: false },
+                    { id: 'givat_hamatos_state',         name: 'בעלות מדינה ורשויות',    desc: 'מדינת ישראל ורשות הפיתוח (13 מגרשים, 329 יח״ד)', on: false },
+                    { id: 'givat_hamatos_companies',     name: 'בעלות חברות פרטיות',     desc: 'פסגות ירושלים בע״מ, הולדינגס בע״מ ועוד (11 מגרשים, 182 יח״ד)', on: false },
+                    { id: 'givat_hamatos_jewish',        name: 'בעלות יהודית פרטית',     desc: 'משפחות יהודיות פרטיות (13 מגרשים, 139 יח״ד)', on: false },
+                    { id: 'givat_hamatos_christian',     name: 'כנסיות נוצריות אירופיות',  desc: 'מוסדות נוצריים אירופיים, כולל אוונגליסטיים (3 מגרשים, 136 יח״ד)', on: false },
+                    { id: 'givat_hamatos_unknown',       name: 'לא ידוע / לבדיקה',         desc: 'מגרשים לא מסווגים או דורשים בדיקה ידנית (19 מגרשים, 182 יח״ד)', on: false },
                 ]
             },
         };
@@ -10432,24 +10442,42 @@
                     geoLayersRef.current.sport_kayam = sportKayamLayer;
                 }
 
-                // --- Givat HaMatos Arab/Armenian allocations (plan מק/14295) ---
-                // Styled like an approved TABA (status='אישור' green) with per-plot
-                // "+N יח״ד" labels matching the plans layer label format.
-                if (layers['givat_hamatos_arab_armenian'] && gd.givat_hamatos_arab_armenian) {
-                    const GH_FAMILY_LABELS = {
-                        arab_muslim:               'ערבי-מוסלמי',
-                        arab_christian:            'ערבי-נוצרי',
-                        'arab_christian+armenian': 'ערבי-נוצרי + ארמני',
-                        armenian:                  'ארמני',
-                    };
-                    const GH_GREEN = STATUS_COLORS['אישור'] || '#50d25a';
-                    const ghLayer = L.geoJSON(gd.givat_hamatos_arab_armenian, {
+                // --- Givat HaMatos ownership layers (plan מק/14295 = 101-0979336) ---
+                // Each layer is one ownership category; styled like an approved TABA
+                // (dashed border, fill color from the per-category palette below) with
+                // per-plot "+N יח״ד" labels matching the plans layer label format.
+                const GH_OWNERSHIP_COLORS = {
+                    givat_hamatos_arab_armenian: '#50d25a', // green = TABA-approved (kept original)
+                    givat_hamatos_state:         '#1976d2', // blue
+                    givat_hamatos_companies:     '#ff9800', // orange
+                    givat_hamatos_jewish:        '#ffd54f', // gold
+                    givat_hamatos_christian:     '#8e44ad', // purple
+                    givat_hamatos_unknown:       '#9e9e9e', // gray
+                };
+                const GH_FAMILY_LABELS = {
+                    arab_muslim:               'ערבי-מוסלמי',
+                    arab_christian:            'ערבי-נוצרי',
+                    'arab_christian+armenian': 'ערבי-נוצרי + ארמני',
+                    armenian:                  'ארמני',
+                    state_israel:              'מדינת ישראל / רשות הפיתוח',
+                    company_israeli:           'חברה פרטית',
+                    jewish_israeli:            'יהודי פרטי',
+                    jewish_persian:            'יהודי פרסי',
+                    christian_european:        'נוצרי אירופי',
+                    christian_other:           'נוצרי (אחר)',
+                    unknown:                   'לא ידוע',
+                    needs_review:              'דורש בדיקה',
+                };
+                Object.keys(GH_OWNERSHIP_COLORS).forEach(layerId => {
+                    if (!layers[layerId] || !gd[layerId]) return;
+                    const fillColor = GH_OWNERSHIP_COLORS[layerId];
+                    const ghLayer = L.geoJSON(gd[layerId], {
                         style: () => {
                             const isSat = basemap === 'satellite';
                             return {
                                 color: 'rgba(67,67,227,1)',
                                 weight: 1.5,
-                                fillColor: GH_GREEN,
+                                fillColor: fillColor,
                                 fillOpacity: isSat ? 1 : opacity * 0.3,
                                 dashArray: '4,2',
                             };
@@ -10465,6 +10493,7 @@
                                     <div class="plan-popup" style="direction:rtl;text-align:right;min-width:280px;">
                                         <h4 style="margin:0 0 8px 0;color:#2e7d32;">מגרש ${p.plot_num || '—'} — תכנית מק/14295</h4>
                                         <div style="font-size:13px;line-height:1.6;">
+                                            <div><b>קטגוריית בעלות:</b> ${p.ownership_label || '—'}</div>
                                             <div><b>סוג בעלות:</b> ${ft}</div>
                                             <div><b>בעלים:</b> ${p.owners || '—'}</div>
                                             <div><b>שטח (טבלה):</b> ${p.area_sqm_table ? p.area_sqm_table.toLocaleString() + ' מ״ר' : '—'}</div>
@@ -10480,8 +10509,7 @@
                                 L.popup({ maxWidth: popupMaxWidth() })
                                     .setLatLng(e.latlng).setContent(html).openOn(map);
                             });
-
-                            // Per-plot "+N יח״ד" label, matching the plan layer's label format.
+                            // Per-plot "+N יח״ד" label
                             const add = parseInt(p.units_yachd) || 0;
                             const zoom = map.getZoom();
                             if (zoom >= 16 && add > 0) {
@@ -10490,26 +10518,18 @@
                                 const ne = map.latLngToContainerPoint(bounds.getNorthEast());
                                 const pxW = Math.abs(ne.x - sw.x);
                                 const pxH = Math.abs(ne.y - sw.y);
-                                let labelText;
-                                if (zoom >= 17) {
-                                    labelText = '+' + add + ' יח"ד';
-                                } else {
-                                    labelText = '+' + add + '\nיח"ד';
-                                }
+                                let labelText = zoom >= 17 ? ('+' + add + ' יח"ד') : ('+' + add + '\nיח"ד');
                                 const lines = labelText.split('\n');
                                 const maxLineLen = Math.max(...lines.map(l => l.length));
                                 const fontSize = zoom >= 18 ? 11 : zoom === 16 ? 9 : 8;
-                                const charW = fontSize * 0.75;
-                                const lineH = fontSize * 1.5;
-                                const estW = maxLineLen * charW;
-                                const estH = lines.length * lineH;
+                                const estW = maxLineLen * fontSize * 0.75;
+                                const estH = lines.length * fontSize * 1.5;
                                 const fitRatio = zoom >= 18 ? 0.85 : zoom >= 17 ? 0.75 : 0.65;
                                 if (estW <= pxW * fitRatio && estH <= pxH * fitRatio) {
                                     let cls = 'plan-label-center';
                                     if (zoom >= 18) cls += ' plan-label-z18';
                                     cls += add >= 30 ? ' plan-label-large' : ' plan-label-small';
-                                    const center = bounds.getCenter();
-                                    const lm = L.marker(center, {
+                                    const lm = L.marker(bounds.getCenter(), {
                                         icon: L.divIcon({
                                             className: cls,
                                             html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
@@ -10523,8 +10543,8 @@
                             }
                         }
                     }).addTo(map);
-                    geoLayersRef.current.givat_hamatos_arab_armenian = ghLayer;
-                }
+                    geoLayersRef.current[layerId] = ghLayer;
+                });
 
                 // --- Master plans (Moshavot/Rasko/Baka) — combined per-plan layers ---
                 const MASTER_PLAN_CONFIGS = {
