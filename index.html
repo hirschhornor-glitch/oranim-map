@@ -8701,7 +8701,12 @@
                         // doesn't accumulate a noisy "אחר" column.
                         let subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
                         if (!subRaw || subRaw === 'אחר' || subRaw === 'לא ידוע') subRaw = m || 'אחר';
-                        const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                        let sub = SUB_NORMALIZE[subRaw] || subRaw;
+                        // בית צפאפא minahak collapses to two named subs only:
+                        // 'בית צפאפא' (default) and 'גבעת המטוס - בעלות ערבית' (synthetic).
+                        if (m === 'בית צפאפא' && sub !== 'גבעת המטוס - בעלות ערבית') {
+                            sub = 'בית צפאפא';
+                        }
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].units_in += inVal;
                         bySub[m][sub].units_add += addVal;
