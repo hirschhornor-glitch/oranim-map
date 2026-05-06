@@ -2344,6 +2344,7 @@
             master_plan_gonenim: 'data/master_plan_gonenim.geojson',
             master_plan_talpiot: 'data/master_plan_talpiot.geojson',
             buildings: 'data/buildings.geojson',
+            givat_hamatos_arab_armenian: 'data/givat_hamatos_arab_armenian_plots.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -2702,6 +2703,12 @@
                     { id: 'master_plan_arnona', name: 'ארנונה', desc: 'תכנית אב ארנונה — גבול, מתחמי קומות, מבנים + שימור', on: false },
                     { id: 'master_plan_gonenim', name: 'גוננים', desc: 'תכנית אב גוננים — שלד התחדשות עירונית (~867 ד׳, 286 יעודי קרקע); מקור: jergisng', on: false },
                     { id: 'master_plan_talpiot', name: 'א.ת. תלפיות', desc: 'תכנית אב א.ת. תלפיות — הסבת תעשייה למעורב, גרסת 2021 (~881 ד׳, 96 יעודי קרקע); מקור: jergisng + ArcGIS Online', on: false },
+                ]
+            },
+            allocations: {
+                title: 'הקצאות איחוד וחלוקה',
+                layers: [
+                    { id: 'givat_hamatos_arab_armenian', name: 'גבעת המטוס - בעלות ערבית', desc: 'מגרשים בבעלות משפחות ערביות וארמניות מתוך טבלת איחוד וחלוקה מק/14295 (40 מגרשים, 413 יח״ד מתוכננות)', on: false },
                 ]
             },
         };
@@ -8604,9 +8611,42 @@
                         'אזור תעשייה תלפיות': 'א.ת. תלפיות',
                         'אזור תעשיה תלפיות': 'א.ת. תלפיות',
                     };
+
+                    // Reverse-map sub-neighborhood → minahak from the canonical
+                    // MINAHAK_SUBS literal so we can override stale CSV minahak
+                    // values (e.g. "גבעת השקד" was tagged בית צפאפא in the sheet
+                    // but belongs under גוננים).
+                    const SUB_TO_MINAHAK = {};
+                    Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
+                        subs.forEach(s => { SUB_TO_MINAHAK[s] = m; });
+                    });
+
+                    // Synthetic row: Givat HaMatos Arab+Armenian allocations from
+                    // איחוד וחלוקה מק/14295 (=101-0979336). Surfaces in the Minhal
+                    // summary report under בית צפאפא, sub-neighborhood
+                    // "גבעת המטוס - בעלות ערבית" with the per-plot יח"ד aggregate.
+                    const __ghArabRow = {
+                        plan_name: '101-0979336',
+                        plan_name_he: 'מק/14295 - איחוד וחלוקה גבעת המטוס',
+                        plan_summary: 'גבעת המטוס - בעלות ערבית (40 מגרשים, משפ\' ערביות + ארמניות)',
+                        units_add: '413',
+                        units_in: '0',
+                        status_mavat: 'אישור',
+                        plan_type: 'איחוד וחלוקה',
+                        minahak: 'בית צפאפא',
+                        sub_neighborhood: 'גבעת המטוס - בעלות ערבית',
+                        stage: '',
+                    };
+                    if (!planRows.some(p => p.plan_name === __ghArabRow.plan_name &&
+                                            p.sub_neighborhood === __ghArabRow.sub_neighborhood)) {
+                        planRows.push(__ghArabRow);
+                    }
+
                     // Plans (from Google Sheets CSV)
                     planRows.forEach(p => {
-                        const mRaw = (p.minahak || '').trim();
+                        const subForLookup = SUB_NORMALIZE[(p.sub_neighborhood || '').trim()] || (p.sub_neighborhood || '').trim();
+                        const minahakFromSub = SUB_TO_MINAHAK[(p.sub_neighborhood || '').trim()] || SUB_TO_MINAHAK[subForLookup];
+                        const mRaw = (minahakFromSub || p.minahak || '').trim();
                         const m = MINAHAK_NORMALIZE[mRaw] || mRaw;
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
                         // Skip rejected/archived plans for units_add
@@ -10383,6 +10423,100 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.sport_kayam = sportKayamLayer;
+                }
+
+                // --- Givat HaMatos Arab/Armenian allocations (plan מק/14295) ---
+                // Styled like an approved TABA (status='אישור' green) with per-plot
+                // "+N יח״ד" labels matching the plans layer label format.
+                if (layers['givat_hamatos_arab_armenian'] && gd.givat_hamatos_arab_armenian) {
+                    const GH_FAMILY_LABELS = {
+                        arab_muslim:               'ערבי-מוסלמי',
+                        arab_christian:            'ערבי-נוצרי',
+                        'arab_christian+armenian': 'ערבי-נוצרי + ארמני',
+                        armenian:                  'ארמני',
+                    };
+                    const GH_GREEN = STATUS_COLORS['אישור'] || '#50d25a';
+                    const ghLayer = L.geoJSON(gd.givat_hamatos_arab_armenian, {
+                        style: () => {
+                            const isSat = basemap === 'satellite';
+                            return {
+                                color: 'rgba(67,67,227,1)',
+                                weight: 1.5,
+                                fillColor: GH_GREEN,
+                                fillOpacity: isSat ? 1 : opacity * 0.3,
+                                dashArray: '4,2',
+                            };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const ft = GH_FAMILY_LABELS[p.family_type] || p.family_type || '—';
+                            const tooltip = `מגרש ${p.plot_num || '—'} — ${ft} — ${p.units_yachd || 0} יח״ד`;
+                            layer.bindTooltip(tooltip, { sticky: true, direction: 'right', offset: [8, 0] });
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current) return;
+                                const html = `
+                                    <div class="plan-popup" style="direction:rtl;text-align:right;min-width:280px;">
+                                        <h4 style="margin:0 0 8px 0;color:#2e7d32;">מגרש ${p.plot_num || '—'} — תכנית מק/14295</h4>
+                                        <div style="font-size:13px;line-height:1.6;">
+                                            <div><b>סוג בעלות:</b> ${ft}</div>
+                                            <div><b>בעלים:</b> ${p.owners || '—'}</div>
+                                            <div><b>שטח (טבלה):</b> ${p.area_sqm_table ? p.area_sqm_table.toLocaleString() + ' מ״ר' : '—'}</div>
+                                            <div><b>יח״ד מתוכננות:</b> ${p.units_yachd || 0}</div>
+                                            <div><b>יעוד (טבלה):</b> ${p.designation_table || '—'}</div>
+                                            <div><b>יעוד (XPLAN):</b> ${p.mavat_name || '—'}</div>
+                                            <div style="margin-top:6px;color:#666;font-size:11px;">
+                                                מקור: ${p.pl_number || '—'} · רמת ביטחון: ${p.confidence || '—'}
+                                                ${p.notes ? '<br/>הערות: ' + p.notes : ''}
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                L.popup({ maxWidth: popupMaxWidth() })
+                                    .setLatLng(e.latlng).setContent(html).openOn(map);
+                            });
+
+                            // Per-plot "+N יח״ד" label, matching the plan layer's label format.
+                            const add = parseInt(p.units_yachd) || 0;
+                            const zoom = map.getZoom();
+                            if (zoom >= 16 && add > 0) {
+                                const bounds = layer.getBounds();
+                                const sw = map.latLngToContainerPoint(bounds.getSouthWest());
+                                const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+                                const pxW = Math.abs(ne.x - sw.x);
+                                const pxH = Math.abs(ne.y - sw.y);
+                                let labelText;
+                                if (zoom >= 17) {
+                                    labelText = '+' + add + ' יח"ד';
+                                } else {
+                                    labelText = '+' + add + '\nיח"ד';
+                                }
+                                const lines = labelText.split('\n');
+                                const maxLineLen = Math.max(...lines.map(l => l.length));
+                                const fontSize = zoom >= 18 ? 11 : zoom === 16 ? 9 : 8;
+                                const charW = fontSize * 0.75;
+                                const lineH = fontSize * 1.5;
+                                const estW = maxLineLen * charW;
+                                const estH = lines.length * lineH;
+                                const fitRatio = zoom >= 18 ? 0.85 : zoom >= 17 ? 0.75 : 0.65;
+                                if (estW <= pxW * fitRatio && estH <= pxH * fitRatio) {
+                                    let cls = 'plan-label-center';
+                                    if (zoom >= 18) cls += ' plan-label-z18';
+                                    cls += add >= 30 ? ' plan-label-large' : ' plan-label-small';
+                                    const center = bounds.getCenter();
+                                    const lm = L.marker(center, {
+                                        icon: L.divIcon({
+                                            className: cls,
+                                            html: '<div class="label-inner">' + labelText.replace(/\n/g, '<br>') + '</div>',
+                                            iconSize: [0, 0], iconAnchor: [0, 0],
+                                        }),
+                                        interactive: false,
+                                        pane: 'labelsPane',
+                                    }).addTo(map);
+                                    layer._ghLabel = lm;
+                                }
+                            }
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.givat_hamatos_arab_armenian = ghLayer;
                 }
 
                 // --- Master plans (Moshavot/Rasko/Baka) — combined per-plan layers ---
