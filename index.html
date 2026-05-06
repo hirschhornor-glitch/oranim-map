@@ -16323,13 +16323,48 @@
                         if (permitsBySubDrilldown) {
                             const { sub, stage } = permitsBySubDrilldown;
                             const data = bySub[sub];
-                            const stagePermits = data && data[stage] ? data[stage].permits : [];
+                            const stagePermits = (data && data[stage] ? data[stage].permits : []).slice().sort((a,b) => b.units - a.units);
+                            const drillTitle = sub + ' — ' + getPermitStageLabel(stage) + ' (' + stagePermits.length + ' היתרים, ' + data[stage].units + ' יח"ד)';
+                            const drillCols = ['תב"ע', 'היתר', 'סטטוס', 'תאריך', 'יח"ד', 'סוג', 'תיאור'];
+                            function exportDrilldownCsv() {
+                                const rows = stagePermits.map(p => [p.plan || '', p.file || '', p.status || '', p.date || '', p.units || 0, getPermitCategoryLabel(p.cat) || '', p.desc || '']);
+                                const csv = [drillCols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url; a.download = (sub + '_' + getPermitStageLabel(stage) + '.csv').replace(/[\\/:"*?<>|]/g, '_');
+                                document.body.appendChild(a); a.click(); a.remove();
+                                URL.revokeObjectURL(url);
+                            }
+                            function printDrilldown() {
+                                const win = window.open('', '_blank');
+                                const rowsHtml = stagePermits.map(p =>
+                                    '<tr><td>' + (p.plan || '') + '</td>' +
+                                    '<td style="direction:ltr">' + (p.file || '') + '</td>' +
+                                    '<td>' + (p.status || '') + '</td>' +
+                                    '<td>' + (p.date || '') + '</td>' +
+                                    '<td style="text-align:left;font-weight:bold">' + (p.units || 0) + '</td>' +
+                                    '<td>' + (getPermitCategoryLabel(p.cat) || '') + '</td>' +
+                                    '<td style="font-size:10px">' + (p.desc || '') + '</td></tr>'
+                                ).join('');
+                                win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + drillTitle + '</title>' +
+                                    '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#9c27b0;margin-bottom:12px}' +
+                                    'table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right;vertical-align:top}th{background:#eee}</style></head><body>');
+                                win.document.write('<h2>' + drillTitle + '</h2>');
+                                win.document.write('<table><thead><tr>' + drillCols.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>');
+                                win.document.write('</body></html>');
+                                win.document.close(); win.print();
+                            }
                             return (
                                 <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(900px,95vw)'}}>
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPermitsBySubDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
-                                            <h2>{sub} — {getPermitStageLabel(stage)} ({stagePermits.length} היתרים, {data[stage].units} יח"ד)</h2>
+                                            <h2>{drillTitle}</h2>
+                                            <div style={{display:'flex',gap:6,marginRight:8}}>
+                                                <button onClick={exportDrilldownCsv} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
+                                                <button onClick={printDrilldown} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                            </div>
                                             <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
@@ -18291,8 +18326,53 @@
 
                     {minahakReport && (
                         <div className="units-overlay" onClick={() => setMinahakReport(null)}>
-                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(600px, 95vw)'}}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(600px, 95vw)'}} id="minahak-report-modal">
                                 <button className="units-close" onClick={() => setMinahakReport(null)}>&times;</button>
+                                <div style={{display:'flex',gap:6,position:'absolute',top:14,left:50}}>
+                                    <button onClick={() => {
+                                        const m = document.getElementById('minahak-report-modal');
+                                        if (!m) return;
+                                        const win = window.open('', '_blank');
+                                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח מינהל — ' + minahakReport + '</title>' +
+                                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h2,h3{color:#9c27b0}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}a{color:#1565c0;text-decoration:none}div[style*="background"]{background:none !important}</style></head><body>');
+                                        win.document.write(m.innerHTML.replace(/<button[^>]*>.*?<\/button>/g, ''));
+                                        win.document.write('</body></html>');
+                                        win.document.close(); win.print();
+                                    }} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                    <button onClick={() => {
+                                        const gd = geoDataRef.current;
+                                        if (!gd.plans) return;
+                                        const rejectedStatuses = new Set(['נגנזה/נדחתה','נגנזה','נדחתה']);
+                                        const seen = new Set();
+                                        const rows = [];
+                                        gd.plans.features.forEach(f => {
+                                            if ((f.properties.minahak||'') !== minahakReport) return;
+                                            const pn = f.properties.plan_name || '';
+                                            if (seen.has(pn)) return; seen.add(pn);
+                                            const st = (f.properties.status_mavat || '').trim();
+                                            if (rejectedStatuses.has(st)) return;
+                                            rows.push([
+                                                pn,
+                                                f.properties.plan_name_he || '',
+                                                f.properties.plan_summary || '',
+                                                f.properties.sub_neighborhood || '',
+                                                parseFloat(f.properties.units_add) || 0,
+                                                parseFloat(f.properties.units_in) || 0,
+                                                st,
+                                                f.properties.mavat_date || '',
+                                            ]);
+                                        });
+                                        rows.sort((a,b) => b[4] - a[4]);
+                                        const cols = ['מס תכנית','שם תכנית','תיאור','תת-שכונה','תוספת יח"ד','יח"ד קיימות','סטטוס','תאריך מבא"ת'];
+                                        const csv = [cols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))).join('\n');
+                                        const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url; a.download = ('דוח_מינהל_' + minahakReport + '.csv').replace(/[\\/:"*?<>|]/g,'_');
+                                        document.body.appendChild(a); a.click(); a.remove();
+                                        URL.revokeObjectURL(url);
+                                    }} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
+                                </div>
                                 <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח מינהל — {minahakReport}</h2>
                                 {(() => {
                                     const gd = geoDataRef.current;
