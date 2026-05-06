@@ -2719,6 +2719,7 @@
                     { id: 'givat_hamatos_jewish',        name: 'בעלות יהודית פרטית',     desc: 'משפחות יהודיות פרטיות (13 מגרשים, 139 יח״ד)', on: false },
                     { id: 'givat_hamatos_christian',     name: 'כנסיות נוצריות אירופיות',  desc: 'מוסדות נוצריים אירופיים, כולל אוונגליסטיים (3 מגרשים, 136 יח״ד)', on: false },
                     { id: 'givat_hamatos_unknown',       name: 'לא ידוע / לבדיקה',         desc: 'מגרשים לא מסווגים או דורשים בדיקה ידנית (19 מגרשים, 182 יח״ד)', on: false },
+                    { id: 'givat_hamatos_show_ownership_outline', name: '🎨 הצג מתאר לפי בעלות', desc: 'כשפעיל - קו המתאר של כל מגרש מקבל את צבע סוג הבעלות (במקום מתאר תב"ע סטנדרטי)', on: false },
                 ]
             },
         };
@@ -10469,15 +10470,19 @@
                     unknown:                   'לא ידוע',
                     needs_review:              'דורש בדיקה',
                 };
+                const showOwnershipOutline = !!layers['givat_hamatos_show_ownership_outline'];
                 Object.keys(GH_OUTLINE_COLORS).forEach(layerId => {
                     if (!layers[layerId] || !gd[layerId]) return;
-                    const outlineColor = GH_OUTLINE_COLORS[layerId];
+                    const ownerOutline = GH_OUTLINE_COLORS[layerId];
                     const ghLayer = L.geoJSON(gd[layerId], {
                         style: () => {
                             const isSat = basemap === 'satellite';
                             return {
-                                color: outlineColor,
-                                weight: 2,
+                                // Default: standard approved-TABA border (purple-blue).
+                                // When the ownership-outline toggle is on: switch to
+                                // the per-category color and a heavier weight.
+                                color: showOwnershipOutline ? ownerOutline : 'rgba(67,67,227,1)',
+                                weight: showOwnershipOutline ? 2.5 : 1.5,
                                 fillColor: GH_FILL,
                                 fillOpacity: isSat ? 1 : opacity * 0.3,
                                 dashArray: '4,2',
