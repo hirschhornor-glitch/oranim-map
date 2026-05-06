@@ -3739,7 +3739,9 @@
             'עמק רפאים-המושבה הגרמנית': 'המושבה הגרמנית',
             'קוממיות - טלביה': 'טלביה',
             'קריית שמואל': 'קרית שמואל',
-            'בית צפאפא': 'בית צפאפא,שרפת',
+            'בית צפאפא,שרפת': 'בית צפאפא',
+            'בית צפאפא, שרפת': 'בית צפאפא',
+            'שרפת': 'בית צפאפא',
         };
 
         // Reverse map: canonical sub-name → canonical minahak name. Used to correct misattributed subs
@@ -8611,15 +8613,10 @@
                         'אזור תעשייה תלפיות': 'א.ת. תלפיות',
                         'אזור תעשיה תלפיות': 'א.ת. תלפיות',
                     };
-
-                    // Reverse-map sub-neighborhood → minahak from the canonical
-                    // MINAHAK_SUBS literal so we can override stale CSV minahak
-                    // values (e.g. "גבעת השקד" was tagged בית צפאפא in the sheet
-                    // but belongs under גוננים).
-                    const SUB_TO_MINAHAK = {};
-                    Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
-                        subs.forEach(s => { SUB_TO_MINAHAK[s] = m; });
-                    });
+                    // SUB_TO_MINAHAK is the global reverse-map from MINAHAK_SUBS
+                    // (sub-neighborhood → minahak). Used to override stale CSV
+                    // minahak values (e.g. גבעת השקד was tagged בית צפאפא but
+                    // belongs under גוננים).
 
                     // Synthetic row: Givat HaMatos Arab+Armenian allocations from
                     // איחוד וחלוקה מק/14295 (=101-0979336). Surfaces in the Minhal
@@ -8780,7 +8777,7 @@
                             'קטמון הישנה': 4343, 'קרית שמואל': 3423, 'רחביה': 3156,
                         },
                         'בית צפאפא': {
-                            'בית צפאפא,שרפת': 4262,
+                            'בית צפאפא': 4262,
                         },
                     };
                     Object.entries(fixedSubUnitsIn).forEach(([m, subs]) => {
