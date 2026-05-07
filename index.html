@@ -2653,7 +2653,6 @@
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
-                    { id: 'easements', name: 'זיקות הנאה', desc: 'תכניות עם זיקת הנאה — הפרדה גרפית בין רכב/הולכי רגל', on: false },
                 ]
             },
             infrastructure: {
@@ -2662,6 +2661,7 @@
                     { id: 'roads', name: 'כבישים', on: true },
                     { id: 'rakal', name: 'רק"ל', on: false },
                     { id: 'stations', name: 'תחנות רק"ל', on: false },
+                    { id: 'easements', name: 'זיקות הנאה', desc: 'תכניות עם זיקת הנאה — הפרדה גרפית בין רכב/הולכי רגל', on: false },
                 ]
             },
             admin: {
@@ -3633,6 +3633,14 @@
             { label: 'נפתח תיק היתר', color: 'rgb(253,174,97)' },
             { label: 'היתר אושר בועדת רישוי', color: 'rgb(255,255,192)' },
             { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
+        ];
+
+        const EASEMENTS_LEGEND = [
+            { label: 'לרכב', color: '#dc2626' },
+            { label: 'להולכי רגל', color: '#22c55e' },
+            { label: 'לרכב + הולכי רגל (מעורב)', color: '#a855f7' },
+            { label: 'אחר', color: '#facc15' },
+            { label: 'לא מסווג', color: '#fca5a5' },
         ];
 
         const MOSADOT_LEGEND = [
@@ -11974,44 +11982,36 @@
                     geoLayersRef.current.rakal = rakalLayer;
                 }
 
-                // --- Easements (זיקות הנאה) ---
+                // --- Easements (זיקות הנאה) — polygon hatching from PDF vector extraction ---
                 if (layers['easements'] && gd.easements) {
                     const EASEMENT_STYLES = {
-                        'לרכב':            { color: '#1d4ed8', fillColor: '#3b82f6', dashArray: null,   weight: 2, fillOpacity: 0.35 },
-                        'להולכי רגל':       { color: '#15803d', fillColor: '#22c55e', dashArray: '6,4', weight: 2, fillOpacity: 0.35 },
-                        'לרכב והולכי רגל':  { color: '#6d28d9', fillColor: '#8b5cf6', dashArray: '6,4', weight: 2, fillOpacity: 0.35 },
+                        'לרכב':            { color: '#dc2626', fillColor: '#dc2626', dashArray: null,   weight: 2, fillOpacity: 0.30 },
+                        'להולכי רגל':       { color: '#15803d', fillColor: '#22c55e', dashArray: '4,3', weight: 2, fillOpacity: 0.35 },
+                        'לרכב והולכי רגל':  { color: '#7c3aed', fillColor: '#a855f7', dashArray: null,  weight: 2, fillOpacity: 0.30 },
                         'אחר':             { color: '#a16207', fillColor: '#facc15', dashArray: null,   weight: 2, fillOpacity: 0.30 },
-                        'default':         { color: '#4b5563', fillColor: '#9ca3af', dashArray: '2,3', weight: 2, fillOpacity: 0.25 },
+                        'default':         { color: '#dc2626', fillColor: '#fca5a5', dashArray: null,   weight: 2, fillOpacity: 0.35 },
+                    };
+                    const EASEMENT_MARKER_STYLES = {
+                        'לרכב':            { fillColor: '#3b82f6', color: '#1d4ed8' },
+                        'להולכי רגל':       { fillColor: '#22c55e', color: '#15803d' },
+                        'לרכב והולכי רגל':  { fillColor: '#8b5cf6', color: '#6d28d9' },
+                        'אחר':             { fillColor: '#facc15', color: '#a16207' },
+                        'default':         { fillColor: '#9ca3af', color: '#4b5563' },
                     };
                     const easementsLayer = L.geoJSON(gd.easements, {
                         style: f => EASEMENT_STYLES[f.properties.easement_type] || EASEMENT_STYLES.default,
-                        onEachFeature: (f, lyr) => {
-                            const p = f.properties || {};
-                            const typeLabel = p.easement_type || 'לא מסווג';
-                            const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-                            const easementsArr = Array.isArray(p.easements) ? p.easements : [];
-                            const itemsHtml = easementsArr.map(e => {
-                                const parts = [];
-                                parts.push('ID ' + escape(e.id_zikot));
-                                if (e.megrash) parts.push('מגרש ' + escape(e.megrash));
-                                if (e.sug) parts.push(escape(e.sug));
-                                else parts.push('<span style="color:#888">לא מסווג</span>');
-                                return '<li style="margin:2px 0">' + parts.join(' · ') + '</li>';
-                            }).join('');
-                            const mavatLink = p.mavat_url
-                                ? ' <a href="' + escape(p.mavat_url) + '" target="_blank" style="color:#1d4ed8">(Mavat)</a>'
-                                : '';
-                            const html =
-                                '<div class="popup-header" style="background:linear-gradient(90deg,#4b5563,#6b7280);color:#fff;padding:6px 10px;font-weight:bold">זיקת הנאה — ' + escape(p.plan_name_he || p.pl_number || '') + '</div>' +
-                                '<div class="popup-body" style="padding:8px 10px;direction:rtl;text-align:right">' +
-                                    '<div class="popup-row"><b>תכנית:</b> ' + escape(p.pl_number || '') + mavatLink + '</div>' +
-                                    '<div class="popup-row"><b>מנהל:</b> ' + escape(p.minahak || '') + '</div>' +
-                                    '<div class="popup-row"><b>סוג מצרפי:</b> ' + escape(typeLabel) + '</div>' +
-                                    '<div class="popup-row"><b>מס\' זיקות בתכנית:</b> ' + escape(p.easement_count) + '</div>' +
-                                    '<div class="popup-row"><b>פירוט:</b><ul style="margin:4px 16px 0 0;padding:0">' + itemsHtml + '</ul></div>' +
-                                '</div>';
-                            lyr.bindPopup(html, { maxWidth: 360 });
-                        }
+                        pointToLayer: (f, latlng) => {
+                            const s = EASEMENT_MARKER_STYLES[f.properties.easement_type] || EASEMENT_MARKER_STYLES.default;
+                            return L.circleMarker(latlng, {
+                                radius: 8,
+                                fillColor: s.fillColor,
+                                color: s.color,
+                                weight: 2,
+                                fillOpacity: 0.85,
+                                opacity: 1,
+                            });
+                        },
+                        interactive: false,
                     }).addTo(map);
                     geoLayersRef.current.easements = easementsLayer;
                 }
@@ -14200,6 +14200,10 @@
                                             {layer.id === 'tama38' && (
                                                 <button className="layer-legend-btn" title="מקרא תמ&quot;א 38"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא תמ"א 38 - סטטוס', items: TAMA38_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'easements' && (
+                                                <button className="layer-legend-btn" title="מקרא זיקות הנאה"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא זיקות הנאה - סוג', items: EASEMENTS_LEGEND }); }}>⋯</button>
                                             )}
                                             {groupKey === 'master_plans' && (
                                                 <button className="layer-legend-btn" title={"דוח סיכום — תכנית אב " + layer.name}
