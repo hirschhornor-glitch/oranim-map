@@ -3814,7 +3814,13 @@
                 if (blob) {
                     for (const hint of PLAN_NAME_SUB_HINTS) {
                         if (!hint.sub) continue;
-                        const variants = [hint.sub, hint.sub.replace(/^גבעת /, 'גבעת ה')];
+                        // Match the sub name with or without the optional 'ה'
+                        // prefix (e.g. "גבעת השקד" ↔ "גבעת שקד").
+                        const variants = [
+                            hint.sub,
+                            hint.sub.replace(/^גבעת ה/, 'גבעת '),
+                            hint.sub.replace(/^גבעת ([^ה])/, 'גבעת ה$1'),
+                        ];
                         if (variants.some(v => v && blob.indexOf(v) >= 0)) {
                             // Override sub + minahak to the canonical pair when
                             // the plan name disagrees with the CSV.
