@@ -3787,21 +3787,52 @@
         // minahak than what's tagged. Used so the canonical mapping (e.g.
         // גבעת השקד → גוננים) flows into every report that reads minahak
         // directly from the geojson, not just the CSV-driven units summary.
+        // Hints derived from MINAHAK_SUBS for matching plan names that mention
+        // a sub-neighborhood explicitly (e.g. "שכונת גבעת שקד") even when the
+        // CSV tags the plan with a different sub.
+        const PLAN_NAME_SUB_HINTS = (() => {
+            const out = [];
+            Object.entries(MINAHAK_SUBS).forEach(([minahak, subs]) => {
+                subs.forEach(sub => {
+                    const norm = SUB_NORMALIZE[sub] || sub;
+                    out.push({ sub: norm, minahak });
+                });
+            });
+            return out;
+        })();
         function applyMinahakOverrides(gd) {
             if (!gd || !gd.plans || !gd.plans.features) return 0;
             let n = 0;
             gd.plans.features.forEach(f => {
                 const p = f.properties || {};
                 const subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
-                if (!subRaw) return;
-                const sub = SUB_NORMALIZE[subRaw] || subRaw;
-                const canonical = SUB_TO_MINAHAK[sub];
+                let sub = subRaw ? (SUB_NORMALIZE[subRaw] || subRaw) : '';
+                let canonical = sub ? SUB_TO_MINAHAK[sub] : null;
+                // 2nd-pass: if the plan name explicitly mentions a known sub
+                // (e.g. "שכונת גבעת שקד"), prefer that over the CSV's sub.
+                const blob = ((p.plan_summary || '') + ' ' + (p.plan_name_he || '')).trim();
+                if (blob) {
+                    for (const hint of PLAN_NAME_SUB_HINTS) {
+                        if (!hint.sub) continue;
+                        const variants = [hint.sub, hint.sub.replace(/^גבעת /, 'גבעת ה')];
+                        if (variants.some(v => v && blob.indexOf(v) >= 0)) {
+                            // Override sub + minahak to the canonical pair when
+                            // the plan name disagrees with the CSV.
+                            if (sub !== hint.sub) {
+                                p.sub_neighborhood = hint.sub;
+                                sub = hint.sub;
+                            }
+                            canonical = hint.minahak;
+                            break;
+                        }
+                    }
+                }
                 if (canonical && canonical !== (p.minahak || '').trim()) {
                     p.minahak = canonical;
                     n++;
                 }
             });
-            if (n > 0) console.log('[Minahak] overrode', n, 'plans from sub→minahak canonical map');
+            if (n > 0) console.log('[Minahak] overrode', n, 'plans from sub/name → minahak canonical map');
             return n;
         }
 
@@ -16577,32 +16608,88 @@
 
                         // Drilldown table
                         if (permitsBySubDrilldown) {
-                            const { sub, stage } = permitsBySubDrilldown;
-                            const data = bySub[sub];
-                            const stagePermits = (data && data[stage] ? data[stage].permits : []).slice().sort((a,b) => b.units - a.units);
-                            const drillTitle = sub + ' — ' + getPermitStageLabel(stage) + ' (' + stagePermits.length + ' היתרים, ' + data[stage].units + ' יח"ד)';
-                            const drillCols = ['תב"ע', 'היתר', 'סטטוס', 'תאריך', 'יח"ד', 'סוג', 'תיאור'];
+                            const dd = permitsBySubDrilldown;
+                            // Backward-compat: old shape was {sub, stage}; new shape is {scope, key, stage}
+                            const scope = dd.scope || 'sub';
+                            const key = dd.key || dd.sub;
+                            const stage = dd.stage;
+                            const isAllStages = stage === 'all';
+                            const showSubCol = scope === 'minahak';
+
+                            // Build permit list per scope+stage
+                            let permitsList = [];
+                            if (scope === 'sub') {
+                                const data = bySub[key];
+                                if (data) {
+                                    if (isAllStages) {
+                                        PERMIT_STAGES_ALL.forEach(st => {
+                                            (data[st].permits || []).forEach(p => permitsList.push({ ...p, stage: st, sub: key }));
+                                        });
+                                    } else {
+                                        ((data[stage] && data[stage].permits) || []).forEach(p => permitsList.push({ ...p, stage, sub: key }));
+                                    }
+                                }
+                            } else if (scope === 'minahak') {
+                                Object.entries(bySub).forEach(([subName, data]) => {
+                                    if (data.minahak !== key) return;
+                                    PERMIT_STAGES_ALL.forEach(st => {
+                                        if (!isAllStages && st !== stage) return;
+                                        (data[st].permits || []).forEach(p => permitsList.push({ ...p, stage: st, sub: subName }));
+                                    });
+                                });
+                            }
+                            permitsList.sort((a, b) => b.units - a.units);
+
+                            const totalUnits = permitsList.reduce((s, p) => s + (Number(p.units) || 0), 0);
+                            const stageLabel = isAllStages ? 'כל ההיתרים' : getPermitStageLabel(stage);
+                            const drillTitle = key + ' — ' + stageLabel + ' (' + permitsList.length + ' היתרים, ' + totalUnits + ' יח"ד)';
+
+                            const drillCols = []
+                                .concat(showSubCol ? ['תת-שכונה'] : [])
+                                .concat(['תב"ע', 'היתר', 'סטטוס'])
+                                .concat(isAllStages ? ['שלב'] : [])
+                                .concat(['תאריך', 'יח"ד', 'סוג', 'תיאור']);
+
+                            function rowValuesFor(p) {
+                                const arr = [];
+                                if (showSubCol) arr.push(p.sub || '');
+                                arr.push(p.plan || '');
+                                arr.push(p.file || '');
+                                arr.push(p.status || '');
+                                if (isAllStages) arr.push(getPermitStageLabel(p.stage) || '');
+                                arr.push(p.date || '');
+                                arr.push(p.units || 0);
+                                arr.push(getPermitCategoryLabel(p.cat) || '');
+                                arr.push(p.desc || '');
+                                return arr;
+                            }
+
                             function exportDrilldownCsv() {
-                                const rows = stagePermits.map(p => [p.plan || '', p.file || '', p.status || '', p.date || '', p.units || 0, getPermitCategoryLabel(p.cat) || '', p.desc || '']);
+                                const rows = permitsList.map(rowValuesFor);
                                 const csv = [drillCols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
                                 const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
-                                a.href = url; a.download = (sub + '_' + getPermitStageLabel(stage) + '.csv').replace(/[\\/:"*?<>|]/g, '_');
+                                const fnameBase = key + '_' + stageLabel;
+                                a.href = url; a.download = (fnameBase + '.csv').replace(/[\\/:"*?<>|]/g, '_');
                                 document.body.appendChild(a); a.click(); a.remove();
                                 URL.revokeObjectURL(url);
                             }
                             function printDrilldown() {
                                 const win = window.open('', '_blank');
-                                const rowsHtml = stagePermits.map(p =>
-                                    '<tr><td>' + (p.plan || '') + '</td>' +
-                                    '<td style="direction:ltr">' + (p.file || '') + '</td>' +
-                                    '<td>' + (p.status || '') + '</td>' +
-                                    '<td>' + (p.date || '') + '</td>' +
-                                    '<td style="text-align:left;font-weight:bold">' + (p.units || 0) + '</td>' +
-                                    '<td>' + (getPermitCategoryLabel(p.cat) || '') + '</td>' +
-                                    '<td style="font-size:10px">' + (p.desc || '') + '</td></tr>'
-                                ).join('');
+                                const rowsHtml = permitsList.map(p => {
+                                    const cells = [];
+                                    if (showSubCol) cells.push('<td>' + (p.sub || '') + '</td>');
+                                    cells.push('<td>' + (p.plan || '') + '</td>');
+                                    cells.push('<td style="direction:ltr">' + (p.file || '') + '</td>');
+                                    cells.push('<td>' + (p.status || '') + '</td>');
+                                    if (isAllStages) cells.push('<td>' + (getPermitStageLabel(p.stage) || '') + '</td>');
+                                    cells.push('<td>' + (p.date || '') + '</td>');
+                                    cells.push('<td style="text-align:left;font-weight:bold">' + (p.units || 0) + '</td>');
+                                    cells.push('<td>' + (getPermitCategoryLabel(p.cat) || '') + '</td>');
+                                    cells.push('<td style="font-size:10px">' + (p.desc || '') + '</td>');
+                                    return '<tr>' + cells.join('') + '</tr>';
+                                }).join('');
                                 win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + drillTitle + '</title>' +
                                     '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#9c27b0;margin-bottom:12px}' +
                                     'table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right;vertical-align:top}th{background:#eee}</style></head><body>');
@@ -16611,9 +16698,10 @@
                                 win.document.write('</body></html>');
                                 win.document.close(); win.print();
                             }
+                            const modalMaxWidth = isAllStages ? 'min(1200px,95vw)' : 'min(900px,95vw)';
                             return (
                                 <div className="units-overlay" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>
-                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(900px,95vw)'}}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:modalMaxWidth}}>
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPermitsBySubDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
                                             <h2>{drillTitle}</h2>
@@ -16627,9 +16715,11 @@
                                             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
                                                 <thead>
                                                     <tr style={{background:'#1a1a2e',color:'#aaa',position:'sticky',top:0}}>
+                                                        {showSubCol && <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תת-שכונה</th>}
                                                         <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תב"ע</th>
                                                         <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>היתר</th>
                                                         <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>סטטוס</th>
+                                                        {isAllStages && <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>שלב</th>}
                                                         <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>תאריך</th>
                                                         <th style={{padding:'8px 6px',textAlign:'left',borderBottom:'1px solid #333',color:'#aaa'}}>יח"ד</th>
                                                         <th style={{padding:'8px 6px',textAlign:'right',borderBottom:'1px solid #333',color:'#aaa'}}>סוג</th>
@@ -16637,15 +16727,17 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {stagePermits.sort((a,b) => b.units - a.units).map((p, i) => (
+                                                    {permitsList.map((p, i) => (
                                                         <tr key={i} style={{borderBottom:'1px solid #222'}}>
+                                                            {showSubCol && <td style={{padding:'6px',color:'#cfcfdf',fontSize:11}}>{p.sub || ''}</td>}
                                                             <td style={{padding:'6px',color:'#cfcfdf'}}>{p.plan}</td>
                                                             <td style={{padding:'6px',direction:'ltr',color:'#5dade2'}}>{p.file}</td>
                                                             <td style={{padding:'6px',color:'#e0e0e0'}}>{p.status}</td>
+                                                            {isAllStages && <td style={{padding:'6px',color:getPermitStageColor(p.stage),fontWeight:'bold',fontSize:11}}>{getPermitStageLabel(p.stage)}</td>}
                                                             <td style={{padding:'6px',color:'#c9c9d9'}}>{p.date}</td>
                                                             <td style={{padding:'6px',textAlign:'left',fontWeight:'bold',color:'#fff'}}>{p.units}</td>
                                                             <td style={{padding:'6px',color:'#fff'}}>{getPermitCategoryLabel(p.cat)}</td>
-                                                            <td style={{padding:'6px',color:'#c9c9d9',fontSize:11}}>{p.desc.substring(0, 80)}</td>
+                                                            <td style={{padding:'6px',color:'#c9c9d9',fontSize:11}}>{(p.desc || '').substring(0, 80)}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -16749,20 +16841,35 @@
                                                     return (
                                                     <tr key={s.name} style={{borderBottom:'1px solid #222',borderTop: minahakChanged && idx > 0 ? '2px solid #444' : 'none'}}>
                                                         <td style={{padding:'6px',fontWeight:'bold',color:'#e0e0e0'}}>{s.name}</td>
-                                                        <td style={{padding:'6px',color:'#9ca3af',fontSize:11}}>{s.minahak || '—'}</td>
+                                                        <td style={{padding:'6px',color:'#9ca3af',fontSize:11}}>
+                                                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                                                <span>{s.minahak || '—'}</span>
+                                                                {minahakChanged && s.minahak && (
+                                                                    <button onClick={() => setPermitsBySubDrilldown({ scope: 'minahak', key: s.minahak, stage: 'all' })}
+                                                                        title={'כל ההיתרים במינהל ' + s.minahak}
+                                                                        style={{background:'#3a3a5a',color:'#e0e0ff',border:'1px solid #5a5a7a',padding:'2px 6px',borderRadius:4,cursor:'pointer',fontSize:10,fontFamily:'inherit'}}>
+                                                                        📋 כל ההיתרים
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td style={{padding:'6px',textAlign:'center',color:'#aaa'}}>{s.plans}</td>
                                                         {PERMIT_STAGES_ALL.map(st => {
                                                             const cell = s[st];
                                                             const empty = cell.count === 0;
                                                             return (
-                                                                <td key={st} onClick={() => empty ? null : setPermitsBySubDrilldown({ sub: s.name, stage: st })}
+                                                                <td key={st} onClick={() => empty ? null : setPermitsBySubDrilldown({ scope: 'sub', key: s.name, stage: st })}
                                                                     style={{padding:'6px',textAlign:'center',cursor:empty?'default':'pointer',color:empty?'#555':getPermitStageColor(st),background:empty?'transparent':'rgba(255,255,255,0.02)'}}
                                                                     title={empty ? '' : 'הצג היתרים'}>
                                                                     {empty ? '—' : (cell.count + ' / ' + cell.units)}
                                                                 </td>
                                                             );
                                                         })}
-                                                        <td style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff'}}>{s.total.count} / {s.total.units}</td>
+                                                        <td onClick={() => s.total.count === 0 ? null : setPermitsBySubDrilldown({ scope: 'sub', key: s.name, stage: 'all' })}
+                                                            style={{padding:'6px',textAlign:'center',fontWeight:'bold',color:'#fff',cursor:s.total.count===0?'default':'pointer',background:s.total.count===0?'transparent':'rgba(255,255,255,0.04)'}}
+                                                            title={s.total.count === 0 ? '' : 'כל ההיתרים בתת-שכונה'}>
+                                                            {s.total.count} / {s.total.units}
+                                                        </td>
                                                     </tr>
                                                     );
                                                 })}
