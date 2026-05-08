@@ -3754,6 +3754,9 @@
             'גוננים א-ו': 'גוננים',
             'ארנונה': 'תלפיות ארנונה',
             'תלפיות': 'תלפיות ארנונה',
+            'תלפיות - תעשייה ומסחר': 'א.ת. תלפיות',
+            'תלפיות תעשייה ומסחר': 'א.ת. תלפיות',
+            'תלפיות תעשיה ומסחר': 'א.ת. תלפיות',
             'עמק רפאים': 'המושבה הגרמנית',
             'עמק רפאים - המושבה הגרמנית': 'המושבה הגרמנית',
             'עמק רפאים- המושבה הגרמנית': 'המושבה הגרמנית',
@@ -3778,6 +3781,29 @@
             });
             return m;
         })();
+
+        // Walk plans.features and override f.properties.minahak from
+        // SUB_TO_MINAHAK whenever the sub_neighborhood points at a different
+        // minahak than what's tagged. Used so the canonical mapping (e.g.
+        // גבעת השקד → גוננים) flows into every report that reads minahak
+        // directly from the geojson, not just the CSV-driven units summary.
+        function applyMinahakOverrides(gd) {
+            if (!gd || !gd.plans || !gd.plans.features) return 0;
+            let n = 0;
+            gd.plans.features.forEach(f => {
+                const p = f.properties || {};
+                const subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
+                if (!subRaw) return;
+                const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                const canonical = SUB_TO_MINAHAK[sub];
+                if (canonical && canonical !== (p.minahak || '').trim()) {
+                    p.minahak = canonical;
+                    n++;
+                }
+            });
+            if (n > 0) console.log('[Minahak] overrode', n, 'plans from sub→minahak canonical map');
+            return n;
+        }
 
         const CENTER = [31.7530, 35.2100];
         const DEFAULT_ZOOM = 15;
@@ -3869,6 +3895,9 @@
             const [printShowLegend, setPrintShowLegend] = useState(true);
             const [printShowTitle, setPrintShowTitle] = useState(true);
             const [printShowBasemap, setPrintShowBasemap] = useState(true);
+            const [printAreaMode, setPrintAreaMode] = useState(false);
+            const [printAreaBounds, setPrintAreaBounds] = useState(null);
+            const printAreaRef = useRef({ corner1: null, marker1: null, previewLayer: null, rectLayer: null, mouseHandler: null, clickHandler: null, keyHandler: null });
             const [activeDropdown, setActiveDropdown] = useState(null); // 'measure' | null
             const [showUnits, setShowUnits] = useState(false);
             const [unitsData, setUnitsData] = useState(null); // { minahaks, byMinahak }
@@ -4731,6 +4760,7 @@
                     rebuildHafrashLookup(planByTaba);
                     extractAvailablePlanTypes(gd);
 
+                    applyMinahakOverrides(gd);
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd;
 
@@ -4755,6 +4785,7 @@
                     fetch(sheetUrl).then(r => r.text()).catch(() => '').then(csvText => {
                         if (!csvText) return;
                         applyCSVEnrichment(gd, csvText);
+                        applyMinahakOverrides(gd); // CSV may have re-introduced stale minahak; re-correct.
                         foldRental(gd); // re-run with CSV-overridden values
                         const pbt = rebuildPlanByTaba(gd);
                         rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
@@ -6166,6 +6197,63 @@
                     setAreaPts(0);
                 };
             }, [areaMode]);
+
+            // ── Print-area: rectangle drawing mode ──
+            useEffect(() => {
+                const map = mapInstanceRef.current;
+                if (!map || !printAreaMode) return;
+                const r = printAreaRef.current;
+                r.corner1 = null;
+                if (r.marker1) { map.removeLayer(r.marker1); r.marker1 = null; }
+                if (r.previewLayer) { map.removeLayer(r.previewLayer); r.previewLayer = null; }
+                map.getContainer().classList.add('measuring');
+
+                function onClick(e) {
+                    if (!r.corner1) {
+                        r.corner1 = e.latlng;
+                        r.marker1 = L.circleMarker(e.latlng, { radius: 5, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 1 }).addTo(map);
+                    } else {
+                        const bounds = L.latLngBounds(r.corner1, e.latlng);
+                        if (r.previewLayer) { map.removeLayer(r.previewLayer); r.previewLayer = null; }
+                        if (r.marker1) { map.removeLayer(r.marker1); r.marker1 = null; }
+                        if (r.rectLayer) { map.removeLayer(r.rectLayer); r.rectLayer = null; }
+                        r.rectLayer = L.rectangle(bounds, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.05 }).addTo(map);
+                        r.corner1 = null;
+                        setPrintAreaBounds(bounds);
+                        setPrintAreaMode(false);
+                        setShowPrint(true);
+                    }
+                }
+
+                function onMouseMove(e) {
+                    if (!r.corner1) return;
+                    const bounds = L.latLngBounds(r.corner1, e.latlng);
+                    if (r.previewLayer) map.removeLayer(r.previewLayer);
+                    r.previewLayer = L.rectangle(bounds, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.1, dashArray: '6,4' }).addTo(map);
+                }
+
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') {
+                        if (r.marker1) { map.removeLayer(r.marker1); r.marker1 = null; }
+                        if (r.previewLayer) { map.removeLayer(r.previewLayer); r.previewLayer = null; }
+                        r.corner1 = null;
+                        setPrintAreaMode(false);
+                    }
+                }
+
+                map.on('click', onClick);
+                map.on('mousemove', onMouseMove);
+                document.addEventListener('keydown', onKeyDown);
+                return () => {
+                    map.off('click', onClick);
+                    map.off('mousemove', onMouseMove);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.getContainer().classList.remove('measuring');
+                    if (r.marker1) { map.removeLayer(r.marker1); r.marker1 = null; }
+                    if (r.previewLayer) { map.removeLayer(r.previewLayer); r.previewLayer = null; }
+                    r.corner1 = null;
+                };
+            }, [printAreaMode]);
 
             // ── Radius mode: click on map to set center ──────────────────────
             useEffect(() => {
@@ -8323,9 +8411,29 @@
                 { value: '1:25000', label: '1:25,000', denom: 25000 },
             ];
 
+            const closePrintModal = useCallback(() => {
+                const map = mapInstanceRef.current;
+                if (printAreaRef.current.rectLayer && map) {
+                    map.removeLayer(printAreaRef.current.rectLayer);
+                    printAreaRef.current.rectLayer = null;
+                }
+                setPrintAreaBounds(null);
+                setShowPrint(false);
+            }, []);
+
             const handlePrint = useCallback(async () => {
                 const map = mapInstanceRef.current;
                 if (!map) return;
+
+                const originalBounds = printAreaBounds ? map.getBounds() : null;
+                if (printAreaBounds && printAreaRef.current.rectLayer) {
+                    map.removeLayer(printAreaRef.current.rectLayer);
+                    printAreaRef.current.rectLayer = null;
+                }
+                if (printAreaBounds) {
+                    map.fitBounds(printAreaBounds, { animate: false, padding: [0, 0] });
+                    await new Promise(r => setTimeout(r, 300));
+                }
 
                 const title = printShowTitle ? (printTitle || 'מפת אורנים - תכנון עירוני') : '';
 
@@ -8477,8 +8585,14 @@
                     if (po) po.remove();
                     const pl = document.getElementById('print-legend-overlay');
                     if (pl) pl.remove();
+                    if (originalBounds) {
+                        map.fitBounds(originalBounds, { animate: false });
+                    }
+                    if (printAreaBounds) {
+                        setPrintAreaBounds(null);
+                    }
                 }, 500);
-            }, [printTitle, printShowLegend, printShowTitle, printShowBasemap, printScale, printPageSize, printOrientation, layers]);
+            }, [printTitle, printShowLegend, printShowTitle, printShowBasemap, printScale, printPageSize, printOrientation, layers, printAreaBounds]);
 
             // ── Units summary: fetch plans + tama38 and aggregate by minahak ──
             // Map tama38 neighborho → minahak
@@ -15256,15 +15370,21 @@
                             <div className="scale-display">{mapScale}</div>
                         )}
 
+                        {printAreaMode && (
+                            <div style={{position:'fixed',top:'12px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'10px 18px',borderRadius:'8px',fontSize:'14px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl'}}>
+                                סמן את הפינה הראשונה ואז את הפינה השניה &nbsp;·&nbsp; ESC לביטול
+                            </div>
+                        )}
+
                     </div>
 
                     {/* ── Print Modal ── */}
                     {showPrint && (
-                        <div className="print-overlay" onClick={() => setShowPrint(false)}>
+                        <div className="print-overlay" onClick={closePrintModal}>
                             <div className="print-modal" onClick={e => e.stopPropagation()}>
                                 <div className="print-header">
                                     <h2>🖨️ הדפסת מפה</h2>
-                                    <button className="modal-close" onClick={() => setShowPrint(false)}>&times;</button>
+                                    <button className="modal-close" onClick={closePrintModal}>&times;</button>
                                 </div>
                                 <div className="print-body">
                                     <div className="print-field">
@@ -15287,6 +15407,30 @@
                                                 <option key={s.value} value={s.value}>{s.label}</option>
                                             ))}
                                         </select>
+                                    </div>
+                                    <div className="print-field">
+                                        <label>אזור הדפסה</label>
+                                        {!printAreaBounds ? (
+                                            <button className="modal-action-btn" style={{background:'#2196F3',fontSize:'12px',padding:'6px 12px',width:'100%'}}
+                                                onClick={() => { setShowPrint(false); setPrintAreaMode(true); }}>
+                                                ✏️ סמן מלבן על המפה (אופציונלי)
+                                            </button>
+                                        ) : (
+                                            <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                                                <span style={{fontSize:'12px',color:'#27ae60',flex:1}}>✓ נבחר אזור</span>
+                                                <button className="modal-action-btn" style={{background:'#666',fontSize:'12px',padding:'6px 12px'}}
+                                                    onClick={() => {
+                                                        const map = mapInstanceRef.current;
+                                                        if (printAreaRef.current.rectLayer && map) {
+                                                            map.removeLayer(printAreaRef.current.rectLayer);
+                                                            printAreaRef.current.rectLayer = null;
+                                                        }
+                                                        setPrintAreaBounds(null);
+                                                    }}>
+                                                    ✕ נקה
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{display:'flex',gap:'8px'}}>
                                         <div className="print-field" style={{flex:1}}>
@@ -15338,6 +15482,13 @@
                                     <button className="modal-action-btn" style={{background:'#27ae60'}} onClick={async () => {
                                         const map = mapInstanceRef.current;
                                         if (!map || !window.html2canvas) return;
+                                        const originalBounds = printAreaBounds ? map.getBounds() : null;
+                                        const hidRect = printAreaBounds && printAreaRef.current.rectLayer;
+                                        if (hidRect) map.removeLayer(printAreaRef.current.rectLayer);
+                                        if (printAreaBounds) {
+                                            map.fitBounds(printAreaBounds, { animate: false, padding: [0, 0] });
+                                            await new Promise(r => setTimeout(r, 300));
+                                        }
                                         const canvas = await window.html2canvas(map.getContainer(), { useCORS: true, allowTaint: true, logging: false });
                                         const a = document.createElement('a');
                                         const c2 = document.createElement('canvas');
@@ -15349,10 +15500,14 @@
                                         a.href = c2.toDataURL('image/jpeg', 0.92);
                                         a.download = 'map_oranim.jpg';
                                         a.click();
+                                        if (originalBounds) map.fitBounds(originalBounds, { animate: false });
+                                        if (hidRect && printAreaBounds) {
+                                            printAreaRef.current.rectLayer = L.rectangle(printAreaBounds, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.05 }).addTo(map);
+                                        }
                                     }}>
                                         🖼️ שמור JPEG
                                     </button>
-                                    <button className="modal-action-btn" onClick={() => setShowPrint(false)}>
+                                    <button className="modal-action-btn" onClick={closePrintModal}>
                                         ביטול
                                     </button>
                                 </div>
