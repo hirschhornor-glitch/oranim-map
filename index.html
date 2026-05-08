@@ -12162,7 +12162,31 @@
                                 opacity: 1,
                             });
                         },
-                        interactive: false,
+                        onEachFeature: (feat, lyr) => {
+                            const p = feat.properties || {};
+                            const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                            const typeLabel = p.easement_type || 'לא מסווג';
+                            const sizeM = p.size_meters_clipped || p.size_meters;
+                            const sizeStr = Array.isArray(sizeM) ? `${sizeM[0]}×${sizeM[1]} מ׳` : '';
+                            const mavatLink = p.mavat_url
+                                ? ` <a href="${escape(p.mavat_url)}" target="_blank" style="color:#1d4ed8">[Mavat]</a>`
+                                : '';
+                            const html = '<div style="direction:rtl;text-align:right;font-family:Assistant,Arial,sans-serif;min-width:240px">' +
+                                '<div style="background:linear-gradient(90deg,#7c3aed,#a855f7);color:#fff;padding:6px 10px;font-weight:bold;font-size:13px">' +
+                                  'זיקת הנאה' +
+                                '</div>' +
+                                '<div style="padding:8px 10px;font-size:12px;line-height:1.6">' +
+                                  `<div><b>תכנית:</b> ${escape(p.pl_number || '')}${mavatLink}</div>` +
+                                  (p.plan_name_he ? `<div><b>שם:</b> ${escape(p.plan_name_he)}</div>` : '') +
+                                  (p.minahak ? `<div><b>מנהל:</b> ${escape(p.minahak)}</div>` : '') +
+                                  `<div><b>סוג:</b> <span style="font-weight:bold">${escape(typeLabel)}</span></div>` +
+                                  (p.layer_type ? `<div><b>שכבה:</b> ${p.layer_type === 'approved' ? 'מאושרת' : 'מצב קיים'}</div>` : '') +
+                                  (sizeStr ? `<div><b>גודל:</b> ${escape(sizeStr)}</div>` : '') +
+                                  (p.was_clipped ? '<div style="color:#a16207;font-size:11px;margin-top:3px">(נחתך לגבול התכנית)</div>' : '') +
+                                  (p.source ? `<div style="color:#888;font-size:10px;margin-top:3px">${escape(p.source)}</div>` : '') +
+                                '</div></div>';
+                            lyr.bindPopup(html, { maxWidth: 320 });
+                        }
                     }).addTo(map);
                     geoLayersRef.current.easements = easementsLayer;
                 }
