@@ -11821,8 +11821,6 @@
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
-                            const tip = [p.name || 'מגרש ריק', p.address || '', p.gross_area ? p.gross_area + ' מ"ר' : ''].filter(Boolean).join(' · ');
-                            if (tip) layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -8] });
                             layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current) return;
                                 const accent = '#8B4513';
@@ -11906,8 +11904,6 @@
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
-                            const tip = [p.name || p.type || '', p.address || ''].filter(Boolean).join(' · ');
-                            if (tip) layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -8] });
                             layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current) return;
                                 const cat = p.category || '';
