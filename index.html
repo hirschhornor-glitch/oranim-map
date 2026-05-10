@@ -2337,6 +2337,8 @@
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
             education_shanaton: 'data/education_shanaton.geojson',
+            mosadot_moch: 'data/mosadot_moch.geojson',
+            migrash_panui: 'data/migrash_panui.geojson',
             master_plan_moshavot: 'data/master_plan_moshavot.geojson',
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
@@ -2422,6 +2424,24 @@
 
         // Granular parser keys aligned with PUBLIC_NEEDS_SERVICES (edu) + NEIGHBORHOOD_PROGRAM_SERVICES (other).
         const PARSER_KEYS = ['maon','gan','yesodi','al_yesodi','tipat_chalav','clinic','matnas','welfare_dept','noar_club','elderly_club','elderly_day','synagogue','mikve','sport_hall','library'];
+
+        // Map MOCH `type` field → PARSER_KEY. Only non-education types (edu uses class-count from shanaton).
+        // NULL = no mapping (we don't count it in the program balance).
+        const MOCH_TYPE_TO_PARSER_KEY = {
+            'בית כנסת': 'synagogue',
+            'מקווה טוהרה': 'mikve',
+            'מגרש ספורט': 'sport_hall',
+            'אולם ספורט, התעמלות': 'sport_hall',
+            'בריכת שחייה ציבורית או עירונית': 'sport_hall',
+            'איצטדיון': 'sport_hall',
+            'מועדון קהילתי כולל מרכז צעירים': 'matnas',
+            'מועדון נוער': 'noar_club',
+            'ספרייה': 'library',
+            'לשכת רווחה של הרשות המקומית': 'welfare_dept',
+            'מועדון קשישים, מרכז לאזרחים ותיקים,מרכז יום לקשישים': 'elderly_club',
+            'מרפאה': 'clinic',
+            'טיפת חלב': 'tipat_chalav',
+        };
 
         // Parse a free-text shavatz/hafrash description (cols S=out / Q=in / AR=hafrash).
         // Returns { counts: {key→int}, uncategorizedSqm }.
@@ -2693,6 +2713,8 @@
                 layers: [
                     { id: 'shavaz_kayam', name: 'מבני ציבור קיים', desc: 'מבני ציבור קיימים', on: false },
                     { id: 'sport_kayam', name: 'מגרשי ספורט', desc: 'מגרשי ספורט קיימים', on: false },
+                    { id: 'mosadot_moch', name: 'מוסדות ציבור (משב"ש)', desc: 'דת/ספורט/תרבות/רווחה/בריאות/חירום — מאגר משרד הבינוי והשיכון 2021 (381 ברובע)', on: false },
+                    { id: 'migrash_panui', name: 'מגרשים ציבוריים פנויים (משב"ש)', desc: '45 מגרשים ציבוריים ריקים — להצלבה עם מבני ציבור עתידי והפרשה', on: false },
                     { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                 ]
@@ -2897,13 +2919,13 @@
             shavaz_kayam_stroke:   '#5C2E0A',
             shavaz_future_fill:    '#D2B48C',
             shavaz_future_stroke:  '#C4956A',
-            edu_mamlachti:         '#8D6E63',
-            edu_mamlachti_dati:    '#5D4037',
-            edu_aravi:             '#4E342E',
-            edu_haredi:            '#3E2723',
-            edu_status_existing:   '#A1887F',
-            edu_status_authorized: '#BCAAA4',
-            edu_status_no_auth:    '#D7CCC8',
+            edu_mamlachti:         '#0d47a1',
+            edu_mamlachti_dati:    '#d63384',
+            edu_aravi:             '#7b1fa2',
+            edu_haredi:            '#1a1a2e',
+            edu_status_existing:   '#4CAF50',
+            edu_status_authorized: '#f1c40f',
+            edu_status_no_auth:    '#e74c3c',
             prog_kpi_accent:       '#6D4C41',
             prog_popup_header:     'linear-gradient(135deg, #5C2E0A, #8B4513)',
             prog_badge_bg:         '#8B4513',
@@ -11698,7 +11720,7 @@
                                         const sHarsha = (sp['סטטוס הרשאה'] || '').trim();
                                         const isN = sStatus.includes('נמסר');
                                         const hasA = sHarsha.includes('מלאה') || sHarsha.includes('חלקית');
-                                        const hdrColor = isN ? PUBLIC_PALETTE.edu_mamlachti_dati : hasA ? PUBLIC_PALETTE.shavaz_future_stroke : PUBLIC_PALETTE.shavaz_future_fill;
+                                        const hdrColor = isN ? PUBLIC_PALETTE.edu_status_existing : hasA ? PUBLIC_PALETTE.edu_status_authorized : PUBLIC_PALETTE.edu_status_no_auth;
                                         html += `<div class="popup-header" style="border-bottom:3px solid ${hdrColor}"><div class="popup-header-title" style="font-size:13px">${sp['שם הפרויקט'] || ''}</div></div>`;
                                         html += '<div class="popup-body" style="padding:6px 16px">';
                                         if (sStatus) html += `<div class="popup-row"><span class="popup-label">סטטוס</span><span class="popup-value">${sStatus}</span></div>`;
@@ -11739,7 +11761,7 @@
                                 const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
                                 const hasAuth = harsha.includes('מלאה') || harsha.includes('חלקית') || harsha.includes('לא נדרשת');
-                                const headerColor = isNimsar ? PUBLIC_PALETTE.edu_mamlachti_dati : hasAuth ? PUBLIC_PALETTE.shavaz_future_stroke : PUBLIC_PALETTE.shavaz_future_fill;
+                                const headerColor = isNimsar ? PUBLIC_PALETTE.edu_status_existing : hasAuth ? PUBLIC_PALETTE.edu_status_authorized : PUBLIC_PALETTE.edu_status_no_auth;
                                 let html = '<div>';
                                 html += `<div class="popup-header" style="border-bottom:3px solid ${headerColor}"><div class="popup-header-title">${name}</div>`;
                                 const summary = [p['שכונה'], p['סוג מוסד'], p['מס כיתות בפרויקט'] ? p['מס כיתות בפרויקט'] + ' כיתות' : ''].filter(v => v && v !== 'None').join(' · ');
@@ -11779,6 +11801,137 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.sara_march_2026 = saraLayer;
+                }
+
+                // --- Migrash Panui (empty public plots from MOCH DB) ---
+                if (layers['migrash_panui'] && gd.migrash_panui) {
+                    const mpClean = { ...gd.migrash_panui, features: gd.migrash_panui.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const mpLayer = L.geoJSON(mpClean, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties;
+                            const hasFs = (p.match_future_shavaz || []).length > 0;
+                            const hasHafrash = (p.match_landuse_xplan || []).some(h => h.is_hafrash);
+                            // Strong outline + filled = matches existing data; dashed = no match (potential gap)
+                            const matched = hasFs || hasHafrash;
+                            const fill = matched ? 'rgba(139,69,19,0.55)' : 'rgba(139,69,19,0.25)';
+                            const border = matched ? '2px solid #5C2E0A' : '2px dashed #5C2E0A';
+                            const html = `<div style="background:${fill};border:${border};width:14px;height:14px;box-shadow:0 1px 2px rgba(0,0,0,0.3)"></div>`;
+                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'mp-icon', iconSize: [16, 16], iconAnchor: [8, 8] }) });
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const tip = [p.name || 'מגרש ריק', p.address || '', p.gross_area ? p.gross_area + ' מ"ר' : ''].filter(Boolean).join(' · ');
+                            if (tip) layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -8] });
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current) return;
+                                const accent = '#8B4513';
+                                let html = '<div style="font-family:inherit">';
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">מגרש ציבורי פנוי</div>`;
+                                const sub = [p.type, p.address].filter(Boolean).join(' · ');
+                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
+                                html += '</div><div class="popup-body">';
+                                const row = (label, value) => value ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
+                                html += row('שטח ברוטו', p.gross_area ? `${p.gross_area} מ"ר` : '');
+                                if (p.taba_id) html += row('תכנית', p.taba_id);
+                                if (p.planning_plot) html += row('מגרש', p.planning_plot);
+
+                                // Matches section
+                                const fsHits = p.match_future_shavaz || [];
+                                const xplHits = p.match_landuse_xplan || [];
+                                const hafHits = xplHits.filter(h => h.is_hafrash);
+                                const planHits = p.match_in_plans || [];
+
+                                html += '<hr style="margin:8px 0;border:none;border-top:1px solid rgba(255,255,255,0.15)">';
+                                html += `<div style="font-weight:600;margin-bottom:4px;font-size:12px">הצלבה עם נתוני המערכת</div>`;
+
+                                if (fsHits.length === 0 && hafHits.length === 0) {
+                                    html += `<div style="background:rgba(220,150,50,0.18);padding:6px 8px;border-radius:6px;font-size:11.5px;border-left:3px solid #d2691e">⚠ לא חופף ל-מבני ציבור עתידי או הפרשה — מגרש שאינו מתועד בשכבות הקיימות (פוטנציאל לחוסר?)</div>`;
+                                }
+
+                                if (fsHits.length > 0) {
+                                    html += `<div style="margin:4px 0 2px;font-size:11px;color:#9ec5fe">✓ מבני ציבור עתידי (${fsHits.length})</div>`;
+                                    fsHits.slice(0, 3).forEach(h => {
+                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">תכנית ${h.TABA || '?'}, מגרש ${h.MIGRASH || '?'} — ${h.MAVAT_NAME || ''} <span style="opacity:0.6">[${h.match}]</span></div>`;
+                                    });
+                                    if (fsHits.length > 3) html += `<div style="font-size:11px;padding:2px 8px;opacity:0.6">ועוד ${fsHits.length - 3}…</div>`;
+                                }
+
+                                if (hafHits.length > 0) {
+                                    html += `<div style="margin:6px 0 2px;font-size:11px;color:#90ee90">✓ הפרשה ב-landuse (${hafHits.length})</div>`;
+                                    hafHits.slice(0, 3).forEach(h => {
+                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">${h.pl_number || '?'}, מגרש ${h.num || '?'} — ${h.mavat_name || ''}</div>`;
+                                    });
+                                }
+
+                                if (planHits.length > 0) {
+                                    html += `<div style="margin:6px 0 2px;font-size:11px;color:#ffd180">✓ נמצא בתב"עות (${planHits.length})</div>`;
+                                    planHits.slice(0, 3).forEach(h => {
+                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">${h.taba} <span style="opacity:0.6">${h.status || ''}</span> — ${h.plan_name_he || ''}</div>`;
+                                    });
+                                }
+
+                                if (xplHits.length > 0 && hafHits.length === 0) {
+                                    const sample = xplHits[0];
+                                    html += `<div style="margin:6px 0 2px;font-size:11px;opacity:0.7">ייעוד נוכחי ב-landuse: ${sample.mavat_name || sample.mavat_code} (${sample.pl_number})</div>`;
+                                }
+
+                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: מאגר מוסדות ציבור משב"ש · עודכן 01/2021</div>`;
+                                html += '</div></div>';
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.migrash_panui = mpLayer;
+                }
+
+                // --- Mosadot MOCH (Ministry of Construction & Housing public institutions DB, 2021) ---
+                if (layers['mosadot_moch'] && gd.mosadot_moch) {
+                    const MOCH_CAT_COLOR = {
+                        'דת':            '#FFB300',  // amber/gold
+                        'ספורט':         '#388E3C',  // green
+                        'תרבות וקהילה':   '#7E57C2',  // purple
+                        'רווחה':          '#FB8C00',  // orange
+                        'בריאות':         '#D32F2F',  // red
+                        'חירום וכללי':    '#546E7A',  // slate
+                    };
+                    const mochClean = { ...gd.mosadot_moch, features: gd.mosadot_moch.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const mochLayer = L.geoJSON(mochClean, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => {
+                            const cat = f.properties.category || '';
+                            const fill = MOCH_CAT_COLOR[cat] || '#888';
+                            const html = `<div style="background:${fill};border:1.5px solid #5C2E0A;border-radius:50%;width:14px;height:14px;box-shadow:0 1px 2px rgba(0,0,0,0.4)"></div>`;
+                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'moch-icon', iconSize: [14, 14], iconAnchor: [7, 7] }) });
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties;
+                            const tip = [p.name || p.type || '', p.address || ''].filter(Boolean).join(' · ');
+                            if (tip) layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -8] });
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current) return;
+                                const cat = p.category || '';
+                                const accent = MOCH_CAT_COLOR[cat] || '#888';
+                                const headerTitle = p.name || p.type || 'מוסד ציבור';
+                                let html = '<div style="font-family:inherit">';
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">${headerTitle}</div>`;
+                                const sub = [p.type, p.address].filter(Boolean).join(' · ');
+                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
+                                html += '</div><div class="popup-body">';
+                                const row = (label, value) => value ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
+                                html += row('קטגוריה', `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};margin-left:6px;border:1px solid #5C2E0A"></span>${cat}`);
+                                html += row('אוכלוסיית יעד', p.target_population);
+                                html += row('שטח ברוטו', p.gross_area ? `${p.gross_area} מ"ר` : '');
+                                if (p.taba_id) html += row('תכנית', p.taba_id);
+                                if (p.planning_plot) html += row('מגרש', p.planning_plot);
+                                if (p.information_source) html += row('מקור', p.information_source);
+                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: מאגר מוסדות ציבור משב"ש · עודכן 01/2021</div>`;
+                                html += '</div></div>';
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.mosadot_moch = mochLayer;
                 }
 
                 // --- Education Shanaton (institutions from manhi yearbook, grouped by address) ---
@@ -17062,6 +17215,27 @@
                                 if (!matchedKey) return;
                                 if (!_shavazBySubKey[subName]) _shavazBySubKey[subName] = {};
                                 _shavazBySubKey[subName][matchedKey] = (_shavazBySubKey[subName][matchedKey] || 0) + 1;
+                            });
+                        }
+                        // MOCH (non-edu) facility counts per sub. Take MAX per (sub, key) vs shavaz_kayam to avoid double-counting
+                        // when a building is recorded in both. MOCH is generally more granular, so for many cells it wins.
+                        if (gd.mosadot_moch) {
+                            const _mochBySubKey = {};
+                            gd.mosadot_moch.features.forEach(f => {
+                                const g = f.geometry; if (!g || g.type !== 'Point') return;
+                                const t = (f.properties && f.properties.type) || '';
+                                const key = MOCH_TYPE_TO_PARSER_KEY[t.trim()];
+                                if (!key) return;
+                                const subName = _findSubByCentroid(g.coordinates[0], g.coordinates[1]);
+                                if (!subName) return;
+                                if (!_mochBySubKey[subName]) _mochBySubKey[subName] = {};
+                                _mochBySubKey[subName][key] = (_mochBySubKey[subName][key] || 0) + 1;
+                            });
+                            Object.entries(_mochBySubKey).forEach(([sub, byKey]) => {
+                                if (!_shavazBySubKey[sub]) _shavazBySubKey[sub] = {};
+                                Object.entries(byKey).forEach(([k, n]) => {
+                                    _shavazBySubKey[sub][k] = Math.max(_shavazBySubKey[sub][k] || 0, n);
+                                });
                             });
                         }
 
