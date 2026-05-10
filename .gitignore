@@ -16,3 +16,5 @@ data/gmaps_lookup.json
 # Local backups (created by data-update scripts, not for deploy)
 *.bak
 *.bak_*
+*.bak.*
+*.backup_*
