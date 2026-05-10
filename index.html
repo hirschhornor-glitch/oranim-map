@@ -2708,23 +2708,25 @@
                     { id: 'yiud_karka_kayam', name: 'ייעודי קרקע מצב קיים', on: false },
                 ]
             },
-            shavaz: {
-                title: 'מבני ציבור',
+            shavaz_kayam_group: {
+                title: 'מבני ציבור — קיים',
                 layers: [
-                    { id: 'shavaz_kayam', name: 'מבני ציבור קיים', desc: 'מבני ציבור קיימים', on: false },
-                    { id: 'sport_kayam', name: 'מגרשי ספורט', desc: 'מגרשי ספורט קיימים', on: false },
-                    { id: 'mosadot_moch', name: 'מוסדות ציבור (משב"ש)', desc: 'דת/ספורט/תרבות/רווחה/בריאות/חירום — מאגר משרד הבינוי והשיכון 2021 (381 ברובע)', on: false },
-                    { id: 'migrash_panui', name: 'מגרשים ציבוריים פנויים (משב"ש)', desc: '45 מגרשים ציבוריים ריקים — להצלבה עם מבני ציבור עתידי והפרשה', on: false },
-                    { id: 'future_shavaz', name: 'מבני ציבור עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
-                    { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
+                    { id: 'education_shanaton', name: 'חינוך', desc: 'מסגרות חינוך — שנתון מנח"י (262 מוסדות ב-156 כתובות, מועשר עם פיקוח/כיתות/תלמידים)', on: false },
+                    { id: 'mosadot_moch_religion', name: 'דת', desc: 'בית כנסת/מקווה/כנסייה/מנזר/מסגד (משב"ש 2021)', on: false },
+                    { id: 'mosadot_moch_sport', name: 'ספורט', desc: 'מגרש/אולם ספורט/בריכה/איצטדיון (משב"ש 2021)', on: false },
+                    { id: 'mosadot_moch_culture', name: 'תרבות וקהילה', desc: 'מתנ"ס/מועדון נוער/אולם מופעים/ספרייה (משב"ש 2021)', on: false },
+                    { id: 'mosadot_moch_welfare_health', name: 'רווחה ובריאות', desc: 'לשכת רווחה/קשישים/מרפאה/טיפת חלב (משב"ש 2021)', on: false },
+                    { id: 'mosadot_moch_emergency_municipal', name: 'חירום וכלל-עירוני', desc: 'מקלטים/מבני עירייה (משב"ש 2021)', on: false },
+                    { id: 'shavaz_kayam', name: 'אזורי שב"צ ברקע', desc: 'פוליגונים מתב"עות (קיים) — fill בעצמה נמוכה', on: false },
                 ]
             },
-            education: {
-                title: 'מוסדות חינוך',
+            shavaz_atid_group: {
+                title: 'מבני ציבור — עתידי',
                 layers: [
-                    { id: 'mosadot_shchuna', name: 'מוסדות חינוך', desc: 'פרטי המוסדות בשכונה - מצב קיים', on: false },
-                    { id: 'sara_march_2026', name: 'פרויקטי בנייה חינוך', desc: 'טבלת שרה - פרויקטי בנייה מוסדות חינוך מרץ 2026', on: false },
-                    { id: 'education_shanaton', name: 'מסגרות חינוך (שנתון)', desc: 'מסגרות חינוך משנתון מנח"י — 317 מוסדות, מקובץ לפי כתובת', on: false },
+                    { id: 'future_shavaz', name: 'שב"צ עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
+                    { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
+                    { id: 'sara_march_2026', name: 'פרויקטי חינוך', desc: 'טבלת שרה - פרויקטי בנייה חינוך מרץ 2026', on: false },
+                    { id: 'migrash_panui', name: 'מגרשים פנויים', desc: '45 מגרשים ציבוריים ריקים (משב"ש) — פוטנציאל לשב"צ עתידי', on: false },
                 ]
             },
             master_plans: {
@@ -10603,19 +10605,12 @@
                     bindShavazPopupEvents(popup, entry.properties, latlng, null, allShavaz, idx);
                 }
 
-                // --- Shavaz Kayam (existing public buildings) ---
+                // --- Shavaz Kayam (existing public buildings — background fill only) ---
                 if (layers['shavaz_kayam'] && gd.shavaz_kayam) {
                     const shavazKayamLayer = L.geoJSON(gd.shavaz_kayam, {
                         pane: 'shavazPane',
-                        style: () => ({ fillColor: '#8B4513', fillOpacity: 0.8, color: '#8B4513', weight: 1 }),
-                        onEachFeature: (f, layer) => {
-                            layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
-                                const allShavaz = findOverlappingShavaz(e.latlng);
-                                if (allShavaz.length === 0) allShavaz.push({ properties: f.properties, isFuture: false });
-                                openShavazPopup(allShavaz, e.latlng, 0);
-                            });
-                        }
+                        style: () => ({ fillColor: '#8B4513', fillOpacity: 0.22, color: '#5C2E0A', weight: 0.5, opacity: 0.5 }),
+                        interactive: false,
                     }).addTo(map);
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
                 }
@@ -11884,7 +11879,20 @@
                 }
 
                 // --- Mosadot MOCH (Ministry of Construction & Housing public institutions DB, 2021) ---
-                if (layers['mosadot_moch'] && gd.mosadot_moch) {
+                // Split into 5 sub-toggles by category (religion / sport / culture / welfare+health / emergency+municipal).
+                // Each sub-toggle filters gd.mosadot_moch to its allowed categories.
+                const MOCH_SUBTOGGLE_CATS = {
+                    mosadot_moch_religion:            ['דת'],
+                    mosadot_moch_sport:               ['ספורט'],
+                    mosadot_moch_culture:             ['תרבות וקהילה'],
+                    mosadot_moch_welfare_health:      ['רווחה', 'בריאות'],
+                    mosadot_moch_emergency_municipal: ['חירום וכללי'],
+                };
+                const _mochActiveCats = new Set();
+                Object.entries(MOCH_SUBTOGGLE_CATS).forEach(([toggle, cats]) => {
+                    if (layers[toggle]) cats.forEach(c => _mochActiveCats.add(c));
+                });
+                if (_mochActiveCats.size > 0 && gd.mosadot_moch) {
                     const MOCH_CAT_COLOR = {
                         'דת':            '#FFB300',  // amber/gold
                         'ספורט':         '#388E3C',  // green
@@ -11893,7 +11901,7 @@
                         'בריאות':         '#D32F2F',  // red
                         'חירום וכללי':    '#546E7A',  // slate
                     };
-                    const mochClean = { ...gd.mosadot_moch, features: gd.mosadot_moch.features.filter(f => f.geometry && f.geometry.coordinates) };
+                    const mochClean = { ...gd.mosadot_moch, features: gd.mosadot_moch.features.filter(f => f.geometry && f.geometry.coordinates && _mochActiveCats.has(f.properties.category || '')) };
                     const mochLayer = L.geoJSON(mochClean, {
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
@@ -14576,7 +14584,7 @@
                                         ))}
                                         </div>
                                     ))}
-                                    {groupKey === 'education' && !collapsedGroups[groupKey] && (layers['mosadot_shchuna'] || layers['sara_march_2026']) && (
+                                    {groupKey === 'shavaz_kayam_group' && !collapsedGroups[groupKey] && layers['education_shanaton'] && (
                                         <div style={{padding:'4px 8px 8px 8px',fontSize:11,direction:'rtl'}}>
                                             <div style={{fontWeight:'bold',marginBottom:4,color:'#aaa'}}>סינון:</div>
                                             <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px',marginBottom:4}}>
