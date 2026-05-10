@@ -2381,14 +2381,18 @@
         // Aggregate education_shanaton institutions matching a filter — returns same
         // shape as computeExistingEduPerSub's per-sub block (ganim_count, yesodi_classes, etc.).
         function aggregateEduFeatures(matchedFeatures) {
-            const out = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
+            const out = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, maon_count: 0, maon_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
             matchedFeatures.forEach(f => {
                 (f.properties.institutions || []).forEach(inst => {
                     const t = inst.type;
                     const studs = inst.students || 0;
                     out.students += studs;
                     const baseInfo = { name: inst.name, type: t, students: studs, address: f.properties.address, semel: inst.semel_chinuch, pikuach: inst.pikuach };
-                    if (t === 'גן') {
+                    if (t === 'מעון') {
+                        const c2 = inst.classes || 1;
+                        out.maon_count++; out.maon_classes += c2; out.total_classes += c2;
+                        out.byKey.maon.push({ ...baseInfo, classes: c2, avg: 0 });
+                    } else if (t === 'גן') {
                         out.ganim_count++; out.total_classes++;
                         out.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs });
                     } else if (t === 'גן חינוך מיוחד') {
@@ -7160,7 +7164,7 @@
                     gan: existingEdu.ganim_count + existingEdu.gan_special_count,
                     yesodi: existingEdu.yesodi_classes,
                     al_yesodi: existingEdu.alyesodi_classes,
-                    maon: null,
+                    maon: existingEdu.maon_classes || 0,
                 };
                 function deltaColor(delta, req) {
                     if (delta === null) return '#888';
@@ -9314,14 +9318,19 @@
                         }
                     }
                     if (!subName) return;
-                    if (!out[subName]) out[subName] = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
+                    if (!out[subName]) out[subName] = { ganim_count: 0, gan_special_count: 0, yesodi_count: 0, yesodi_classes: 0, alyesodi_count: 0, alyesodi_classes: 0, special_classes: 0, maon_count: 0, maon_classes: 0, total_classes: 0, students: 0, byKey: { gan: [], yesodi: [], al_yesodi: [], maon: [] } };
                     const o = out[subName];
                     f.properties.institutions.forEach(inst => {
                         const t = inst.type;
                         const studs = inst.students || 0;
                         o.students += studs;
                         const baseInfo = { name: inst.name, type: t, students: studs, address: f.properties.address, semel: inst.semel_chinuch, pikuach: inst.pikuach };
-                        if (t === 'גן') {
+                        if (t === 'מעון') {
+                            const c2 = inst.classes || 1;
+                            o.maon_count++; o.maon_classes += c2; o.total_classes += c2;
+                            o.byKey.maon.push({ ...baseInfo, classes: c2, avg: 0 });
+                        }
+                        else if (t === 'גן') {
                             o.ganim_count++; o.total_classes++;
                             o.byKey.gan.push({ ...baseInfo, classes: 1, avg: studs });
                         }
@@ -11817,6 +11826,7 @@
                                     const meta = [];
                                     if (inst.pikuach) meta.push(inst.pikuach);
                                     if (inst.students != null) meta.push(`${inst.students} תלמידים`);
+                                    if (inst.type === 'מעון' && inst.classes) meta.push(`${inst.classes} כיתות`);
                                     if (isSchool(inst.type)) {
                                         const kreg = inst.kitot_regilot || 0, kmek = inst.kitot_mekadmot || 0, ktot = kreg + kmek;
                                         if (ktot > 0) meta.push(`${ktot} כיתות${kmek ? ` (${kmek} חמ"ד)` : ''}`);
@@ -17464,6 +17474,7 @@
                                     if (svc.key === 'gan') return (e.ganim_count || 0) + (e.gan_special_count || 0);
                                     if (svc.key === 'yesodi') return e.yesodi_classes || 0;
                                     if (svc.key === 'al_yesodi') return e.alyesodi_classes || 0;
+                                    if (svc.key === 'maon') return e.maon_classes || 0;
                                     return null;
                                 }
                                 return (s.existingByService && s.existingByService[svc.key]) || 0;
@@ -17473,7 +17484,6 @@
                                 : ((s.nonEduRequiredByKey && s.nonEduRequiredByKey[svc.key]) || 0);
                             const _minEx = (svc) => {
                                 if (svc.kind === 'edu') {
-                                    if (svc.key === 'maon') return null;
                                     let any = false, total = 0;
                                     mData.subs.forEach(s => {
                                         if (!s.existingEdu) return;
@@ -17482,6 +17492,7 @@
                                         if (svc.key === 'gan') total += (e.ganim_count || 0) + (e.gan_special_count || 0);
                                         else if (svc.key === 'yesodi') total += e.yesodi_classes || 0;
                                         else if (svc.key === 'al_yesodi') total += e.alyesodi_classes || 0;
+                                        else if (svc.key === 'maon') total += e.maon_classes || 0;
                                     });
                                     return any ? total : null;
                                 }
@@ -17560,6 +17571,7 @@
                                     if (svc.key === 'gan') return (e.ganim_count || 0) + (e.gan_special_count || 0);
                                     if (svc.key === 'yesodi') return e.yesodi_classes || 0;
                                     if (svc.key === 'al_yesodi') return e.alyesodi_classes || 0;
+                                    if (svc.key === 'maon') return e.maon_classes || 0;
                                     return null;
                                 }
                                 return (s.existingByService && s.existingByService[svc.key]) || 0;
@@ -17569,7 +17581,6 @@
                                 : ((s.nonEduRequiredByKey && s.nonEduRequiredByKey[svc.key]) || 0);
                             const _mExFor = (svc) => {
                                 if (svc.kind === 'edu') {
-                                    if (svc.key === 'maon') return null;
                                     let any = false, total = 0;
                                     mData.subs.forEach(s => {
                                         if (!s.existingEdu) return;
@@ -17577,6 +17588,7 @@
                                         if (svc.key === 'gan') total += (e.ganim_count || 0) + (e.gan_special_count || 0);
                                         else if (svc.key === 'yesodi') total += e.yesodi_classes || 0;
                                         else if (svc.key === 'al_yesodi') total += e.alyesodi_classes || 0;
+                                        else if (svc.key === 'maon') total += e.maon_classes || 0;
                                     });
                                     return any ? total : null;
                                 }
@@ -17760,7 +17772,8 @@
                                                     else if (svc.key === 'gan') exGross = (e.ganim_count || 0) + (e.gan_special_count || 0);
                                                     else if (svc.key === 'yesodi') exGross = e.yesodi_classes || 0;
                                                     else if (svc.key === 'al_yesodi') exGross = e.alyesodi_classes || 0;
-                                                    else exGross = null; // maon — no שנתון coverage
+                                                    else if (svc.key === 'maon') exGross = e.maon_classes || 0;
+                                                    else exGross = null;
                                                 } else {
                                                     exGross = (s.existingByService && s.existingByService[svc.key]) || 0;
                                                 }
@@ -17778,18 +17791,19 @@
                                             const getMinahakCounts = (svc) => {
                                                 let exGross;
                                                 if (svc.kind === 'edu') {
-                                                    let g = 0, y = 0, ay = 0; let anyEdu = false;
+                                                    let g = 0, y = 0, ay = 0, m = 0; let anyEdu = false;
                                                     mData.subs.forEach(s => {
                                                         if (!s.existingEdu) return;
                                                         anyEdu = true;
                                                         g += (s.existingEdu.ganim_count || 0) + (s.existingEdu.gan_special_count || 0);
                                                         y += s.existingEdu.yesodi_classes || 0;
                                                         ay += s.existingEdu.alyesodi_classes || 0;
+                                                        m += s.existingEdu.maon_classes || 0;
                                                     });
-                                                    if (svc.key === 'maon') exGross = null;
-                                                    else if (!anyEdu) exGross = null;
+                                                    if (!anyEdu) exGross = null;
                                                     else if (svc.key === 'gan') exGross = g;
                                                     else if (svc.key === 'yesodi') exGross = y;
+                                                    else if (svc.key === 'maon') exGross = m;
                                                     else exGross = ay; // al_yesodi
                                                 } else {
                                                     exGross = (mData.existingByService && mData.existingByService[svc.key]) || 0;
