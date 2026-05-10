@@ -2313,7 +2313,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-01';
+        const APP_VERSION = '2026-05-10';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2353,6 +2353,7 @@
             givat_hamatos_christian: 'data/givat_hamatos_christian_plots.geojson',
             givat_hamatos_unknown: 'data/givat_hamatos_unknown_plots.geojson',
             easements: 'data/easements.geojson',
+            projector_talpiot: 'data/projector_talpiot.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -2727,6 +2728,12 @@
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי חינוך', desc: 'טבלת שרה - פרויקטי בנייה חינוך מרץ 2026', on: false },
                     { id: 'migrash_panui', name: 'מגרשים פנויים', desc: '45 מגרשים ציבוריים ריקים (משב"ש) — פוטנציאל לשב"צ עתידי', on: false },
+                ]
+            },
+            projector: {
+                title: 'פרוייקטור שכונתי',
+                layers: [
+                    { id: 'projector_talpiot', name: 'פרוייקטור תלפיות', desc: 'גבול ההתייחסות של הפרוייקטור השכונתי תלפיות', on: false },
                 ]
             },
             master_plans: {
@@ -9819,6 +9826,32 @@
                 });
                 geoLayersRef.current.minahak = minahakLayers;
 
+                // --- Projector boundary (Talpiot) — orange dashed outline + label ---
+                if (layers['projector_talpiot'] && gd.projector_talpiot) {
+                    const projLayer = L.geoJSON(gd.projector_talpiot, {
+                        pane: 'minahakPane',
+                        style: { color: '#e65100', weight: 3, dashArray: '8,6', fillColor: '#ff9800', fillOpacity: 0.05 },
+                        onEachFeature: (f, layer) => {
+                            const name = (f.properties && f.properties.name) || 'פרוייקטור תלפיות';
+                            if (f.geometry) {
+                                const center = visualCenter(f.geometry);
+                                const marker = L.marker(center, {
+                                    icon: L.divIcon({
+                                        className: 'minahak-name-label',
+                                        html: '<div class="label-inner" style="color:#e65100;background:rgba(255,255,255,0.85);border:1px solid #e65100;border-radius:4px;padding:2px 6px;">' + name + '</div>',
+                                        iconSize: [0, 0],
+                                        iconAnchor: [0, 0]
+                                    }),
+                                    interactive: false,
+                                    pane: 'minahakLabelsPane'
+                                }).addTo(map);
+                                layer._minahakLabel = marker;
+                            }
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.projector_talpiot = projLayer;
+                }
+
                 // --- Plans layer ---
                 if (layers['plans'] && gd.plans && !showHeatMap && !showCommerceHeatMap) {
                     const zoom = map.getZoom();
@@ -11293,23 +11326,14 @@
                 });
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
+                // Strict separation from hafrashah_future: only pure-shavaz codes (no HAFRASHAH spill-over).
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
-                    // 1670 = שטחים פתוחים ומבנים ומוסדות ציבור — always treated as standalone shavaz, not הפרשה מבונה
+                    // 1670 = שטחים פתוחים ומבנים ומוסדות ציבור — always treated as standalone shavaz
                     const SHAVAZ_CODES = new Set([400, 410, 450, 460, 1670]);
                     const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => {
-                            if (SHAVAZ_CODES.has(f.properties.mavat_code)) return true;
-                            if (!HAFRASHAH_CODES_FOR_SHAVAZ.has(f.properties.mavat_code)) return false;
-                            // HAFRASHAH-coded lot: include in future_shavaz only when plan has per-lot data
-                            // and this lot is NOT one of the listed plots (it's a "spare" public lot)
-                            const plNum = String(f.properties.pl_number || '');
-                            const taba = plNum.includes('-') ? String(parseInt(plNum.split('-')[1])) : plNum;
-                            const lotNum = String(f.properties.num || '');
-                            const lookup = window.__hafrashByTabaLot || {};
-                            return !!(lookup[taba] && !lookup[taba][lotNum]);
-                        },
+                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code),
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
