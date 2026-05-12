@@ -2354,6 +2354,7 @@
             givat_hamatos_unknown: 'data/givat_hamatos_unknown_plots.geojson',
             easements: 'data/easements.geojson',
             projector_talpiot: 'data/projector_talpiot.geojson',
+            projector_talpiot_subs: 'data/projector_talpiot_subs.geojson',
             projector_gonenim: 'data/projector_gonenim.geojson',
         };
 
@@ -9834,8 +9835,10 @@
                 });
                 geoLayersRef.current.minahak = minahakLayers;
 
-                // --- Projector boundary (Talpiot) — orange dashed outline + label ---
+                // --- Projector boundary (Talpiot) — orange dashed outline + internal sub-polygons ---
                 if (layers['projector_talpiot'] && gd.projector_talpiot) {
+                    const TXT_SHADOW = '-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff,2px 2px 0 #fff,-2px 0 0 #fff,2px 0 0 #fff,0 -2px 0 #fff,0 2px 0 #fff';
+                    // Outer boundary
                     const projLayer = L.geoJSON(gd.projector_talpiot, {
                         pane: 'minahakPane',
                         style: { color: '#e65100', weight: 3, dashArray: '8,6', fillColor: '#ff9800', fillOpacity: 0.05 },
@@ -9846,7 +9849,7 @@
                                 const marker = L.marker(center, {
                                     icon: L.divIcon({
                                         className: 'minahak-name-label',
-                                        html: '<div class="label-inner" style="color:#e65100;background:rgba(255,255,255,0.85);border:1px solid #e65100;border-radius:4px;padding:2px 6px;">' + name + '</div>',
+                                        html: '<div class="label-inner" style="color:#e65100;font-weight:bold;font-size:14px;text-shadow:' + TXT_SHADOW + ';background:transparent;border:none;padding:0;">' + name + '</div>',
                                         iconSize: [0, 0],
                                         iconAnchor: [0, 0]
                                     }),
@@ -9858,6 +9861,32 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.projector_talpiot = projLayer;
+
+                    // Internal sub-neighborhood polygons (5 areas inside the boundary)
+                    if (gd.projector_talpiot_subs) {
+                        const subsLayer = L.geoJSON(gd.projector_talpiot_subs, {
+                            pane: 'minahakPane',
+                            style: { color: '#e65100', weight: 1.5, dashArray: '3,4', fillColor: '#ff9800', fillOpacity: 0.04 },
+                            onEachFeature: (f, layer) => {
+                                const name = (f.properties && f.properties.name) || '';
+                                if (name && f.geometry) {
+                                    const center = visualCenter(f.geometry);
+                                    const marker = L.marker(center, {
+                                        icon: L.divIcon({
+                                            className: 'minahak-name-label',
+                                            html: '<div class="label-inner" style="color:#bf360c;font-weight:bold;font-size:11px;text-shadow:' + TXT_SHADOW + ';background:transparent;border:none;padding:0;">' + name + '</div>',
+                                            iconSize: [0, 0],
+                                            iconAnchor: [0, 0]
+                                        }),
+                                        interactive: false,
+                                        pane: 'minahakLabelsPane'
+                                    }).addTo(map);
+                                    layer._minahakLabel = marker;
+                                }
+                            }
+                        }).addTo(map);
+                        geoLayersRef.current.projector_talpiot_subs = subsLayer;
+                    }
                 }
 
                 // --- Plans layer ---
