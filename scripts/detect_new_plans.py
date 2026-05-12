@@ -606,9 +606,15 @@ def fetch_blue_line(pl_number):
 
 
 def create_plan_geometry(features, pl_number=None):
-    """Union all feature geometries for a plan into a single MultiPolygon.
+    """Union all feature geometries for a plan into a single clean geometry.
     Also includes blue line (plan boundary from layer 1) to capture full plan extent.
-    Features should already be in WGS84."""
+    Features should already be in WGS84.
+
+    Uses shapely.unary_union so overlapping/nested input rings collapse into a
+    well-formed Polygon (with holes) or non-overlapping MultiPolygon. Naïvely
+    concatenating rings into a MultiPolygon caused inner regions to render as
+    transparent under Leaflet's default fillRule:'evenodd'.
+    """
     if not features and not pl_number:
         return None
 
@@ -632,10 +638,34 @@ def create_plan_geometry(features, pl_number=None):
     if not all_coords:
         return None
 
-    return {
-        'type': 'MultiPolygon',
-        'coordinates': all_coords
-    }
+    from shapely.geometry import shape, mapping
+    from shapely.ops import unary_union
+    from shapely.validation import make_valid
+
+    polys = []
+    for coords in all_coords:
+        try:
+            g = make_valid(shape({'type': 'Polygon', 'coordinates': coords}))
+            if not g.is_empty:
+                polys.append(g)
+        except Exception:
+            continue
+
+    if not polys:
+        return None
+
+    merged = unary_union(polys)
+    if merged.is_empty:
+        return None
+
+    # Drop any non-polygonal pieces that make_valid may have produced (lines/points)
+    if merged.geom_type == 'GeometryCollection':
+        polys = [g for g in merged.geoms if g.geom_type in ('Polygon', 'MultiPolygon')]
+        if not polys:
+            return None
+        merged = unary_union(polys)
+
+    return mapping(merged)
 
 
 def update_geojson(new_plans, push_to_github=False):

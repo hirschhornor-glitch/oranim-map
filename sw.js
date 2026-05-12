@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v8';
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
