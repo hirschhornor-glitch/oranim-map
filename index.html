@@ -2840,12 +2840,6 @@
                     { id: 'migrash_panui', name: 'מגרשים פנויים', desc: '45 מגרשים ציבוריים ריקים (משב"ש) — פוטנציאל לשב"צ עתידי', on: false },
                 ]
             },
-            projector: {
-                title: 'פרוייקטור שכונתי',
-                layers: [
-                    { id: 'projector_talpiot', name: 'פרוייקטור תלפיות', desc: 'גבול ההתייחסות של הפרוייקטור השכונתי תלפיות', on: false },
-                ]
-            },
             master_plans: {
                 title: 'תכניות אב',
                 layers: [
@@ -2858,8 +2852,9 @@
                 ]
             },
             projector: {
-                title: 'המלצות פרוייקטור',
+                title: 'פרוייקטור שכונתי',
                 layers: [
+                    { id: 'projector_talpiot', name: 'פרוייקטור תלפיות', desc: 'גבול ההתייחסות של הפרוייקטור השכונתי תלפיות', on: false },
                     { id: 'projector_gonenim', name: 'גוננים — תכנית עבודה מתכללת', desc: 'המלצות פרוייקטור גוננים — 113 פרויקטים ב-3 תחומים (פרוגרמה/מרחב ציבורי/תנועה); מקור: מהדורה 4', on: false },
                 ]
             },
@@ -3995,6 +3990,39 @@
             return n;
         }
 
+        // Geometric override: for each plan, take its centroid and find which
+        // minahak boundary polygon contains it — that's the canonical minahak.
+        // Catches cases where the CSV's sub_neighborhood is wrong (e.g. plans on
+        // לייב יפה St — actually ארנונה/בקעה רבתי — tagged as פת/גוננים).
+        // Runs after applyMinahakOverrides so name-based hints take precedence
+        // when the centroid happens to fall just over a border.
+        function applyMinahakOverridesByGeometry(gd) {
+            if (!gd || !gd.plans || !gd.plans.features) return 0;
+            const minahakLayers = [
+                { name: 'בית צפאפא',         layer: gd.minahak_beit_tzfafa },
+                { name: 'גוננים',             layer: gd.minahak_gonen },
+                { name: 'בקעה רבתי',         layer: gd.minahak_baka },
+                { name: 'א.ת. תלפיות',       layer: gd.minahak_talpiot },
+                { name: 'מינהל מוסדי מלחה', layer: gd.minahak_malha },
+                { name: 'גינות העיר',         layer: gd.minahak_ganot },
+            ].filter(x => x.layer && x.layer.features);
+            if (!minahakLayers.length) return 0;
+            let n = 0;
+            gd.plans.features.forEach(f => {
+                const p = f.properties || {};
+                if (!f.geometry) return;
+                const centroid = geomCentroid(f.geometry);
+                if (!centroid) return;
+                const containing = minahakLayers.find(({layer}) => pointInLayer(centroid, layer));
+                if (containing && (p.minahak || '').trim() !== containing.name) {
+                    p.minahak = containing.name;
+                    n++;
+                }
+            });
+            if (n > 0) console.log('[MinahakGeom] overrode', n, 'plans via centroid-in-polygon');
+            return n;
+        }
+
         const CENTER = [31.7530, 35.2100];
         const DEFAULT_ZOOM = 15;
 
@@ -4965,6 +4993,7 @@
                     extractAvailablePlanTypes(gd);
 
                     applyMinahakOverrides(gd);
+                    applyMinahakOverridesByGeometry(gd);
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd;
                     buildProjectorTalpiotPlanSet(gd);
@@ -4991,6 +5020,7 @@
                         if (!csvText) return;
                         applyCSVEnrichment(gd, csvText);
                         applyMinahakOverrides(gd); // CSV may have re-introduced stale minahak; re-correct.
+                        applyMinahakOverridesByGeometry(gd); // final word: centroid-in-polygon
                         foldRental(gd); // re-run with CSV-overridden values
                         const pbt = rebuildPlanByTaba(gd);
                         rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
