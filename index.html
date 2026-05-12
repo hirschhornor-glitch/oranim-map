@@ -3966,12 +3966,14 @@
                     for (const hint of PLAN_NAME_SUB_HINTS) {
                         if (!hint.sub) continue;
                         // Match the sub name with or without the optional 'ה'
-                        // prefix (e.g. "גבעת השקד" ↔ "גבעת שקד").
+                        // prefix (e.g. "גבעת השקד" ↔ "גבעת שקד"), and known
+                        // spelling variants of the same neighborhood.
                         const variants = [
                             hint.sub,
                             hint.sub.replace(/^גבעת ה/, 'גבעת '),
                             hint.sub.replace(/^גבעת ([^ה])/, 'גבעת ה$1'),
                         ];
+                        if (hint.sub === 'בית צפאפא') variants.push('בית צפפה');
                         if (variants.some(v => v && blob.indexOf(v) >= 0)) {
                             // Override sub + minahak to the canonical pair when
                             // the plan name disagrees with the CSV.
