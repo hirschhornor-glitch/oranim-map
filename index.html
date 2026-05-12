@@ -1663,7 +1663,7 @@
             position: fixed; inset: 0; z-index: 2000;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
             display: flex; align-items: center; justify-content: center;
-            animation: fadeIn 0.2s ease;
+            opacity: 1;
         }
         .units-modal {
             background: #16162e; border: 1px solid #2a2a4a; border-radius: 14px;
@@ -2233,6 +2233,114 @@
                 }
             }
             return map;
+        }
+
+        // Area-weighted centroid of a Polygon/MultiPolygon. Returns [lng, lat] or null.
+        function geomCentroid(geometry) {
+            if (!geometry) return null;
+            let ring;
+            if (geometry.type === 'MultiPolygon') {
+                let maxArea = 0;
+                for (const poly of geometry.coordinates) {
+                    const r = poly[0]; if (!r) continue;
+                    let a = 0;
+                    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+                        a += r[j][0] * r[i][1] - r[i][0] * r[j][1];
+                    }
+                    a = Math.abs(a);
+                    if (a > maxArea) { maxArea = a; ring = r; }
+                }
+            } else if (geometry.type === 'Polygon') {
+                ring = geometry.coordinates[0];
+            } else if (geometry.type === 'Point') {
+                return geometry.coordinates.slice(0, 2);
+            }
+            if (!ring || ring.length === 0) return null;
+            let area = 0, cx = 0, cy = 0;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const a = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+                area += a;
+                cx += (ring[j][0] + ring[i][0]) * a;
+                cy += (ring[j][1] + ring[i][1]) * a;
+            }
+            area *= 0.5;
+            if (Math.abs(area) > 1e-12) return [cx / (6 * area), cy / (6 * area)];
+            return [ring[0][0], ring[0][1]];
+        }
+
+        // True if [lng,lat] point is inside any ring of a Polygon/MultiPolygon geometry.
+        function pointInGeometry(pt, geometry) {
+            if (!pt || !geometry) return false;
+            const polys = geometry.type === 'MultiPolygon' ? geometry.coordinates
+                       : geometry.type === 'Polygon' ? [geometry.coordinates] : [];
+            for (const poly of polys) {
+                if (!poly[0]) continue;
+                if (pointInPolygon(pt, poly[0])) return true;
+            }
+            return false;
+        }
+
+        // True if plan passes the active report scope (projector boundary).
+        // No active scope => always true. Empty plan_name => false (can't classify).
+        function planPassesReportScope(planName) {
+            const scope = window.__reportScope;
+            if (!scope) return true;
+            if (!planName) return false;
+            if (scope === 'projector_talpiot') {
+                const set = window.__inProjectorTalpiotPlans;
+                return set ? set.has(planName) : false;
+            }
+            return true;
+        }
+
+        // Pre-compute: set of plan_names inside the projector boundary, plus a
+        // Map<plan_name, sub_name> classifying each plan into one of the 5 internal sub-polygons.
+        const PROJECTOR_TALPIOT_MINAHAK = 'פרוייקטור תלפיות';
+        function buildProjectorTalpiotPlanSet(gd) {
+            const out = new Set();
+            const subByPlan = new Map();
+            const projGeom = gd && gd.projector_talpiot && gd.projector_talpiot.features
+                && gd.projector_talpiot.features[0] && gd.projector_talpiot.features[0].geometry;
+            if (!projGeom || !gd.plans) {
+                window.__inProjectorTalpiotPlans = out;
+                window.__projectorTalpiotSubByPlan = subByPlan;
+                return out;
+            }
+            const subFeats = (gd.projector_talpiot_subs && gd.projector_talpiot_subs.features) || [];
+            for (const f of gd.plans.features) {
+                const c = geomCentroid(f.geometry);
+                if (!c) continue;
+                if (!pointInGeometry(c, projGeom)) continue;
+                const pn = (f.properties && f.properties.plan_name) || '';
+                if (!pn) continue;
+                out.add(pn);
+                for (const sf of subFeats) {
+                    if (pointInGeometry(c, sf.geometry)) {
+                        subByPlan.set(pn, (sf.properties && sf.properties.name) || 'אחר');
+                        break;
+                    }
+                }
+            }
+            window.__inProjectorTalpiotPlans = out;
+            window.__projectorTalpiotSubByPlan = subByPlan;
+            return out;
+        }
+
+        // Effective minahak / sub when a report scope is active.
+        // In projector scope: all plans roll up under a single virtual minahak, and the
+        // sub-neighborhood comes from the 5 internal polygons (not the plan's own field).
+        function effectiveMinahakInScope(realMinahak) {
+            return window.__reportScope === 'projector_talpiot' ? PROJECTOR_TALPIOT_MINAHAK : realMinahak;
+        }
+        function effectiveSubInScope(planName, fallbackSub) {
+            if (window.__reportScope === 'projector_talpiot') {
+                const m = window.__projectorTalpiotSubByPlan;
+                return (m && m.get(planName)) || fallbackSub || 'אחר';
+            }
+            return fallbackSub;
+        }
+        function effectiveMinahakOrderInScope(realOrder) {
+            return window.__reportScope === 'projector_talpiot' ? [PROJECTOR_TALPIOT_MINAHAK] : realOrder;
         }
 
         function visualCenter(geometry, excludeRings) {
@@ -4007,6 +4115,11 @@
             const [showReportsMenu, setShowReportsMenu] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
+            // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
+            // filter plans/permits to those whose centroid is inside the projector boundary, roll them
+            // up under one virtual minahak ("פרוייקטור תלפיות"), and bucket sub-neighborhood by the 5 internal polygons.
+            const [reportScope, setReportScope] = useState(null);
+            useEffect(() => { window.__reportScope = reportScope; }, [reportScope]);
             const [showPermitsGap, setShowPermitsGap] = useState(false);
             const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
             const [showPermitsBySub, setShowPermitsBySub] = useState(false);
@@ -4019,6 +4132,14 @@
             const [plannedDrilldown, setPlannedDrilldown] = useState(null); // { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
             const [uncatDrilldown, setUncatDrilldown] = useState(null); // sub name or null — for uncategorized sqm panel
             const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
+            // Auto-clear report scope when all scope-aware modals close.
+            useEffect(() => {
+                if (!showMimush && !showUnits && !showCommerceTable && !showPermitsBySub && !showPermitsGap && !showPublicNeeds && reportScope) {
+                    setReportScope(null);
+                    setUnitsData(null); setCommerceData(null); setMimushData(null);
+                    window.__unitsData = null; window.__unitsFetching = false;
+                }
+            }, [showMimush, showUnits, showCommerceTable, showPermitsBySub, showPermitsGap, showPublicNeeds, reportScope]);
             // Assumptions: default + per-minahak presets + per-minahak overrides.
             // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
             // and qualitative demographic knowledge per minahak.
@@ -4844,6 +4965,7 @@
                     applyMinahakOverrides(gd);
                     geoDataRef.current = gd;
                     window.__geoDataForLanduse = gd;
+                    buildProjectorTalpiotPlanSet(gd);
 
                     // Compute overlap map once — heavy O(n²); deferred so first paint isn't blocked.
                     overlapMapRef.current = new Map();
@@ -8760,7 +8882,7 @@
 
                 plansPromise.then(planRows => {
                     // Aggregate
-                    const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const minahakOrder = effectiveMinahakOrderInScope(['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות']);
                     const byMinahak = {};
                     const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
                     const STATUS_GROUPS = [
@@ -8858,10 +8980,11 @@
 
                     // Plans (from Google Sheets CSV)
                     planRows.forEach(p => {
+                        if (!planPassesReportScope(p.plan_name)) return;
                         const subForLookup = SUB_NORMALIZE[(p.sub_neighborhood || '').trim()] || (p.sub_neighborhood || '').trim();
                         const minahakFromSub = SUB_TO_MINAHAK[(p.sub_neighborhood || '').trim()] || SUB_TO_MINAHAK[subForLookup];
                         const mRaw = (minahakFromSub || p.minahak || '').trim();
-                        const m = MINAHAK_NORMALIZE[mRaw] || mRaw;
+                        const m = effectiveMinahakInScope(MINAHAK_NORMALIZE[mRaw] || mRaw);
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
                         // Skip rejected/archived plans for units_add
                         const status = (p.status_mavat || '').trim();
@@ -8924,6 +9047,8 @@
                         if (m === 'בית צפאפא' && sub !== 'גבעת המטוס - בעלות ערבית') {
                             sub = 'בית צפאפא';
                         }
+                        // In projector scope: override to one of the 5 internal sub-polygons.
+                        sub = effectiveSubInScope(p.plan_name, sub);
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].units_in += inVal;
                         bySub[m][sub].units_add += addVal;
@@ -8959,8 +9084,10 @@
                         }
                     });
 
-                    // Tama38 — add to units_add and to renewal (התחדשות עירונית)
+                    // Tama38 — add to units_add and to renewal (התחדשות עירונית).
+                    // Skip in scope mode — tama38 records have no plan_name we can spatially filter.
                     tamaMap.forEach(p => {
+                        if (window.__reportScope) return;
                         const neighborho = (p.neighborho || '').trim();
                         const m = NEIGHBORHOOD_TO_MINAHAK[neighborho] || '';
                         if (!m) return;
@@ -8986,9 +9113,11 @@
                         'מינהל מוסדי מלחה': 0,
                         'א.ת. תלפיות': 643,
                     };
-                    Object.entries(fixedUnitsIn).forEach(([m, val]) => {
-                        if (byMinahak[m]) byMinahak[m].units_in = val;
-                    });
+                    if (!window.__reportScope) {
+                        Object.entries(fixedUnitsIn).forEach(([m, val]) => {
+                            if (byMinahak[m]) byMinahak[m].units_in = val;
+                        });
+                    }
 
                     // Fixed units_in per sub-neighborhood
                     const fixedSubUnitsIn = {
@@ -9007,13 +9136,15 @@
                             'בית צפאפא': 4262,
                         },
                     };
-                    Object.entries(fixedSubUnitsIn).forEach(([m, subs]) => {
-                        if (!bySub[m]) bySub[m] = {};
-                        Object.entries(subs).forEach(([s, val]) => {
-                            if (!bySub[m][s]) bySub[m][s] = emptyRow();
-                            bySub[m][s].units_in = val;
+                    if (!window.__reportScope) {
+                        Object.entries(fixedSubUnitsIn).forEach(([m, subs]) => {
+                            if (!bySub[m]) bySub[m] = {};
+                            Object.entries(subs).forEach(([s, val]) => {
+                                if (!bySub[m][s]) bySub[m][s] = emptyRow();
+                                bySub[m][s].units_in = val;
+                            });
                         });
-                    });
+                    }
 
                     const EXCLUDE_MINAHAK_REPORT = ['גבעת המטוס'];
                     const minahaks = minahakOrder.filter(m => byMinahak[m]);
@@ -9087,7 +9218,7 @@
                         return obj;
                     });
 
-                    const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                    const minahakOrder = effectiveMinahakOrderInScope(['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות']);
                     const COMMERCE_HIDE_MINAHAKS = ['גבעת המטוס', 'התחדשות עירונית'];
                     const MINAHAK_NORMALIZE = { 'אזור תעשייה תלפיות': 'א.ת. תלפיות', 'אזור תעשיה תלפיות': 'א.ת. תלפיות' };
                     const byMinahak = {};
@@ -9116,8 +9247,9 @@
                     const SUB_NORMALIZE = window.__subNormalize || {};
 
                     planRows.forEach(p => {
+                        if (!planPassesReportScope(p.plan_name)) return;
                         const mRaw = (p.minahak || '').trim();
-                        const m = MINAHAK_NORMALIZE[mRaw] || mRaw;
+                        const m = effectiveMinahakInScope(MINAHAK_NORMALIZE[mRaw] || mRaw);
                         if (!m) return;
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
 
@@ -9151,9 +9283,9 @@
                             if (!plansByCell[m][grp].some(x => x.plan_name === planInfo.plan_name)) plansByCell[m][grp].push(planInfo);
                         }
 
-                        // Sub-neighborhood breakdown
+                        // Sub-neighborhood breakdown — override to internal projector polygon in scope
                         const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
-                        const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                        const sub = effectiveSubInScope(p.plan_name, SUB_NORMALIZE[subRaw] || subRaw);
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].commerce_in += ciVal;
                         bySub[m][sub].commerce_out += coVal;
@@ -9494,7 +9626,7 @@
             const buildMimushData = useCallback(() => {
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return null;
-                const minahakOrder = ['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות'];
+                const minahakOrder = effectiveMinahakOrderInScope(['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות']);
                 const byMinahak = {};
                 const bySub = {};
                 const plansByCell = {};   // { minahak: { stageIndex: [plan...] } }
@@ -9515,7 +9647,8 @@
                 const MIMUSH_MINAHAK_NORMALIZE = { 'אזור תעשייה תלפיות': 'א.ת. תלפיות', 'אזור תעשיה תלפיות': 'א.ת. תלפיות' };
                 gd.plans.features.forEach(f => {
                     const p = f.properties;
-                    const m = MIMUSH_MINAHAK_NORMALIZE[p.minahak] || p.minahak || '';
+                    if (!planPassesReportScope(p.plan_name)) return;
+                    const m = effectiveMinahakInScope(MIMUSH_MINAHAK_NORMALIZE[p.minahak] || p.minahak || '');
                     if (!byMinahak[m]) return;
                     const result = calcMimush(p);
                     if (!result) return;
@@ -9551,7 +9684,7 @@
                     if (result.isTail) tailPlans.push({ ...planInfo, minahak: m });
 
                     // Sub-neighborhood
-                    const sub = p.sub_neighborhood || 'לא ידוע';
+                    const sub = effectiveSubInScope(p.plan_name, p.sub_neighborhood) || 'לא ידוע';
                     if (!bySub[m][sub]) {
                         bySub[m][sub] = { total: 0, byStage: {}, weightedMimush: 0, planCount: 0, tailCount: 0, byYear: {} };
                         MILESTONE_YEARS.forEach(y => { bySub[m][sub].byYear[y] = 0; });
@@ -16336,6 +16469,23 @@
                         );
                     })()}
 
+                    {/* Floating scope chip — visible when a scope-aware report is open */}
+                    {reportScope === 'projector_talpiot' && (showMimush || showUnits || showCommerceTable || showPermitsBySub || showPermitsGap || showPublicNeeds) && (
+                        <div style={{
+                            position:'fixed', top:14, left:14, zIndex:10001,
+                            background:'#e65100', color:'#fff', padding:'6px 12px',
+                            borderRadius:18, fontSize:13, fontWeight:'bold',
+                            boxShadow:'0 2px 8px rgba(0,0,0,0.4)',
+                            display:'flex', alignItems:'center', gap:8,
+                            border:'2px solid #ff9800'
+                        }}>
+                            <span>📐 מסנן: פרוייקטור תלפיות</span>
+                            <span style={{fontSize:11, fontWeight:'normal', opacity:0.9}}>
+                                ({(window.__inProjectorTalpiotPlans && window.__inProjectorTalpiotPlans.size) || 0} תב"עות)
+                            </span>
+                        </div>
+                    )}
+
                     {/* ── Reports Menu Modal ── */}
                     {showReportsMenu && (
                         <div className="units-overlay" onClick={() => setShowReportsMenu(false)}>
@@ -16345,6 +16495,73 @@
                                     <button className="units-close" onClick={() => setShowReportsMenu(false)}>&times;</button>
                                 </div>
                                 <div className="reports-menu-body">
+                                    {/* קטגוריה: פרוייקטור תלפיות — סינון מרחבי */}
+                                    <div className="reports-category" style={{border:'1px dashed #e65100', background:'rgba(255,152,0,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                        <h3 style={{color:'#e65100'}}>📐 פרוייקטור תלפיות</h3>
+                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>הדוחות מסוננים לתב"עות בתוך גבול הפרוייקטור — שורה אחת ("פרוייקטור תלפיות") עם פירוק לפי 5 תת-שכונות פנימיות</div>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); openMimushModal(); }}>
+                                                <span className="report-icon">🚧</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">אחוזי מימוש</span>
+                                                    <span className="report-desc">שלביות ביצוע בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); window.__unitsData = null; window.__unitsFetching = false; setUnitsData(null); openPublicNeedsModal(); }}>
+                                                <span className="report-icon">🏘️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">פרוגרמה</span>
+                                                    <span className="report-desc">צרכי ציבור בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                window.__reportScope = 'projector_talpiot';
+                                                setReportScope('projector_talpiot');
+                                                setShowReportsMenu(false);
+                                                window.__unitsData = null; window.__unitsFetching = false;
+                                                setUnitsData(null);
+                                                setUnitsLoading(true);
+                                                setShowUnits(true);
+                                                fetchUnitsDataInternal();
+                                            }}>
+                                                <span className="report-icon">🏠</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">סיכום יח"ד</span>
+                                                    <span className="report-desc">יחידות דיור בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                window.__reportScope = 'projector_talpiot';
+                                                setReportScope('projector_talpiot');
+                                                setShowReportsMenu(false);
+                                                setCommerceData(null);
+                                                setCommerceLoading(true);
+                                                setShowCommerceTable(true);
+                                                fetchCommerceDataInternal();
+                                            }}>
+                                                <span className="report-icon">🏪</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">מסחר ותעסוקה</span>
+                                                    <span className="report-desc">שטחי מסחר ותעסוקה בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }}>
+                                                <span className="report-icon">🏘️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים לפי תת-שכונה</span>
+                                                    <span className="report-desc">פילוח שלב + יח"ד בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); setPermitsGapDrilldown(null); setShowPermitsGap(true); }}>
+                                                <span className="report-icon">📑</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים מול תב"ע</span>
+                                                    <span className="report-desc">פערי יח"ד בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     {/* קטגוריה: דוחות אזוריים */}
                                     <div className="reports-category">
                                         <h3>🏘️ דוחות אזוריים</h3>
@@ -16533,6 +16750,7 @@
                         const seenTaba = new Set();
                         gd.plans.features.forEach(f => {
                             const p = f.properties || {};
+                            if (!planPassesReportScope(p.plan_name)) return;
                             const taba = String(p.taba || '').trim();
                             if (!taba || seenTaba.has(taba)) return;
                             seenTaba.add(taba);
@@ -16967,6 +17185,7 @@
                         const seenTaba = new Set();
                         gd.plans.features.forEach(f => {
                             const p = f.properties || {};
+                            if (!planPassesReportScope(p.plan_name)) return;
                             const taba = String(p.taba || '').trim();
                             if (!taba || seenTaba.has(taba)) return;
                             const planType = (p.plan_type || '').trim();
@@ -16975,10 +17194,11 @@
                             if (permits.length === 0) return;
                             seenTaba.add(taba);
                             const subRaw = (p.sub_neighborhood || p.neighborhood || 'לא ידוע').trim() || 'לא ידוע';
-                            const sub = SUB_NORMALIZE[subRaw] || subRaw;
+                            const subBase = SUB_NORMALIZE[subRaw] || subRaw;
+                            const sub = effectiveSubInScope(p.plan_name, subBase);
                             // Override stale CSV minahak from canonical SUB_TO_MINAHAK
                             // (e.g. גבעת השקד plans tagged בית צפאפא → גוננים).
-                            const minahak = (SUB_TO_MINAHAK[sub] || (p.minahak || '').trim());
+                            const minahak = effectiveMinahakInScope(SUB_TO_MINAHAK[subBase] || (p.minahak || '').trim());
                             if (!bySub[sub]) {
                                 bySub[sub] = { minahak, total: { count: 0, units: 0 }, plans: 0 };
                                 PERMIT_STAGES_ALL.forEach(st => bySub[sub][st] = { count: 0, units: 0, permits: [] });
@@ -17379,6 +17599,7 @@
                             const _seenTaba = new Set();
                             gd.plans.features.forEach(f => {
                                 const p = f.properties || {};
+                                if (!planPassesReportScope(p.plan_name)) return;
                                 const taba = String(p.taba || '').trim();
                                 if (taba && _seenTaba.has(taba)) return;
                                 const s = normalizeStatus((p.status_mavat || '').trim());
