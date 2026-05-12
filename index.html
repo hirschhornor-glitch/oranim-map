@@ -7525,7 +7525,7 @@
                     nonEdu.forEach(svc => {
                         lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                     });
-                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
@@ -7772,7 +7772,7 @@
                         if (!isUncat) totRow.push(items.reduce((s,it)=>s+it.rawDem,0));
                         HORIZONS.forEach(h => { totRow.push(horTotals[h].add); if (!isUncat) totRow.push(horTotals[h].dem); });
                         lines.push(totRow.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
-                        const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                        const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url; a.download = title.replace(/[^\w֐-׿]+/g,'_').slice(0,80) + '.csv';
@@ -17055,7 +17055,7 @@
                             function exportDrilldownCsv() {
                                 const rows = permitsList.map(rowValuesFor);
                                 const csv = [drillCols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
-                                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+                                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
                                 const fnameBase = key + '_' + stageLabel;
@@ -19141,7 +19141,7 @@
                                         rows.sort((a,b) => b[4] - a[4]);
                                         const cols = ['מס תכנית','שם תכנית','תיאור','תת-שכונה','תוספת יח"ד','יח"ד קיימות','סטטוס','תאריך מבא"ת'];
                                         const csv = [cols.join(',')].concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))).join('\n');
-                                        const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
+                                        const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
                                         const url = URL.createObjectURL(blob);
                                         const a = document.createElement('a');
                                         a.href = url; a.download = ('דוח_מינהל_' + minahakReport + '.csv').replace(/[\\/:"*?<>|]/g,'_');
@@ -20499,6 +20499,23 @@
                         const allAdminOn2 = adminLayers2.every(l => layers[l.id]);
                         const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
 
+                        // Talpiot master plan was approved in 2021. In א.ת. תלפיות a group is
+                        // a real spatial conflict only when ≥2 of its Talpiot plans are post-2021.
+                        const POST_2021_CUTOFF = new Date(2021, 0, 1);
+                        const parseHebDate = (s) => {
+                            const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((s || '').trim());
+                            return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+                        };
+                        // GS authority field is mostly "ועדה מחוזית" / "ועדה מקומית", but ~21
+                        // rows carry stray text from misaligned imports — accept only matching
+                        // tokens, treat anything else as missing.
+                        const normalizeAuthority = (raw) => {
+                            const v = String(raw == null ? '' : raw).trim();
+                            if (v.includes('מחוזית')) return 'מחוזית';
+                            if (v.includes('מקומית')) return 'מקומית';
+                            return '';
+                        };
+
                         // Same filter as plans layer: no archived/infra/consolidation-division
                         const isVisible = (p) => {
                             if (!checkMinahak(p)) return false;
@@ -20562,14 +20579,43 @@
                             }
                             if (comp.size >= 2) {
                                 const plans = [...comp].map(t => byTaba[t]).filter(Boolean);
+                                // Sort plans by approval date ascending — oldest is the "base"
+                                // plan, and we surface how many units the later plans add on top.
+                                plans.sort((a, b) => {
+                                    const da = parseHebDate(a.mavat_date);
+                                    const db = parseHebDate(b.mavat_date);
+                                    if (da && db) return da - db;
+                                    if (da) return -1;
+                                    if (db) return 1;
+                                    return 0;
+                                });
                                 const totalUnits = plans.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
-                                groups.push({ plans, totalUnits });
+                                const baseUnits = parseFloat(plans[0].units_add) || 0;
+                                const supplementaryUnits = totalUnits - baseUnits;
+                                // (a) supplementaryUnits > 0 captures "real" duplicate-on-space —
+                                // if plan-2-and-up don't add units beyond the base, the overlap
+                                // isn't a housing-planning conflict worth surfacing.
+                                // (b) In א.ת. תלפיות, require ≥2 of the Talpiot plans in the
+                                // group to be from 2021+ — otherwise the overlap is just the
+                                // master plan being implemented over an old TBA.
+                                const talpiotPlans = plans.filter(p => (p.minahak || '').trim() === 'א.ת. תלפיות');
+                                let talpiotOK = true;
+                                if (talpiotPlans.length > 0) {
+                                    const post2021 = talpiotPlans.filter(p => {
+                                        const d = parseHebDate(p.mavat_date);
+                                        return d && d >= POST_2021_CUTOFF;
+                                    }).length;
+                                    talpiotOK = post2021 >= 2;
+                                }
+                                if (supplementaryUnits > 0 && talpiotOK) {
+                                    groups.push({ plans, totalUnits, supplementaryUnits });
+                                }
                             }
                         }
                         groups.sort((a, b) => (b.plans.length - a.plans.length) || (b.totalUnits - a.totalUnits));
 
                         const totalPlansInReport = groups.reduce((s, g) => s + g.plans.length, 0);
-                        const totalUnitsInReport = groups.reduce((s, g) => s + g.totalUnits, 0);
+                        const totalUnitsInReport = groups.reduce((s, g) => s + g.supplementaryUnits, 0);
 
                         const jumpToPlan = (p) => {
                             const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
@@ -20595,12 +20641,134 @@
                             }, 100);
                         };
 
+                        const STOPWORDS = new Set([
+                            'תוספת','בנייה','בניה','הגדלת','זכויות','תוכנית','תכנית','שינוי',
+                            'הקמת','הוספת','חדש','חדשה','שכונת','שכ','ירושלים','ב','של','על',
+                            'מס','סה','ד','יח','מבני','מבנה','מגורים','מסחר','תעסוקה','ותעסוקה',
+                            'קומות','קומה','בבניין','קיים','חדשים','חדשות','בכל','לבנייה','לבניה',
+                            'במתחם','במקום','ממ','הגדלה','איחוד','חלוקה','בהסכמת','ללא','עם',
+                            'בית','בתים','חברת','חב','תב','תב"ע'
+                        ]);
+                        const groupName = (plans) => {
+                            const wordCount = new Map();
+                            let n = 0;
+                            for (const p of plans) {
+                                const s = (p.plan_summary || '').trim();
+                                if (!s) continue;
+                                n++;
+                                const words = s.replace(/[.,\-–—:;()"'\/]+/g, ' ').split(/\s+/).filter(w =>
+                                    w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS.has(w));
+                                const uniq = new Set(words);
+                                for (const w of uniq) wordCount.set(w, (wordCount.get(w) || 0) + 1);
+                            }
+                            if (n === 0) return '';
+                            const threshold = Math.max(2, Math.ceil(n / 2));
+                            const common = [...wordCount.entries()]
+                                .filter(([, c]) => c >= threshold)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([w]) => w);
+                            return common.slice(0, 3).join(' ');
+                        };
+                        const groupKey = (plans) => plans.map(p => String(p.taba || '')).sort().join('|');
+                        // Fallback when shared-words extraction returns nothing: use the first
+                        // non-empty plan_summary (closest thing to an address) so the group still
+                        // has a human-readable label.
+                        const groupAddressFallback = (plans) => {
+                            const s = plans.map(p => (p.plan_summary || p.plan_name_he || '').trim()).find(x => x);
+                            return s ? s.slice(0, 60) : '';
+                        };
+                        const resolvedGroupName = (plans) =>
+                            overlapNames[groupKey(plans)] || groupName(plans) || groupAddressFallback(plans) || 'קבוצה';
+
+                        function exportOverlapCSV() {
+                            if (!groups.length) { alert('אין כפולות בקרב התכניות המוצגות כעת'); return; }
+                            const cols = ['שם הקבוצה', 'מס\' תכניות בקבוצה', 'תב"ע', 'שם תכנית', 'סטטוס', 'סמכות', 'תאריך אישור', 'מינה"ק', 'יח"ד תוספת'];
+                            const rows = [];
+                            groups.forEach(g => {
+                                const gname = resolvedGroupName(g.plans);
+                                const gsize = g.plans.length;
+                                g.plans.forEach(p => {
+                                    const units = parseFloat(p.units_add) || 0;
+                                    rows.push([
+                                        gname,
+                                        gsize,
+                                        p.plan_name || '',
+                                        p.plan_summary || p.plan_name_he || '',
+                                        normalizeStatus((p.status_mavat || '').trim()),
+                                        normalizeAuthority(p.authority),
+                                        p.mavat_date || '',
+                                        (p.minahak || '').trim(),
+                                        units > 0 ? Math.round(units) : '',
+                                    ]);
+                                });
+                            });
+                            const csv = [cols.join(',')]
+                                .concat(rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')))
+                                .join('\n');
+                            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'תכניות_כפולות_על_אותו_מרחב.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        }
+
+                        function printOverlapReport() {
+                            const win = window.open('', '_blank');
+                            const today = new Date().toLocaleDateString('he-IL');
+                            const totalPlansAll = groups.reduce((s, g) => s + g.plans.length, 0);
+                            const totalUnitsAll = groups.reduce((s, g) => s + g.supplementaryUnits, 0);
+                            let body = '<h2>🔀 תכניות כפולות על אותו מרחב — ' + today + '</h2>';
+                            if (!groups.length) {
+                                body += '<p>אין כפולות בקרב התכניות המוצגות כעת.</p>';
+                            } else {
+                                body += '<p class="summary">' + groups.length + ' קבוצות · ' + totalPlansAll + ' תכניות · סה"כ ' + Math.round(totalUnitsAll) + ' יח"ד תוספת</p>';
+                                groups.forEach(g => {
+                                    const gname = resolvedGroupName(g.plans);
+                                    const minahaks = [...new Set(g.plans.map(p => (p.minahak||'').trim()).filter(Boolean))];
+                                    const minahakText = minahaks.length === 1 ? minahaks[0] : (minahaks.length > 1 ? minahaks.length + ' מינהלים' : '-');
+                                    body += '<h3>' + gname + ' <span class="meta">· ' + g.plans.length + ' תכניות · ' + minahakText + ' · ' + Math.round(g.supplementaryUnits) + ' יח"ד תוספת</span></h3>';
+                                    const rowsHtml = g.plans.map(p => {
+                                        const units = parseFloat(p.units_add) || 0;
+                                        const s = normalizeStatus((p.status_mavat || '').trim());
+                                        return '<tr>' +
+                                            '<td>' + (p.plan_name || '') + '</td>' +
+                                            '<td>' + (p.plan_summary || p.plan_name_he || '') + '</td>' +
+                                            '<td>' + s + '</td>' +
+                                            '<td>' + normalizeAuthority(p.authority) + '</td>' +
+                                            '<td>' + (p.mavat_date || '') + '</td>' +
+                                            '<td>' + ((p.minahak || '').trim()) + '</td>' +
+                                            '<td style="text-align:left">' + (units > 0 ? Math.round(units) : '') + '</td>' +
+                                            '</tr>';
+                                    }).join('');
+                                    body += '<table><thead><tr>' +
+                                        '<th>תב"ע</th><th>שם תכנית</th><th>סטטוס</th><th>סמכות</th><th>תאריך</th><th>מינה"ק</th><th>יח"ד תוספת</th>' +
+                                        '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+                                });
+                            }
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>תכניות כפולות על אותו מרחב</title>' +
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}' +
+                                'h2{color:#3366ff;margin-bottom:6px}' +
+                                'h3{color:#1a5276;margin:18px 0 6px;font-size:14px}' +
+                                'h3 .meta{color:#666;font-weight:400;font-size:12px}' +
+                                '.summary{color:#555;margin-bottom:16px}' +
+                                'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}' +
+                                'th,td{border:1px solid #ccc;padding:5px;text-align:right;vertical-align:top}' +
+                                'th{background:#eee}' +
+                                '</style></head><body>' + body + '</body></html>');
+                            win.document.close(); win.print();
+                        }
+
                         return (
                         <div className="units-overlay" onClick={() => setOverlapReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(900px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
                                 <button className="units-close" onClick={() => setOverlapReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🔀 תכניות כפולות על אותו מרחב</h2>
+                                    <div style={{display:'flex',gap:8,marginBottom:8}}>
+                                        <button onClick={exportOverlapCSV} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📊 CSV</button>
+                                        <button onClick={printOverlapReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>🖨️ הדפסה</button>
+                                    </div>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:16}}>
                                         {groups.length} קבוצות · {totalPlansInReport} תכניות · סה"כ {Math.round(totalUnitsInReport)} יח"ד תוספת
                                     </p>
@@ -20608,42 +20776,13 @@
                                         <p style={{color:'#888',fontSize:13}}>אין כפולות בקרב התכניות המוצגות כעת.</p>
                                     )}
                                     {(() => {
-                                        // Pick a representative name for a group.
-                                        // Words shared across plan_summary of most plans → common location.
-                                        const STOPWORDS = new Set([
-                                            'תוספת','בנייה','בניה','הגדלת','זכויות','תוכנית','תכנית','שינוי',
-                                            'הקמת','הוספת','חדש','חדשה','שכונת','שכ','ירושלים','ב','של','על',
-                                            'מס','סה','ד','יח','מבני','מבנה','מגורים','מסחר','תעסוקה','ותעסוקה',
-                                            'קומות','קומה','בבניין','קיים','חדשים','חדשות','בכל','לבנייה','לבניה',
-                                            'במתחם','במקום','ממ','הגדלה','איחוד','חלוקה','בהסכמת','ללא','עם',
-                                            'בית','בתים','חברת','חב','תב','תב"ע'
-                                        ]);
-                                        const groupName = (plans) => {
-                                            const wordCount = new Map();
-                                            let n = 0;
-                                            for (const p of plans) {
-                                                const s = (p.plan_summary || '').trim();
-                                                if (!s) continue;
-                                                n++;
-                                                const words = s.replace(/[.,\-–—:;()"'\/]+/g, ' ').split(/\s+/).filter(w =>
-                                                    w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS.has(w));
-                                                const uniq = new Set(words);
-                                                for (const w of uniq) wordCount.set(w, (wordCount.get(w) || 0) + 1);
-                                            }
-                                            if (n === 0) return '';
-                                            const threshold = Math.max(2, Math.ceil(n / 2));
-                                            const common = [...wordCount.entries()]
-                                                .filter(([, c]) => c >= threshold)
-                                                .sort((a, b) => b[1] - a[1])
-                                                .map(([w]) => w);
-                                            return common.slice(0, 3).join(' ');
-                                        };
+                                        // STOPWORDS, groupName, groupKey are defined in the outer IIFE
+                                        // so they can be shared with the CSV/print exporters above.
                                         const toggleGroup = (idx) => setOverlapExpanded(prev => {
                                             const next = new Set(prev);
                                             if (next.has(idx)) next.delete(idx); else next.add(idx);
                                             return next;
                                         });
-                                        const groupKey = (plans) => plans.map(p => String(p.taba || '')).sort().join('|');
                                         const saveName = (key, value) => {
                                             setOverlapNames(prev => {
                                                 const next = { ...prev };
@@ -20656,7 +20795,7 @@
                                         return groups.map((g, gi) => {
                                             const expanded = overlapExpanded.has(gi);
                                             const key = groupKey(g.plans);
-                                            const autoName = groupName(g.plans) || 'קבוצה';
+                                            const autoName = groupName(g.plans) || groupAddressFallback(g.plans) || 'קבוצה';
                                             const displayName = overlapNames[key] || autoName;
                                             const isEditing = overlapEditingKey === key;
                                             const minahaks = [...new Set(g.plans.map(p => (p.minahak||'').trim()).filter(Boolean))];
@@ -20692,7 +20831,7 @@
                                                         <span style={{color:'#7788aa',fontSize:12,fontWeight:400}}>· {g.plans.length} תכניות</span>
                                                     </span>
                                                     <span style={{color:'#ce93d8',fontSize:12}}>{minahakText}</span>
-                                                    <span style={{color:'#ffa726',fontSize:12,minWidth:90,textAlign:'left'}}>{Math.round(g.totalUnits)} יח"ד תוספת</span>
+                                                    <span style={{color:'#ffa726',fontSize:12,minWidth:90,textAlign:'left'}}>{Math.round(g.supplementaryUnits)} יח"ד תוספת</span>
                                                 </div>
                                                 {expanded && (
                                                     <div style={{padding:'0 12px 10px'}}>
@@ -20701,6 +20840,7 @@
                                                                 <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מספר</th>
                                                                 <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>שם תכנית</th>
                                                                 <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>סטטוס</th>
+                                                                <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>סמכות</th>
                                                                 <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>תאריך</th>
                                                                 <th style={{textAlign:'right',padding:'4px',color:'#bbb',fontWeight:600}}>מינה"ק</th>
                                                                 <th style={{textAlign:'center',padding:'4px',color:'#bbb',fontWeight:600}}>יח"ד תוספת</th>
@@ -20709,12 +20849,14 @@
                                                                 {g.plans.map((p, i) => {
                                                                     const s = normalizeStatus((p.status_mavat||'').trim());
                                                                     const statusColor = STATUS_COLORS[s] || '#aaa';
+                                                                    const auth = normalizeAuthority(p.authority);
                                                                     return (
                                                                     <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
                                                                         onClick={() => jumpToPlan(p)}>
                                                                         <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
                                                                         <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                                         <td style={{padding:'4px',color:statusColor}}>{s || '-'}</td>
+                                                                        <td style={{padding:'4px',color:'#90caf9'}}>{auth || '-'}</td>
                                                                         <td style={{textAlign:'center',padding:'4px',color:'#ccc'}}>{p.mavat_date || '-'}</td>
                                                                         <td style={{padding:'4px',color:'#ce93d8'}}>{(p.minahak || '-').trim()}</td>
                                                                         <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{parseFloat(p.units_add) > 0 ? Math.round(parseFloat(p.units_add)) : '-'}</td>
