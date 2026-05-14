@@ -2850,7 +2850,7 @@
                     { id: 'master_plan_arnona', name: 'ארנונה', desc: 'תכנית אב ארנונה — גבול, מתחמי קומות, מבנים + שימור', on: false },
                     { id: 'master_plan_gonenim', name: 'גוננים', desc: 'תכנית אב גוננים — שלד התחדשות עירונית (~867 ד׳, 286 יעודי קרקע); מקור: jergisng', on: false },
                     { id: 'master_plan_talpiot', name: 'א.ת. תלפיות', desc: 'תכנית אב א.ת. תלפיות — הסבת תעשייה למעורב, גרסת 2021 (~881 ד׳, 96 יעודי קרקע); מקור: jergisng + ArcGIS Online', on: false },
-                    { id: 'mivnei_lashimur', name: 'מבנים לשימור', desc: '3,637 מבנים לשימור בכל הרובע (נקודות) — מאוחד מ-10 תכניות אב/מתאר של עיריית י-ם', on: false },
+                    { id: 'mivnei_lashimur', name: 'מבנים לשימור', desc: '1,817 מבנים ברשימת השימור העירונית (עיריית י-ם) בתוך הרובע — נקודות', on: false },
                 ]
             },
             projector: {
@@ -12293,36 +12293,54 @@
                     geoLayersRef.current.migrash_panui = mpLayer;
                 }
 
-                // --- Mivnei Lashimur (consolidated conservation-buildings POINT layer, all neighborhoods in district) ---
+                // --- Mivnei Lashimur (רשימת השימור העירונית, enriched, in district) ---
+                // Fill color  ← mp_grade (הגדרת שימור) from master-plan enrichment.
+                // Outline     ← status (מאושרת/מוצעת/הוצא) per the legend.
+                const MIVNEI_LASHIMUR_GRADE_COLORS = {
+                    'שימור מלא':         '#8B0000', // dark red — strictest preservation
+                    'שימור עם תוספות':   '#D2691E', // chocolate — preservation w/ additions
+                    'מבנן לשימור':       '#6B4423', // brown — conservation compound
+                };
+                const MIVNEI_LASHIMUR_NO_GRADE_COLOR = '#888'; // gray — no master-plan grade
+                const MIVNEI_LASHIMUR_STATUS_OUTLINE = {
+                    'ברשימת שימור מאושרת': '#27AE60', // green — approved
+                    'ברשימת שימור מוצעת':  '#C0392B', // red — proposed
+                    'הוצא מרשימת השימור':   '#666',    // dark gray — removed
+                };
                 if (layers['mivnei_lashimur'] && gd.mivnei_lashimur) {
                     const mlClean = { ...gd.mivnei_lashimur, features: gd.mivnei_lashimur.features.filter(f => f.geometry && f.geometry.coordinates) };
                     const mlLayer = L.geoJSON(mlClean, {
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
-                            const html = `<div style="background:#8B0000;border:1.5px solid #fff;width:7px;height:7px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,0.6)"></div>`;
-                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'ml-icon', iconSize: [10, 10], iconAnchor: [5, 5] }) });
+                            const grade = (f.properties && f.properties.mp_grade) || null;
+                            const status = (f.properties && f.properties.status) || null;
+                            const fill = MIVNEI_LASHIMUR_GRADE_COLORS[grade] || MIVNEI_LASHIMUR_NO_GRADE_COLOR;
+                            const outline = MIVNEI_LASHIMUR_STATUS_OUTLINE[status] || '#fff';
+                            const html = `<div style="background:${fill};border:2px solid ${outline};width:8px;height:8px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,0.6)"></div>`;
+                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'ml-icon', iconSize: [12, 12], iconAnchor: [6, 6] }) });
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties || {};
                             layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current) return;
-                                const accent = '#8B0000';
+                                const accent = MIVNEI_LASHIMUR_GRADE_COLORS[p.mp_grade] || '#8B0000';
                                 const row = (label, value) => (value !== null && value !== undefined && value !== '' && value !== 'None') ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
-                                const addr = [p.street, p.house_num].filter(v => v && v !== 'None').join(' ');
                                 let html = '<div style="font-family:inherit">';
-                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">מבנה לשימור</div>`;
-                                const sub = [addr, p.neighborhood].filter(Boolean).join(' · ');
-                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">${p.shem || 'מבנה לשימור'}</div>`;
+                                if (p.mp_grade) html += `<div class="popup-header-subtitle" style="opacity:0.85">${p.mp_grade}</div>`;
+                                else if (p.sugMivne && p.sugMivne !== 'None') html += `<div class="popup-header-subtitle" style="opacity:0.85">${p.sugMivne.split('\n')[0]}</div>`;
                                 html += '</div><div class="popup-body">';
-                                html += row('שכונה', p.neighborhood);
-                                html += row('כתובת', addr);
-                                html += row('שנת בנייה', p.year);
-                                html += row('קומות', p.floors);
-                                html += row('גובה (מ\')', typeof p.height_m === 'number' ? p.height_m.toFixed(1) : p.height_m);
-                                html += row('דרגת שימור', p.grade);
+                                html += row('שם / כתובת', p.shem);
+                                html += row('הגדרת שימור', p.mp_grade);
+                                html += row('סוג', p.sugMivne ? p.sugMivne.split('\n')[0] : null);
                                 html += row('סטטוס', p.status);
-                                html += row('מתחם', p.compound);
-                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: ${p.plan || ''} (עיריית י-ם, ArcGIS)</div>`;
+                                html += row('מספר תיק', p.tikNum);
+                                html += row('פירוט שימור', p.perut);
+                                html += row('שנת בנייה', p.mp_year);
+                                html += row('קומות', p.mp_floors);
+                                html += row('גובה (מ\')', typeof p.mp_height_m === 'number' ? p.mp_height_m.toFixed(1) : p.mp_height_m);
+                                html += row('מתחם', p.mp_compound);
+                                html += row('הערה', p.mp_note);
                                 html += '</div></div>';
                                 L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
                             });
