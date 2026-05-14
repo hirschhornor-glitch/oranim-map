@@ -1,0 +1,1733 @@
+{
+  "רסקו": {
+    "by_key": {
+      "gan": {
+        "units": 2.0,
+        "overlap_units": 3.0,
+        "projects": [
+          {
+            "project_id": "3b9cf3a6290c",
+            "project_name": "מבוא בנין 14",
+            "units_required": 1,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 1280000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "1b57e5f1259f",
+            "project_name": "מתחם לוריא",
+            "units_required": -6,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 307200.0,
+            "overlap": false
+          },
+          {
+            "project_id": "a43269f16203",
+            "project_name": "יצחק קצנלסון 3",
+            "units_required": -2,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 102400.0,
+            "overlap": false
+          },
+          {
+            "project_id": "34fc373d63c6",
+            "project_name": "בית הנוער",
+            "units_required": 6,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7680000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "3864d70b4f4c",
+            "project_name": " טשרניחובסקי 51-53",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-0794214",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3840000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "maon": {
+        "units": 16.0,
+        "overlap_units": 6.0,
+        "projects": [
+          {
+            "project_id": "d69a260cf2f4",
+            "project_name": "מבוא בנין 14",
+            "units_required": 2,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "2cfebfac04a9",
+            "project_name": "מתחם לוריא",
+            "units_required": 3,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "97f68cabfb9d",
+            "project_name": "בית הנוער",
+            "units_required": 5,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "5f16530369c3",
+            "project_name": "דב קמחי-טשרניחובסקי",
+            "units_required": 3,
+            "chumash": 1,
+            "plan_number": "101-0502948",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "80f1eac5123f",
+            "project_name": " טשרניחובסקי 68 שמעוני 39",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-0690859",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "yesodi": {
+        "units": 6.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "e8b95fb79850",
+            "project_name": "מתחם לוריא",
+            "units_required": -12,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 960000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "907b0734eae8",
+            "project_name": "בית הנוער",
+            "units_required": 18,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 35000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "synagogue": {
+        "units": 950.0,
+        "overlap_units": 300.0,
+        "projects": [
+          {
+            "project_id": "c673a8d76c1b",
+            "project_name": "מתחם לוריא",
+            "units_required": 350,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 3500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "c19eff13a1a7",
+            "project_name": "בית הנוער",
+            "units_required": 300,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "fa90934f46da",
+            "project_name": "טשרניחובסקי 52-54-55",
+            "units_required": 300,
+            "chumash": null,
+            "plan_number": "101-0899880",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "al_yesodi": {
+        "units": 24.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "0ab4018f592f",
+            "project_name": "בית הנוער",
+            "units_required": 24,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 36000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "matnas": {
+        "units": 1200.0,
+        "overlap_units": 450.0,
+        "projects": [
+          {
+            "project_id": "cfdc039ac540",
+            "project_name": "בית הנוער",
+            "units_required": 750,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "611a2ce5413d",
+            "project_name": "התקופה 2-שמעוני 48-הרצוג",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-0550541",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "34f5d41f46c6",
+            "project_name": "טשרניחובסקי 52-54-55",
+            "units_required": 200,
+            "chumash": null,
+            "plan_number": "101-0899880",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "elderly_club": {
+        "units": 410.0,
+        "overlap_units": 410.0,
+        "projects": [
+          {
+            "project_id": "582bf7aa0814",
+            "project_name": "טשרניחובסקי 32",
+            "units_required": 160,
+            "chumash": null,
+            "plan_number": "101-0870865",
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 1600000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "0cded80c326c",
+            "project_name": "התקופה 2-שמעוני 48-הרצוג",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-0550541",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "welfare_dept": {
+        "units": 80.0,
+        "overlap_units": 80.0,
+        "projects": [
+          {
+            "project_id": "bc0e234d2417",
+            "project_name": "דוד שמעוני 22, ירושלים",
+            "units_required": 80,
+            "chumash": null,
+            "plan_number": "101-0891747",
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 800000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "library": {
+        "units": 450.0,
+        "overlap_units": 450.0,
+        "projects": [
+          {
+            "project_id": "aa8e637861a6",
+            "project_name": " טשרניחובסקי 68 שמעוני 39",
+            "units_required": 450,
+            "chumash": null,
+            "plan_number": "101-0690859",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "tipat_chalav": {
+        "units": 195.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "ddfd61cb22e7",
+            "project_name": "עתידי במרכז מסחרי רסקו",
+            "units_required": 195,
+            "chumash": null,
+            "plan_number": "101-0993139",
+            "plan_status": "בתכנון",
+            "estimate_nis": 1950000.0,
+            "overlap": false
+          }
+        ]
+      }
+    },
+    "extras": [
+      {
+        "key": "extra:performance",
+        "label": "אולם מופעים",
+        "units": 700.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "11dd6088a51f",
+            "project_name": "בית הנוער",
+            "units_required": 700,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7000000.0,
+            "overlap": false
+          }
+        ]
+      }
+    ]
+  },
+  "גוננים א-ו": {
+    "by_key": {
+      "gan": {
+        "units": 33.0,
+        "overlap_units": 5.0,
+        "projects": [
+          {
+            "project_id": "33972f12af7b",
+            "project_name": "מתחם אילנות",
+            "units_required": 15,
+            "chumash": 1,
+            "plan_number": "101-1115484",
+            "plan_status": "בתכנון",
+            "estimate_nis": 33750000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "5c280d9124b8",
+            "project_name": "3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)",
+            "units_required": 3,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": false
+          },
+          {
+            "project_id": "d74d9737b55f",
+            "project_name": "מתחם מכוור/הורקניה",
+            "units_required": 3,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 3840000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "662fae4b8608",
+            "project_name": "גוננים, רח' אנטיגנוס 2, גן אנטיגנוס",
+            "units_required": 4,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 5120000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "af01c5a93f24",
+            "project_name": "בי\"ס פלא",
+            "units_required": -8,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": false
+          },
+          {
+            "project_id": "344ca623beb6",
+            "project_name": "מתחם דנמרק",
+            "units_required": 6,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7680000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "99dc6b63f03c",
+            "project_name": "3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-1056019",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3840000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "1cd88fd742c1",
+            "project_name": "פינוי בינוי אנטיגונוס 14",
+            "units_required": 1,
+            "chumash": null,
+            "plan_number": "101-0515635",
+            "plan_status": "בתכנון",
+            "estimate_nis": 1280000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "d2c863f6694e",
+            "project_name": "מעגלי יבנה",
+            "units_required": 2,
+            "chumash": 3,
+            "plan_number": "101-0836809",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "1063c12d7230",
+            "project_name": "פינוי בינוי מתחם נהוראי 5-11, 18-29",
+            "units_required": 2,
+            "chumash": 2,
+            "plan_number": "101-0778036",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "2bacf9a6d207",
+            "project_name": "יוסי בן יועזר – רבי תנחומא - אלכסנדריון",
+            "units_required": 2,
+            "chumash": 2,
+            "plan_number": "101-0944512",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "yesodi": {
+        "units": 108.0,
+        "overlap_units": 60.0,
+        "projects": [
+          {
+            "project_id": "1b0ca5f5678b",
+            "project_name": "מתחם אילנות",
+            "units_required": 24,
+            "chumash": 1,
+            "plan_number": "101-1115484",
+            "plan_status": "בתכנון",
+            "estimate_nis": 40000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "2e8348f0cc60",
+            "project_name": "בי\"ס פלא",
+            "units_required": 18,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בביצוע",
+            "estimate_nis": 35000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "e079f8f44f03",
+            "project_name": "מתחם דנמרק",
+            "units_required": 6,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 12000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "80bc07a46686",
+            "project_name": "יונתן זקס חוקר יוצר (יעבור לשבצ צפון-מזרחי במתחם המשתלה)",
+            "units_required": 18,
+            "chumash": 1,
+            "plan_number": "101-0250563",
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": true
+          },
+          {
+            "project_id": "c252751d6681",
+            "project_name": "מעגלי יבנה",
+            "units_required": 24,
+            "chumash": 3,
+            "plan_number": "101-0836809",
+            "plan_status": "בתכנון",
+            "estimate_nis": 40000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "121d082351d6",
+            "project_name": "בית ספר יסודי חדש מתחם בזק",
+            "units_required": 18,
+            "chumash": null,
+            "plan_number": "101-0833038",
+            "plan_status": "בתכנון",
+            "estimate_nis": 35000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "welfare_dept": {
+        "units": 3102.0,
+        "overlap_units": 352.0,
+        "projects": [
+          {
+            "project_id": "6690cd9ca363",
+            "project_name": "מתחם אילנות",
+            "units_required": 500,
+            "chumash": 2,
+            "plan_number": "101-1115484",
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "ef2cb2bf2921",
+            "project_name": "מתחם דנמרק",
+            "units_required": 1750,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 17500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "39522280edb3",
+            "project_name": "קנאי הגליל 3",
+            "units_required": 500,
+            "chumash": null,
+            "plan_number": "101-1056019",
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "469a50dded31",
+            "project_name": "פינוי בינוי אנטיגונוס 14",
+            "units_required": 100,
+            "chumash": null,
+            "plan_number": "101-0515635",
+            "plan_status": "בתכנון",
+            "estimate_nis": 1000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "f20ed8df03b6",
+            "project_name": "יהודה הנשיא 1",
+            "units_required": 102,
+            "chumash": null,
+            "plan_number": "101-0862904",
+            "plan_status": "הושלם תכנון",
+            "estimate_nis": 1020000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "3373e64111f7",
+            "project_name": "הרחבת בנין מאושר יהודה הנשיא 2",
+            "units_required": 150,
+            "chumash": null,
+            "plan_number": "101-0912337",
+            "plan_status": "הושלם תכנון",
+            "estimate_nis": 1500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "tipat_chalav": {
+        "units": 523.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "dc77c0284057",
+            "project_name": "מתחם אילנות",
+            "units_required": 900,
+            "chumash": 2,
+            "plan_number": "101-1115484",
+            "plan_status": "בתכנון",
+            "estimate_nis": 9000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "cd1ede5fb3b0",
+            "project_name": "אלעזר הגדול 4",
+            "units_required": -377,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 150800.0,
+            "overlap": false
+          }
+        ]
+      },
+      "matnas": {
+        "units": 4990.0,
+        "overlap_units": 840.0,
+        "projects": [
+          {
+            "project_id": "77752eb55f60",
+            "project_name": "מתחם אילנות",
+            "units_required": 1000,
+            "chumash": 2,
+            "plan_number": "101-1115484",
+            "plan_status": "בתכנון",
+            "estimate_nis": 10000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "9981e0dbd8ae",
+            "project_name": "מתחם דנמרק",
+            "units_required": 150,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 1500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "bf755cdcd114",
+            "project_name": "קנאי הגליל 3",
+            "units_required": 500,
+            "chumash": null,
+            "plan_number": "101-1056019",
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "645959762161",
+            "project_name": "מעגלי יבנה",
+            "units_required": 400,
+            "chumash": 3,
+            "plan_number": "101-0836809",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "6e1a92a6e877",
+            "project_name": "פינוי בינוי מתחם נהוראי 5-11, 18-28",
+            "units_required": 440,
+            "chumash": 2,
+            "plan_number": "101-0778035",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4400000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "30ba0bc0c22e",
+            "project_name": "בן יועזר 22",
+            "units_required": 2500,
+            "chumash": null,
+            "plan_number": "101-0926105",
+            "plan_status": "בתכנון",
+            "estimate_nis": 25000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "synagogue": {
+        "units": 1929.0,
+        "overlap_units": 855.0,
+        "projects": [
+          {
+            "project_id": "646576aa552e",
+            "project_name": "פת יעקב 3",
+            "units_required": -226,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 90400.0,
+            "overlap": false
+          },
+          {
+            "project_id": "515aee423c3e",
+            "project_name": "מכוור/רבי טרפון",
+            "units_required": 250,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 2500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "40b12b50fc3b",
+            "project_name": "מתחם דנמרק",
+            "units_required": 500,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "aaea1cadb818",
+            "project_name": "קנאי הגליל 3",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-1056019",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "dedfc025e040",
+            "project_name": "מעגלי יבנה",
+            "units_required": 355,
+            "chumash": 3,
+            "plan_number": "101-0836809",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3550000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "2dbdc8008eff",
+            "project_name": "פינוי בינוי מתחם נהוראי 5-11, 18-28",
+            "units_required": 250,
+            "chumash": 2,
+            "plan_number": "101-0778035",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "a3ed12e9cd8f",
+            "project_name": "יוסי בן יועזר – רבי תנחומא - אלכסנדריון",
+            "units_required": 250,
+            "chumash": 2,
+            "plan_number": "101-0944512",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "c1ffea937f5c",
+            "project_name": "פינת הרצוג/פת",
+            "units_required": 300,
+            "chumash": null,
+            "plan_number": "101-1182146",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "noar_club": {
+        "units": 303.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "3a58035e30e9",
+            "project_name": "מתחם מכוור/הורקניה",
+            "units_required": 3,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 3840000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "8cc607d995ab",
+            "project_name": "מתחם דנמרק",
+            "units_required": 300,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "al_yesodi": {
+        "units": 16.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "6f77681d7886",
+            "project_name": "עלמא אמונה ",
+            "units_required": 9,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 168750000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "0fca3ea8132c",
+            "project_name": "בי\"ס פלא",
+            "units_required": -2,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": false
+          },
+          {
+            "project_id": "9adbf7732e31",
+            "project_name": "מתחם דנמרק",
+            "units_required": 9,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 35000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "maon": {
+        "units": 24.0,
+        "overlap_units": 12.0,
+        "projects": [
+          {
+            "project_id": "65ea535f7509",
+            "project_name": "מתחם דנמרק",
+            "units_required": 6,
+            "chumash": 3,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 9000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "6c36c2494474",
+            "project_name": "מעון יום במתחם המשתלה",
+            "units_required": 3,
+            "chumash": 1,
+            "plan_number": "101-0250563",
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": true
+          },
+          {
+            "project_id": "d85fb056c94c",
+            "project_name": "מעגלי יבנה",
+            "units_required": 3,
+            "chumash": 3,
+            "plan_number": "101-0836809",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "76adb9daeaf6",
+            "project_name": "פינוי בינוי מתחם נהוראי 5-11, 18-29",
+            "units_required": 3,
+            "chumash": 2,
+            "plan_number": "101-0778036",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "6c5831d497fd",
+            "project_name": "עתידי באלעזר בן יאיר",
+            "units_required": 3,
+            "chumash": 2,
+            "plan_number": "101-0798306",
+            "plan_status": "הושלם תכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "a68c6851578d",
+            "project_name": "מעון יום בן זכאי 31",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-1025295",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "ae6ff93c02e4",
+            "project_name": "מעון יום בן יועזר 22",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-0926105",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "elderly_club": {
+        "units": 450.0,
+        "overlap_units": 450.0,
+        "projects": [
+          {
+            "project_id": "c96f8389036b",
+            "project_name": "פינוי בינוי מתחם נהוראי 5-11, 18-28",
+            "units_required": 250,
+            "chumash": 2,
+            "plan_number": "101-0778035",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "449c88dc68e1",
+            "project_name": " ניתאי הארבלי",
+            "units_required": 200,
+            "chumash": 1,
+            "plan_number": "101-0721902",
+            "plan_status": "הושלם תכנון",
+            "estimate_nis": 2000000.0,
+            "overlap": true
+          }
+        ]
+      }
+    },
+    "extras": [
+      {
+        "key": "extra:sport_field",
+        "label": "מגרש ספורט",
+        "units": 8666.0,
+        "overlap_units": 8666.0,
+        "projects": [
+          {
+            "project_id": "9d561a51f0bf",
+            "project_name": "רשב\"ג",
+            "units_required": 8666,
+            "chumash": 2,
+            "plan_number": "101-0857086",
+            "plan_status": "הושלם תכנון",
+            "estimate_nis": 12999000.0,
+            "overlap": true
+          }
+        ]
+      }
+    ]
+  },
+  "קטמונים ח-ט": {
+    "by_key": {
+      "yesodi": {
+        "units": 72.0,
+        "overlap_units": 24.0,
+        "projects": [
+          {
+            "project_id": "fb7ffb263d02",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 24,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 40000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "7aa958adad51",
+            "project_name": "מתחם קנגורו",
+            "units_required": 24,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 40000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "a694818f1af2",
+            "project_name": "בר יוחאי- פת",
+            "units_required": 12,
+            "chumash": null,
+            "plan_number": "101-0666032",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 24000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "368ab13f6ace",
+            "project_name": "סן מרטין 6-4",
+            "units_required": 12,
+            "chumash": null,
+            "plan_number": "101-1069764",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 24000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "maon": {
+        "units": 40.0,
+        "overlap_units": 16.0,
+        "projects": [
+          {
+            "project_id": "896b93d2d4ac",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 6,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 9000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "3718cd215ed6",
+            "project_name": "השומר 7-5",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "תקוע",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "29b96aa6b32d",
+            "project_name": "מתחם קנגורו",
+            "units_required": 9,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 13500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "23e6dfdcec8c",
+            "project_name": "מתחם אגד",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "67322ff5e9cc",
+            "project_name": "סן מרטין  15-5 (קדמת גונן)",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-0511923",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "e960920d4858",
+            "project_name": "מתחם 15, יצחק שדה 17-16",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-1002054",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "685f434ebca8",
+            "project_name": "השומר 15, יצחק שדה 8",
+            "units_required": 4,
+            "chumash": null,
+            "plan_number": "101-0950493",
+            "plan_status": "בתכנון",
+            "estimate_nis": 6000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "c4df176fcedf",
+            "project_name": "מתחם 06 אלמליח בר יוחאי",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "d33fd544511f",
+            "project_name": "סן מרטין 1",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "3186ab2a04d6",
+            "project_name": "סן מרטין 6-4",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-1069764",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "gan": {
+        "units": 169.0,
+        "overlap_units": 153.0,
+        "projects": [
+          {
+            "project_id": "0b09ea2feb41",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 8,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 10240000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "3080b87a8ac7",
+            "project_name": "מתחם קנגורו",
+            "units_required": 6,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 7680000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "b7d781f5efe0",
+            "project_name": "סן מרטין 22-26, בר יוחאי 12-14",
+            "units_required": 3,
+            "chumash": null,
+            "plan_number": "101-1063957",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3840000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "2dc800187083",
+            "project_name": "מתחם אגד",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "703a1e5d641f",
+            "project_name": "בר יוחאי- פת",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-0666032",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "e6d799ffc0e3",
+            "project_name": "סן מרטין  15-5 (קדמת גונן)",
+            "units_required": 4,
+            "chumash": null,
+            "plan_number": "101-0511923",
+            "plan_status": "בתכנון",
+            "estimate_nis": 5120000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "c21e425a7500",
+            "project_name": "מתחם 04 - סן מרטין ובר יוחאי 10",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-1008176",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "124f2b5079a1",
+            "project_name": "מתחם 04 - סן מרטין ובר יוחאי 10",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-1008176",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "5b71c67ea3db",
+            "project_name": "סן מרטין 3",
+            "units_required": 130,
+            "chumash": null,
+            "plan_number": "101-0565317",
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": true
+          },
+          {
+            "project_id": "aad5da55a956",
+            "project_name": "סן מרטין 1",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "12dd250984fe",
+            "project_name": "סן מרטין 6-4",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-1069764",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "b5248fdb07e1",
+            "project_name": "מתחם 01 בר יוחאי 1,3",
+            "units_required": 4,
+            "chumash": null,
+            "plan_number": "101-1033869",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 5120000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "8dd6dd2d1125",
+            "project_name": "סן מרטין 19-21",
+            "units_required": 2,
+            "chumash": null,
+            "plan_number": "101-1019157",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 2560000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "al_yesodi": {
+        "units": 84.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "da04462b4984",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 42,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 95000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "8d7c80399cc1",
+            "project_name": "מתחם קנגורו",
+            "units_required": 42,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 95000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "sport_hall": {
+        "units": 4170.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "696951d0faf5",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 2800,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 28000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "579cd96baf02",
+            "project_name": "מתחם קנגורו",
+            "units_required": 1370,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 13700000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "matnas": {
+        "units": 3700.0,
+        "overlap_units": 700.0,
+        "projects": [
+          {
+            "project_id": "5a6b894e2b6c",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 3000,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 30000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "889b2061b07d",
+            "project_name": "מתחם אגד",
+            "units_required": 500,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "efc593b398d7",
+            "project_name": "סן מרטין 25-23",
+            "units_required": 200,
+            "chumash": null,
+            "plan_number": "101-0477240",
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": true
+          }
+        ]
+      },
+      "welfare_dept": {
+        "units": 2075.0,
+        "overlap_units": 1075.0,
+        "projects": [
+          {
+            "project_id": "86e35885c2d7",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 1000,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 10000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "97a2f8bb10ea",
+            "project_name": "סן מרטין 22-26, בר יוחאי 12-14",
+            "units_required": 425,
+            "chumash": null,
+            "plan_number": "101-1063957",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4250000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "529ace1eb807",
+            "project_name": "מתחם אגד",
+            "units_required": 450,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "906948344016",
+            "project_name": "סן מרטין 25-23",
+            "units_required": 200,
+            "chumash": null,
+            "plan_number": "101-0477240",
+            "plan_status": "בביצוע",
+            "estimate_nis": null,
+            "overlap": true
+          }
+        ]
+      },
+      "noar_club": {
+        "units": 1100.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "43bf547f19d3",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 1000,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 10000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "b3217dd7e01c",
+            "project_name": "מרגולין 3",
+            "units_required": 100,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 1000000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "synagogue": {
+        "units": 6550.0,
+        "overlap_units": 4200.0,
+        "projects": [
+          {
+            "project_id": "f092182fb4cf",
+            "project_name": "מתחם גבעת גונן",
+            "units_required": 900,
+            "chumash": 1,
+            "plan_number": "101-1166586",
+            "plan_status": "בתכנון",
+            "estimate_nis": 9000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "5ae501dc695b",
+            "project_name": "השומר 8",
+            "units_required": 150,
+            "chumash": 1,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 1500000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "01dc472f3418",
+            "project_name": "מתחם קנגורו",
+            "units_required": 500,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "3cb0fa0c7447",
+            "project_name": "סן מרטין 22-26, בר יוחאי 12-14",
+            "units_required": 400,
+            "chumash": null,
+            "plan_number": "101-1063957",
+            "plan_status": "בתכנון",
+            "estimate_nis": 4000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "9d68f83e9fcd",
+            "project_name": "מתחם אגד",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "8c613db548b5",
+            "project_name": "סן מרטין 19-21",
+            "units_required": 1450,
+            "chumash": null,
+            "plan_number": "101-1019157",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 14500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "44b6c9c87d11",
+            "project_name": "בר יוחאי- פת",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-0666032",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "c3f46e2c2c52",
+            "project_name": "סן מרטין  15-5 (קדמת גונן)",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-0511923",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "7867fd2b12a2",
+            "project_name": "מתחם 15, יצחק שדה 17-16",
+            "units_required": 300,
+            "chumash": null,
+            "plan_number": "101-1002054",
+            "plan_status": "בתכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "10c83ec34898",
+            "project_name": "מתחם 04 - סן מרטין ובר יוחאי 10",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-1008176",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "6ab6a075fc11",
+            "project_name": "מתחם 04 - סן מרטין ובר יוחאי 10",
+            "units_required": 250,
+            "chumash": null,
+            "plan_number": "101-1008176",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "a97dba021504",
+            "project_name": "מתחם 06 אלמליח בר יוחאי",
+            "units_required": 400,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 4000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "9feb05740b7a",
+            "project_name": "סן מרטין 1",
+            "units_required": 400,
+            "chumash": null,
+            "plan_number": null,
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 4000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "1aba094fe1b6",
+            "project_name": "סן מרטין 6-4",
+            "units_required": 500,
+            "chumash": null,
+            "plan_number": "101-1069764",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "e819d41e80f5",
+            "project_name": "מתחם 01 בר יוחאי 1,3",
+            "units_required": 300,
+            "chumash": null,
+            "plan_number": "101-1033869",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 3000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "mikve": {
+        "units": 250.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "d9e9cca35eb4",
+            "project_name": "מתחם קנגורו",
+            "units_required": 250,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 2500000.0,
+            "overlap": false
+          }
+        ]
+      },
+      "tipat_chalav": {
+        "units": 500.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "5beb99d17f1e",
+            "project_name": "מתחם קנגורו",
+            "units_required": 500,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 5000000.0,
+            "overlap": false
+          }
+        ]
+      }
+    },
+    "extras": [
+      {
+        "key": "extra:sport_field",
+        "label": "מגרש ספורט",
+        "units": 8580.0,
+        "overlap_units": 0.0,
+        "projects": [
+          {
+            "project_id": "4bfada4d34ad",
+            "project_name": "מתחם קנגורו",
+            "units_required": 8580,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 85800000.0,
+            "overlap": false
+          }
+        ]
+      },
+      {
+        "key": "extra:culture",
+        "label": "שירותי תרבות",
+        "units": 8398.0,
+        "overlap_units": 2798.0,
+        "projects": [
+          {
+            "project_id": "5a9c649282be",
+            "project_name": "מתחם קנגורו",
+            "units_required": 5600,
+            "chumash": 2,
+            "plan_number": null,
+            "plan_status": "בתכנון",
+            "estimate_nis": 56000000.0,
+            "overlap": false
+          },
+          {
+            "project_id": "166424cb907e",
+            "project_name": "מתחם אגד",
+            "units_required": 1519,
+            "chumash": null,
+            "plan_number": "101-0252379",
+            "plan_status": "בתכנון",
+            "estimate_nis": 15190000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "bf24bdff5119",
+            "project_name": "סן מרטין  15-5 (קדמת גונן)",
+            "units_required": 279,
+            "chumash": null,
+            "plan_number": "101-0511923",
+            "plan_status": "בתכנון",
+            "estimate_nis": 2790000.0,
+            "overlap": true
+          },
+          {
+            "project_id": "7c5b33a2d9e1",
+            "project_name": "סן מרטין 6-4",
+            "units_required": 1000,
+            "chumash": null,
+            "plan_number": "101-1069764",
+            "plan_status": "טרם תכנון",
+            "estimate_nis": 10000000.0,
+            "overlap": true
+          }
+        ]
+      }
+    ]
+  },
+  "פת": {
+    "by_key": {
+      "synagogue": {
+        "units": 150.0,
+        "overlap_units": 150.0,
+        "projects": [
+          {
+            "project_id": "2eea35ab4486",
+            "project_name": "ברל לוקר 13",
+            "units_required": 150,
+            "chumash": 1,
+            "plan_number": "101-0397752",
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 1500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "welfare_dept": {
+        "units": 150.0,
+        "overlap_units": 150.0,
+        "projects": [
+          {
+            "project_id": "5af9fe451eb7",
+            "project_name": "ברל לוקר 13",
+            "units_required": 150,
+            "chumash": 1,
+            "plan_number": "101-0397752",
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 1500000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "tipat_chalav": {
+        "units": 311.0,
+        "overlap_units": 311.0,
+        "projects": [
+          {
+            "project_id": "c5dc9531c061",
+            "project_name": "ברל לוקר 13",
+            "units_required": 311,
+            "chumash": 1,
+            "plan_number": "101-0397752",
+            "plan_status": "טרם ביצוע",
+            "estimate_nis": 3110000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "matnas": {
+        "units": 800.0,
+        "overlap_units": 800.0,
+        "projects": [
+          {
+            "project_id": "9230dab1ec78",
+            "project_name": "אריה בעהם 3",
+            "units_required": 800,
+            "chumash": 3,
+            "plan_number": "101-1121920",
+            "plan_status": "בתכנון",
+            "estimate_nis": 8000000.0,
+            "overlap": true
+          }
+        ]
+      },
+      "yesodi": {
+        "units": 18.0,
+        "overlap_units": 18.0,
+        "projects": [
+          {
+            "project_id": "de509b547f5d",
+            "project_name": "מבוא דב רוזנשטיין 7",
+            "units_required": 18,
+            "chumash": 3,
+            "plan_number": "101-1121920",
+            "plan_status": "בתכנון",
+            "estimate_nis": 35000000.0,
+            "overlap": true
+          }
+        ]
+      }
+    },
+    "extras": []
+  }
+}

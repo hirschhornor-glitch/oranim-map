@@ -1,0 +1,508 @@
+{
+  "_doc": "Cache of (project_name, sub_neighborhood) → coordinate, used by build_projector_gonenim.py for features that no other lookup matched. Manual entries come first; Nominatim auto-fills the rest. Keys are 'project_name|sub_neighborhood'. Set lat/lon to null to record a 'tried but failed' miss (so we don't re-query every build).",
+  "מתחם דנמרק|גוננים א-ו": {
+    "lat": 31.75458,
+    "lon": 35.20367,
+    "source": "nominatim:תיכון דנמרק",
+    "note": "התיכון נמצא ברחוב יהודה הנשיא בקטמונים (גוננים)"
+  },
+  "בית הנוער|גוננים א-ו": {
+    "lat": 31.75946,
+    "lon": 35.20105,
+    "source": "nominatim:בית הנוער העברי",
+    "note": "בית הנוער העברי, הרב הרצוג 105"
+  },
+  "בית הנוער|רסקו": {
+    "lat": 31.75946,
+    "lon": 35.20105,
+    "source": "nominatim:בית הנוער העברי",
+    "note": "בית הנוער העברי, הרב הרצוג 105"
+  },
+  "מעבר עבדי|רסקו": {
+    "lat": 31.7629,
+    "lon": 35.20138,
+    "source": "nominatim:מעלות עבאדי",
+    "note": "מעלות יצחק א' עבאדי"
+  },
+  "חיבור למדרגות עבדי|רסקו": {
+    "lat": 31.7629,
+    "lon": 35.20138,
+    "source": "nominatim:מעלות עבאדי"
+  },
+  "המשך מעבר עבדי|רסקו": {
+    "lat": 31.7629,
+    "lon": 35.20138,
+    "source": "nominatim:מעלות עבאדי"
+  },
+  "מעלות שנהר|רסקו": {
+    "lat": 31.7638717,
+    "lon": 35.2025436,
+    "source": "nominatim:מעלות שנהר רסקו ירושלים"
+  },
+  "מעבר הפילבוקס|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "גינה קהילתית ברודי|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "נתיבי זהרה|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "שצ\"פ זהרה|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "גינת רחל אלישר|רסקו": {
+    "lat": 31.763797,
+    "lon": 35.2024546,
+    "source": "nominatim:גינת רחל אלישר רסקו ירושלים"
+  },
+  "מעבר ה\"ר מגן חביבה|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר ה\"ר מפארק נילי|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "המשך נתיבי זהרה|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "הארכת נתיבי לגרלף|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם לוריא|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "ציר מבני ציבור|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "חוות הנוער|רסקו": {
+    "lat": 31.7602117,
+    "lon": 35.2035647,
+    "source": "nominatim:חוות הנוער רסקו ירושלים"
+  },
+  "שימור מעבר קיים טשרניחובסקי 48|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר חציה בטשרניחובסקי|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר חציה בשי עגנון|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מסלול תח\"צ שכונת רסקו|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "צומת ניות|רסקו": {
+    "lat": 31.7670463,
+    "lon": 35.2046894,
+    "source": "nominatim:צומת ניות רסקו ירושלים"
+  },
+  "מתחם אנטיגונוס|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם רשב\"ג|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם ברניקי, פת|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מהורקניה לניקנור|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגינת ניקנור לרח' ניקנור|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגינת ניקנור לרח' יהודה הנשיא|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגן אלכסנדריון לרח' קנאי הגליל|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מציר יהודה הנשיא לרח' אלכסנדריון|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מרח' קנאי הגליל לת. רק\"ל בפת|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מרח' בן יועזר לרח' פת|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מדרך האמוראים לרח' אליעזר הגדול|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "רח' אליעזר הגדול לפארק גוננים|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מרח' אליעזר הגדול למרכז מסחרי|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מאנטיגונוס לגן אנטיגונוס|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מבן זכאי לבני בתירא|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מבני בתירא לחיים יחיל|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "גינת בן יועזר פינת תנחומא|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגרש קט רגל צמוד לגן אנטיגונוס|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "ניקנור|גוננים א-ו": {
+    "lat": 31.7581371,
+    "lon": 35.1996536,
+    "source": "nominatim:ניקנור ירושלים"
+  },
+  "חננאל|גוננים א-ו": {
+    "lat": 31.7584322,
+    "lon": 35.1997334,
+    "source": "nominatim:חננאל ירושלים"
+  },
+  "ניתאי הארבלי|גוננים א-ו": {
+    "lat": 31.753443,
+    "lon": 35.2005096,
+    "source": "nominatim:ניתאי הארבלי ירושלים"
+  },
+  "אלעזר בן יאיר|גוננים א-ו": {
+    "lat": 31.7532116,
+    "lon": 35.2020435,
+    "source": "nominatim:אלעזר בן יאיר ירושלים"
+  },
+  "רשב\"ג|גוננים א-ו": {
+    "lat": 31.7552041,
+    "lon": 35.2086274,
+    "source": "nominatim:רשב\"ג ירושלים"
+  },
+  "יוסי בן יועזר|גוננים א-ו": {
+    "lat": 31.756468,
+    "lon": 35.2086462,
+    "source": "nominatim:יוסי בן יועזר ירושלים"
+  },
+  "אנטיגונוס|גוננים א-ו": {
+    "lat": 31.7565472,
+    "lon": 35.2071443,
+    "source": "nominatim:אנטיגונוס ירושלים"
+  },
+  "מעגלי יבנה|גוננים א-ו": {
+    "lat": 31.7572272,
+    "lon": 35.2112515,
+    "source": "nominatim:מעגלי יבנה ירושלים"
+  },
+  "שדרוג מעבר בן בבא-רח' בן זכאי|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם בן זכאי-אנטיגונוס-אליעזר הגדול|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "בי\"ס פלא|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "שביל גוננים|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "שב\"צ קנאי הגליל|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "פת יעקב 3|גוננים א-ו": {
+    "lat": 31.7532863,
+    "lon": 35.1998689,
+    "source": "nominatim:פת יעקב 3 ירושלים"
+  },
+  "מכוור/רבי טרפון|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "עלמא אמונה |גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "גוננים, רח' אנטיגנוס 2, גן אנטיגנוס|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "אלעזר הגדול 4|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "תכנון תחנות תח\"צ קנאי הגליל יוסי בן יועזר|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "תב\"ע לכביש 34 עתידי|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם מכוור/הורקניה|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "צומת הכניסה הצפונית|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "שדרוג פינת משחק בדב הוז|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מרבי צדוק לסן מרטין|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מהכניסה לבי\"ס הדו לשוני עד לדב יוסף|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגן גולדשטיין למרכז פאני קפלן|פת": {
+    "lat": 31.752,
+    "lon": 35.203,
+    "source": "manual:approx פת"
+  },
+  "מפאני קפלן לברל לוקר|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מגן אולריך למעבר שמואל פינלס|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "דב הוז|קטמונים ח-ט": {
+    "lat": 31.7561265,
+    "lon": 35.1957599,
+    "source": "nominatim:דב הוז ירושלים"
+  },
+  "אלמליח|קטמונים ח-ט": {
+    "lat": 31.7533956,
+    "lon": 35.192104,
+    "source": "nominatim:אלמליח ירושלים"
+  },
+  "הנוטרים|קטמונים ח-ט": {
+    "lat": 31.7556409,
+    "lon": 35.1964783,
+    "source": "nominatim:הנוטרים ירושלים"
+  },
+  "השומר|קטמונים ח-ט": {
+    "lat": 31.7547114,
+    "lon": 35.1966936,
+    "source": "nominatim:השומר ירושלים"
+  },
+  "יצחק שדה|קטמונים ח-ט": {
+    "lat": 31.7542446,
+    "lon": 35.1973887,
+    "source": "nominatim:יצחק שדה ירושלים"
+  },
+  "בר יוחאי|קטמונים ח-ט": {
+    "lat": 31.7538655,
+    "lon": 35.1928142,
+    "source": "nominatim:בר יוחאי ירושלים"
+  },
+  "ברל לוקר|פת": {
+    "lat": 31.751267,
+    "lon": 35.202518,
+    "source": "nominatim:ברל לוקר פת ירושלים"
+  },
+  "ציר סן מרטין|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "תצפית עירונית ברבי צדוק|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם הפסגה (בית שוויץ)|קטמונים ח-ט": {
+    "lat": 31.755,
+    "lon": 35.209,
+    "source": "manual:מתחם הפסגה approx in קטמונים"
+  },
+  "חיבור בין השכונה לפארק המסילה|פת": {
+    "lat": 31.75336,
+    "lon": 35.20956,
+    "source": "nominatim:פארק המסילה"
+  },
+  "מתחם קנגורו|קטמונים ח-ט": {
+    "lat": 31.7524,
+    "lon": 35.1932,
+    "source": "manual:אברהם אלמליח (אזור קטמונים, סמוך ל-מתחם 06 אלמליח-בר יוחאי)",
+    "note": "מיקום משוער - הרחוב 'הקנגורו' לא נמצא ב-OSM"
+  },
+  "מתחם 06 אלמליח בר יוחאי|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "סן מרטין 1|קטמונים ח-ט": {
+    "lat": 31.7564261,
+    "lon": 35.1946824,
+    "source": "nominatim:סן מרטין 1 ירושלים"
+  },
+  "בית שוויץ (מתחם הפסגה)|קטמונים ח-ט": {
+    "lat": 31.755,
+    "lon": 35.209,
+    "source": "manual:בית שוויץ approx"
+  },
+  "מוריס שיפר 20|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "שיפור תח\"צ בקטמונים ח-ט|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "חידוש רחוב אברהם אלמליח|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "חיבור רחוב ברל לוקר לדב יוסף|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "רח' אברהם ארנסט|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "רכיבת אופניים רח' פת בקטע דב יוסף/ברל לוקר מזרח|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעלות סלמה לגרלף|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "ציר הרצוג|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר חציה בחיים ברלין|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר חציה בטייסים|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מעבר חציה בדוד שמעוני|רסקו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "קנאי הגליל|גוננים א-ו": {
+    "lat": 31.7529703,
+    "lon": 35.201332,
+    "source": "nominatim:קנאי הגליל ירושלים"
+  },
+  "מדב יוסף למבוא רוזנשטיין|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "פינוי בינוי מתחם נהוראי 5-11, 18-29|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  }
+}
