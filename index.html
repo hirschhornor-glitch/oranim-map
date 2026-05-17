@@ -2650,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-17-zohara-relocate';
+        const APP_VERSION = '2026-05-17-projector-wip-hidden';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3086,7 +3086,9 @@
                 title: 'פרוייקטור שכונתי',
                 layers: [
                     { id: 'projector_talpiot', name: 'פרוייקטור תלפיות', desc: 'גבול ההתייחסות של הפרוייקטור השכונתי תלפיות', on: false },
-                    { id: 'projector_gonenim', name: 'גוננים — תכנית עבודה מתכללת', desc: 'המלצות פרוייקטור גוננים — 113 פרויקטים ב-3 תחומים (פרוגרמה/מרחב ציבורי/תנועה); מקור: מהדורה 4', on: false },
+                    { id: 'projector_gonenim', name: 'גוננים — תכנית עבודה מתכללת', desc: 'המלצות פרוייקטור גוננים — 113 פרויקטים ב-3 תחומים (פרוגרמה/מרחב ציבורי/תנועה); מקור: מהדורה 4', on: false,
+                      // WIP: many polygons still need to be refined; only show on local dev until accuracy improves.
+                      hiddenFromList: !(typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) },
                 ]
             },
             givat_hamatos_ownerships: {
@@ -4013,11 +4015,9 @@
         ];
 
         const EASEMENTS_LEGEND = [
-            { label: 'לרכב', color: '#dc2626' },
-            { label: 'להולכי רגל', color: '#22c55e' },
-            { label: 'לרכב + הולכי רגל (מעורב)', color: '#a855f7' },
-            { label: 'אחר', color: '#facc15' },
-            { label: 'לא מסווג', color: '#fca5a5' },
+            { label: 'רכב', color: '#dc2626' },
+            { label: 'רגלי', color: '#22c55e' },
+            { label: 'כללי', color: '#a855f7' },
         ];
 
         const MOSADOT_LEGEND = [
@@ -13258,41 +13258,23 @@
                     geoLayersRef.current.rakal = rakalLayer;
                 }
 
-                // --- Easements (זיקות הנאה) — polygon hatching from PDF vector extraction ---
+                // --- Easements (זיקות הנאה) — polygons from iplan Xplan/MapServer/3 ---
                 if (layers['easements'] && gd.easements) {
                     const EASEMENT_STYLES = {
-                        'לרכב':            { color: '#dc2626', fillColor: '#dc2626', dashArray: null,   weight: 2, fillOpacity: 0.30 },
-                        'להולכי רגל':       { color: '#15803d', fillColor: '#22c55e', dashArray: '4,3', weight: 2, fillOpacity: 0.35 },
-                        'לרכב והולכי רגל':  { color: '#7c3aed', fillColor: '#a855f7', dashArray: null,  weight: 2, fillOpacity: 0.30 },
-                        'אחר':             { color: '#a16207', fillColor: '#facc15', dashArray: null,   weight: 2, fillOpacity: 0.30 },
-                        'default':         { color: '#dc2626', fillColor: '#fca5a5', dashArray: null,   weight: 2, fillOpacity: 0.35 },
-                    };
-                    const EASEMENT_MARKER_STYLES = {
-                        'לרכב':            { fillColor: '#3b82f6', color: '#1d4ed8' },
-                        'להולכי רגל':       { fillColor: '#22c55e', color: '#15803d' },
-                        'לרכב והולכי רגל':  { fillColor: '#8b5cf6', color: '#6d28d9' },
-                        'אחר':             { fillColor: '#facc15', color: '#a16207' },
-                        'default':         { fillColor: '#9ca3af', color: '#4b5563' },
+                        'רכב':    { color: '#dc2626', fillColor: '#dc2626', dashArray: null,  weight: 2, fillOpacity: 0.30 },
+                        'רגלי':   { color: '#15803d', fillColor: '#22c55e', dashArray: '4,3', weight: 2, fillOpacity: 0.35 },
+                        'כללי':   { color: '#7c3aed', fillColor: '#a855f7', dashArray: null,  weight: 2, fillOpacity: 0.30 },
+                        'default':{ color: '#7c3aed', fillColor: '#a855f7', dashArray: null,  weight: 2, fillOpacity: 0.30 },
                     };
                     const easementsLayer = L.geoJSON(gd.easements, {
                         style: f => EASEMENT_STYLES[f.properties.easement_type] || EASEMENT_STYLES.default,
-                        pointToLayer: (f, latlng) => {
-                            const s = EASEMENT_MARKER_STYLES[f.properties.easement_type] || EASEMENT_MARKER_STYLES.default;
-                            return L.circleMarker(latlng, {
-                                radius: 8,
-                                fillColor: s.fillColor,
-                                color: s.color,
-                                weight: 2,
-                                fillOpacity: 0.85,
-                                opacity: 1,
-                            });
-                        },
                         onEachFeature: (feat, lyr) => {
                             const p = feat.properties || {};
                             const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                             const typeLabel = p.easement_type || 'לא מסווג';
-                            const sizeM = p.size_meters_clipped || p.size_meters;
-                            const sizeStr = Array.isArray(sizeM) ? `${sizeM[0]}×${sizeM[1]} מ׳` : '';
+                            const areaStr = (typeof p.shape_area === 'number')
+                                ? `${Math.round(p.shape_area).toLocaleString('he-IL')} מ"ר`
+                                : '';
                             const mavatLink = p.mavat_url
                                 ? ` <a href="${escape(p.mavat_url)}" target="_blank" style="color:#1d4ed8">[Mavat]</a>`
                                 : '';
@@ -13305,10 +13287,8 @@
                                   (p.plan_name_he ? `<div><b>שם:</b> ${escape(p.plan_name_he)}</div>` : '') +
                                   (p.minahak ? `<div><b>מנהל:</b> ${escape(p.minahak)}</div>` : '') +
                                   `<div><b>סוג:</b> <span style="font-weight:bold">${escape(typeLabel)}</span></div>` +
-                                  (p.layer_type ? `<div><b>שכבה:</b> ${p.layer_type === 'approved' ? 'מאושרת' : 'מצב קיים'}</div>` : '') +
-                                  (sizeStr ? `<div><b>גודל:</b> ${escape(sizeStr)}</div>` : '') +
-                                  (p.was_clipped ? '<div style="color:#a16207;font-size:11px;margin-top:3px">(נחתך לגבול התכנית)</div>' : '') +
-                                  (p.source ? `<div style="color:#888;font-size:10px;margin-top:3px">${escape(p.source)}</div>` : '') +
+                                  (p.mavat_name ? `<div style="color:#666;font-size:11px;margin-top:2px">${escape(p.mavat_name)}</div>` : '') +
+                                  (areaStr ? `<div style="margin-top:3px"><b>שטח:</b> ${areaStr}</div>` : '') +
                                 '</div></div>';
                             lyr.bindPopup(html, { maxWidth: 320 });
                         }
