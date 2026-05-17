@@ -90,7 +90,7 @@
       "101-0502948"
     ],
     "overlap_features": [
-      "פינוי בינוי דב קמחי-טשרניחובסקי ירושלים זיהוי וסיווג תכנית עדכון אחרון 16/05/2024 סה\"כ שטח בדונם 3.386 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/בחלק "
+      "פינוי בינוי דב קמחי-טשרניחובסקי"
     ]
   },
   "3864d70b4f4c": {
@@ -221,7 +221,7 @@
   },
   "a281b4a91655": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -269,7 +269,7 @@
   },
   "951aee69a434": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -683,7 +683,7 @@
   },
   "5c280d9124b8": {
     "plan_number": null,
-    "match_quality": "tashrir",
+    "match_quality": "approx",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -974,12 +974,8 @@
   "9d561a51f0bf": {
     "plan_number": "101-0857086",
     "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0857086"
-    ],
-    "overlap_features": [
-      "מסחר משולב מגורים, שצ\"פ משולב שב\"צ, צפונית לפארק המסילה ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 10.714 סוג תכנית מתאר מקומית סוג איחוד וחלוקה ללא איחוד וחלוקה סמכות מחוזית היתרים"
-    ]
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "6c5831d497fd": {
     "plan_number": "101-0798306",
@@ -1038,7 +1034,7 @@
       "101-0833038"
     ],
     "overlap_features": [
-      "התחדשות עירונית ניקנור-יעקב פת- מתחם בזק ירושלים זיהוי וסיווג תכנית עדכון אחרון 16/09/2024 סה\"כ שטח בדונם 4.237 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכ"
+      "התחדשות עירונית ניקנור-יעקב פת- מתחם בזק"
     ]
   },
   "c1ffea937f5c": {
@@ -1066,14 +1062,22 @@
   "ae6ff93c02e4": {
     "plan_number": "101-0926105",
     "match_quality": "plan_number",
-    "overlap_plan_names": [],
-    "overlap_features": []
+    "overlap_plan_names": [
+      "101-0926105"
+    ],
+    "overlap_features": [
+      "מבנה משולב למגורים, למסחר ולמבני-ציבור, בן-יועזר 22, ירושלים "
+    ]
   },
   "30ba0bc0c22e": {
     "plan_number": "101-0926105",
     "match_quality": "plan_number",
-    "overlap_plan_names": [],
-    "overlap_features": []
+    "overlap_plan_names": [
+      "101-0926105"
+    ],
+    "overlap_features": [
+      "מבנה משולב למגורים, למסחר ולמבני-ציבור, בן-יועזר 22, ירושלים "
+    ]
   },
   "d295d8a68879": {
     "plan_number": null,
@@ -1949,7 +1953,7 @@
   },
   "1f999561ba73": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "parcels",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1987,13 +1991,13 @@
   },
   "a34aeb281e9c": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "parcels",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "6844c77272e1": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "parcels",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -2005,7 +2009,7 @@
   },
   "ff11ae02d2b9": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "parcels",
     "overlap_plan_names": [],
     "overlap_features": []
   },

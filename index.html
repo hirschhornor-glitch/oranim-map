@@ -198,6 +198,235 @@
         .archived-popup .leaflet-popup-content-wrapper {
             background: #3a3a3a;
         }
+        /* Projector recommendations: light theme — keeps the banner highlights readable.
+           Override every text color the default popup CSS sets on the dark theme. */
+        .projector-popup .leaflet-popup-content-wrapper {
+            background: #ffffff;
+            color: #1c1c1c;
+            border-radius: 10px;
+        }
+        .projector-popup .leaflet-popup-content,
+        .projector-popup .leaflet-popup-content * {
+            color: #1c1c1c;
+        }
+        .projector-popup .leaflet-popup-tip {
+            background: #ffffff !important;
+        }
+        .projector-popup .leaflet-popup-content {
+            margin: 0 !important;
+            width: 320px !important;
+        }
+
+        /* ---- Popup UX (.pp-*) ---- */
+        .pp-root {
+            font-family: 'Assistant', 'Heebo', Arial, sans-serif;
+            direction: rtl;
+            text-align: right;
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #1c1c1c;
+            --pp-accent: #616161;
+        }
+        .pp-header {
+            background: linear-gradient(135deg, var(--pp-accent), color-mix(in srgb, var(--pp-accent) 75%, #000));
+            color: #fff;
+            padding: 10px 12px 8px;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 3px solid color-mix(in srgb, var(--pp-accent) 60%, #000);
+        }
+        .pp-header * { color: #fff !important; }
+        .pp-title {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin: 0;
+            word-break: keep-all;
+        }
+        .pp-subtitle {
+            font-size: 11px;
+            opacity: 0.88;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+        .pp-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 5px;
+            padding: 8px 12px 4px;
+        }
+        .pp-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 11px;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        .pp-card {
+            margin: 8px 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+        .pp-card--ps {
+            background: #f0f7ff;
+            border-right: 4px solid #0277bd;
+        }
+        .pp-card--kar {
+            background: #faf3ec;
+            border-right: 4px solid #8d6e63;
+        }
+        .pp-card-header {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #5d4037;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .pp-card-icon { font-size: 13px; }
+        .pp-quote {
+            font-weight: 600;
+            line-height: 1.55;
+        }
+        .pp-quote--ps { color: #01579b; font-size: 12px; }
+        .pp-quote--kar { color: #3e2723; font-size: 12px; }
+        .pp-facts {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #1c1c1c;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px 8px;
+        }
+        .pp-detail-row {
+            display: flex;
+            gap: 6px;
+            padding: 3px 0;
+            font-size: 11.5px;
+        }
+        .pp-detail-row--multiline { flex-direction: column; gap: 2px; }
+        .pp-detail-label {
+            color: #607d8b;
+            font-weight: 600;
+            min-width: 80px;
+        }
+        .pp-desc {
+            padding: 4px 12px 6px;
+            font-size: 11.5px;
+            color: #424242;
+            line-height: 1.55;
+        }
+        .pp-overlap {
+            margin: 6px 10px;
+            padding: 6px 8px;
+            background: #fff8e1;
+            border-right: 3px solid #fbc02d;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .pp-overlap-sub {
+            color: #6d4c00;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+        .pp-warn {
+            color: #a16207;
+            font-size: 10.5px;
+            background: #fff8e1;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .pp-details {
+            margin: 4px 10px 8px;
+            border-top: 1px solid #eceff1;
+            padding-top: 4px;
+        }
+        .pp-details > summary {
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1976d2;
+            padding: 4px 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .pp-details > summary::-webkit-details-marker { display: none; }
+        .pp-details > summary::before { content: '▸'; transition: transform .15s; display: inline-block; }
+        .pp-details[open] > summary::before { transform: rotate(90deg); }
+        .pp-details-body {
+            padding: 4px 0 2px;
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+        .pp-actions {
+            display: flex;
+            gap: 6px;
+            padding: 8px 10px 10px;
+            border-top: 1px solid #eceff1;
+            background: #fafafa;
+            border-radius: 0 0 10px 10px;
+            flex-wrap: wrap;
+        }
+        .pp-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 11px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color .12s, transform .05s;
+            border: none;
+            font-family: inherit;
+        }
+        .pp-action:hover { transform: translateY(-1px); }
+        .pp-action--primary {
+            background: linear-gradient(135deg, #fff4cc, #ffe082);
+            color: #5d4037 !important;
+            border: 1px solid #c79100;
+        }
+        .pp-action--primary:hover {
+            background: linear-gradient(135deg, #ffe082, #ffca28);
+        }
+        .pp-action--link {
+            background: transparent;
+            color: #0d47a1 !important;
+            border: 1px solid #bbdefb;
+            cursor: default;
+        }
+        /* תשריט-style permanent labels on passages + crossings. Mirror the
+           green/red chips drawn on the projector's official planning map. */
+        .leaflet-tooltip.tashrit-label {
+            font-family: Assistant, Arial, sans-serif;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            direction: rtl;
+        }
+        .leaflet-tooltip.tashrit-label-passage {
+            background: #1b5e20;
+            color: #ffffff;
+            border: 1px solid #0d3a13;
+        }
+        .leaflet-tooltip.tashrit-label-crossing {
+            background: #d32f2f;
+            color: #ffffff;
+            border: 1px solid #7f0000;
+        }
+        /* Hide the default tooltip arrow — the chip looks cleaner without it. */
+        .leaflet-tooltip.tashrit-label::before { display: none; }
         .archived-popup .popup-header {
             background: linear-gradient(135deg, #4a4a4a, #3a3a3a) !important;
         }
@@ -2421,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-12';
+        const APP_VERSION = '2026-05-17-zohara-relocate';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11596,76 +11825,237 @@
                         html: `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">${inner}${star}</svg>`,
                     });
                 }
+                // === Refined popup UX
+                // Visual hierarchy:
+                //   1) Big title + subtitle row (project type · sub-neighborhood)
+                //   2) Colored pills row (status, chumash, units, estimate) — fast scan
+                //   3) Description / banner content (only when useful)
+                //   4) Single details disclosure for everything else
+                //   5) Sticky action button row at the bottom
                 function buildProjectorPopup(p) {
                     const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                     const cfg = PROJECTOR_DOMAIN_STYLES[p.domain] || { color: '#616161', label: p.domain_he || '' };
                     const fmtNum = n => (typeof n === 'number') ? n.toLocaleString('he-IL') : escape(n);
                     const isOverlap = Array.isArray(p.overlap_plan_names) && p.overlap_plan_names.length > 0;
-                    const chumashLbl = p.chumash ? `חומש ${p.chumash}` : (p.chumash_raw || 'ללא חומש');
-                    const planLink = p.plan_number
-                        ? `<button data-action="open-plan" data-plan-name="${escape(p.plan_number)}" style="margin-top:4px;padding:2px 8px;font-size:11px;cursor:pointer;background:#fff4cc;border:1px solid #c79100;border-radius:3px">פתח תב״ע ${escape(p.plan_number)}</button>`
+
+                    // Status → colored pill (color reflects planning maturity)
+                    const statusPill = (() => {
+                        const s = p.plan_status;
+                        if (!s) return '';
+                        const palette = {
+                            'מאושר':    { bg: '#e8f5e9', fg: '#1b5e20', border: '#43a047' },
+                            'מופקד':    { bg: '#fffde7', fg: '#827717', border: '#cddc39' },
+                            'בתכנון':   { bg: '#e3f2fd', fg: '#0d47a1', border: '#1976d2' },
+                            'טרום תכנון': { bg: '#fce4ec', fg: '#880e4f', border: '#ad1457' },
+                            'טרם תכנון': { bg: '#fce4ec', fg: '#880e4f', border: '#ad1457' },
+                            'בביצוע':   { bg: '#fff3e0', fg: '#bf360c', border: '#f57c00' },
+                            'הסתיים':   { bg: '#e0f2f1', fg: '#004d40', border: '#00897b' },
+                            'בוצע':     { bg: '#e0f2f1', fg: '#004d40', border: '#00897b' },
+                        };
+                        const c = palette[s] || { bg: '#eceff1', fg: '#37474f', border: '#90a4ae' };
+                        return `<span class="pp-pill" style="background:${c.bg};color:${c.fg};border:1px solid ${c.border}">⏳ ${escape(s)}</span>`;
+                    })();
+
+                    // Chumash → numeric pill (1=red, 2=amber, 3=green-blue → timeline)
+                    const chumashPill = (() => {
+                        if (!p.chumash) return p.chumash_raw
+                            ? `<span class="pp-pill" style="background:#eceff1;color:#546e7a;border:1px solid #b0bec5">📅 ${escape(p.chumash_raw)}</span>`
+                            : '';
+                        const palette = {
+                            1: { bg: '#ffebee', fg: '#b71c1c', border: '#ef5350' },
+                            2: { bg: '#fff8e1', fg: '#e65100', border: '#ffb300' },
+                            3: { bg: '#e8eaf6', fg: '#1a237e', border: '#5c6bc0' },
+                        };
+                        const c = palette[p.chumash] || palette[3];
+                        return `<span class="pp-pill" style="background:${c.bg};color:${c.fg};border:1px solid ${c.border}">📅 חומש ${escape(String(p.chumash))}</span>`;
+                    })();
+
+                    // Units pill
+                    const unitsPill = (p.units_required != null && p.units_required !== '')
+                        ? `<span class="pp-pill" style="background:#f3e5f5;color:#4a148c;border:1px solid #ab47bc">📐 ${fmtNum(p.units_required)} ${escape(p.units_label || '')}</span>`
                         : '';
-                    const overlapBlock = isOverlap
-                        ? `<div style="margin-top:6px;padding:4px 6px;background:#fff8e1;border-right:3px solid #fbc02d;font-size:11px"><b>★ חופף עם תב״ע:</b> ${escape(p.overlap_plan_names.join(', '))}<div style="color:#666;font-size:10px;margin-top:2px">המלצת פרוייקטור — אינה נספרת פעמיים במאזן</div></div>`
+
+                    // Year-execution pill
+                    const yearPill = p.year_execution
+                        ? `<span class="pp-pill" style="background:#e0f2f1;color:#004d40;border:1px solid #4db6ac">🗓 ${escape(p.year_execution)}</span>`
                         : '';
-                    const fallback = (p.geometry_source === 'minahak_centroid')
-                        ? `<div style="color:#a16207;font-size:10px;margin-top:4px">⚠ מיקום משוער — לא נמצאה גיאומטריה ספציפית</div>`
+
+                    // Overlap pill (will also appear as a row below if present, but a pill in the
+                    // header makes it impossible to miss)
+                    const overlapPill = isOverlap
+                        ? `<span class="pp-pill" style="background:#fff8e1;color:#7c4a00;border:1px solid #fbc02d;font-weight:bold">★ חופף עם תב״ע</span>`
                         : '';
-                    const rows = [];
-                    if (p.service_he) rows.push(`<div><b>שירות:</b> ${escape(p.service_he)}</div>`);
-                    if (p.units_required != null && p.units_required !== '') rows.push(`<div><b>יח׳ נדרשות:</b> ${fmtNum(p.units_required)} ${escape(p.units_label || '')}</div>`);
-                    if (p.description) rows.push(`<div style="margin-top:4px;font-size:11px;color:#444;white-space:pre-wrap">${escape(p.description)}</div>`);
-                    rows.push(`<div style="margin-top:6px"><b>חומש:</b> ${escape(chumashLbl)}</div>`);
-                    if (p.year_execution) rows.push(`<div><b>צפי ביצוע:</b> ${escape(p.year_execution)}</div>`);
-                    if (p.estimate_nis) rows.push(`<div><b>אומדן:</b> ${fmtNum(p.estimate_nis)} ₪</div>`);
-                    if (p.managing_body) rows.push(`<div><b>גורם מנהל:</b> ${escape(p.managing_body)}</div>`);
-                    if (p.plan_status) rows.push(`<div><b>סטטוס:</b> ${escape(p.plan_status)}</div>`);
-                    // --- Official shapefile attributes (transport + public-space passages) ---
-                    const shpChips = [];
-                    if (p.shp_hierarchy) shpChips.push(`<span style="background:#e3f2fd;color:#01579b;padding:1px 6px;border-radius:8px;font-size:10px">היררכיה: ${escape(p.shp_hierarchy)}</span>`);
-                    if (p.shp_oneway)    shpChips.push(`<span style="background:#e3f2fd;color:#01579b;padding:1px 6px;border-radius:8px;font-size:10px">${escape(p.shp_oneway)}</span>`);
-                    if (p.shp_lanes)     shpChips.push(`<span style="background:#e3f2fd;color:#01579b;padding:1px 6px;border-radius:8px;font-size:10px">${escape(p.shp_lanes)} נתיב/ים</span>`);
-                    if (p.shp_row_m)     shpChips.push(`<span style="background:#e3f2fd;color:#01579b;padding:1px 6px;border-radius:8px;font-size:10px">ר. דרך: ${escape(p.shp_row_m)} מ׳</span>`);
-                    if (p.shp_calming && p.shp_calming !== 'לא') shpChips.push(`<span style="background:#fff3e0;color:#bf360c;padding:1px 6px;border-radius:8px;font-size:10px">מיתון תנועה</span>`);
-                    if (p.shp_path_kind) shpChips.push(`<span style="background:#e8f5e9;color:#1b5e20;padding:1px 6px;border-radius:8px;font-size:10px">${escape(p.shp_path_kind)}</span>`);
-                    if (shpChips.length) rows.push(`<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${shpChips.join('')}</div>`);
-                    if (p.shp_essence)   rows.push(`<div style="margin-top:4px;font-size:11px;color:#1565c0"><b>מהות:</b> ${escape(p.shp_essence)}</div>`);
-                    if (p.shp_element)   rows.push(`<div style="font-size:11px;color:#1565c0"><b>אלמנט:</b> ${escape(p.shp_element)}</div>`);
-                    // Parking by direction (Park_north/south/east/west)
-                    const parkRows = [];
-                    if (p.shp_park_n) parkRows.push(`צפון: ${escape(p.shp_park_n)}`);
-                    if (p.shp_park_s) parkRows.push(`דרום: ${escape(p.shp_park_s)}`);
-                    if (p.shp_park_e) parkRows.push(`מזרח: ${escape(p.shp_park_e)}`);
-                    if (p.shp_park_w) parkRows.push(`מערב: ${escape(p.shp_park_w)}`);
-                    if (parkRows.length) rows.push(`<div style="margin-top:4px;font-size:11px;color:#444"><b>חניה:</b> ${parkRows.join(' · ')}</div>`);
-                    if (p.is_shp_only) rows.push(`<div style="margin-top:4px;color:#0277bd;font-size:10px">📐 גיאומטריה רשמית — שכבת מידע פרוייקטור</div>`);
-                    // Tik-shchunah narrative excerpt (collapsible) with deep-link to the slide.
-                    if (p.tik_excerpt) {
-                        const tikLabel = escape(p.tik_label || 'תיק שכונה');
-                        const tikTitle = escape(p.tik_title || '');
-                        const tikPage  = p.tik_page ? Number(p.tik_page) : null;
-                        // Trim leading repeats of the slide title from the excerpt body.
-                        let body = String(p.tik_excerpt).trim();
-                        // Compact runs of >=3 newlines and turn single newlines into spaces between
-                        // short fragments so it reads like prose.
-                        body = body.replace(/\n{2,}/g, ' • ').replace(/[ \t]+/g, ' ').trim();
-                        if (body.length > 480) body = body.slice(0, 470).trim() + '…';
-                        rows.push(
-                            `<details style="margin-top:8px;background:#f5f9ff;border-right:3px solid #1976d2;padding:6px 8px;border-radius:3px">` +
-                            `<summary style="cursor:pointer;font-weight:bold;color:#0d47a1;font-size:12px">📚 ${tikLabel} · ${tikTitle}${tikPage ? ` (עמ׳ ${tikPage})` : ''}</summary>` +
-                            `<div style="margin-top:4px;font-size:11px;color:#1c1c1c;line-height:1.5;white-space:pre-wrap">${escape(body)}</div>` +
-                            `</details>`
-                        );
+
+                    const pillsRow = [statusPill, chumashPill, unitsPill, yearPill, overlapPill].filter(Boolean).join('');
+
+                    // Category icon chips (PS slides: שדרוג / פינת ישיבה / תצפית …)
+                    const catIcons = {
+                        'שדרוג':            { emoji: '🚧' },  'פינת ישיבה':    { emoji: '🪑' },
+                        'תצפית':            { emoji: '🔭' },  'הנגשה':         { emoji: '♿' },
+                        'הנגשה מכאנית':     { emoji: '🛗' },  'מעבר חדש':      { emoji: '➕' },
+                        'יצירת מקום':       { emoji: '✨' },  'שימור':         { emoji: '🛡️' },
+                        'הסדרה':            { emoji: '📋' },  'הסדרה סטטוטורית': { emoji: '⚖️' },
+                        'הצעה מתחמית':      { emoji: '🗺️' },
+                    };
+                    const categoryChips = (p.ps_categories || []).map(cat => {
+                        const ic = catIcons[cat] || { emoji: '●' };
+                        return `<span class="pp-pill" style="background:#0277bd;color:#fff;border:1px solid #01579b">${ic.emoji} ${escape(cat)}</span>`;
+                    }).join('');
+
+                    // --- "Recommendation" card (public-space):
+                    let psCard = '';
+                    if (p.ps_recommendation || categoryChips || p.ps_land_use || p.ps_dimensions) {
+                        const recText = p.ps_recommendation ? String(p.ps_recommendation).trim() : '';
+                        const facts = [];
+                        if (p.ps_land_use)   facts.push(`<span style="white-space:nowrap"><span style="color:#01579b">ייעוד:</span> <b>${escape(p.ps_land_use)}</b></span>`);
+                        if (p.ps_dimensions) facts.push(`<span style="white-space:nowrap"><span style="color:#01579b">מידות:</span> <b>${escape(p.ps_dimensions)}</b></span>`);
+                        if (p.ps_location)   facts.push(`<span style="white-space:nowrap"><span style="color:#01579b">מיקום:</span> <b>${escape(p.ps_location)}</b></span>`);
+                        psCard = `<div class="pp-card pp-card--ps">` +
+                            (categoryChips ? `<div class="pp-pills">${categoryChips}</div>` : '') +
+                            (recText ? `<div class="pp-quote pp-quote--ps">${escape(recText)}</div>` : '') +
+                            (facts.length ? `<div class="pp-facts">${facts.join(' · ')}</div>` : '') +
+                        `</div>`;
                     }
-                    if (p.pdf_link) rows.push(`<div style="color:#666;font-size:10px;margin-top:2px">📎 ${escape(p.pdf_link)}</div>`);
-                    return `<div style="font-family:Assistant,Arial,sans-serif;direction:rtl;text-align:right;max-width:340px">` +
-                        `<div style="background:${cfg.color};color:#fff;padding:6px 10px;font-weight:bold;font-size:13px">` +
-                        `<span style="opacity:0.85;font-size:11px">[${escape(cfg.label)}]</span> ${escape(p.project_name || '')}` +
-                        `</div>` +
-                        `<div style="padding:8px 10px;font-size:12px;line-height:1.55">` +
-                        rows.join('') +
-                        overlapBlock + fallback + planLink +
-                        `</div></div>`;
+
+                    // --- "Karteset" card (brown-land):
+                    let karCard = '';
+                    if (p.kar_recommendations || p.kar_land_use || p.kar_programmatic_potential) {
+                        const recK = p.kar_recommendations ? String(p.kar_recommendations).trim() : '';
+                        const pot  = p.kar_programmatic_potential ? String(p.kar_programmatic_potential).trim() : '';
+                        const kFacts = [];
+                        if (p.kar_land_use)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">ייעוד ע״פ תב״ע:</span> <b>${escape(p.kar_land_use)}</b></span>`);
+                        if (p.kar_lot_area)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">שטח:</span> <b>${escape(p.kar_lot_area)} דונם</b></span>`);
+                        if (p.kar_taba_lot)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">תב״ע/מגרש:</span> <b>${escape(p.kar_taba_lot)}</b></span>`);
+                        if (p.kar_ownership)      kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">בעלות:</span> <b>${escape(p.kar_ownership)}</b></span>`);
+                        karCard = `<div class="pp-card pp-card--kar">` +
+                            `<div class="pp-card-header"><span class="pp-card-icon">📋</span>כרטסת שטחים חומים${p.kar_page ? ` · עמ׳ ${escape(String(p.kar_page))}` : ''}</div>` +
+                            (recK ? `<div class="pp-quote pp-quote--kar">${escape(recK)}</div>` : '') +
+                            (pot ? `<div class="pp-detail-row"><span class="pp-detail-label">פוטנציאל פרוגרמתי</span><span>${escape(pot)}</span></div>` : '') +
+                            (p.kar_existing_built ? `<div class="pp-detail-row"><span class="pp-detail-label">בינוי קיים</span><span>${escape(p.kar_existing_built)}</span></div>` : '') +
+                            (kFacts.length ? `<div class="pp-facts">${kFacts.join(' · ')}</div>` : '') +
+                        `</div>`;
+                    }
+
+                    // --- Short description (only if not already covered by a card)
+                    let descBlock = '';
+                    if (p.description && !p.ps_recommendation && !p.kar_recommendations) {
+                        const short = String(p.description).replace(/\s+/g, ' ').trim();
+                        const truncated = short.length > 150 ? short.slice(0, 147) + '…' : short;
+                        descBlock = `<div class="pp-desc">${escape(truncated)}</div>`;
+                    }
+
+                    // --- Overlap detail row (when there's an overlap, show the actual plan names)
+                    const overlapDetail = isOverlap
+                        ? `<div class="pp-overlap">★ חופף עם תב״ע: <b>${escape(p.overlap_plan_names.join(', '))}</b><div class="pp-overlap-sub">המלצת פרוייקטור — אינה נספרת פעמיים במאזן</div></div>`
+                        : '';
+
+                    // --- Action buttons
+                    const actions = [];
+                    if (p.plan_number) {
+                        actions.push(`<button class="pp-action pp-action--primary" data-action="open-plan" data-plan-name="${escape(p.plan_number)}">📂 פתח תב״ע ${escape(p.plan_number)}</button>`);
+                    }
+                    if (p.tik_page) {
+                        actions.push(`<span class="pp-action pp-action--link" title="${escape(p.tik_label || 'תיק שכונה')}">📚 ${escape(p.tik_label || 'תיק שכונה')} · עמ׳ ${escape(String(p.tik_page))}</span>`);
+                    }
+
+                    // --- Extras (collapsed) — managing body, geometry note, shp attributes, etc.
+                    const extras = [];
+                    if (p.managing_body)  extras.push(`<div class="pp-detail-row"><span class="pp-detail-label">גורם מנהל</span><span>${escape(p.managing_body)}</span></div>`);
+                    if (p.year_planning && p.year_planning !== p.year_execution)
+                        extras.push(`<div class="pp-detail-row"><span class="pp-detail-label">שנת תכנון</span><span>${escape(p.year_planning)}</span></div>`);
+                    // Long description (full text — only if much longer than the truncated form)
+                    if (p.description && String(p.description).length > 150 && !p.ps_recommendation && !p.kar_recommendations) {
+                        extras.push(`<div class="pp-detail-row pp-detail-row--multiline"><span class="pp-detail-label">תיאור מלא</span><span>${escape(p.description)}</span></div>`);
+                    }
+                    // Shapefile road attributes (transport)
+                    const shpBits = [];
+                    if (p.shp_hierarchy) shpBits.push(`היררכיה ${escape(p.shp_hierarchy)}`);
+                    if (p.shp_oneway)    shpBits.push(escape(p.shp_oneway));
+                    if (p.shp_lanes)     shpBits.push(`${escape(p.shp_lanes)} נתיב/ים`);
+                    if (p.shp_row_m)     shpBits.push(`ר. דרך ${escape(p.shp_row_m)} מ׳`);
+                    if (p.shp_calming && p.shp_calming !== 'לא') shpBits.push('מיתון תנועה');
+                    if (p.shp_essence)   shpBits.push(escape(p.shp_essence));
+                    if (shpBits.length) extras.push(`<div class="pp-detail-row"><span class="pp-detail-label">🛣 דרך</span><span>${shpBits.join(' · ')}</span></div>`);
+                    // Geometry warning
+                    if (p.geometry_source === 'minahak_centroid') {
+                        extras.push(`<div class="pp-warn">⚠ מיקום משוער — לא נמצאה גיאומטריה ספציפית</div>`);
+                    }
+                    const extrasBlock = extras.length
+                        ? `<details class="pp-details">` +
+                            `<summary>פרטים נוספים</summary>` +
+                            `<div class="pp-details-body">${extras.join('')}</div>` +
+                          `</details>`
+                        : '';
+
+                    // --- Subtitle: service · sub-neighborhood (one line)
+                    const subtitleParts = [];
+                    if (p.service_he) subtitleParts.push(escape(p.service_he));
+                    if (p.sub_neighborhood) subtitleParts.push(escape(p.sub_neighborhood));
+                    const subtitle = subtitleParts.length
+                        ? `<div class="pp-subtitle">${subtitleParts.join(' · ')}</div>`
+                        : '';
+
+                    return `<div class="pp-root" style="--pp-accent:${cfg.color}">` +
+                        `<div class="pp-header"><div class="pp-title">${escape(p.project_name || '')}</div>${subtitle}</div>` +
+                        (pillsRow ? `<div class="pp-pills">${pillsRow}</div>` : '') +
+                        psCard + karCard + descBlock + overlapDetail +
+                        extrasBlock +
+                        (actions.length ? `<div class="pp-actions">${actions.join('')}</div>` : '') +
+                    `</div>`;
+                }
+
+                // Pick a representative [lat, lng] for marker placement.
+                // Prefer the build script's `display_point` (shapely.representative_point,
+                // guaranteed inside the polygon — handles concave shapes + multi-lot plans
+                // where the geometric centroid would land in a gap/road).
+                function projectorCentroid(geomOrFeature, propsOpt) {
+                    // Allow being called with the feature properties so we can read display_point.
+                    const props = propsOpt || (geomOrFeature && geomOrFeature.properties);
+                    const geom  = (geomOrFeature && geomOrFeature.type === 'Feature') ? geomOrFeature.geometry : geomOrFeature;
+                    if (props && Array.isArray(props.display_point) && props.display_point.length >= 2) {
+                        const dp = props.display_point;
+                        return [dp[1], dp[0]];  // GeoJSON [lon, lat] → Leaflet [lat, lon]
+                    }
+                    if (!geom) return null;
+                    const t = geom.type;
+                    if (t === 'Point') {
+                        const c = geom.coordinates;
+                        return [c[1], c[0]];
+                    }
+                    let coords = geom.coordinates;
+                    if (t === 'MultiPolygon') coords = coords[0];
+                    if (t === 'Polygon')      coords = coords[0];
+                    if (t === 'MultiLineString') coords = coords[0];
+                    if (!Array.isArray(coords) || !coords.length) return null;
+                    let sx = 0, sy = 0, n = 0;
+                    for (const c of coords) {
+                        if (Array.isArray(c) && typeof c[0] === 'number') {
+                            sx += c[0]; sy += c[1]; n++;
+                        }
+                    }
+                    return n ? [sy / n, sx / n] : null;
+                }
+                // Build the projector's "ר מעבר 5" / "ק חציה 2" style label from a feature.
+                // Mirrors the תשריט's prefix convention (ר=רסקו, ג=גוננים א-ו, ק=קטמונים ח-ט, פ=פת).
+                const TASHRIT_AREA_PREFIX = {
+                    'רסקו':         'ר',
+                    'גוננים א-ו':   'ג',
+                    'קטמונים ח-ט':  'ק',
+                    'פת':           'פ',
+                };
+                function tashritLabel(p) {
+                    const prefix = TASHRIT_AREA_PREFIX[p.sub_neighborhood];
+                    if (!prefix) return null;
+                    // Extract project number from project_num (might be like "מעבר ה"ר מס' 6")
+                    const m = String(p.project_num || '').match(/(\d+)/);
+                    if (!m) return null;
+                    const num = m[1];
+                    const svc = String(p.service_he || '');
+                    let kind = null;
+                    if (svc.includes('מעבר חציה') || svc.includes('חציה')) kind = 'חציה';
+                    else if (svc.includes('מעבר ה') || svc.includes('הולכי')) kind = 'מעבר';
+                    if (!kind) return null;
+                    return `${prefix} ${kind} ${num}`;
                 }
                 function buildProjectorLayer(layerKey, geojson) {
                     const activeSet = window.__projectorActiveChumash || new Set([1, 2, 3, 'unknown']);
@@ -11674,35 +12064,132 @@
                         if (ch === null || ch === undefined) return activeSet.has('unknown');
                         return activeSet.has(ch);
                     });
-                    const fc = { type: 'FeatureCollection', features: visible };
-                    return L.geoJSON(fc, {
-                        pane: 'plansPane',
-                        style: f => {
-                            const cfg = PROJECTOR_DOMAIN_STYLES[f.properties.domain] || { color: '#616161' };
-                            const isOverlap = (f.properties.overlap_plan_names || []).length > 0;
-                            const gt = f.geometry && f.geometry.type;
-                            // Real LineStrings (from official shapefile) need a thicker stroke
-                            // since there's no polygon fill to give them visual weight.
-                            const isLine = gt === 'LineString' || gt === 'MultiLineString';
-                            return {
-                                color: cfg.color,
-                                weight: isLine ? 4 : 2,
-                                fillColor: cfg.color,
-                                fillOpacity: isLine ? 0 : 0.45,
-                                opacity: isLine ? 0.9 : 1,
-                                dashArray: isOverlap ? '5,3' : (isLine && f.properties.is_shp_only ? '8,4' : null),
-                                lineCap: 'round',
-                                lineJoin: 'round',
-                            };
-                        },
-                        pointToLayer: (f, latlng) => {
-                            const isOverlap = (f.properties.overlap_plan_names || []).length > 0;
-                            return L.marker(latlng, { icon: projectorIcon(f.properties.domain, isOverlap), pane: 'plansPane' });
-                        },
-                        onEachFeature: (f, lyr) => {
-                            lyr.bindPopup(buildProjectorPopup(f.properties), { maxWidth: 360 });
+
+                    // Match the projector's official תשריט legend:
+                    //   • מעברי חציה (crossings)  → red filled rectangle on the road
+                    //   • מעברי הולכי-רגל (passages) → dark-green line along the road
+                    //   • רחובות (new roads)        → blue line along the road
+                    //   • תחנת אוטובוס (bus stop)   → small turquoise ring
+                    //   • שצ"פ / מבנה ציבור        → small circle marker with green/brown ring
+                    const layerGroup = L.layerGroup().addTo(map);
+
+                    const ringColors = {
+                        public_space: '#2e7d32', // green
+                        programa:     '#8d6e63', // brown
+                        transport:    '#00838f',
+                    };
+                    // תשריט-aligned palette for the transport sub-categories.
+                    const TASHRIT_CROSSWALK_FILL = '#d32f2f';   // bright red
+                    const TASHRIT_CROSSWALK_BORDER = '#7f0000';
+                    const TASHRIT_PASSAGE_GREEN  = '#1b5e20';   // dark green
+                    const TASHRIT_ROAD_BLUE      = '#1565c0';   // blue
+                    const TASHRIT_BUS_STOP       = '#00838f';
+
+                    function crosswalkIcon(num, isOverlap) {
+                        // Small red horizontal rectangle (~14×7px). Optional number badge above.
+                        const lbl = (num != null && num !== '' && String(num).length <= 4)
+                            ? `<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#fff;color:#7f0000;border:1px solid #7f0000;border-radius:2px;padding:0 3px;font-size:9px;font-weight:bold;white-space:nowrap;line-height:1.3">${String(num)}</div>`
+                            : '';
+                        const star = isOverlap ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;color:#fbc02d">★</span>' : '';
+                        return L.divIcon({
+                            className: 'projector-crosswalk',
+                            iconSize: [14, 7],
+                            iconAnchor: [7, 3.5],
+                            html: `<div style="position:relative;width:14px;height:7px;background:${TASHRIT_CROSSWALK_FILL};border:1.2px solid ${TASHRIT_CROSSWALK_BORDER};border-radius:1.5px;box-shadow:0 0 0 1px rgba(255,255,255,0.85)">${star}${lbl}</div>`,
+                        });
+                    }
+
+                    visible.forEach(f => {
+                        const p = f.properties;
+                        const g = f.geometry;
+                        if (!g) return;
+                        const isOverlap = (p.overlap_plan_names || []).length > 0;
+                        const cfg = PROJECTOR_DOMAIN_STYLES[p.domain] || { color: '#616161' };
+                        const ring = ringColors[p.domain] || cfg.color;
+                        const popup = buildProjectorPopup(p);
+                        const gt = g.type;
+                        let lyr = null;
+
+                        // Pick the right line color for transport sub-types.
+                        const lineColor = (p.marker_kind === 'passage_line')   ? TASHRIT_PASSAGE_GREEN
+                                       : (p.marker_kind === 'road_segment')    ? TASHRIT_ROAD_BLUE
+                                       : (p.marker_kind === 'bike_line')       ? '#6a1b9a'  // purple
+                                       : (p.marker_kind === 'bridge_line')     ? '#0d47a1'  // dark blue
+                                       : cfg.color;
+
+                        // --- Lines (LineString / MultiLineString) → render as polyline
+                        if (gt === 'LineString' || gt === 'MultiLineString') {
+                            lyr = L.geoJSON(f, {
+                                pane: 'plansPane',
+                                style: () => ({
+                                    color: lineColor,
+                                    weight: 4,
+                                    opacity: 0.95,
+                                    dashArray: isOverlap ? '5,3' : (p.is_shp_only ? '8,4' : null),
+                                    lineCap: 'round', lineJoin: 'round',
+                                    fillOpacity: 0,
+                                }),
+                            });
                         }
-                    }).addTo(map);
+                        // --- Crossing points → red rectangle on the road
+                        else if (gt === 'Point' && p.marker_kind === 'crossing_point') {
+                            const c = projectorCentroid(g);
+                            if (c) lyr = L.marker(c, {
+                                pane: 'plansPane',
+                                icon: crosswalkIcon(p.project_num, isOverlap),
+                                interactive: true,
+                            });
+                        }
+                        // --- Bus stops (small_circle) → small circle marker
+                        else if (gt === 'Point' && (p.marker_kind === 'small_circle' || p.service_key === 'extra:bus_stop')) {
+                            const c = projectorCentroid(g);
+                            if (c) lyr = L.circleMarker(c, {
+                                pane: 'plansPane', radius: 4,
+                                color: TASHRIT_BUS_STOP, weight: 1.5,
+                                fillColor: '#fff', fillOpacity: 0.95,
+                            });
+                        }
+                        // --- Public space + programa polygons → POINT at centroid with colored ring
+                        else if (p.domain === 'public_space' || p.domain === 'programa') {
+                            const c = projectorCentroid(g, p);
+                            if (c) lyr = L.circleMarker(c, {
+                                pane: 'plansPane', radius: 6,
+                                color: ring,
+                                weight: 2,
+                                fillColor: '#ffffff',
+                                fillOpacity: 0.85,
+                                dashArray: isOverlap ? '3,2' : null,
+                            });
+                        }
+                        // --- Generic Point fallback (passage_point, transport leftovers) → divIcon
+                        else if (gt === 'Point') {
+                            const c = projectorCentroid(g, p);
+                            if (c) lyr = L.marker(c, { icon: projectorIcon(p.domain, isOverlap), pane: 'plansPane' });
+                        }
+                        // --- Any leftover Polygon (e.g. transport polygon fallback) → centroid marker
+                        else if (gt === 'Polygon' || gt === 'MultiPolygon') {
+                            const c = projectorCentroid(g, p);
+                            if (c) lyr = L.circleMarker(c, {
+                                pane: 'plansPane', radius: 5,
+                                color: cfg.color, weight: 1.5,
+                                fillColor: cfg.color, fillOpacity: 0.5,
+                            });
+                        }
+
+                        if (lyr) {
+                            lyr.bindPopup(popup, { maxWidth: 340, className: 'projector-popup' });
+                            // Attach the source feature so external tooling can locate
+                            // a marker by its feature properties (e.g. for testing).
+                            lyr.feature = f;
+                            // (Permanent "chip"-style labels removed: the projector's
+                            // "ר מעבר N" / "ק חציה N" chips on the תשריט are LEGEND
+                            // references, not the actual features. The features are
+                            // the drawn lines/marks themselves — we render them, not
+                            // the chip labels.)
+                            layerGroup.addLayer(lyr);
+                        }
+                    });
+                    return layerGroup;
                 }
 
                 ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot'].forEach(key => {

@@ -400,9 +400,10 @@
     "source": "nominatim_miss"
   },
   "מתחם הפסגה (בית שוויץ)|קטמונים ח-ט": {
-    "lat": 31.755,
-    "lon": 35.209,
-    "source": "manual:מתחם הפסגה approx in קטמונים"
+    "lat": 31.7551,
+    "lon": 35.1964,
+    "source": "manual:matched to גוש 30169 חלקות 25-34,73-77",
+    "note": "corrected 2026-05 — previous lat/lon (35.209) pointed to the wrong area"
   },
   "חיבור בין השכונה לפארק המסילה|פת": {
     "lat": 31.75336,
@@ -426,9 +427,10 @@
     "source": "nominatim:סן מרטין 1 ירושלים"
   },
   "בית שוויץ (מתחם הפסגה)|קטמונים ח-ט": {
-    "lat": 31.755,
-    "lon": 35.209,
-    "source": "manual:בית שוויץ approx"
+    "lat": 31.7551,
+    "lon": 35.1964,
+    "source": "manual:matched to גוש 30169 חלקות 25-34,73-77",
+    "note": "corrected 2026-05 — previous lat/lon (35.209) was for the wrong area"
   },
   "מוריס שיפר 20|פת": {
     "lat": null,

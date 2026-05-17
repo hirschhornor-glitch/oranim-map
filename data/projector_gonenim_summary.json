@@ -601,7 +601,7 @@
       },
       "matnas": {
         "units": 4990.0,
-        "overlap_units": 840.0,
+        "overlap_units": 3340.0,
         "projects": [
           {
             "project_id": "77752eb55f60",
@@ -661,7 +661,7 @@
             "plan_number": "101-0926105",
             "plan_status": "בתכנון",
             "estimate_nis": 25000000.0,
-            "overlap": false
+            "overlap": true
           }
         ]
       },
@@ -815,7 +815,7 @@
       },
       "maon": {
         "units": 24.0,
-        "overlap_units": 12.0,
+        "overlap_units": 15.0,
         "projects": [
           {
             "project_id": "65ea535f7509",
@@ -885,7 +885,7 @@
             "plan_number": "101-0926105",
             "plan_status": "בתכנון",
             "estimate_nis": 4500000.0,
-            "overlap": false
+            "overlap": true
           }
         ]
       },
@@ -921,7 +921,7 @@
         "key": "extra:sport_field",
         "label": "מגרש ספורט",
         "units": 8666.0,
-        "overlap_units": 8666.0,
+        "overlap_units": 0.0,
         "projects": [
           {
             "project_id": "9d561a51f0bf",
@@ -931,7 +931,7 @@
             "plan_number": "101-0857086",
             "plan_status": "הושלם תכנון",
             "estimate_nis": 12999000.0,
-            "overlap": true
+            "overlap": false
           }
         ]
       }
