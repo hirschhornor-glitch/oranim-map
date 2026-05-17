@@ -638,7 +638,8 @@ def create_plan_geometry(features, pl_number=None):
     if not all_coords:
         return None
 
-    from shapely.geometry import shape, mapping
+    from shapely.geometry import shape, mapping, MultiPolygon
+    from shapely.geometry.polygon import orient
     from shapely.ops import unary_union
     from shapely.validation import make_valid
 
@@ -664,6 +665,14 @@ def create_plan_geometry(features, pl_number=None):
         if not polys:
             return None
         merged = unary_union(polys)
+
+    # Enforce GeoJSON RFC 7946 winding: outer CCW, holes CW.
+    # Without this, Leaflet fills on the wrong side and the polygon shows
+    # only its outline. shapely.mapping doesn't enforce this on its own.
+    if merged.geom_type == 'Polygon':
+        merged = orient(merged, sign=1.0)
+    elif merged.geom_type == 'MultiPolygon':
+        merged = MultiPolygon([orient(p, sign=1.0) for p in merged.geoms])
 
     return mapping(merged)
 
