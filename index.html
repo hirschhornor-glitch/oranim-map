@@ -4370,6 +4370,8 @@
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
+            const [shavazKayamReport, setShavazKayamReport] = useState(false);
+            const [shavazReportFilter, setShavazReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
@@ -9183,11 +9185,9 @@
                     const minahakOrder = effectiveMinahakOrderInScope(['גינות העיר', 'בית צפאפא', 'גוננים', 'בקעה רבתי', 'מינהל מוסדי מלחה', 'א.ת. תלפיות']);
                     const byMinahak = {};
                     const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
+                    // Plan-status breakdown only — approved plans aggregate under one row regardless
+                    // of permit progress (no separate גמר בנייה/בבנייה/היתר בנייה/רישוי בתהליך rows).
                     const STATUS_GROUPS = [
-                        { key: 'ו-גמר בנייה', label: 'גמר בנייה', color: '#494CC2', match: [] },
-                        { key: 'ה-בבנייה', label: 'בבנייה', color: '#4a69d1', match: [] },
-                        { key: 'ד-היתר בנייה', label: 'היתר בנייה', color: '#4b85e0', match: [] },
-                        { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך', color: '#4ba1f0', match: [] },
                         { key: 'approved', label: 'אישור / מאושרת', color: '#4CAF50',
                           match: ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'] },
                         { key: 'in_approval', label: 'בהליך אישור', color: '#66BB6A',
@@ -9279,15 +9279,22 @@
                     // Plans (from Google Sheets CSV)
                     planRows.forEach(p => {
                         if (!planPassesReportScope(p.plan_name)) return;
-                        const subForLookup = SUB_NORMALIZE[(p.sub_neighborhood || '').trim()] || (p.sub_neighborhood || '').trim();
-                        const minahakFromSub = SUB_TO_MINAHAK[(p.sub_neighborhood || '').trim()] || SUB_TO_MINAHAK[subForLookup];
+                        // GS column is `SUB_N`; geojson uses `sub_neighborhood`. Read both.
+                        const subRawCsv = (p.sub_neighborhood || p.SUB_N || p.neighborhood || '').trim();
+                        const subForLookup = SUB_NORMALIZE[subRawCsv] || subRawCsv;
+                        const minahakFromSub = SUB_TO_MINAHAK[subRawCsv] || SUB_TO_MINAHAK[subForLookup];
                         const mRaw = (minahakFromSub || p.minahak || '').trim();
                         const m = effectiveMinahakInScope(MINAHAK_NORMALIZE[mRaw] || mRaw);
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
                         // Skip rejected/archived plans for units_add
                         const status = (p.status_mavat || '').trim();
                         const isRejected = status === 'נגנזה/נדחתה' || status === 'נגנזה' || status === 'נדחתה';
-                        const addVal = isRejected ? 0 : (parseInt(p.units_add) || 0);
+                        // GS `rental` is separate from units_total (geojson folds it via foldRental();
+                        // CSV path does not, so fold it here). `conditional_housing` is a subset of
+                        // units_total → already in units_add; not added.
+                        const addBase = parseInt(p.units_add) || 0;
+                        const rentalVal = parseInt(p.rental) || 0;
+                        const addVal = isRejected ? 0 : (addBase + rentalVal);
                         const inVal = parseInt(p.units_in) || 0;
                         byMinahak[m].units_in += inVal;
                         byMinahak[m].units_add += addVal;
@@ -9299,20 +9306,16 @@
                             byMinahak[m].densification += addVal;
                         }
 
-                        // Per-status group breakdown
+                        // Per-status group breakdown — aggregate by plan status only.
+                        // Approved plans land in `approved` regardless of permit `stage`; the
+                        // permit-stage breakdown (גמר בנייה/בבנייה/היתר בנייה/רישוי בתהליך) is
+                        // intentionally not surfaced here, but those plans are still counted
+                        // because their plan status is approved.
                         if (!isRejected && addVal > 0 && status) {
                             const grp = getStatusGroup(status);
-                            const stageRaw = (p.stage || p.Stage || '').trim();
-                            // Normalize double-space variant
-                            const stageVal = stageRaw.replace(/\s+/g, ' ');
+                            const stageVal = (p.stage || p.Stage || '').trim().replace(/\s+/g, ' ');
                             const planInfo = { plan_name: p.plan_name || '', plan_name_he: p.plan_name_he || '', plan_summary: p.plan_summary || '', units_add: addVal, status_mavat: status, stage: stageVal };
-                            // If approved and has a stage value, use stage instead of status
-                            if (grp === 'approved' && stageVal) {
-                                byMinahak[m].byStatus[stageVal] = (byMinahak[m].byStatus[stageVal] || 0) + addVal;
-                                if (!plansByCell[m]) plansByCell[m] = {};
-                                if (!plansByCell[m][stageVal]) plansByCell[m][stageVal] = [];
-                                if (!plansByCell[m][stageVal].some(x => x.plan_name === planInfo.plan_name)) plansByCell[m][stageVal].push(planInfo);
-                            } else if (grp) {
+                            if (grp) {
                                 byMinahak[m].byStatus[grp] = (byMinahak[m].byStatus[grp] || 0) + addVal;
                                 if (!plansByCell[m]) plansByCell[m] = {};
                                 if (!plansByCell[m][grp]) plansByCell[m][grp] = [];
@@ -9337,7 +9340,7 @@
                         // the plan to a sub named after its minahak (e.g. בית צפאפא
                         // minahak with empty sub → "בית צפאפא"), so the report
                         // doesn't accumulate a noisy "אחר" column.
-                        let subRaw = (p.sub_neighborhood || p.neighborhood || '').trim();
+                        let subRaw = (p.sub_neighborhood || p.SUB_N || p.neighborhood || '').trim();
                         if (!subRaw || subRaw === 'אחר' || subRaw === 'לא ידוע') subRaw = m || 'אחר';
                         let sub = SUB_NORMALIZE[subRaw] || subRaw;
                         // בית צפאפא minahak collapses to two named subs only:
@@ -9588,7 +9591,8 @@
                         }
 
                         // Sub-neighborhood breakdown — override to internal projector polygon in scope
-                        const subRaw = (p.sub_neighborhood || p.neighborhood || 'אחר').trim() || 'אחר';
+                        // GS column is `SUB_N`; geojson uses `sub_neighborhood`. Read both.
+                        const subRaw = (p.sub_neighborhood || p.SUB_N || p.neighborhood || 'אחר').trim() || 'אחר';
                         const sub = effectiveSubInScope(p.plan_name, SUB_NORMALIZE[subRaw] || subRaw);
                         if (!bySub[m][sub]) bySub[m][sub] = emptyRow();
                         bySub[m][sub].commerce_in += ciVal;
@@ -17193,6 +17197,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">פרוגרמה שכונתית</span>
                                                     <span className="report-desc">חישוב כיתות ושירותים קהילתיים לפי מינהל</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }}>
+                                                <span className="report-icon">🏛️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">שב"צ קיים לפי תת-שכונה</span>
+                                                    <span className="report-desc">מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל</span>
                                                 </div>
                                             </button>
                                             <div className="reports-menu-item" onClick={(e) => {
