@@ -2650,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-17-mevar10-corrected';
+        const APP_VERSION = '2026-05-17-mevar9-east';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6497,8 +6497,11 @@
                     panel.id = 'tree-panel';
                     panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
 
-                    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                        '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — ' + subName + '</h3>' +
+                    const valencyAgg = aggregateTreeValencies(stats.plans || []);
+
+                    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' +
+                        '<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — ' + subName + '</h3>' +
+                        '<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>' +
                         '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
 
                     if (stats.withData === 0) {
@@ -6509,7 +6512,15 @@
                             '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
                             '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
                             '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
-                            '</div>' +
+                            '</div>';
+                        if (valencyAgg) {
+                            html +=
+                                '<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה ' +
+                                '<span style="color:#666;font-size:10px">(מתוך ' + valencyAgg.plans_with_data + ' תכניות, ' + valencyAgg.total_trees.toLocaleString() + ' עצים)</span></div>' +
+                                renderValencyPivotHTML(valencyAgg, { dark: true }) +
+                                '<div style="margin:10px 0"></div>';
+                        }
+                        html +=
                             '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
                             '<table style="width:100%;font-size:11px;border-collapse:collapse">' +
                             '<thead><tr style="border-bottom:1px solid #2a2a4a">' +
@@ -6536,6 +6547,10 @@
                         panel.remove();
                         if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
                     };
+                    const exportBtn = document.getElementById('tree-export');
+                    if (exportBtn) {
+                        exportBtn.onclick = () => openTreesReportExport('עצים — ' + subName, stats, valencyAgg);
+                    }
                     attachTreePlanLinks(panel);
                 }
 
@@ -7220,8 +7235,11 @@
                 panel.id = 'tree-panel';
                 panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
 
-                let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-                    '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — אזור נבחר</h3>' +
+                const valencyAggArea = aggregateTreeValencies(stats.plans || []);
+
+                let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' +
+                    '<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — אזור נבחר</h3>' +
+                    '<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>' +
                     '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
 
                 if (stats.withData === 0) {
@@ -7232,7 +7250,15 @@
                         '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
                         '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
                         '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
-                        '</div>' +
+                        '</div>';
+                    if (valencyAggArea) {
+                        html +=
+                            '<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה ' +
+                            '<span style="color:#666;font-size:10px">(מתוך ' + valencyAggArea.plans_with_data + ' תכניות, ' + valencyAggArea.total_trees.toLocaleString() + ' עצים)</span></div>' +
+                            renderValencyPivotHTML(valencyAggArea, { dark: true }) +
+                            '<div style="margin:10px 0"></div>';
+                    }
+                    html +=
                         '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
                         '<table style="width:100%;font-size:11px;border-collapse:collapse">' +
                         '<thead><tr style="border-bottom:1px solid #2a2a4a">' +
@@ -7254,6 +7280,10 @@
 
                 panel.innerHTML = html;
                 document.body.appendChild(panel);
+                const exportBtnArea = document.getElementById('tree-export');
+                if (exportBtnArea) {
+                    exportBtnArea.onclick = () => openTreesReportExport('עצים — אזור נבחר', stats, valencyAggArea);
+                }
 
                 // Keep the drawn polygon and markers visible while the tree panel
                 // is open. Only remove them when the user closes the popup.
@@ -14121,6 +14151,166 @@
                     plans: included,
                     suppressed,
                 };
+            }
+
+            // Aggregate per-plan valency cross-tabs across the surveyed plans of a
+            // neighborhood/area. Returns null if no plan in `plans` has valency data.
+            //   plans: array from aggregateTreeStats().plans
+            // Result shape mirrors a single tree_valencies entry:
+            //   { by_bucket, bucket_totals, by_reco, total_trees, plans_with_data, plans_total }
+            function aggregateTreeValencies(plans) {
+                const tv = window.__treeValencies || {};
+                const by_bucket = {};
+                const bucket_totals = {};
+                const by_reco = {};
+                let total_trees = 0;
+                let plans_with_data = 0;
+                plans.forEach(p => {
+                    const v = tv[p.taba || ''];
+                    if (!v || !v.by_bucket) return;
+                    plans_with_data += 1;
+                    total_trees += v.total_trees || 0;
+                    Object.entries(v.by_bucket).forEach(([bucket, recoMap]) => {
+                        if (!by_bucket[bucket]) by_bucket[bucket] = {};
+                        Object.entries(recoMap).forEach(([reco, n]) => {
+                            by_bucket[bucket][reco] = (by_bucket[bucket][reco] || 0) + n;
+                        });
+                    });
+                    Object.entries(v.bucket_totals || {}).forEach(([bucket, n]) => {
+                        bucket_totals[bucket] = (bucket_totals[bucket] || 0) + n;
+                    });
+                    Object.entries(v.by_reco || {}).forEach(([reco, n]) => {
+                        by_reco[reco] = (by_reco[reco] || 0) + n;
+                    });
+                });
+                if (plans_with_data === 0) return null;
+                return {
+                    by_bucket, bucket_totals, by_reco, total_trees,
+                    plans_with_data, plans_total: plans.length,
+                };
+            }
+
+            // Render the valency × recommendation cross-tab as an HTML string.
+            // Used by both the plan popup and the neighborhood/area report.
+            function renderValencyPivotHTML(valency, opts = {}) {
+                if (!valency || !valency.by_bucket) return '';
+                const BUCKETS = [
+                    ['17-20', 'גבוהה מאד', '#27ae60'],
+                    ['14-16', 'גבוהה',     '#82c91e'],
+                    ['7-13',  'בינונית',   '#fab005'],
+                    ['0-6',   'נמוכה',     '#e67e22'],
+                ];
+                const RECO_LABELS = {
+                    shimur:     'שימור',
+                    krita:      'כריתה',
+                    haataka:    'העתקה',
+                    stump:      'גדם',
+                    lo_nidresh: 'לא נדרש',
+                };
+                const recosPresent = Object.keys(valency.by_reco || {}).filter(k => k in RECO_LABELS);
+                if (recosPresent.length === 0) return '';
+                const HIGH = new Set(['17-20', '14-16']);
+                const headerBg = opts.dark ? '#2a2a4a' : '#f4f4f4';
+                const altBg = opts.dark ? '#1a1a2e' : '#fafafa';
+                const border = opts.dark ? '#3a3a5a' : '#ddd';
+                const textColor = opts.dark ? '#e0e0e0' : '#222';
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;direction:rtl;color:' + textColor + '">';
+                html += '<thead><tr style="background:' + headerBg + '">';
+                html += '<th style="padding:3px 4px;text-align:right;border:1px solid ' + border + '">ערכיות</th>';
+                for (const reco of recosPresent) {
+                    html += '<th style="padding:3px 4px;text-align:center;border:1px solid ' + border + '">' + RECO_LABELS[reco] + '</th>';
+                }
+                html += '<th style="padding:3px 4px;text-align:center;border:1px solid ' + border + '">סה"כ</th>';
+                html += '<th style="padding:3px 4px;text-align:center;border:1px solid ' + border + '" title="כריתה+העתקה כאחוז מהשורה">% נעקרים</th>';
+                html += '</tr></thead><tbody>';
+                for (const [key, label, color] of BUCKETS) {
+                    const rowTotal = (valency.bucket_totals || {})[key] || 0;
+                    if (rowTotal === 0) continue;
+                    const rowBucket = (valency.by_bucket || {})[key] || {};
+                    const rowRemoved = (rowBucket.krita || 0) + (rowBucket.haataka || 0);
+                    const rowPct = rowTotal > 0 ? Math.round(rowRemoved / rowTotal * 100) : 0;
+                    const highlight = HIGH.has(key) ? 'background:rgba(231,76,60,' + (opts.dark ? '0.15' : '0.06') + ');' : '';
+                    html += '<tr style="' + highlight + '"><td style="padding:3px 4px;border:1px solid ' + border + ';color:' + color + ';font-weight:600">' + label + '</td>';
+                    for (const reco of recosPresent) {
+                        const cellVal = rowBucket[reco] || 0;
+                        html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + '">' + (cellVal || '·') + '</td>';
+                    }
+                    html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + ';font-weight:600">' + rowTotal + '</td>';
+                    const pctColor = HIGH.has(key) ? (opts.dark ? '#ff7675' : '#c0392b') : (opts.dark ? '#aaa' : '#666');
+                    html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + ';color:' + pctColor + ';font-weight:' + (HIGH.has(key) ? '700' : '500') + '">' + rowPct + '%</td></tr>';
+                }
+                const totalRemoved = (valency.by_reco?.krita || 0) + (valency.by_reco?.haataka || 0);
+                const totalAll = valency.total_trees || 0;
+                const totalPct = totalAll > 0 ? Math.round(totalRemoved / totalAll * 100) : 0;
+                html += '<tr style="background:' + altBg + '"><td style="padding:3px 4px;border:1px solid ' + border + ';font-weight:600">סה"כ</td>';
+                for (const reco of recosPresent) {
+                    html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + ';font-weight:600">' + ((valency.by_reco || {})[reco] || 0) + '</td>';
+                }
+                html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + ';font-weight:700">' + totalAll + '</td>';
+                html += '<td style="padding:3px 4px;text-align:center;border:1px solid ' + border + ';font-weight:700">' + totalPct + '%</td>';
+                html += '</tr></tbody></table>';
+                return html;
+            }
+
+            // Open a printable/exportable window with the full trees report.
+            function openTreesReportExport(title, stats, valencyAgg) {
+                const w = window.open('', '_blank');
+                if (!w) return;
+                const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+                let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>';
+                html += '<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl;color:#222}h2{margin:0 0 6px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th,td{padding:4px 6px;text-align:center;border:1px solid #ddd}th{background:#f5f5f5;font-weight:700}.stat{text-align:center;padding:14px;background:#f7f7fb;border-radius:8px;margin:10px 0}.stat-big{font-size:32px;font-weight:700;color:#c0392b}.stat-sub{color:#666;font-size:13px}@media print{.no-print{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>';
+                html += '</head><body>';
+                html += '<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">';
+                html += '<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">🖨 הדפסה / PDF</button>';
+                html += '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">📊 ייצוא CSV (אקסל)</button>';
+                html += '</div>';
+                html += '<h2>🌳 ' + esc(title) + '</h2>';
+                html += '<div class="stat"><div class="stat-big">' + stats.pct + '%</div>';
+                html += '<div class="stat-sub">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>';
+                html += '<div class="stat-sub" style="font-size:11px">' + stats.withData + ' תכניות עם סקר עצים</div>';
+                html += '</div>';
+                if (valencyAgg) {
+                    html += '<h3 style="margin-top:18px;margin-bottom:4px;font-size:14px">פילוח ערכיות × המלצה</h3>';
+                    html += '<div style="color:#888;font-size:11px;margin-bottom:4px">מתוך ' + valencyAgg.plans_with_data + ' תכניות עם נתוני ערכיות (' + valencyAgg.total_trees.toLocaleString() + ' עצים)</div>';
+                    html += renderValencyPivotHTML(valencyAgg, { dark: false });
+                }
+                html += '<h3 style="margin-top:18px;margin-bottom:4px;font-size:14px">תכניות לפי עצים נעקרים</h3>';
+                html += '<table><thead><tr><th>#</th><th>שם תכנית</th><th>נעקרים</th><th>סה"כ</th><th>%</th></tr></thead><tbody>';
+                stats.plans.forEach((row, i) => {
+                    html += '<tr><td>' + (i + 1) + '</td><td style="text-align:right">' + esc(row.name) + '</td><td>' + row.removed + '</td><td>' + row.total + '</td><td>' + row.pct + '%</td></tr>';
+                });
+                html += '<tr style="background:#fafafa;font-weight:700"><td colspan="2">סה"כ</td><td>' + stats.removed + '</td><td>' + stats.total + '</td><td>' + stats.pct + '%</td></tr>';
+                html += '</tbody></table>';
+                if (stats.suppressed && stats.suppressed.length) {
+                    html += '<div style="margin-top:14px;font-size:11px;color:#888">⚠ ' + stats.suppressed.length + ' סקרי עצים הוחרגו כדי למנוע כפילות (תכניות חופפות עם אותם עצים).</div>';
+                }
+                const csvRows = ['"#","שם תכנית","נעקרים","סה""כ","%"'];
+                stats.plans.forEach((row, i) => {
+                    const cell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    csvRows.push([cell(i + 1), cell(row.name), cell(row.removed), cell(row.total), cell(row.pct + '%')].join(','));
+                });
+                csvRows.push('"","סה""כ","' + stats.removed + '","' + stats.total + '","' + stats.pct + '%"');
+                if (valencyAgg) {
+                    csvRows.push('');
+                    csvRows.push('"פילוח ערכיות × המלצה"');
+                    const RECO_LABELS_CSV = { shimur: 'שימור', krita: 'כריתה', haataka: 'העתקה', stump: 'גדם', lo_nidresh: 'לא נדרש' };
+                    const recos = Object.keys(valencyAgg.by_reco || {}).filter(k => k in RECO_LABELS_CSV);
+                    csvRows.push(['"ערכיות"', ...recos.map(r => '"' + RECO_LABELS_CSV[r] + '"'), '"סה""כ"', '"% נעקרים"'].join(','));
+                    [['17-20','גבוהה מאד'],['14-16','גבוהה'],['7-13','בינונית'],['0-6','נמוכה']].forEach(([k, label]) => {
+                        const rowTotal = (valencyAgg.bucket_totals || {})[k] || 0;
+                        if (rowTotal === 0) return;
+                        const rb = (valencyAgg.by_bucket || {})[k] || {};
+                        const removed = (rb.krita || 0) + (rb.haataka || 0);
+                        const pct = rowTotal > 0 ? Math.round(removed / rowTotal * 100) : 0;
+                        csvRows.push(['"' + label + '"', ...recos.map(r => '"' + (rb[r] || 0) + '"'), '"' + rowTotal + '"', '"' + pct + '%"'].join(','));
+                    });
+                }
+                const csvContent = csvRows.join('\n');
+                html += '<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="trees_report.csv";a.click();});<\/script>';
+                html += '</body></html>';
+                w.document.write(html);
+                w.document.close();
+                w.focus();
             }
 
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
