@@ -2650,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-17-projector-wip-hidden';
+        const APP_VERSION = '2026-05-17-mevar10-corrected';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -6369,7 +6369,7 @@
                         html +=
                             '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
                             '<div style="font-size:36px;font-weight:bold;color:#e94560">' + pct + '%</div>' +
-                            '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + removed + ' מתוך ' + rec.total + ')</div>' +
+                            '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + removed + ' מתוך ' + rec.total + ')</div>' +
                             '</div>' +
                             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
                             '<div style="padding:8px;background:rgba(76,175,80,0.12);border-radius:6px"><div style="color:#888;font-size:10px">שימור</div><div style="font-size:18px;font-weight:bold;color:#4CAF50">' + (rec.shimur || 0) + '</div></div>' +
@@ -6507,7 +6507,7 @@
                         html +=
                             '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
                             '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
-                            '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
+                            '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
                             '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
                             '</div>' +
                             '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
@@ -7230,7 +7230,7 @@
                     html +=
                         '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
                         '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' +
-                        '<div style="font-size:12px;color:#aaa">עצים לעקירה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
+                        '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' +
                         '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' +
                         '</div>' +
                         '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' +
@@ -14042,6 +14042,30 @@
                         suppressedBy: null,
                     });
                 });
+                // Step 1.5: dedup by identical tree-survey signature.
+                // When XPLAN attributes the same tree points to multiple overlapping plans
+                // (e.g. base plan + amendment), the candidates have IDENTICAL totals/recos.
+                // Spatial-overlap detection may miss these pairs if their area-overlap is
+                // small. The signature itself is a strong "same trees" signal — collapse
+                // each signature group to one survivor (lowest taba key alphabetically).
+                {
+                    const sigGroups = new Map();
+                    candidates.forEach(c => {
+                        if (c.isTama) return; // skip TAMA38 — they're keyed by tik
+                        const rec = ts[c.key];
+                        const sig = [rec.total, rec.krita || 0, rec.shimur || 0, rec.haataka || 0, rec.lo_nidresh || 0].join('|');
+                        if (!sigGroups.has(sig)) sigGroups.set(sig, []);
+                        sigGroups.get(sig).push(c);
+                    });
+                    sigGroups.forEach(group => {
+                        if (group.length < 2) return;
+                        group.sort((a, b) => String(a.key).localeCompare(String(b.key)));
+                        const winner = group[0];
+                        for (let i = 1; i < group.length; i++) {
+                            group[i].suppressedBy = winner.key;
+                        }
+                    });
+                }
                 // Step 2: dedup by significant spatial overlap — among taba-candidates with
                 // overlapping geometries (≥50% area), keep the one with highest `total`.
                 // Dropped candidates record which `suppressedBy` won. TAMA38 plans are not
@@ -14350,23 +14374,35 @@
                                 html += `<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">${RECO_LABELS[reco]}</th>`;
                             }
                             html += '<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">סה"כ</th>';
+                            html += '<th style="padding:3px 4px;text-align:center;border:1px solid #ddd" title="כריתה+העתקה כאחוז מהשורה">% נעקרים</th>';
                             html += '</tr></thead><tbody>';
+                            const HIGH_BUCKETS = new Set(['17-20', '14-16']);
                             for (const [key, label, color] of BUCKETS) {
                                 const rowTotal = (valency.bucket_totals || {})[key] || 0;
                                 if (rowTotal === 0) continue;
-                                html += `<tr><td style="padding:3px 4px;border:1px solid #ddd;color:${color};font-weight:600">${label}</td>`;
+                                const rowBucket = (valency.by_bucket || {})[key] || {};
+                                const rowRemoved = (rowBucket.krita || 0) + (rowBucket.haataka || 0);
+                                const rowPct = rowTotal > 0 ? Math.round(rowRemoved / rowTotal * 100) : 0;
+                                const highlight = HIGH_BUCKETS.has(key) ? 'background:rgba(231,76,60,0.06);' : '';
+                                html += `<tr style="${highlight}"><td style="padding:3px 4px;border:1px solid #ddd;color:${color};font-weight:600">${label}</td>`;
                                 for (const reco of recosPresent) {
-                                    const cellVal = ((valency.by_bucket || {})[key] || {})[reco] || 0;
+                                    const cellVal = (rowBucket || {})[reco] || 0;
                                     html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd">${cellVal || '·'}</td>`;
                                 }
                                 html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${rowTotal}</td>`;
+                                const pctColor = HIGH_BUCKETS.has(key) ? '#c0392b' : '#666';
+                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;color:${pctColor};font-weight:${HIGH_BUCKETS.has(key) ? '700' : '500'}">${rowPct}%</td>`;
                                 html += '</tr>';
                             }
+                            const totalRemoved = (valency.by_reco?.krita || 0) + (valency.by_reco?.haataka || 0);
+                            const totalAll = valency.total_trees || 0;
+                            const totalPct = totalAll > 0 ? Math.round(totalRemoved / totalAll * 100) : 0;
                             html += '<tr style="background:#fafafa"><td style="padding:3px 4px;border:1px solid #ddd;font-weight:600">סה"כ</td>';
                             for (const reco of recosPresent) {
                                 html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${(valency.by_reco || {})[reco] || 0}</td>`;
                             }
-                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${valency.total_trees || 0}</td>`;
+                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${totalAll}</td>`;
+                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${totalPct}%</td>`;
                             html += '</tr>';
                             html += '</tbody></table>';
                         }
