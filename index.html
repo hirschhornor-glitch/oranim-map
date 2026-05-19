@@ -20642,7 +20642,7 @@
                                                 csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + p.units_add + '","' + (p.stage||p.status_mavat||'').replace(/"/g,'""') + '"');
                                             });
                                             csvRows.push('"","סה\\"כ","","' + total + '",""');
-                                            const csvContent = csvRows.join('\\n');
+                                            const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="דוח_תכניות_' + (cellReport.statusLabel||'').replace(/[\s\/]/g,'_') + '.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
@@ -20709,7 +20709,7 @@
                                             csvRows.push(k + ',' + row.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(row.byStage[s.index]||0)).join(',') + ',' + row.avgMimush + '%,' + (row.tailCount||0) + ',' + MILESTONE_YEARS.map(y=>Math.round(row.byYear[y]||0)).join(','));
                                         });
                                         if (tots) csvRows.push('סה"כ,' + tots.total + ',' + MIMUSH_STAGES.filter(s=>s.index<=6).map(s=>(tots.byStage[s.index]||0)).join(',') + ',' + tots.avgMimush + '%,' + (tots.tailCount||0) + ',' + MILESTONE_YEARS.map(y=>Math.round(tots.byYear[y]||0)).join(','));
-                                        const csvContent = csvRows.join('\\n');
+                                        const csvContent = csvRows.join('\n');
                                         html += '<div class="print-btns"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">הדפסה</button>';
                                         html += '<button id="csvBtn" style="background:#2d6a4f;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600">Excel/CSV</button></div>';
                                         html += '<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="mimush_report.csv";a.click()});<\/script>';
@@ -21117,7 +21117,7 @@
                                             plans.forEach((p, i) => {
                                                 csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (p.mavat_date||'-') + '","' + (p.objection_end_date||'-') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
                                             });
-                                            const csvContent = csvRows.join('\\n');
+                                            const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="הפקדות_להתנגדויות.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
@@ -21429,7 +21429,7 @@
                                                 const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
                                                 csvRows.push('"' + (i+1) + '","' + (mt.meeting_date||'-') + '","' + (mt.meeting_time||'-') + '","' + committeeLabel + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + (mt.purpose||'-').replace(/"/g,'""') + '","' + (p._unmatched ? '-' : (p.status_mavat||'-').trim()).replace(/"/g,'""') + '","' + (p.minahak||'-').trim().replace(/"/g,'""') + '"');
                                             });
-                                            const csvContent = csvRows.join('\\n');
+                                            const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="ישיבות_קרובות.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
