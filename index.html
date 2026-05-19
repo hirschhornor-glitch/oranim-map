@@ -19568,11 +19568,23 @@
                                                                 </button>
                                                             </div>
                                                         </td>
-                                                        {subs.map(s => (
-                                                            <td key={s} style={{color: '#8ecae6', fontWeight: 600}}>
+                                                        {subs.map(s => {
+                                                            const subPlansByStatus = unitsData.plansBySub && unitsData.plansBySub[unitsDrilldown] && unitsData.plansBySub[unitsDrilldown][s];
+                                                            const seen = new Set();
+                                                            const subAllPlans = subPlansByStatus
+                                                                ? Object.values(subPlansByStatus).flat().filter(p => { if (seen.has(p.plan_name)) return false; seen.add(p.plan_name); return true; })
+                                                                : [];
+                                                            return (
+                                                            <td key={s}
+                                                                style={subAllPlans.length > 0
+                                                                    ? {color: '#8ecae6', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted'}
+                                                                    : {color: '#8ecae6', fontWeight: 600}}
+                                                                onClick={() => { if (subAllPlans.length > 0) setCellReport({minahak: s, statusKey: 'all', statusLabel: 'כל הסטטוסים', plans: subAllPlans}); }}
+                                                                title={subAllPlans.length > 0 ? `לחץ לצפייה ב-${subAllPlans.length} תכניות בכל הסטטוסים` : ''}
+                                                            >
                                                                 {(subData[s].units_add || 0).toLocaleString()}
-                                                            </td>
-                                                        ))}
+                                                            </td>);
+                                                        })}
                                                         <td style={{color: '#8ecae6', fontWeight: 700, background: '#141440'}}>
                                                             {Object.values(subData).reduce((sum, d) => sum + (d.units_add || 0), 0).toLocaleString()}
                                                         </td>
