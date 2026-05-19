@@ -19436,6 +19436,91 @@
                                     ) : (
                                         <h2>🏠 תוספת יח"ד לפי מינהל קהילתי</h2>
                                     )}
+                                    <button
+                                        title="הדפסה / ייצוא CSV"
+                                        style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'6px 14px',cursor:'pointer',fontSize:12,fontWeight:600,marginLeft:8,whiteSpace:'nowrap'}}
+                                        onClick={() => {
+                                            if (!unitsData) return;
+                                            const isDrill = !!unitsDrilldown;
+                                            const title = isDrill ? (unitsDrilldown + ' — פירוט לפי תת שכונה') : 'תוספת יח"ד לפי מינהל קהילתי';
+                                            const cols = isDrill ? Object.keys(unitsData.bySub[unitsDrilldown] || {}).sort() : unitsData.minahaks;
+                                            const cell = isDrill ? (c => unitsData.bySub[unitsDrilldown][c] || {}) : (c => unitsData.byMinahak[c] || {});
+                                            const getStatusVal = isDrill
+                                                ? (col, g) => {
+                                                    const bs = cell(col).byStatus || {};
+                                                    return (g.match && g.match.length) ? g.match.reduce((s, st) => s + (bs[st] || 0), 0) : (bs[g.key] || 0);
+                                                }
+                                                : (col, g) => (cell(col).byStatus || {})[g.key] || 0;
+                                            // Row total sums all entries (including ones not shown as
+                                                            // columns — e.g. unassigned minahak or excluded גבעת המטוס) so the
+                                                            // total matches the on-screen table.
+                                            const allCells = isDrill
+                                                ? Object.values(unitsData.bySub[unitsDrilldown] || {})
+                                                : Object.values(unitsData.byMinahak || {});
+                                            const rowTotal = (getter) => allCells.reduce((s, d) => s + (getter(d) || 0), 0);
+                                            const allStatusVal = isDrill
+                                                ? (g) => allCells.reduce((s, d) => {
+                                                    const bs = d.byStatus || {};
+                                                    return s + ((g.match && g.match.length) ? g.match.reduce((a, st) => a + (bs[st] || 0), 0) : (bs[g.key] || 0));
+                                                }, 0)
+                                                : (g) => allCells.reduce((s, d) => s + ((d.byStatus || {})[g.key] || 0), 0);
+                                            const rows = [
+                                                { label: 'יח"ד קיימות', vals: cols.map(c => cell(c).units_in || 0), total: rowTotal(d => d.units_in) },
+                                                { label: 'יח"ד תוספת', vals: cols.map(c => cell(c).units_add || 0), total: rowTotal(d => d.units_add), bold: true },
+                                            ];
+                                            (unitsData.statusGroups || []).forEach(g => {
+                                                const vals = cols.map(c => getStatusVal(c, g));
+                                                const tot = allStatusVal(g);
+                                                if (tot === 0) return;
+                                                rows.push({ label: g.label, vals, total: tot, indent: true, color: g.color });
+                                            });
+                                            rows.push({ label: 'סה"כ (קיימות + תוספת)', vals: cols.map(c => (cell(c).units_in || 0) + (cell(c).units_add || 0)), total: rowTotal(d => (d.units_in || 0) + (d.units_add || 0)), grandTotal: true });
+                                            const esc = s => String(s == null ? '' : s).replace(/"/g, '""');
+                                            const csvLines = ['"שורה",' + cols.map(c => '"' + esc(c) + '"').join(',') + ',"סה""כ"'];
+                                            rows.forEach(r => {
+                                                csvLines.push('"' + esc(r.label) + '",' + r.vals.join(',') + ',' + r.total);
+                                            });
+                                            const csv = csvLines.join('\n');
+                                            const csvFile = (isDrill ? (unitsDrilldown + '_תת_שכונות') : 'יח_ד_לפי_מינהל') + '.csv';
+                                            const win = window.open('', '_blank', 'width=1100,height=800');
+                                            let html = '<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>';
+                                            html += '<style>body{font-family:Arial,Assistant,sans-serif;padding:20px;direction:rtl;color:#222}';
+                                            html += 'h2{margin:0 0 4px}.sub{color:#666;margin:0 0 14px;font-size:12px}';
+                                            html += 'table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}';
+                                            html += 'th,td{padding:8px 10px;text-align:center;border-bottom:1px solid #ddd}';
+                                            html += 'th{background:#1a1a2e;color:#fff;font-weight:700}';
+                                            html += 'th:first-child,td:first-child{text-align:right;background:#f5f5f5;font-weight:600}';
+                                            html += 'tr.indent td:first-child{padding-right:24px;font-weight:normal}';
+                                            html += 'tr.bold td{font-weight:700;background:#fafbff}';
+                                            html += 'tr.total td{border-top:2px solid #333;background:#fef0f0;color:#c00;font-weight:700}';
+                                            html += 'td.t{font-weight:700;background:#f9f9ff}';
+                                            html += '@media print{.no-print{display:none!important}}</style></head><body>';
+                                            html += '<div class="no-print" style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">';
+                                            html += '<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>';
+                                            html += '<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF (יעד: שמור כ-PDF)</button>';
+                                            html += '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; ייצוא CSV</button>';
+                                            html += '</div>';
+                                            html += '<h2>🏠 ' + title + '</h2>';
+                                            html += '<p class="sub">' + new Date().toLocaleDateString('he-IL') + '</p>';
+                                            html += '<table><thead><tr><th></th>';
+                                            cols.forEach(c => { html += '<th>' + c + '</th>'; });
+                                            html += '<th>סה"כ</th></tr></thead><tbody>';
+                                            rows.forEach(r => {
+                                                const cls = [r.indent && 'indent', r.bold && 'bold', r.grandTotal && 'total'].filter(Boolean).join(' ');
+                                                const labelCell = r.color
+                                                    ? '<td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + r.color + ';margin-left:6px;vertical-align:middle"></span>' + r.label + '</td>'
+                                                    : '<td>' + r.label + '</td>';
+                                                html += '<tr class="' + cls + '">' + labelCell;
+                                                r.vals.forEach(v => { html += '<td>' + (v || 0).toLocaleString() + '</td>'; });
+                                                html += '<td class="t">' + r.total.toLocaleString() + '</td></tr>';
+                                            });
+                                            html += '</tbody></table>';
+                                            html += '<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csv) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=' + JSON.stringify(csvFile) + ';a.click()});<\/script>';
+                                            html += '</body></html>';
+                                            win.document.write(html);
+                                            win.document.close();
+                                            win.focus();
+                                        }}>📊 הדפסה / CSV</button>
                                     <button className="modal-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
