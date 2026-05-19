@@ -4921,6 +4921,7 @@
                 window.__tama38Permits = {};
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
+                window.__treeValencies = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
@@ -4931,6 +4932,7 @@
                     ['__tama38Permits', 'data/tama38_permits.json'],
                     ['__treeSurveys', 'data/tree_surveys.json'],
                     ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'],
+                    ['__treeValencies', 'data/tree_valencies.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                 ];
@@ -5302,6 +5304,7 @@
                             else if (key === '__tama38Permits') { window.__tama38Permits = data || {}; }
                             else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                             else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
+                            else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
@@ -14319,6 +14322,54 @@
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${total}</span></div>`;
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">העתקה/כריתה</span><span class="popup-pair-value">${removed} <span style="color:#5dade2;font-size:11px">(${removedPct}%)</span></span></div>`;
                     html += '</div>';
+
+                    // Cross-tab: valency × recommendation (from tree_valencies.json)
+                    const valency = (window.__treeValencies || {})[taba];
+                    if (valency && valency.by_bucket) {
+                        const BUCKETS = [
+                            ['17-20', 'גבוהה מאד', '#27ae60'],
+                            ['14-16', 'גבוהה',     '#82c91e'],
+                            ['7-13',  'בינונית',   '#fab005'],
+                            ['0-6',   'נמוכה',     '#e67e22'],
+                        ];
+                        const RECO_LABELS = {
+                            shimur: 'שימור',
+                            krita:  'כריתה',
+                            haataka:'העתקה',
+                            stump:  'גדם',
+                        };
+                        const recosPresent = Object.keys(valency.by_reco || {})
+                            .filter(k => k in RECO_LABELS);
+                        if (recosPresent.length > 0) {
+                            html += `<div class="popup-sub-row" style="margin-top:4px">פילוח ערכיות × המלצה${valency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : ''}</div>`;
+                            html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;direction:rtl">';
+                            html += '<thead><tr style="background:#f4f4f4">';
+                            html += '<th style="padding:3px 4px;text-align:right;border:1px solid #ddd">ערכיות</th>';
+                            for (const reco of recosPresent) {
+                                html += `<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">${RECO_LABELS[reco]}</th>`;
+                            }
+                            html += '<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">סה"כ</th>';
+                            html += '</tr></thead><tbody>';
+                            for (const [key, label, color] of BUCKETS) {
+                                const rowTotal = (valency.bucket_totals || {})[key] || 0;
+                                if (rowTotal === 0) continue;
+                                html += `<tr><td style="padding:3px 4px;border:1px solid #ddd;color:${color};font-weight:600">${label}</td>`;
+                                for (const reco of recosPresent) {
+                                    const cellVal = ((valency.by_bucket || {})[key] || {})[reco] || 0;
+                                    html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd">${cellVal || '·'}</td>`;
+                                }
+                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${rowTotal}</td>`;
+                                html += '</tr>';
+                            }
+                            html += '<tr style="background:#fafafa"><td style="padding:3px 4px;border:1px solid #ddd;font-weight:600">סה"כ</td>';
+                            for (const reco of recosPresent) {
+                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${(valency.by_reco || {})[reco] || 0}</td>`;
+                            }
+                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${valency.total_trees || 0}</td>`;
+                            html += '</tr>';
+                            html += '</tbody></table>';
+                        }
+                    }
                 }
 
                 html += '</div>'; // end popup-body
@@ -21825,6 +21876,321 @@
                                             </div>);
                                         });
                                     })()}
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── Shavaz Kayam Report (שב"צ קיים לפי תת-שכונה) ── */}
+                    {shavazKayamReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.shavaz_kayam) {
+                            return (
+                                <div className="units-overlay" onClick={() => setShavazKayamReport(false)}>
+                                    <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:520}}>
+                                        <button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
+                                        <div style={{padding:'30px 24px',color:'#e0e0ff',textAlign:'center'}}>
+                                            <h2>🏛️ שב"צ קיים</h2>
+                                            <p style={{color:'#aab',marginTop:12}}>שכבת "שב"צ קיים" לא נטענה. הפעל אותה בתפריט השכבות ונסה שוב.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // Local sub-polygon lookup (centroid → sub_neighborhood name)
+                        const subPolygonByName = {};
+                        if (gd.sub_neighborhoods) {
+                            gd.sub_neighborhoods.features.forEach(f => {
+                                const raw = f.properties && f.properties.schn_nama;
+                                if (!raw || !f.geometry) return;
+                                if (!subPolygonByName[raw]) subPolygonByName[raw] = f.geometry;
+                            });
+                        }
+                        const ringHit = (lng, lat, ring) => {
+                            let inside = false;
+                            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi)) inside = !inside;
+                            }
+                            return inside;
+                        };
+                        const inGeom = (lng, lat, g) => {
+                            if (!g) return false;
+                            if (g.type === 'Polygon') return ringHit(lng, lat, g.coordinates[0]);
+                            if (g.type === 'MultiPolygon') {
+                                for (const poly of g.coordinates) { if (ringHit(lng, lat, poly[0])) return true; }
+                            }
+                            return false;
+                        };
+                        const findSub = (lng, lat) => {
+                            for (const sn in subPolygonByName) {
+                                if (inGeom(lng, lat, subPolygonByName[sn])) return sn;
+                            }
+                            return null;
+                        };
+                        const ringCentroid = (ring) => {
+                            let cx = 0, cy = 0, cn = 0;
+                            for (const c of ring) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; cn++; } }
+                            return cn === 0 ? null : [cx / cn, cy / cn];
+                        };
+                        const featureCentroid = (g) => {
+                            if (!g) return null;
+                            if (g.type === 'Polygon') return ringCentroid(g.coordinates[0]);
+                            if (g.type === 'MultiPolygon') return ringCentroid(g.coordinates[0][0]);
+                            return null;
+                        };
+
+                        // Clean "building_type" the same way the popup does (strip sport tokens, count duplicates)
+                        const SPORT_RE = /ספורט|מגרש כדור|מגרש כטר|בריכת שחי/;
+                        const cleanBuildingType = (raw) => {
+                            if (!raw) return '';
+                            const items = String(raw).split(/[;,]/).map(s => s.trim()).filter(s => s && !SPORT_RE.test(s));
+                            const counts = {};
+                            items.forEach(i => { counts[i] = (counts[i] || 0) + 1; });
+                            return Object.entries(counts).map(([name, c]) => c === 1 ? name : c + ' ' + name).join('; ');
+                        };
+
+                        const byTaba = window.__planByTaba || {};
+
+                        // Build rows
+                        const rows = [];
+                        gd.shavaz_kayam.features.forEach((f, idx) => {
+                            const p = f.properties || {};
+                            const ctr = featureCentroid(f.geometry);
+                            const sub = ctr ? findSub(ctr[0], ctr[1]) : null;
+                            const subNorm = sub ? (SUB_NORMALIZE[sub] || sub) : '';
+                            const minahak = subNorm ? (SUB_TO_MINAHAK[subNorm] || '') : '';
+                            const taba = cleanNull(p.TABA) || cleanNull(p.taba) || '';
+                            const tabaNum = (taba || '').replace(/[^\d]/g, '');
+                            const planRow = byTaba[taba] || byTaba[tabaNum] || null;
+                            const buildingName = fixHebrewText(cleanNull(p.building_name) || '');
+                            const buildingType = fixHebrewText(cleanBuildingType(cleanNull(p.building_type) || cleanNull(p.Descriptio) || ''));
+                            rows.push({
+                                idx,
+                                feature: f,
+                                taba,
+                                migrash: cleanNull(p.MIGRASH) || cleanNull(p.migrash) || '',
+                                areaSqm: parseFloat(p.POLY_AREA) || 0,
+                                sub: sub || '',
+                                subNorm,
+                                minahak,
+                                buildingName,
+                                buildingType,
+                                planSummary: planRow ? (planRow.plan_summary || planRow.plan_name_he || '') : '',
+                                hasActual: !!(buildingName || buildingType),
+                                source: p.gmaps_source ? 'Google Maps' : (p.osm_source ? 'OSM' : ''),
+                            });
+                        });
+
+                        // Lists for filter selects
+                        const allSubs = [...new Set(rows.map(r => r.sub).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
+                        const allMinahaks = [...new Set(rows.map(r => r.minahak).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
+
+                        const f = shavazReportFilter;
+                        const q = (f.q || '').trim().toLowerCase();
+                        const filtered = rows.filter(r => {
+                            if (f.sub !== 'all' && r.sub !== f.sub) return false;
+                            if (f.minahak !== 'all' && r.minahak !== f.minahak) return false;
+                            if (q) {
+                                const joined = [r.taba, r.migrash, r.buildingName, r.buildingType, r.planSummary, r.sub].join(' ').toLowerCase();
+                                if (!joined.includes(q)) return false;
+                            }
+                            return true;
+                        });
+
+                        // Group by sub
+                        const groups = {};
+                        filtered.forEach(r => {
+                            const key = r.sub || '— ללא תת-שכונה —';
+                            if (!groups[key]) groups[key] = { sub: key, minahak: r.minahak, items: [], totalArea: 0 };
+                            groups[key].items.push(r);
+                            groups[key].totalArea += r.areaSqm;
+                        });
+                        const groupList = Object.values(groups).sort((a,b) => b.totalArea - a.totalArea);
+
+                        const totalAreaAll = filtered.reduce((s,r) => s + r.areaSqm, 0);
+                        const withActual = filtered.filter(r => r.hasActual).length;
+
+                        const jumpToShavaz = (r) => {
+                            const gd2 = geoDataRef.current;
+                            const map = mapInstanceRef.current;
+                            if (!map || !gd2.shavaz_kayam) return;
+                            const feat = r.feature;
+                            if (!feat || !feat.geometry) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                            setShavazKayamReport(false);
+                            setLayers(prev => ({ ...prev, shavaz_kayam: true }));
+                            setTimeout(() => {
+                                map.fitBounds(bounds, { padding:[60,60], maxZoom: 18 });
+                                setTimeout(() => {
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup shavaz-popup shavaz-kayam-popup' })
+                                        .setLatLng(center)
+                                        .setContent(buildShavazPopup(feat.properties, false, false, null));
+                                    popup.openOn(map);
+                                    bindShavazPopupEvents(popup, feat.properties, center, null, [{ properties: feat.properties, isFuture: false }], 0);
+                                }, 500);
+                            }, 100);
+                        };
+
+                        const fmtArea = (sqm) => {
+                            if (!sqm) return '-';
+                            const dunam = sqm / 1000;
+                            return `${Math.round(sqm).toLocaleString()} מ"ר (${dunam.toFixed(2)} דונם)`;
+                        };
+
+                        function exportShavazCSV() {
+                            if (!filtered.length) { alert('אין שורות לייצוא'); return; }
+                            const cols = ['תת-שכונה','מינהל','תב"ע','מגרש','שם תכנית','שטח (מ"ר)','שטח (דונם)','שם בפועל','שימוש בפועל','מקור'];
+                            const out = [cols.join(',')];
+                            groupList.forEach(g => {
+                                g.items.forEach(r => {
+                                    const row = [
+                                        g.sub, r.minahak || '', r.taba || '', r.migrash || '',
+                                        r.planSummary || '',
+                                        r.areaSqm ? Math.round(r.areaSqm) : '',
+                                        r.areaSqm ? (r.areaSqm/1000).toFixed(2) : '',
+                                        r.buildingName || '', r.buildingType || '', r.source || ''
+                                    ];
+                                    out.push(row.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','));
+                                });
+                            });
+                            const blob = new Blob(['﻿' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'שבץ_קיים_לפי_תת_שכונה.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        }
+
+                        function printShavazReport() {
+                            const win = window.open('', '_blank');
+                            const today = new Date().toLocaleDateString('he-IL');
+                            let body = '<h2>🏛️ שב"צ קיים לפי תת-שכונה — ' + today + '</h2>';
+                            body += '<p class="summary">' + groupList.length + ' תתי-שכונות · ' + filtered.length + ' מגרשים · ' +
+                                'סה"כ ' + Math.round(totalAreaAll).toLocaleString() + ' מ"ר (' + (totalAreaAll/1000).toFixed(1) + ' דונם) · ' +
+                                withActual + ' עם מידע על שימוש בפועל</p>';
+                            if (f.sub !== 'all' || f.minahak !== 'all' || q) {
+                                const parts = [];
+                                if (f.sub !== 'all') parts.push('תת-שכונה: ' + f.sub);
+                                if (f.minahak !== 'all') parts.push('מינהל: ' + f.minahak);
+                                if (q) parts.push('חיפוש: ' + f.q);
+                                body += '<p class="summary" style="color:#888">סינון: ' + parts.join(' · ') + '</p>';
+                            }
+                            groupList.forEach(g => {
+                                body += '<h3>' + g.sub + ' <span class="meta">· ' + g.items.length + ' מגרשים · ' +
+                                    Math.round(g.totalArea).toLocaleString() + ' מ"ר (' + (g.totalArea/1000).toFixed(1) + ' דונם)' +
+                                    (g.minahak ? ' · ' + g.minahak : '') + '</span></h3>';
+                                const rowsHtml = g.items
+                                    .sort((a,b) => b.areaSqm - a.areaSqm)
+                                    .map(r => {
+                                        const tabaLot = [r.taba, r.migrash].filter(Boolean).join(' / ');
+                                        const actual = [r.buildingName, r.buildingType].filter(Boolean).join(' — ');
+                                        return '<tr>' +
+                                            '<td>' + tabaLot + '</td>' +
+                                            '<td>' + (r.planSummary || '-') + '</td>' +
+                                            '<td style="text-align:left">' + (r.areaSqm ? Math.round(r.areaSqm).toLocaleString() : '-') + '</td>' +
+                                            '<td style="text-align:left">' + (r.areaSqm ? (r.areaSqm/1000).toFixed(2) : '-') + '</td>' +
+                                            '<td>' + (actual || '-') + '</td>' +
+                                            '</tr>';
+                                    }).join('');
+                                body += '<table><thead><tr>' +
+                                    '<th>תב"ע / מגרש</th><th>שם תכנית</th><th>שטח (מ"ר)</th><th>דונם</th><th>שימוש בפועל</th>' +
+                                    '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+                            });
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>שב"צ קיים לפי תת-שכונה</title>' +
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}' +
+                                'h2{color:#8B4513;margin-bottom:6px}' +
+                                'h3{color:#5C2E0A;margin:18px 0 6px;font-size:14px;border-bottom:1px solid #d2b48c;padding-bottom:3px}' +
+                                'h3 .meta{color:#666;font-weight:400;font-size:12px}' +
+                                '.summary{color:#555;margin-bottom:16px}' +
+                                'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}' +
+                                'th,td{border:1px solid #ccc;padding:5px;text-align:right;vertical-align:top}' +
+                                'th{background:#f5e6d3}' +
+                                '@media print { h3 { page-break-after: avoid } table { page-break-inside: avoid } }' +
+                                '</style></head><body>' + body + '</body></html>');
+                            win.document.close();
+                            setTimeout(() => win.print(), 250);
+                        }
+
+                        return (
+                        <div className="units-overlay" onClick={() => setShavazKayamReport(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1000px,95vw)',maxHeight:'88vh',display:'flex',flexDirection:'column'}}>
+                                <div className="units-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+                                    <h2 style={{margin:0,color:'#e0e0ff',fontSize:17}}>🏛️ שב"צ קיים לפי תת-שכונה</h2>
+                                    <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                                        <button onClick={printShavazReport} style={{background:'#3a5a8c',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📄 הדפסה / PDF</button>
+                                        <button onClick={exportShavazCSV} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📊 ייצוא אקסל</button>
+                                        <button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
+                                    </div>
+                                </div>
+                                <div style={{padding:'8px 16px',borderBottom:'1px solid #2a2a4a',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',fontSize:11}}>
+                                    <span style={{color:'#aab'}}>תת-שכונה:</span>
+                                    <select value={f.sub} onChange={e => setShavazReportFilter(prev => ({...prev, sub: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                        <option value="all">הכל ({allSubs.length})</option>
+                                        {allSubs.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                    <span style={{color:'#aab',marginRight:6}}>מינהל:</span>
+                                    <select value={f.minahak} onChange={e => setShavazReportFilter(prev => ({...prev, minahak: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                        <option value="all">הכל</option>
+                                        {allMinahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <input type="text" placeholder="חיפוש (תב״ע / שם / שימוש)" value={f.q}
+                                        onChange={e => setShavazReportFilter(prev => ({...prev, q: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit',flex:'1 1 160px',minWidth:120}} />
+                                    <span style={{color:'#9ca3af',marginRight:'auto'}}>
+                                        {groupList.length} תתי-שכונות · {filtered.length} מגרשים · {Math.round(totalAreaAll).toLocaleString()} מ"ר · {withActual} עם מידע בפועל
+                                    </span>
+                                </div>
+                                <div style={{overflowY:'auto',flex:1,padding:'8px 12px'}}>
+                                    {groupList.length === 0 && (
+                                        <div style={{padding:30,textAlign:'center',color:'#aab'}}>אין שורות התואמות את הסינון.</div>
+                                    )}
+                                    {groupList.map(g => (
+                                        <div key={g.sub} style={{marginBottom:14,border:'1px solid #2a2a4a',borderRadius:6,background:'#16162a'}}>
+                                            <div style={{padding:'7px 12px',background:'rgba(139,69,19,0.18)',borderBottom:'1px solid #2a2a4a',display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                                                <span style={{color:'#d2b48c',fontWeight:600,fontSize:13}}>🏘️ {g.sub}</span>
+                                                {g.minahak && <span style={{color:'#ce93d8',fontSize:11}}>{g.minahak}</span>}
+                                                <span style={{color:'#9ca3af',fontSize:11,marginRight:'auto'}}>
+                                                    {g.items.length} מגרשים · {Math.round(g.totalArea).toLocaleString()} מ"ר ({(g.totalArea/1000).toFixed(2)} דונם)
+                                                </span>
+                                            </div>
+                                            <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse'}}>
+                                                <thead>
+                                                    <tr style={{borderBottom:'1px solid #2a2a4a',background:'#1c1c30'}}>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600,width:120}}>תב״ע / מגרש</th>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600}}>שם תכנית</th>
+                                                        <th style={{textAlign:'left',padding:'5px 8px',color:'#bbb',fontWeight:600,width:130}}>שטח</th>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600}}>שימוש בפועל</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {g.items.slice().sort((a,b) => b.areaSqm - a.areaSqm).map((r, i) => {
+                                                        const tabaLot = [r.taba, r.migrash].filter(Boolean).join(' / ') || '-';
+                                                        const actual = [r.buildingName, r.buildingType].filter(Boolean).join(' — ');
+                                                        return (
+                                                        <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                            onClick={() => jumpToShavaz(r)}
+                                                            title="קליק להצגה על המפה">
+                                                            <td style={{padding:'5px 8px',color:'#64b5f6'}}>{tabaLot}</td>
+                                                            <td style={{padding:'5px 8px',color:'#e0e0e0'}}>{r.planSummary || '-'}</td>
+                                                            <td style={{padding:'5px 8px',color:'#ffa726',textAlign:'left',whiteSpace:'nowrap'}}>{fmtArea(r.areaSqm)}</td>
+                                                            <td style={{padding:'5px 8px',color: actual ? '#a5d6a7' : '#666'}}>{actual || '—'}</td>
+                                                        </tr>);
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>);
