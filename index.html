@@ -2650,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-17-mevar9-east';
+        const APP_VERSION = '2026-05-20-sanmartin1';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14537,64 +14537,21 @@
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">העתקה/כריתה</span><span class="popup-pair-value">${removed} <span style="color:#5dade2;font-size:11px">(${removedPct}%)</span></span></div>`;
                     html += '</div>';
 
-                    // Cross-tab: valency × recommendation (from tree_valencies.json)
+                    // High-valency summary (from tree_valencies.json) — single line,
+                    // calling out the % of high+very-high valency trees being removed.
+                    // Full bucket × recommendation cross-tab lives in the neighborhood
+                    // report instead, to keep the popup compact.
                     const valency = (window.__treeValencies || {})[taba];
-                    if (valency && valency.by_bucket) {
-                        const BUCKETS = [
-                            ['17-20', 'גבוהה מאד', '#27ae60'],
-                            ['14-16', 'גבוהה',     '#82c91e'],
-                            ['7-13',  'בינונית',   '#fab005'],
-                            ['0-6',   'נמוכה',     '#e67e22'],
-                        ];
-                        const RECO_LABELS = {
-                            shimur:     'שימור',
-                            krita:      'כריתה',
-                            haataka:    'העתקה',
-                            stump:      'גדם',
-                            lo_nidresh: 'לא נדרש',
-                        };
-                        const recosPresent = Object.keys(valency.by_reco || {})
-                            .filter(k => k in RECO_LABELS);
-                        if (recosPresent.length > 0) {
-                            html += `<div class="popup-sub-row" style="margin-top:4px">פילוח ערכיות × המלצה${valency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : ''}</div>`;
-                            html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;direction:rtl">';
-                            html += '<thead><tr style="background:#f4f4f4">';
-                            html += '<th style="padding:3px 4px;text-align:right;border:1px solid #ddd">ערכיות</th>';
-                            for (const reco of recosPresent) {
-                                html += `<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">${RECO_LABELS[reco]}</th>`;
-                            }
-                            html += '<th style="padding:3px 4px;text-align:center;border:1px solid #ddd">סה"כ</th>';
-                            html += '<th style="padding:3px 4px;text-align:center;border:1px solid #ddd" title="כריתה+העתקה כאחוז מהשורה">% נעקרים</th>';
-                            html += '</tr></thead><tbody>';
-                            const HIGH_BUCKETS = new Set(['17-20', '14-16']);
-                            for (const [key, label, color] of BUCKETS) {
-                                const rowTotal = (valency.bucket_totals || {})[key] || 0;
-                                if (rowTotal === 0) continue;
-                                const rowBucket = (valency.by_bucket || {})[key] || {};
-                                const rowRemoved = (rowBucket.krita || 0) + (rowBucket.haataka || 0);
-                                const rowPct = rowTotal > 0 ? Math.round(rowRemoved / rowTotal * 100) : 0;
-                                const highlight = HIGH_BUCKETS.has(key) ? 'background:rgba(231,76,60,0.06);' : '';
-                                html += `<tr style="${highlight}"><td style="padding:3px 4px;border:1px solid #ddd;color:${color};font-weight:600">${label}</td>`;
-                                for (const reco of recosPresent) {
-                                    const cellVal = (rowBucket || {})[reco] || 0;
-                                    html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd">${cellVal || '·'}</td>`;
-                                }
-                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${rowTotal}</td>`;
-                                const pctColor = HIGH_BUCKETS.has(key) ? '#c0392b' : '#666';
-                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;color:${pctColor};font-weight:${HIGH_BUCKETS.has(key) ? '700' : '500'}">${rowPct}%</td>`;
-                                html += '</tr>';
-                            }
-                            const totalRemoved = (valency.by_reco?.krita || 0) + (valency.by_reco?.haataka || 0);
-                            const totalAll = valency.total_trees || 0;
-                            const totalPct = totalAll > 0 ? Math.round(totalRemoved / totalAll * 100) : 0;
-                            html += '<tr style="background:#fafafa"><td style="padding:3px 4px;border:1px solid #ddd;font-weight:600">סה"כ</td>';
-                            for (const reco of recosPresent) {
-                                html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:600">${(valency.by_reco || {})[reco] || 0}</td>`;
-                            }
-                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${totalAll}</td>`;
-                            html += `<td style="padding:3px 4px;text-align:center;border:1px solid #ddd;font-weight:700">${totalPct}%</td>`;
-                            html += '</tr>';
-                            html += '</tbody></table>';
+                    if (valency && valency.bucket_totals) {
+                        const highTotal = (valency.bucket_totals['17-20'] || 0) + (valency.bucket_totals['14-16'] || 0);
+                        if (highTotal > 0) {
+                            const highBucket1 = valency.by_bucket['17-20'] || {};
+                            const highBucket2 = valency.by_bucket['14-16'] || {};
+                            const highRemoved = (highBucket1.krita || 0) + (highBucket1.haataka || 0) + (highBucket2.krita || 0) + (highBucket2.haataka || 0);
+                            const highPct = Math.round(highRemoved / highTotal * 100);
+                            const pctColor = highPct >= 50 ? '#c0392b' : (highPct >= 25 ? '#e67e22' : '#27ae60');
+                            const partialNote = valency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : '';
+                            html += `<div class="popup-sub-row" style="margin-top:4px">ערכיות גבוהה+: <span style="color:${pctColor};font-weight:700">${highRemoved} מתוך ${highTotal} (${highPct}%)</span> נעקרים/מועתקים${partialNote}</div>`;
                         }
                     }
                 }
