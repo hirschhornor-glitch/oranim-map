@@ -11576,10 +11576,11 @@
                                 }
                                 return { color: cfg.color, weight: 3, fillOpacity: 0.001, fillColor: cfg.color, dashArray: '6,4' };
                             }
-                            // Voronoi sub-area (מתחם) cells — invisible but clickable.
-                            // Their popup shows the מתחם info; sit between boundary and landuse.
+                            // Voronoi sub-area (מתחם) cells — subtle dashed gray borders,
+                            // almost-transparent fill. Visible enough to be clickable for the
+                            // מתחם popup, faint enough not to obscure landuse colors.
                             if (ft === 'mtchm_zone') {
-                                return { opacity: 0, weight: 0, fillOpacity: 0.001, fillColor: '#000' };
+                                return { color: '#444', weight: 1, opacity: 0.35, fillColor: '#888', fillOpacity: 0.03, dashArray: '4,4', interactive: true };
                             }
                             const c = masterPlanThemeColor(f.properties);
                             return { color: c, weight: 1, fillColor: c, fillOpacity: 0.92 };
