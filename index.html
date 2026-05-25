@@ -2650,7 +2650,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-20-sanmartin1';
+        const APP_VERSION = '2026-05-20-mevar7-gonen';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -8697,6 +8697,66 @@
                 if (map) map.getContainer().classList.remove('measuring');
             }, [clearMeasurement]);
 
+            // Cancel every interactive mode so a fresh one can start without leftover state.
+            // `except` skips the mode-flag write for that mode (the one being activated).
+            // Sub-flags (programaAreaActive, treeAreaActive, etc.) and drawn polygons/centers
+            // are ALWAYS reset — the caller is expected to re-set its own sub-flag right after.
+            // Values: 'measure' | 'area' | 'radius' | 'landuse-compare' | 'shatzaf' | 'tree' | 'programa-area' | 'programa-radius' | null
+            const cancelAllModes = useCallback((except = null) => {
+                const map = mapInstanceRef.current;
+                const isAreaExcept = except === 'area' || except === 'programa-area';
+                const isRadiusExcept = except === 'radius' || except === 'programa-radius';
+
+                // 1. Measure
+                if (except !== 'measure') {
+                    clearMeasurement();
+                    setMeasureMode(null);
+                }
+                // 2. Area drawing: always wipe polygon + sub-flags + result panels.
+                //    Skip setting areaMode=false only if the caller is itself activating an area mode.
+                const r = areaRef.current;
+                if (map && r) {
+                    r.markers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+                    if (r.polygon) { try { map.removeLayer(r.polygon); } catch(e){} }
+                    r.points = []; r.markers = []; r.polygon = null;
+                }
+                if (!isAreaExcept) setAreaMode(false);
+                setAreaPts(0);
+                setAreaFinished(null);
+                programaAreaActiveRef.current = false;
+                treeAreaActiveRef.current = false;
+                setTreeAreaActive(false);
+                const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
+                const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
+                const prev3 = document.getElementById('tree-panel'); if (prev3) prev3.remove();
+                // 3. Radius: always wipe center + sub-flags + result panel.
+                if (!isRadiusExcept) setRadiusMode(false);
+                setRadiusCenter(null);
+                programaRadiusActiveRef.current = false;
+                const prev4 = document.getElementById('radius-select-result'); if (prev4) prev4.remove();
+                // 4. Landuse compare
+                if (except !== 'landuse-compare') {
+                    setLanduseCompareMode(null);
+                    landuseCompareModeRef.current = null;
+                }
+                // 5. Shatzaf
+                if (except !== 'shatzaf') {
+                    setShatzafMode(false);
+                    shatzafModeRef.current = false;
+                }
+                // 6. Tree
+                if (except !== 'tree') {
+                    setTreeMode(false);
+                    treeModeRef.current = false;
+                }
+                // 7. Programa-active UI flag
+                if (except !== 'programa-area' && except !== 'programa-radius') {
+                    setProgramaActive(null);
+                }
+                // 8. Always strip cursor — entry handlers re-add it via useEffect or directly.
+                if (map) map.getContainer().classList.remove('measuring');
+            }, [clearMeasurement]);
+
             // Format distance in m/km
             function fmtDist(m) {
                 if (m >= 1000) return (m / 1000).toFixed(2) + ' ק"מ';
@@ -8774,11 +8834,12 @@
 
                 function onMapClick(e) {
                     // Ignore clicks on controls/popups
-                    if (e.originalEvent && (
-                        e.originalEvent.target.closest('.leaflet-control') ||
-                        e.originalEvent.target.closest('.leaflet-popup') ||
-                        e.originalEvent.target.closest('.map-toolbar') ||
-                        e.originalEvent.target.closest('.measure-result')
+                    const tgt = e.originalEvent && e.originalEvent.target;
+                    if (tgt && (
+                        tgt.closest('.leaflet-control') ||
+                        tgt.closest('.leaflet-popup') ||
+                        tgt.closest('.map-toolbar') ||
+                        tgt.closest('.measure-result')
                     )) return;
 
                     const pt = e.latlng;
@@ -16121,19 +16182,22 @@
                             {activeDropdown === 'measure' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
                                     <button className="toolbar-dropdown-item" data-tip="מדידת מרחק בין נקודות על המפה" onClick={() => {
-                                        clearMeasurement(); setMeasureMode('distance'); setActiveDropdown(null);
+                                        cancelAllModes('measure');
+                                        setMeasureMode('distance'); setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 20L20 2"/><path d="M2 20h4v-4"/><path d="M20 2h-4v4"/></svg>
                                         <span className="sub-label">מרחק</span>
                                     </button>
                                     <button className="toolbar-dropdown-item" data-tip="מדידת שטח ע&quot;י ציור פוליגון" onClick={() => {
-                                        clearMeasurement(); setMeasureMode('area'); setActiveDropdown(null);
+                                        cancelAllModes('measure');
+                                        setMeasureMode('area'); setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/></svg>
                                         <span className="sub-label">שטח</span>
                                     </button>
                                     <button className="toolbar-dropdown-item" data-tip="מדידת רדיוס — לחצו מרכז ואז קצה" onClick={() => {
-                                        clearMeasurement(); setMeasureMode('radius'); setActiveDropdown(null);
+                                        cancelAllModes('measure');
+                                        setMeasureMode('radius'); setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="19" y2="8"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
                                         <span className="sub-label">רדיוס</span>
@@ -16179,10 +16243,16 @@
                             {activeDropdown === 'permits' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
                                     <button className={`toolbar-dropdown-item ${((radiusMode && !programaRadiusActiveRef.current) || radiusCenter) ? 'sub-active' : ''}`} data-tip="קליק על נקודה — היתרים ויח&quot;ד ברדיוס נבחר" onClick={() => {
-                                        if (radiusCenter) { setRadiusCenter(null); }
-                                        // Switching to permits-radius mode: clear the programa flag so the radius effect renders the permits modal
-                                        if (programaRadiusActiveRef.current) { programaRadiusActiveRef.current = false; setProgramaActive(null); }
-                                        setRadiusMode(prev => !prev);
+                                        const wasActiveAndNonPrograma = radiusMode && !programaRadiusActiveRef.current;
+                                        if (wasActiveAndNonPrograma) {
+                                            // Toggle off — just turn radius off
+                                            setRadiusMode(false);
+                                            setRadiusCenter(null);
+                                        } else {
+                                            // Activating: clear every other mode first so clicks aren't double-handled
+                                            cancelAllModes('radius');
+                                            setRadiusMode(true);
+                                        }
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" strokeDasharray="3 3"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="12" x2="20" y2="6"/></svg>
@@ -16240,6 +16310,8 @@
                                                 r.points = []; r.markers = []; r.polygon = null; setAreaMode(false); programaAreaActiveRef.current = false; setProgramaActive(null);
                                             }
                                         } else {
+                                            // Activating: clear every other mode first
+                                            cancelAllModes('programa-area');
                                             setAreaFinished(null);
                                             const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
                                             const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
@@ -16260,6 +16332,8 @@
                                             setProgramaActive(null);
                                             setRadiusMode(false);
                                         } else {
+                                            // Activating: clear every other mode first
+                                            cancelAllModes('programa-radius');
                                             setRadiusCenter(null);
                                             programaRadiusActiveRef.current = true;
                                             setProgramaActive('radius');
@@ -16299,8 +16373,8 @@
                                                 r.points = []; r.markers = []; r.polygon = null; setAreaMode(false);
                                             }
                                         } else {
-                                            // Switching to plans-area mode: clear programa flag so polygon completion shows the plans modal, not programa
-                                            if (programaAreaActiveRef.current) { programaAreaActiveRef.current = false; setProgramaActive(null); }
+                                            // Activating plans-area mode: clear every other mode first
+                                            cancelAllModes('area');
                                             setAreaFinished(null);
                                             const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
                                             setAreaMode(true);
@@ -16321,11 +16395,11 @@
                             )}
                             {activeDropdown === 'landuse-compare' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className="toolbar-dropdown-item" data-tip="בחירת תכנית קיימת על המפה" onClick={() => { setLanduseCompareMode('plan'); setActiveDropdown(null); }}>
+                                    <button className="toolbar-dropdown-item" data-tip="בחירת תכנית קיימת על המפה" onClick={() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('plan'); setActiveDropdown(null); }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
                                         <span className="sub-label">תכנית</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="ציור אזור חופשי להשוואה" onClick={() => { setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }}>
+                                    <button className="toolbar-dropdown-item" data-tip="ציור אזור חופשי להשוואה" onClick={() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                         <span className="sub-label">אזור</span>
                                     </button>
@@ -16464,8 +16538,7 @@
                             {activeDropdown === 'green-trees' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
                                     <button className={`toolbar-dropdown-item ${treeMode === 'sub' ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה לצפייה באחוז עצים לעקירה" onClick={() => {
-                                        shatzafModeRef.current = false; setShatzafMode(false);
-                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        cancelAllModes('tree');
                                         treeModeRef.current = 'sub'; setTreeMode('sub'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
@@ -16473,12 +16546,7 @@
                                         <span className="sub-label">שכונה</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${treeAreaActive ? 'sub-active' : ''}`} data-tip="ציור אזור חופשי על המפה לצפייה בנתוני עצים" onClick={() => {
-                                        shatzafModeRef.current = false; setShatzafMode(false);
-                                        treeModeRef.current = false; setTreeMode(false);
-                                        setLanduseCompareMode(null); landuseCompareModeRef.current = null;
-                                        setAreaFinished(null);
-                                        const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
-                                        const prev2 = document.getElementById('tree-panel'); if (prev2) prev2.remove();
+                                        cancelAllModes('area');
                                         treeAreaActiveRef.current = true; setTreeAreaActive(true);
                                         setAreaMode(true);
                                         setActiveDropdown(null);
@@ -16491,8 +16559,7 @@
                             {activeDropdown === 'green-shatzaf' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'plan' ? 'sub-active' : ''}`} data-tip="לחצו על תכנית במפה לחישוב שצ&quot;פ לנפש" onClick={() => {
-                                        treeModeRef.current = false; setTreeMode(false);
-                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'plan'; setShatzafMode('plan'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
@@ -16500,8 +16567,7 @@
                                         <span className="sub-label">תכנית</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'sub' ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה לחישוב שצ&quot;פ ממוצע" onClick={() => {
-                                        treeModeRef.current = false; setTreeMode(false);
-                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'sub'; setShatzafMode('sub'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
@@ -16509,8 +16575,7 @@
                                         <span className="sub-label">שכונה</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'radius' ? 'sub-active' : ''}`} data-tip="לחיצה על המפה תקבע מרכז עיגול ברדיוס 500מ׳ לחישוב שצ&quot;פ" onClick={() => {
-                                        treeModeRef.current = false; setTreeMode(false);
-                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'radius'; setShatzafMode('radius'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
@@ -16518,8 +16583,7 @@
                                         <span className="sub-label">רדיוס</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'area' ? 'sub-active' : ''}`} data-tip="ציור פוליגון על המפה לחישוב שצ&quot;פ באזור (קליק לקודקוד, דאבל-קליק לסיום)" onClick={() => {
-                                        treeModeRef.current = false; setTreeMode(false);
-                                        treeAreaActiveRef.current = false; setTreeAreaActive(false);
+                                        cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'area'; setShatzafMode('area'); setActiveDropdown(null);
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
@@ -17533,6 +17597,7 @@
                                         <div className="reports-menu-grid">
                                             <button className="reports-menu-item" onClick={() => {
                                                 setShowReportsMenu(false);
+                                                cancelAllModes('landuse-compare');
                                                 setLanduseCompareMode('plan');
                                             }}>
                                                 <span className="report-icon">🎨</span>
@@ -17543,6 +17608,7 @@
                                             </button>
                                             <button className="reports-menu-item" onClick={() => {
                                                 setShowReportsMenu(false);
+                                                cancelAllModes('area');
                                                 setAreaMode(true);
                                             }}>
                                                 <span className="report-icon">✏️</span>
@@ -17553,7 +17619,7 @@
                                             </button>
                                             <button className="reports-menu-item" onClick={() => {
                                                 setShowReportsMenu(false);
-                                                setRadiusCenter(null);
+                                                cancelAllModes('radius');
                                                 setRadiusMode(true);
                                             }}>
                                                 <span className="report-icon">⊙</span>
