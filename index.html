@@ -11596,6 +11596,18 @@
                     const boundaryFeat = geojson.features.find(f => (f.properties || {}).feature_type === 'boundary');
                     const planMeta = boundaryFeat ? boundaryFeat.properties : null;
 
+                    // Build a lookup of mtchm_num → mtchm_zone properties (Talpiot has
+                    // per-מתחם details: built_allocations, traffic, recommendations etc.).
+                    // Used at popup time to enrich landuse popups with their containing
+                    // מתחם's specific data, without duplicating on each landuse feature.
+                    const mtchmDetails = {};
+                    geojson.features.forEach(f => {
+                        if ((f.properties || {}).feature_type === 'mtchm_zone') {
+                            const m = f.properties.mtchm_num;
+                            if (m != null) mtchmDetails[m] = f.properties;
+                        }
+                    });
+
                     const zoneLayer = L.geoJSON(zoneFc, {
                         pane: 'masterPlanPane',
                         style: f => {
@@ -11640,7 +11652,21 @@
                             return L.circleMarker(latlng, { radius: 4 });
                         },
                         onEachFeature: (f, lyr) => {
-                            const html = buildMasterPlanPopup(f.properties, planMeta);
+                            // For landuse polygons tagged with mtchm_num (Talpiot only),
+                            // enrich popup props with the matching mtchm_zone's details
+                            // (built_allocations, traffic, recommendations etc.).
+                            let mergedProps = f.properties;
+                            if (f.properties.feature_type === 'landuse' && f.properties.mtchm_num != null) {
+                                const d = mtchmDetails[f.properties.mtchm_num];
+                                if (d) {
+                                    mergedProps = Object.assign({}, f.properties);
+                                    ['mtchm_built_allocations', 'mtchm_public_services',
+                                     'mtchm_land_allocations', 'mtchm_traffic', 'mtchm_recommendations'].forEach(k => {
+                                        if (d[k] && !mergedProps[k]) mergedProps[k] = d[k];
+                                    });
+                                }
+                            }
+                            const html = buildMasterPlanPopup(mergedProps, planMeta);
                             lyr.bindPopup(html, { maxWidth: 360 });
                         }
                     });
