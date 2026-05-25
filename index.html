@@ -11424,14 +11424,15 @@
                     const heading = p.plan_name || p.zone_name || p.merkam || p.conservation_grade || p.land_use ||
                         ({boundary: 'גבול תכנית', subzone: 'תת-מתחם', building_height: 'גובה מבנה',
                           texture: 'מרקם', conservation_point: 'מבנה לשימור', conservation: 'שימור',
-                          special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע', mtchm_zone: 'מתחם'}[p.feature_type] || 'פרטים');
+                          special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע', mtchm_zone: 'מתחם',
+                          red_dot: 'נקודה אדומה — תוספת מגורים ללא הריסה'}[p.feature_type] || 'פרטים');
 
                     // For non-boundary features, append plan-level meta (rules approved for this area).
                     // Mtchm voronoi popups: ONLY show the mtchm-specific info (number, location,
                     // related TBAs). Plan-wide rules are NOT mtchm-specific and would be misleading
                     // here — the user can click the dashed boundary line to see them.
                     let planBlock = '';
-                    if (planMeta && p.feature_type !== 'boundary' && p.feature_type !== 'mtchm_zone') {
+                    if (planMeta && p.feature_type !== 'boundary' && p.feature_type !== 'mtchm_zone' && p.feature_type !== 'red_dot') {
                         const planFields = [
                             // === Building rules (MOST IMPORTANT — shown first) ===
                             'realistic_units', 'existing_units_total', 'small_units_pct',
