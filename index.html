@@ -11433,23 +11433,19 @@
                     // here — the user can click the dashed boundary line to see them.
                     let planBlock = '';
                     if (planMeta && p.feature_type !== 'boundary' && p.feature_type !== 'mtchm_zone' && p.feature_type !== 'red_dot') {
+                        // For landuse popups, show ONLY building rules (a developer's
+                        // perspective: "what can I build here?"). NO sub-zone list,
+                        // NO plan-level identity (name/year/adopted_date/related_tba),
+                        // NO long descriptions — those belong in the plan boundary popup.
                         const planFields = [
-                            // === Building rules (MOST IMPORTANT — shown first) ===
-                            'realistic_units', 'existing_units_total', 'small_units_pct',
                             'max_floors', 'max_floors_base',
                             'far_pct_max', 'far_pct', 'coverage_pct_max', 'coverage_pct',
-                            'max_height_m',
+                            'max_height_m', 'min_floors',
+                            'small_units_pct',
                             'employment_max_sqm', 'commerce_extra_sqm',
+                            'commercial_frontage',
                             'realization_cap_2040_pct',
-                            'area_dunam',
-                            // === Sub-zones + special rules ===
-                            'sub_zones', 'red_dot_rule',
-                            'central_axis', 'main_commercial',
-                            'description',
-                            // === Plan identity (less important — shown last) ===
-                            'plan_name', 'plan_type',
-                            'plan_year', 'adopted_date',
-                            'related_tba', 'review_trigger',
+                            'red_dot_rule',
                         ];
                         const planSkip = new Set(['feature_type', 'plan_short', 'plane_name', 'hide_outline']);
                         const planRows = planFields
