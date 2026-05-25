@@ -11412,23 +11412,25 @@
                         related_tba: 'תב״עות קשורות', area_description: 'תיאור אזור',
                         small_units_pct: 'יח״ד קטנות', review_trigger: 'מועד עדכון',
                     };
+                    const rowFmt = (label, val) =>
+                        `<div style="margin:3px 0;line-height:1.4"><span style="color:#9aa;font-size:11px">${label}</span> <span style="color:#fff">${val}</span></div>`;
                     const rows = Object.entries(p)
                         .filter(([k, v]) => !skip.has(k) && v !== '' && v !== null && v !== undefined)
                         .map(([k, v]) => {
                             const label = labels[k] || k;
                             const val = (typeof v === 'boolean') ? (v ? 'כן' : 'לא') : v;
-                            return `<div style="margin:2px 0"><b>${label}:</b> ${val}</div>`;
+                            return rowFmt(label, val);
                         }).join('');
                     const heading = p.plan_name || p.zone_name || p.merkam || p.conservation_grade || p.land_use ||
                         ({boundary: 'גבול תכנית', subzone: 'תת-מתחם', building_height: 'גובה מבנה',
                           texture: 'מרקם', conservation_point: 'מבנה לשימור', conservation: 'שימור',
-                          special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע'}[p.feature_type] || 'פרטים');
+                          special_focus: 'מוקד מיוחד', landuse: 'יעוד קרקע', mtchm_zone: 'מתחם'}[p.feature_type] || 'פרטים');
 
                     // For non-boundary features, append plan-level meta (rules approved for this area)
                     let planBlock = '';
                     if (planMeta && p.feature_type !== 'boundary') {
                         const planFields = [
-                            'plan_name', 'plan_short', 'plan_year', 'adopted_date', 'plan_type',
+                            'plan_name', 'plan_year', 'adopted_date', 'plan_type',
                             'area_dunam', 'existing_units_total', 'realistic_units',
                             'sub_zones', 'central_axis', 'main_commercial',
                             'max_floors', 'max_floors_base', 'far_pct', 'far_pct_max', 'coverage_pct', 'coverage_pct_max',
@@ -11442,14 +11444,14 @@
                                 const label = labels[k] || k;
                                 const v = planMeta[k];
                                 const val = (typeof v === 'boolean') ? (v ? 'כן' : 'לא') : v;
-                                return `<div style="margin:2px 0;font-size:12px;color:#444"><b>${label}:</b> ${val}</div>`;
+                                return rowFmt(label, val);
                             }).join('');
                         if (planRows) {
-                            planBlock = `<div style="margin-top:10px;padding-top:8px;border-top:1px dashed #999"><b style="color:#555;font-size:12px">📋 מטא-דאטה של תכנית האב — מאושר לאזור:</b></div>` + planRows;
+                            planBlock = `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #3a3a4e">` + planRows + `</div>`;
                         }
                     }
-                    return `<div style="font-family:Assistant;direction:rtl;max-width:340px">` +
-                        `<div style="font-weight:bold;font-size:14px;margin-bottom:6px;border-bottom:1px solid #333;padding-bottom:4px">${heading}</div>` +
+                    return `<div style="font-family:Assistant,sans-serif;direction:rtl;padding:14px 16px;color:#e0e0e0;max-width:340px">` +
+                        `<div style="font-weight:bold;font-size:15px;color:#fff;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #3a3a4e">${heading}</div>` +
                         rows + planBlock + `</div>`;
                 }
                 // Thematic color palette — same color for the same theme across ALL master plans
