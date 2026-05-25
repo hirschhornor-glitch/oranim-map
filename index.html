@@ -11430,12 +11430,22 @@
                     let planBlock = '';
                     if (planMeta && p.feature_type !== 'boundary') {
                         const planFields = [
-                            'plan_name', 'plan_year', 'adopted_date', 'plan_type',
-                            'area_dunam', 'existing_units_total', 'realistic_units',
-                            'sub_zones', 'central_axis', 'main_commercial',
-                            'max_floors', 'max_floors_base', 'far_pct', 'far_pct_max', 'coverage_pct', 'coverage_pct_max',
-                            'employment_max_sqm', 'commerce_extra_sqm', 'realization_cap_2040_pct',
-                            'small_units_pct', 'related_tba', 'review_trigger', 'red_dot_rule', 'description',
+                            // === Building rules (MOST IMPORTANT — shown first) ===
+                            'realistic_units', 'existing_units_total', 'small_units_pct',
+                            'max_floors', 'max_floors_base',
+                            'far_pct_max', 'far_pct', 'coverage_pct_max', 'coverage_pct',
+                            'max_height_m',
+                            'employment_max_sqm', 'commerce_extra_sqm',
+                            'realization_cap_2040_pct',
+                            'area_dunam',
+                            // === Sub-zones + special rules ===
+                            'sub_zones', 'red_dot_rule',
+                            'central_axis', 'main_commercial',
+                            'description',
+                            // === Plan identity (less important — shown last) ===
+                            'plan_name', 'plan_type',
+                            'plan_year', 'adopted_date',
+                            'related_tba', 'review_trigger',
                         ];
                         const planSkip = new Set(['feature_type', 'plan_short', 'plane_name', 'hide_outline']);
                         const planRows = planFields
@@ -11600,13 +11610,17 @@
                         // Points (red dots: plots permitted to add residential without demolition)
                         pointToLayer: (f, latlng) => {
                             if (f.properties.feature_type === 'red_dot') {
+                                // Render in masterPlanTbaPane (z-index 350) so dots are above
+                                // landuse polygons, mtchm cells, AND any pajama/hatch overlay.
+                                // Bigger radius + thicker white border = highly visible at any zoom.
                                 return L.circleMarker(latlng, {
-                                    pane: 'masterPlanPane',
-                                    radius: 7,
+                                    pane: 'masterPlanTbaPane',
+                                    radius: 9,
                                     color: '#ffffff',
-                                    weight: 2,
-                                    fillColor: '#e60000',
+                                    weight: 3,
+                                    fillColor: '#d50000',
                                     fillOpacity: 1,
+                                    interactive: true,
                                 });
                             }
                             return L.circleMarker(latlng, { radius: 4 });
