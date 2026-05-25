@@ -11582,10 +11582,11 @@
                                 return { color: cfg.color, weight: 3, fillOpacity: 0.02, fillColor: cfg.color, dashArray: '6,4', interactive: true };
                             }
                             if (ft === 'mtchm_zone') {
-                                // Completely invisible (no stroke, near-zero fill) but reliably
-                                // catches clicks via interactive=true + tiny fillOpacity. No visual
-                                // clutter; the popup fires wherever clicked inside the cell.
-                                return { stroke: false, fillColor: '#000', fillOpacity: 0.005, interactive: true };
+                                // Reliably clickable: weight:1 + opacity:0.02 forces Leaflet to
+                                // create an interactive SVG path. fillOpacity:0.02 (same as the
+                                // boundary) is consistently clickable across browsers. Both
+                                // values are effectively invisible to the eye.
+                                return { color: '#000', weight: 1, opacity: 0.02, fillColor: '#000', fillOpacity: 0.02, interactive: true };
                             }
                             const c = masterPlanThemeColor(f.properties);
                             return { color: c, weight: 1, fillColor: c, fillOpacity: 0.92 };
