@@ -1,43 +1,43 @@
 {
   "3b9cf3a6290c": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d69a260cf2f4": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "e8b95fb79850": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "1b57e5f1259f": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "2cfebfac04a9": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c673a8d76c1b": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "a43269f16203": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -203,13 +203,13 @@
   },
   "63973153baa6": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c3b22bd0dd2b": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -239,13 +239,13 @@
   },
   "0fc194751092": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "248a474a5b1a": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -275,25 +275,25 @@
   },
   "e9506b1737ae": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "8f6fc97b9d92": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "34abcb0ec253": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "f32948096fa5": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -311,7 +311,7 @@
   },
   "2b303aebf920": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -345,12 +345,6 @@
     "overlap_plan_names": [],
     "overlap_features": []
   },
-  "38e809dd3538": {
-    "plan_number": null,
-    "match_quality": "street",
-    "overlap_plan_names": [],
-    "overlap_features": []
-  },
   "48e388a6773c": {
     "plan_number": null,
     "match_quality": "geocoded",
@@ -365,7 +359,7 @@
   },
   "2e70429512dc": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -425,7 +419,7 @@
   },
   "6bab41277a3b": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -437,7 +431,7 @@
   },
   "065844ef8887": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -449,13 +443,13 @@
   },
   "0984fac5340c": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c2fcf9b32608": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -593,13 +587,13 @@
   },
   "e511ef8d03ae": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "485be3ae1365": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -617,7 +611,7 @@
   },
   "ac978cc2fd0a": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -683,67 +677,67 @@
   },
   "5c280d9124b8": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "646576aa552e": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "515aee423c3e": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d74d9737b55f": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "3a58035e30e9": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "6f77681d7886": {
     "plan_number": null,
-    "match_quality": "tashrir",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "662fae4b8608": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "af01c5a93f24": {
     "plan_number": null,
-    "match_quality": "tashrir",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "0fca3ea8132c": {
     "plan_number": null,
-    "match_quality": "tashrir",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "2e8348f0cc60": {
     "plan_number": null,
-    "match_quality": "tashrir",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "cd1ede5fb3b0": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -797,7 +791,7 @@
   },
   "99dc6b63f03c": {
     "plan_number": "101-1056019",
-    "match_quality": "plan_number",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -931,13 +925,13 @@
   },
   "1063c12d7230": {
     "plan_number": "101-0778036",
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "76adb9daeaf6": {
     "plan_number": "101-0778036",
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1145,7 +1139,7 @@
   },
   "3746d44c15e3": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1175,7 +1169,7 @@
   },
   "b417fda17e33": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1331,7 +1325,7 @@
   },
   "357cce9f4a88": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1391,85 +1385,85 @@
   },
   "5ae501dc695b": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "b3217dd7e01c": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "3718cd215ed6": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "579cd96baf02": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "3080b87a8ac7": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "01dc472f3418": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d9e9cca35eb4": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "7aa958adad51": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "8d7c80399cc1": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "4bfada4d34ad": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "5beb99d17f1e": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "a0ab8635110e": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "29b96aa6b32d": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "5a9c649282be": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1600,7 +1594,7 @@
       "101-1069764"
     ],
     "overlap_features": [
-      "התחדשות עירונית סן מרטין 4-6 , ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/01/2026 סה\"כ שטח בדונם 7.273 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנ"
+      "התחדשות עירונית סן מרטין 4-6 , ירושלים."
     ]
   },
   "8c613db548b5": {
@@ -1795,37 +1789,37 @@
   },
   "c4df176fcedf": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "a97dba021504": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "664c79437797": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d33fd544511f": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "aad5da55a956": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "9feb05740b7a": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1836,7 +1830,7 @@
       "101-1069764"
     ],
     "overlap_features": [
-      "התחדשות עירונית סן מרטין 4-6 , ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/01/2026 סה\"כ שטח בדונם 7.273 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנ"
+      "התחדשות עירונית סן מרטין 4-6 , ירושלים."
     ]
   },
   "12dd250984fe": {
@@ -1846,7 +1840,7 @@
       "101-1069764"
     ],
     "overlap_features": [
-      "התחדשות עירונית סן מרטין 4-6 , ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/01/2026 סה\"כ שטח בדונם 7.273 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנ"
+      "התחדשות עירונית סן מרטין 4-6 , ירושלים."
     ]
   },
   "1aba094fe1b6": {
@@ -1856,7 +1850,7 @@
       "101-1069764"
     ],
     "overlap_features": [
-      "התחדשות עירונית סן מרטין 4-6 , ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/01/2026 סה\"כ שטח בדונם 7.273 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנ"
+      "התחדשות עירונית סן מרטין 4-6 , ירושלים."
     ]
   },
   "7c5b33a2d9e1": {
@@ -1866,7 +1860,7 @@
       "101-1069764"
     ],
     "overlap_features": [
-      "התחדשות עירונית סן מרטין 4-6 , ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/01/2026 סה\"כ שטח בדונם 7.273 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנ"
+      "התחדשות עירונית סן מרטין 4-6 , ירושלים."
     ]
   },
   "e819d41e80f5": {
@@ -1901,25 +1895,25 @@
   },
   "d185a0aea2d5": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "5cf85ab4ac03": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "25f8ce736bd9": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "414a8d9e4620": {
     "plan_number": null,
-    "match_quality": "address",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1931,7 +1925,7 @@
   },
   "a19bfadebbfd": {
     "plan_number": "101-1261510",
-    "match_quality": "plan_number",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1953,13 +1947,13 @@
   },
   "1f999561ba73": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d6a753a06e7a": {
     "plan_number": "101-0178129",
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -2009,7 +2003,7 @@
   },
   "ff11ae02d2b9": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -2021,7 +2015,7 @@
   },
   "dc2f75666caf": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },

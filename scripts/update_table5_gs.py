@@ -1,16 +1,18 @@
 """
 Update Google Sheets with Table 5 data from all_table5_v2_results.json.
 
-Column mapping:
-    W  (23)  commerce_out     ← totals.commerce_requested_sqm (main + service)
-    AA (27)  employment       ← totals.employment_requested_sqm
-    R  (18)  shavatz_out_sqm  ← totals.public_requested_sqm_standalone (ציבור ללא מגורים)
-    S  (19)  shavatz_out_prog ← public uses description (standalone)
-    AQ (43)  hafrash_sqm      ← totals.public_requested_sqm_hafrash (ציבור עם מגורים)
-    AR (44)  hafrash_prg      ← public uses description (hafrash)
-    AT (46)  floors_max       ← totals.max_floors                    [NEW]
-    AU (47)  height_max       ← totals.max_height_m                  [NEW]
-    AN (40)  last_modified    ← ISO timestamp
+Columns updated (resolved at runtime by header name — NOT hardcoded index;
+hardcoding caused floors_max to overwrite the `authority` column when new
+columns were inserted, see _archive notes / project_authority_col_fix memory):
+    commerce_out      ← totals.commerce_requested_sqm
+    employment        ← totals.employment_requested_sqm
+    shavatz_out_sqm   ← totals.public_requested_sqm_standalone
+    shavatz_out_prog  ← public uses description (standalone)
+    hafrash_sqm       ← totals.public_requested_sqm_hafrash
+    hafrash_prg       ← public uses description (hafrash)
+    level_num         ← totals.max_floors
+    High              ← totals.max_height_m
+    last_modified     ← ISO timestamp (touched on any change)
 
 Usage:
     python update_table5_gs.py            # actually write
@@ -30,18 +32,19 @@ CREDS_FILE = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
 RESULTS_FILE = r"C:\ORANIM\all_table5_v2_results.json"
 
-# 1-indexed column numbers
-COL_PLAN_NAME = 6         # F
-COL_SHAVATZ_OUT = 18      # R  - public_requested_sqm_standalone
-COL_SHAVATZ_PROG = 19     # S  - public uses detail (standalone)
-COL_COMMERCE_OUT = 23     # W  - commerce_requested_sqm (proposed total goes to "יוצא")
-COL_COMMERCE_IN = 22      # V  - kept for cleanup of legacy wrong writes
-COL_EMPLOYMENT = 27       # AA - employment_requested_sqm
-COL_LAST_MOD = 40         # AN
-COL_HAFRASH = 43          # AQ - public_requested_sqm_hafrash
-COL_HAFRASH_PRG = 44      # AR - public uses detail (hafrash)
-COL_FLOORS_MAX = 46       # AT - max_floors                 [NEW]
-COL_HEIGHT_MAX = 47       # AU - max_height_m               [NEW]
+# field_key (used in build_plan_updates) → GS header name
+FIELD_TO_HEADER = {
+    "plan_name":    "plan_name",
+    "commerce":     "commerce_out",
+    "employment":   "employment",
+    "shavatz_out":  "shavatz_out_sqm",
+    "shavatz_prog": "shavatz_out_prog",
+    "hafrash":      "hafrash_sqm",
+    "hafrash_prg":  "hafrash_prg",
+    "floors_max":   "level_num",
+    "height_max":   "High",
+    "last_mod":     "last_modified",
+}
 
 
 def fmt_num(val: float) -> str:
@@ -128,49 +131,58 @@ def main() -> None:
     all_data = sheet.get_all_values()
     print(f"Sheet has {len(all_data) - 1} data rows\n", flush=True)
 
+    # Resolve all column positions by header name (1-indexed for rowcol_to_a1).
+    headers = all_data[0]
+    header_idx = {h.strip(): i for i, h in enumerate(headers)}
+    missing = [hdr for hdr in FIELD_TO_HEADER.values() if hdr not in header_idx]
+    if missing:
+        print(f"ERROR: missing headers in sheet: {missing}", file=sys.stderr)
+        sys.exit(1)
+    col = {fk: header_idx[hdr] + 1 for fk, hdr in FIELD_TO_HEADER.items()}
+
     now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     batch: list = []
     changes: list = []
 
     for row_idx, row in enumerate(all_data[1:], start=2):
-        if len(row) < COL_PLAN_NAME:
+        if len(row) < col["plan_name"]:
             continue
-        plan_name = row[COL_PLAN_NAME - 1].strip()
+        plan_name = row[col["plan_name"] - 1].strip()
         if plan_name not in plan_updates:
             continue
         pu = plan_updates[plan_name]
 
         cell_changes: dict = {}
 
-        def maybe_set(col: int, new_val: str) -> None:
+        def maybe_set(c: int, new_val: str) -> None:
             """Stage a cell update only if the value is non-empty."""
             if new_val == "":
                 return
-            existing = row[col - 1].strip() if col - 1 < len(row) else ""
+            existing = row[c - 1].strip() if c - 1 < len(row) else ""
             if existing == new_val:
                 return
-            cell_changes[col] = new_val
+            cell_changes[c] = new_val
 
-        maybe_set(COL_COMMERCE_OUT, fmt_num(pu["commerce"]))
-        maybe_set(COL_EMPLOYMENT, fmt_num(pu["employment"]))
-        maybe_set(COL_SHAVATZ_OUT, fmt_num(pu["shavatz_out"]))
-        maybe_set(COL_SHAVATZ_PROG, pu["shavatz_prog"])
-        maybe_set(COL_HAFRASH, fmt_num(pu["hafrash"]))
-        maybe_set(COL_HAFRASH_PRG, pu["hafrash_prg"])
-        maybe_set(COL_FLOORS_MAX, fmt_num(pu["floors_max"]))
-        maybe_set(COL_HEIGHT_MAX, fmt_num(pu["height_max"]))
+        maybe_set(col["commerce"], fmt_num(pu["commerce"]))
+        maybe_set(col["employment"], fmt_num(pu["employment"]))
+        maybe_set(col["shavatz_out"], fmt_num(pu["shavatz_out"]))
+        maybe_set(col["shavatz_prog"], pu["shavatz_prog"])
+        maybe_set(col["hafrash"], fmt_num(pu["hafrash"]))
+        maybe_set(col["hafrash_prg"], pu["hafrash_prg"])
+        maybe_set(col["floors_max"], fmt_num(pu["floors_max"]))
+        maybe_set(col["height_max"], fmt_num(pu["height_max"]))
 
         if not cell_changes:
             continue
 
-        for col, val in cell_changes.items():
+        for c, val in cell_changes.items():
             batch.append({
-                "range": gspread.utils.rowcol_to_a1(row_idx, col),
+                "range": gspread.utils.rowcol_to_a1(row_idx, c),
                 "values": [[val]],
             })
         # Touch last_modified whenever anything else changes
         batch.append({
-            "range": gspread.utils.rowcol_to_a1(row_idx, COL_LAST_MOD),
+            "range": gspread.utils.rowcol_to_a1(row_idx, col["last_mod"]),
             "values": [[now_iso]],
         })
         changes.append({
@@ -183,16 +195,16 @@ def main() -> None:
         print("All target cells already match computed values — nothing to write.")
         return
 
-    print(f"{'Plan':20} | {'Cout':>6} | {'E':>6} | {'R':>6} | {'AQ':>6} | {'AT':>6} | {'AU':>6}")
+    print(f"{'Plan':20} | {'Cout':>6} | {'Emp':>6} | {'SOut':>6} | {'Hafr':>6} | {'Lvl':>6} | {'High':>6}")
     print("-" * 78)
     for c in changes[:30]:
-        def g(col: int) -> str:
-            return c["fields"].get(col, "")
+        def g(field_key: str) -> str:
+            return c["fields"].get(col[field_key], "")
         print(
             f"{c['plan']:20} | "
-            f"{g(COL_COMMERCE_OUT):>6} | {g(COL_EMPLOYMENT):>6} | "
-            f"{g(COL_SHAVATZ_OUT):>6} | {g(COL_HAFRASH):>6} | "
-            f"{g(COL_FLOORS_MAX):>6} | {g(COL_HEIGHT_MAX):>6}"
+            f"{g('commerce'):>6} | {g('employment'):>6} | "
+            f"{g('shavatz_out'):>6} | {g('hafrash'):>6} | "
+            f"{g('floors_max'):>6} | {g('height_max'):>6}"
         )
     if len(changes) > 30:
         print(f"... and {len(changes) - 30} more")
