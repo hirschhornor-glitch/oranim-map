@@ -16350,7 +16350,7 @@
                             {/* ══ ניתוח כללי ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${(areaMode || landuseCompareMode) ? 'active' : ''}`}
+                                className={`toolbar-btn ${((areaMode && !programaAreaActiveRef.current && !treeAreaActiveRef.current) || landuseCompareMode) ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'analysis' ? null : 'analysis'); }}
                                 title="ניתוח כללי"
                             >
@@ -16359,7 +16359,7 @@
                                     <rect x="14" y="14" width="7" height="7" rx="1" />
                                     <path d="M10 7h4M7 10v4M14 17h-4M17 14v-4" />
                                 </svg>
-                                <span className="toolbar-label">{(areaMode && !programaAreaActiveRef.current) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'ניתוח ▾'}</span>
+                                <span className="toolbar-label">{(areaMode && !programaAreaActiveRef.current && !treeAreaActiveRef.current) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : landuseCompareMode === 'plan' ? 'בחר תכנית...' : landuseCompareMode === 'area' ? 'צייר אזור...' : 'ניתוח ▾'}</span>
                             </button>
                             {activeDropdown === 'analysis' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
