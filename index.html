@@ -4867,11 +4867,15 @@
                 // Separate SVG renderer for rakal so pane z-index works
                 window.__rakalRenderer = L.svg({ pane: 'rakalPane' });
                 map.createPane('subNeighborhoodPane').style.zIndex = 250;
+                map.createPane('minahakPane').style.zIndex = 260;
+                // masterPlanPane MUST be above minahakPane so clicks on master plan
+                // polygons aren't intercepted by the projector_talpiot overlay
+                // (which sits in minahakPane with fillOpacity 0.05 — interactive but
+                // has no popup attached, so clicks would silently fall on it).
                 const masterPlanPane = map.createPane('masterPlanPane');
-                masterPlanPane.style.zIndex = 260;
+                masterPlanPane.style.zIndex = 275;
                 const masterPlanTbaPane = map.createPane('masterPlanTbaPane');
                 masterPlanTbaPane.style.zIndex = 350;
-                map.createPane('minahakPane').style.zIndex = 270;
                 const infraPane = map.createPane('infrastructurePane');
                 infraPane.style.zIndex = 280;
                 infraPane.style.pointerEvents = 'none';
