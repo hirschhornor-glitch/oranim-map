@@ -12901,7 +12901,7 @@
                                 }),
                             });
                             halo.feature = f;
-                            halo.bindPopup(popup, { maxWidth: 340, className: 'projector-popup' });
+                            halo.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
                             layerGroup.addLayer(halo);
                             lyr = L.geoJSON(f, {
                                 pane: 'projectorPane',
@@ -12994,7 +12994,7 @@
                         }
 
                         if (lyr) {
-                            lyr.bindPopup(popup, { maxWidth: 340, className: 'projector-popup' });
+                            lyr.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
                             // Attach the source feature so external tooling can locate
                             // a marker by its feature properties (e.g. for testing).
                             lyr.feature = f;
