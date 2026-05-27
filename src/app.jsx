@@ -2596,6 +2596,29 @@
                             btn.style.outline = active ? '' : '1.5px dashed #999';
                         });
                     }
+                    // Map raw service_he variants → display category.
+                    // User-requested 2026-05-28 to group near-duplicates so the panel
+                    // has fewer rows. Each parent checkbox toggles all member services.
+                    const SERVICE_CATEGORIES = {
+                        'מעבר ה"ר / שביל': ['הוספת מעבר ה"ר', 'שדרוג מעבר ה"ר', 'מעבר ה"ר', 'הוספת שביל ה"ר', 'מעבר הולכי רגל'],
+                        'מעבר חציה': ['מעבר חציה', 'הוספת מעבר חציה'],
+                        'גני ילדים / מעון': ['גני ילדים', 'גן ילדים', 'מעון יום', 'מעון יום + גני ילדים'],
+                        'בי"ס יסודי': ['יסודי', 'בי"ס יסודי'],
+                        'בי"ס על-יסודי': ['על יסודי', 'בי"ס על-יסודי'],
+                        'שירותי רווחה': ['שירותי רווחה', 'שירותי רווחה נוספים', 'מוסדות רווחה נוספים', 'משרדי שירותים חברתיים'],
+                        'שצ"פ': ['שצ"פ', 'תוספת שצ"פ', 'חיבור לשצ"פ'],
+                        'כביש / רחוב': ['רחוב', 'רחוב חדש', 'שדרוג רחובות'],
+                        'תח"צ / תחבורה': ['תח"צ', 'שיפור רמת שירות', 'הנגשה'],
+                        'ספורט': ['מגרש ספורט', 'אולם ספורט'],
+                    };
+                    const SERVICE_TO_CATEGORY = (() => {
+                        const m = {};
+                        for (const cat in SERVICE_CATEGORIES) {
+                            for (const sv of SERVICE_CATEGORIES[cat]) m[sv] = cat;
+                        }
+                        return m;
+                    })();
+
                     function renderServicesList() {
                         const container = document.getElementById('pf-services');
                         if (!container) return;
@@ -2613,11 +2636,38 @@
                             window.__projectorFilters.services = new Set(all.keys());
                         }
                         const svcSet = window.__projectorFilters.services;
-                        const items = [...all.entries()].sort((a, b) => b[1] - a[1]);
-                        container.innerHTML = items.map(([sv, n]) => {
-                            const checked = svcSet.has(sv) ? 'checked' : '';
-                            return `<label style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px"><input type="checkbox" data-pf-svc="${sv.replace(/"/g, '&quot;')}" ${checked} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#778;font-size:10.5px">${n}</span></label>`;
+                        // Group services by category (or self if uncategorized)
+                        const grouped = new Map();  // key = category name → { total, members: [{sv,n}] }
+                        for (const [sv, n] of all.entries()) {
+                            const cat = SERVICE_TO_CATEGORY[sv] || sv;
+                            if (!grouped.has(cat)) grouped.set(cat, { total: 0, members: [] });
+                            const g = grouped.get(cat);
+                            g.total += n;
+                            g.members.push({ sv, n });
+                        }
+                        // Sort categories by total count, members alphabetically
+                        const cats = [...grouped.entries()].sort((a, b) => b[1].total - a[1].total);
+                        const escAttr = s => String(s).replace(/"/g, '&quot;').replace(/&/g, '&amp;');
+                        container.innerHTML = cats.map(([cat, g]) => {
+                            if (g.members.length === 1) {
+                                // Single-member category: render as flat checkbox (no expand)
+                                const { sv, n } = g.members[0];
+                                const checked = svcSet.has(sv) ? 'checked' : '';
+                                return `<label style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${checked} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#778;font-size:10.5px">${n}</span></label>`;
+                            }
+                            // Multi-member category: parent checkbox + expandable list
+                            const memberSvs = g.members.map(m => m.sv);
+                            const onCount = memberSvs.filter(sv => svcSet.has(sv)).length;
+                            const parentState = onCount === memberSvs.length ? 'checked' : onCount === 0 ? '' : 'indeterminate';
+                            const parentAttr = parentState === 'checked' ? 'checked' : '';
+                            const memberList = g.members.map(({ sv, n }) => {
+                                const c = svcSet.has(sv) ? 'checked' : '';
+                                return `<label style="display:flex;align-items:center;padding:2px 0 2px 18px;cursor:pointer;color:#9aa8b3;font-size:10.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${c} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#667;font-size:10px">${n}</span></label>`;
+                            }).join('');
+                            return `<details style="margin:1px 0"><summary style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px;list-style:none"><span style="color:#788;margin-left:4px;font-size:9px">▸</span><input type="checkbox" data-pf-cat="${escAttr(cat)}" ${parentAttr} ${parentState==='indeterminate'?'data-indeterminate="1"':''} style="margin-left:6px" onclick="event.stopPropagation()"/> <span style="flex:1;font-weight:600">${cat}</span><span style="color:#778;font-size:10.5px">${g.total}</span></summary><div style="padding:2px 0 4px 4px;border-right:1px dashed #2a2a4a;margin-right:8px">${memberList}</div></details>`;
                         }).join('');
+                        // Apply indeterminate state to category checkboxes (HTML attribute doesn't work for indeterminate)
+                        container.querySelectorAll('input[data-pf-cat][data-indeterminate]').forEach(cb => { cb.indeterminate = true; });
                     }
                     window.__updateProjectorFilterCounts = function () {
                         const out = document.getElementById('pf-count');
@@ -2691,12 +2741,25 @@
                         window.__rebuildProjectorLayers();
                     });
                     panel.addEventListener('change', (ev) => {
+                        if (!window.__projectorFilters.services) window.__projectorFilters.services = new Set();
+                        const set = window.__projectorFilters.services;
+                        // Category-level checkbox: toggle all members
+                        const catCb = ev.target.closest('input[type="checkbox"][data-pf-cat]');
+                        if (catCb) {
+                            const cat = catCb.getAttribute('data-pf-cat');
+                            const members = SERVICE_CATEGORIES[cat] || [];
+                            if (catCb.checked) members.forEach(sv => set.add(sv));
+                            else members.forEach(sv => set.delete(sv));
+                            renderServicesList();  // refresh to update child states
+                            window.__rebuildProjectorLayers();
+                            return;
+                        }
+                        // Service-level checkbox
                         const cb = ev.target.closest('input[type="checkbox"][data-pf-svc]');
                         if (!cb) return;
                         const sv = cb.getAttribute('data-pf-svc');
-                        if (!window.__projectorFilters.services) window.__projectorFilters.services = new Set();
-                        const set = window.__projectorFilters.services;
                         if (cb.checked) set.add(sv); else set.delete(sv);
+                        renderServicesList();  // refresh parent checkbox state
                         window.__rebuildProjectorLayers();
                     });
 

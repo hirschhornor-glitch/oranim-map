@@ -377,20 +377,10 @@ MANUAL_LOCATION_OVERRIDES = {
     # בית שוויץ (מתחם הפסגה) — user-corrected from "בית שלום" (wrong building) 2026-05-20.
     ("בית שוויץ (מתחם הפסגה)", "קטמונים ח-ט"): [35.19706010789749, 31.755262137288366],
     # בית שוויץ — road segment (traffic study for the מתחם הפסגה plan).
-    # Auto was a Polygon (lot); user provided 7 ITM points 2026-05-26 along the
-    # planned road network (winding path through the complex, ~360m total).
-    ("בית שוויץ (מתחם הפסגה)", "קטמונים ח-ט", "שדרוג רחובות"): {
-        "type": "LineString",
-        "coordinates": [
-            [35.1971872, 31.7559103],
-            [35.1968857, 31.7558768],
-            [35.1950872, 31.7549843],
-            [35.1954783, 31.7543210],
-            [35.1968132, 31.7547696],
-            [35.1977011, 31.7552851],
-            [35.1976340, 31.7554140],
-        ],
-    },
+    # User-flagged 2026-05-28: change geometry to be along רחוב השומר (cross-
+    # section already linked to PDF page 33 of דוח מסכם). Use roads.geojson
+    # street-name match — 14 segments will be unioned.
+    ("בית שוויץ (מתחם הפסגה)", "קטמונים ח-ט", "שדרוג רחובות"): {"road_name": "השומר"},
     # מתחם לוריא — has 6 services in the xlsx (school/kindergarten/daycare/synagogue +
     # this new street + a pedestrian crossing). Each needs its own location, so the
     # key includes service_he. Coords below are for the access-road service only.
@@ -681,6 +671,21 @@ MANUAL_LOCATION_OVERRIDES = {
     ("מתחם ברניקי, פת", "גוננים א-ו"): {
         "gush_helka": "30171/45,46,47,48,49,50,51,52,53,54,55,56,57,110,121,150,151,156,194,195,196,197,198,199,200,214,217,218,219,220"
     },
+    # סן מרטין 15-5 (קדמת גונן) — 4 services (גני ילדים, מעון יום, בית כנסת,
+    # שירותי תרבות). xlsx address is WRONG: plan 101-0511923 "קדמת גונן" is
+    # actually at בר יוחאי 5-15, NOT סן מרטין 5-15 (~400m west of where xlsx
+    # implies). The auto-match landed on landuse_xplan num=25 mc=400 (the
+    # plan's standalone SHAVAZ allocation at the eastern edge [35.198, 31.7535])
+    # which is geographically detached from the actual residential lots.
+    # Override to use the full plan polygon so all 4 services display centered
+    # on the actual 52-dunam plan area in בר יוחאי. User-flagged 2026-05-28.
+    ("סן מרטין  15-5 (קדמת גונן)", "קטמונים ח-ט"): {"plan_name": "101-0511923"},
+    # צומת הכניסה הצפונית (קטמונים, פרויקט 3) — תב"ע 1069764 בסן מרטין 4-6
+    # מרחיבה את הצומת על חשבון השצ"פ. xlsx location_id="95/30199" — חלקה 95
+    # היא 12,726 m² של גן ציבורי גדול שעוטף את האזור — ענק מדי. הפלאן עצמה
+    # קטנה יותר (7,275 m², centered at [35.193486, 31.755944]) ומכוונת
+    # למיקום המדויק של הצומת. User-flagged 2026-05-28.
+    ("צומת הכניסה הצפונית", "קטמונים ח-ט"): {"plan_name": "101-1069764"},
     # מכוור/רבי טרפון (בית כנסת) — at parcel גוש 30123 / חלקה 16 (per PDF excerpt
     # + user 2026-05-20).
     ("מכוור/רבי טרפון", "גוננים א-ו", "בית כנסת"): {"gush_helka": "30123/16"},

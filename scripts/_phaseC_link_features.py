@@ -57,6 +57,9 @@ KEYWORD_TO_CS = {
     "נוטרים": ["33"],
     "מרגולין": ["33"],
     "חוות הנוער": ["14"],  # גוננים תיק שכונה
+    # User-flagged 2026-05-28: בית שוויץ "שדרוג רחובות" — the road work
+    # spans רחוב השומר which is documented on page 33.
+    "בית שוויץ": ["33"],
 }
 
 # For each feature, look for street matches in project_name
@@ -76,6 +79,7 @@ KEYWORD_TO_PDFS = {
     "נוטרים":     ["גוננים ח-ט ופת- דוח מסכם.pdf"],
     "מרגולין":    ["גוננים ח-ט ופת- דוח מסכם.pdf"],
     "חוות הנוער": ["25-12-29 גוננים א-ו - תיק שכונה.pdf"],
+    "בית שוויץ":  ["גוננים ח-ט ופת- דוח מסכם.pdf"],
 }
 
 for f in gj["features"]:
@@ -86,8 +90,16 @@ for f in gj["features"]:
         continue
     cs_for_feat = []
     seen_keys = set()
+    # When a project name matches a keyword, the button label uses that keyword.
+    # But sometimes the project name and the cross-section street differ
+    # (e.g. "בית שוויץ" project shows a cross-section of רחוב השומר).
+    # MATCH_LABEL_OVERRIDE remaps the button label per keyword.
+    MATCH_LABEL_OVERRIDE = {
+        "בית שוויץ": "השומר",
+    }
     for kw, pages in KEYWORD_TO_CS.items():
         if kw in name:
+            label = MATCH_LABEL_OVERRIDE.get(kw, kw)
             for pdf in KEYWORD_TO_PDFS.get(kw, []):
                 for pg in pages:
                     pg_i = int(pg)
@@ -98,7 +110,7 @@ for f in gj["features"]:
                             "pdf": pdf,
                             "page": pg_i,
                             "url": e.get("url"),
-                            "match": kw,
+                            "match": label,
                         })
     if cs_for_feat:
         out_index[pid] = cs_for_feat
