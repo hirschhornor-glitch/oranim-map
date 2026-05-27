@@ -10940,6 +10940,18 @@
                                 }),
                             });
                         }
+                        // --- מתחם תכנון אב מתחמית להתחדשות → light brown (tan) polygon
+                        // Differentiated from is_eivuy_brown (darker) so users can tell
+                        // a master-plan compound proposal from a brown-lot densification.
+                        else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_metaham_polygon) {
+                            lyr = L.geoJSON(f, {
+                                pane: 'projectorPane',
+                                style: () => ({
+                                    color: '#a1887f', weight: 2, dashArray: isOverlap ? '5,3' : '4,3',
+                                    fillColor: '#d2b48c', fillOpacity: 0.35,
+                                }),
+                            });
+                        }
                         // --- שצ"פ / גינה → render the real lot polygon (green)
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_shatzap_polygon) {
                             lyr = L.geoJSON(f, {
