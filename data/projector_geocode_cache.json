@@ -506,5 +506,35 @@
     "lat": null,
     "lon": null,
     "source": "nominatim_miss"
+  },
+  "תחנות רח' אליעזר הגדול|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מתחם ברניקי פת|גוננים א-ו": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "תו חניה לשכונת קטמונים ח-ט|קטמונים ח-ט": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "חשיבה תנועתית מתחמית|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "מפרצי העלאה והורדת למתחם מבני ציבור|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
+  },
+  "התחדשות עירונית הנושקת לרח' יעקב פת - חניונים|פת": {
+    "lat": null,
+    "lon": null,
+    "source": "nominatim_miss"
   }
 }

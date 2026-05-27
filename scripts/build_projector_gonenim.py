@@ -184,7 +184,6 @@ MANUAL_NOTES = {
 # until ITM/CAD coords arrive. Format: (project_name, area[, service]) → "note".
 # Each build prints how many pending items remain.
 PENDING_REVIEW = {
-    ("שביל גוננים", "גוננים א-ו"): "2.3km path crossing entire neighborhood — needs 10-20 points",
     # User-flagged 2026-05-27: should render as a LINE (currently auto-derived
     # point/polygon). Needs ITM endpoints for the road segment.
     ("התחדשות עירונית בן זכאי 31", "גוננים א-ו"): "should be a LineString — needs ITM endpoints",
@@ -275,6 +274,54 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.1975225, 31.7535408],
             [35.1980979, 31.7519708],
             [35.1985838, 31.7519136],
+        ],
+    },
+    # שביל גוננים — הציר הראשי של 2.3 ק"מ החוצה את כל השכונה (פרויקט #4 בפרק ג'
+    # של חוברת "גוננים מרחב ציבורי 05.2024.pdf", עמ' 20-24). שתי נקודות מוצא:
+    # רח' בן זכאי במזרח ↔ רח' הרצוג במערב. עובר ליד אילנות, דנמרק, בית הנוער,
+    # פלא, יהודה הנשיא, אליעזר הגדול. 35 waypoints מ-Google Earth KMZ שסומן
+    # ידנית ע"י המשתמשת (2026-05-27); אורך מחושב 2,362 מ' (102.7% מ-2.30 ק"מ
+    # המוצהרים בחוברת). זהו ה-PARENT trail — בהמשך יסומנו 9 מקטעי תכנון
+    # נפרדים כפיצ'רים-בנים שיקושרו עם parent_project_id, כדי לתעד מקטעים
+    # קיימים/בתכנון/תלויים-בתב"ע בנפרד.
+    ("שביל גוננים", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.200043, 31.759621],
+            [35.201251, 31.759883],
+            [35.201695, 31.759132],
+            [35.201362, 31.759023],
+            [35.201448, 31.758708],
+            [35.201645, 31.758328],
+            [35.201437, 31.758018],
+            [35.201155, 31.757418],
+            [35.201164, 31.756659],
+            [35.201391, 31.756117],
+            [35.201415, 31.755288],
+            [35.201535, 31.754574],
+            [35.201909, 31.753832],
+            [35.202486, 31.753315],
+            [35.202752, 31.753039],
+            [35.203124, 31.752815],
+            [35.203489, 31.752956],
+            [35.203758, 31.752716],
+            [35.203767, 31.752477],
+            [35.204834, 31.752452],
+            [35.205247, 31.752061],
+            [35.20586, 31.7526],
+            [35.2062, 31.752956],
+            [35.206537, 31.753645],
+            [35.207181, 31.755217],
+            [35.2076, 31.754943],
+            [35.208148, 31.755637],
+            [35.208586, 31.755899],
+            [35.209408, 31.756429],
+            [35.209749, 31.756706],
+            [35.210271, 31.757285],
+            [35.210481, 31.757399],
+            [35.210635, 31.757455],
+            [35.21074, 31.75775],
+            [35.211911, 31.759211],
         ],
     },
     # מתחם אגד (קטמונים, פרויקט 10) — new road per master-plan, gush 30169/1,68,69
@@ -1033,8 +1080,12 @@ DOMAIN_MAVAT_CODES = {
 
 
 # --- Helpers --------------------------------------------------------------
-def project_id(area: str, proj_num, service: str) -> str:
-    raw = f"{area}|{proj_num}|{service}"
+def project_id(area: str, proj_num, service: str, proj_name: str = "") -> str:
+    # Includes proj_name to disambiguate rows where the xlsx has multiple distinct
+    # projects under the same (area, num, service) — e.g. 5 different recommendations
+    # share area='גוננים א-ו' num='' service='רחוב חדש'. Without proj_name they would
+    # all collapse to one pid and only the first row's feature would be emitted.
+    raw = f"{area}|{proj_num}|{service}|{proj_name}"
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
 
 
@@ -3538,9 +3589,21 @@ def main():
         service_key = SERVICE_MAP.get(service_he)
         chumash = normalize_chumash(chumash_text, year_completion)
         plan_number = extract_plan_number(plan_raw)
-        pid = project_id(area, proj_num, service_he)
+        pid = project_id(area, proj_num, service_he, str(proj_name or "").strip())
         if pid in seen_pids:
             duplicate_count += 1
+            # Same (area, num, svc, name) → merge any distinct obstacles into the
+            # already-emitted feature so we don't silently drop info.
+            obs_new = str(obstacles).strip() if obstacles else ""
+            if obs_new:
+                existing_feat = next((f for f in out_features
+                                      if f["properties"].get("project_id") == pid), None)
+                if existing_feat:
+                    obs_old = existing_feat["properties"].get("obstacles") or ""
+                    parts = [p.strip() for p in obs_old.split(";") if p.strip()] if obs_old else []
+                    if obs_new not in parts:
+                        parts.append(obs_new)
+                        existing_feat["properties"]["obstacles"] = "; ".join(parts)
             continue
         seen_pids.add(pid)
 
