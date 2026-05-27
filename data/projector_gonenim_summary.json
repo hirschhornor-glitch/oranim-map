@@ -327,7 +327,7 @@
     "by_key": {
       "gan": {
         "units": 33.0,
-        "overlap_units": 5.0,
+        "overlap_units": 3.0,
         "projects": [
           {
             "project_id": "33972f12af7b",
@@ -391,7 +391,7 @@
           },
           {
             "project_id": "99dc6b63f03c",
-            "project_name": "3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)",
+            "project_name": "מתחם קנאי הגליל (מחסן תרופות)",
             "units_required": 3,
             "chumash": null,
             "plan_number": "101-1056019",
@@ -417,7 +417,7 @@
             "plan_number": "101-0836809",
             "plan_status": "בתכנון",
             "estimate_nis": 2560000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "1063c12d7230",
@@ -443,7 +443,7 @@
       },
       "yesodi": {
         "units": 108.0,
-        "overlap_units": 60.0,
+        "overlap_units": 36.0,
         "projects": [
           {
             "project_id": "1b0ca5f5678b",
@@ -493,7 +493,7 @@
             "plan_number": "101-0836809",
             "plan_status": "בתכנון",
             "estimate_nis": 40000000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "121d082351d6",
@@ -601,7 +601,7 @@
       },
       "matnas": {
         "units": 4990.0,
-        "overlap_units": 3340.0,
+        "overlap_units": 2500.0,
         "projects": [
           {
             "project_id": "77752eb55f60",
@@ -641,7 +641,7 @@
             "plan_number": "101-0836809",
             "plan_status": "בתכנון",
             "estimate_nis": 4000000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "6e1a92a6e877",
@@ -651,7 +651,7 @@
             "plan_number": "101-0778035",
             "plan_status": "בתכנון",
             "estimate_nis": 4400000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "30ba0bc0c22e",
@@ -667,7 +667,7 @@
       },
       "synagogue": {
         "units": 1929.0,
-        "overlap_units": 855.0,
+        "overlap_units": 250.0,
         "projects": [
           {
             "project_id": "646576aa552e",
@@ -717,7 +717,7 @@
             "plan_number": "101-0836809",
             "plan_status": "בתכנון",
             "estimate_nis": 3550000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "2dbdc8008eff",
@@ -727,7 +727,7 @@
             "plan_number": "101-0778035",
             "plan_status": "בתכנון",
             "estimate_nis": 2500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "a3ed12e9cd8f",
@@ -815,7 +815,7 @@
       },
       "maon": {
         "units": 24.0,
-        "overlap_units": 15.0,
+        "overlap_units": 12.0,
         "projects": [
           {
             "project_id": "65ea535f7509",
@@ -845,7 +845,7 @@
             "plan_number": "101-0836809",
             "plan_status": "בתכנון",
             "estimate_nis": 4500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "76adb9daeaf6",
@@ -891,7 +891,7 @@
       },
       "elderly_club": {
         "units": 450.0,
-        "overlap_units": 450.0,
+        "overlap_units": 200.0,
         "projects": [
           {
             "project_id": "c96f8389036b",
@@ -901,7 +901,7 @@
             "plan_number": "101-0778035",
             "plan_status": "בתכנון",
             "estimate_nis": 2500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "449c88dc68e1",
@@ -987,7 +987,7 @@
       },
       "maon": {
         "units": 40.0,
-        "overlap_units": 16.0,
+        "overlap_units": 13.0,
         "projects": [
           {
             "project_id": "896b93d2d4ac",
@@ -1027,7 +1027,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 4500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "67322ff5e9cc",
@@ -1093,7 +1093,7 @@
       },
       "gan": {
         "units": 169.0,
-        "overlap_units": 153.0,
+        "overlap_units": 151.0,
         "projects": [
           {
             "project_id": "0b09ea2feb41",
@@ -1133,7 +1133,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 2560000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "703a1e5d641f",
@@ -1281,7 +1281,7 @@
       },
       "matnas": {
         "units": 3700.0,
-        "overlap_units": 700.0,
+        "overlap_units": 200.0,
         "projects": [
           {
             "project_id": "5a6b894e2b6c",
@@ -1301,7 +1301,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 5000000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "efc593b398d7",
@@ -1317,7 +1317,7 @@
       },
       "welfare_dept": {
         "units": 2075.0,
-        "overlap_units": 1075.0,
+        "overlap_units": 625.0,
         "projects": [
           {
             "project_id": "86e35885c2d7",
@@ -1347,7 +1347,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 4500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "906948344016",
@@ -1389,7 +1389,7 @@
       },
       "synagogue": {
         "units": 6550.0,
-        "overlap_units": 4200.0,
+        "overlap_units": 3950.0,
         "projects": [
           {
             "project_id": "f092182fb4cf",
@@ -1439,7 +1439,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 2500000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "8c613db548b5",
@@ -1599,7 +1599,7 @@
         "key": "extra:culture",
         "label": "שירותי תרבות",
         "units": 8398.0,
-        "overlap_units": 2798.0,
+        "overlap_units": 1279.0,
         "projects": [
           {
             "project_id": "5a9c649282be",
@@ -1619,7 +1619,7 @@
             "plan_number": "101-0252379",
             "plan_status": "בתכנון",
             "estimate_nis": 15190000.0,
-            "overlap": true
+            "overlap": false
           },
           {
             "project_id": "bf24bdff5119",

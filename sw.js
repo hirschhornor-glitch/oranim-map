@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9-swr';
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
@@ -71,11 +71,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 3: Network-first for data files
-  // Always fetch fresh when online; fall back to cache only when offline.
-  // Avoids serving stale GeoJSON updates (plan statuses, has_objection_btn, etc.) on PWA.
+  // Strategy 3: Stale-while-revalidate for data files
+  // Serve from cache instantly (perf!), refresh in background for next visit.
+  // GeoJSON data is large; network-first was making repeat visits as slow as
+  // first visits. SWR gives instant UI + freshness on the next reload.
   if (url.pathname.includes('/data/') && (url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json') || url.pathname.endsWith('.js'))) {
-    event.respondWith(networkFirst(event.request, DATA_CACHE));
+    event.respondWith(staleWhileRevalidate(event.request, DATA_CACHE));
     return;
   }
 

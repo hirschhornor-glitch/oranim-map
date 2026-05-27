@@ -43,43 +43,43 @@
   },
   "97f68cabfb9d": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "34fc373d63c6": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "907b0734eae8": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "0ab4018f592f": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c19eff13a1a7": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "11dd6088a51f": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "cfdc039ac540": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -170,7 +170,7 @@
       "101-0899880"
     ],
     "overlap_features": [
-      "התחדשות עירונית טשרניחובסקי 52-54-55 ירושלים זיהוי וסיווג תכנית עדכון אחרון 10/09/2024 סה\"כ שטח בדונם 2.777 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
+      "התחדשות עירונית טשרניחובסקי 52-54-55"
     ]
   },
   "fa90934f46da": {
@@ -180,7 +180,7 @@
       "101-0899880"
     ],
     "overlap_features": [
-      "התחדשות עירונית טשרניחובסקי 52-54-55 ירושלים זיהוי וסיווג תכנית עדכון אחרון 10/09/2024 סה\"כ שטח בדונם 2.777 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
+      "התחדשות עירונית טשרניחובסקי 52-54-55"
     ]
   },
   "ddfd61cb22e7": {
@@ -191,13 +191,13 @@
   },
   "fd17fbfe528f": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "73e668b6af65": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -215,7 +215,7 @@
   },
   "eeb180be4727": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -233,7 +233,7 @@
   },
   "c16a277ccb8a": {
     "plan_number": null,
-    "match_quality": "approx",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -251,19 +251,19 @@
   },
   "30f568e90062": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "1b96c6f46a3d": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d93bdd98b941": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -299,13 +299,7 @@
   },
   "6bbfae5bb8ab": {
     "plan_number": null,
-    "match_quality": "parcels",
-    "overlap_plan_names": [],
-    "overlap_features": []
-  },
-  "8c4531032efe": {
-    "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -351,12 +345,6 @@
     "overlap_plan_names": [],
     "overlap_features": []
   },
-  "397ae68e6b52": {
-    "plan_number": null,
-    "match_quality": "geocoded",
-    "overlap_plan_names": [],
-    "overlap_features": []
-  },
   "2e70429512dc": {
     "plan_number": null,
     "match_quality": "manual_override",
@@ -389,13 +377,13 @@
   },
   "ad3ab2c614b8": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "da939959478e": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -407,13 +395,13 @@
   },
   "590195b57ac7": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d6b2cc63da88": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -437,7 +425,7 @@
   },
   "f7cf0bcd29ff": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -455,13 +443,13 @@
   },
   "87193df6e527": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c807f8a16543": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -557,7 +545,7 @@
   },
   "66dc42e3d865": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -581,7 +569,7 @@
   },
   "3e474057f177": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -605,7 +593,7 @@
   },
   "8d05cd013459": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -617,13 +605,13 @@
   },
   "329c6d49e5e9": {
     "plan_number": "101-1182146",
-    "match_quality": "plan_number",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "8b4e54ad213d": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -791,7 +779,7 @@
   },
   "99dc6b63f03c": {
     "plan_number": "101-1056019",
-    "match_quality": "manual_override",
+    "match_quality": "plan_number",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -875,53 +863,33 @@
   },
   "d2c863f6694e": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "d85fb056c94c": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "c252751d6681": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "dedfc025e040": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "645959762161": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "1063c12d7230": {
     "plan_number": "101-0778036",
@@ -937,33 +905,21 @@
   },
   "2dbdc8008eff": {
     "plan_number": "101-0778035",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0778035"
-    ],
-    "overlap_features": [
-      "פינוי בינוי מתחם נהוראי 5-11 ו-18-28 ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/12/2024 סה\"כ שטח בדונם 8.892 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "c96f8389036b": {
     "plan_number": "101-0778035",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0778035"
-    ],
-    "overlap_features": [
-      "פינוי בינוי מתחם נהוראי 5-11 ו-18-28 ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/12/2024 סה\"כ שטח בדונם 8.892 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "6e1a92a6e877": {
     "plan_number": "101-0778035",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0778035"
-    ],
-    "overlap_features": [
-      "פינוי בינוי מתחם נהוראי 5-11 ו-18-28 ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/12/2024 סה\"כ שטח בדונם 8.892 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "9d561a51f0bf": {
     "plan_number": "101-0857086",
@@ -978,7 +934,7 @@
       "101-0798306"
     ],
     "overlap_features": [
-      "מגורים ומעונות יום בין הרחובות אלעזר בן יאיר אלכסנדריון, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 29/05/2023 סה\"כ שטח בדונם 5.367 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמ"
+      "מגורים ומעונות יום בין הרחובות אלעזר בן יאיר אלכסנדריון, ירושלים"
     ]
   },
   "2bacf9a6d207": {
@@ -1081,27 +1037,19 @@
   },
   "477a29627125": {
     "plan_number": "101-0836809",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0836809"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית במעגלי יבנה, ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון 08/12/2025 סה\"כ שטח בדונם 39196 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "b98183baf8a9": {
     "plan_number": "101-0778035",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0778035"
-    ],
-    "overlap_features": [
-      "פינוי בינוי מתחם נהוראי 5-11 ו-18-28 ירושלים זיהוי וסיווג תכנית עדכון אחרון 05/12/2024 סה\"כ שטח בדונם 8.892 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "ecbc1f7390dd": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1125,15 +1073,9 @@
       "פינוי בינוי אנטיגנוס 14 ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 3.848 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/בחלק מתחום התכני"
     ]
   },
-  "0cf5b8ed3d3b": {
-    "plan_number": "101-0775940",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [],
-    "overlap_features": []
-  },
   "b6c6f4f49f57": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1157,7 +1099,7 @@
   },
   "2a12f85e5a40": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1170,12 +1112,6 @@
   "b417fda17e33": {
     "plan_number": null,
     "match_quality": "manual_override",
-    "overlap_plan_names": [],
-    "overlap_features": []
-  },
-  "6420992fe553": {
-    "plan_number": null,
-    "match_quality": "parcels",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1199,19 +1135,19 @@
   },
   "da672946b571": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d77668cf1c89": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "c0e1cd29c99e": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1223,7 +1159,7 @@
   },
   "a96546735bc7": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1301,7 +1237,7 @@
   },
   "0f6eb4d7f9f7": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1313,7 +1249,7 @@
   },
   "b5490b4b57b4": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1529,63 +1465,39 @@
   },
   "23e6dfdcec8c": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "2dc800187083": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "9d68f83e9fcd": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "529ace1eb807": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "889b2061b07d": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "166424cb907e": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "368ab13f6ace": {
     "plan_number": "101-1069764",
@@ -1919,7 +1831,7 @@
   },
   "4de5d5985e59": {
     "plan_number": "101-1166586",
-    "match_quality": "plan_number",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1937,13 +1849,9 @@
   },
   "bcc05146f26d": {
     "plan_number": "101-0252379",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0252379"
-    ],
-    "overlap_features": [
-      "תוספת יח\"ד, שטחי מסחר, מבנה לצרכי ציבור ושטח ציבורי פתוח בצומת פת ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 8.047 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה בהסכמת כל "
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "1f999561ba73": {
     "plan_number": null,
@@ -1985,13 +1893,13 @@
   },
   "a34aeb281e9c": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "6844c77272e1": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },

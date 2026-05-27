@@ -31,6 +31,12 @@ except ImportError:
     shape = mapping = unary_union = ShPoint = _shp_nearest_points = None
 
 try:
+    from pyproj import Transformer as _PyProjTransformer
+    _ITM_TRANSFORMER = _PyProjTransformer.from_crs(4326, 2039, always_xy=True)
+except ImportError:
+    _ITM_TRANSFORMER = None
+
+try:
     from scipy.interpolate import RBFInterpolator as _RBFInterpolator
 except ImportError:
     _RBFInterpolator = None
@@ -91,18 +97,117 @@ AREA_TO_SUBNEIGH = {
 
 # Features to skip entirely (don't emit to the geojson). Keyed by (project_name, area).
 # Use for recommendations the planner decided to drop from the map.
+# Features that qualify as is_eivuy_brown or is_shatzap_polygon but the user
+# wants rendered as POINT markers instead of polygons (e.g. multiple services
+# share a single lot, so a polygon would be ambiguous). Keyed by (name, area).
+FORCE_POINT_FEATURES = {
+    # User-flagged 2026-05-26: should be point, not 2.76-dunam polygon.
+    ("טשרניחובסקי 52-54-55", "רסקו"),
+    # User-flagged 2026-05-26: should be point, not 2.85-dunam polygon.
+    ("התקופה 2-שמעוני 48-הרצוג", "רסקו"),
+    # User-flagged 2026-05-26: should be point — מעון יום inside the larger
+    # מתחם המשתלה compound (shared lot with יונתן זקס school).
+    ("מעון יום במתחם המשתלה", "גוננים א-ו"),
+    # User-flagged 2026-05-26: programa services (gan, me'on, beit knesset)
+    # within plan 101-0987016 should appear as הפרשה (point), not the full plan
+    # polygon.
+    ("סן מרטין 1", "קטמונים ח-ט"),
+}
+
 SKIP_FEATURES = {
     # User-removed 2026-05-20: too generic to map (whole-neighborhood transit route).
     ("מסלול תח\"צ שכונת רסקו", "רסקו"),
+    # User-merged 2026-05-26: actually describes the same passage as
+    # "מעבר ה\"ר מס' 7" (מתחם לוריא); attached as a note to that feature.
+    ("שימור מעבר קיים טשרניחובסקי 48", "רסקו"),
+    # User-merged 2026-05-26: same physical road as the "מתחם מכוור/הורקניה"
+    # road_segment (just a different recommendation #); attached as a note.
+    ("הארכת דרך רח' מכוור שכונת גוננים", "גוננים א-ו"),
+    # User-merged 2026-05-26: same passage as "שדרוג והנגשה מעבר ה\"ר בין דב הוז
+    # לגולומב" (project #2, service "הנגשה"); attached as a note.
+    ("דב הוז לגולומב", "קטמונים ח-ט"),
+    # User-merged 2026-05-26: transport aspect of בית הנוער (the 8th feature) —
+    # merged as a note onto the other 7 services. 3-tuple key, service-specific.
+    ("בית הנוער", "רסקו", "שיפור רמת שירות"),
+}
+
+# Extra note text to APPEND to a feature's popup. Keyed by (project_name, area).
+# Used when an xlsx row is redundant/merged with another feature but its note
+# text should still be surfaced on the kept feature.
+# Bidirectional cross-feature links. Keyed by (name, area) → list of related
+# (name, area) tuples. Resolved at build time to {project_id, name, display_point}
+# entries on the feature's `related_features` property; the frontend renders them
+# as clickable "ראי גם" badges that pan the map to the linked feature.
+RELATED_FEATURES = {
+    # The southern boundary of חוות הנוער's 3 proposed passages is the same passage
+    # as מבני בתירא לחיים יחיל (project #15 in גוננים). Link both directions.
+    ("מבני בתירא לחיים יחיל", "גוננים א-ו"): [("חוות הנוער", "רסקו")],
+    ("חוות הנוער", "רסקו"): [("מבני בתירא לחיים יחיל", "גוננים א-ו")],
+}
+
+MANUAL_NOTES = {
+    ("מתחם לוריא", "רסקו"): (
+        "הערה (משימור מעבר קיים טשרניחובסקי 48): "
+        "הצגת מעבר ה\"ר בשטח מגרש טשרניחובסקי 48 במסגרת תב\"ע 15791, "
+        "בהתאם למעבר הקיים הפופולרי. הוספת המעבר למסמכי התב\"ע."
+    ),
+    ("מבני בתירא לחיים יחיל", "גוננים א-ו"): (
+        "הערה (מחוות הנוער): זהו הגבול הדרומי של 3 ההצעות למעברי הולכי רגל "
+        "בשטח חוות הנוער הציוני (פרויקט מעברי ה\"ר מס' 11,12,13 ברסקו, "
+        "גוש/חלקה 30122/124 ו-30006/132,133)."
+    ),
+    ("חוות הנוער", "רסקו"): (
+        "הערה: הפיצ'ר מציג את הקטע הצפוני (מעבר 11) ואת הקטע המרכזי "
+        "(מעבר 12, שני קווים נפרדים). הקטע הדרומי (מעבר 13) מוצג בנפרד "
+        "כ-\"מבני בתירא לחיים יחיל\" (מעבר ה\"ר מס' 15 בגוננים)."
+    ),
+    ("בית הנוער", "רסקו"): (
+        "היבט תנועתי (תושי\"ה, חומש 1, 2030, רסקו כבישים ותנועה שקופית 12): "
+        "המתחם ממוקם בסמוך לתחנת רכבת קלה; עירוב שימושים טוב מאפשר הקטנת חניה (~100 מ\"ח). "
+        "כניסה ויציאת רכב מרחוב הרצוג לא מעמיסה על השכונה. "
+        "מפרצי העלאה/הורדה: דרך השירות של הרצוג + רח' התקופה. "
+        "מומלץ לשקול גם ברח' ניקנור מול מעבר ה\"ר המוביל למתחם (~1000 תלמידי תיכון)."
+    ),
+    ("מתחם מכוור/הורקניה", "גוננים א-ו", "רחוב חדש"): (
+        "הערה (מהארכת דרך רח' מכוור שכונת גוננים — המלצה 8): "
+        "חיבור רח' מכור ללא מוצא לבני בתירא. שיפור רמת שירות, חומש 1 (2030)."
+    ),
+    ("שדרוג והנגשה מעבר ה\"ר בין דב הוז לגולומב", "קטמונים ח-ט"): (
+        "הערה (מ-\"דב הוז לגולומב\" מעבר ה\"ר מס' 2): "
+        "חיבור דב הוז לתחנת האוטובוס. בתב\"ע 0987016 מתאפשר מעבר בין הבניינים. "
+        "יש לוודא רציפות המעבר לכשתגיע יוזמת התחדשות בחלקה מס' 11 הסמוכה. "
+        "גוש/חלקה 30169/11. הוספת מעבר ה\"ר, חומש 3 (2040)."
+    ),
 }
 
 # Features the planner couldn't locate precisely YET — kept at fallback (centroid)
 # until ITM/CAD coords arrive. Format: (project_name, area[, service]) → "note".
 # Each build prints how many pending items remain.
 PENDING_REVIEW = {
-    ("ציר הרצוג", "רסקו"): "2000m road upgrade — מצריך 4-8 ITM points along הרב הרצוג",
     ("שביל גוננים", "גוננים א-ו"): "2.3km path crossing entire neighborhood — needs 10-20 points",
-    ("תב\"ע לכביש 34 עתידי", "גוננים א-ו"): "400m segment within נהוראי street (full street is 1082m) — needs endpoints",
+    # User-flagged 2026-05-27: should render as a LINE (currently auto-derived
+    # point/polygon). Needs ITM endpoints for the road segment.
+    ("התחדשות עירונית בן זכאי 31", "גוננים א-ו"): "should be a LineString — needs ITM endpoints",
+}
+
+# Hard overrides for features whose xlsx `קישורים` (PDF reference) is wrong or
+# points to the wrong page. Keyed by (project_name, area) → str. Applied AFTER
+# reading the xlsx, so the popup shows the corrected reference.
+MANUAL_PDF_OVERRIDES = {
+    # User-corrected 2026-05-26: xlsx said pages 9,26; actual recommendation is page 25.
+    ("מאלעזר בין יאיר לקנאי הגליל", "גוננים א-ו"): "עמ' 25 חוברת מרחב ציבורי גוננים",
+    # User-corrected 2026-05-26: xlsx said page 22; actual page is 21.
+    ("חיבור בין השכונה לפארק המסילה", "פת"): "עמ' 21 חוברת מרחב ציבורי קטמונים ופת",
+}
+
+# Fix mislabeled project_name in xlsx where one row was copied with the wrong
+# name. Keyed by (xlsx_name, area, project_num). Applied very early, before any
+# other name-based lookup runs (overrides, notes, force-point, skip).
+MANUAL_NAME_OVERRIDES = {
+    # User-flagged 2026-05-26: pn=10 had project_name "3 גני ילדים ברחוב גוננים
+    # (משרה מלכה, מנח"י)" but its description / plan / location all describe a
+    # different project — "מתחם קנאי הגליל (מחסן תרופות)".
+    ("3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)", "גוננים א-ו", "10"): "מתחם קנאי הגליל (מחסן תרופות)",
 }
 
 # Hard overrides for features whose xlsx `מזהה מיקום` points to a wrong/stale
@@ -111,10 +216,9 @@ PENDING_REVIEW = {
 # These take precedence over every other geocoding step. Use sparingly — file an
 # xlsx fix instead when possible.
 MANUAL_LOCATION_OVERRIDES = {
-    # xlsx says location_id="136/30121" → empty parcel far from the actual שצ"פ;
-    # the area is part of the נתיבי זהרה passage system in north Rasco.
-    # Updated 2026-05-17 from ITM (219739.21, 630282.00) — user-provided.
-    ("שצ\"פ זהרה", "רסקו"): [35.207427, 31.765197],
+    # שצ"פ זהרה (רסקו, פרויקט 8) — 1.4 דונם, gush/helka 30121/136. User wants
+    # the whole lot polygon (2026-05-26). Parcel exists in parcels file.
+    ("שצ\"פ זהרה", "רסקו"): {"gush_helka": "30121/136"},
     # Passage extension from המשוריינים to the existing מעבר לגרלף. No xlsx parcel,
     # and the chip's adjacent green polyline points NW instead of the actual E-W
     # direction — coords traced manually from the תשריט on 2026-05-17, then
@@ -150,15 +254,84 @@ MANUAL_LOCATION_OVERRIDES = {
     ("פת יעקב 3", "גוננים א-ו"): [35.19831472381227, 31.756940954015516],
     # חיבור בין השכונה לפארק המסילה — was nominatim at the lake; user-corrected
     # to the actual connection point near פאני קפלן plot 2026-05-20.
-    ("חיבור בין השכונה לפארק המסילה", "פת"): [35.20064588009044, 31.748766930545255],
+    # חיבור בין השכונה לפארק המסילה (פת, פרויקט 1) — LineString from neighborhood
+    # to railway park. User-provided 2 ITM endpoints 2026-05-26 (~93m W→E).
+    ("חיבור בין השכונה לפארק המסילה", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2007844, 31.7498401],
+            [35.1998964, 31.7495442],
+        ],
+    },
     # מתחם קנגורו (אולם ספורט) — was nominatim on a random street; user said
     # "kangaroo = plan 1261510" 2026-05-20, so use the polygon of plan 101-1261510.
     ("מתחם קנגורו", "קטמונים ח-ט"): {"plan_name": "101-1261510"},
+    # מתחם קנגורו — road segment (כניסה מזרחית לשכונה מדב יוסף דרך המתחם).
+    # Was inheriting the plan polygon; user provided 3 ITM points 2026-05-26
+    # (~205m winding S→E).
+    ("מתחם קנגורו", "קטמונים ח-ט", "רחוב חדש"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1975225, 31.7535408],
+            [35.1980979, 31.7519708],
+            [35.1985838, 31.7519136],
+        ],
+    },
+    # מתחם אגד (קטמונים, פרויקט 10) — new road per master-plan, gush 30169/1,68,69
+    # and 30170/3. Auto was 100m E-W parcel-edge; user provided 2 ITM endpoints
+    # 2026-05-26 (~190m NW→SE).
+    ("מתחם אגד", "קטמונים ח-ט"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1968074, 31.7569172],
+            [35.1978547, 31.7555166],
+        ],
+    },
+    # שיפור תח"צ בקטמונים ח-ט — widening of רח' סן מרטין for bi-directional
+    # transit service. User provided 7 ITM points 2026-05-26 (~290m winding N).
+    ("שיפור תח\"צ בקטמונים ח-ט", "קטמונים ח-ט"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1927751, 31.7541012],
+            [35.1926019, 31.7546882],
+            [35.1927470, 31.7551225],
+            [35.1932273, 31.7555377],
+            [35.1939589, 31.7558146],
+            [35.1943667, 31.7560628],
+            [35.1945230, 31.7565448],
+        ],
+    },
+    # חידוש רחוב אברהם אלמליח — full street upgrade. Auto was 78m parcel-edge;
+    # user requested 2026-05-26 to pull from roads.geojson and CUT at the given
+    # point (keeping the longer portion — the actual project area).
+    ("חידוש רחוב אברהם אלמליח", "קטמונים ח-ט"): {
+        "road_name": "אברהם אלמליח",
+        "cut_at": [35.1924346, 31.7530370],
+    },
     # סן מרטין 1 (מעון יום) — xlsx has plan_raw=101-987016 but auto-match failed
     # due to leading-zero mismatch (plans.geojson has 101-0987016).
     ("סן מרטין 1", "קטמונים ח-ט"): {"plan_name": "101-0987016"},
+    # סן מרטין 1 — transport variant (parking entrance, שיפור רמת שירות).
+    # Keep as point at the specific intersection (סן מרטין-גולומב), not the plan polygon.
+    # User-provided ITM 2026-05-26.
+    ("סן מרטין 1", "קטמונים ח-ט", "שיפור רמת שירות"): [35.1954628, 31.7561411],
     # בית שוויץ (מתחם הפסגה) — user-corrected from "בית שלום" (wrong building) 2026-05-20.
     ("בית שוויץ (מתחם הפסגה)", "קטמונים ח-ט"): [35.19706010789749, 31.755262137288366],
+    # בית שוויץ — road segment (traffic study for the מתחם הפסגה plan).
+    # Auto was a Polygon (lot); user provided 7 ITM points 2026-05-26 along the
+    # planned road network (winding path through the complex, ~360m total).
+    ("בית שוויץ (מתחם הפסגה)", "קטמונים ח-ט", "שדרוג רחובות"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1971872, 31.7559103],
+            [35.1968857, 31.7558768],
+            [35.1950872, 31.7549843],
+            [35.1954783, 31.7543210],
+            [35.1968132, 31.7547696],
+            [35.1977011, 31.7552851],
+            [35.1976340, 31.7554140],
+        ],
+    },
     # מתחם לוריא — has 6 services in the xlsx (school/kindergarten/daycare/synagogue +
     # this new street + a pedestrian crossing). Each needs its own location, so the
     # key includes service_he. Coords below are for the access-road service only.
@@ -178,6 +351,259 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.205939, 31.755022],
         ],
     },
+    # שדרוג מעבר בן בבא-רח' בן זכאי — auto-derived from parcels was a 33m N-S
+    # segment on a single lot boundary; user provided 4 ITM points 2026-05-26
+    # forming an L-shaped passage from בן בבא south then east to בן זכאי.
+    ("שדרוג מעבר בן בבא-רח' בן זכאי", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2065896, 31.7575217],
+            [35.2070070, 31.7572080],
+            [35.2071731, 31.7572080],
+            [35.2071718, 31.7570791],
+        ],
+    },
+    # מעבר ה"ר מס' 5 — מאלעזר בין יאיר לקנאי הגליל. Auto-derived was 25m E-W
+    # inside one parcel; user provided 2 ITM endpoints 2026-05-26 (66m diagonal).
+    ("מאלעזר בין יאיר לקנאי הגליל", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2024578, 31.7528497],
+            [35.2019887, 31.7523772],
+        ],
+    },
+    # מתחם דנמרק (פרויקט 8) — הנגשת קמפוס גוננים מדר'-מז'. Auto was 30m N-S
+    # within one parcel; user provided 6 ITM points 2026-05-26 (~140m total,
+    # winding NE→W through the campus). The passage and the road segment (חיבור
+    # רח' טוביה לרח' אלכסנדריון, service="רחוב חדש") share the project name but
+    # take different physical routes — split by service via 3-tuple override.
+    ("מתחם דנמרק", "גוננים א-ו", "הוספת מעבר ה\"ר"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2059429, 31.7528211],
+            [35.2056860, 31.7529213],
+            [35.2054793, 31.7531647],
+            [35.2049879, 31.7532649],
+            [35.2049823, 31.7531790],
+            [35.2045522, 31.7531694],
+        ],
+    },
+    # מתחם דנמרק — road segment (separate physical route from the passage above).
+    # חיבור רח' טוביה לרח' אלכסנדריון. User provided 3 ITM points 2026-05-26.
+    ("מתחם דנמרק", "גוננים א-ו", "רחוב חדש"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2031029, 31.7531933],
+            [35.2032537, 31.7535751],
+            [35.2031979, 31.7539760],
+        ],
+    },
+    # מעבר ה"ר מס' 15 — מבני בתירא לחיים יחיל. Auto was 75m E-W on one parcel;
+    # user provided 2 ITM endpoints 2026-05-26 (~114m east-west).
+    ("מבני בתירא לחיים יחיל", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2038206, 31.7585431],
+            [35.2050214, 31.7584452],
+        ],
+    },
+    # מעבר ה"ר מס' 6 (פת) — מדב יוסף למבוא רוזנשטיין. Exit toward bus/rakl
+    # stations on דב יוסף. Auto was 27m NE diagonal; user provided 2 ITM
+    # endpoints 2026-05-26 (~38m WSW-ENE).
+    ("מדב יוסף למבוא רוזנשטיין", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1998440, 31.7525561],
+            [35.1994782, 31.7527041],
+        ],
+    },
+    # מעבר ה"ר מס' 7 (פת) — מהכניסה לבי"ס הדו לשוני עד לדב יוסף.
+    # Auto was a 37m L over 3 parcels; user provided 2 ITM endpoints 2026-05-26
+    # (~58m diagonal SE→NW).
+    ("מהכניסה לבי\"ס הדו לשוני עד לדב יוסף", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1994978, 31.7514251],
+            [35.1991124, 31.7518355],
+        ],
+    },
+    # מעבר ה"ר מס' 8 (פת) — מגן גולדשטיין למרכז פאני קפלן. Continuous walking
+    # axis along the public boulevard. Auto was 80m N-S over 2 parcels; user
+    # provided 2 ITM endpoints 2026-05-26 (~71m NNW→SSE).
+    ("מגן גולדשטיין למרכז פאני קפלן", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2001626, 31.7503585],
+            [35.2005340, 31.7498026],
+        ],
+    },
+    # מעבר ה"ר מס' 10 (פת) — מגן אולריך למעבר שמואל פינלס. Continuous link
+    # from the neighborhood park to SE Pat. Auto was 35m L; user provided 2 ITM
+    # endpoints 2026-05-26 (~55m NNW→SSE).
+    ("מגן אולריך למעבר שמואל פינלס", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2020530, 31.7501128],
+            [35.2022960, 31.7496809],
+        ],
+    },
+    # מתחם גבעת גונן (קטמונים, פרויקט 7) — passage (gush/helka 30199/16).
+    # 156m E→W. User-provided 2026-05-26.
+    ("מתחם גבעת גונן", "קטמונים ח-ט", "הוספת מעבר ה\"ר"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1952223, 31.7546032],
+            [35.1936919, 31.7540829],
+        ],
+    },
+    # מתחם גבעת גונן — one-way road (כביש חד-סטרי) from רח' ר' צדוק to צומת
+    # הנוטרים/אליעזר מרגולין. gush/helka 30199/15,53. User provided 6 ITM points
+    # 2026-05-26 (~140m winding W→E).
+    ("מתחם גבעת גונן", "קטמונים ח-ט", "רחוב חדש"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1950817, 31.7549962],
+            [35.1945986, 31.7548411],
+            [35.1944170, 31.7550272],
+            [35.1941964, 31.7550845],
+            [35.1940568, 31.7550630],
+            [35.1936463, 31.7550176],
+        ],
+    },
+    # שדרוג והנגשה מעבר ה"ר בין דב הוז לגולומב (קטמונים, פרויקט 2). Service is
+    # "הנגשה" but the project name says "מעבר ה\"ר". Auto was a Polygon (the lot);
+    # user provided 2 ITM endpoints 2026-05-26 (~69m N-S, the existing passage).
+    ("שדרוג והנגשה מעבר ה\"ר בין דב הוז לגולומב", "קטמונים ח-ט"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1953618, 31.7560397],
+            [35.1953728, 31.7566601],
+        ],
+    },
+    # מעלות שנהר (רסקו, פרויקט 1) — upgrade existing stairs + add seating.
+    # Auto was 32m N-S inside parcel boundary; user provided 2 ITM endpoints
+    # 2026-05-26 (~122m NW-SE, full length of the stairs).
+    ("מעלות שנהר", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2027062, 31.7637519],
+            [35.2018794, 31.7645919],
+        ],
+    },
+    # מעלות סלמה לגרלף (רסקו, פרויקט 2) — upgrade existing stairs + seating.
+    # Auto was 30m E-W within one parcel; user provided 2 ITM endpoints
+    # 2026-05-26 (~105m W→E, full length of the stairs).
+    ("מעלות סלמה לגרלף", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2060354, 31.7650786],
+            [35.2049852, 31.7653793],
+        ],
+    },
+    # נתיבי זהרה (רסקו, פרויקט 5) — accessibility upgrade for the existing
+    # passage. Auto was 30m E-W on one parcel; user provided 2 ITM endpoints
+    # 2026-05-26 (~91m W→E, full length of the passage).
+    ("נתיבי זהרה", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2061303, 31.7655940],
+            [35.2070408, 31.7655749],
+        ],
+    },
+    # ציר הרצוג (רסקו, פרויקט 10) — upgrade of full הרב הרצוג street section.
+    # Was PENDING_REVIEW; now pulled from roads.geojson by street-name match.
+    ("ציר הרצוג", "רסקו"): {"road_name": "הרב הרצוג"},
+    # בית הנוער (רסקו) — 24.08 dunam compound at הרצוג 105. 8 services all
+    # share the same lot. User-provided plan 101-1158146 (2026-05-26).
+    ("בית הנוער", "רסקו"): {"plan_name": "101-1158146"},
+    # ציר סן מרטין (קטמונים) — full street + 2 missing connecting segments +
+    # eastern part of בר יוחאי. User-confirmed by visual annotation 2026-05-26.
+    ("ציר סן מרטין", "קטמונים ח-ט"): {
+        "road_name": "חוזה סן מרטין",
+        "extra_lines": [
+            # Small connector: from סן מרטין south end to missing seg 1 start
+            [
+                [35.192753, 31.754111],
+                [35.1930111, 31.7536498],
+            ],
+            # Missing seg 1 — west connector
+            [
+                [35.1930111, 31.7536498],
+                [35.1940220, 31.7533779],
+                [35.1951446, 31.7534018],
+            ],
+            # Missing seg 2 — east connector
+            [
+                [35.1961108, 31.7536166],
+                [35.1966246, 31.7535403],
+                [35.1968481, 31.7533637],
+            ],
+            # Cyan — eastern part of בר יוחאי connecting to יצחק שדה
+            [
+                [35.1968481, 31.7533637],
+                [35.1993166, 31.7543756],
+            ],
+        ],
+    },
+    # מעגלי יבנה (גוננים, פרויקט 16) — section of future כביש 34 (רחוב המסילה).
+    # The xlsx lists addresses on 3 streets (מעגלי יבנה / רבי חנינא / רבן יוחנן
+    # בן זכאי). Auto-derived was a 60m parcel-edge fragment; user provided 3 ITM
+    # points 2026-05-26 (~380m diagonal across the project's footprint).
+    ("מעגלי יבנה", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2138771, 31.7585618],
+            [35.2115869, 31.7562235],
+            [35.2105815, 31.7554314],
+        ],
+    },
+    # פינוי בינוי מתחם נהוראי 5-11, 18-28 (גוננים, פרויקט 17) — continuation of
+    # כביש 34 along נהוראי. Auto was 46m E-W; user provided 2 ITM endpoints
+    # 2026-05-26 (~95m NE→SW along the future road).
+    ("פינוי בינוי מתחם נהוראי 5-11, 18-28", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2094644, 31.7542574],
+            [35.2086824, 31.7536848],
+        ],
+    },
+    # תב"ע לכביש 34 עתידי (גוננים) — section of the future כביש 34 on נהוראי 6-30
+    # (even numbers). Was PENDING_REVIEW; user provided 2 ITM endpoints 2026-05-26
+    # (~225m NE→SW).
+    ("תב\"ע לכביש 34 עתידי", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2105592, 31.7554600],
+            [35.2086378, 31.7537325],
+        ],
+    },
+    # חוות הנוער (רסקו, מעברי ה"ר 11,12,13) — 3 הצעות למעברים בשטח חוות הנוער
+    # הציוני. הגבול הדרומי (מעבר 13) הוא אותו מעבר כמו "מבני בתירא לחיים יחיל"
+    # (מעבר 15 בגוננים) — מסומן שם בנפרד. כאן מוצגים הקטע הצפוני (מעבר 11)
+    # והקטע המרכזי (מעבר 12, שני קווים). User-provided ITM points 2026-05-26.
+    ("חוות הנוער", "רסקו"): {
+        "type": "MultiLineString",
+        "coordinates": [
+            # Northern segment (מעבר 11) — 52m W→E
+            [
+                [35.2023711, 31.7621055],
+                [35.2018824, 31.7619623],
+            ],
+            # Central — line A (4 points, NE→S, winding through campus)
+            [
+                [35.2044937, 31.7611439],
+                [35.2034435, 31.7606524],
+                [35.2032871, 31.7603278],
+                [35.2034157, 31.7601608],
+            ],
+            # Central — line B (3 points, E→W)
+            [
+                [35.2040635, 31.7602897],
+                [35.2033709, 31.7601513],
+                [35.2028795, 31.7599413],
+            ],
+        ],
+    },
     # שב"צ קנאי הגליל — at plan 101-1056019 (per user 2026-05-20).
     ("שב\"צ קנאי הגליל", "גוננים א-ו"): {"plan_name": "101-1056019"},
     # מכוור/רבי טרפון (בית כנסת) — at parcel גוש 30123 / חלקה 16 (per PDF excerpt
@@ -192,9 +618,11 @@ MANUAL_LOCATION_OVERRIDES = {
     # אלעזר הגדול 4 (תחנה ט' - גוננים, תחנת בריאות) — user-provided specific point
     # within the מתחם דנמרק complex.
     ("אלעזר הגדול 4", "גוננים א-ו"): [35.204501490529324, 31.75434455925096],
-    # פינוי בינוי מתחם נהוראי 5-11, 18-29 — same parcel for גן ילדים + מעון יום.
-    ("פינוי בינוי מתחם נהוראי 5-11, 18-29", "גוננים א-ו", "גן ילדים"): {"gush_helka": "30143/195"},
-    ("פינוי בינוי מתחם נהוראי 5-11, 18-29", "גוננים א-ו", "מעון יום"): {"gush_helka": "30143/195"},
+    # פינוי בינוי מתחם נהוראי 5-11, 18-29 — gan + me'on yom (440 m² combined, 2 כיתות גן).
+    # Per תב"ע 101-0778035, the הפרשה מבונה is on מגרש 1 (residential lot מגורים ד'
+    # at center [35.2084544, 31.7544346] per landuse_xplan). User-confirmed 2026-05-26.
+    ("פינוי בינוי מתחם נהוראי 5-11, 18-29", "גוננים א-ו", "גן ילדים"): [35.2084544, 31.7544346],
+    ("פינוי בינוי מתחם נהוראי 5-11, 18-29", "גוננים א-ו", "מעון יום"): [35.2084544, 31.7544346],
     # מתחם 06 אלמליח בר יוחאי — same plan (101-0855585) for all 3 services
     # (מעון יום + בית כנסת + טרם נקבע).
     ("מתחם 06 אלמליח בר יוחאי", "קטמונים ח-ט", "מעון יום"): {"plan_name": "101-0855585"},
@@ -225,9 +653,27 @@ MANUAL_LOCATION_OVERRIDES = {
     ("בי\"ס פלא", "גוננים א-ו"): {"gush_helka": "30143/211"},
     # מעבר הפילבוקס (הנגשה, רסקו) — at parcel גוש 30024 / חלקה 34 (per xlsx
     # location_id 34/30024 — same helka/gush format issue).
-    ("מעבר הפילבוקס", "רסקו"): {"gush_helka": "30024/34"},
+    # מעבר הפילבוקס (רסקו, פרויקט 3) — הנגשת מעבר 25×2 מ' בצומת חיים הזז.
+    # gush 30024 isn't in parcels file; user provided 2 ITM endpoints 2026-05-26.
+    ("מעבר הפילבוקס", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2094275, 31.7695996],
+            [35.2096565, 31.7690604],
+        ],
+    },
     # גינה קהילתית ברודי (הנגשה, רסקו) — at parcel גוש 30024 / חלקה 140.
-    ("גינה קהילתית ברודי", "רסקו"): {"gush_helka": "30024/140"},
+    # גינה קהילתית ברודי (רסקו, פרויקט 4) — accessibility ramp + steps at the
+    # entrance to the community garden (15×6m path). gush 30024 isn't in the
+    # parcels file; user provided 3 ITM points 2026-05-26 (~28m winding S).
+    ("גינה קהילתית ברודי", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.2100405, 31.7680903],
+            [35.2100670, 31.7679830],
+            [35.2099553, 31.7678434],
+        ],
+    },
     # מעבר חציה בחיים ברלין (רסקו) — at parcel גוש 30024 / חלקה 24.
     ("מעבר חציה בחיים ברלין", "רסקו"): {"gush_helka": "30024/24"},
     # מתחם לוריא — has 4 public-services (school/kindergartens/daycare/synagogue)
@@ -240,22 +686,34 @@ MANUAL_LOCATION_OVERRIDES = {
     # 3 גני ילדים ברחוב גוננים (משרה מלכה, מנח"י) — at parcels גוש 30171 / חלקות
     # 98,134,158 (per PDF #31, address ברניקי).
     ("3 גני ילדים ברחוב גוננים (משרה מלכה, מנח\"י)", "גוננים א-ו"): {"gush_helka": "30171/98,134,158"},
-    # גשר בין דב הוז לגולומב (75m bridge, קטמונים) — endpoints are the centroids
-    # of parcels 30169/138 (דב הוז side) and 30170/19 (גולומב side).
+    # גשר בין דב הוז לגולומב (קטמונים) — proposed bridge. User refined to 2 ITM
+    # endpoints 2026-05-26 (~64m N→S across the highway/park to bus stop).
     ("גשר בין דב הוז לגולומב", "קטמונים ח-ט"): {
         "type": "LineString",
         "coordinates": [
-            [35.19581, 31.75670],  # דב הוז side (parcel 30169/138)
-            [35.19700, 31.75734],  # גולומב side (parcel 30170/19)
+            [35.1958579, 31.7570364],
+            [35.1961148, 31.7564781],
         ],
     },
-    # דוד איילון (שיפור רמת שירות, קטמונים) — LineString from parcel 30199/36 (south)
-    # to parcel 30199/51 (north) along the road.
+    # גשר בין רח' חננאל לעמק הצבאים (גוננים, פרויקט 7) — bridge approved within
+    # תב"ע 101-1182146. User clarified 2026-05-26 — keep only the segment ABOVE
+    # הרצוג (the actual bridge crossing), not the access spine going south.
+    ("גשר בין רח' חננאל לעמק הצבאים", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1985603, 31.7579751],
+            [35.1984030, 31.7581114],
+            [35.1983039, 31.7582447],
+        ],
+    },
+    # דוד איילון (שיפור רמת שירות, קטמונים) — entry/exit reorganization. User
+    # refined to 3 ITM points 2026-05-26 (~78m L-shape south then west).
     ("דוד איילון", "קטמונים ח-ט"): {
         "type": "LineString",
         "coordinates": [
-            [35.19235, 31.75293],
-            [35.19274, 31.75449],
+            [35.1937750, 31.7528319],
+            [35.1934902, 31.7521590],
+            [35.1931719, 31.7521542],
         ],
     },
     # רח' אברהם ארנסט (שיפור רמת שירות, פת) — merged from roads.geojson, 124m.
@@ -296,6 +754,17 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.207570, 31.767736],
         ],
     },
+    ("מעבר ה\"ר מגן חביבה", "רסקו", "הוספת מעבר ה\"ר", "מעבר ה\"ר מס' 4"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.207710, 31.766959],
+            [35.207380, 31.766968],
+            [35.207280, 31.767054],
+            [35.206458, 31.767050],
+            [35.205978, 31.766973],
+            [35.205056, 31.766821],
+        ],
+    },
     # מעבר 10 גוננים (מדרך האמוראים לרח' אליעזר הגדול) — 159m from user ITM 2026-05-20.
     ("מדרך האמוראים לרח' אליעזר הגדול", "גוננים א-ו"): {
         "type": "LineString",
@@ -310,6 +779,97 @@ MANUAL_LOCATION_OVERRIDES = {
         "coordinates": [
             [35.203656, 31.750992],
             [35.203628, 31.751684],
+        ],
+    },
+    # מעבר 11 גוננים (רח' אליעזר הגדול לפארק גוננים) — 193m from user ITM 2026-05-20.
+    ("רח' אליעזר הגדול לפארק גוננים", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.207595, 31.753174],
+            [35.208863, 31.754539],
+        ],
+    },
+    # מעבר 3 רסקו (מעבר ה"ר מפארק נילי) — 86m from user ITM (3 pts) 2026-05-20.
+    ("מעבר ה\"ר מפארק נילי", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.207199, 31.767644],
+            [35.206741, 31.767830],
+            [35.206512, 31.768116],
+        ],
+    },
+    # מעבר 4 גוננים (מגן אלכסנדריון לרח' קנאי הגליל) — 158m / 5 pts from user ITM 2026-05-20.
+    ("מגן אלכסנדריון לרח' קנאי הגליל", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.200203, 31.755147],
+            [35.200387, 31.755210],
+            [35.200728, 31.755229],
+            [35.200728, 31.755310],
+            [35.201750, 31.755186],
+        ],
+    },
+    # מעבר 14 גוננים (מבן זכאי לבני בתירא) — 331m / 3 pts from user ITM 2026-05-20.
+    ("מבן זכאי לבני בתירא", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.202158, 31.757634],
+            [35.204129, 31.757453],
+            [35.205229, 31.756570],
+        ],
+    },
+    # מעבר 5 רסקו (המשך נתיבי זהרה) — 93m / 4 pts from user ITM 2026-05-20.
+    ("המשך נתיבי זהרה", "רסקו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.206037, 31.765601],
+            [35.205573, 31.765611],
+            [35.205562, 31.765682],
+            [35.205135, 31.765723],
+        ],
+    },
+    # מעבר 5 גוננים (מציר יהודה הנשיא לרח' אלכסנדריון) — 461m / 9 pts from user ITM 2026-05-20.
+    ("מציר יהודה הנשיא לרח' אלכסנדריון", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.201390, 31.755680],
+            [35.201406, 31.755174],
+            [35.201445, 31.754687],
+            [35.201769, 31.754014],
+            [35.201937, 31.753790],
+            [35.202233, 31.753432],
+            [35.202691, 31.753122],
+            [35.203479, 31.752477],
+            [35.203819, 31.752444],
+        ],
+    },
+    # מעבר 2 גוננים (מגינת ניקנור לרח' ניקנור) — 65m from user ITM (3 pts) 2026-05-20.
+    ("מגינת ניקנור לרח' ניקנור", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.199918, 31.757596],
+            [35.199583, 31.757672],
+            [35.199315, 31.757853],
+        ],
+    },
+    # מעבר 1 גוננים (מהורקניה לניקנור) — T-shaped passage, 2 segments / 145m total.
+    # User-provided 2 pairs of ITM 2026-05-20.
+    ("מהורקניה לניקנור", "גוננים א-ו"): {
+        "type": "MultiLineString",
+        "coordinates": [
+            [[35.202479, 31.758295], [35.201739, 31.758844]],  # main arm (93m)
+            [[35.202063, 31.758562], [35.201644, 31.758252]],  # cross arm (53m)
+        ],
+    },
+    # מעבר 2 גוננים (מגינת ניקנור לרח' ניקנור) — chip-derived line was slightly too
+    # long on west end (crossing onto a building). Trimmed left endpoint per user
+    # 2026-05-20.
+    ("מגינת ניקנור לרח' ניקנור", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.199335, 31.757865],  # trimmed west (was 35.1992459, 31.7579061)
+            [35.199543, 31.757768],  # mid
+            [35.1998814, 31.757642], # east
         ],
     },
     # ציר מבני ציבור (מעבר ה"ר מס' 8, רסקו) — 207m from user KMZ 2026-05-20.
@@ -339,13 +899,13 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.20473468945329, 31.76500075841066],
         ],
     },
-    # מתחם מכוור/הורקניה — new street (138m). User-provided 3 vertices 2026-05-20.
+    # מתחם מכוור/הורקניה — new street. User refined to 2 ITM endpoints 2026-05-26
+    # (~30m E-W between Horkania and Yehuda Hanasi).
     ("מתחם מכוור/הורקניה", "גוננים א-ו", "רחוב חדש"): {
         "type": "LineString",
         "coordinates": [
-            [35.203813021010625, 31.755405726698054],
-            [35.203267199736985, 31.755969565048794],
-            [35.20268980202602, 31.75583531813394],
+            [35.2038520, 31.7561224],
+            [35.2041634, 31.7560388],
         ],
     },
     # מתחם בן זכאי-אנטיגונוס-אליעזר הגדול — 30 dunam preservation complex.
@@ -2361,6 +2921,77 @@ def snap_point_to_nearest_road(lon: float, lat: float, roads_features: list,
         return None
 
 
+def road_bearing_at(lon: float, lat: float, roads_features: list,
+                    max_dist_deg: float = 0.0015) -> float | None:
+    """Compass bearing (0=N, clockwise) of the nearest road segment at the
+    projection of (lon, lat). Returned in [0, 360). The crosswalk renderer
+    uses (bearing - 90°) to lay the rectangle ACROSS the road. None if no
+    road within max_dist_deg."""
+    if shape is None:
+        return None
+    try:
+        import math
+        from shapely.geometry import LineString as ShLine, Point as P
+        target = P(lon, lat)
+        best = None
+        best_dist = float("inf")
+        for f in roads_features:
+            g = f.get("geometry") or {}
+            t = g.get("type")
+            if t == "LineString":
+                lines = [g["coordinates"]]
+            elif t == "MultiLineString":
+                lines = g["coordinates"]
+            else:
+                continue
+            for coords in lines:
+                if len(coords) < 2:
+                    continue
+                ls = ShLine(coords)
+                d = ls.distance(target)
+                if d < best_dist:
+                    best_dist = d
+                    best = ls
+        if best is None or best_dist > max_dist_deg:
+            return None
+        proj_d = best.project(target, normalized=False)
+        cos_lat = max(0.1, math.cos(math.radians(lat)))
+        delta_deg = 5.0 / 111000.0 / cos_lat  # 5m on each side
+        start = max(0.0, proj_d - delta_deg)
+        end = min(best.length, proj_d + delta_deg)
+        if end <= start:
+            return None
+        p1 = best.interpolate(start)
+        p2 = best.interpolate(end)
+        dx_m = (p2.x - p1.x) * 111000.0 * cos_lat
+        dy_m = (p2.y - p1.y) * 111000.0
+        bearing = math.degrees(math.atan2(dx_m, dy_m))  # compass: 0=N, 90=E
+        if bearing < 0:
+            bearing += 360.0
+        return round(bearing, 1)
+    except Exception:
+        return None
+
+
+def polygon_area_m2(geom: dict) -> float | None:
+    """Area in m² of a Polygon/MultiPolygon GeoJSON (lon/lat) by projecting
+    to Israel TM (EPSG:2039). Returns None if shapely/pyproj unavailable or
+    geometry isn't polygonal."""
+    if not geom or shape is None or _ITM_TRANSFORMER is None:
+        return None
+    if geom.get("type") not in ("Polygon", "MultiPolygon"):
+        return None
+    try:
+        from shapely.ops import transform as _shp_transform
+        g = shape(geom)
+        g_itm = _shp_transform(
+            lambda x, y, z=None: _ITM_TRANSFORMER.transform(x, y), g
+        )
+        return float(g_itm.area)
+    except Exception:
+        return None
+
+
 def make_stadium_polygon(lon: float, lat: float, length_m: float, width_m: float,
                           horizontal: bool = False) -> dict:
     """Stadium shape (rectangle with rounded ends) — matches the legend's dark-green oval
@@ -2594,6 +3225,7 @@ def main():
     # Read header from row 2 (row 1 is meta — "רשימה"/"הזנה חופשית" labels)
     header = [c.value for c in ws[2]]
     h = {name: idx for idx, name in enumerate(header)}
+    print(f"      xlsx headers ({len(header)} cols): {[str(c) for c in header]}")
 
     rows = []
     for row in ws.iter_rows(min_row=3, values_only=True):
@@ -2869,6 +3501,11 @@ def main():
         area = row[h["אזור"]]
         proj_num = row[h["מס פרויקט"]]
         proj_name = row[h["שם פרויקט"]]
+        # Apply name override BEFORE any name-based lookups (overrides, notes, etc.)
+        _orig_name = str(proj_name or "").strip()
+        _name_override = MANUAL_NAME_OVERRIDES.get((_orig_name, area, str(proj_num or "").strip()))
+        if _name_override:
+            proj_name = _name_override
         domain_he = row[h["תחום"]]
         service_he = (row[h["שירות"]] or "").strip()
         units_label = row[h["יחידות"]]
@@ -2879,8 +3516,13 @@ def main():
         year_completion = row[h["צפי לשנת השלמת ביצוע"]]
         chumash_text = row[h["חומש לביצוע"]]
         managing = row[h["גורם מנהל"]]
+        obstacles = row[h["חסמים/פעולות נדרשות"]] if "חסמים/פעולות נדרשות" in h else None
+        related_projects = row[h["פרויקטים נלווים"]] if "פרויקטים נלווים" in h else None
         location_id = row[h["מזהה מיקום"]]
         pdf_link = row[h["קישורים"]]
+        _pdf_override = MANUAL_PDF_OVERRIDES.get((str(proj_name or "").strip(), area))
+        if _pdf_override:
+            pdf_link = _pdf_override
         plan_status = row[h["סטטוס"]]
         estimate = coerce_float(row[h["אומדן"]])
 
@@ -2895,7 +3537,10 @@ def main():
         seen_pids.add(pid)
 
         # Skip features explicitly marked for removal (no map presence at all).
-        if (str(proj_name or "").strip(), area) in SKIP_FEATURES:
+        _sk_name = str(proj_name or "").strip()
+        _sk_svc = str(service_he or "").strip()
+        if ((_sk_name, area) in SKIP_FEATURES
+            or (_sk_name, area, _sk_svc) in SKIP_FEATURES):
             continue
 
         # Compute PDF excerpt early so geocoding can use it for street/gush lookup.
@@ -2976,6 +3621,89 @@ def main():
                     geometry_source = "manual_override"
                 else:
                     print(f"      [override] plan_name={pn_ref!r} not found in plans.geojson — skipping override for {proj_name!r}")
+            elif isinstance(override, dict) and override.get("road_name"):
+                # Collect all road segments whose `street` matches and union them
+                # via shapely. Divided roads have parallel ft/tf pairs; drop `tf` to
+                # avoid drawing both lanes. Then linemerge to chain adjacent segments.
+                # Optional `cut_at: [lon, lat]` truncates the road at the projection
+                # of that point — keeps the LONGER portion by default.
+                rn = override["road_name"]
+                cut_at = override.get("cut_at")
+                from shapely.geometry import LineString as _ShL, MultiLineString as _ShML, Point as _ShP
+                from shapely.ops import linemerge as _linemerge, substring as _substring
+                ls = []
+                for rf in roads.get("features", []):
+                    rp = rf.get("properties") or {}
+                    if rp.get("street") != rn:
+                        continue
+                    if rp.get("oneway") == "tf":
+                        continue  # parallel lane of a divided road — paired with an 'ft'
+                    rg = rf.get("geometry") or {}
+                    if rg.get("type") == "LineString" and len(rg["coordinates"]) >= 2:
+                        ls.append(_ShL(rg["coordinates"]))
+                    elif rg.get("type") == "MultiLineString":
+                        for ln in rg["coordinates"]:
+                            if len(ln) >= 2:
+                                ls.append(_ShL(ln))
+                if ls:
+                    from shapely.ops import unary_union as _uu
+                    # Step 1: merge adjacent endpoints into long chunks.
+                    merged_obj = _linemerge(_ShML(ls))
+                    chunks = list(merged_obj.geoms) if merged_obj.geom_type == "MultiLineString" else [merged_obj]
+                    # Step 2: drop parallel-lane duplicates by buffer-overlap ratio.
+                    # If ≥70% of a candidate sits within ~20m of a previously-kept
+                    # chunk, treat as a parallel duplicate. (Some divided streets
+                    # have lanes 15-20m apart, so we need a generous buffer.)
+                    BUFFER_DEG = 20.0 / 111000.0   # ~20m at this latitude
+                    chunks.sort(key=lambda l: -l.length)
+                    kept = []
+                    for cand in chunks:
+                        is_dup = False
+                        for kp in kept:
+                            try:
+                                buf = kp.buffer(BUFFER_DEG)
+                                inter = cand.intersection(buf)
+                                inside_len = inter.length if hasattr(inter, "length") else 0
+                                if cand.length > 0 and inside_len / cand.length > 0.7:
+                                    is_dup = True
+                                    break
+                            except Exception:
+                                pass
+                        if not is_dup:
+                            kept.append(cand)
+                    # Optional cut: keep only the longer portion around cut_at point
+                    if cut_at and kept:
+                        cut_pt = _ShP(cut_at[0], cut_at[1])
+                        cut_kept = []
+                        for line in kept:
+                            try:
+                                proj_d = line.project(cut_pt, normalized=False)
+                                # Two sides of the cut
+                                lo = _substring(line, 0, proj_d)
+                                hi = _substring(line, proj_d, line.length)
+                                # Keep whichever side is longer
+                                cut_kept.append(lo if lo.length >= hi.length else hi)
+                            except Exception:
+                                cut_kept.append(line)
+                        kept = [c for c in cut_kept if not c.is_empty]
+                    # Optional `extra_lines`: append manually-defined LineStrings to
+                    # the road_name pull (e.g. missing connecting segments).
+                    for extra in (override.get("extra_lines") or []):
+                        if extra and len(extra) >= 2:
+                            try:
+                                kept.append(_ShL(extra))
+                            except Exception:
+                                pass
+                    if not kept:
+                        geometry = None
+                    elif len(kept) == 1:
+                        geometry = mapping(kept[0])
+                    else:
+                        geometry = mapping(_ShML(kept))
+                    match_quality = "manual_override"
+                    geometry_source = "manual_override_road_name"
+                else:
+                    print(f"      [override] road_name={rn!r} not found in roads.geojson — skipping override for {proj_name!r}")
             elif isinstance(override, dict) and override.get("gush_helka"):
                 # "{gush}/{helka}" → single parcel polygon
                 # "{gush}/{helka1},{helka2},..." → union of multiple parcels (MultiPolygon)
@@ -3568,12 +4296,84 @@ def main():
             elif domain == "public_space":
                 if service_he and ("מתחם" in service_he):
                     marker_kind = "metaham_square"
+                elif service_he and "גשר" in service_he:
+                    # Bridge service → bridge_line (dark-blue styling)
+                    marker_kind = "bridge_line"
                 else:
-                    marker_kind = "shatzap_rect"
+                    # Detect passages via service text OR project name (some rows
+                    # have service="הנגשה" but a name like "שדרוג והנגשה מעבר ה\"ר…").
+                    _passage_kw = ("מעבר", "ה\"ר", "הולכי", "שביל", "חיבור")
+                    _svc_match = service_he and any(k in service_he for k in _passage_kw)
+                    _name_match = proj_name and any(k in proj_name for k in _passage_kw)
+                    # Road-like services in public_space domain (e.g. ציר הרצוג):
+                    # surface them as road_segment so the styling matches transport.
+                    _road_kw = ("שדרוג רחובות", "רחוב חדש", "תח\"צ", "שיפור רמת שירות", "רחוב")
+                    _road_svc_match = service_he and any(k in service_he for k in _road_kw)
+                    if _svc_match or _name_match:
+                        _gt = (geometry or {}).get("type") or ""
+                        if _gt in ("LineString", "MultiLineString"):
+                            marker_kind = "passage_line"
+                        elif _gt in ("Polygon", "MultiPolygon"):
+                            marker_kind = "passage_polygon"
+                        else:
+                            marker_kind = "passage_point"
+                    elif _road_svc_match:
+                        marker_kind = "road_segment"
+                    else:
+                        marker_kind = "shatzap_rect"
             elif domain == "transport":
                 marker_kind = "road_segment"
             else:
                 marker_kind = "shavatz_future_rect"
+
+        # ---- Polygon-render eligibility flags (Phase-1 visual refinements) ----
+        # #1 עיבוי שטחים חומים: programa polygon, NOT הפרשה מבונה, area > 1 dunam.
+        # #2 שצ"פ/גינה: public_space polygon when service mentions שצ"פ or גינה.
+        # #3 Crossings perpendicular to road: capture road bearing for crossing_point.
+        _HM_CODES = {1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604}
+        is_hafrasha_mevuna = False
+        if domain == "programa":
+            # Aggregate every text field that might mention הפרשה מבונה / הקצאה /
+            # שטחי הפרשה. Catches more cases than just land_use alone.
+            _texts = [
+                (karteset_rec or {}).get("land_use") or "",
+                (karteset_rec or {}).get("recommendations") or "",
+                (karteset_rec or {}).get("programmatic_potential") or "",
+                (karteset_rec or {}).get("allowed_uses") or "",
+                (karteset_rec or {}).get("existing_built") or "",
+                description or "",
+            ]
+            _hm_patterns = ("הפרשה מבונה", "הקצאת מבנה", "שטחי הפרשה", "הקצאה מבונה")
+            for _t in _texts:
+                if any(pat in _t for pat in _hm_patterns):
+                    is_hafrasha_mevuna = True
+                    break
+            if not is_hafrasha_mevuna and matched_features:
+                if any(
+                    (f.get("properties") or {}).get("mavat_code") in _HM_CODES
+                    for f in matched_features
+                ):
+                    is_hafrasha_mevuna = True
+
+        lot_area_m2 = None
+        is_eivuy_brown = False
+        is_shatzap_polygon = False
+        _force_point = (str(proj_name or "").strip(), area) in FORCE_POINT_FEATURES
+        if geometry and geometry.get("type") in ("Polygon", "MultiPolygon"):
+            lot_area_m2 = polygon_area_m2(geometry)
+            if _force_point:
+                pass  # user-opt-out — render as centroid point
+            elif domain == "programa" and not is_hafrasha_mevuna and (lot_area_m2 or 0) > 1000:
+                is_eivuy_brown = True
+            elif domain == "public_space" and service_he and (
+                "שצ" in service_he or "גינ" in service_he
+            ):
+                is_shatzap_polygon = True
+
+        road_bearing_deg = None
+        if marker_kind == "crossing_point" and geometry and geometry.get("type") == "Point":
+            cx, cy = geometry["coordinates"][:2]
+            road_bearing_deg = road_bearing_at(cx, cy, roads.get("features", []))
 
         props = {
             "project_id": pid,
@@ -3604,7 +4404,19 @@ def main():
             "overlap_plan_names": overlap_plan_names,
             "geometry_source": geometry_source,
             "marker_kind": marker_kind,
+            "lot_area_m2": round(lot_area_m2, 1) if lot_area_m2 is not None else None,
+            "is_eivuy_brown": is_eivuy_brown,
+            "is_shatzap_polygon": is_shatzap_polygon,
+            "road_bearing_deg": road_bearing_deg,
+            "obstacles": str(obstacles).strip() if obstacles else None,
+            "related_projects_text": str(related_projects).strip() if related_projects else None,
         }
+        # Notes lookup precedence: (name, area, service) → (name, area)
+        _nk_name = str(proj_name or "").strip()
+        _note = (MANUAL_NOTES.get((_nk_name, area, str(service_he or "").strip()))
+                 or MANUAL_NOTES.get((_nk_name, area)))
+        if _note:
+            props["manual_note"] = _note
         # Merge any enrichment fields from the official shapefile match (transport rows).
         if shp_enrich:
             props.update(shp_enrich)
@@ -3852,6 +4664,45 @@ def main():
         line = ", ".join(f"{k}={v}" for k, v in sorted(stats.items()))
         print(f"      {dom:14s} ({total:3d}): {line}")
 
+    # Phase-1 visual flags coverage (sanity check).
+    n_eivuy = sum(1 for f in out_features if f["properties"].get("is_eivuy_brown"))
+    n_shatzap = sum(1 for f in out_features if f["properties"].get("is_shatzap_polygon"))
+    n_bearing = sum(1 for f in out_features if f["properties"].get("road_bearing_deg") is not None)
+    n_crossing = sum(1 for f in out_features if f["properties"].get("marker_kind") == "crossing_point")
+    print(f"      polygon-render flags: is_eivuy_brown={n_eivuy}, "
+          f"is_shatzap_polygon={n_shatzap}, road_bearing_deg={n_bearing}/{n_crossing} crossings")
+
+    # Resolve RELATED_FEATURES — second pass after all features are built.
+    # Builds (name, area) → first matching feature index so we can attach a
+    # compact reference (project_id + display_point) to each related entry.
+    _feat_index = {}
+    for f in out_features:
+        prop = f["properties"]
+        key = (str(prop.get("project_name") or "").strip(), prop.get("sub_neighborhood") or "")
+        if key not in _feat_index:
+            _feat_index[key] = prop
+    n_related = 0
+    for f in out_features:
+        prop = f["properties"]
+        my_key = (str(prop.get("project_name") or "").strip(), prop.get("sub_neighborhood") or "")
+        targets = RELATED_FEATURES.get(my_key) or []
+        if not targets:
+            continue
+        rel_list = []
+        for t_name, t_area in targets:
+            t = _feat_index.get((t_name, t_area))
+            if t:
+                rel_list.append({
+                    "project_id": t.get("project_id"),
+                    "name": t.get("project_name"),
+                    "area": t.get("sub_neighborhood"),
+                    "display_point": t.get("display_point"),
+                })
+        if rel_list:
+            prop["related_features"] = rel_list
+            n_related += 1
+    print(f"      related_features attached to {n_related} features")
+
     # Convert defaultdicts in summary
     summary_out = {}
     for sub_name, sub in summary.items():
@@ -3866,9 +4717,24 @@ def main():
     # (already done above per area)
 
     print("[5/6] Writing outputs to data dirs:")
-    geojson_out = {"type": "FeatureCollection", "features": out_features}
+    # Split features whose geometry came from the official projector shapefiles
+    # (פורמט שכבות מידע - פרויקטים מומלצים.zip) into a separate "tzatal" layer.
+    TZATAL_SOURCES = {
+        "projector_official_layer1",
+        "projector_official_layer2",
+        "projector_official_layer3",
+    }
+    tzatal_features = [f for f in out_features
+                       if (f.get("properties") or {}).get("geometry_source") in TZATAL_SOURCES]
+    main_features = [f for f in out_features
+                     if (f.get("properties") or {}).get("geometry_source") not in TZATAL_SOURCES]
+    geojson_out = {"type": "FeatureCollection", "features": main_features}
+    tzatal_out = {"type": "FeatureCollection", "features": tzatal_features}
+    print(f"      main projector: {len(main_features)} features")
+    print(f"      tzatal (פרוייקטים מרחביים): {len(tzatal_features)} features")
     files_to_write = {
         "projector_gonenim.geojson": geojson_out,
+        "projector_gonenim_tzatal.geojson": tzatal_out,
         "projector_gonenim_overlap.json": overlap_idx,
         "projector_gonenim_summary.json": summary_out,
     }
