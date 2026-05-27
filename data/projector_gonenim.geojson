@@ -62,6 +62,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "נדרשת בחינה אדר' ובהינתן אפשרות עיבוי לייצר מסגרת תכנונית למימוש",
         "related_projects_text": null,
@@ -144,6 +145,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "נדרשת בחינה אדר' ובהינתן אפשרות עיבוי לייצר מסגרת תכנונית למימוש",
         "related_projects_text": null,
@@ -426,6 +428,7 @@
         "lot_area_m2": 6329.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": "כיתות מארחות במתחם המשתלה",
@@ -709,6 +712,7 @@
         "lot_area_m2": 6329.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -992,6 +996,7 @@
         "lot_area_m2": 6329.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -1275,6 +1280,7 @@
         "lot_area_m2": 6329.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -1358,6 +1364,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "נדרשת בחינה אדר' ובהינתן אפשרות עיבוי לייצר מסגרת תכנונית למימוש",
         "related_projects_text": null,
@@ -1914,6 +1921,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -2471,6 +2479,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -3028,6 +3037,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -3585,6 +3595,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -4142,6 +4153,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -4699,6 +4711,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -5256,6 +5269,7 @@
         "lot_area_m2": 26866.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -5421,6 +5435,7 @@
         "lot_area_m2": 3386.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -5557,6 +5572,7 @@
         "lot_area_m2": 2730.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -5799,6 +5815,7 @@
         "lot_area_m2": 3995.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -5903,6 +5920,7 @@
         "lot_area_m2": 998.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -6007,6 +6025,7 @@
         "lot_area_m2": 589.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -6249,6 +6268,7 @@
         "lot_area_m2": 3995.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -6499,6 +6519,7 @@
         "lot_area_m2": 2853.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -6749,6 +6770,7 @@
         "lot_area_m2": 2853.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -6919,6 +6941,7 @@
         "lot_area_m2": 2756.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -7089,6 +7112,7 @@
         "lot_area_m2": 2756.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -7201,6 +7225,7 @@
         "lot_area_m2": 3249.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי אחוזי מימוש ופעולות יזם - דרוש מעקב עירוני",
         "related_projects_text": null,
@@ -7269,6 +7294,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -7339,6 +7365,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קיימת טענת תושבים שהנגשה פוגעת באיכות המגוננת של השצ\"פ ובנוכחות עצים- מצריך תמיכת תושבים",
         "related_projects_text": null,
@@ -7407,6 +7434,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -7478,6 +7506,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -7545,6 +7574,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -7711,6 +7741,7 @@
         "lot_area_m2": 1376.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -8461,6 +8492,7 @@
         "lot_area_m2": 3196.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לשמר את הגינה  במידה ותקום יוזמה להתחדשות עירונית במגרש",
         "related_projects_text": null,
@@ -8809,6 +8841,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מצריך גיוס צוות תכנון ייעודי.\nמצריך תאום מול פרויקטים מאושרים/מוצעים להתחדשות בהרצוג.\nקיים פרויקט נת\"צ בהרצוג שלא עונה בקנה אחד עם שינוי חתך הרח'",
         "related_projects_text": null,
@@ -8885,6 +8918,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -8941,6 +8975,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9001,6 +9036,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9073,6 +9109,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9137,6 +9174,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9201,6 +9239,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9285,6 +9324,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9358,6 +9398,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9414,6 +9455,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9470,6 +9512,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -9560,6 +9603,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תלוי משא ומתן והסכמת חוות הנוער",
         "related_projects_text": null,
@@ -9622,6 +9666,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 220.1,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -9672,6 +9717,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 166.9,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -9722,6 +9768,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 235.6,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -9772,6 +9819,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 230.5,
         "obstacles": null,
         "related_projects_text": null,
@@ -9822,6 +9870,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 138.3,
         "obstacles": null,
         "related_projects_text": null,
@@ -9872,6 +9921,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 147.4,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -10022,6 +10072,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "במסגרת תכנון נת\"צ הרצוג",
         "related_projects_text": null,
@@ -10078,6 +10129,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -11019,6 +11071,7 @@
         "lot_area_m2": 32219.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "גיבוש צוות להכנת תוכנית",
         "related_projects_text": null,
@@ -11871,6 +11924,7 @@
         "lot_area_m2": 15824.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "גיבוש צוות להכנת תוכנית",
         "related_projects_text": "\"שביל גוננים\" בשורה 33",
@@ -11883,108 +11937,478 @@
     {
       "type": "Feature",
       "geometry": {
-        "type": "Polygon",
+        "type": "MultiPolygon",
         "coordinates": [
           [
             [
-              35.19842675892626,
-              31.75665433649304
-            ],
+              [
+                35.19830686275979,
+                31.756641930477095
+              ],
+              [
+                35.19828294750931,
+                31.756674621184924
+              ],
+              [
+                35.19824765034085,
+                31.756732112054408
+              ],
+              [
+                35.198225053138316,
+                31.756783967002
+              ],
+              [
+                35.19820575408901,
+                31.756839204020487
+              ],
+              [
+                35.19819502967033,
+                31.756912478334247
+              ],
+              [
+                35.19819617784931,
+                31.756994771664033
+              ],
+              [
+                35.198208707538306,
+                31.757059028662926
+              ],
+              [
+                35.198557514677645,
+                31.75706017238689
+              ],
+              [
+                35.19861753220586,
+                31.757278872302436
+              ],
+              [
+                35.198621160156485,
+                31.75729240012727
+              ],
+              [
+                35.198625282009736,
+                31.75730705527934
+              ],
+              [
+                35.19894786962282,
+                31.75726986837539
+              ],
+              [
+                35.1989432533528,
+                31.75724394016183
+              ],
+              [
+                35.19893402200864,
+                31.75717179224244
+              ],
+              [
+                35.19892825606055,
+                31.757060188791318
+              ],
+              [
+                35.19892941241985,
+                31.757032006213095
+              ],
+              [
+                35.19893201792041,
+                31.756986605689267
+              ],
+              [
+                35.19893419973474,
+                31.756948585839066
+              ],
+              [
+                35.19894409969929,
+                31.7568674202923
+              ],
+              [
+                35.19895713266854,
+                31.756798655233798
+              ],
+              [
+                35.19860255985019,
+                31.756703946014273
+              ],
+              [
+                35.19842675892626,
+                31.75665433649304
+              ],
+              [
+                35.19833737598522,
+                31.756606985467336
+              ],
+              [
+                35.19830686275979,
+                31.756641930477095
+              ]
+            ]
+          ],
+          [
             [
-              35.19833737598522,
-              31.756606985467336
-            ],
+              [
+                35.19907224217528,
+                31.75687193491603
+              ],
+              [
+                35.19907170352823,
+                31.756878023243182
+              ],
+              [
+                35.19906415612997,
+                31.756963246294525
+              ],
+              [
+                35.199060194172304,
+                31.757030884436166
+              ],
+              [
+                35.19905936615783,
+                31.757095140792618
+              ],
+              [
+                35.19906381547637,
+                31.7571616519789
+              ],
+              [
+                35.19907106870651,
+                31.7572191448406
+              ],
+              [
+                35.199077177992365,
+                31.757254578548142
+              ],
+              [
+                35.199084092359406,
+                31.75729467482242
+              ],
+              [
+                35.19909761326858,
+                31.75734991333169
+              ],
+              [
+                35.19910470360336,
+                31.757376968946744
+              ],
+              [
+                35.19913933117207,
+                31.757471663999397
+              ],
+              [
+                35.19916884849096,
+                31.757540430816878
+              ],
+              [
+                35.199200674603674,
+                31.757602433890607
+              ],
+              [
+                35.199214361912446,
+                31.757628362461507
+              ],
+              [
+                35.199266801727866,
+                31.757714039756884
+              ],
+              [
+                35.199320562683496,
+                31.757788444032236
+              ],
+              [
+                35.19934607674136,
+                31.757817876721216
+              ],
+              [
+                35.199373334393805,
+                31.757849320585574
+              ],
+              [
+                35.19940307573548,
+                31.75787931708142
+              ],
+              [
+                35.199433692059785,
+                31.75791019741125
+              ],
+              [
+                35.199507739604336,
+                31.757972202037
+              ],
+              [
+                35.19957007714659,
+                31.758020678518314
+              ],
+              [
+                35.19966820294933,
+                31.758083811261493
+              ],
+              [
+                35.19974538453491,
+                31.75812552437486
+              ],
+              [
+                35.19987939879613,
+                31.758188089191417
+              ],
+              [
+                35.19988061787605,
+                31.758188658298003
+              ],
+              [
+                35.199971488912674,
+                31.758221353317257
+              ],
+              [
+                35.20003993741952,
+                31.75808382446811
+              ],
+              [
+                35.199940828708066,
+                31.757887669993035
+              ],
+              [
+                35.19981055347488,
+                31.75763063985076
+              ],
+              [
+                35.19979000912865,
+                31.757590580103255
+              ],
+              [
+                35.19977828368254,
+                31.757567718836395
+              ],
+              [
+                35.19971342338957,
+                31.757441249086092
+              ],
+              [
+                35.1996997370247,
+                31.757415320568057
+              ],
+              [
+                35.19989203806733,
+                31.757343179964433
+              ],
+              [
+                35.200138926744565,
+                31.7573195150165
+              ],
+              [
+                35.20040741929512,
+                31.75729246835033
+              ],
+              [
+                35.20040214395125,
+                31.75721806605093
+              ],
+              [
+                35.20040445741828,
+                31.75712337249577
+              ],
+              [
+                35.200407428877256,
+                31.75706813463851
+              ],
+              [
+                35.200421452810495,
+                31.756928349240372
+              ],
+              [
+                35.20043695847201,
+                31.756841547225577
+              ],
+              [
+                35.200320029458936,
+                31.75686183504545
+              ],
+              [
+                35.20020392488399,
+                31.75687874086954
+              ],
+              [
+                35.200164508431406,
+                31.75688437609705
+              ],
+              [
+                35.20006835930607,
+                31.75689226401522
+              ],
+              [
+                35.19996610853915,
+                31.75689676973413
+              ],
+              [
+                35.19989568827336,
+                31.756899021885115
+              ],
+              [
+                35.19981966029804,
+                31.7568990191863
+              ],
+              [
+                35.19962521939513,
+                31.756892248246874
+              ],
+              [
+                35.199503673910186,
+                31.75688322521145
+              ],
+              [
+                35.19932589066046,
+                31.75685954487461
+              ],
+              [
+                35.19918637015662,
+                31.756833611244886
+              ],
+              [
+                35.199083955304566,
+                31.756809933620502
+              ],
+              [
+                35.19907224217528,
+                31.75687193491603
+              ]
+            ]
+          ],
+          [
             [
-              35.19830686275979,
-              31.756641930477095
-            ],
+              [
+                35.20014750140554,
+                31.75734657062306
+              ],
+              [
+                35.19990044805574,
+                31.757369108276677
+              ],
+              [
+                35.19995618086671,
+                31.75760133506072
+              ],
+              [
+                35.20000811969739,
+                31.757827925156914
+              ],
+              [
+                35.20024247612184,
+                31.757791859224756
+              ],
+              [
+                35.20049926085907,
+                31.757751284326574
+              ],
+              [
+                35.20046595068836,
+                31.75764306202802
+              ],
+              [
+                35.20044385611404,
+                31.757539349286045
+              ],
+              [
+                35.20041796885868,
+                31.757393926134025
+              ],
+              [
+                35.20040857179489,
+                31.757319523707803
+              ],
+              [
+                35.20014750140554,
+                31.75734657062306
+              ]
+            ]
+          ],
+          [
             [
-              35.19828294750931,
-              31.756674621184924
-            ],
-            [
-              35.19824765034085,
-              31.756732112054408
-            ],
-            [
-              35.198225053138316,
-              31.756783967002
-            ],
-            [
-              35.19820575408901,
-              31.756839204020487
-            ],
-            [
-              35.19819502967033,
-              31.756912478334247
-            ],
-            [
-              35.19819617784931,
-              31.756994771664033
-            ],
-            [
-              35.198208707538306,
-              31.757059028662926
-            ],
-            [
-              35.198557514677645,
-              31.75706017238689
-            ],
-            [
-              35.19861753220586,
-              31.757278872302436
-            ],
-            [
-              35.198621160156485,
-              31.75729240012727
-            ],
-            [
-              35.198625282009736,
-              31.75730705527934
-            ],
-            [
-              35.19894786962282,
-              31.75726986837539
-            ],
-            [
-              35.1989432533528,
-              31.75724394016183
-            ],
-            [
-              35.19893402200864,
-              31.75717179224244
-            ],
-            [
-              35.19892825606055,
-              31.757060188791318
-            ],
-            [
-              35.19892941241985,
-              31.757032006213095
-            ],
-            [
-              35.19893201792041,
-              31.756986605689267
-            ],
-            [
-              35.19893419973474,
-              31.756948585839066
-            ],
-            [
-              35.19894409969929,
-              31.7568674202923
-            ],
-            [
-              35.19895713266854,
-              31.756798655233798
-            ],
-            [
-              35.19860255985019,
-              31.756703946014273
-            ],
-            [
-              35.19842675892626,
-              31.75665433649304
+              [
+                35.200249565767834,
+                31.757818914774223
+              ],
+              [
+                35.20001438593464,
+                31.757856107996005
+              ],
+              [
+                35.20007028271574,
+                31.758092843937707
+              ],
+              [
+                35.20000100878932,
+                31.75823150007949
+              ],
+              [
+                35.20011760758978,
+                31.758269832400543
+              ],
+              [
+                35.20038807688074,
+                31.758361152858676
+              ],
+              [
+                35.20061814155814,
+                31.758434434676815
+              ],
+              [
+                35.20065788737178,
+                31.758443454283213
+              ],
+              [
+                35.20068328608592,
+                31.758442327717916
+              ],
+              [
+                35.20071412620544,
+                31.758434437475085
+              ],
+              [
+                35.200741504565585,
+                31.758418655991896
+              ],
+              [
+                35.20076723346594,
+                31.7583949833219
+              ],
+              [
+                35.20078669616038,
+                31.758362292031027
+              ],
+              [
+                35.200792963962016,
+                31.758329600366157
+              ],
+              [
+                35.20078933718934,
+                31.75830367225163
+              ],
+              [
+                35.20077977232042,
+                31.75827323474964
+              ],
+              [
+                35.200699458585305,
+                31.75817515692813
+              ],
+              [
+                35.20066284852111,
+                31.758119917924315
+              ],
+              [
+                35.2005896285244,
+                31.75798351187005
+              ],
+              [
+                35.200534220125455,
+                31.757851615529603
+              ],
+              [
+                35.20050717597738,
+                31.757778339887018
+              ],
+              [
+                35.200249565767834,
+                31.757818914774223
+              ]
             ]
           ]
         ]
@@ -12014,19 +12438,20 @@
         "estimate_nis": 400000.0,
         "pdf_link": "מתחם מס' 3 בחוברת תכנון מתחמי",
         "pdf_excerpt": "[עמ' 23]\nמרחב ציבור ופרוגרמה |. רצף ציבורי בין ברניקי לפת3 | גוננים\n הגדרת לב המתחם כשצ\"פ\n דונם4-מרכזי בגודל כ\nללא חניון תת\"ק\n()הקיים כיום בייעוד שב\"צ\n הוספת מוצא להולכי רגל\nליהודה הנשיא\nהסדרת כיכר מסחרית\nהסדרת חניון לשקול\n()לטובת באי המסחר על פת\n הסדרת שב\"צ בשטח דומה בגודלו\n ,( ד' לכל הפחות1.7) למאושר כיום\n עם מוצא לכביש. פוטנציאל למעונות\n.יום, טיפת חלב או שירות אחר\n ביה\"ס הקיים עתיד לעבור לגבעת\n שטח גונן וכך יתאפשר לפתח\n ציבור משמעותי עם שימושי\n ,חינוך / תרבות / קהילה\nסמוך לתחנת רק\"ל\n הצעה להצרחה בין השצ\"פ\nלכביש\nלצורך איחוד מגרשים ציבוריים\n(שצפ+)בייעוד מוסד\n:1 הצעה\n:עקרונות תכנון' מ4 מומלץ ציר ה\"ל ברוחב\n' מ5 מומלץ ציר ה\"ל ברוחב\nמומלץ להוסיף הנגשה מכאנית\n706.0\n721.0\n שיפוע\n7%\n729.5\n710.0\n10% שיפוע\n11% שיפוע\n723.5\n713.0\nברניקי\nניקנור\nהרצוג\nפת\n יהודה\nהנשיא\nחננאל\n' ד3-כ\n 1.7-כ\n'ד\nת. רק\"ל\n' ד4-כ\n קו סגול\nרק\"ל\n קו ירוק רק\"ל\nת. רק\"ל\n בייעוד ציבורי9 ,' דו40\n\n— — —\n\n[עמ' 24]\nמרחב ציבור ופרוגרמה |. רצף ציבורי בין ברניקי לפת3 | גוננים\n706.0\n721.0\n שיפוע\n7%\n729.5\n710.0\n10% שיפוע\n11% שיפוע\n723.5\n713.0\nברניקי\nניקנור\nהרצוג\nפת\n יהודה\nהנשיא\nחננאל\nת. רק\"ל\n:2 הצעה\n:\"צומת פת פינוי בינוי-חופפת ליוזמה \"מתחם ניקנור\n' ד1.3-כ\n' ד3-כ\nת רק\"ל\n\n— — —\n\n[עמ' 22]\nמרחב ציבורי |. רצף ציבורי בין ברניקי לפת3 | גוננים\n: צירי הולכי רגל משמעותיים חוצים את המתחם2\n\n— — —\n\n[עמ' 25]\nתנועה |. רצף ציבורי בין ברניקי לפת3 | גוננים\n ( בפרוגרמה16 ו: מרכזיית בזק )מזהה-גוננים א\nבדיקת היתכנות להסטת הכביש מעבר לשצ\"פ",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_gush_helka",
+        "geometry_source": "manual_override",
         "marker_kind": "shatzap_rect",
-        "lot_area_m2": 3549.4,
+        "lot_area_m2": 20555.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "גיבוש צוות להכנת תוכנית",
         "related_projects_text": "ראה מעברי ה\"ר 2 ו-3 שורות 36,37",
         "display_point": [
-          35.1985645,
-          31.7569676
+          35.1994504,
+          31.757506
         ]
       }
     },
@@ -12357,6 +12782,7 @@
         "lot_area_m2": 15584.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "גיבוש צוות להכנת תוכנית",
         "related_projects_text": null,
@@ -12430,6 +12856,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -12495,6 +12922,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": "מתחם 3 שורה 31",
@@ -12560,6 +12988,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד) ובגלל פלישת דיירים קיימת",
         "related_projects_text": "מתחם 3 שורה 31",
@@ -12633,6 +13062,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -12722,6 +13152,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": "\"שביל גוננים\" בשורה 33",
@@ -12783,6 +13214,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית בגלל פלישת דיירים קיימת",
         "related_projects_text": null,
@@ -12844,6 +13276,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": "\"שביל גוננים\" בשורה 33",
@@ -12905,6 +13338,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -12966,6 +13400,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -13027,6 +13462,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -13087,6 +13523,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -13148,6 +13585,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסדרה מול חוות הנוער",
         "related_projects_text": null,
@@ -13250,6 +13688,7 @@
         "lot_area_m2": 1315.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מתואם מול יועצי הפרוגרמה של הפרויקטור מבחינת גריעת מגרשים בייעוד שב\"צ",
         "related_projects_text": null,
@@ -13349,6 +13788,7 @@
         "lot_area_m2": 811.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מתואם מול יועצי הפרוגרמה של הפרויקטור מבחינת גריעת מגרשים בייעוד שב\"צ",
         "related_projects_text": null,
@@ -13423,6 +13863,7 @@
         "lot_area_m2": 1172.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מתואם מול יועצי הפרוגרמה של הפרויקטור מבחינת גריעת מגרשים בייעוד שב\"צ",
         "related_projects_text": null,
@@ -13529,6 +13970,7 @@
         "lot_area_m2": 2553.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מתואם מול יועצי הפרוגרמה של הפרויקטור מבחינת גריעת מגרשים בייעוד שב\"צ",
         "related_projects_text": null,
@@ -13579,6 +14021,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 13.5,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13634,6 +14077,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 13.5,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13689,6 +14133,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 13.5,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13744,6 +14189,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 143.5,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13794,6 +14240,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 47.1,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13849,6 +14296,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 40.8,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -13909,6 +14357,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": "מתכונן במסגרת מעגלי יבנה",
@@ -13959,6 +14408,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 355.2,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": "מתחם ציבורי מס' 2 רשב\"ג\nשורה 30 בטבלה",
@@ -14014,6 +14464,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 109.1,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
@@ -14078,6 +14529,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "פינוי פלישה של דיירים,  שימור תצוגת הפסיפס המיוחדת",
         "related_projects_text": null,
@@ -14170,7 +14622,8 @@
         "marker_kind": "metaham_square",
         "lot_area_m2": 35232.5,
         "is_eivuy_brown": false,
-        "is_shatzap_polygon": true,
+        "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "תכנון השצ\"פים המסומנים, הוספת פינות תצפית,.\nהאתגר יהיה שימור השלד הנופי במידה ויוצעו יוזמות להתחדשות",
         "related_projects_text": "פרויקט מס' 1 בגוננים \n(בשורה מעל)",
@@ -14280,7 +14733,8 @@
         "marker_kind": "metaham_square",
         "lot_area_m2": 1429.5,
         "is_eivuy_brown": false,
-        "is_shatzap_polygon": true,
+        "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -14351,6 +14805,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "התב\"ע של ביה\"ס הושלמה",
         "related_projects_text": null,
@@ -14552,6 +15007,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ייעודי קרקע: חלק מייעודי הקרקע אינם תואמים ייעוד שביל/דרך/שצ\"פ ולכן יש להקפיד על ייעודי קרקע תואמים בפרויקטים של התחדשות עירונית",
         "related_projects_text": null,
@@ -14623,6 +15079,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "השטח פנוי ממכשולים וייעודי השטח ציבוריים (שב\"צ ושצ\"פ) כך שבקלות רבה ניתן להתוות כשביל",
         "related_projects_text": null,
@@ -14767,6 +15224,7 @@
         "lot_area_m2": 1043.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש תב\"ע שמקודמת ע\"י העירייה- יש לבטל אותה! כדי לשנות ייעוד לשצ\"פ.\nכרגע חצי מהמגרש משמש כחניה שהוסדרה ע\"י העירייה- במידה ותחול יוזמת בניה ניתן לפנות את שטח החניה שיכלל בבניה החדשה.",
         "related_projects_text": null,
@@ -14845,6 +15303,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "המעבר הקיים במגרש 120 בין רח' חננאל למיקום הגשר העתידי צר. האידיאלי שהגשר יתוכנן יחד עם התחדשות הבינוי במגרשים 5,6,29,30 על מנת להרחיבו",
         "related_projects_text": null,
@@ -14917,6 +15376,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -14991,6 +15451,7 @@
         "lot_area_m2": 132.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מעבר צר יחסית ולכן קיים ספק אם מתאפשרת ההנגשה",
         "related_projects_text": "בית הנוער",
@@ -15347,6 +15808,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -15703,6 +16165,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -16059,6 +16522,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הוראות התכנית קובעות 3.5 ד' קרקע ו-9 קומות, ו-360% מ\"ר שטחי בנייה מתא השטח. כלומר כ-12600 מ\"ר. הוערך כי כי כ-1500 מ\"ר ישמש לחינוך. והייתר יתחלק בין מס' שירותים",
         "related_projects_text": null,
@@ -16415,6 +16879,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הוראות התכנית קובעות 3.5 ד' קרקע ו-9 קומות, ו-360% מ\"ר שטחי בנייה מתא השטח. כלומר כ-12600 מ\"ר. הוערך כי כי כ-1500 מ\"ר ישמש לחינוך. והייתר יתחלק בין מס' שירותים",
         "related_projects_text": null,
@@ -16771,6 +17236,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הוראות התכנית קובעות 3.5 ד' קרקע ו-9 קומות, ו-360% מ\"ר שטחי בנייה מתא השטח. כלומר כ-12600 מ\"ר. הוערך כי כי כ-1500 מ\"ר ישמש לחינוך. והייתר יתחלק בין מס' שירותים",
         "related_projects_text": null,
@@ -17127,6 +17593,7 @@
         "lot_area_m2": 15922.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת שימושים נוספים לשילוב ביתרת השטח ע\"י מחלקת מדיניות תכנון",
         "related_projects_text": null,
@@ -17257,6 +17724,7 @@
         "lot_area_m2": 1012.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום בנייה בהתאם ללו\"ז",
         "related_projects_text": null,
@@ -17339,6 +17807,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -17429,6 +17898,7 @@
         "lot_area_m2": 870.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מעקב אחר היתר + בנייה",
         "related_projects_text": null,
@@ -17539,6 +18009,7 @@
         "lot_area_m2": 1306.2,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ייזום וקידום תכנון מתחם חדש ע\"י הרשות המקומית",
         "related_projects_text": null,
@@ -17654,6 +18125,7 @@
         "lot_area_m2": 1306.2,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ייזום וקידום תכנון מתחם חדש ע\"י הרשות המקומית",
         "related_projects_text": null,
@@ -17925,6 +18397,7 @@
         "lot_area_m2": 7567.0,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינה האם יבוצע עיבוי כפי שמנח\"י הציעה וקידמה בלו\"ז, או ראיה מתחמית כפי שאישר צוות העבודה העירוני במסגרת הפרויקטור",
         "related_projects_text": null,
@@ -18059,6 +18532,7 @@
         "lot_area_m2": 1917.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ייזום וקידום תכנון מתחם חדש ע\"י הרשות המקומית. במידה ומתחם זה לא יקודם, מוצע הריסה ובינה או עיבוי בשטח",
         "related_projects_text": null,
@@ -18253,6 +18727,7 @@
         "lot_area_m2": 6907.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום בנייה בהתאם ללו\"ז",
         "related_projects_text": null,
@@ -18447,6 +18922,7 @@
         "lot_area_m2": 6907.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום בנייה בהתאם ללו\"ז",
         "related_projects_text": null,
@@ -18641,6 +19117,7 @@
         "lot_area_m2": 6907.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום בנייה בהתאם ללו\"ז",
         "related_projects_text": null,
@@ -18723,6 +19200,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -19201,6 +19679,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת צורך עתידי, מוצע לשקול שילוב שירות שכונתי במתחם משמעותי זה",
         "related_projects_text": null,
@@ -19679,6 +20158,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת לו\"ז נדרש ע\"י מנח\"י מעת לעת, וקידום תכנון והיתר בהתאם",
         "related_projects_text": null,
@@ -20157,6 +20637,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת צורך עתידי, מוצע לשקול שילוב שירות שכונתי במתחם משמעותי זה",
         "related_projects_text": null,
@@ -20635,6 +21116,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת לו\"ז נדרש ע\"י מנח\"י מעת לעת, וקידום תכנון והיתר בהתאם",
         "related_projects_text": null,
@@ -21113,6 +21595,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -21591,6 +22074,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -22069,6 +22553,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -22547,6 +23032,7 @@
         "lot_area_m2": 58626.9,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -22685,6 +23171,7 @@
         "lot_area_m2": 1043.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום התכנית ואישורה. חניון תת קרקעי מהווה חסם, יש לנסות לאתר מימון או לשקול להסירו",
         "related_projects_text": null,
@@ -22816,6 +23303,7 @@
         "lot_area_m2": 1043.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום התכנית ואישורה. חניון תת קרקעי מהווה חסם, יש לנסות לאתר מימון או לשקול להסירו",
         "related_projects_text": null,
@@ -22947,6 +23435,7 @@
         "lot_area_m2": 1043.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום התכנית ואישורה. חניון תת קרקעי מהווה חסם, יש לנסות לאתר מימון או לשקול להסירו",
         "related_projects_text": null,
@@ -23078,6 +23567,7 @@
         "lot_area_m2": 1043.7,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום התכנית ואישורה. חניון תת קרקעי מהווה חסם, יש לנסות לאתר מימון או לשקול להסירו",
         "related_projects_text": null,
@@ -23409,6 +23899,7 @@
         "lot_area_m2": 4467.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": "עשוי להוות כבי\"ס מארח לתלמידי לוריא בעת פינוי בינוי בי\"ס לוריא ברסקו",
@@ -23747,6 +24238,7 @@
         "lot_area_m2": 4467.5,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -23939,6 +24431,7 @@
         "lot_area_m2": 3730.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -24131,6 +24624,7 @@
         "lot_area_m2": 3730.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -24321,6 +24815,7 @@
         "lot_area_m2": 975.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא קבלת 2 יח\"ד ציבוריות כפי שאושר בהוראות התכנית.",
         "related_projects_text": null,
@@ -24486,6 +24981,7 @@
         "lot_area_m2": 756.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא קבלת 2 יח\"ד ציבוריות כפי שאושר בהוראות התכנית.",
         "related_projects_text": null,
@@ -24563,6 +25059,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -24635,6 +25132,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -24707,6 +25205,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בחינת לו\"ז נדרש ע\"י מנח\"י מעת לעת, וקידום תכנון והיתר בהתאם",
         "related_projects_text": null,
@@ -24779,6 +25278,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -24851,6 +25351,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידדא הקצאה + נייסיון לשילוב תנועת נוער במרחק מהמגורים לכיוון פארק המסילה",
         "related_projects_text": null,
@@ -24933,6 +25434,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסרת הערות מטבלה 5 של הורואת התכנית המגבילות שימושים מותרים",
         "related_projects_text": null,
@@ -25015,6 +25517,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסרת הערות מטבלה 5 של הורואת התכנית המגבילות שימושים מותרים",
         "related_projects_text": null,
@@ -25083,6 +25586,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסרת הערות מטבלה 5 של הורואת התכנית המגבילות שימושים מותרים",
         "related_projects_text": null,
@@ -25151,6 +25655,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסרת הערות מטבלה 5 של הורואת התכנית המגבילות שימושים מותרים",
         "related_projects_text": null,
@@ -25219,6 +25724,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסרת הערות מטבלה 5 של הורואת התכנית המגבילות שימושים מותרים",
         "related_projects_text": null,
@@ -25361,6 +25867,7 @@
         "lot_area_m2": 3645.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "המלצת הצוות שאושרה ע\"י הצוות העירוני. לבחון צורך בהוספת שימוש בהוראות התכנית",
         "related_projects_text": null,
@@ -25470,6 +25977,7 @@
         "lot_area_m2": 937.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "קידום ע\"י מנח\"י ואגף מבני ציבור",
         "related_projects_text": null,
@@ -25968,6 +26476,7 @@
         "lot_area_m2": 9540.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -26471,6 +26980,7 @@
         "lot_area_m2": 9540.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הוראות התכנית מאפשרות שירותי חינוך ובתי כנסת, אך בפועל ניתן לשלב רק 2 גני ילדים ו-4 בתי כנסת. יש לאפשר שימושים נוספים",
         "related_projects_text": null,
@@ -26974,6 +27484,7 @@
         "lot_area_m2": 9540.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הוראות התכנית מאפשרות שירותי חינוך ובתי כנסת, אך בפועל ניתן לשלב רק 2 גני ילדים ו-4 בתי כנסת. יש לאפשר שימושים נוספים",
         "related_projects_text": null,
@@ -27125,6 +27636,7 @@
         "lot_area_m2": 1288.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -27274,6 +27786,7 @@
         "lot_area_m2": 807.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": "בצמוד מקודמת תכנית מגדלי עמק הצבאים באזור תחנת הדלק. יש לוודא שלא יתקבלו 2 בי\"ס במרחק זה ושבתכנית זו ישולבו שירותים אחרים בהתאם להמלצות",
@@ -27480,6 +27993,7 @@
         "lot_area_m2": 4378.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בבניין א - ווידאו הקצאה ובנייה ע\"י היזם, בכפוף לאישור התכנית",
         "related_projects_text": null,
@@ -27686,6 +28200,7 @@
         "lot_area_m2": 4378.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בבניין ב - שילוב תרבות, קהילה וחברה. יש לוודא שימושים מותרים בהוראות התכית וקידום שימושים נדרשים מול מחלקות/אגפים רלוונטיים",
         "related_projects_text": null,
@@ -27940,6 +28455,7 @@
         "lot_area_m2": 3175.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לוודא הקצאת שטח תקינה, ומוצע לאפשר שימושים נוספים בתבע",
         "related_projects_text": null,
@@ -28085,6 +28601,7 @@
         "lot_area_m2": 3235.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אישור התכנית ועדכון הנתונים הפרוגרמתיים בהתאם",
         "related_projects_text": null,
@@ -28218,6 +28735,7 @@
         "lot_area_m2": 3235.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "חשיבה משותפת לקראת מתן היתר לשילוב שירות נדרש מבין שירותי קהילה, תרבות וספורט",
         "related_projects_text": null,
@@ -28283,6 +28801,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא תכנון ובנייה ע\"י היזם בהתאם להמלצות",
         "related_projects_text": "שב\"צים 60-66  שצ\"פ נהוראי גן רשב\"ג",
@@ -28339,6 +28858,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא תכנון ובנייה ע\"י היזם בהתאם להמלצות",
         "related_projects_text": null,
@@ -28395,6 +28915,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא תכנון ובנייה ע\"י היזם בהתאם להמלצות",
         "related_projects_text": null,
@@ -28467,6 +28988,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "במסגרת תכנון מתחמי מוצע למתחם אנטיגונוס",
         "related_projects_text": null,
@@ -28479,109 +29001,19 @@
     {
       "type": "Feature",
       "geometry": {
-        "type": "Polygon",
+        "type": "LineString",
         "coordinates": [
           [
-            [
-              35.207910735027916,
-              31.758468854998142
-            ],
-            [
-              35.20790856884821,
-              31.758482845216797
-            ],
-            [
-              35.20790221793066,
-              31.75849588202517
-            ],
-            [
-              35.20789211507981,
-              31.758507076986316
-            ],
-            [
-              35.207878948788235,
-              31.75851566718213
-            ],
-            [
-              35.207863616316956,
-              31.758521067204967
-            ],
-            [
-              35.20784716254855,
-              31.758522909052196
-            ],
-            [
-              35.20783070878015,
-              31.758521067204967
-            ],
-            [
-              35.20781537630887,
-              31.75851566718213
-            ],
-            [
-              35.2078022100173,
-              31.758507076986316
-            ],
-            [
-              35.20779210716645,
-              31.75849588202517
-            ],
-            [
-              35.207785756248896,
-              31.758482845216797
-            ],
-            [
-              35.20778359006919,
-              31.758468854998142
-            ],
-            [
-              35.207785756248896,
-              31.758454864779488
-            ],
-            [
-              35.20779210716645,
-              31.758441827971115
-            ],
-            [
-              35.2078022100173,
-              31.75843063300997
-            ],
-            [
-              35.20781537630887,
-              31.758422042814153
-            ],
-            [
-              35.20783070878015,
-              31.758416642791317
-            ],
-            [
-              35.20784716254855,
-              31.758414800944088
-            ],
-            [
-              35.207863616316956,
-              31.758416642791317
-            ],
-            [
-              35.207878948788235,
-              31.758422042814153
-            ],
-            [
-              35.20789211507981,
-              31.75843063300997
-            ],
-            [
-              35.20790221793066,
-              31.758441827971115
-            ],
-            [
-              35.20790856884821,
-              31.758454864779488
-            ],
-            [
-              35.207910735027916,
-              31.758468854998142
-            ]
+            35.21027,
+            31.757965
+          ],
+          [
+            35.209567,
+            31.758228
+          ],
+          [
+            35.208597,
+            31.75829
           ]
         ]
       },
@@ -28610,15 +29042,14 @@
         "estimate_nis": null,
         "pdf_link": "גוננים א-ו כבישים ותנועה שקופית 4 המלצה 7",
         "pdf_excerpt": "[עמ' 4]\nתאריך עדכון אחרון :\n29.05.2024גוננים א'-ו'-ניתוח תנועתיות בתוך השכונה ,קיימת ומתוכננת\nמקרא:\nרחוב מקומי חד סטרי\nרחוב מקומי דו סטרי\nרחוב מאסף\nגבול השכונות\nרבן יוחנן בן זכאי\n4\n השינוי המשמעותי הצפוי\n בשכונה הוא רכבת קלה\n בירושלים-קו סגול\n101-0800771\nאשר בתהליך הפקדה.\nתכנון הקו במרכז הרחוב ,\nחיובית ,\n ומאפשרת את מירב\nהחיבורים והתנועות בצמתים.\nרחוב סטטוטורי\nמעבר מתוכנן לה\"\n ר\nורכבי שירות וחירום\nרחוב מומלץ\n2\n3\n1\n2\n3\n כביש הברך-\n בביצוע\nאינפרא1\n–\nנבדק ונמצא כמועיל לשכונה.\nמוציא תנועה עוברת מתוך השכונה.\n מעגלי יבנה-התחדשות עירונית.\nנמצא כמועיל לפרויקט ולשכונה.\nהמקטע מייצר יציאה נוספת לשכונה.\nללא הוספת תנועה עוברת.\nצומת אורנים ,רקל\"ה ,\n יצירת\nאופרציה תנועתית חכמה ,\n אך\nפחות ידידותית לה\"ר.\n7\n8\n7\n9\n10\n טוביה בן חפץ-הפיכת שני רחובות ללא מוצא\nלרחוב אחד המשכי ,\n שיפור משמעותי של\nזרימת התנועה ברחוב.\nמוצג כחלק מתכנון מתחמי.\n8מכור–תב\"ע פורסמה להפקדה .הפיכת רחוב\nללא מוצא לרחוב המשכי ,שיפור משמעותי של\nזרימת התנועה ברחוב .והשלמת תנועה לאחר\nביצוע הקו הסגול.\n9\n מעונות יום גוננים–מכור .פיתרון לשטח\nשב\"צ\nללא אפשרות מימוש.\nמוצג כחלק מתכנון מתחמי.\n4\n כביש34קיים תכנון מוקדם.\nמומלץ אך ורק לתנועה פנים שכונתית\n ולא כחיבור המשכי מצומת אורנים\nועד לכביש הברך .\n מה שיגרום\nלתנועה עוברת.\n1\n6\n6חיבור כביש הברך לאליעזר הגדול.\nנושא שעולה לעיתים .קיים בית.\nלא מומלץ לתנועת רכב פרטי ,יכניס\nתנועה עוברת לשכונה .\n כן מומלץ\nלנת\"צ\nבלבד ,באכיפה יגדיל את\nהאפשרויות לשירות תח\"צ לשכונה.\n4\nסיכום והמלצות:\nרחוב בביצוע\nרחוב בתכנון\n טוביה–אלכסנדריון .מתוכנן במסגרת התחדשות עירונית.\nהפיכת רחוב ללא מוצא לרחוב המשכי ,\n שיפור משמעותי של זרימת\nהתנועה ברחוב .חובה לבצע במימוש תב\"\n ע מתחם גוננים(קשת ,דנמרק )\nמומלץ מאוד לביצוע במימוש מבנים צפון/מזרחיים ה.\n ע\nאלכסנדריון ,\n ואין\nהשפעה במימוש מבנים דרום/מערביים ה.ע .אלכסנדריון.\n10\n מתחם\nנהוראי ,\n מסתמך על מקטע\n מכביש34\n ומייצר חיבור\nלרשב\"ג.\nמומלץ לבצע אך ורק עד החיבור ,\nללא חיבור לכ …",
-        "match_quality": "plan_number",
-        "overlap_plan_names": [
-          "101-1025295"
-        ],
-        "geometry_source": "landuse_xplan_filtered",
-        "marker_kind": "small_circle",
-        "lot_area_m2": 112.1,
+        "match_quality": "manual_override",
+        "overlap_plan_names": [],
+        "geometry_source": "manual_override",
+        "marker_kind": "road_segment",
+        "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בעת תכנון מפורט לבדוק המלצות",
         "related_projects_text": "שב\"צ 81",
@@ -28628,8 +29059,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "בן זכאי |מתוכנן",
         "display_point": [
-          35.2078472,
-          31.7584759
+          35.2094565,
+          31.7582351
         ]
       }
     },
@@ -28776,6 +29207,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בעת תכנון מפורט לבדוק המלצות",
         "related_projects_text": "שב\"צ 57",
@@ -28854,6 +29286,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא תכנון ובנייה ע\"י היזם בהתאם להמלצות",
         "related_projects_text": "שב\"צ 34",
@@ -28914,6 +29347,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא תכנון ובנייה בהתאם להמלצות; יש לוודא שמירה על זכות דרך מיועדת לחיבור טוביה לאלכסנדריון והטמעה בתכנית.",
         "related_projects_text": "מתחם פינוי בינוי אלכסנדריון",
@@ -28970,6 +29404,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ייזום וקידום תכנון מתחם חדש ע\"י הרשות המקומית",
         "related_projects_text": "שב\"צ 20 אין לקשר לפרויקט הארכת דרך רח' מכור",
@@ -29032,6 +29467,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "טרם הפעלת קו 509 או כל קו שיעבור ברח' אליעזר הגדול",
         "related_projects_text": "חיבור כביש הברך לאליעזר הגדול",
@@ -29093,6 +29529,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לשקול בהתאם לתכלול המתחם כולו, תועלות מול חסרונות",
         "related_projects_text": null,
@@ -29979,6 +30416,7 @@
         "lot_area_m2": 12725.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תב\"ע בהפקדה",
         "related_projects_text": null,
@@ -30035,6 +30473,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "חלק מהשטח היום משוייך לחצר של בניין מגורים אך לא מטופח או מתוחזק",
         "related_projects_text": null,
@@ -30127,6 +30566,7 @@
         "lot_area_m2": 448.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "השקעה זמנית. ייעוד דרכים. יש לבחון הרחבה על חשבון שטח חום צמוד.",
         "related_projects_text": null,
@@ -30183,6 +30623,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "העיון הוצג לגורמים הרלוונטיים ולא זכה להסכמה. אני עדיין סבורה שיש בו צורך ושווה לבדוק היתכנות שלו.",
         "related_projects_text": "מעבר ה\"ר בדב הוז",
@@ -30251,6 +30692,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -30307,6 +30749,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -30363,6 +30806,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -30419,6 +30863,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יתאפשר רק במסגרת פרויקטים עתידיים של התחדשות עירונית (כרוך בשינוי ייעוד)",
         "related_projects_text": null,
@@ -30469,6 +30914,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 254.2,
         "obstacles": "כרוך בביטול חניות",
         "related_projects_text": null,
@@ -30519,6 +30965,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 173.9,
         "obstacles": "ניתן לממש בעת שדרוגי כבישים",
         "related_projects_text": null,
@@ -30569,6 +31016,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 56.0,
         "obstacles": "כרוך בביטול חניות",
         "related_projects_text": null,
@@ -30619,6 +31067,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": 250.6,
         "obstacles": "ניתן לממש בעת שדרוגי כבישים",
         "related_projects_text": null,
@@ -30831,6 +31280,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -30892,6 +31342,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -31231,6 +31682,7 @@
         "lot_area_m2": 27293.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": true,
         "road_bearing_deg": null,
         "obstacles": "יוזמת התחדשות של מתחם שוויץ שהקדימה את היוזמה לכל המתחם",
         "related_projects_text": null,
@@ -31287,6 +31739,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "עדכון תב\"ע מקודמת",
         "related_projects_text": null,
@@ -31859,6 +32312,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -32431,6 +32885,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -33003,6 +33458,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -33575,6 +34031,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -34147,6 +34604,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -34719,6 +35177,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -35291,6 +35750,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -35863,6 +36323,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -36435,6 +36896,7 @@
         "lot_area_m2": 19138.4,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": null,
@@ -36505,6 +36967,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש ליזום תכנית לכלל מתחם גן הנוטרים לרבות הדיור המוגן, בית הכנסת והמגורים מסביב",
         "related_projects_text": "מתחם גן הנוטרים",
@@ -36587,6 +37050,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש ליזום תכנית לכלל מתחם גן הנוטרים לרבות הדיור המוגן, בית הכנסת והמגורים מסביב",
         "related_projects_text": "תכנית אב גן הנוטרים",
@@ -36669,6 +37133,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש להסדיר את הנושא הקנייני",
         "related_projects_text": null,
@@ -36955,6 +37420,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -37229,6 +37695,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -37503,6 +37970,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -37777,6 +38245,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -38051,6 +38520,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -38325,6 +38795,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -38599,6 +39070,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -38873,6 +39345,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -39147,6 +39620,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -39421,6 +39895,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -39695,6 +40170,7 @@
         "lot_area_m2": 26804.5,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש הכרח לקבוע שלביות בפרוייקט לאור היקף הבינוי על בסיס מוסדות קיימים",
         "related_projects_text": "קדמת גונן",
@@ -39791,6 +40267,7 @@
         "lot_area_m2": 1408.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לעת אישור התכנית יש לתאם תכנון מוסדות ציבור מול מנח\"י. מוצע לבחון אפשרות לתוספת של בית כנסת קטן נוסף",
         "related_projects_text": null,
@@ -39904,6 +40381,7 @@
         "lot_area_m2": 1408.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לעת אישור התכנית יש לתאם תכנון מוסדות ציבור מול מנח\"י. מוצע לבחון אפשרות לתוספת של בית כנסת קטן נוסף",
         "related_projects_text": null,
@@ -40017,6 +40495,7 @@
         "lot_area_m2": 1408.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לעת אישור התכנית יש לתאם תכנון מוסדות ציבור מול מנח\"י. מוצע לבחון אפשרות לתוספת של בית כנסת קטן נוסף",
         "related_projects_text": null,
@@ -40130,6 +40609,7 @@
         "lot_area_m2": 1408.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לעת אישור התכנית יש לתאם תכנון מוסדות ציבור מול מנח\"י. מוצע לבחון אפשרות לתוספת של בית כנסת קטן נוסף",
         "related_projects_text": null,
@@ -40231,6 +40711,7 @@
         "lot_area_m2": 2268.0,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לקדם תכנון מפורט של מבני הציבור כחלק מתכנית מתחם קנגורו לרבות בחינת השלביות ובהתחשב במימוש תכנית הפינוי בינוי. באחריות אגף מבני ציבור לתאם תכנון מפורט עם מנח\"י וצוות התכנון של מתחם קטגורו.",
         "related_projects_text": "מתחם קנגורו",
@@ -40344,6 +40825,7 @@
         "lot_area_m2": 1800.6,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לבצע תיאום תכנון עם אגף מבני ציבור על מנת לבחון התאמה בין שתי התכניות ( עם 101-0855668). בשטח העירוני למבנ\"צ יהיו לפחות 12 כיתות בית ספר ו-2 כיתות גן (ע\"פ נספח היתכנות מבני ציבור) שטח לאיחוד וחלוקה עם 1.8 ד' מתכנית מצרנית101-0855668 (יחד 3.1 ד').",
         "related_projects_text": "101-0855668",
@@ -40417,6 +40899,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40485,6 +40968,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40553,6 +41037,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40621,6 +41106,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40689,6 +41175,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40757,6 +41244,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לתכנן את מבני הציבור ואת מימושם עם מימוש התכנית ותיאום עם מנח\"י",
         "related_projects_text": null,
@@ -40905,6 +41393,7 @@
         "lot_area_m2": 2541.8,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "תיאום תכנון עם מנח\"י לאחר אישור תכנית",
         "related_projects_text": null,
@@ -41082,6 +41571,7 @@
         "lot_area_m2": 939.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש להשלים תכנון במסגרת התבע. יש להבטיח שלביות למבנה הרווחה ובית הכנסת הקיימים כיום במתחם",
         "related_projects_text": null,
@@ -41195,6 +41685,7 @@
         "lot_area_m2": 1800.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -41308,6 +41799,7 @@
         "lot_area_m2": 1800.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -41409,6 +41901,7 @@
         "lot_area_m2": 2268.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -41510,6 +42003,7 @@
         "lot_area_m2": 2268.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -41611,6 +42105,7 @@
         "lot_area_m2": 2268.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -41712,6 +42207,7 @@
         "lot_area_m2": 2268.0,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -42009,6 +42505,7 @@
         "lot_area_m2": 2515.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -42306,6 +42803,7 @@
         "lot_area_m2": 2515.6,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -43651,6 +44149,7 @@
         "lot_area_m2": 5384.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -44991,6 +45490,7 @@
         "lot_area_m2": 5384.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -46331,6 +46831,7 @@
         "lot_area_m2": 5384.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא עם היזם הקצאת מוסדות הציבור ורישומם עבור העירייה עם מימוש התוכנית על ידי אגף מבני ציבור. היקף השטחים הציבורים מאפשר מיקום של שימושים ציבוריים רבים בתכנית. יש לבחון במועד מימוש התכנית את הצרכים השכונתיים (אגף תכנון עיר בשיתוף מבני ציבור)",
         "related_projects_text": null,
@@ -46543,6 +47044,7 @@
         "lot_area_m2": 4210.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -46760,6 +47262,7 @@
         "lot_area_m2": 4210.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -46977,6 +47480,7 @@
         "lot_area_m2": 4210.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא עם היזם הקצאת מוסדות הציבור ורישומם עבור העירייה עם הוצאת היתר בנייה ומימוש התוכנית על ידי אגף מבני ציבור לרבות ביצוע מעבר ציבורי ומעליות",
         "related_projects_text": null,
@@ -47194,6 +47698,7 @@
         "lot_area_m2": 4210.9,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא עם היזם הקצאת מוסדות הציבור ורישומם עבור העירייה עם הוצאת היתר בנייה ומימוש התוכנית על ידי אגף מבני ציבור לרבות ביצוע מעבר ציבורי ומעליות",
         "related_projects_text": null,
@@ -47395,6 +47900,7 @@
         "lot_area_m2": 3703.4,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -47550,6 +48056,7 @@
         "lot_area_m2": 3051.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא עם היזם הקצאת מוסדות הציבור ורישומם עבור העירייה עם מימוש התוכנית על ידי אגף מבני ציבור לרבות ביצוע מעבר ציבורי לבי\"ס יסודי בתכנית מצרנית 101-666032",
         "related_projects_text": "101-0666032",
@@ -47697,6 +48204,7 @@
         "lot_area_m2": 2864.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא עם היזם הקצאת מוסדות ציבור ורישומם עבור העירייה עם הוצאת היתר בנייה על ידי אגף מבני ציבור לרבות ביצוע שצ\"פ בעת מימוש התכנית",
         "related_projects_text": null,
@@ -48103,6 +48611,7 @@
         "lot_area_m2": 8198.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -48514,6 +49023,7 @@
         "lot_area_m2": 8198.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -48925,6 +49435,7 @@
         "lot_area_m2": 8198.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם; מימוש זכויות הבנייה עם מימוש הפרויקט",
         "related_projects_text": null,
@@ -49082,6 +49593,7 @@
         "lot_area_m2": 3668.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לאחר אישור התכנית יש לוודא עם היזם הקצאת מוסדות ציבור ורישומם עבור העירייה עם הוצאת היתר בנייה בנייה על ידי אגף מבני ציבור",
         "related_projects_text": null,
@@ -49239,6 +49751,7 @@
         "lot_area_m2": 3668.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לאחר אישור התכנית יש לוודא עם היזם הקצאת מוסדות ציבור ורישומם עבור העירייה עם הוצאת היתר בנייה בנייה על ידי אגף מבני ציבור",
         "related_projects_text": null,
@@ -49396,6 +49909,7 @@
         "lot_area_m2": 3668.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "לאחר אישור התכנית יש לוודא עם היזם הקצאת מוסדות ציבור ורישומם עבור העירייה עם הוצאת היתר בנייה בנייה על ידי אגף מבני ציבור",
         "related_projects_text": null,
@@ -49549,6 +50063,7 @@
         "lot_area_m2": 2541.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -49702,6 +50217,7 @@
         "lot_area_m2": 2541.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -49855,6 +50371,7 @@
         "lot_area_m2": 2541.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -50008,6 +50525,7 @@
         "lot_area_m2": 2541.8,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -50209,6 +50727,7 @@
         "lot_area_m2": 4303.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -50410,6 +50929,7 @@
         "lot_area_m2": 4303.2,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "ווידוא הקצאה ובנייה ע\"י היזם",
         "related_projects_text": null,
@@ -50587,6 +51107,7 @@
         "lot_area_m2": 939.7,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש להשלים תכנון במסגרת התבע. יש להבטיח שלביות למבנה הרווחה ובית הכנסת הקיימים כיום במתחם",
         "related_projects_text": null,
@@ -50674,6 +51195,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש ליזום תכנית לכלל מתחם גן הנוטרים לרבות הדיור המוגן, בית הכנסת והמגורים מסביב - באחריות אגף תכנון עיר",
         "related_projects_text": null,
@@ -50816,6 +51338,7 @@
         "lot_area_m2": 10740.1,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -50958,6 +51481,7 @@
         "lot_area_m2": 10740.1,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -51040,6 +51564,7 @@
         "lot_area_m2": 397.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -51124,6 +51649,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הדרך אינה מוגדרת כזכות דרך בתב\"ע, יש לוודא כי נשמרת בתכנון המפורט ולא להתפשר בשום מצב.",
         "related_projects_text": null,
@@ -51184,6 +51710,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "אין לעכב את הקמת מבנה הציבור ע\"מ לפתור בעיה תנועתית של השכונה, על כן חובה לתכנן כך שיאפשר לבצע אך לא לתלות ביצוע זה בזה.",
         "related_projects_text": null,
@@ -51240,6 +51767,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לוודא חיבור למצב קיים בזמן ביצוע והיתכנות למצב עתידי",
         "related_projects_text": null,
@@ -51316,6 +51844,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -51376,6 +51905,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "הסדרת נגישות לפארק אלמליח",
         "related_projects_text": "משפיע על תב\"עות: 101-0855585   101-0511923",
@@ -51528,6 +52058,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש להפקיע בשלב מימוש התכנית ולתכנן שלביות בהתאם לפלו\"ז פרויקטים סמוכים.",
         "related_projects_text": null,
@@ -51685,6 +52216,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש להפקיע בשלב מימוש התכנית ולתכנן שלביות בהתאם לפלו\"ז פרויקטים סמוכים.",
         "related_projects_text": null,
@@ -51766,6 +52298,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בשלב ראשון יש לתכנן תב\"ע מכיוון שהמבנים מיועדים לשימור ולא להתחדשות עירונית.",
         "related_projects_text": "הפיכת סו מרטין בקטע חד סטרי לדו-סטרי",
@@ -51918,6 +52451,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בעת שיעלה הצורך מהשטח או מחיבור פרויקטי קצה",
         "related_projects_text": "תב\"עות מתוכננות בקצות הרחוב  101-0855585  101-1069764   ומתחבר לפרויקט דוד איילון",
@@ -52068,6 +52602,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "בדיקה בעת תכנון מפורט של הקו הסגול, ע\"מ שלא לבטל את התנועה מהשומר ליהודה הנשיא.",
         "related_projects_text": "הקו הסגול רקל\"ה",
@@ -52218,6 +52753,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -52368,6 +52904,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -52433,6 +52970,7 @@
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "מומלץ, לא חובה במידה וניתן פתרון טוב יותר.",
         "related_projects_text": null,
@@ -52583,6 +53121,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": "יש לערוך את החשיבה הכללית כבר בתכנית הראשונה במתחם.",
         "related_projects_text": null,
@@ -52733,6 +53272,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -52883,6 +53423,7 @@
         "lot_area_m2": 112.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -52987,6 +53528,7 @@
         "lot_area_m2": 2488.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -53108,6 +53650,7 @@
         "lot_area_m2": 2488.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -53229,6 +53772,7 @@
         "lot_area_m2": 2488.1,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -53362,6 +53906,7 @@
         "lot_area_m2": 2995.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -53495,6 +54040,7 @@
         "lot_area_m2": 2995.3,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,
@@ -53628,6 +54174,7 @@
         "lot_area_m2": 2995.3,
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
+        "is_metaham_polygon": false,
         "road_bearing_deg": null,
         "obstacles": null,
         "related_projects_text": null,

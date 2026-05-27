@@ -184,9 +184,6 @@ MANUAL_NOTES = {
 # until ITM/CAD coords arrive. Format: (project_name, area[, service]) → "note".
 # Each build prints how many pending items remain.
 PENDING_REVIEW = {
-    # User-flagged 2026-05-27: should render as a LINE (currently auto-derived
-    # point/polygon). Needs ITM endpoints for the road segment.
-    ("התחדשות עירונית בן זכאי 31", "גוננים א-ו"): "should be a LineString — needs ITM endpoints",
 }
 
 # Hard overrides for features whose xlsx `קישורים` (PDF reference) is wrong or
@@ -274,6 +271,21 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.1975225, 31.7535408],
             [35.1980979, 31.7519708],
             [35.1985838, 31.7519136],
+        ],
+    },
+    # התחדשות עירונית בן זכאי 31 — לפי "גוננים א-ו כבישים ותנועה.pdf" עמ' 4
+    # המלצה #7: "טוביה בן חפץ - הפיכת שני רחובות ללא מוצא לרחוב אחד המשכי".
+    # ה-xlsx פירש את התב"ע (101-1025295) כפוליגון 10×10 מ', אבל ההמלצה היא
+    # יצירת קו (כביש) חדש. 3 נקודות ITM מהמשתמשת (2026-05-28), אורך 165 מ':
+    #   ITM (220008.63, 629480.18) — קצה מזרחי
+    #   ITM (219941.95, 629509.28) — מקטע אמצעי
+    #   ITM (219850.14, 629516.16) — קצה מערבי
+    ("התחדשות עירונית בן זכאי 31", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.21027, 31.757965],   # מזרח
+            [35.209567, 31.758228],  # אמצע
+            [35.208597, 31.75829],   # מערב
         ],
     },
     # שביל גוננים — הציר הראשי של 2.3 ק"מ החוצה את כל השכונה (פרויקט #4 בפרק ג'
@@ -661,6 +673,14 @@ MANUAL_LOCATION_OVERRIDES = {
     # "הפרשה מבונה" קטנים. ה-3-tuple overrides למעבר ה"ר ולרחוב חדש נשארים
     # יותר ספציפיים ולכן מנצחים את ה-2-tuple הזה לאותם שירותים.
     ("מתחם דנמרק", "גוננים א-ו"): {"gush_helka": "30143/136,146,165,166,167,170,186,189,201,218,219"},
+    # מתחם ברניקי, פת (מתחם 3, בין יהודה הנשיא/ברניקי/פת/ניקנור) — 40 דונם
+    # תיאוריים, 20.6 דונם פיזיים מ-30 החלקות שלהלן בגוש 30171.
+    # xlsx location_id = "45-57,150,151,156,194-200,110,,121,214,217-220/30171"
+    # אבל ה-regex extract_migrash_pairs נשבר על ה-,, ותפס רק 121,214,217-220.
+    # User-confirmed 2026-05-28: להוסיף את כל 30 החלקות במפורש.
+    ("מתחם ברניקי, פת", "גוננים א-ו"): {
+        "gush_helka": "30171/45,46,47,48,49,50,51,52,53,54,55,56,57,110,121,150,151,156,194,195,196,197,198,199,200,214,217,218,219,220"
+    },
     # מכוור/רבי טרפון (בית כנסת) — at parcel גוש 30123 / חלקה 16 (per PDF excerpt
     # + user 2026-05-20).
     ("מכוור/רבי טרפון", "גוננים א-ו", "בית כנסת"): {"gush_helka": "30123/16"},
@@ -4429,11 +4449,22 @@ def main():
         lot_area_m2 = None
         is_eivuy_brown = False
         is_shatzap_polygon = False
+        is_metaham_polygon = False
+        # Metaham-master-plan: a "תכנון אב מתחמית" recommendation that should be
+        # rendered as a light-brown polygon covering the entire compound (not a
+        # small marker). Triggered by service text or project name keywords.
+        _metaham_kw = ("תכנון אב", "תוכנית אב", "מתחמית", "מתחמי להתחדשות")
+        _is_metaham = (
+            (service_he and any(k in service_he for k in _metaham_kw))
+            or (proj_name and "מתחם" in proj_name and service_he and "מתחם" in service_he)
+        )
         _force_point = (str(proj_name or "").strip(), area) in FORCE_POINT_FEATURES
         if geometry and geometry.get("type") in ("Polygon", "MultiPolygon"):
             lot_area_m2 = polygon_area_m2(geometry)
             if _force_point:
                 pass  # user-opt-out — render as centroid point
+            elif _is_metaham and (lot_area_m2 or 0) > 1000:
+                is_metaham_polygon = True
             elif domain == "programa" and not is_hafrasha_mevuna and (lot_area_m2 or 0) > 1000:
                 is_eivuy_brown = True
             elif domain == "public_space" and service_he and (
@@ -4478,6 +4509,7 @@ def main():
             "lot_area_m2": round(lot_area_m2, 1) if lot_area_m2 is not None else None,
             "is_eivuy_brown": is_eivuy_brown,
             "is_shatzap_polygon": is_shatzap_polygon,
+            "is_metaham_polygon": is_metaham_polygon,
             "road_bearing_deg": road_bearing_deg,
             "obstacles": str(obstacles).strip() if obstacles else None,
             "related_projects_text": str(related_projects).strip() if related_projects else None,
@@ -4738,10 +4770,12 @@ def main():
     # Phase-1 visual flags coverage (sanity check).
     n_eivuy = sum(1 for f in out_features if f["properties"].get("is_eivuy_brown"))
     n_shatzap = sum(1 for f in out_features if f["properties"].get("is_shatzap_polygon"))
+    n_metaham = sum(1 for f in out_features if f["properties"].get("is_metaham_polygon"))
     n_bearing = sum(1 for f in out_features if f["properties"].get("road_bearing_deg") is not None)
     n_crossing = sum(1 for f in out_features if f["properties"].get("marker_kind") == "crossing_point")
     print(f"      polygon-render flags: is_eivuy_brown={n_eivuy}, "
-          f"is_shatzap_polygon={n_shatzap}, road_bearing_deg={n_bearing}/{n_crossing} crossings")
+          f"is_shatzap_polygon={n_shatzap}, is_metaham_polygon={n_metaham}, "
+          f"road_bearing_deg={n_bearing}/{n_crossing} crossings")
 
     # Resolve RELATED_FEATURES — second pass after all features are built.
     # Builds (name, area) → first matching feature index so we can attach a

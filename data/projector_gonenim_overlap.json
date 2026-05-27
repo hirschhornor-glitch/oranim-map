@@ -365,7 +365,7 @@
   },
   "2cdb6140df61": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1073,13 +1073,9 @@
   },
   "92b68be77fc1": {
     "plan_number": "101-1025295",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-1025295"
-    ],
-    "overlap_features": [
-      "התחדשות עירונית בן זכאי 31, ירושלים. ירושלים זיהוי וסיווג תכנית עדכון אחרון 31/12/2025 סה\"כ שטח בדונם 3.288 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "0ba11a4445a7": {
     "plan_number": "101-0515635",
