@@ -1,0 +1,14 @@
+{
+  "name": "oranim-map",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Oranim urban planning GIS map — Jerusalem",
+  "scripts": {
+    "build": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js --source-maps"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.0",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.24.0"
+  }
+}
