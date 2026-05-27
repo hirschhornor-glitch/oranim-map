@@ -8871,6 +8871,7 @@
                             const shavazActive = layers['shavaz_kayam'] || futureShavazActive;
                             const landuseActive = layers['landuse_xplan'];
                             const projectorActive = layers['projector_gonenim'] || layers['projector_gonenim_tzatal'];
+                            const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
                             const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].filter(k => layers[k]);
@@ -8895,9 +8896,9 @@
                             if (projectorActive) {
                                 // Fade plans when projector recommendations are on so the
                                 // recommendations are more visible. Outline still readable.
-                                return { color: statusColor, weight: 1, fillColor: fillColor, fillOpacity: 0.1, dashArray: '4,2' };
+                                return { color: statusColor, weight: 1, fillColor: fillColor, fillOpacity: isApprovedGreen ? 0.05 : 0.1, dashArray: '4,2' };
                             }
-                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * 0.3, dashArray: '4,2' };
+                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), dashArray: '4,2' };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -9001,12 +9002,13 @@
                                 const isSat = basemap === 'satellite';
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 const landuseOn = layersRef.current['landuse_xplan'];
+                                const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
                                 if (landuseOn) {
                                     layer.setStyle({ weight: 2.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
                                 } else if (shavazOn) {
                                     layer.setStyle({ weight: 1.5, fillOpacity: 0.07, fillColor: fillColor, color: statusColor });
                                 } else {
-                                    layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * 0.3, fillColor: fillColor });
+                                    layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), fillColor: fillColor });
                                 }
                             });
                             // Labels: zoom-dependent with fit-in-polygon check
@@ -10477,20 +10479,93 @@
                     }
 
                     // --- "Karteset" card (brown-land):
+                    // The raw PDF-extracted text has extraction artifacts: missing
+                    // spaces between digits and Hebrew letters, a trailing counter row
+                    // that leaked from the PDF, and inline "לחצו כאן" links to slides
+                    // that don't exist here. cleanKartesetRec strips them and splits
+                    // on הצעה-N markers into separate items.
                     let karCard = '';
                     if (p.kar_recommendations || p.kar_land_use || p.kar_programmatic_potential) {
-                        const recK = p.kar_recommendations ? String(p.kar_recommendations).trim() : '';
-                        const pot  = p.kar_programmatic_potential ? String(p.kar_programmatic_potential).trim() : '';
+                        const cleanKartesetRec = (raw) => {
+                            if (!raw) return [];
+                            let t = String(raw).trim();
+                            t = t.replace(/^הליך\s*נדרש\s*לתכנון\s*:?\s*/, '');
+                            t = t.replace(/\s*גנ[״"]י(?:\s+\d+){1,5}\s*בי[״"]ס(?:[\s\S]*)$/, '');
+                            t = t.replace(/\s*[–-]\s*לתמצית\s+ההצעה[^.]*?לחצו\s+כאן\s*\.?/g, '');
+                            t = t.replace(/\.?\s*לחצו\s+כאן\s*\.?/g, '');
+                            t = t.replace(/\s*למתחם\s+המלא\s+ראו\s+מצגת[^.]*\./g, '');
+                            t = t.replace(/\s*מנה[״"]פ\s*[–-][^|]*(?:\|\s*אדריכל\s*[–-][^|]*)?\s*$/, '');
+                            // Insert space when PDF extraction lost it (digit↔Hebrew, colon↔Hebrew)
+                            t = t.replace(/(\d)([א-ת])/g, '$1 $2');
+                            t = t.replace(/([א-ת])(\d)/g, '$1 $2');
+                            t = t.replace(/([א-ת]):([א-ת])/g, '$1: $2');
+                            t = t.replace(/\.(\s*)(\d+)\s*\./g, (_, sp, n) => `${sp}${n}.`);
+                            t = t.replace(/\s+/g, ' ').trim();
+                            t = t.replace(/^\s*[–\-•·]\s*/, '');
+                            const propRe = /הצעה\s*(\d+)\s*[:\-–]\s*/g;
+                            const splits = [];
+                            let m;
+                            while ((m = propRe.exec(t))) splits.push({idx: m.index, len: m[0].length, num: m[1]});
+                            const out = [];
+                            if (splits.length) {
+                                if (splits[0].idx > 0) {
+                                    const intro = t.slice(0, splits[0].idx).trim().replace(/[\s:.,;–-]+$/, '');
+                                    if (intro) out.push({label: '', text: intro});
+                                }
+                                for (let i = 0; i < splits.length; i++) {
+                                    const s2 = splits[i].idx + splits[i].len;
+                                    const e2 = i + 1 < splits.length ? splits[i + 1].idx : t.length;
+                                    const txt = t.slice(s2, e2).trim();
+                                    if (txt) out.push({label: `הצעה ${splits[i].num}`, text: txt});
+                                }
+                            } else if (t) {
+                                out.push({label: '', text: t});
+                            }
+                            return out;
+                        };
+                        const cleanField = (v) => {
+                            if (!v) return '';
+                            let s = String(v).trim();
+                            // Strip field-prefix contamination (parser sometimes grabs the next label)
+                            s = s.replace(/^(?:בינוי\s*קיים\s*במתחם|פוטנציאל\s*פרוגרמתי|המלצות|שימושים\s*מותרים)\s*:?\s*/, '');
+                            s = s.replace(/(\d)([א-ת])/g, '$1 $2').replace(/([א-ת])(\d)/g, '$1 $2');
+                            s = s.replace(/\s+/g, ' ').trim();
+                            return s;
+                        };
+                        const isOwnershipUsable = (v) => {
+                            if (!v) return false;
+                            const s = String(v).trim();
+                            // Drop label-only and stray-bullet values from the parser.
+                            if (s.length < 3) return false;
+                            if (/^(?:בינוי|פוטנציאל|המלצ|שימוש)/.test(s)) return false;
+                            if (/^[•\-–\d\s.,;]+$/.test(s)) return false;
+                            return true;
+                        };
+                        const proposals = cleanKartesetRec(p.kar_recommendations);
+                        const pot  = cleanField(p.kar_programmatic_potential);
+                        const exist = cleanField(p.kar_existing_built);
                         const kFacts = [];
                         if (p.kar_land_use)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">ייעוד ע״פ תב״ע:</span> <b>${escape(p.kar_land_use)}</b></span>`);
                         if (p.kar_lot_area)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">שטח:</span> <b>${escape(p.kar_lot_area)} דונם</b></span>`);
                         if (p.kar_taba_lot)       kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">תב״ע/מגרש:</span> <b>${escape(p.kar_taba_lot)}</b></span>`);
-                        if (p.kar_ownership)      kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">בעלות:</span> <b>${escape(p.kar_ownership)}</b></span>`);
+                        if (isOwnershipUsable(p.kar_ownership))
+                            kFacts.push(`<span style="white-space:nowrap"><span style="color:#5d4037">בעלות:</span> <b>${escape(p.kar_ownership)}</b></span>`);
+                        let recHtml = '';
+                        if (proposals.length === 1 && !proposals[0].label) {
+                            recHtml = `<div class="pp-quote pp-quote--kar">${escape(proposals[0].text)}</div>`;
+                        } else if (proposals.length > 1) {
+                            recHtml = `<div class="pp-quote pp-quote--kar" style="display:flex;flex-direction:column;gap:6px">` +
+                                proposals.map(pr => pr.label
+                                    ? `<div><b style="color:#5d4037">${pr.label}:</b> ${escape(pr.text)}</div>`
+                                    : `<div>${escape(pr.text)}</div>`
+                                ).join('') +
+                                `</div>`;
+                        }
                         karCard = `<div class="pp-card pp-card--kar">` +
                             `<div class="pp-card-header"><span class="pp-card-icon">📋</span>כרטסת שטחים חומים${p.kar_page ? ` · עמ׳ ${escape(String(p.kar_page))}` : ''}</div>` +
-                            (recK ? `<div class="pp-quote pp-quote--kar">${escape(recK)}</div>` : '') +
+                            recHtml +
                             (pot ? `<div class="pp-detail-row"><span class="pp-detail-label">פוטנציאל פרוגרמתי</span><span>${escape(pot)}</span></div>` : '') +
-                            (p.kar_existing_built ? `<div class="pp-detail-row"><span class="pp-detail-label">בינוי קיים</span><span>${escape(p.kar_existing_built)}</span></div>` : '') +
+                            (exist ? `<div class="pp-detail-row"><span class="pp-detail-label">בינוי קיים</span><span>${escape(exist)}</span></div>` : '') +
                             (kFacts.length ? `<div class="pp-facts">${kFacts.join(' · ')}</div>` : '') +
                         `</div>`;
                     }
