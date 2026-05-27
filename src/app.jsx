@@ -2449,16 +2449,43 @@
                             if (url) window.open(url, '_blank', 'noopener');
                         });
                     });
-                    // Wire up clickable service rows — pan to sibling recommendation.
+                    // Wire up clickable service rows — find the sibling feature's
+                    // own Leaflet layer (by project_id) and fire its click event so
+                    // its native popup opens. Falls back to lat/lng pan if the layer
+                    // can't be located (e.g. on-demand layer not yet loaded).
                     const svcRows = root.querySelectorAll('tr.pp-svc-row');
                     svcRows.forEach(tr => {
                         tr.addEventListener('click', (ev) => {
                             ev.preventDefault();
+                            const targetId = tr.getAttribute('data-row-id');
                             const lat = parseFloat(tr.getAttribute('data-row-lat'));
                             const lon = parseFloat(tr.getAttribute('data-row-lon'));
-                            if (!isFinite(lat) || !isFinite(lon)) return;
                             map.closePopup();
-                            map.flyTo([lat, lon], Math.max(map.getZoom(), 18), { duration: 0.6 });
+                            // Search both projector layers for a matching project_id.
+                            let foundLyr = null;
+                            ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+                                if (foundLyr) return;
+                                const grp = geoLayersRef.current && geoLayersRef.current[k];
+                                if (!grp || !grp.eachLayer) return;
+                                grp.eachLayer(sub => {
+                                    if (foundLyr) return;
+                                    const fp = sub.feature && sub.feature.properties;
+                                    if (fp && targetId && fp.project_id === targetId) foundLyr = sub;
+                                });
+                            });
+                            if (foundLyr) {
+                                try {
+                                    const b = foundLyr.getBounds && foundLyr.getBounds();
+                                    if (b && b.isValid && b.isValid()) map.fitBounds(b, { maxZoom: 18, padding: [40, 40] });
+                                    else if (foundLyr.getLatLng) map.setView(foundLyr.getLatLng(), 18);
+                                    setTimeout(() => foundLyr.fire('click'), 200);
+                                } catch (err) { console.warn(err); }
+                                return;
+                            }
+                            // Fallback: pan only.
+                            if (isFinite(lat) && isFinite(lon)) {
+                                map.flyTo([lat, lon], Math.max(map.getZoom(), 18), { duration: 0.6 });
+                            }
                         });
                         tr.addEventListener('mouseenter', () => { tr.style.outline = '2px solid #1565c0'; });
                         tr.addEventListener('mouseleave', () => { tr.style.outline = ''; });
@@ -10745,50 +10772,86 @@
                         : '';
 
                     // Services table — when the same project_name+sub_neighborhood
-                    // hosts multiple services (e.g. בית הנוער has 7 services), show
-                    // them all in a compact table so the user sees the full program.
+                    // hosts multiple features, split into two semantic groups:
+                    //
+                    //   * SAME-DOMAIN — services that share the geometry of this feature
+                    //     (e.g. הפרשה מבונה במגרש 15 = מעון יום + בית כנסת + טרם נקבע,
+                    //     all programa). These are the full program for this lot.
+                    //
+                    //   * CROSS-DOMAIN — recommendations in OTHER domains at the same
+                    //     project_name (e.g. מתחם קנגורו has a transport feature 'רחוב
+                    //     חדש' alongside the 11 programa services). These are separate
+                    //     recommendations that happen to belong to the same compound,
+                    //     not part of the same lot's program.
+                    //
+                    // Each cross-domain row is clickable and opens its own popup
+                    // (rather than panning), so the user can dive into the related
+                    // recommendation without losing context.
+                    const DOM_LABEL = { programa: 'פרוגרמה', public_space: 'מרחב ציבורי', transport: 'תנועה' };
+                    const DOM_COLOR = { programa: '#8d6e63', public_space: '#2e7d32', transport: '#1565c0' };
                     let servicesTable = '';
                     if (Array.isArray(siblings) && siblings.length >= 1) {
                         const all = [p].concat(siblings);
                         // Dedup by service+project_num to avoid showing the same row twice
                         const seen = new Set();
-                        const rows = [];
+                        const sameDom = [];
+                        const crossDom = [];
                         for (const s of all) {
                             const key = (s.service_he || '') + '|' + (s.project_num || '');
                             if (seen.has(key)) continue;
                             seen.add(key);
-                            rows.push(s);
+                            ((s.domain || 'other') === (p.domain || 'other') ? sameDom : crossDom).push(s);
                         }
-                        if (rows.length >= 2) {
-                            const trs = rows.map(s => {
-                                const isThis = s.project_id === p.project_id;
-                                const sv = escape(s.service_he || '—');
-                                const un = (s.units_required != null && s.units_required !== '')
-                                    ? `${fmtNum(s.units_required)} ${escape(s.units_label || '')}` : '—';
-                                const yr = escape(s.year_execution || '—');
-                                const ch = s.chumash ? `חומש ${s.chumash}` : '';
-                                const bg = isThis ? `background:${cfg.color}22;font-weight:600` : '';
-                                const dp = s.display_point || [];
-                                const clickable = !isThis && dp.length === 2;
-                                const cursorStyle = clickable ? 'cursor:pointer' : '';
-                                const dataAttrs = clickable
-                                    ? `data-row-lat="${dp[1]}" data-row-lon="${dp[0]}" data-row-id="${escape(s.project_id || '')}" title="קליק לעבור להמלצה זו"`
-                                    : '';
-                                const cls = clickable ? 'pp-svc-row' : '';
-                                return `<tr class="${cls}" style="${bg};${cursorStyle}" ${dataAttrs}><td style="padding:3px 6px;white-space:nowrap">${isThis ? '▸ ' : ''}${sv}</td><td style="padding:3px 6px;color:#546e7a">${un}</td><td style="padding:3px 6px;color:#546e7a">${yr}${ch ? ' · ' + ch : ''}</td></tr>`;
-                            }).join('');
-                            // Label: if all rows have the same service, it's multiple
-                            // instances of the same project; otherwise the rows describe
-                            // the full program (multiple services) planned for this lot.
-                            // NOTE: rows includes the clicked feature (`p`), not just
-                            // the siblings — so "נוספות" was misleading. Reframe as the
-                            // complete recommendations within this lot/compound.
-                            const uniqueSvcs = new Set(rows.map(s => (s.service_he || '').trim()));
-                            const tableLabel = uniqueSvcs.size === 1
-                                ? `📋 מקטעים בשם זהה (${rows.length})`
-                                : `📋 פירוט ההמלצות במגרש (${rows.length})`;
-                            servicesTable = `<details class="pp-services" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${tableLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`;
+
+                        const renderRow = (s, withDomChip) => {
+                            const isThis = s.project_id === p.project_id;
+                            const sv = escape(s.service_he || '—');
+                            const un = (s.units_required != null && s.units_required !== '')
+                                ? `${fmtNum(s.units_required)} ${escape(s.units_label || '')}` : '—';
+                            const yr = escape(s.year_execution || '—');
+                            const ch = s.chumash ? `חומש ${s.chumash}` : '';
+                            const bg = isThis ? `background:${cfg.color}22;font-weight:600` : '';
+                            const clickable = !isThis;
+                            const cursorStyle = clickable ? 'cursor:pointer' : '';
+                            const dp = s.display_point || [];
+                            const latlonAttrs = (dp.length === 2)
+                                ? `data-row-lat="${dp[1]}" data-row-lon="${dp[0]}"`
+                                : '';
+                            const dataAttrs = clickable
+                                ? `data-row-id="${escape(s.project_id || '')}" ${latlonAttrs} title="קליק לפתיחת ההמלצה"`
+                                : '';
+                            const cls = clickable ? 'pp-svc-row' : '';
+                            const domChip = withDomChip
+                                ? `<span style="display:inline-block;font-size:10px;background:${(DOM_COLOR[s.domain] || '#666')}22;color:${DOM_COLOR[s.domain] || '#666'};padding:1px 5px;border-radius:8px;margin-left:5px;font-weight:600">${DOM_LABEL[s.domain] || s.domain || '—'}</span>`
+                                : '';
+                            return `<tr class="${cls}" style="${bg};${cursorStyle}" ${dataAttrs}><td style="padding:3px 6px;white-space:nowrap">${isThis ? '▸ ' : ''}${sv}${domChip}</td><td style="padding:3px 6px;color:#546e7a">${un}</td><td style="padding:3px 6px;color:#546e7a">${yr}${ch ? ' · ' + ch : ''}</td></tr>`;
+                        };
+
+                        const sections = [];
+
+                        // Same-domain section — only when at least one sibling shares
+                        // this domain (i.e. rows.length >= 2). Otherwise the clicked
+                        // feature is alone in its domain and the table would be a
+                        // single self-row, which is noise.
+                        if (sameDom.length >= 2) {
+                            const uniqueSvcs = new Set(sameDom.map(s => (s.service_he || '').trim()));
+                            const sameLabel = uniqueSvcs.size === 1
+                                ? `📋 מקטעים בשם זהה (${sameDom.length})`
+                                : `📋 פירוט ההמלצות במגרש (${sameDom.length})`;
+                            const trs = sameDom.map(s => renderRow(s, false)).join('');
+                            sections.push(`<details class="pp-services" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${sameLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`);
                         }
+
+                        // Cross-domain section — recommendations from a different
+                        // domain at the same compound. Chip-shows each row's domain
+                        // so the user knows what they're looking at.
+                        if (crossDom.length >= 1) {
+                            const crossLabel = `📋 המלצות נוספות במתחם — תחומים אחרים (${crossDom.length})`;
+                            const trs = crossDom.map(s => renderRow(s, true)).join('');
+                            sections.push(`<details class="pp-services pp-cross" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${crossLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`);
+                        }
+
+                        servicesTable = sections.join('');
                     }
 
                     // Obstacles banner — top-priority info from xlsx "חסמים/פעולות
