@@ -2014,6 +2014,12 @@
             };
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
+            // Marker-coords tool: capture coords for updating recommendations / polygons.
+            const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'polygon'
+            const markerCoordsModeRef = useRef(null);
+            const [markerCoordsPts, setMarkerCoordsPts] = useState(0);
+            const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'polygon', points:[{lat,lng}] }
+            const markerCoordsRef = useRef({ points: [], markers: [], polygon: null });
             const [showPrint, setShowPrint] = useState(false);
             const [printTitle, setPrintTitle] = useState('');
             const [printShowLegend, setPrintShowLegend] = useState(true);
@@ -3530,6 +3536,7 @@
                         console.log('[Filter] future_shavaz:', orig.length, '->', filtered.length, 'features');
                     }
                 }
+                window.__applyKayamFilter = applyKayamFilter;
 
                 // === Stage 1: GeoJSON only — render the map ASAP ===
                 Promise.all(allEntries.map(([key, url]) =>
@@ -3766,7 +3773,7 @@
                                 });
                                 window.__kayamTabaSet = set;
                             }
-                            applyKayamFilter();
+                            if (window.__applyKayamFilter) window.__applyKayamFilter();
                             _anyArrived = true;
                             if (_pendingTick) clearTimeout(_pendingTick);
                             _pendingTick = setTimeout(() => setDeferredTick(t => t + 1), 150);
@@ -5102,6 +5109,73 @@
                     setAreaPts(0);
                 };
             }, [areaMode]);
+
+            // ── Marker-coords tool: capture lat/lng (and ITM) for plan/recommendation updates ──
+            // Register EPSG:2039 (ITM) once. proj4js is loaded via CDN in index.html.
+            useEffect(() => {
+                if (typeof window === 'undefined' || !window.proj4) return;
+                if (!window.proj4.defs('EPSG:2039')) {
+                    window.proj4.defs('EPSG:2039',
+                        '+proj=tmerc +lat_0=31.7343936111111 +lon_0=35.2045169444444 ' +
+                        '+k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 ' +
+                        '+towgs84=-24.0024,-17.1032,-17.8444,-0.33077,-1.85269,1.66969,5.4248 ' +
+                        '+units=m +no_defs');
+                }
+            }, []);
+
+            useEffect(() => {
+                markerCoordsModeRef.current = markerCoordsMode;
+                const map = mapInstanceRef.current;
+                if (!map || !markerCoordsMode) return;
+                const r = markerCoordsRef.current;
+                r.points = []; r.markers = []; r.polygon = null;
+                map.getContainer().classList.add('measuring');
+
+                function onClick(e) {
+                    if (markerCoordsMode === 'point') {
+                        // Single point: capture and finish immediately.
+                        const m = L.circleMarker(e.latlng, { radius: 6, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 1, weight: 2 }).addTo(map);
+                        r.markers.push(m);
+                        r.points = [e.latlng];
+                        setMarkerCoordsPts(1);
+                        setMarkerCoordsResult({ type: 'point', points: [e.latlng] });
+                        setMarkerCoordsMode(null);
+                    } else {
+                        // Polygon: accumulate vertices.
+                        r.points.push(e.latlng);
+                        setMarkerCoordsPts(r.points.length);
+                        const m = L.circleMarker(e.latlng, { radius: 4, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 1 }).addTo(map);
+                        r.markers.push(m);
+                        if (r.points.length > 1) {
+                            if (r.polygon) map.removeLayer(r.polygon);
+                            r.polygon = L.polygon(r.points, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.12, dashArray: '6,4' }).addTo(map);
+                        }
+                    }
+                }
+
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') {
+                        r.markers.forEach(m => { try { map.removeLayer(m); } catch(_){} });
+                        if (r.polygon) { try { map.removeLayer(r.polygon); } catch(_){} }
+                        r.points = []; r.markers = []; r.polygon = null;
+                        setMarkerCoordsPts(0);
+                        setMarkerCoordsMode(null);
+                    }
+                }
+
+                map.on('click', onClick);
+                document.addEventListener('keydown', onKeyDown);
+                return () => {
+                    map.off('click', onClick);
+                    document.removeEventListener('keydown', onKeyDown);
+                    map.getContainer().classList.remove('measuring');
+                    // Wipe drawn markers/polygon when mode ends.
+                    r.markers.forEach(m => { try { map.removeLayer(m); } catch(_){} });
+                    if (r.polygon) { try { map.removeLayer(r.polygon); } catch(_){} }
+                    r.points = []; r.markers = []; r.polygon = null;
+                    setMarkerCoordsPts(0);
+                };
+            }, [markerCoordsMode]);
 
             // ── Print-area: rectangle drawing mode ──
             useEffect(() => {
@@ -7140,6 +7214,18 @@
                 // 7. Programa-active UI flag
                 if (except !== 'programa-area' && except !== 'programa-radius') {
                     setProgramaActive(null);
+                }
+                // 7.5 Marker-coords: wipe drawn helpers + close any open result modal.
+                if (except !== 'marker-coords') {
+                    const mc = markerCoordsRef.current;
+                    if (map && mc) {
+                        mc.markers.forEach(m => { try { map.removeLayer(m); } catch(_){} });
+                        if (mc.polygon) { try { map.removeLayer(mc.polygon); } catch(_){} }
+                        mc.points = []; mc.markers = []; mc.polygon = null;
+                    }
+                    setMarkerCoordsMode(null);
+                    setMarkerCoordsPts(0);
+                    setMarkerCoordsResult(null);
                 }
                 // 8. Always strip cursor — entry handlers re-add it via useEffect or directly.
                 if (map) map.getContainer().classList.remove('measuring');
@@ -10692,12 +10778,15 @@
                                 return `<tr class="${cls}" style="${bg};${cursorStyle}" ${dataAttrs}><td style="padding:3px 6px;white-space:nowrap">${isThis ? '▸ ' : ''}${sv}</td><td style="padding:3px 6px;color:#546e7a">${un}</td><td style="padding:3px 6px;color:#546e7a">${yr}${ch ? ' · ' + ch : ''}</td></tr>`;
                             }).join('');
                             // Label: if all rows have the same service, it's multiple
-                            // instances of the same project; otherwise multiple recommendations
-                            // in different domains/services at the same compound.
+                            // instances of the same project; otherwise the rows describe
+                            // the full program (multiple services) planned for this lot.
+                            // NOTE: rows includes the clicked feature (`p`), not just
+                            // the siblings — so "נוספות" was misleading. Reframe as the
+                            // complete recommendations within this lot/compound.
                             const uniqueSvcs = new Set(rows.map(s => (s.service_he || '').trim()));
                             const tableLabel = uniqueSvcs.size === 1
-                                ? `📋 מקטעים נוספים בשם זהה (${rows.length})`
-                                : `📋 המלצות נוספות באותו מתחם (${rows.length})`;
+                                ? `📋 מקטעים בשם זהה (${rows.length})`
+                                : `📋 פירוט ההמלצות במגרש (${rows.length})`;
                             servicesTable = `<details class="pp-services" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${tableLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`;
                         }
                     }
@@ -14948,6 +15037,59 @@
                                 <span className="toolbar-label">הערות</span>
                             </button>
 
+                            {/* ══ סימון קואורדינטות ══ */}
+                            <div style={{position:'relative'}}>
+                            <button
+                                className={`toolbar-btn ${markerCoordsMode ? 'active' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // If polygon mode is active with ≥3 vertices, this click finishes & shows the modal.
+                                    if (markerCoordsMode === 'polygon') {
+                                        const r = markerCoordsRef.current;
+                                        if (r.points.length >= 3) {
+                                            setMarkerCoordsResult({ type: 'polygon', points: [...r.points] });
+                                            setMarkerCoordsMode(null);
+                                            setActiveDropdown(null);
+                                            return;
+                                        }
+                                        // Not enough points yet — cancel.
+                                        setMarkerCoordsMode(null);
+                                        setActiveDropdown(null);
+                                        return;
+                                    }
+                                    setActiveDropdown(prev => prev === 'marker-coords' ? null : 'marker-coords');
+                                }}
+                                title="סימון קואורדינטות לעדכון פוליגונים והמלצות"
+                            >
+                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span className="toolbar-label">{markerCoordsMode === 'polygon' ? (markerCoordsPts >= 3 ? 'סיום ✓' : markerCoordsPts + ' נק\'') : markerCoordsMode === 'point' ? 'בחר נקודה...' : 'סימון ▾'}</span>
+                            </button>
+                            {activeDropdown === 'marker-coords' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" data-tip="לחץ על המפה לסימון נקודה — יוצג פלט קואורדינטות" onClick={() => {
+                                        cancelAllModes('marker-coords');
+                                        setMarkerCoordsResult(null);
+                                        setMarkerCoordsMode('point');
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        <span className="sub-label">נקודה</span>
+                                    </button>
+                                    <button className="toolbar-dropdown-item" data-tip="ציור פוליגון לסימון גבול — יוצג GeoJSON להעתקה" onClick={() => {
+                                        cancelAllModes('marker-coords');
+                                        setMarkerCoordsResult(null);
+                                        setMarkerCoordsMode('polygon');
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                        <span className="sub-label">פוליגון</span>
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
                             <button
                                 className={`toolbar-btn ${showReportsMenu ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setShowReportsMenu(true); setActiveDropdown(null); }}
@@ -15584,6 +15726,17 @@
                             </div>
                         )}
 
+                        {/* Marker-coords active-mode banner */}
+                        {markerCoordsMode && (
+                            <div style={{position:'fixed',top:'60px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'10px 18px',borderRadius:'8px',fontSize:'14px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl'}}>
+                                {markerCoordsMode === 'point'
+                                    ? 'לחץ על המפה לסימון נקודה · ESC לביטול'
+                                    : (markerCoordsPts < 3
+                                        ? `סמן קדקודים (${markerCoordsPts}/3 לפחות) · ESC לביטול`
+                                        : `${markerCoordsPts} קדקודים · לחץ "סיום" בסרגל · ESC לביטול`)}
+                            </div>
+                        )}
+
                     </div>
 
                     {/* ── Print Modal ── */}
@@ -15722,6 +15875,94 @@
                             </div>
                         </div>
                     )}
+
+                    {/* ── Marker-Coords Result Modal ── */}
+                    {markerCoordsResult && (() => {
+                        const pts = markerCoordsResult.points || [];
+                        const type = markerCoordsResult.type;
+                        const fmtNum = (n, d = 6) => Number(n).toFixed(d);
+                        const wgs84Lines = pts.map(p => `[${fmtNum(p.lng)}, ${fmtNum(p.lat)}]`).join(',\n');
+                        const itmLines = (() => {
+                            if (!window.proj4 || !window.proj4.defs('EPSG:2039')) return null;
+                            try {
+                                return pts.map(p => {
+                                    const [x, y] = window.proj4('EPSG:4326', 'EPSG:2039', [p.lng, p.lat]);
+                                    return `[${fmtNum(x, 2)}, ${fmtNum(y, 2)}]`;
+                                }).join(',\n');
+                            } catch (_) { return null; }
+                        })();
+                        const geojson = (() => {
+                            if (type === 'point') {
+                                return JSON.stringify({
+                                    type: 'Feature',
+                                    geometry: { type: 'Point', coordinates: [Number(fmtNum(pts[0].lng)), Number(fmtNum(pts[0].lat))] },
+                                    properties: {}
+                                }, null, 2);
+                            }
+                            // Close polygon ring (GeoJSON requires first == last)
+                            const ring = pts.map(p => [Number(fmtNum(p.lng)), Number(fmtNum(p.lat))]);
+                            ring.push(ring[0]);
+                            return JSON.stringify({
+                                type: 'Feature',
+                                geometry: { type: 'Polygon', coordinates: [ring] },
+                                properties: {}
+                            }, null, 2);
+                        })();
+                        const copyToClipboard = (text, btn) => {
+                            navigator.clipboard.writeText(text).then(() => {
+                                if (btn) { const o = btn.textContent; btn.textContent = '✓ הועתק'; setTimeout(() => { btn.textContent = o; }, 1500); }
+                            }).catch(() => alert('שגיאה בהעתקה'));
+                        };
+                        const close = () => {
+                            setMarkerCoordsResult(null);
+                            // Strip drawn helpers when modal closes.
+                            const map = mapInstanceRef.current;
+                            const r = markerCoordsRef.current;
+                            if (map && r) {
+                                r.markers.forEach(m => { try { map.removeLayer(m); } catch(_){} });
+                                if (r.polygon) { try { map.removeLayer(r.polygon); } catch(_){} }
+                                r.points = []; r.markers = []; r.polygon = null;
+                            }
+                        };
+                        return (
+                            <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',direction:'rtl'}} onClick={close}>
+                                <div onClick={e => e.stopPropagation()} style={{background:'#16162e',border:'1px solid #2a2a4a',borderRadius:14,width:'90vw',maxWidth:560,maxHeight:'85vh',display:'flex',flexDirection:'column',color:'#e0e0ff',fontFamily:'Assistant, sans-serif'}}>
+                                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid #2a2a4a'}}>
+                                        <h2 style={{fontSize:16,margin:0}}>📍 קואורדינטות {type === 'point' ? 'נקודה' : `פוליגון (${pts.length} קדקודים)`}</h2>
+                                        <button className="modal-close" onClick={close}>&times;</button>
+                                    </div>
+                                    <div style={{padding:'14px 18px',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
+                                        <div>
+                                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                                                <span style={{fontSize:12,color:'#8888aa',fontWeight:600}}>WGS84 (lng, lat)</span>
+                                                <button className="modal-action-btn" style={{fontSize:11,padding:'3px 10px'}} onClick={e => copyToClipboard(wgs84Lines, e.currentTarget)}>📋 העתק</button>
+                                            </div>
+                                            <textarea readOnly value={wgs84Lines} style={{width:'100%',minHeight:60,background:'#0f0f1e',border:'1px solid #2a2a4a',borderRadius:6,padding:8,color:'#c5e1ff',fontFamily:'ui-monospace, monospace',fontSize:12,direction:'ltr',resize:'vertical'}} />
+                                        </div>
+                                        {itmLines && (
+                                            <div>
+                                                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                                                    <span style={{fontSize:12,color:'#8888aa',fontWeight:600}}>ITM / EPSG:2039 (x, y במטרים)</span>
+                                                    <button className="modal-action-btn" style={{fontSize:11,padding:'3px 10px'}} onClick={e => copyToClipboard(itmLines, e.currentTarget)}>📋 העתק</button>
+                                                </div>
+                                                <textarea readOnly value={itmLines} style={{width:'100%',minHeight:60,background:'#0f0f1e',border:'1px solid #2a2a4a',borderRadius:6,padding:8,color:'#c5e1ff',fontFamily:'ui-monospace, monospace',fontSize:12,direction:'ltr',resize:'vertical'}} />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                                                <span style={{fontSize:12,color:'#8888aa',fontWeight:600}}>GeoJSON Feature</span>
+                                                <button className="modal-action-btn" style={{fontSize:11,padding:'3px 10px'}} onClick={e => copyToClipboard(geojson, e.currentTarget)}>📋 העתק</button>
+                                            </div>
+                                            <textarea readOnly value={geojson} style={{width:'100%',minHeight:120,background:'#0f0f1e',border:'1px solid #2a2a4a',borderRadius:6,padding:8,color:'#c5e1ff',fontFamily:'ui-monospace, monospace',fontSize:12,direction:'ltr',resize:'vertical'}} />
+                                        </div>
+                                    </div>
+                                    <div style={{padding:'10px 18px',borderTop:'1px solid #2a2a4a',display:'flex',justifyContent:'flex-end',gap:8}}>
+                                        <button className="modal-action-btn primary" onClick={close}>סגור</button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* ── Annotations Modal ── */}
                     {showAnnotations && (() => {
