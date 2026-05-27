@@ -2977,6 +2977,196 @@
                             ` · לחיצה על שורה — מעבר לפיצ׳ר במפה</div>` +
                             `<table style="width:100%;border-collapse:collapse"><thead>${obHeader}</thead><tbody>${obRows}</tbody></table>`;
 
+                        // ── Tab 4: Budget (תקציב) ──
+                        // estimate_nis at 80% population, total ~1.9B ₪; programa dominates.
+                        // Show: KPI cards + pivot (sub-neighborhood × domain) + top 10 items.
+                        const fmtNisFull = n => {
+                            if (!n) return '·';
+                            if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M ₪';
+                            if (n >= 1_000) return Math.round(n / 1_000) + 'K ₪';
+                            return Math.round(n) + ' ₪';
+                        };
+                        let budgetTotal = 0, budgetPopulated = 0;
+                        const budgetByDom = { programa: 0, public_space: 0, transport: 0 };
+                        const budgetByDomN = { programa: 0, public_space: 0, transport: 0 };
+                        const budgetByArea = {};
+                        AREAS.forEach(a => { budgetByArea[a] = { programa: 0, public_space: 0, transport: 0, total: 0 }; });
+                        const budgetItems = [];
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const v = parseFloat(p.estimate_nis) || 0;
+                            if (!v) return;
+                            budgetTotal += v;
+                            budgetPopulated++;
+                            const dom = p.domain || 'other';
+                            if (dom in budgetByDom) { budgetByDom[dom] += v; budgetByDomN[dom]++; }
+                            const a = p.sub_neighborhood;
+                            if (a in budgetByArea) {
+                                budgetByArea[a].total += v;
+                                if (dom in budgetByArea[a]) budgetByArea[a][dom] += v;
+                            }
+                            budgetItems.push({ w, v, dom });
+                        });
+                        budgetItems.sort((a, b) => b.v - a.v);
+                        window.__projectorSummaryBudgetItems = budgetItems;
+                        // KPI cards
+                        const kpiCard = (lbl, val, color) =>
+                            `<div style="background:${color}11;border:1px solid ${color}55;border-radius:5px;padding:8px 12px;flex:1;min-width:140px"><div style="font-size:10.5px;color:${color};font-weight:600">${lbl}</div><div style="font-size:15px;color:#1e293b;font-weight:700;margin-top:2px">${val}</div></div>`;
+                        const budgetKPIs = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">` +
+                            kpiCard('סה״כ אומדן', fmtNisFull(budgetTotal), '#43a047') +
+                            kpiCard(`פרוגרמה (${budgetByDomN.programa})`, fmtNisFull(budgetByDom.programa), '#8d6e63') +
+                            kpiCard(`מרחב ציבורי (${budgetByDomN.public_space})`, fmtNisFull(budgetByDom.public_space), '#2e7d32') +
+                            kpiCard(`תנועה (${budgetByDomN.transport})`, fmtNisFull(budgetByDom.transport), '#1565c0') +
+                            `</div>`;
+                        // Sub-neighborhood × domain pivot
+                        const budgetPivotHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th>` +
+                            DOMS.map(([k, lbl, c]) => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('') +
+                            `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;background:#eceff1">סה״כ</th></tr>`;
+                        const budgetPivotRows = AREAS.map(a => {
+                            const s = budgetByArea[a];
+                            return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${a}</td>` +
+                                DOMS.map(([k, lbl, c]) => `<td style="padding:5px 9px;text-align:center;color:${s[k] ? c : '#bbb'};${s[k] ? 'font-weight:600' : ''}">${fmtNisFull(s[k])}</td>`).join('') +
+                                `<td style="padding:5px 9px;text-align:center;font-weight:700;background:#eceff1">${fmtNisFull(s.total)}</td></tr>`;
+                        }).join('');
+                        // Top 10 expensive items
+                        const top10 = budgetItems.slice(0, 10);
+                        const top10Rows = top10.map((it, i) => {
+                            const p = it.w.feature.properties;
+                            const escape2 = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+                            return `<tr data-budget-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">` +
+                                `<td style="padding:5px 9px;text-align:center;color:#888">${i + 1}</td>` +
+                                `<td style="padding:5px 9px;font-weight:600">${escape2(p.project_name) || '(ללא שם)'}</td>` +
+                                `<td style="padding:5px 9px;text-align:center">${escape2(p.service_he)}</td>` +
+                                `<td style="padding:5px 9px;text-align:center">${p.sub_neighborhood || ''}</td>` +
+                                `<td style="padding:5px 9px;text-align:center;color:${DOM_COLOR[it.dom] || '#666'};font-weight:600">${DOM_LABEL[it.dom] || it.dom}</td>` +
+                                `<td style="padding:5px 9px;text-align:left;font-weight:700;color:#0d47a1">${fmtNisFull(it.v)}</td></tr>`;
+                        }).join('');
+                        const tabBudgetHTML = budgetKPIs +
+                            `<div style="font-size:11.5px;color:#666;margin-bottom:6px">פירוט תקציב: ${budgetPopulated}/${allFeatures.length} המלצות עם אומדן · סה״כ ${fmtNisFull(budgetTotal)}</div>` +
+                            `<table style="width:100%;border-collapse:collapse;margin-bottom:14px"><thead>${budgetPivotHeader}</thead><tbody>${budgetPivotRows}</tbody></table>` +
+                            `<h3 style="font-size:13px;color:#1e293b;margin:8px 0 4px">💰 10 ההמלצות היקרות ביותר — לחיצה למעבר במפה</h3>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f5f5f5;font-size:11.5px"><th style="padding:5px 9px;border-bottom:2px solid #b0bec5">#</th><th style="padding:5px 9px;text-align:right;border-bottom:2px solid #b0bec5">שם</th><th style="padding:5px 9px;border-bottom:2px solid #b0bec5">שירות</th><th style="padding:5px 9px;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:5px 9px;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:5px 9px;border-bottom:2px solid #b0bec5">אומדן</th></tr></thead><tbody>${top10Rows}</tbody></table>`;
+
+                        // ── Tab 5: Plans overlap (תב"עות) ──
+                        // Cross-reference overlap_plan_names with plans.geojson status_mavat.
+                        // 64/269 features have an overlap; ~97% of those are with אישור/מאושרת
+                        // plans → strong indicator that the recommendation is "in the pipeline".
+                        const plansLookup = {};
+                        const _plansData = geoDataRef.current.plans;
+                        if (_plansData && _plansData.features) {
+                            _plansData.features.forEach(pf => {
+                                const pn = pf.properties && pf.properties.plan_name;
+                                if (pn) plansLookup[pn] = pf.properties;
+                            });
+                        }
+                        // Approved-ish statuses get a "green" marker; deposited get yellow; others grey.
+                        const STATUS_TIER = (s) => {
+                            if (!s) return { tier: 'unknown', color: '#9e9e9e', label: 'לא ידוע' };
+                            if (s === 'אישור' || s === 'תבע מאושרת' || s.includes('אישור')) return { tier: 'approved', color: '#2e7d32', label: 'מאושרת' };
+                            if (s.includes('הפקדה') || s.includes('תנאים')) return { tier: 'deposited', color: '#e65100', label: 'בהפקדה' };
+                            return { tier: 'other', color: '#9e9e9e', label: s };
+                        };
+                        const overlapItems = [];
+                        const tierCount = { approved: 0, deposited: 0, other: 0, unknown: 0 };
+                        const statusCount = {};
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const op = p.overlap_plan_names || [];
+                            if (!op.length) return;
+                            op.forEach(pn => {
+                                const planP = plansLookup[pn] || {};
+                                const stat = planP.status_mavat || '';
+                                const tier = STATUS_TIER(stat);
+                                tierCount[tier.tier] = (tierCount[tier.tier] || 0) + 1;
+                                statusCount[stat || '(לא נמצא)'] = (statusCount[stat || '(לא נמצא)'] || 0) + 1;
+                                overlapItems.push({ w, plan_name: pn, status: stat, tier });
+                            });
+                        });
+                        // Sort by tier (approved first), then by feature name
+                        overlapItems.sort((a, b) => {
+                            const tierOrder = { approved: 0, deposited: 1, other: 2, unknown: 3 };
+                            const ta = tierOrder[a.tier.tier] ?? 9, tb = tierOrder[b.tier.tier] ?? 9;
+                            if (ta !== tb) return ta - tb;
+                            return (a.w.feature.properties.project_name || '').localeCompare(b.w.feature.properties.project_name || '');
+                        });
+                        window.__projectorSummaryOverlap = overlapItems;
+                        const overlapKPIs = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">` +
+                            kpiCard('עם חפיפת תב״ע', `${overlapItems.length} / ${allFeatures.length}`, '#1976d2') +
+                            kpiCard('בתב״ע מאושרת', `${tierCount.approved} (${Math.round(100 * tierCount.approved / Math.max(overlapItems.length, 1))}%)`, '#2e7d32') +
+                            kpiCard('בהפקדה / תנאים', `${tierCount.deposited}`, '#e65100') +
+                            kpiCard('סטטוס אחר/לא ידוע', `${tierCount.other + tierCount.unknown}`, '#9e9e9e') +
+                            `</div>`;
+                        const overlapHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">המלצה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">מספר תב״ע</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סטטוס</th></tr>`;
+                        const overlapRows = overlapItems.map((it, i) => {
+                            const p = it.w.feature.properties;
+                            const escape3 = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+                            return `<tr data-overlap-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">` +
+                                `<td style="padding:6px 9px;font-weight:600">${escape3(p.project_name) || '(ללא שם)'} <span style="font-weight:400;color:#888;font-size:10.5px">· ${escape3(p.service_he)}</span></td>` +
+                                `<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood || ''}</td>` +
+                                `<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[p.domain] || '#666'};font-weight:600">${DOM_LABEL[p.domain] || p.domain}</td>` +
+                                `<td style="padding:6px 9px;text-align:center;font-family:monospace;font-size:11px">${escape3(it.plan_name)}</td>` +
+                                `<td style="padding:6px 9px;text-align:center"><span style="background:${it.tier.color}22;color:${it.tier.color};font-weight:600;padding:2px 8px;border-radius:10px;font-size:10.5px">${escape3(it.status || it.tier.label)}</span></td>` +
+                            `</tr>`;
+                        }).join('');
+                        const tabOverlapHTML = overlapKPIs +
+                            `<div style="font-size:11.5px;color:#666;margin-bottom:6px">המלצות שחופפות גיאוגרפית עם תב"עות קיימות — אם התב"ע מאושרת, סיכוי המימוש גבוה. לחיצה על שורה — מעבר להמלצה במפה.</div>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead>${overlapHeader}</thead><tbody>${overlapRows}</tbody></table>`;
+
+                        // ── Tab 6: Normalized to יח"ד ──
+                        // Compute features-per-1000-units for each sub-neighborhood.
+                        const unitsBySub = {};
+                        AREAS.forEach(a => { unitsBySub[a] = 0; });
+                        if (_plansData && _plansData.features) {
+                            _plansData.features.forEach(pf => {
+                                const pp = pf.properties || {};
+                                const sub = pp.sub_neighborhood;
+                                const u = parseFloat(pp.units_total) || 0;
+                                if (sub in unitsBySub && u > 0) unitsBySub[sub] += u;
+                            });
+                        }
+                        const featsBySub = {};
+                        AREAS.forEach(a => { featsBySub[a] = { total: 0, programa: 0, public_space: 0, transport: 0, budget: 0 }; });
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const a = p.sub_neighborhood;
+                            if (!(a in featsBySub)) return;
+                            featsBySub[a].total++;
+                            if (p.domain in featsBySub[a]) featsBySub[a][p.domain]++;
+                            featsBySub[a].budget += parseFloat(p.estimate_nis) || 0;
+                        });
+                        // Compute ratios
+                        const normData = AREAS.map(a => {
+                            const u = unitsBySub[a] || 0;
+                            const f = featsBySub[a];
+                            return {
+                                area: a,
+                                units: u,
+                                feats: f.total,
+                                feats_per_1k: u > 0 ? (f.total / u * 1000) : 0,
+                                budget: f.budget,
+                                budget_per_unit: u > 0 ? (f.budget / u) : 0,
+                            };
+                        });
+                        const maxRatio = Math.max(...normData.map(d => d.feats_per_1k), 1);
+                        const maxBudgetPerUnit = Math.max(...normData.map(d => d.budget_per_unit), 1);
+                        const normHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">יח״ד</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות/1,000 יח״ד</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תקציב</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תקציב/יח״ד</th></tr>`;
+                        const normRows = normData.map(d => {
+                            const wRatio = Math.round(d.feats_per_1k / maxRatio * 90);
+                            const wBudget = Math.round(d.budget_per_unit / maxBudgetPerUnit * 90);
+                            return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">` +
+                                `<td style="padding:6px 9px;font-weight:600">${d.area}</td>` +
+                                `<td style="padding:6px 9px;text-align:center">${d.units ? d.units.toLocaleString() : '·'}</td>` +
+                                `<td style="padding:6px 9px;text-align:center;font-weight:600">${d.feats}</td>` +
+                                `<td style="padding:6px 9px"><div style="display:flex;align-items:center;gap:6px"><div style="width:${wRatio}%;background:#1976d2;height:14px;border-radius:2px;min-width:2px"></div><span style="font-size:11px;color:#0d47a1;font-weight:600">${d.feats_per_1k.toFixed(1)}</span></div></td>` +
+                                `<td style="padding:6px 9px;text-align:center;color:#0d47a1;font-weight:600">${fmtNisFull(d.budget)}</td>` +
+                                `<td style="padding:6px 9px"><div style="display:flex;align-items:center;gap:6px"><div style="width:${wBudget}%;background:#2e7d32;height:14px;border-radius:2px;min-width:2px"></div><span style="font-size:11px;color:#1b5e20;font-weight:600">${d.budget_per_unit ? Math.round(d.budget_per_unit).toLocaleString() + ' ₪' : '·'}</span></div></td>` +
+                            `</tr>`;
+                        }).join('');
+                        const totalUnitsAll = normData.reduce((a, d) => a + d.units, 0);
+                        const tabNormalizedHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:14px">השוואה מנורמלת לפי מספר יחידות הדיור בכל תת-שכונה (מהתב"עות הקיימות, units_total). מאפשר לראות איזו שכונה זוכה ליחס המלצות/תקציב גבוה יותר ביחס לגודלה.</div>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead>${normHeader}</thead><tbody>${normRows}</tbody></table>` +
+                            `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">סה״כ יח״ד ב-4 השכונות: ${totalUnitsAll.toLocaleString()} · אורך עמודה פרופורציונלית למקסימום בקבוצה</div>`;
+
                         // ── Shell with tabs + export/print buttons ──
                         const tabBtn = (id, label, active) =>
                             `<button data-tab-btn="${id}" style="background:${active ? '#1976d2' : 'transparent'};color:${active ? '#fff' : '#1976d2'};border:1.5px solid #1976d2;border-radius:5px 5px 0 0;padding:6px 14px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:600;border-bottom-color:${active ? '#1976d2' : 'transparent'}">${label}</button>`;
@@ -2990,14 +3180,20 @@
                                         `<button id="pf-summary-close" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:#666;padding:0 4px;line-height:1">×</button>` +
                                     `</div>` +
                                 `</div>` +
-                                `<div style="display:flex;gap:4px;border-bottom:2px solid #1976d2;margin-bottom:14px">` +
-                                    tabBtn('pivot', '📊 סיכום + ציר זמן', true) +
+                                `<div style="display:flex;gap:4px;border-bottom:2px solid #1976d2;margin-bottom:14px;flex-wrap:wrap">` +
+                                    tabBtn('pivot', '📊 סיכום', true) +
                                     tabBtn('body', '🏛️ גורם מנהל', false) +
                                     tabBtn('obstacles', `🚧 חסמים (${obstacleFeats.length})`, false) +
+                                    tabBtn('budget', '💰 תקציב', false) +
+                                    tabBtn('overlap', `🔗 תב״עות (${overlapItems.length})`, false) +
+                                    tabBtn('normalized', '📈 מנורמל ליח״ד', false) +
                                 `</div>` +
                                 `<div data-tab-pane="pivot" data-tab-label="סיכום + ציר זמן" style="display:block">${tabPivotHTML}</div>` +
                                 `<div data-tab-pane="body" data-tab-label="גורם מנהל" style="display:none">${tabBodyHTML}</div>` +
                                 `<div data-tab-pane="obstacles" data-tab-label="חסמים" style="display:none">${tabObstaclesHTML}</div>` +
+                                `<div data-tab-pane="budget" data-tab-label="תקציב" style="display:none">${tabBudgetHTML}</div>` +
+                                `<div data-tab-pane="overlap" data-tab-label="חפיפת תב״עות" style="display:none">${tabOverlapHTML}</div>` +
+                                `<div data-tab-pane="normalized" data-tab-label="מנורמל ליח״ד" style="display:none">${tabNormalizedHTML}</div>` +
                             `</div>` +
                         `</div>`;
                         const wrap = document.createElement('div');
@@ -3024,6 +3220,59 @@
                             });
                         });
 
+                        // Shared row-click handler: find feature's layer by project_id
+                        // and fire its click event (opens its popup); fallback to pan.
+                        const zoomToFeature = (feature, src) => {
+                            m.remove();
+                            try {
+                                const layer = geoLayersRef.current[src];
+                                if (layer && map.hasLayer(layer) === false) layer.addTo(map);
+                                let found = null;
+                                if (layer && layer.eachLayer) {
+                                    layer.eachLayer(sub => {
+                                        if (found) return;
+                                        try {
+                                            const fp = sub.feature && sub.feature.properties;
+                                            if (fp && fp.project_id && fp.project_id === feature.properties.project_id) found = sub;
+                                        } catch (e) {}
+                                    });
+                                }
+                                if (found) {
+                                    const b = found.getBounds && found.getBounds();
+                                    if (b && b.isValid && b.isValid()) map.fitBounds(b, { maxZoom: 18, padding: [40, 40] });
+                                    else if (found.getLatLng) map.setView(found.getLatLng(), 18);
+                                    setTimeout(() => found.fire('click'), 200);
+                                } else {
+                                    const dp = feature.properties.display_point;
+                                    if (dp && Array.isArray(dp) && dp.length === 2) {
+                                        map.setView([dp[1], dp[0]], 18);
+                                    } else if (feature.geometry && feature.geometry.coordinates) {
+                                        try {
+                                            const tmp = L.geoJSON(feature);
+                                            map.fitBounds(tmp.getBounds(), { maxZoom: 18, padding: [40, 40] });
+                                        } catch (e) {}
+                                    }
+                                }
+                            } catch (err) { console.warn(err); }
+                        };
+                        // Budget top-10 row click
+                        m.querySelectorAll('tr[data-budget-idx]').forEach(tr => {
+                            tr.addEventListener('click', () => {
+                                const idx = parseInt(tr.getAttribute('data-budget-idx'), 10);
+                                const it = window.__projectorSummaryBudgetItems[idx];
+                                if (!it || !it.w) return;
+                                zoomToFeature(it.w.feature, it.w._src);
+                            });
+                        });
+                        // Overlap row click
+                        m.querySelectorAll('tr[data-overlap-idx]').forEach(tr => {
+                            tr.addEventListener('click', () => {
+                                const idx = parseInt(tr.getAttribute('data-overlap-idx'), 10);
+                                const it = window.__projectorSummaryOverlap[idx];
+                                if (!it || !it.w) return;
+                                zoomToFeature(it.w.feature, it.w._src);
+                            });
+                        });
                         // Obstacles row click → zoom to feature on map
                         m.querySelectorAll('tr[data-ob-idx]').forEach(tr => {
                             tr.addEventListener('click', () => {
@@ -3119,6 +3368,48 @@
                                     ].join(',') + '\n';
                                 });
                                 filename = `projector_gonenim_obstacles_${today}.csv`;
+                            } else if (activeTab === 'budget') {
+                                csv = 'תת-שכונה,פרוגרמה,מרחב ציבורי,תנועה,סה"כ\n';
+                                AREAS.forEach(a => {
+                                    const s = budgetByArea[a];
+                                    csv += [csvEscape(a), Math.round(s.programa), Math.round(s.public_space), Math.round(s.transport), Math.round(s.total)].join(',') + '\n';
+                                });
+                                csv += `\nסה"כ אומדן,${Math.round(budgetTotal)}\n`;
+                                csv += `אוכלסו,${budgetPopulated}/${allFeatures.length}\n`;
+                                csv += '\n10 ההמלצות היקרות ביותר\n#,שם,שירות,תת-שכונה,תחום,אומדן (ש"ח)\n';
+                                top10.forEach((it, i) => {
+                                    const p = it.w.feature.properties;
+                                    csv += [i + 1, csvEscape(p.project_name), csvEscape(p.service_he), csvEscape(p.sub_neighborhood), csvEscape(DOM_LABEL[it.dom] || it.dom), Math.round(it.v)].join(',') + '\n';
+                                });
+                                filename = `projector_gonenim_budget_${today}.csv`;
+                            } else if (activeTab === 'overlap') {
+                                csv = 'המלצה,שירות,תת-שכונה,תחום,מספר תב"ע,סטטוס\n';
+                                overlapItems.forEach(it => {
+                                    const p = it.w.feature.properties;
+                                    csv += [
+                                        csvEscape(p.project_name),
+                                        csvEscape(p.service_he),
+                                        csvEscape(p.sub_neighborhood),
+                                        csvEscape(DOM_LABEL[p.domain] || p.domain),
+                                        csvEscape(it.plan_name),
+                                        csvEscape(it.status || it.tier.label)
+                                    ].join(',') + '\n';
+                                });
+                                csv += `\nסיכום: ${overlapItems.length} חפיפות · ${tierCount.approved} מאושרות · ${tierCount.deposited} בהפקדה · ${tierCount.other + tierCount.unknown} אחר/לא ידוע\n`;
+                                filename = `projector_gonenim_overlap_${today}.csv`;
+                            } else if (activeTab === 'normalized') {
+                                csv = 'תת-שכונה,יח"ד,המלצות,המלצות לכל 1000 יח"ד,תקציב,תקציב ליח"ד\n';
+                                normData.forEach(d => {
+                                    csv += [
+                                        csvEscape(d.area),
+                                        d.units,
+                                        d.feats,
+                                        d.feats_per_1k.toFixed(2),
+                                        Math.round(d.budget),
+                                        Math.round(d.budget_per_unit)
+                                    ].join(',') + '\n';
+                                });
+                                filename = `projector_gonenim_normalized_${today}.csv`;
                             }
                             downloadCSV(filename, csv);
                         });
@@ -10747,8 +11038,15 @@
                     }
 
                     // --- Short description (only if not already covered by a card)
+                    // descBlock — only show when hero won't render the same text.
+                    // The hero block already shows the first sentence of p.description
+                    // when there's no ps_/kar_recommendation, and the "תיאור מלא"
+                    // details row (added to extras when length>150) preserves the full
+                    // text. So descBlock would just duplicate the hero content.
+                    // Keep descBlock only for the rare case where ps/kar rendering
+                    // suppressed the hero but we still have a standalone description.
                     let descBlock = '';
-                    if (p.description && !p.ps_recommendation && !p.kar_recommendations) {
+                    if (p.description && (p.ps_recommendation || p.kar_recommendations)) {
                         const short = String(p.description).replace(/\s+/g, ' ').trim();
                         const truncated = short.length > 150 ? short.slice(0, 147) + '…' : short;
                         descBlock = `<div class="pp-desc">${escape(truncated)}</div>`;
@@ -16643,6 +16941,87 @@
                                                 <div className="report-text">
                                                     <span className="report-title">רשימת חסמים</span>
                                                     <span className="report-desc">כל ההמלצות עם חסמים — לחיצה מעבירה למפה</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') {
+                                                            window.__openProjectorSummary();
+                                                            setTimeout(() => {
+                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="budget"]');
+                                                                if (btn) btn.click();
+                                                            }, 50);
+                                                        }
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">💰</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">תקציב</span>
+                                                    <span className="report-desc">אומדן כספי לפי תת-שכונה/תחום + 10 הגדולות</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') {
+                                                            window.__openProjectorSummary();
+                                                            setTimeout(() => {
+                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="overlap"]');
+                                                                if (btn) btn.click();
+                                                            }, 50);
+                                                        }
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">🔗</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">חפיפת תב״עות</span>
+                                                    <span className="report-desc">המלצות שכבר בתב״ע מאושרת/בהפקדה — סיכוי מימוש</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') {
+                                                            window.__openProjectorSummary();
+                                                            setTimeout(() => {
+                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="normalized"]');
+                                                                if (btn) btn.click();
+                                                            }, 50);
+                                                        }
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">📈</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">מנורמל ליח״ד</span>
+                                                    <span className="report-desc">השוואה לפי המלצות + תקציב לכל 1,000 יח״ד</span>
                                                 </div>
                                             </button>
                                         </div>
