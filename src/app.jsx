@@ -2667,31 +2667,40 @@
                         window.__rebuildProjectorLayers();
                     });
 
-                    // --- Summary modal: pivot by sub-neighborhood × domain × חומש
+                    // --- Summary modal: tabbed view — pivot / managing body / obstacles
                     window.__openProjectorSummary = function () {
                         const old = document.getElementById('pf-summary-modal');
                         if (old) old.remove();
                         const AREAS = ['רסקו', 'גוננים א-ו', 'קטמונים ח-ט', 'פת'];
                         const DOMS = [['programa','פרוגרמה','#8d6e63'], ['public_space','מרחב ציבורי','#2e7d32'], ['transport','תנועה','#1565c0']];
+                        const DOM_LABEL = { programa: 'פרוגרמה', public_space: 'מרחב ציבורי', transport: 'תנועה' };
+                        const DOM_COLOR = { programa: '#8d6e63', public_space: '#2e7d32', transport: '#1565c0' };
                         const CHS = [1, 2, 3, 'unknown'];
                         const CH_LABELS = { 1: 'ח״1', 2: 'ח״2', 3: 'ח״3', unknown: 'ללא' };
-                        const stats = {};
-                        AREAS.forEach(a => { stats[a] = { total: 0, dom: { programa: 0, public_space: 0, transport: 0 }, ch: { 1: 0, 2: 0, 3: 0, unknown: 0 } }; });
-                        const T = { total: 0, dom: { programa: 0, public_space: 0, transport: 0 }, ch: { 1: 0, 2: 0, 3: 0, unknown: 0 } };
+                        const CH_COLORS = { 1: '#b71c1c', 2: '#e65100', 3: '#1a237e', unknown: '#546e7a' };
+
+                        // Gather features once (tagged by source for zoom-to)
+                        const allFeatures = [];
                         ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
                             const data = geoDataRef.current[k];
                             if (!data || !data.features) return;
-                            data.features.forEach(ft => {
-                                const p = ft.properties;
-                                const a = p.sub_neighborhood;
-                                if (!stats[a]) return;
-                                const dom = p.domain || 'other';
-                                const ch = p.chumash;
-                                const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
-                                stats[a].total++; T.total++;
-                                if (dom in stats[a].dom) { stats[a].dom[dom]++; T.dom[dom]++; }
-                                if (chKey in stats[a].ch) { stats[a].ch[chKey]++; T.ch[chKey]++; }
-                            });
+                            data.features.forEach((ft, idx) => allFeatures.push({ feature: ft, _src: k, _idx: idx }));
+                        });
+
+                        // ── Tab 1: Pivot by sub-neighborhood × domain × chumash ──
+                        const stats = {};
+                        AREAS.forEach(a => { stats[a] = { total: 0, dom: { programa: 0, public_space: 0, transport: 0 }, ch: { 1: 0, 2: 0, 3: 0, unknown: 0 } }; });
+                        const T = { total: 0, dom: { programa: 0, public_space: 0, transport: 0 }, ch: { 1: 0, 2: 0, 3: 0, unknown: 0 } };
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const a = p.sub_neighborhood;
+                            if (!stats[a]) return;
+                            const dom = p.domain || 'other';
+                            const ch = p.chumash;
+                            const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
+                            stats[a].total++; T.total++;
+                            if (dom in stats[a].dom) { stats[a].dom[dom]++; T.dom[dom]++; }
+                            if (chKey in stats[a].ch) { stats[a].ch[chKey]++; T.ch[chKey]++; }
                         });
                         const cell = (n, color) => `<td style="padding:5px 9px;text-align:center;background:${color || 'transparent'};color:${color ? '#fff' : '#263238'};font-weight:${n ? '600' : '300'}">${n || '·'}</td>`;
                         const headerRow = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>` +
@@ -2710,9 +2719,7 @@
                             CHS.map(c => `<td style="padding:6px 9px;text-align:center">${T.ch[c]}</td>`).join('') +
                         `</tr>`;
 
-                        // ── Timeline view: yearly bar chart of planning + execution ──
-                        // Build / refresh mimush plan-year lookup for "עם מימוש התכנית" resolution.
-                        // Uses calcMimush(plan_properties).estimatedYear from the plans layer.
+                        // ── Timeline (existing, unchanged) ──
                         const mimush = {};
                         const _plans = geoDataRef.current.plans;
                         if (_plans && _plans.features && typeof calcMimush === 'function') {
@@ -2729,37 +2736,31 @@
                         const _yr = (val, planName) => {
                             if (val == null) return null;
                             const s = String(val).trim();
-                            // Numeric like "2025" or "2030"
                             const m = s.match(/(20[2-4][0-9])/);
                             if (m) return parseInt(m[1], 10);
-                            // "עם מימוש התכנית" → look up plan
                             if (planName && mimush[planName]) return mimush[planName];
                             return null;
                         };
-                        const yearStats = {};  // year → {planning, execution, planning_mimush, execution_mimush}
+                        const yearStats = {};
                         const planningRaw = [], executionRaw = [];
                         let mimushUsed = 0;
-                        ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
-                            const data = geoDataRef.current[k];
-                            if (!data || !data.features) return;
-                            data.features.forEach(ft => {
-                                const p = ft.properties;
-                                const pn = p.plan_number;
-                                const yp = _yr(p.year_planning, pn);
-                                const yexRaw = p.year_execution;
-                                const yex = _yr(yexRaw, pn);
-                                if (yex !== null && (String(yexRaw || '').includes('מימוש'))) mimushUsed++;
-                                if (yp != null) {
-                                    yearStats[yp] = yearStats[yp] || { plan: 0, exec: 0 };
-                                    yearStats[yp].plan++;
-                                    planningRaw.push(yp);
-                                }
-                                if (yex != null) {
-                                    yearStats[yex] = yearStats[yex] || { plan: 0, exec: 0 };
-                                    yearStats[yex].exec++;
-                                    executionRaw.push(yex);
-                                }
-                            });
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const pn = p.plan_number;
+                            const yp = _yr(p.year_planning, pn);
+                            const yexRaw = p.year_execution;
+                            const yex = _yr(yexRaw, pn);
+                            if (yex !== null && (String(yexRaw || '').includes('מימוש'))) mimushUsed++;
+                            if (yp != null) {
+                                yearStats[yp] = yearStats[yp] || { plan: 0, exec: 0 };
+                                yearStats[yp].plan++;
+                                planningRaw.push(yp);
+                            }
+                            if (yex != null) {
+                                yearStats[yex] = yearStats[yex] || { plan: 0, exec: 0 };
+                                yearStats[yex].exec++;
+                                executionRaw.push(yex);
+                            }
                         });
                         const years = Object.keys(yearStats).map(Number).sort((a, b) => a - b);
                         let timelineHTML = '';
@@ -2787,13 +2788,260 @@
                         } else {
                             timelineHTML = `<div style="margin-top:18px;color:#888;font-size:12px">אין מספיק נתוני שנים להצגת ציר זמן</div>`;
                         }
-                        const html = `<div id="pf-summary-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:Assistant,sans-serif;direction:rtl"><div style="background:#fff;border-radius:8px;padding:18px 22px;max-width:820px;width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><h2 style="margin:0;font-size:17px;color:#1e293b">📊 סיכום המלצות פרוייקטור גוננים</h2><button id="pf-summary-close" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:#666">×</button></div><div style="font-size:11.5px;color:#666;margin-bottom:12px">פיזור לפי תת-שכונה × תחום × חומש (${T.total} סה״כ)</div><table style="width:100%;border-collapse:collapse"><thead>${headerRow}</thead><tbody>${rows}${totalRow}</tbody></table>${timelineHTML}</div></div>`;
+                        const tabPivotHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">פיזור לפי תת-שכונה × תחום × חומש (${T.total} סה״כ)</div><table style="width:100%;border-collapse:collapse"><thead>${headerRow}</thead><tbody>${rows}${totalRow}</tbody></table>${timelineHTML}`;
+
+                        // ── Tab 2: By managing body ──
+                        // Split combined bodies (e.g. "מנהל תכנון, תושי״ה") into individual entries.
+                        // Each feature contributes once to each listed body; budget is divided equally.
+                        const splitBodies = mb => {
+                            const s = String(mb || '').trim();
+                            if (!s) return ['(לא ידוע)'];
+                            const parts = s.split(/[,،]/).map(x => x.trim()).filter(Boolean);
+                            return parts.length ? parts : [s];
+                        };
+                        const bodyStats = {};
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const bodies = splitBodies(p.managing_body);
+                            const dom = p.domain || 'other';
+                            const ch = p.chumash;
+                            const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
+                            const nis = parseFloat(p.estimate_nis) || 0;
+                            bodies.forEach(b => {
+                                if (!bodyStats[b]) bodyStats[b] = { total: 0, dom: { programa: 0, public_space: 0, transport: 0 }, ch: { 1: 0, 2: 0, 3: 0, unknown: 0 }, nis: 0 };
+                                bodyStats[b].total++;
+                                if (dom in bodyStats[b].dom) bodyStats[b].dom[dom]++;
+                                if (chKey in bodyStats[b].ch) bodyStats[b].ch[chKey]++;
+                                bodyStats[b].nis += nis / bodies.length;
+                            });
+                        });
+                        const sortedBodies = Object.entries(bodyStats).sort((a, b) => b[1].total - a[1].total);
+                        const fmtNis = n => {
+                            if (!n) return '·';
+                            if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M ₪';
+                            if (n >= 1_000) return Math.round(n / 1_000) + 'K ₪';
+                            return Math.round(n) + ' ₪';
+                        };
+                        const totalNis = sortedBodies.reduce((acc, [, s]) => acc + s.nis, 0);
+                        const bodyHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">גורם מנהל</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>` +
+                            DOMS.map(([k, lbl, c]) => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('') +
+                            CHS.map(c => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${CH_COLORS[c]}">${CH_LABELS[c]}</th>`).join('') +
+                            `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">אומדן</th>` +
+                        `</tr>`;
+                        const bodyRows = sortedBodies.map(([b, s]) => {
+                            return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${b}</td><td style="padding:5px 9px;text-align:center;font-weight:700;background:#eceff1">${s.total}</td>` +
+                                DOMS.map(([k, lbl, c]) => cell(s.dom[k], s.dom[k] ? c + '22' : '')).join('') +
+                                CHS.map(c => cell(s.ch[c])).join('') +
+                                `<td style="padding:5px 9px;text-align:center;font-size:11px;color:#0d47a1">${fmtNis(s.nis)}</td>` +
+                            `</tr>`;
+                        }).join('');
+                        const bodyTotalRow = `<tr style="border-top:2px solid #b0bec5;background:#f5f5f5;font-weight:700"><td style="padding:6px 9px">סה״כ ייחוסים</td><td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a,[,s])=>a+s.total,0)}</td>` +
+                            DOMS.map(([k, lbl, c]) => `<td style="padding:6px 9px;text-align:center;color:${c}">${sortedBodies.reduce((a,[,s])=>a+s.dom[k],0)}</td>`).join('') +
+                            CHS.map(c => `<td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a,[,s])=>a+s.ch[c],0)}</td>`).join('') +
+                            `<td style="padding:6px 9px;text-align:center;color:#0d47a1">${fmtNis(totalNis)}</td>` +
+                        `</tr>`;
+                        const tabBodyHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">פילוח אחריות לפי גורם מנהל × תחום × חומש · אומדן כספי מחולק שווה בין גורמים משותפים (${allFeatures.length} המלצות, ${sortedBodies.length} גורמים)</div><table style="width:100%;border-collapse:collapse"><thead>${bodyHeader}</thead><tbody>${bodyRows}${bodyTotalRow}</tbody></table><div style="font-size:10.5px;color:#888;margin-top:6px;font-style:italic">* המלצה עם מספר גורמים נספרת לכל גורם בנפרד — סה״כ הייחוסים גבוה ממספר ההמלצות (${allFeatures.length})</div>`;
+
+                        // ── Tab 3: Obstacles list ──
+                        const obstacleFeats = allFeatures.filter(w => {
+                            const o = w.feature.properties.obstacles;
+                            return o && String(o).trim();
+                        });
+                        // Sort by domain (programa, public_space, transport) then chumash
+                        const DOM_ORDER = { programa: 0, public_space: 1, transport: 2, other: 3 };
+                        obstacleFeats.sort((a, b) => {
+                            const da = DOM_ORDER[a.feature.properties.domain] || 9, db = DOM_ORDER[b.feature.properties.domain] || 9;
+                            if (da !== db) return da - db;
+                            const ca = a.feature.properties.chumash, cb = b.feature.properties.chumash;
+                            const cra = ca == null ? 99 : ca, crb = cb == null ? 99 : cb;
+                            if (cra !== crb) return cra - crb;
+                            return (a.feature.properties.project_name || '').localeCompare(b.feature.properties.project_name || '');
+                        });
+                        // Stash for zoom-to handler
+                        window.__projectorSummaryObstacles = obstacleFeats;
+                        const obHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">שם</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">חומש</th><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">חסם</th></tr>`;
+                        const obRows = obstacleFeats.map((w, i) => {
+                            const p = w.feature.properties;
+                            const dom = p.domain || 'other';
+                            const ch = p.chumash;
+                            const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
+                            const escape = s => String(s || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+                            return `<tr data-ob-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">` +
+                                `<td style="padding:6px 9px;font-weight:600">${escape(p.project_name) || '(ללא שם)'}</td>` +
+                                `<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood || ''}</td>` +
+                                `<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[dom] || '#666'};font-weight:600">${DOM_LABEL[dom] || dom}</td>` +
+                                `<td style="padding:6px 9px;text-align:center;color:${CH_COLORS[chKey] || '#666'};font-weight:600">${CH_LABELS[chKey]}</td>` +
+                                `<td style="padding:6px 9px;color:#37474f;line-height:1.4">${escape(p.obstacles)}</td>` +
+                            `</tr>`;
+                        }).join('');
+                        const obByDomain = { programa: 0, public_space: 0, transport: 0 };
+                        obstacleFeats.forEach(w => { const d = w.feature.properties.domain; if (d in obByDomain) obByDomain[d]++; });
+                        const tabObstaclesHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">${obstacleFeats.length} המלצות עם חסמים מתוך ${allFeatures.length} סה״כ · ` +
+                            DOMS.map(([k, lbl, c]) => `<span style="color:${c};font-weight:600">${lbl}: ${obByDomain[k]}</span>`).join(' · ') +
+                            ` · לחיצה על שורה — מעבר לפיצ׳ר במפה</div>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead>${obHeader}</thead><tbody>${obRows}</tbody></table>`;
+
+                        // ── Shell with tabs + export/print buttons ──
+                        const tabBtn = (id, label, active) =>
+                            `<button data-tab-btn="${id}" style="background:${active ? '#1976d2' : 'transparent'};color:${active ? '#fff' : '#1976d2'};border:1.5px solid #1976d2;border-radius:5px 5px 0 0;padding:6px 14px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:600;border-bottom-color:${active ? '#1976d2' : 'transparent'}">${label}</button>`;
+                        const html = `<div id="pf-summary-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:Assistant,sans-serif;direction:rtl">` +
+                            `<div style="background:#fff;border-radius:8px;padding:18px 22px;max-width:900px;width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)">` +
+                                `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">` +
+                                    `<h2 style="margin:0;font-size:17px;color:#1e293b">📊 סיכום המלצות פרוייקטור גוננים</h2>` +
+                                    `<div style="display:flex;gap:6px;align-items:center">` +
+                                        `<button id="pf-export-csv" style="background:#43a047;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📊 ייצוא אקסל</button>` +
+                                        `<button id="pf-print" style="background:#5e35b1;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📄 הדפסה</button>` +
+                                        `<button id="pf-summary-close" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:#666;padding:0 4px;line-height:1">×</button>` +
+                                    `</div>` +
+                                `</div>` +
+                                `<div style="display:flex;gap:4px;border-bottom:2px solid #1976d2;margin-bottom:14px">` +
+                                    tabBtn('pivot', '📊 סיכום + ציר זמן', true) +
+                                    tabBtn('body', '🏛️ גורם מנהל', false) +
+                                    tabBtn('obstacles', `🚧 חסמים (${obstacleFeats.length})`, false) +
+                                `</div>` +
+                                `<div data-tab-pane="pivot" data-tab-label="סיכום + ציר זמן" style="display:block">${tabPivotHTML}</div>` +
+                                `<div data-tab-pane="body" data-tab-label="גורם מנהל" style="display:none">${tabBodyHTML}</div>` +
+                                `<div data-tab-pane="obstacles" data-tab-label="חסמים" style="display:none">${tabObstaclesHTML}</div>` +
+                            `</div>` +
+                        `</div>`;
                         const wrap = document.createElement('div');
                         wrap.innerHTML = html;
                         document.body.appendChild(wrap.firstChild);
                         const m = document.getElementById('pf-summary-modal');
                         m.addEventListener('click', e => { if (e.target === m) m.remove(); });
                         document.getElementById('pf-summary-close').addEventListener('click', () => m.remove());
+
+                        // Tab switching
+                        let activeTab = 'pivot';
+                        m.querySelectorAll('[data-tab-btn]').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                activeTab = btn.getAttribute('data-tab-btn');
+                                m.querySelectorAll('[data-tab-btn]').forEach(b => {
+                                    const on = b.getAttribute('data-tab-btn') === activeTab;
+                                    b.style.background = on ? '#1976d2' : 'transparent';
+                                    b.style.color = on ? '#fff' : '#1976d2';
+                                    b.style.borderBottomColor = on ? '#1976d2' : 'transparent';
+                                });
+                                m.querySelectorAll('[data-tab-pane]').forEach(p => {
+                                    p.style.display = p.getAttribute('data-tab-pane') === activeTab ? 'block' : 'none';
+                                });
+                            });
+                        });
+
+                        // Obstacles row click → zoom to feature on map
+                        m.querySelectorAll('tr[data-ob-idx]').forEach(tr => {
+                            tr.addEventListener('click', () => {
+                                const idx = parseInt(tr.getAttribute('data-ob-idx'), 10);
+                                const w = window.__projectorSummaryObstacles[idx];
+                                if (!w || !w.feature) return;
+                                m.remove();
+                                try {
+                                    const layer = geoLayersRef.current[w._src];
+                                    if (layer && map.hasLayer(layer) === false) layer.addTo(map);
+                                    // Find matching sub-layer and pan/zoom + fire click
+                                    let found = null;
+                                    if (layer && layer.eachLayer) {
+                                        layer.eachLayer(sub => {
+                                            if (found) return;
+                                            try {
+                                                const fp = sub.feature && sub.feature.properties;
+                                                if (fp && fp.project_id && fp.project_id === w.feature.properties.project_id) found = sub;
+                                            } catch (e) {}
+                                        });
+                                    }
+                                    if (found) {
+                                        try {
+                                            const b = found.getBounds && found.getBounds();
+                                            if (b && b.isValid && b.isValid()) map.fitBounds(b, { maxZoom: 18, padding: [40, 40] });
+                                            else if (found.getLatLng) map.setView(found.getLatLng(), 18);
+                                            setTimeout(() => found.fire('click'), 200);
+                                        } catch (e) { console.warn(e); }
+                                    } else {
+                                        // Fallback: use display_point if set, else geometry centroid
+                                        const dp = w.feature.properties.display_point;
+                                        if (dp && Array.isArray(dp) && dp.length === 2) {
+                                            map.setView([dp[1], dp[0]], 18);
+                                        } else if (w.feature.geometry && w.feature.geometry.coordinates) {
+                                            try {
+                                                const tmp = L.geoJSON(w.feature);
+                                                map.fitBounds(tmp.getBounds(), { maxZoom: 18, padding: [40, 40] });
+                                            } catch (e) {}
+                                        }
+                                    }
+                                } catch (err) { console.warn(err); }
+                            });
+                        });
+
+                        // ── Export current tab to CSV ──
+                        const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
+                        const downloadCSV = (name, csv) => {
+                            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = name;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        };
+                        const today = new Date().toISOString().slice(0, 10);
+                        document.getElementById('pf-export-csv').addEventListener('click', () => {
+                            let csv = '', filename = '';
+                            if (activeTab === 'pivot') {
+                                csv = 'תת-שכונה,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש\n';
+                                AREAS.forEach(a => {
+                                    const s = stats[a];
+                                    csv += [csvEscape(a), s.total, s.dom.programa, s.dom.public_space, s.dom.transport, s.ch[1], s.ch[2], s.ch[3], s.ch.unknown].join(',') + '\n';
+                                });
+                                csv += [csvEscape('סה"כ'), T.total, T.dom.programa, T.dom.public_space, T.dom.transport, T.ch[1], T.ch[2], T.ch[3], T.ch.unknown].join(',') + '\n';
+                                if (years.length) {
+                                    csv += '\nציר זמן\nשנה,תכנון,ביצוע\n';
+                                    const minY = years[0], maxY = years[years.length - 1];
+                                    for (let y = minY; y <= maxY; y++) {
+                                        const s = yearStats[y] || { plan: 0, exec: 0 };
+                                        csv += `${y},${s.plan},${s.exec}\n`;
+                                    }
+                                }
+                                filename = `projector_gonenim_summary_${today}.csv`;
+                            } else if (activeTab === 'body') {
+                                csv = 'גורם מנהל,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש,אומדן (ש"ח)\n';
+                                sortedBodies.forEach(([b, s]) => {
+                                    csv += [csvEscape(b), s.total, s.dom.programa, s.dom.public_space, s.dom.transport, s.ch[1], s.ch[2], s.ch[3], s.ch.unknown, Math.round(s.nis)].join(',') + '\n';
+                                });
+                                filename = `projector_gonenim_by_body_${today}.csv`;
+                            } else if (activeTab === 'obstacles') {
+                                csv = 'שם הפרויקט,תת-שכונה,תחום,חומש,שירות,גורם מנהל,חסם\n';
+                                obstacleFeats.forEach(w => {
+                                    const p = w.feature.properties;
+                                    csv += [
+                                        csvEscape(p.project_name),
+                                        csvEscape(p.sub_neighborhood),
+                                        csvEscape(DOM_LABEL[p.domain] || p.domain),
+                                        csvEscape(p.chumash),
+                                        csvEscape(p.service_he),
+                                        csvEscape(p.managing_body),
+                                        csvEscape(p.obstacles)
+                                    ].join(',') + '\n';
+                                });
+                                filename = `projector_gonenim_obstacles_${today}.csv`;
+                            }
+                            downloadCSV(filename, csv);
+                        });
+
+                        // ── Print current tab ──
+                        document.getElementById('pf-print').addEventListener('click', () => {
+                            const pane = m.querySelector(`[data-tab-pane="${activeTab}"]`);
+                            const label = pane ? pane.getAttribute('data-tab-label') : '';
+                            const content = pane ? pane.innerHTML : '';
+                            const w = window.open('', '_blank');
+                            if (!w) { alert('הדפדפן חסם את חלון ההדפסה. אשר חלונות קופצים ונסה שוב.'); return; }
+                            w.document.write(`<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>${label} — פרוייקטור גוננים</title>` +
+                                `<style>body{font-family:Assistant,Arial,sans-serif;direction:rtl;padding:24px;color:#222;background:#fff}h1{font-size:20px;color:#1e293b;border-bottom:2px solid #1976d2;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin-top:10px;font-size:12px}th,td{padding:5px 8px;border:1px solid #ccc;text-align:right}th{background:#f5f5f5}tr[data-ob-idx]{cursor:default}.print-meta{font-size:11px;color:#888;margin-bottom:14px}@media print{button{display:none}}</style>` +
+                                `</head><body><h1>📊 ${label} — פרוייקטור גוננים</h1>` +
+                                `<div class="print-meta">הופק: ${new Date().toLocaleString('he-IL')}</div>` +
+                                content + `</body></html>`);
+                            w.document.close();
+                            setTimeout(() => w.print(), 400);
+                        });
                     };
                     window.__refreshProjectorFilterPanel = function () {
                         const L = layersRef.current || {};
@@ -15856,6 +16104,91 @@
                                                 <div className="report-text">
                                                     <span className="report-title">היתרים מול תב"ע</span>
                                                     <span className="report-desc">פערי יח"ד בתחום הפרוייקטור</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* קטגוריה: פרוייקטור גוננים — סיכום ההמלצות */}
+                                    <div className="reports-category" style={{border:'1px dashed #1976d2', background:'rgba(25,118,210,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                        <h3 style={{color:'#1976d2'}}>📋 פרוייקטור גוננים</h3>
+                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>סיכום ההמלצות (259 פיצ׳רים): פיזור לפי תת-שכונה/חומש/תחום, גורם מנהל ואומדן, ורשימת חסמים</div>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                // Poll for data to arrive (on-demand fetch), then open summary
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') window.__openProjectorSummary();
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">📊</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">סיכום + ציר זמן</span>
+                                                    <span className="report-desc">פיזור תת-שכונה × תחום × חומש + ציר זמן שנתי</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') {
+                                                            window.__openProjectorSummary();
+                                                            // Auto-switch to body tab
+                                                            setTimeout(() => {
+                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="body"]');
+                                                                if (btn) btn.click();
+                                                            }, 50);
+                                                        }
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">🏛️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">לפי גורם מנהל</span>
+                                                    <span className="report-desc">פילוח אחריות + אומדן כספי לפי גוף</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                                                let tries = 0;
+                                                const tick = () => {
+                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                                    if (ready || tries > 100) {
+                                                        if (typeof window.__openProjectorSummary === 'function') {
+                                                            window.__openProjectorSummary();
+                                                            setTimeout(() => {
+                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="obstacles"]');
+                                                                if (btn) btn.click();
+                                                            }, 50);
+                                                        }
+                                                        return;
+                                                    }
+                                                    tries++;
+                                                    setTimeout(tick, 100);
+                                                };
+                                                tick();
+                                            }}>
+                                                <span className="report-icon">🚧</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">רשימת חסמים</span>
+                                                    <span className="report-desc">כל ההמלצות עם חסמים — לחיצה מעבירה למפה</span>
                                                 </div>
                                             </button>
                                         </div>
