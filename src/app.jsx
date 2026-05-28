@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-shatzap-categories';
+        const APP_VERSION = '2026-05-28-green-uniform';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11482,13 +11482,15 @@
                         // Inner שצ"פים + trails for metaham compounds (any styling
                         // variant — brown is_metaham_polygon OR pink is_metaham_pdf_tichnun).
                         // Categorized by build script using PDF-derived metadata:
-                        //   מוצלח           → bright green (#4caf50) — successful, no work
-                        //   לשדרוג           → amber/orange (#ff9800) — upgrade only
-                        //   לשדרוג+תצפית    → indigo purple (#5e35b1) — upgrade + viewpoint
+                        // All under "מרחב ציבורי" → uniform green palette per user
+                        // request 2026-05-28. Categories differentiated by shade:
+                        //   מוצלח           → bright green   (#66bb6a) — successful
+                        //   לשדרוג           → medium green   (#388e3c) — upgrade
+                        //   לשדרוג+תצפית    → dark green     (#1b5e20) — upgrade + viewpoint
                         const INNER_CAT_COLORS = {
-                            'מוצלח':         { fill: '#4caf50', stroke: '#1b5e20' },
-                            'לשדרוג':         { fill: '#ff9800', stroke: '#e65100' },
-                            'לשדרוג+תצפית':  { fill: '#5e35b1', stroke: '#311b92' },
+                            'מוצלח':         { fill: '#66bb6a', stroke: '#2e7d32' },
+                            'לשדרוג':         { fill: '#388e3c', stroke: '#1b5e20' },
+                            'לשדרוג+תצפית':  { fill: '#1b5e20', stroke: '#0d3712' },
                         };
                         if (p.inner_shatzaps && p.inner_shatzaps.length) {
                             p.inner_shatzaps.forEach(sub => {
@@ -11499,7 +11501,7 @@
                                     pane: 'projectorPane',
                                     style: () => ({
                                         color: col.stroke, weight: 1.5,
-                                        fillColor: col.fill, fillOpacity: 0.45,
+                                        fillColor: col.fill, fillOpacity: 0.5,
                                     }),
                                 });
                                 const subPopupHtml =
@@ -11515,21 +11517,30 @@
                             });
                         }
                         if (p.inner_trails && p.inner_trails.length) {
+                            // All trails in green (per user). Main trail = solid thick,
+                            // accessibility trails = dashed thinner — to distinguish.
                             p.inner_trails.forEach(trail => {
+                                const isAccess = trail.kind === 'accessibility_trail';
                                 const trailFeat = { type: 'Feature', geometry: trail.geometry, properties: p };
-                                // Yellow halo (wider, lighter) under colored line for visibility
+                                // White halo under colored line for visibility
                                 const trailHalo = L.geoJSON(trailFeat, {
                                     pane: 'projectorPane',
-                                    style: () => ({ color: '#fffde7', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }),
+                                    style: () => ({ color: '#ffffff', weight: isAccess ? 7 : 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }),
                                 });
                                 layerGroup.addLayer(trailHalo);
                                 const trailLine = L.geoJSON(trailFeat, {
                                     pane: 'projectorPane',
-                                    style: () => ({ color: '#fbc02d', weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
+                                    style: () => ({
+                                        color: isAccess ? '#388e3c' : '#1b5e20',
+                                        weight: isAccess ? 3.5 : 5,
+                                        opacity: 0.95,
+                                        dashArray: isAccess ? '6,3' : null,
+                                        lineCap: 'round', lineJoin: 'round',
+                                    }),
                                 });
                                 const trailPopup =
                                     `<div style="font-family:Assistant,sans-serif;direction:rtl;min-width:200px">` +
-                                    `<div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#f57f17">${trail.label || 'שביל'}</div>` +
+                                    `<div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#1b5e20">${trail.label || 'שביל'}</div>` +
                                     `<div style="font-size:11px;color:#888;margin-top:6px;border-top:1px solid #eee;padding-top:4px">חלק מ-${p.project_name || 'מתחם'}</div>` +
                                     `</div>`;
                                 trailLine.feature = trailFeat;

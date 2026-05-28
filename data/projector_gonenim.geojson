@@ -14056,7 +14056,7 @@
         "inner_trails": [
           {
             "label": "הסדרה סטטוטורית של השביל",
-            "kind": "yellow_trail",
+            "kind": "main_trail",
             "geometry": {
               "type": "LineString",
               "coordinates": [
@@ -14071,6 +14071,57 @@
                 [
                   35.206965,
                   31.757232
+                ]
+              ]
+            }
+          },
+          {
+            "label": "הסדרת שביל דרומי",
+            "kind": "accessibility_trail",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  35.205088,
+                  31.755539
+                ],
+                [
+                  35.204514,
+                  31.755649
+                ]
+              ]
+            }
+          },
+          {
+            "label": "הסדרת שביל אמצעי",
+            "kind": "accessibility_trail",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  35.205485,
+                  31.755877
+                ],
+                [
+                  35.205002,
+                  31.756105
+                ]
+              ]
+            }
+          },
+          {
+            "label": "הסדרת שביל שלישי",
+            "kind": "accessibility_trail",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  35.206343,
+                  31.756662
+                ],
+                [
+                  35.206,
+                  31.756994
                 ]
               ]
             }

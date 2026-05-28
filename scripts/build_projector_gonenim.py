@@ -138,9 +138,10 @@ INNER_SHATZAP_CATEGORIES = {
 # compound shown on PDF page 18). Keyed by (project_name, area) → list of trails.
 INNER_TRAILS_BY_COMPOUND = {
     ("מתחם בן זכאי-אנטיגונוס-אליעזר הגדול", "גוננים א-ו"): [
+        # Main statutory trail spine — N-S ~310m (yellow line on PDF page 18)
         {
             "label": "הסדרה סטטוטורית של השביל",
-            "kind": "yellow_trail",
+            "kind": "main_trail",
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
@@ -148,6 +149,34 @@ INNER_TRAILS_BY_COMPOUND = {
                     [35.205957, 31.756260],
                     [35.206965, 31.757232],
                 ],
+            },
+        },
+        # 3 accessibility passage upgrades (orange arrows on PDF p18). One of
+        # these two will be accessibility-upgraded as a connector to the
+        # purple light-rail line (per PDF: "אחד משני המעברים יונגש במסגרת
+        # מצרנים לקו הסגול").
+        {
+            "label": "הסדרת שביל דרומי",
+            "kind": "accessibility_trail",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[35.205088, 31.755539], [35.204514, 31.755649]],
+            },
+        },
+        {
+            "label": "הסדרת שביל אמצעי",
+            "kind": "accessibility_trail",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[35.205485, 31.755877], [35.205002, 31.756105]],
+            },
+        },
+        {
+            "label": "הסדרת שביל שלישי",
+            "kind": "accessibility_trail",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[35.206343, 31.756662], [35.206000, 31.756994]],
             },
         },
     ],
