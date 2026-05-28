@@ -11704,14 +11704,6 @@
     "permit_count": 1,
     "error": ""
   },
-  "317": {
-    "tik": "15419",
-    "address": "מבוא הנטף 1",
-    "permits": [],
-    "scraped_at": "2026-05-28T12:18:54.455831",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "318": {
     "tik": "2015/0320",
     "address": "יוסי בן יועזר 19",
@@ -11744,54 +11736,6 @@
     "permit_count": 1,
     "error": ""
   },
-  "320": {
-    "tik": "2018/0689",
-    "address": "מבוא הקנמון 3",
-    "permits": [
-      {
-        "file_number": "2018/0689.00",
-        "status": "הבקשה נסגרה",
-        "status_date": "11/07/2022",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת בניה ומרפסות בהליך של תמ\"א 10038"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:19:58.236008",
-    "permit_count": 1,
-    "error": ""
-  },
-  "321": {
-    "tik": "15486",
-    "address": "ורדינון 5-7",
-    "permits": [],
-    "scraped_at": "2026-05-28T12:20:16.141552",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "322": {
-    "tik": "2019/0269",
-    "address": "מבוא בשמת 4+5",
-    "permits": [
-      {
-        "file_number": "2019/0269.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "09/08/2022",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "הבקשה היא לבניית תוספות לחיזוק בניין קיים בן 4 קומות מעל קומת מרתף בן שתי כניסות ובו 16 יח\"ד קיימות מפני רעידות אדמה בהתאם לתמ\"א 38 ותכנית 10038."
-      }
-    ],
-    "scraped_at": "2026-05-28T12:20:36.507965",
-    "permit_count": 1,
-    "error": ""
-  },
-  "323": {
-    "tik": "15269",
-    "address": "אפרסמון 8-2",
-    "permits": [],
-    "scraped_at": "2026-05-28T12:20:54.421749",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "324": {
     "tik": "15637",
     "address": "ברניקי 6",
@@ -11813,30 +11757,6 @@
     ],
     "scraped_at": "2026-05-28T12:21:17.718070",
     "permit_count": 2,
-    "error": ""
-  },
-  "325": {
-    "tik": "15268",
-    "address": "אפרסמון 10-18",
-    "permits": [],
-    "scraped_at": "2026-05-28T12:21:35.846672",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
-  "326": {
-    "tik": "2019/0496.00",
-    "address": "מבוא הצרי 12",
-    "permits": [
-      {
-        "file_number": "2019/0496.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "19/05/2024",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת בניה עפ\"י תמ\"א 38."
-      }
-    ],
-    "scraped_at": "2026-05-28T12:21:56.230170",
-    "permit_count": 1,
     "error": ""
   },
   "327": {
@@ -11897,22 +11817,6 @@
     ],
     "scraped_at": "2026-05-28T12:22:43.257914",
     "permit_count": 3,
-    "error": ""
-  },
-  "329": {
-    "tik": "2018/0330",
-    "address": "מבוא הקינמון 1-2",
-    "permits": [
-      {
-        "file_number": "2018/0330.00",
-        "status": "אושר ע\"י מהנדס העיר",
-        "status_date": "20/06/2024",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת 2.5 קומות מעל בניין קיים בן 5 קומות לפי תמ\"א 38 ותוכנית 10038 לחיזוק מיבנים מפני רעידות אדמה."
-      }
-    ],
-    "scraped_at": "2026-05-28T12:23:03.463877",
-    "permit_count": 1,
     "error": ""
   },
   "331": {
@@ -12128,58 +12032,12 @@
     "permit_count": 1,
     "error": ""
   },
-  "336": {
-    "tik": "2015/123",
-    "address": "מבוא דודאים 3",
-    "permits": [
-      {
-        "file_number": "2015/0123.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "26/12/2016",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספות בניה ומרפסות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה."
-      }
-    ],
-    "scraped_at": "2026-05-28T12:25:17.223854",
-    "permit_count": 1,
-    "error": ""
-  },
   "337": {
     "tik": "21554",
     "address": "רבי חסדא 4",
     "permits": [],
     "scraped_at": "2026-05-28T12:25:40.594635",
     "permit_count": 0,
-    "error": ""
-  },
-  "338": {
-    "tik": "15622",
-    "address": "אפרסמון 20",
-    "permits": [
-      {
-        "file_number": "1974/0507.00",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "11/04/1975",
-        "request_type": "תוספת מבנה-מגרש בנוי",
-        "request_description": "בניין חדש"
-      },
-      {
-        "file_number": "1974/0507.01",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "05/01/1977",
-        "request_type": "שינויים בבנין קיים",
-        "request_description": ";"
-      },
-      {
-        "file_number": "1974/0507.02",
-        "status": "הבקשה נסגרה",
-        "status_date": "09/02/2023",
-        "request_type": "תוספת בניה / הרחבה לבניין קיים",
-        "request_description": "תוספת בניה ומרפסות עח פי תב\"ע לצורך הרחבת דירות קיימות בעמודה שלמה"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:26:04.041516",
-    "permit_count": 3,
     "error": ""
   },
   "339": {
@@ -12226,50 +12084,6 @@
     ],
     "scraped_at": "2026-05-28T12:26:47.672591",
     "permit_count": 3,
-    "error": ""
-  },
-  "341": {
-    "tik": "15238",
-    "address": "הגפן 228",
-    "permits": [
-      {
-        "file_number": "1977/0510.00",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "05/10/1978",
-        "request_type": "בניה חדשה / בניין חדש",
-        "request_description": "."
-      },
-      {
-        "file_number": "1990/0363.01",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "02/01/2005",
-        "request_type": "בנית מחסן/מחסנים",
-        "request_description": "בניית מחסן בקומת המרתף לדירה קיימת בבניין"
-      },
-      {
-        "file_number": "1990/0363.03",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "26/03/2006",
-        "request_type": "חידוש היתר",
-        "request_description": "חידוש היתר בניה למחסן."
-      },
-      {
-        "file_number": "1990/0363.05",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "07/04/2008",
-        "request_type": "חידוש היתר",
-        "request_description": "חידוש היתר בניה למחסן"
-      },
-      {
-        "file_number": "2019/0267.00",
-        "status": "נדונה בוועדת המשנה",
-        "status_date": "15/03/2021",
-        "request_type": "",
-        "request_description": "תוספות בניה ותוספת 5.2 קומות מעל 4 קומות מגורים וקומת מרתף במסגרת תמ\"א 38."
-      }
-    ],
-    "scraped_at": "2026-05-28T12:27:10.654637",
-    "permit_count": 5,
     "error": ""
   },
   "342": {
@@ -12351,43 +12165,6 @@
     ],
     "scraped_at": "2026-05-28T12:27:57.805228",
     "permit_count": 8,
-    "error": ""
-  },
-  "344": {
-    "tik": "15286",
-    "address": "מבוא קציעה 2",
-    "permits": [
-      {
-        "file_number": "1973/0482.00",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "27/02/1974",
-        "request_type": "תוספת מבנה-מגרש בנוי",
-        "request_description": "."
-      },
-      {
-        "file_number": "2017/0185.00",
-        "status": "הבקשה נסגרה",
-        "status_date": "10/07/2022",
-        "request_type": "תוספת בניה / הרחבה לבניין קיים",
-        "request_description": "תוספת בנייה ע\"פ תב\"ע בניית ממ\"דים בניית מרפסות"
-      },
-      {
-        "file_number": "2020/0242.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "18/11/2021",
-        "request_type": "",
-        "request_description": "תוספת בניה ומרפסות לכל דירות הבניין, ביטול מקלט ובניית מחסנים בהליך תמ\"א 38"
-      },
-      {
-        "file_number": "2020/0242.01",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "13/02/2023",
-        "request_type": "",
-        "request_description": "שינויים לתמ\"א 38"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:28:21.409931",
-    "permit_count": 4,
     "error": ""
   },
   "345": {
@@ -12858,14 +12635,6 @@
     "permit_count": 0,
     "error": ""
   },
-  "352": {
-    "tik": "15026",
-    "address": "מבוא הדודאים 4 ו-5",
-    "permits": [],
-    "scraped_at": "2026-05-28T12:31:20.295158",
-    "permit_count": 0,
-    "error": "no_street_suggestion"
-  },
   "353": {
     "tik": "15022",
     "address": "הפלמח 66",
@@ -13030,22 +12799,6 @@
     "permit_count": 0,
     "error": ""
   },
-  "362": {
-    "tik": "2018/0485",
-    "address": "מבוא הצרי 7",
-    "permits": [
-      {
-        "file_number": "2018/0485.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "06/07/2020",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת בניה ומרפסות לכל דירות הבניין, ביטול מקלט ובניית מחסנים בהליך תמ\"א 38"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:35:28.942743",
-    "permit_count": 1,
-    "error": ""
-  },
   "363": {
     "tik": "2018/0611",
     "address": "הרב חיים ברלין 3",
@@ -13196,89 +12949,6 @@
     "permit_count": 1,
     "error": ""
   },
-  "368": {
-    "tik": "15614",
-    "address": "ורדינון 11",
-    "permits": [
-      {
-        "file_number": "1972/0077.00",
-        "status": "נדונה בוועדת המשנה",
-        "status_date": "16/02/1972",
-        "request_type": "תוספת בניה / הרחבה לבניין קיים",
-        "request_description": "3"
-      },
-      {
-        "file_number": "1993/0659.00",
-        "status": "הבקשה נסגרה",
-        "status_date": "09/02/2023",
-        "request_type": "תוספת בניה / הרחבה לבניין קיים",
-        "request_description": "תוספת בניה סטנדרטית ל_8_ דיירים בשתי עמודות שלמות"
-      },
-      {
-        "file_number": "1993/0659.01",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "22/08/2001",
-        "request_type": "תוספת בניה / הרחבה לבניין קיים",
-        "request_description": "תוספת בניה בבנין בן 4 קומות"
-      },
-      {
-        "file_number": "2023/0617.00",
-        "status": "נדונה בוועדת המשנה",
-        "status_date": "20/04/2026",
-        "request_type": "",
-        "request_description": "תוספת לבניה בהתאם לתמ\"א 38 לחיזוק הבנין מפני רעידות אדמה"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:38:09.288102",
-    "permit_count": 4,
-    "error": ""
-  },
-  "369": {
-    "tik": "15358",
-    "address": "השליו 413",
-    "permits": [
-      {
-        "file_number": "1978/0751.00",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "30/04/1979",
-        "request_type": "תוספת מבנה-מגרש בנוי",
-        "request_description": "."
-      },
-      {
-        "file_number": "1978/0751.01",
-        "status": "הוכנה טיוטת היתר בניה",
-        "status_date": "15/11/1982",
-        "request_type": "שינויים בבנין קיים",
-        "request_description": "."
-      },
-      {
-        "file_number": "2022/0344.00",
-        "status": "נדונה בוועדת המשנה",
-        "status_date": "02/07/2025",
-        "request_type": "",
-        "request_description": "סגירת מרפסות + בניית מרפסות"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:38:39.352682",
-    "permit_count": 3,
-    "error": ""
-  },
-  "370": {
-    "tik": "2020/0073.00",
-    "address": "מבוא הצרי 5 ו-6",
-    "permits": [
-      {
-        "file_number": "2020/0073.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "02/02/2022",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת בניה ומרפסות לכל דירות הבניין, ביטול מקלט ובניית מחסנים בהליך תמ\"א 38"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:39:04.424925",
-    "permit_count": 1,
-    "error": ""
-  },
   "371": {
     "tik": "2014/640",
     "address": "אחד העם 5",
@@ -13324,22 +12994,6 @@
       }
     ],
     "scraped_at": "2026-05-28T12:40:19.566142",
-    "permit_count": 1,
-    "error": ""
-  },
-  "374": {
-    "tik": "2016/1042",
-    "address": "מבוא יסמין 3",
-    "permits": [
-      {
-        "file_number": "2016/1042.00",
-        "status": "הופק-הוצא היתר בניה",
-        "status_date": "11/06/2018",
-        "request_type": "תמ\"א 38 - תוספות",
-        "request_description": "תוספת בניה ומרפסות לכל דירות הבניין .ביטול מקלט ובניית מחסנים בהליך של תמא 38"
-      }
-    ],
-    "scraped_at": "2026-05-28T12:40:44.611257",
     "permit_count": 1,
     "error": ""
   },
