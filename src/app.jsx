@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-inner-shatzap';
+        const APP_VERSION = '2026-05-28-shatzap-categories';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2570,7 +2570,7 @@
                                 mkChip('domains', 'programa', 'פרוגרמה', '#8d6e63') +
                                 mkChip('domains', 'public_space', 'מרחב ציבורי', '#2e7d32') +
                                 mkChip('domains', 'transport', 'תנועה', '#1565c0') +
-                                mkChip('domains', 'metaham', 'מתחמים', '#a1887f') +
+                                mkChip('domains', 'metaham', 'מתחמים', '#d81b60') +
                             `</div>` +
                             `<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">חומש לביצוע</div>` +
                                 mkChip('chumashim', '1', 'חומש 1', '#b71c1c') +
@@ -11398,8 +11398,8 @@
                             lyr = L.geoJSON(f, {
                                 pane: 'projectorPane',
                                 style: () => ({
-                                    color: '#c2185b', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
-                                    fillColor: '#ec407a', fillOpacity: 0.10,
+                                    color: '#d81b60', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
+                                    fillColor: '#e91e63', fillOpacity: 0.10,
                                 }),
                             });
                         }
@@ -11409,34 +11409,13 @@
                         // Master-plan compounds are inherently large — always use the
                         // light outline+5% style.
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_metaham_polygon) {
-                            // Compound: faint outline + 5% fill (just a border showing extent)
-                            const compoundLayer = L.geoJSON(f, {
+                            lyr = L.geoJSON(f, {
                                 pane: 'projectorPane',
                                 style: () => ({
                                     color: '#a1887f', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
                                     fillColor: '#d2b48c', fillOpacity: 0.05,
                                 }),
                             });
-                            compoundLayer.feature = f;
-                            compoundLayer.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
-                            layerGroup.addLayer(compoundLayer);
-                            // Inner שצ"פים (detected from yiud_karka_kayam at build time) —
-                            // rendered prominently in green to show the actual project subjects
-                            // inside the compound outline.
-                            if (p.inner_shatzap_geom) {
-                                const innerFeat = { type: 'Feature', geometry: p.inner_shatzap_geom, properties: p };
-                                const innerLayer = L.geoJSON(innerFeat, {
-                                    pane: 'projectorPane',
-                                    style: () => ({
-                                        color: '#2e7d32', weight: 1.5,
-                                        fillColor: '#66bb6a', fillOpacity: 0.45,
-                                    }),
-                                });
-                                innerLayer.feature = innerFeat;
-                                innerLayer.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
-                                layerGroup.addLayer(innerLayer);
-                            }
-                            lyr = null;  // already added above
                         }
                         // --- שצ"פ / גינה → render the real lot polygon (green)
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_shatzap_polygon) {
@@ -11498,6 +11477,65 @@
                             // the drawn lines/marks themselves — we render them, not
                             // the chip labels.)
                             layerGroup.addLayer(lyr);
+                        }
+
+                        // Inner שצ"פים + trails for metaham compounds (any styling
+                        // variant — brown is_metaham_polygon OR pink is_metaham_pdf_tichnun).
+                        // Categorized by build script using PDF-derived metadata:
+                        //   מוצלח           → bright green (#4caf50) — successful, no work
+                        //   לשדרוג           → amber/orange (#ff9800) — upgrade only
+                        //   לשדרוג+תצפית    → indigo purple (#5e35b1) — upgrade + viewpoint
+                        const INNER_CAT_COLORS = {
+                            'מוצלח':         { fill: '#4caf50', stroke: '#1b5e20' },
+                            'לשדרוג':         { fill: '#ff9800', stroke: '#e65100' },
+                            'לשדרוג+תצפית':  { fill: '#5e35b1', stroke: '#311b92' },
+                        };
+                        if (p.inner_shatzaps && p.inner_shatzaps.length) {
+                            p.inner_shatzaps.forEach(sub => {
+                                const cat = sub.category || 'מוצלח';
+                                const col = INNER_CAT_COLORS[cat] || INNER_CAT_COLORS['מוצלח'];
+                                const subFeat = { type: 'Feature', geometry: sub.geometry, properties: { ...p, _innerSub: sub } };
+                                const subLayer = L.geoJSON(subFeat, {
+                                    pane: 'projectorPane',
+                                    style: () => ({
+                                        color: col.stroke, weight: 1.5,
+                                        fillColor: col.fill, fillOpacity: 0.45,
+                                    }),
+                                });
+                                const subPopupHtml =
+                                    `<div style="font-family:Assistant,sans-serif;direction:rtl;min-width:200px">` +
+                                    `<div style="font-weight:600;font-size:13px;margin-bottom:4px;color:${col.stroke}">${cat}</div>` +
+                                    (sub.label ? `<div style="font-size:12px;color:#555">גודל מתוכנן: ${sub.label}</div>` : '') +
+                                    `<div style="font-size:11px;color:#888;margin-top:3px">שטח קיים: ${Math.round(sub.area_m2)} מ"ר</div>` +
+                                    `<div style="font-size:11px;color:#888;margin-top:6px;border-top:1px solid #eee;padding-top:4px">חלק מ-${p.project_name || 'מתחם'}</div>` +
+                                    `</div>`;
+                                subLayer.feature = subFeat;
+                                subLayer.bindPopup(subPopupHtml, { maxWidth: 280, className: 'projector-popup', autoPan: false });
+                                layerGroup.addLayer(subLayer);
+                            });
+                        }
+                        if (p.inner_trails && p.inner_trails.length) {
+                            p.inner_trails.forEach(trail => {
+                                const trailFeat = { type: 'Feature', geometry: trail.geometry, properties: p };
+                                // Yellow halo (wider, lighter) under colored line for visibility
+                                const trailHalo = L.geoJSON(trailFeat, {
+                                    pane: 'projectorPane',
+                                    style: () => ({ color: '#fffde7', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }),
+                                });
+                                layerGroup.addLayer(trailHalo);
+                                const trailLine = L.geoJSON(trailFeat, {
+                                    pane: 'projectorPane',
+                                    style: () => ({ color: '#fbc02d', weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
+                                });
+                                const trailPopup =
+                                    `<div style="font-family:Assistant,sans-serif;direction:rtl;min-width:200px">` +
+                                    `<div style="font-weight:600;font-size:13px;margin-bottom:4px;color:#f57f17">${trail.label || 'שביל'}</div>` +
+                                    `<div style="font-size:11px;color:#888;margin-top:6px;border-top:1px solid #eee;padding-top:4px">חלק מ-${p.project_name || 'מתחם'}</div>` +
+                                    `</div>`;
+                                trailLine.feature = trailFeat;
+                                trailLine.bindPopup(trailPopup, { maxWidth: 280, className: 'projector-popup', autoPan: false });
+                                layerGroup.addLayer(trailLine);
+                            });
                         }
                     });
                     return layerGroup;
