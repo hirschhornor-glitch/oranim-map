@@ -2532,7 +2532,7 @@
                 // Shown only when projector_gonenim or projector_gonenim_tzatal is active.
                 if (!window.__projectorFilters) {
                     window.__projectorFilters = {
-                        domains: new Set(['programa', 'public_space', 'transport']),
+                        domains: new Set(['programa', 'public_space', 'transport', 'metaham']),
                         chumashim: new Set([1, 2, 3, 'unknown']),
                     };
                 }
@@ -2570,6 +2570,7 @@
                                 mkChip('domains', 'programa', 'פרוגרמה', '#8d6e63') +
                                 mkChip('domains', 'public_space', 'מרחב ציבורי', '#2e7d32') +
                                 mkChip('domains', 'transport', 'תנועה', '#1565c0') +
+                                mkChip('domains', 'metaham', 'מתחמים', '#a1887f') +
                             `</div>` +
                             `<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">חומש לביצוע</div>` +
                                 mkChip('chumashim', '1', 'חומש 1', '#b71c1c') +
@@ -2675,7 +2676,7 @@
                         let shown = 0, total = 0;
                         // Per-dimension counts (independent of other dims so user can
                         // see how many features each chip toggles).
-                        const domCounts = { programa: 0, public_space: 0, transport: 0 };
+                        const domCounts = { programa: 0, public_space: 0, transport: 0, metaham: 0 };
                         const chCounts = { 1: 0, 2: 0, 3: 0, unknown: 0 };
                         const f = window.__projectorFilters;
                         ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
@@ -2685,7 +2686,9 @@
                             data.features.forEach(ft => {
                                 const ch = ft.properties.chumash;
                                 const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
-                                const dom = ft.properties.domain || 'other';
+                                const p = ft.properties;
+                                const isMetaham = !!(p.is_metaham_polygon || p.is_metaham_pdf_tichnun);
+                                const dom = isMetaham ? 'metaham' : (p.domain || 'other');
                                 if (dom in domCounts) domCounts[dom]++;
                                 if (chKey in chCounts) chCounts[chKey]++;
                                 if (!f.chumashim.has(chKey)) return;
@@ -5458,10 +5461,25 @@
                     }
                 }
 
+                // Auto-close any popup that opens while marker mode is active —
+                // covers feature popups bound via bindPopup() that bypass the
+                // explicit onClick guards on the various layer click handlers.
+                function onPopupOpen(e) {
+                    if (e && e.popup) {
+                        try { map.closePopup(e.popup); } catch (_) {}
+                    } else {
+                        try { map.closePopup(); } catch (_) {}
+                    }
+                }
+                // Also pre-emptively close any popup already open when entering mode.
+                try { map.closePopup(); } catch (_) {}
+
                 map.on('click', onClick);
+                map.on('popupopen', onPopupOpen);
                 document.addEventListener('keydown', onKeyDown);
                 return () => {
                     map.off('click', onClick);
+                    map.off('popupopen', onPopupOpen);
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     // Wipe drawn markers/polygon when mode ends.
@@ -9284,7 +9302,7 @@
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
                                 // Suppress popups during area/measure drawing or landuse compare or shatzaf/tree
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 if (landuseCompareModeRef.current) return;
                                 if (shatzafModeRef.current) return;
                                 if (treeModeRef.current) return;
@@ -10064,7 +10082,7 @@
                             const tooltip = `מגרש ${p.plot_num || '—'} — ${ft} — ${p.units_yachd || 0} יח״ד`;
                             layer.bindTooltip(tooltip, { sticky: true, direction: 'right', offset: [8, 0] });
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const html = `
                                     <div class="plan-popup" style="direction:rtl;text-align:right;min-width:280px;">
                                         <h4 style="margin:0 0 8px 0;color:#2e7d32;">מגרש ${p.plot_num || '—'} — תכנית מק/14295</h4>
@@ -11230,7 +11248,8 @@
                         const ch = f.properties.chumash;
                         const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
                         if (!chSet.has(chKey)) return false;
-                        const dom = f.properties.domain || 'other';
+                        const isMetaham = !!(f.properties.is_metaham_polygon || f.properties.is_metaham_pdf_tichnun);
+                        const dom = isMetaham ? 'metaham' : (f.properties.domain || 'other');
                         if (!domSet.has(dom)) return false;
                         if (svcSet) {
                             const sv = (f.properties.service_he || '').trim();
@@ -11513,7 +11532,7 @@
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 L.DomEvent.stopPropagation(e);
                                 const allShavaz = findOverlappingShavaz(e.latlng);
                                 // Move the clicked feature (matched by pl_number+num) to the front
@@ -11621,7 +11640,7 @@
                         }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 L.DomEvent.stopPropagation(e);
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup shavaz-popup shavaz-future-popup' })
                                     .setLatLng(layer.getLatLng())
@@ -11735,7 +11754,7 @@
                         }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 L.DomEvent.stopPropagation(e);
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
                                     .setLatLng(layer.getLatLng())
@@ -11877,7 +11896,7 @@
                             const p = f.properties;
                             const name = p['שם מוסד'] || '';
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 // Build mosad popup (styled like plans popup)
                                 let html = '<div>';
                                 html += `<div class="popup-header" style="border-bottom:3px solid ${PUBLIC_PALETTE.shavaz_kayam_fill}"><div class="popup-header-title">${name}</div>`;
@@ -11951,7 +11970,7 @@
                             const p = f.properties;
                             const name = p['שם הפרויקט'] || '';
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const status = (p['סטטוס פרויקט'] || '').trim();
                                 const isNimsar = status.includes('נמסר');
                                 const harsha = (p['סטטוס הרשאה'] || '').trim();
@@ -12017,7 +12036,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const accent = '#8B4513';
                                 let html = '<div style="font-family:inherit">';
                                 html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">מגרש ציבורי פנוי</div>`;
@@ -12107,7 +12126,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties || {};
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const accent = MIVNEI_LASHIMUR_GRADE_COLORS[p.mp_grade] || '#8B0000';
                                 const row = (label, value) => (value !== null && value !== undefined && value !== '' && value !== 'None') ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
                                 let html = '<div style="font-family:inherit">';
@@ -12169,7 +12188,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const cat = p.category || '';
                                 const accent = MOCH_CAT_COLOR[cat] || '#888';
                                 const headerTitle = p.name || p.type || 'מוסד ציבור';
@@ -12217,7 +12236,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const cnt = p.institutions_count || 1;
                                 const headerTitle = cnt > 1 ? `${cnt} מסגרות חינוך` : (p.institutions[0] && p.institutions[0].name) || 'מסגרת חינוך';
                                 const isSchool = (t) => t === 'יסודי' || t === 'יסודי/תיכון' || t === 'תיכון' || t === 'חטיבה' || t === 'אולפנה' || t === 'מדרשייה' || t === 'ישיבה' || t === 'תלמוד תורה';
@@ -12696,7 +12715,7 @@
                             layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
                             // Click opens plan popup
                             layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current) return;
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const mapped = mapPlanProps(f.properties);
                                 const content = buildPlanPopup(mapped, { properties: mapped }, null);
                                 L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
@@ -12842,7 +12861,7 @@
                                 else if (emp > 0) tip += `<br><span style="font-size:10px">תעסוקה: ${emp.toLocaleString('he-IL')} מ"ר</span>`;
                                 layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
                                 layer.on('click', (e) => {
-                                    if (areaModeRef.current || radiusModeRef.current) return;
+                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                     const mapped = mapPlanProps(f.properties);
                                     const content = buildPlanPopup(mapped, { properties: mapped }, null);
                                     L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
