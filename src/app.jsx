@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-hapsaga-categories';
+        const APP_VERSION = '2026-05-28-crosswalk-table';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11359,6 +11359,24 @@
                         ? `<div class="pp-hero" style="background:${cfg.color}14;border-right:3px solid ${cfg.color};padding:6px 10px;margin:6px 0 8px;font-size:12.5px;line-height:1.5;color:#263238"><b style="color:${cfg.color}">המלצה:</b> ${escape(heroText)}</div>`
                         : '';
 
+                    // Crosswalk table row — from per-area planning booklets that include
+                    // a detailed analysis table (e.g. רסקו עמ' 8). Structured 6-field block.
+                    const cwt = p.crosswalk_table_row;
+                    const crosswalkTableBlock = cwt
+                        ? `<div class="pp-crosswalk-table" style="background:#fff3e0;border:1px solid #ffb74d;border-right:4px solid #ef6c00;border-radius:4px;padding:8px 10px;margin:8px 0;font-size:11.5px;line-height:1.5;color:#3e2723">` +
+                            `<div style="font-weight:700;color:#bf360c;margin-bottom:5px">🚦 ניתוח יועצת התנועה</div>` +
+                            `<table style="width:100%;border-collapse:collapse;font-size:11px">` +
+                                (cwt.main_street ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600;width:38%">רח' ראשי:</td><td style="padding:2px 4px">${escape(cwt.main_street)}</td></tr>` : '') +
+                                (cwt.secondary_street ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600">רח' משני:</td><td style="padding:2px 4px">${escape(cwt.secondary_street)}</td></tr>` : '') +
+                                (cwt.distance ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600">מרחק ממעברים קרובים:</td><td style="padding:2px 4px">${escape(cwt.distance)}</td></tr>` : '') +
+                                (cwt.justification ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600">הצדק לחציה:</td><td style="padding:2px 4px">${escape(cwt.justification)}</td></tr>` : '') +
+                                (cwt.type ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600">סוג מומלץ:</td><td style="padding:2px 4px">${escape(cwt.type)}</td></tr>` : '') +
+                                (cwt.implications ? `<tr><td style="padding:2px 4px;color:#5d4037;font-weight:600">השלכות:</td><td style="padding:2px 4px">${escape(cwt.implications)}</td></tr>` : '') +
+                            `</table>` +
+                            (cwt.source ? `<div style="font-size:10.5px;color:#6d4c41;margin-top:5px;font-style:italic">מקור: ${escape(cwt.source)}</div>` : '') +
+                        `</div>`
+                        : '';
+
                     // Compound design principles — extracted from dedicated PDF deep-dives
                     // (e.g. מצגת מתחם הפסגה). Structured list with source ref.
                     const principlesBlock = (p.compound_principles && p.compound_principles.items && p.compound_principles.items.length)
@@ -11376,6 +11394,7 @@
                         (pillsRow ? `<div class="pp-pills">${pillsRow}</div>` : '') +
                         obstaclesBlock +
                         heroBlock +
+                        crosswalkTableBlock +
                         principlesBlock +
                         servicesTable +
                         psCard + karCard + descBlock + overlapDetail +

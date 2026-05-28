@@ -143,6 +143,67 @@ INNER_SHATZAP_CATEGORIES = {
 # Per-compound design principles (extracted from PDF deep-dive booklets like
 # "מצגת קטמונים מתחם הפסגה"). Rendered in popup as a structured list.
 # Keyed by (project_name, area) → list of {label, items[], source}.
+# Per-crosswalk table data from "רסקו מרחב ציבורי 17.4.24.pdf" עמ' 8 — table of
+# 7 recommended crosswalks analyzed by יורוברידג'. Each row maps to a feature
+# via (area, project_num). Row 3 (דוד שמעוני - רח' ללא מוצא) is "לא מומלץ" and
+# has no feature.
+CROSSWALK_TABLE_DATA = {
+    ("רסקו", "מעבר חציה מס' 1"): {
+        "main_street": "הרב חיים ברלין",
+        "secondary_street": "הרב ברודי",
+        "distance": "אין מעברי חציה קרובים",
+        "justification": "מעבר המשכי לה\"ר, צומת לא מוסדר",
+        "type": "הסדרת צומת כלל מעברי חציה",
+        "implications": "ביטול חניות בקרבת הצומת",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+    ("רסקו", "מעבר חציה מס' 2"): {
+        "main_street": "הטייסים",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "100 / 160",
+        "justification": "מעבר חציה מתומרר שלא בצומת",
+        "type": "",
+        "implications": "ביטול 4-5 חניות",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+    ("רסקו", "מעבר חציה מס' 4"): {
+        "main_street": "טשרניחובסקי",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "120 / 200",
+        "justification": "מעבר חציה מוגבה לה\"ר",
+        "type": "מעבר חציה מוגבה",
+        "implications": "ביטול חניה או שתיים",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+    ("רסקו", "מעבר חציה מס' 5"): {
+        "main_street": "דוד שמעוני",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "115 / 200",
+        "justification": "מעבר המשכי לה\"ר",
+        "type": "מעבר חציה מוגבה",
+        "implications": "מתוכנן ברח' שמעוני בעת הפיכתו לחד סטרי (קראוס חן)",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+    ("רסקו", "מעבר חציה מס' 6"): {
+        "main_street": "ש\"י עגנון",
+        "secondary_street": "המעפילים",
+        "distance": "140 / 170",
+        "justification": "מעבר מבוקש לה\"ר",
+        "type": "מתוכנן",
+        "implications": "מתוכנן ע\"י רולי פלד",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+    ("רסקו", "מעבר חציה מס' 7"): {
+        "main_street": "טשרניחובסקי — חד-סטרי מצפון לדרום",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "110",
+        "justification": "מעבר המשכי לה\"ר מומלץ",
+        "type": "אזור החצייה, ללא סימון 811",
+        "implications": "ביטול 4 מקומות חניה",
+        "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')",
+    },
+}
+
 COMPOUND_PRINCIPLES = {
     ("מתחם הפסגה (בית שוויץ)", "קטמונים ח-ט"): {
         "source": "מצגת מתחם הפסגה — עמ' 11 (סיכום המלצות לאחר הצגה לעירייה)",
@@ -1026,8 +1087,9 @@ MANUAL_LOCATION_OVERRIDES = {
             [35.2099553, 31.7678434],
         ],
     },
-    # מעבר חציה בחיים ברלין (רסקו) — at parcel גוש 30024 / חלקה 24.
-    ("מעבר חציה בחיים ברלין", "רסקו"): {"gush_helka": "30024/24"},
+    # מעבר חציה בחיים ברלין (רסקו, מעבר חציה מס' 1) — המשכי למעבר ה"ר ברודי.
+    # User-provided point 2026-05-28 to replace previous gush_helka 30024/24 polygon.
+    ("מעבר חציה בחיים ברלין", "רסקו"): [35.209894, 31.768392],
     # מתחם לוריא — has 4 public-services (school/kindergartens/daycare/synagogue)
     # all on the same complex at גוש 30185 / חלקות 178,203 (per PDF #10).
     # The 5th service (רחוב חדש) and 6th (מעבר ה"ר) keep their own dedicated coords.
@@ -4903,6 +4965,7 @@ def main():
             "compound_principles": COMPOUND_PRINCIPLES.get(
                 (str(proj_name or "").strip(), area)
             ) if is_metaham_polygon else None,
+            "crosswalk_table_row": CROSSWALK_TABLE_DATA.get((area, str(proj_num or "").strip())),
             # Master-plan compound *proposals* (a specific service category) —
             # rendered in pink to distinguish from generic metaham polygons.
             # Covers the 4 compounds from "תכנון מתחמי 09.2023" PDF + מתחם הפסגה
