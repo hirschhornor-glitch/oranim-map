@@ -4794,7 +4794,10 @@ def main():
             # Covers the 4 compounds from "תכנון מתחמי 09.2023" PDF + מתחם הפסגה
             # in קטמונים ח-ט (separate "מצגת מתחם הפסגה" PDF) — all 5 share the
             # same xlsx service "הצעה להכנת תוכנית אב מתחמית להתחדשות".
-            "is_metaham_pdf_tichnun": is_metaham_polygon and isinstance(service_he, str) and "הצעה להכנת תוכנית אב מתחמית" in service_he,
+            "is_metaham_pdf_tichnun": is_metaham_polygon and isinstance(service_he, str) and (
+                "הצעה להכנת תוכנית אב מתחמית" in service_he
+                or service_he.strip() == "מתחם, שצ\"פ"
+            ),
             "road_bearing_deg": road_bearing_deg,
             "obstacles": str(obstacles).strip() if obstacles else None,
             "related_projects_text": str(related_projects).strip() if related_projects else None,
