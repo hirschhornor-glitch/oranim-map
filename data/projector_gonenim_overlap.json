@@ -341,7 +341,7 @@
   },
   "120e33daee9d": {
     "plan_number": null,
-    "match_quality": "geocoded",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1481,13 +1481,9 @@
   },
   "73c0b2afe887": {
     "plan_number": "101-0511923",
-    "match_quality": "plan_number",
-    "overlap_plan_names": [
-      "101-0511923"
-    ],
-    "overlap_features": [
-      "קדמת גונן , פינוי בינוי ברחוב בר יוחאי 5,7,11,13,15 ירושלים ירושלים זיהוי וסיווג תכנית עדכון אחרון לא נערך סה\"כ שטח בדונם 52.425 סוג תכנית מתאר מקומית סוג איחוד וחלוקה איחוד ו/או חלוקה ללא הסכמת כל הב"
-    ]
+    "match_quality": "manual_override",
+    "overlap_plan_names": [],
+    "overlap_features": []
   },
   "8d374938be0f": {
     "plan_number": "101-0666032",
@@ -1943,7 +1939,7 @@
   },
   "a065ae1a8a43": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1973,7 +1969,7 @@
   },
   "cdaec32cf0cb": {
     "plan_number": null,
-    "match_quality": null,
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },

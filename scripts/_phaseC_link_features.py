@@ -85,6 +85,7 @@ KEYWORD_TO_PDFS = {
 for f in gj["features"]:
     p = f["properties"]
     name = p.get("project_name") or ""
+    svc = p.get("service_he") or ""
     pid = p.get("project_id")
     if not pid:
         continue
@@ -97,8 +98,17 @@ for f in gj["features"]:
     MATCH_LABEL_OVERRIDE = {
         "בית שוויץ": "השומר",
     }
+    # Optional service filter — only attach the cross-section to features whose
+    # service_he matches one of the listed values. Used when a project has
+    # multiple service-rows and only the road-related one should get the chip.
+    KEYWORD_SERVICE_FILTER = {
+        "בית שוויץ": {"שדרוג רחובות"},
+    }
     for kw, pages in KEYWORD_TO_CS.items():
         if kw in name:
+            svc_filter = KEYWORD_SERVICE_FILTER.get(kw)
+            if svc_filter and svc not in svc_filter:
+                continue
             label = MATCH_LABEL_OVERRIDE.get(kw, kw)
             for pdf in KEYWORD_TO_PDFS.get(kw, []):
                 for pg in pages:

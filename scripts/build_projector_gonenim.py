@@ -212,6 +212,15 @@ MANUAL_NAME_OVERRIDES = {
 # These take precedence over every other geocoding step. Use sparingly — file an
 # xlsx fix instead when possible.
 MANUAL_LOCATION_OVERRIDES = {
+    # תו חניה לשכונת קטמונים ח-ט — area-wide parking permit recommendation.
+    # No specific lot; user chose the whole sub-neighborhood polygon 2026-05-28.
+    ("תו חניה לשכונת קטמונים ח-ט", "קטמונים ח-ט"): {"area_polygon": True},
+    # חשיבה תנועתית מתחמית (פת) — area-wide "add internal streets" concept.
+    # No specific location; user chose the whole sub-neighborhood polygon 2026-05-28.
+    ("חשיבה תנועתית מתחמית", "פת"): {"area_polygon": True},
+    # צומת ניות (רסקו) — נקודת רמזור. User accepted nominatim geocode 2026-05-28;
+    # frozen as Point override so it won't drift on cache rebuild.
+    ("צומת ניות", "רסקו"): [35.2046894, 31.7670463],
     # שצ"פ זהרה (רסקו, פרויקט 8) — 1.4 דונם, gush/helka 30121/136. User wants
     # the whole lot polygon (2026-05-26). Parcel exists in parcels file.
     ("שצ\"פ זהרה", "רסקו"): {"gush_helka": "30121/136"},
@@ -669,7 +678,9 @@ MANUAL_LOCATION_OVERRIDES = {
     # אבל ה-regex extract_migrash_pairs נשבר על ה-,, ותפס רק 121,214,217-220.
     # User-confirmed 2026-05-28: להוסיף את כל 30 החלקות במפורש.
     ("מתחם ברניקי, פת", "גוננים א-ו"): {
-        "gush_helka": "30171/45,46,47,48,49,50,51,52,53,54,55,56,57,110,121,150,151,156,194,195,196,197,198,199,200,214,217,218,219,220"
+        # User-confirmed 2026-05-28: extended with 6 sub-lot helkas from PDF
+        # (בית כנסת 71/157/173, גנ"י 98/134/158, גן משחקים 56/151) — total ~22 דונם.
+        "gush_helka": "30171/45,46,47,48,49,50,51,52,53,54,55,56,57,71,98,110,121,134,150,151,156,157,158,173,194,195,196,197,198,199,200,214,217,218,219,220"
     },
     # סן מרטין 15-5 (קדמת גונן) — 4 services (גני ילדים, מעון יום, בית כנסת,
     # שירותי תרבות). xlsx address is WRONG: plan 101-0511923 "קדמת גונן" is
@@ -680,6 +691,9 @@ MANUAL_LOCATION_OVERRIDES = {
     # Override to use the full plan polygon so all 4 services display centered
     # on the actual 52-dunam plan area in בר יוחאי. User-flagged 2026-05-28.
     ("סן מרטין  15-5 (קדמת גונן)", "קטמונים ח-ט"): {"plan_name": "101-0511923"},
+    # Same project under alternative xlsx label ("קדמת גונן, בר יוחאי 5,7,11,13,15"
+    # with svc="טרם נקבע" — pn=9 row 5). Stripped — lookup uses .strip().
+    ("קדמת גונן, בר יוחאי 5,7,11,13,15", "קטמונים ח-ט"): {"plan_name": "101-0511923"},
     # צומת הכניסה הצפונית (קטמונים, פרויקט 3) — תב"ע 1069764 בסן מרטין 4-6
     # מרחיבה את הצומת על חשבון השצ"פ. xlsx location_id="95/30199" — חלקה 95
     # היא 12,726 m² של גן ציבורי גדול שעוטף את האזור — ענק מדי. הפלאן עצמה
@@ -3831,6 +3845,18 @@ def main():
                         print(f"      [override] gush_helka={gh!r}: no parcels found — skipping")
                 else:
                     print(f"      [override] gush_helka={gh!r} must be 'gush/helka' format — skipping")
+            elif isinstance(override, dict) and override.get("area_polygon"):
+                # Use the whole sub-neighborhood polygon for area-wide recommendations
+                # (e.g. תו חניה, sub-neighborhood-level concepts with no specific lot).
+                sn_name = AREA_TO_SUBNEIGH.get(area)
+                sn_feat = next((f for f in sub_neigh.get("features", [])
+                                if f.get("properties", {}).get("schn_nama") == sn_name), None)
+                if sn_feat and sn_feat.get("geometry"):
+                    geometry = sn_feat["geometry"]
+                    match_quality = "manual_override"
+                    geometry_source = "manual_override_area_polygon"
+                else:
+                    print(f"      [override] area_polygon: sub_neighborhood {sn_name!r} not found for area {area!r}")
             elif isinstance(override, dict) and override.get("type"):
                 geometry = override
                 match_quality = "manual_override"
