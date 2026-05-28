@@ -3179,21 +3179,13 @@
                             }).join('');
                         const balAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0));
                         const balGrand = balAreaTotals.reduce((a, b) => a + b, 0);
-                        const balEstAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].estimate, 0));
-                        const balEstGrand = balEstAreaTotals.reduce((a, b) => a + b, 0);
                         const balTotalRow = `<tr style="border-top:2px solid #2e7d32;background:#f5f5f5;font-weight:700;font-size:12.5px">` +
                             `<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ פרויקטים</td>` +
                             balAreaTotals.map(t => `<td style="padding:6px 9px;text-align:center">${t}</td>`).join('') +
                             `<td style="padding:6px 9px;text-align:center;background:#eceff1">${balGrand}</td>` +
                         `</tr>`;
-                        const fmtMil = (n) => n >= 1e9 ? (n/1e9).toFixed(2)+'B ₪' : n >= 1e6 ? (n/1e6).toFixed(1)+'M ₪' : n >= 1e3 ? Math.round(n/1e3)+'K ₪' : Math.round(n)+' ₪';
-                        const balEstRow = `<tr style="background:#fafafa;font-weight:600;font-size:11.5px;color:#555">` +
-                            `<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ אומדן</td>` +
-                            balEstAreaTotals.map(t => `<td style="padding:6px 9px;text-align:center">${t ? fmtMil(t) : '·'}</td>`).join('') +
-                            `<td style="padding:6px 9px;text-align:center;background:#eceff1">${fmtMil(balEstGrand)}</td>` +
-                        `</tr>`;
                         const tabBalanceHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:14px">היקף התכנון לפי קטגוריית שירות × תת-שכונה. צבע התא מציין את עוצמת התכנון (ירוק כהה = הרבה פרויקטים). מספר עליון = פרויקטים, מספר תחתון = סה״כ יחידות באותה היחידה (כיתות/מ״ר/דונם/מ׳). מבוסס על ${T.total} השורות בקובץ "תכנית עבודה" אחרי סינון לארבע שכונות מינהל גוננים.</div>` +
-                            `<table style="width:100%;border-collapse:collapse"><thead>${balHeader}</thead><tbody>${balRows}${balTotalRow}${balEstRow}</tbody></table>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead>${balHeader}</thead><tbody>${balRows}${balTotalRow}</tbody></table>` +
                             `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">לפירוט: לחיצה על תא תוביל לסינון פיצ'רי הפרוייקטור לאותה קטגוריה × אזור (TBD).</div>`;
 
                         // ── Shell with tabs + export/print buttons ──
