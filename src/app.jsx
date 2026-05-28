@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-balance-tab';
+        const APP_VERSION = '2026-05-28-balance-export-filter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1214,9 +1214,17 @@
             'תיירות/מלונאות': ['תיירות', 'מלונאות', 'שטח למלונות', 'אירוח כפרי', 'חוף'],
         };
 
+        // Placeholder designations that don't represent real land-use changes (the plan defers to another plan
+        // or excludes the area). xplan uses the full text; kayam truncates Descr at 20 chars.
+        function isLandusePlaceholder(n) {
+            if (!n) return false;
+            return n.startsWith('יעוד עפ"י תכנית') || n.startsWith('שטח שהתכנית אינה') || n.startsWith('שטח שהתוכנית אינה');
+        }
+
         function getLanduseGroup(name) {
             if (!name || !name.trim()) return null;
             const n = name.trim();
+            if (isLandusePlaceholder(n)) return null;
             for (const [group, keywords] of Object.entries(LANDUSE_GROUPS)) {
                 for (const kw of keywords) {
                     if (n.startsWith(kw) || n.includes(kw)) return group;
@@ -1329,6 +1337,8 @@
                 gd.landuse_xplan.features.forEach(f => {
                     const c = centroid(f);
                     if (!c || !pip(c, polyCoords)) return;
+                    const nm = (f.properties.mavat_name || '').trim();
+                    if (isLandusePlaceholder(nm)) return;
                     const pn = (f.properties.pl_number || '').trim();
                     if (pn) xplanPlanNumbers.add(pn);
                 });
@@ -3154,13 +3164,18 @@
                         const balHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">קטגוריה</th>` +
                             AREAS.map(a => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${a}</th>`).join('') +
                             `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;background:#eceff1">סה״כ</th></tr>`;
-                        const balCell = (c) => {
+                        // Click-to-filter: cells carry data-bal-cat + data-bal-area attributes
+                        // so a click handler can filter the projector layer to the matching
+                        // category × area subset.
+                        const balCell = (c, cat, area) => {
                             if (!c.count) return `<td style="padding:5px 9px;text-align:center;color:#ccc">·</td>`;
                             const intensity = Math.min(0.85, c.count / Math.max(balMaxCount, 1) * 0.8 + 0.1);
                             const bg = `rgba(46,125,50,${intensity.toFixed(2)})`;
                             const txtCol = intensity > 0.45 ? '#fff' : '#1b5e20';
                             const unitsStr = c.units > 0 ? `<div style="font-size:10px;opacity:0.92;margin-top:1px;font-weight:400">${c.units.toLocaleString()} ${c.unitLabel}</div>` : '';
-                            return `<td style="padding:5px 9px;text-align:center;background:${bg};color:${txtCol};font-weight:700"><div>${c.count}</div>${unitsStr}</td>`;
+                            const catAttr = cat.replace(/"/g, '&quot;');
+                            const areaAttr = area.replace(/"/g, '&quot;');
+                            return `<td data-bal-cat="${catAttr}" data-bal-area="${areaAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו באזור זה" style="padding:5px 9px;text-align:center;background:${bg};color:${txtCol};font-weight:700;cursor:pointer"><div>${c.count}</div>${unitsStr}</td>`;
                         };
                         const balRows = Object.entries(balance)
                             .filter(([cat, byArea]) => Object.values(byArea).some(c => c.count > 0))
@@ -3171,10 +3186,11 @@
                                     if (byArea[a].unitLabel) acc.unitLabel = byArea[a].unitLabel;
                                     return acc;
                                 }, { count: 0, units: 0, unitLabel: '' });
+                                const catAttr = cat.replace(/"/g, '&quot;');
                                 return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">` +
-                                    `<td style="padding:6px 9px;font-weight:600;background:#fafafa;border-right:3px solid #2e7d32">${cat}</td>` +
-                                    AREAS.map(a => balCell(byArea[a])).join('') +
-                                    `<td style="padding:6px 9px;text-align:center;background:#eceff1;font-weight:700"><div>${totals.count}</div>${totals.units ? `<div style="font-size:10px;color:#555;margin-top:1px;font-weight:400">${totals.units.toLocaleString()} ${totals.unitLabel}</div>` : ''}</td>` +
+                                    `<td data-bal-cat="${catAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו (כל האזורים)" style="padding:6px 9px;font-weight:600;background:#fafafa;border-right:3px solid #2e7d32;cursor:pointer">${cat}</td>` +
+                                    AREAS.map(a => balCell(byArea[a], cat, a)).join('') +
+                                    `<td data-bal-cat="${catAttr}" title="לחץ לסינון" style="padding:6px 9px;text-align:center;background:#eceff1;font-weight:700;cursor:pointer"><div>${totals.count}</div>${totals.units ? `<div style="font-size:10px;color:#555;margin-top:1px;font-weight:400">${totals.units.toLocaleString()} ${totals.unitLabel}</div>` : ''}</td>` +
                                 `</tr>`;
                             }).join('');
                         const balAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0));
@@ -3237,6 +3253,55 @@
                                 });
                                 m.querySelectorAll('[data-tab-pane]').forEach(p => {
                                     p.style.display = p.getAttribute('data-tab-pane') === activeTab ? 'block' : 'none';
+                                });
+                            });
+                        });
+
+                        // ── Balance-tab click handler: filter projector layer by category × area ──
+                        // BAL_CATS maps category → service_he list. When a cell is clicked, we set
+                        // the projector services filter to that list, the domains filter to all,
+                        // and the chumashim filter to all. Also rebuilds layers and closes the modal.
+                        m.querySelectorAll('[data-bal-cat]').forEach(td => {
+                            td.addEventListener('click', () => {
+                                const cat = td.getAttribute('data-bal-cat');
+                                const area = td.getAttribute('data-bal-area');  // may be null (whole row)
+                                const svcs = BAL_CATS[cat] || [];
+                                // Always include 'אחר' catch when category is 'אחר' (collect all unlisted svcs)
+                                if (cat === 'אחר') {
+                                    const known = new Set();
+                                    Object.values(BAL_CATS).forEach(arr => arr.forEach(s => known.add(s)));
+                                    allFeatures.forEach(w => {
+                                        const sv = String(w.feature.properties.service_he || '').trim();
+                                        if (sv && !known.has(sv)) svcs.push(sv);
+                                    });
+                                }
+                                if (!svcs.length) return;
+                                if (!window.__projectorFilters) window.__projectorFilters = {};
+                                window.__projectorFilters.services = new Set(svcs);
+                                // Reset other dimensions to all (so user sees only the cat × area filter)
+                                window.__projectorFilters.domains = new Set(['programa', 'public_space', 'transport']);
+                                window.__projectorFilters.chumashim = new Set([1, 2, 3, 'unknown']);
+                                // Area filter: we filter by sub_neighborhood via a special key the
+                                // build-projector-layer reads (it already filters by chumash/domain/svc;
+                                // we extend via projectorFilters.areas).
+                                window.__projectorFilters.areas = area ? new Set([area]) : null;
+                                if (typeof window.__rebuildProjectorLayers === 'function') {
+                                    window.__rebuildProjectorLayers();
+                                }
+                                m.remove();
+                                // Show a transient banner so the user sees what was filtered
+                                const oldBanner = document.getElementById('pf-filter-banner');
+                                if (oldBanner) oldBanner.remove();
+                                const banner = document.createElement('div');
+                                banner.id = 'pf-filter-banner';
+                                banner.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;border-radius:8px;padding:9px 16px;font-family:Assistant,sans-serif;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:1500;direction:rtl;display:flex;align-items:center;gap:12px';
+                                banner.innerHTML = `🟢 סינון פעיל: <span style="font-weight:400">${cat}${area ? ` · ${area}` : ' · כל השכונות'}</span><button style="background:#fff;color:#2e7d32;border:0;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600">בטל סינון</button>`;
+                                map.getContainer().appendChild(banner);
+                                banner.querySelector('button').addEventListener('click', () => {
+                                    window.__projectorFilters.services = null;  // null = all
+                                    window.__projectorFilters.areas = null;
+                                    if (typeof window.__rebuildProjectorLayers === 'function') window.__rebuildProjectorLayers();
+                                    banner.remove();
                                 });
                             });
                         });
@@ -3409,6 +3474,38 @@
                                     ].join(',') + '\n';
                                 });
                                 filename = `projector_gonenim_normalized_${today}.csv`;
+                            } else if (activeTab === 'balance') {
+                                // Wide format: categories × areas with count/units pairs.
+                                const head = ['קטגוריה'];
+                                AREAS.forEach(a => { head.push(`${a} - פרויקטים`); head.push(`${a} - יחידות`); head.push(`${a} - יחידת מידה`); });
+                                head.push('סה"כ פרויקטים'); head.push('סה"כ יחידות'); head.push('יחידת מידה');
+                                csv = head.map(csvEscape).join(',') + '\n';
+                                Object.entries(balance).forEach(([cat, byArea]) => {
+                                    if (!Object.values(byArea).some(c => c.count > 0)) return;
+                                    const row = [csvEscape(cat)];
+                                    let tCount = 0, tUnits = 0, tLabel = '';
+                                    AREAS.forEach(a => {
+                                        const c = byArea[a];
+                                        row.push(c.count || 0);
+                                        row.push(c.units || 0);
+                                        row.push(csvEscape(c.unitLabel || ''));
+                                        tCount += c.count;
+                                        tUnits += c.units;
+                                        if (c.unitLabel) tLabel = c.unitLabel;
+                                    });
+                                    row.push(tCount); row.push(tUnits); row.push(csvEscape(tLabel));
+                                    csv += row.join(',') + '\n';
+                                });
+                                const totalsRow = [csvEscape('סה"כ פרויקטים')];
+                                let grand = 0;
+                                AREAS.forEach(a => {
+                                    const t = Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0);
+                                    totalsRow.push(t); totalsRow.push(''); totalsRow.push('');
+                                    grand += t;
+                                });
+                                totalsRow.push(grand); totalsRow.push(''); totalsRow.push('');
+                                csv += totalsRow.join(',') + '\n';
+                                filename = `projector_gonenim_balance_${today}.csv`;
                             }
                             downloadCSV(filename, csv);
                         });
@@ -11331,6 +11428,7 @@
                     const chSet = filt.chumashim || new Set([1, 2, 3, 'unknown']);
                     const domSet = filt.domains || new Set(['programa', 'public_space', 'transport']);
                     const svcSet = filt.services;  // null = all allowed
+                    const areaSet = filt.areas;    // null = all areas; otherwise Set of sub_neighborhood names
                     const visible = (geojson.features || []).filter(f => {
                         const ch = f.properties.chumash;
                         const chKey = (ch === null || ch === undefined) ? 'unknown' : ch;
@@ -11341,6 +11439,10 @@
                         if (svcSet) {
                             const sv = (f.properties.service_he || '').trim();
                             if (!svcSet.has(sv)) return false;
+                        }
+                        if (areaSet) {
+                            const a = (f.properties.sub_neighborhood || '').trim();
+                            if (!areaSet.has(a)) return false;
                         }
                         return true;
                     });
