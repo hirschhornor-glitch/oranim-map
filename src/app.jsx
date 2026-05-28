@@ -11310,13 +11310,17 @@
                         // this domain (i.e. rows.length >= 2). Otherwise the clicked
                         // feature is alone in its domain and the table would be a
                         // single self-row, which is noise.
+                        // Per user request 2026-05-28: when all siblings share the same
+                        // service_he (e.g. 3 segments of "הוספת מעבר ה"ר") — skip the
+                        // sub-table entirely. Different-service same-compound rows still
+                        // get the "פירוט ההמלצות במגרש" table.
                         if (sameDom.length >= 2) {
                             const uniqueSvcs = new Set(sameDom.map(s => (s.service_he || '').trim()));
-                            const sameLabel = uniqueSvcs.size === 1
-                                ? `📋 מקטעים בשם זהה (${sameDom.length})`
-                                : `📋 פירוט ההמלצות במגרש (${sameDom.length})`;
-                            const trs = sameDom.map(s => renderRow(s, false)).join('');
-                            sections.push(`<details class="pp-services" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${sameLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`);
+                            if (uniqueSvcs.size > 1) {
+                                const sameLabel = `📋 פירוט ההמלצות במגרש (${sameDom.length})`;
+                                const trs = sameDom.map(s => renderRow(s, false)).join('');
+                                sections.push(`<details class="pp-services" open style="margin:6px 0"><summary style="cursor:pointer;font-size:11.5px;color:#37474f;font-weight:600">${sameLabel}</summary><table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-top:4px;border:1px solid #e0e0e0;border-radius:3px;overflow:hidden"><tbody>${trs}</tbody></table></details>`);
+                            }
                         }
 
                         // Cross-domain section — recommendations from a different

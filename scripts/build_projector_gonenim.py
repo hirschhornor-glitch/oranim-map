@@ -4146,6 +4146,7 @@ def main():
                     geometry = sn_feat["geometry"]
                     match_quality = "manual_override"
                     geometry_source = "manual_override_area_polygon"
+                    pass
                 else:
                     print(f"      [override] area_polygon: sub_neighborhood {sn_name!r} not found for area {area!r}")
             elif isinstance(override, dict) and override.get("type"):
@@ -4434,7 +4435,11 @@ def main():
             or "שביל" in service_he
             or "רחוב חדש" in service_he
         )
-        if (domain == "transport" or _svc_linear) and geometry and geometry.get("type") in ("Polygon", "MultiPolygon"):
+        if (domain == "transport" or _svc_linear) and geometry and geometry.get("type") in ("Polygon", "MultiPolygon") and match_quality != "manual_override":
+            # Convert polygon-from-parcel to centroid Point for transport features
+            # (they'll be re-rendered as small line/rect by _make_synthetic_polygon).
+            # Skip manual_override — those polygons (e.g. area_polygon for sub-neighborhood
+            # scope) are intentional and should NOT be collapsed.
             c = feature_centroid({"geometry": geometry})
             if c:
                 geometry = {"type": "Point", "coordinates": c}
@@ -4785,6 +4790,7 @@ def main():
         _metaham_kw = ("תכנון אב", "תוכנית אב", "מתחמית", "מתחמי להתחדשות")
         _is_metaham = (
             (service_he and any(k in service_he for k in _metaham_kw))
+            or (proj_name and any(k in proj_name for k in _metaham_kw))
             or (proj_name and "מתחם" in proj_name and service_he and "מתחם" in service_he)
         )
         _force_point = (str(proj_name or "").strip(), area) in FORCE_POINT_FEATURES
