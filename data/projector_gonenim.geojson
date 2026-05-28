@@ -10004,8 +10004,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2069756,
-          31.7663411
+          35.207067,
+          31.765565
         ]
       },
       "properties": {
@@ -10033,9 +10033,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 8 חוברת מרחב ציבורי רסקו",
         "pdf_excerpt": "[עמ' 8]\n| מרחב ציבורי | רסקו8\n. מעברי חציה מומלצים להוספה ברסקו6\n.מעברי החציה יושבים על צירי הולכי הרגל הראשיים\n פרק ג': המלצות\nרסקו\nהמלצות להוספת מעברי חציה\n:מקרא\nציר קיים\nמעבר חציה\nציר מוצע\n:מעברי החציה נבחנו ע”י יועצת התנועה חב‘ יורוברידג‘ ומוצגים בטבלה",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -10050,18 +10050,18 @@
           "main_street": "הטייסים",
           "secondary_street": "מעבר לה\"ר",
           "distance": "100 / 160",
-          "justification": "מעבר חציה מתומרר שלא בצומת",
-          "type": "",
+          "justification": "",
+          "type": "מעבר חציה מתומרר שלא בצומת",
           "implications": "ביטול 4-5 חניות",
           "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')"
         },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 166.9,
+        "road_bearing_deg": 99.4,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.2069756,
-          31.7663411
+          35.207067,
+          31.765565
         ]
       }
     },
@@ -10070,8 +10070,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2034157,
-          31.7640812
+          35.203934,
+          31.764338
         ]
       },
       "properties": {
@@ -10099,9 +10099,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 8 חוברת מרחב ציבורי רסקו",
         "pdf_excerpt": "[עמ' 8]\n| מרחב ציבורי | רסקו8\n. מעברי חציה מומלצים להוספה ברסקו6\n.מעברי החציה יושבים על צירי הולכי הרגל הראשיים\n פרק ג': המלצות\nרסקו\nהמלצות להוספת מעברי חציה\n:מקרא\nציר קיים\nמעבר חציה\nציר מוצע\n:מעברי החציה נבחנו ע”י יועצת התנועה חב‘ יורוברידג‘ ומוצגים בטבלה",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -10116,18 +10116,18 @@
           "main_street": "טשרניחובסקי",
           "secondary_street": "מעבר לה\"ר",
           "distance": "120 / 200",
-          "justification": "מעבר חציה מוגבה לה\"ר",
-          "type": "מעבר חציה מוגבה",
+          "justification": "",
+          "type": "מעבר חציה מוגבה לה\"ר",
           "implications": "ביטול חניה או שתיים",
           "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')"
         },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 235.6,
+        "road_bearing_deg": 245.3,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.2034157,
-          31.7640812
+          35.203934,
+          31.764338
         ]
       }
     },
@@ -10136,8 +10136,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2026115,
-          31.7643751
+          35.202298,
+          31.764151
         ]
       },
       "properties": {
@@ -10165,9 +10165,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 8 חוברת מרחב ציבורי רסקו",
         "pdf_excerpt": "[עמ' 8]\n| מרחב ציבורי | רסקו8\n. מעברי חציה מומלצים להוספה ברסקו6\n.מעברי החציה יושבים על צירי הולכי הרגל הראשיים\n פרק ג': המלצות\nרסקו\nהמלצות להוספת מעברי חציה\n:מקרא\nציר קיים\nמעבר חציה\nציר מוצע\n:מעברי החציה נבחנו ע”י יועצת התנועה חב‘ יורוברידג‘ ומוצגים בטבלה",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -10188,12 +10188,12 @@
           "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')"
         },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 230.5,
+        "road_bearing_deg": 319.2,
         "obstacles": null,
         "related_projects_text": null,
         "display_point": [
-          35.2026115,
-          31.7643751
+          35.202298,
+          31.764151
         ]
       }
     },
@@ -10202,8 +10202,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2038849,
-          31.7618627
+          35.203859,
+          31.762691
         ]
       },
       "properties": {
@@ -10231,9 +10231,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 8 חוברת מרחב ציבורי רסקו",
         "pdf_excerpt": "[עמ' 8]\n| מרחב ציבורי | רסקו8\n. מעברי חציה מומלצים להוספה ברסקו6\n.מעברי החציה יושבים על צירי הולכי הרגל הראשיים\n פרק ג': המלצות\nרסקו\nהמלצות להוספת מעברי חציה\n:מקרא\nציר קיים\nמעבר חציה\nציר מוצע\n:מעברי החציה נבחנו ע”י יועצת התנועה חב‘ יורוברידג‘ ומוצגים בטבלה",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -10249,17 +10249,17 @@
           "secondary_street": "המעפילים",
           "distance": "140 / 170",
           "justification": "מעבר מבוקש לה\"ר",
-          "type": "מתוכנן",
+          "type": "",
           "implications": "מתוכנן ע\"י רולי פלד",
           "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')"
         },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 138.3,
+        "road_bearing_deg": 180.6,
         "obstacles": null,
         "related_projects_text": null,
         "display_point": [
-          35.2038849,
-          31.7618627
+          35.203859,
+          31.762691
         ]
       }
     },
@@ -10268,8 +10268,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2019148,
-          31.761736
+          35.201775,
+          31.762846
         ]
       },
       "properties": {
@@ -10297,9 +10297,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 8 חוברת מרחב ציבורי רסקו",
         "pdf_excerpt": "[עמ' 8]\n| מרחב ציבורי | רסקו8\n. מעברי חציה מומלצים להוספה ברסקו6\n.מעברי החציה יושבים על צירי הולכי הרגל הראשיים\n פרק ג': המלצות\nרסקו\nהמלצות להוספת מעברי חציה\n:מקרא\nציר קיים\nמעבר חציה\nציר מוצע\n:מעברי החציה נבחנו ע”י יועצת התנועה חב‘ יורוברידג‘ ומוצגים בטבלה",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -10320,12 +10320,12 @@
           "source": "רסקו מרחב ציבורי 17.4.24, עמ' 8 (יועצת תנועה: יורוברידג')"
         },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 147.4,
+        "road_bearing_deg": 98.9,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.2019148,
-          31.761736
+          35.201775,
+          31.762846
         ]
       }
     },

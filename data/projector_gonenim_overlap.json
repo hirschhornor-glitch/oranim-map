@@ -311,31 +311,31 @@
   },
   "ffcb00aa82da": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d4cbd6abe941": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "0b55f84f7e24": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "09185b8dc6f3": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "921ac9de9ed6": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
