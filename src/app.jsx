@@ -2015,10 +2015,10 @@
             const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
             const measureRef = useRef({ points: [], layers: [], tooltip: null, guideLine: null });
             // Marker-coords tool: capture coords for updating recommendations / polygons.
-            const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'polygon'
+            const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'line' | 'polygon'
             const markerCoordsModeRef = useRef(null);
             const [markerCoordsPts, setMarkerCoordsPts] = useState(0);
-            const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'polygon', points:[{lat,lng}] }
+            const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'line'|'polygon', points:[{lat,lng}] }
             const markerCoordsRef = useRef({ points: [], markers: [], polygon: null });
             const [showPrint, setShowPrint] = useState(false);
             const [printTitle, setPrintTitle] = useState('');
@@ -5431,14 +5431,19 @@
                         setMarkerCoordsResult({ type: 'point', points: [e.latlng] });
                         setMarkerCoordsMode(null);
                     } else {
-                        // Polygon: accumulate vertices.
+                        // Polygon / line: accumulate vertices.
                         r.points.push(e.latlng);
                         setMarkerCoordsPts(r.points.length);
                         const m = L.circleMarker(e.latlng, { radius: 4, color: '#2196F3', fillColor: '#2196F3', fillOpacity: 1 }).addTo(map);
                         r.markers.push(m);
                         if (r.points.length > 1) {
                             if (r.polygon) map.removeLayer(r.polygon);
-                            r.polygon = L.polygon(r.points, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.12, dashArray: '6,4' }).addTo(map);
+                            if (markerCoordsMode === 'line') {
+                                // Open polyline, no fill.
+                                r.polygon = L.polyline(r.points, { color: '#2196F3', weight: 3, dashArray: '6,4' }).addTo(map);
+                            } else {
+                                r.polygon = L.polygon(r.points, { color: '#2196F3', weight: 2, fillColor: '#2196F3', fillOpacity: 0.12, dashArray: '6,4' }).addTo(map);
+                            }
                         }
                     }
                 }
@@ -11352,12 +11357,15 @@
                             });
                         }
                         // --- עיבוי שטחים חומים (>1 דונם) → render the real lot polygon (brown)
+                        // Large compounds (>5 דונם) get a lighter 5% fill so the
+                        // outline reads as a boundary rather than a heavy fill mass.
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_eivuy_brown) {
+                            const isLargeCompound = (p.lot_area_m2 || 0) > 5000;
                             lyr = L.geoJSON(f, {
                                 pane: 'projectorPane',
                                 style: () => ({
-                                    color: '#8d6e63', weight: 2,
-                                    fillColor: '#8d6e63', fillOpacity: 0.4,
+                                    color: '#8d6e63', weight: isLargeCompound ? 2.5 : 2,
+                                    fillColor: '#8d6e63', fillOpacity: isLargeCompound ? 0.05 : 0.4,
                                     dashArray: isOverlap ? '5,3' : null,
                                 }),
                             });
@@ -11365,12 +11373,14 @@
                         // --- מתחם תכנון אב מתחמית להתחדשות → light brown (tan) polygon
                         // Differentiated from is_eivuy_brown (darker) so users can tell
                         // a master-plan compound proposal from a brown-lot densification.
+                        // Master-plan compounds are inherently large — always use the
+                        // light outline+5% style.
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_metaham_polygon) {
                             lyr = L.geoJSON(f, {
                                 pane: 'projectorPane',
                                 style: () => ({
-                                    color: '#a1887f', weight: 2, dashArray: isOverlap ? '5,3' : '4,3',
-                                    fillColor: '#d2b48c', fillOpacity: 0.35,
+                                    color: '#a1887f', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
+                                    fillColor: '#d2b48c', fillOpacity: 0.05,
                                 }),
                             });
                         }
@@ -15352,6 +15362,15 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                         <span className="sub-label">נקודה</span>
                                     </button>
+                                    <button className="toolbar-dropdown-item" data-tip="ציור קו — מתאים לציר/שדרה/שביל. יוצג כ-LineString" onClick={() => {
+                                        cancelAllModes('marker-coords');
+                                        setMarkerCoordsResult(null);
+                                        setMarkerCoordsMode('line');
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,20 9,8 15,14 21,4"/><circle cx="3" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none"/><circle cx="21" cy="4" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                        <span className="sub-label">קו</span>
+                                    </button>
                                     <button className="toolbar-dropdown-item" data-tip="ציור פוליגון לסימון גבול — יוצג GeoJSON להעתקה" onClick={() => {
                                         cancelAllModes('marker-coords');
                                         setMarkerCoordsResult(null);
@@ -16036,31 +16055,36 @@
                         )}
 
                         {/* Marker-coords active-mode banner */}
-                        {markerCoordsMode && (
-                            <div style={{position:'fixed',top:'60px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'8px 14px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl',display:'flex',alignItems:'center',gap:10}}>
-                                <span>
-                                {markerCoordsMode === 'point'
-                                    ? 'לחץ על המפה לסימון נקודה'
-                                    : (markerCoordsPts < 3
-                                        ? `סמן קדקודים (${markerCoordsPts}/3 לפחות)`
-                                        : `${markerCoordsPts} קדקודים`)}
-                                </span>
-                                {markerCoordsMode === 'polygon' && markerCoordsPts >= 3 && (
-                                    <button onClick={() => {
-                                        const r = markerCoordsRef.current;
-                                        if (r.points.length >= 3) {
-                                            setMarkerCoordsResult({ type: 'polygon', points: [...r.points] });
-                                            setMarkerCoordsMode(null);
-                                        }
-                                    }} style={{background:'#fff',color:'#1976D2',border:'none',padding:'4px 12px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-                                        סיום ✓
+                        {markerCoordsMode && (() => {
+                            const minPts = markerCoordsMode === 'line' ? 2 : 3;
+                            const ptsLabel = markerCoordsMode === 'line' ? 'נקודות' : 'קדקודים';
+                            const canFinish = markerCoordsMode !== 'point' && markerCoordsPts >= minPts;
+                            return (
+                                <div style={{position:'fixed',top:'60px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'8px 14px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl',display:'flex',alignItems:'center',gap:10}}>
+                                    <span>
+                                    {markerCoordsMode === 'point'
+                                        ? 'לחץ על המפה לסימון נקודה'
+                                        : (markerCoordsPts < minPts
+                                            ? `סמן ${ptsLabel} (${markerCoordsPts}/${minPts} לפחות)`
+                                            : `${markerCoordsPts} ${ptsLabel}`)}
+                                    </span>
+                                    {canFinish && (
+                                        <button onClick={() => {
+                                            const r = markerCoordsRef.current;
+                                            if (r.points.length >= minPts) {
+                                                setMarkerCoordsResult({ type: markerCoordsMode, points: [...r.points] });
+                                                setMarkerCoordsMode(null);
+                                            }
+                                        }} style={{background:'#fff',color:'#1976D2',border:'none',padding:'4px 12px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                                            סיום ✓
+                                        </button>
+                                    )}
+                                    <button onClick={() => setMarkerCoordsMode(null)} style={{background:'rgba(255,255,255,0.18)',color:'#fff',border:'1px solid rgba(255,255,255,0.4)',padding:'4px 10px',borderRadius:6,fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
+                                        ביטול (ESC)
                                     </button>
-                                )}
-                                <button onClick={() => setMarkerCoordsMode(null)} style={{background:'rgba(255,255,255,0.18)',color:'#fff',border:'1px solid rgba(255,255,255,0.4)',padding:'4px 10px',borderRadius:6,fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
-                                    ביטול (ESC)
-                                </button>
-                            </div>
-                        )}
+                                </div>
+                            );
+                        })()}
 
                     </div>
 
@@ -16224,9 +16248,16 @@
                                     properties: {}
                                 }, null, 2);
                             }
-                            // Close polygon ring (GeoJSON requires first == last)
-                            const ring = pts.map(p => [Number(fmtNum(p.lng)), Number(fmtNum(p.lat))]);
-                            ring.push(ring[0]);
+                            const coords = pts.map(p => [Number(fmtNum(p.lng)), Number(fmtNum(p.lat))]);
+                            if (type === 'line') {
+                                return JSON.stringify({
+                                    type: 'Feature',
+                                    geometry: { type: 'LineString', coordinates: coords },
+                                    properties: {}
+                                }, null, 2);
+                            }
+                            // Polygon — close the ring (GeoJSON requires first == last)
+                            const ring = [...coords, coords[0]];
                             return JSON.stringify({
                                 type: 'Feature',
                                 geometry: { type: 'Polygon', coordinates: [ring] },
@@ -16253,7 +16284,7 @@
                             <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',direction:'rtl'}} onClick={close}>
                                 <div onClick={e => e.stopPropagation()} style={{background:'#16162e',border:'1px solid #2a2a4a',borderRadius:14,width:'90vw',maxWidth:560,maxHeight:'85vh',display:'flex',flexDirection:'column',color:'#e0e0ff',fontFamily:'Assistant, sans-serif'}}>
                                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid #2a2a4a'}}>
-                                        <h2 style={{fontSize:16,margin:0}}>📍 קואורדינטות {type === 'point' ? 'נקודה' : `פוליגון (${pts.length} קדקודים)`}</h2>
+                                        <h2 style={{fontSize:16,margin:0}}>📍 קואורדינטות {type === 'point' ? 'נקודה' : type === 'line' ? `קו (${pts.length} נקודות)` : `פוליגון (${pts.length} קדקודים)`}</h2>
                                         <button className="modal-close" onClick={close}>&times;</button>
                                     </div>
                                     <div style={{padding:'14px 18px',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
