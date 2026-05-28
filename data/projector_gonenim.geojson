@@ -63,7 +63,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -150,7 +151,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -437,7 +439,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -725,7 +728,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -1013,7 +1017,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -1301,7 +1306,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -1389,7 +1395,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -1950,7 +1957,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -2512,7 +2520,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -3074,7 +3083,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -3636,7 +3646,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -4198,7 +4209,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -4760,7 +4772,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -5322,7 +5335,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -5492,7 +5506,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -5633,7 +5648,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -5880,7 +5896,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -5989,7 +6006,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -6098,7 +6116,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -6345,7 +6364,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -6600,7 +6620,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -6855,7 +6876,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7030,7 +7052,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7205,7 +7228,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7322,7 +7346,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7395,7 +7420,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7470,7 +7496,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7543,7 +7570,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7619,7 +7647,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7691,7 +7720,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -7862,7 +7892,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -8617,7 +8648,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -8970,7 +9002,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9051,7 +9084,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9112,7 +9146,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9177,7 +9212,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9254,7 +9290,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9323,7 +9360,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9392,7 +9430,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9481,7 +9520,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9559,7 +9599,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9620,7 +9661,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9681,7 +9723,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9776,7 +9819,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9843,7 +9887,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9898,7 +9943,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -9953,7 +9999,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10008,7 +10055,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10063,7 +10111,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10118,7 +10167,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10273,7 +10323,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10334,7 +10385,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -10478,199 +10530,227 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 989.7,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.209555162796,
-                  31.758639971707808
-                ],
-                [
-                  35.2095327291676,
-                  31.75856669780193
-                ],
-                [
-                  35.20946394211494,
-                  31.758304038529406
-                ],
-                [
-                  35.209427816927,
-                  31.758177781815736
-                ],
-                [
-                  35.20926685626819,
-                  31.758248808290357
-                ],
-                [
-                  35.20939621963559,
-                  31.758457409684272
-                ],
-                [
-                  35.209105742542185,
-                  31.758553186672092
-                ],
-                [
-                  35.20909320895001,
-                  31.75856446018399
-                ],
-                [
-                  35.208989642807325,
-                  31.758678321754438
-                ],
-                [
-                  35.209006465923224,
-                  31.75870763107078
-                ],
-                [
-                  35.209119927726235,
-                  31.75857798685236
-                ],
-                [
-                  35.20925235746189,
-                  31.758523871232274
-                ],
-                [
-                  35.20938331658947,
-                  31.758703107631824
-                ],
-                [
-                  35.20948408192957,
-                  31.75866477527711
-                ],
-                [
-                  35.209555162796,
-                  31.758639971707808
+                  [
+                    [
+                      35.209555162796,
+                      31.758639971707808
+                    ],
+                    [
+                      35.2095327291676,
+                      31.75856669780193
+                    ],
+                    [
+                      35.20946394211494,
+                      31.758304038529406
+                    ],
+                    [
+                      35.209427816927,
+                      31.758177781815736
+                    ],
+                    [
+                      35.20926685626819,
+                      31.758248808290357
+                    ],
+                    [
+                      35.20939621963559,
+                      31.758457409684272
+                    ],
+                    [
+                      35.209105742542185,
+                      31.758553186672092
+                    ],
+                    [
+                      35.20909320895001,
+                      31.75856446018399
+                    ],
+                    [
+                      35.208989642807325,
+                      31.758678321754438
+                    ],
+                    [
+                      35.209006465923224,
+                      31.75870763107078
+                    ],
+                    [
+                      35.209119927726235,
+                      31.75857798685236
+                    ],
+                    [
+                      35.20925235746189,
+                      31.758523871232274
+                    ],
+                    [
+                      35.20938331658947,
+                      31.758703107631824
+                    ],
+                    [
+                      35.20948408192957,
+                      31.75866477527711
+                    ],
+                    [
+                      35.209555162796,
+                      31.758639971707808
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 769.7,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20976722807655,
-                  31.758178895241095
-                ],
-                [
-                  35.20974875571385,
-                  31.75816085914128
-                ],
-                [
-                  35.20967733972885,
-                  31.758076314257895
-                ],
-                [
-                  35.209530711440166,
-                  31.757867768847547
-                ],
-                [
-                  35.20971822606268,
-                  31.75782492355132
-                ],
-                [
-                  35.209868962091456,
-                  31.7577899707013
-                ],
-                [
-                  35.20992338608748,
-                  31.757777567993458
-                ],
-                [
-                  35.20988067020792,
-                  31.757762914877638
-                ],
-                [
-                  35.20983350165236,
-                  31.757756153072723
-                ],
-                [
-                  35.209775613452784,
-                  31.757749391704138
-                ],
-                [
-                  35.209736527258244,
-                  31.757749393351112
-                ],
-                [
-                  35.209697276598895,
-                  31.757752776907903
-                ],
-                [
-                  35.20964883199086,
-                  31.757765163941055
-                ],
-                [
-                  35.20951207179423,
-                  31.757800131300765
-                ],
-                [
-                  35.209490962105995,
-                  31.757805768672938
-                ],
-                [
-                  35.209467709433554,
-                  31.7578249337867
-                ],
-                [
-                  35.209455176167666,
-                  31.757839589250363
-                ],
-                [
-                  35.20944923971453,
-                  31.757853117145903
-                ],
-                [
-                  35.209446931076656,
-                  31.757867772202086
-                ],
-                [
-                  35.2094520449039,
-                  31.757885808878232
-                ],
-                [
-                  35.209573204494234,
-                  31.758145529649713
-                ],
-                [
-                  35.209622429630734,
-                  31.758251048786327
-                ],
-                [
-                  35.20976722807655,
-                  31.758178895241095
+                  [
+                    [
+                      35.20976722807655,
+                      31.758178895241095
+                    ],
+                    [
+                      35.20974875571385,
+                      31.75816085914128
+                    ],
+                    [
+                      35.20967733972885,
+                      31.758076314257895
+                    ],
+                    [
+                      35.209530711440166,
+                      31.757867768847547
+                    ],
+                    [
+                      35.20971822606268,
+                      31.75782492355132
+                    ],
+                    [
+                      35.209868962091456,
+                      31.7577899707013
+                    ],
+                    [
+                      35.20992338608748,
+                      31.757777567993458
+                    ],
+                    [
+                      35.20988067020792,
+                      31.757762914877638
+                    ],
+                    [
+                      35.20983350165236,
+                      31.757756153072723
+                    ],
+                    [
+                      35.209775613452784,
+                      31.757749391704138
+                    ],
+                    [
+                      35.209736527258244,
+                      31.757749393351112
+                    ],
+                    [
+                      35.209697276598895,
+                      31.757752776907903
+                    ],
+                    [
+                      35.20964883199086,
+                      31.757765163941055
+                    ],
+                    [
+                      35.20951207179423,
+                      31.757800131300765
+                    ],
+                    [
+                      35.209490962105995,
+                      31.757805768672938
+                    ],
+                    [
+                      35.209467709433554,
+                      31.7578249337867
+                    ],
+                    [
+                      35.209455176167666,
+                      31.757839589250363
+                    ],
+                    [
+                      35.20944923971453,
+                      31.757853117145903
+                    ],
+                    [
+                      35.209446931076656,
+                      31.757867772202086
+                    ],
+                    [
+                      35.2094520449039,
+                      31.757885808878232
+                    ],
+                    [
+                      35.209573204494234,
+                      31.758145529649713
+                    ],
+                    [
+                      35.209622429630734,
+                      31.758251048786327
+                    ],
+                    [
+                      35.20976722807655,
+                      31.758178895241095
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 467.4,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.209837842530945,
-                  31.758650105671883
-                ],
-                [
-                  35.209738054739226,
-                  31.75850468757828
-                ],
-                [
-                  35.2095327291676,
-                  31.75856669780193
-                ],
-                [
-                  35.209555162796,
-                  31.758639971707808
-                ],
-                [
-                  35.20962295315391,
-                  31.75875720864051
-                ],
-                [
-                  35.209837842530945,
-                  31.758650105671883
+                  [
+                    [
+                      35.209837842530945,
+                      31.758650105671883
+                    ],
+                    [
+                      35.209738054739226,
+                      31.75850468757828
+                    ],
+                    [
+                      35.2095327291676,
+                      31.75856669780193
+                    ],
+                    [
+                      35.209555162796,
+                      31.758639971707808
+                    ],
+                    [
+                      35.20962295315391,
+                      31.75875720864051
+                    ],
+                    [
+                      35.209837842530945,
+                      31.758650105671883
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [],
         "inner_shatzap_count": 3,
         "inner_shatzap_total_m2": 2226.8,
         "is_metaham_pdf_tichnun": true,
@@ -10793,291 +10873,339 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 532.4,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.21121008900645,
-                  31.75847273797528
-                ],
-                [
-                  35.211221391468015,
-                  31.75845955872491
-                ],
-                [
-                  35.21123076636239,
-                  31.758443555001982
-                ],
-                [
-                  35.21123673191245,
-                  31.75842682457552
-                ],
-                [
-                  35.21123928727862,
-                  31.75841227589251
-                ],
-                [
-                  35.21123817287864,
-                  31.7583865373278
-                ],
-                [
-                  35.211170736914305,
-                  31.758434726455
-                ],
-                [
-                  35.211076076515425,
-                  31.758502369750744
-                ],
-                [
-                  35.21128736022129,
-                  31.758737965191703
-                ],
-                [
-                  35.21118164856023,
-                  31.75880786377025
-                ],
-                [
-                  35.21120259602646,
-                  31.75883379066161
-                ],
-                [
-                  35.21122271844381,
-                  31.758821388329135
-                ],
-                [
-                  35.21132042796894,
-                  31.75874754548738
-                ],
-                [
-                  35.211418140505415,
-                  31.758673701667835
-                ],
-                [
-                  35.21141599344183,
-                  31.758671628447285
-                ],
-                [
-                  35.211219722253524,
-                  31.758482070641364
-                ],
-                [
-                  35.211219735974055,
-                  31.75848205621114
-                ],
-                [
-                  35.21121008900645,
-                  31.75847273797528
+                  [
+                    [
+                      35.21121008900645,
+                      31.75847273797528
+                    ],
+                    [
+                      35.211221391468015,
+                      31.75845955872491
+                    ],
+                    [
+                      35.21123076636239,
+                      31.758443555001982
+                    ],
+                    [
+                      35.21123673191245,
+                      31.75842682457552
+                    ],
+                    [
+                      35.21123928727862,
+                      31.75841227589251
+                    ],
+                    [
+                      35.21123817287864,
+                      31.7583865373278
+                    ],
+                    [
+                      35.211170736914305,
+                      31.758434726455
+                    ],
+                    [
+                      35.211076076515425,
+                      31.758502369750744
+                    ],
+                    [
+                      35.21128736022129,
+                      31.758737965191703
+                    ],
+                    [
+                      35.21118164856023,
+                      31.75880786377025
+                    ],
+                    [
+                      35.21120259602646,
+                      31.75883379066161
+                    ],
+                    [
+                      35.21122271844381,
+                      31.758821388329135
+                    ],
+                    [
+                      35.21132042796894,
+                      31.75874754548738
+                    ],
+                    [
+                      35.211418140505415,
+                      31.758673701667835
+                    ],
+                    [
+                      35.21141599344183,
+                      31.758671628447285
+                    ],
+                    [
+                      35.211219722253524,
+                      31.758482070641364
+                    ],
+                    [
+                      35.211219735974055,
+                      31.75848205621114
+                    ],
+                    [
+                      35.21121008900645,
+                      31.75847273797528
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 181.9,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.21188870611573,
-                  31.759175325453857
-                ],
-                [
-                  35.21191641263257,
-                  31.759165880613338
-                ],
-                [
-                  35.21189942333304,
-                  31.759130091043776
-                ],
-                [
-                  35.21190222498192,
-                  31.75910782706095
-                ],
-                [
-                  35.21185697184791,
-                  31.759054612821704
-                ],
-                [
-                  35.21179024056488,
-                  31.759099801796154
-                ],
-                [
-                  35.21169728288612,
-                  31.759159104294305
-                ],
-                [
-                  35.211698222288575,
-                  31.75915902577999
-                ],
-                [
-                  35.21169693870159,
-                  31.759184864579797
-                ],
-                [
-                  35.21176270493895,
-                  31.759187733162108
-                ],
-                [
-                  35.21181449183538,
-                  31.759189403975782
-                ],
-                [
-                  35.211832468368684,
-                  31.759189983713988
-                ],
-                [
-                  35.21188870611573,
-                  31.759175325453857
+                  [
+                    [
+                      35.21188870611573,
+                      31.759175325453857
+                    ],
+                    [
+                      35.21191641263257,
+                      31.759165880613338
+                    ],
+                    [
+                      35.21189942333304,
+                      31.759130091043776
+                    ],
+                    [
+                      35.21190222498192,
+                      31.75910782706095
+                    ],
+                    [
+                      35.21185697184791,
+                      31.759054612821704
+                    ],
+                    [
+                      35.21179024056488,
+                      31.759099801796154
+                    ],
+                    [
+                      35.21169728288612,
+                      31.759159104294305
+                    ],
+                    [
+                      35.211698222288575,
+                      31.75915902577999
+                    ],
+                    [
+                      35.21169693870159,
+                      31.759184864579797
+                    ],
+                    [
+                      35.21176270493895,
+                      31.759187733162108
+                    ],
+                    [
+                      35.21181449183538,
+                      31.759189403975782
+                    ],
+                    [
+                      35.211832468368684,
+                      31.759189983713988
+                    ],
+                    [
+                      35.21188870611573,
+                      31.759175325453857
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 899.3,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.21179024056488,
-                  31.759099801796154
-                ],
-                [
-                  35.21185697184791,
-                  31.759054612821704
-                ],
-                [
-                  35.21163980145462,
-                  31.758818390087313
-                ],
-                [
-                  35.2116437087598,
-                  31.75881585027261
-                ],
-                [
-                  35.21172764505321,
-                  31.758761283010625
-                ],
-                [
-                  35.21172712253124,
-                  31.75876072389753
-                ],
-                [
-                  35.21161291206673,
-                  31.758638744321477
-                ],
-                [
-                  35.21147867090042,
-                  31.75873006355366
-                ],
-                [
-                  35.211448405165996,
-                  31.75870188261443
-                ],
-                [
-                  35.211418140505415,
-                  31.758673701667835
-                ],
-                [
-                  35.21132042796894,
-                  31.75874754548738
-                ],
-                [
-                  35.21122271844381,
-                  31.758821388329135
-                ],
-                [
-                  35.21120259602646,
-                  31.75883379066161
-                ],
-                [
-                  35.21123673848232,
-                  31.758874371802865
-                ],
-                [
-                  35.21127088096796,
-                  31.758914952934706
-                ],
-                [
-                  35.21137906553578,
-                  31.758842235885638
-                ],
-                [
-                  35.21148724993443,
-                  31.758769518743897
-                ],
-                [
-                  35.21149568944695,
-                  31.758778717982292
-                ],
-                [
-                  35.21179024056488,
-                  31.759099801796154
+                  [
+                    [
+                      35.21179024056488,
+                      31.759099801796154
+                    ],
+                    [
+                      35.21185697184791,
+                      31.759054612821704
+                    ],
+                    [
+                      35.21163980145462,
+                      31.758818390087313
+                    ],
+                    [
+                      35.2116437087598,
+                      31.75881585027261
+                    ],
+                    [
+                      35.21172764505321,
+                      31.758761283010625
+                    ],
+                    [
+                      35.21172712253124,
+                      31.75876072389753
+                    ],
+                    [
+                      35.21161291206673,
+                      31.758638744321477
+                    ],
+                    [
+                      35.21147867090042,
+                      31.75873006355366
+                    ],
+                    [
+                      35.211448405165996,
+                      31.75870188261443
+                    ],
+                    [
+                      35.211418140505415,
+                      31.758673701667835
+                    ],
+                    [
+                      35.21132042796894,
+                      31.75874754548738
+                    ],
+                    [
+                      35.21122271844381,
+                      31.758821388329135
+                    ],
+                    [
+                      35.21120259602646,
+                      31.75883379066161
+                    ],
+                    [
+                      35.21123673848232,
+                      31.758874371802865
+                    ],
+                    [
+                      35.21127088096796,
+                      31.758914952934706
+                    ],
+                    [
+                      35.21137906553578,
+                      31.758842235885638
+                    ],
+                    [
+                      35.21148724993443,
+                      31.758769518743897
+                    ],
+                    [
+                      35.21149568944695,
+                      31.758778717982292
+                    ],
+                    [
+                      35.21179024056488,
+                      31.759099801796154
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 238.9,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.21152933496818,
-                  31.758559474252902
-                ],
-                [
-                  35.21156937481063,
-                  31.758534508963844
-                ],
-                [
-                  35.211337133590696,
-                  31.758282115579675
-                ],
-                [
-                  35.21131054112878,
-                  31.758252945082504
-                ],
-                [
-                  35.21126096326466,
-                  31.758285055213694
-                ],
-                [
-                  35.21125482684891,
-                  31.758289017344886
-                ],
-                [
-                  35.21124849411762,
-                  31.758293101235264
-                ],
-                [
-                  35.21152933496818,
-                  31.758559474252902
+                  [
+                    [
+                      35.21152933496818,
+                      31.758559474252902
+                    ],
+                    [
+                      35.21156937481063,
+                      31.758534508963844
+                    ],
+                    [
+                      35.211337133590696,
+                      31.758282115579675
+                    ],
+                    [
+                      35.21131054112878,
+                      31.758252945082504
+                    ],
+                    [
+                      35.21126096326466,
+                      31.758285055213694
+                    ],
+                    [
+                      35.21125482684891,
+                      31.758289017344886
+                    ],
+                    [
+                      35.21124849411762,
+                      31.758293101235264
+                    ],
+                    [
+                      35.21152933496818,
+                      31.758559474252902
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 120.7,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.211761316222784,
-                  31.75873939331626
-                ],
-                [
-                  35.21156937481063,
-                  31.758534508963844
-                ],
-                [
-                  35.21152933496818,
-                  31.758559474252902
-                ],
-                [
-                  35.21161291206673,
-                  31.758638744321477
-                ],
-                [
-                  35.21172712253124,
-                  31.75876072389753
-                ],
-                [
-                  35.21172764505321,
-                  31.758761283010625
-                ],
-                [
-                  35.211761316222784,
-                  31.75873939331626
+                  [
+                    [
+                      35.211761316222784,
+                      31.75873939331626
+                    ],
+                    [
+                      35.21156937481063,
+                      31.758534508963844
+                    ],
+                    [
+                      35.21152933496818,
+                      31.758559474252902
+                    ],
+                    [
+                      35.21161291206673,
+                      31.758638744321477
+                    ],
+                    [
+                      35.21172712253124,
+                      31.75876072389753
+                    ],
+                    [
+                      35.21172764505321,
+                      31.758761283010625
+                    ],
+                    [
+                      35.211761316222784,
+                      31.75873939331626
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [],
         "inner_shatzap_count": 5,
         "inner_shatzap_total_m2": 1973.2,
         "is_metaham_pdf_tichnun": true,
@@ -11236,223 +11364,261 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 290.9,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.2002452954759,
-                  31.75683654576282
-                ],
-                [
-                  35.20023941585492,
-                  31.756777820188216
-                ],
-                [
-                  35.20023206076295,
-                  31.756669754672217
-                ],
-                [
-                  35.20006638938081,
-                  31.75669299058632
-                ],
-                [
-                  35.20007285933086,
-                  31.756788043372733
-                ],
-                [
-                  35.200079696788585,
-                  31.75685633033855
-                ],
-                [
-                  35.200205904385356,
-                  31.75684195644258
-                ],
-                [
-                  35.20021507241935,
-                  31.756840696866924
-                ],
-                [
-                  35.2002452954759,
-                  31.75683654576282
+                  [
+                    [
+                      35.2002452954759,
+                      31.75683654576282
+                    ],
+                    [
+                      35.20023941585492,
+                      31.756777820188216
+                    ],
+                    [
+                      35.20023206076295,
+                      31.756669754672217
+                    ],
+                    [
+                      35.20006638938081,
+                      31.75669299058632
+                    ],
+                    [
+                      35.20007285933086,
+                      31.756788043372733
+                    ],
+                    [
+                      35.200079696788585,
+                      31.75685633033855
+                    ],
+                    [
+                      35.200205904385356,
+                      31.75684195644258
+                    ],
+                    [
+                      35.20021507241935,
+                      31.756840696866924
+                    ],
+                    [
+                      35.2002452954759,
+                      31.75683654576282
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 492.8,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.19895116666773,
-                  31.75727253963135
-                ],
-                [
-                  35.19894655039869,
-                  31.757246611417827
-                ],
-                [
-                  35.198937319057265,
-                  31.75717446349864
-                ],
-                [
-                  35.19893602121834,
-                  31.75714933626376
-                ],
-                [
-                  35.19892296643008,
-                  31.75712118554375
-                ],
-                [
-                  35.19889972531918,
-                  31.75710717349532
-                ],
-                [
-                  35.19882590012573,
-                  31.757104835419792
-                ],
-                [
-                  35.19870559184052,
-                  31.757107164985612
-                ],
-                [
-                  35.1986837171797,
-                  31.7571176731972
-                ],
-                [
-                  35.19866320858599,
-                  31.75714102462775
-                ],
-                [
-                  35.19866320700509,
-                  31.75716671275404
-                ],
-                [
-                  35.198695817305534,
-                  31.757273501569728
-                ],
-                [
-                  35.19869601253305,
-                  31.757274136476667
-                ],
-                [
-                  35.19870681283486,
-                  31.757300707989813
-                ],
-                [
-                  35.19895116666773,
-                  31.75727253963135
+                  [
+                    [
+                      35.19895116666773,
+                      31.75727253963135
+                    ],
+                    [
+                      35.19894655039869,
+                      31.757246611417827
+                    ],
+                    [
+                      35.198937319057265,
+                      31.75717446349864
+                    ],
+                    [
+                      35.19893602121834,
+                      31.75714933626376
+                    ],
+                    [
+                      35.19892296643008,
+                      31.75712118554375
+                    ],
+                    [
+                      35.19889972531918,
+                      31.75710717349532
+                    ],
+                    [
+                      35.19882590012573,
+                      31.757104835419792
+                    ],
+                    [
+                      35.19870559184052,
+                      31.757107164985612
+                    ],
+                    [
+                      35.1986837171797,
+                      31.7571176731972
+                    ],
+                    [
+                      35.19866320858599,
+                      31.75714102462775
+                    ],
+                    [
+                      35.19866320700509,
+                      31.75716671275404
+                    ],
+                    [
+                      35.198695817305534,
+                      31.757273501569728
+                    ],
+                    [
+                      35.19869601253305,
+                      31.757274136476667
+                    ],
+                    [
+                      35.19870681283486,
+                      31.757300707989813
+                    ],
+                    [
+                      35.19895116666773,
+                      31.75727253963135
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 911.7,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20000430581888,
-                  31.758234171360677
-                ],
-                [
-                  35.20007357975252,
-                  31.758095515221854
-                ],
-                [
-                  35.200017682979826,
-                  31.75785877928003
-                ],
-                [
-                  35.200011416743585,
-                  31.757830596440925
-                ],
-                [
-                  35.199959477920984,
-                  31.757604006344643
-                ],
-                [
-                  35.19990374511824,
-                  31.757371779560454
-                ],
-                [
-                  35.19971672044487,
-                  31.757443920363805
-                ],
-                [
-                  35.19978158073414,
-                  31.757570390115223
-                ],
-                [
-                  35.19978904238057,
-                  31.757584938932272
-                ],
-                [
-                  35.19979330617961,
-                  31.757593251382296
-                ],
-                [
-                  35.19980009659761,
-                  31.75760649340247
-                ],
-                [
-                  35.19980295355533,
-                  31.75761206239202
-                ],
-                [
-                  35.19980606908534,
-                  31.757618139128986
-                ],
-                [
-                  35.199813850524656,
-                  31.75763331113015
-                ],
-                [
-                  35.1999441257503,
-                  31.75789034127466
-                ],
-                [
-                  35.20004323445598,
-                  31.75808649575141
-                ],
-                [
-                  35.199974784886486,
-                  31.75822402459758
-                ],
-                [
-                  35.20000430581888,
-                  31.758234171360677
+                  [
+                    [
+                      35.20000430581888,
+                      31.758234171360677
+                    ],
+                    [
+                      35.20007357975252,
+                      31.758095515221854
+                    ],
+                    [
+                      35.200017682979826,
+                      31.75785877928003
+                    ],
+                    [
+                      35.200011416743585,
+                      31.757830596440925
+                    ],
+                    [
+                      35.199959477920984,
+                      31.757604006344643
+                    ],
+                    [
+                      35.19990374511824,
+                      31.757371779560454
+                    ],
+                    [
+                      35.19971672044487,
+                      31.757443920363805
+                    ],
+                    [
+                      35.19978158073414,
+                      31.757570390115223
+                    ],
+                    [
+                      35.19978904238057,
+                      31.757584938932272
+                    ],
+                    [
+                      35.19979330617961,
+                      31.757593251382296
+                    ],
+                    [
+                      35.19980009659761,
+                      31.75760649340247
+                    ],
+                    [
+                      35.19980295355533,
+                      31.75761206239202
+                    ],
+                    [
+                      35.19980606908534,
+                      31.757618139128986
+                    ],
+                    [
+                      35.199813850524656,
+                      31.75763331113015
+                    ],
+                    [
+                      35.1999441257503,
+                      31.75789034127466
+                    ],
+                    [
+                      35.20004323445598,
+                      31.75808649575141
+                    ],
+                    [
+                      35.199974784886486,
+                      31.75822402459758
+                    ],
+                    [
+                      35.20000430581888,
+                      31.758234171360677
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 106.5,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20023206076295,
-                  31.756669754672217
-                ],
-                [
-                  35.20022809368201,
-                  31.75661148007999
-                ],
-                [
-                  35.20019994371852,
-                  31.75661462388845
-                ],
-                [
-                  35.2000954658565,
-                  31.75662629207862
-                ],
-                [
-                  35.20006210386418,
-                  31.756630018272226
-                ],
-                [
-                  35.20006638938081,
-                  31.75669299058632
-                ],
-                [
-                  35.20023206076295,
-                  31.756669754672217
+                  [
+                    [
+                      35.20023206076295,
+                      31.756669754672217
+                    ],
+                    [
+                      35.20022809368201,
+                      31.75661148007999
+                    ],
+                    [
+                      35.20019994371852,
+                      31.75661462388845
+                    ],
+                    [
+                      35.2000954658565,
+                      31.75662629207862
+                    ],
+                    [
+                      35.20006210386418,
+                      31.756630018272226
+                    ],
+                    [
+                      35.20006638938081,
+                      31.75669299058632
+                    ],
+                    [
+                      35.20023206076295,
+                      31.756669754672217
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [],
         "inner_shatzap_count": 4,
         "inner_shatzap_total_m2": 1801.9,
         "is_metaham_pdf_tichnun": true,
@@ -11571,7 +11737,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": true,
@@ -11649,7 +11816,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -11719,7 +11887,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -11789,7 +11958,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -11867,7 +12037,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -11961,7 +12132,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -11976,7 +12148,8 @@
         "display_point": [
           35.2020503,
           31.7536529
-        ]
+        ],
+        "manual_note": "חלק משביל גוננים"
       }
     },
     {
@@ -12027,7 +12200,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12093,7 +12267,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12108,7 +12283,8 @@
         "display_point": [
           35.2106185,
           31.7586685
-        ]
+        ],
+        "manual_note": "חלק משביל גוננים"
       }
     },
     {
@@ -12159,7 +12335,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12225,7 +12402,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12291,7 +12469,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12356,7 +12535,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12422,7 +12602,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12529,7 +12710,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12633,7 +12815,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12712,7 +12895,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12823,7 +13007,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12878,7 +13063,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12938,7 +13124,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -12998,7 +13185,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13058,7 +13246,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13113,7 +13302,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13173,7 +13363,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13238,7 +13429,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13293,7 +13485,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13353,7 +13546,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13422,7 +13616,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -13520,289 +13715,369 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "לשדרוג",
+            "label": "1,100 מ\"ר",
+            "area_m2": 1192.4,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.2061475387002,
-                  31.7565984771137
-                ],
-                [
-                  35.20627661649911,
-                  31.756715973832573
-                ],
-                [
-                  35.20631404856753,
-                  31.756677423944566
-                ],
-                [
-                  35.20650551701029,
-                  31.756488033634042
-                ],
-                [
-                  35.206699457473505,
-                  31.756290751848663
-                ],
-                [
-                  35.20657658934607,
-                  31.756182532715133
-                ],
-                [
-                  35.20635923054295,
-                  31.75636628792055
-                ],
-                [
-                  35.20615473389238,
-                  31.7565398950217
-                ],
-                [
-                  35.20611774076353,
-                  31.75657135275536
-                ],
-                [
-                  35.2061475387002,
-                  31.7565984771137
+                  [
+                    [
+                      35.2061475387002,
+                      31.7565984771137
+                    ],
+                    [
+                      35.20627661649911,
+                      31.756715973832573
+                    ],
+                    [
+                      35.20631404856753,
+                      31.756677423944566
+                    ],
+                    [
+                      35.20650551701029,
+                      31.756488033634042
+                    ],
+                    [
+                      35.206699457473505,
+                      31.756290751848663
+                    ],
+                    [
+                      35.20657658934607,
+                      31.756182532715133
+                    ],
+                    [
+                      35.20635923054295,
+                      31.75636628792055
+                    ],
+                    [
+                      35.20615473389238,
+                      31.7565398950217
+                    ],
+                    [
+                      35.20611774076353,
+                      31.75657135275536
+                    ],
+                    [
+                      35.2061475387002,
+                      31.7565984771137
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "לשדרוג+תצפית",
+            "label": "1,200 מ\"ר",
+            "area_m2": 1153.9,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20558228186782,
-                  31.755313393505784
-                ],
-                [
-                  35.20537860770257,
-                  31.75513415368993
-                ],
-                [
-                  35.20524263482085,
-                  31.755260262275556
-                ],
-                [
-                  35.20521451624827,
-                  31.75528634109383
-                ],
-                [
-                  35.20517757398268,
-                  31.755320160490697
-                ],
-                [
-                  35.205034288286086,
-                  31.75545312291221
-                ],
-                [
-                  35.20518853520444,
-                  31.7555824383919
-                ],
-                [
-                  35.205349584742,
-                  31.755473472841935
-                ],
-                [
-                  35.20539147406915,
-                  31.75544528988408
-                ],
-                [
-                  35.20558228186782,
-                  31.755313393505784
+                  [
+                    [
+                      35.20558228186782,
+                      31.755313393505784
+                    ],
+                    [
+                      35.20537860770257,
+                      31.75513415368993
+                    ],
+                    [
+                      35.20524263482085,
+                      31.755260262275556
+                    ],
+                    [
+                      35.20521451624827,
+                      31.75528634109383
+                    ],
+                    [
+                      35.20517757398268,
+                      31.755320160490697
+                    ],
+                    [
+                      35.205034288286086,
+                      31.75545312291221
+                    ],
+                    [
+                      35.20518853520444,
+                      31.7555824383919
+                    ],
+                    [
+                      35.205349584742,
+                      31.755473472841935
+                    ],
+                    [
+                      35.20539147406915,
+                      31.75544528988408
+                    ],
+                    [
+                      35.20558228186782,
+                      31.755313393505784
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 1197.2,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20582751767371,
-                  31.75552645168937
-                ],
-                [
-                  35.205590202759076,
-                  31.75568878612241
-                ],
-                [
-                  35.20536162842391,
-                  31.75584548351618
-                ],
-                [
-                  35.20525755055125,
-                  31.75591734592475
-                ],
-                [
-                  35.20527888934364,
-                  31.755936471188065
-                ],
-                [
-                  35.20542806587022,
-                  31.756070169366282
-                ],
-                [
-                  35.205513519703366,
-                  31.755986395427488
-                ],
-                [
-                  35.205707461336644,
-                  31.75579700627382
-                ],
-                [
-                  35.205909813131306,
-                  31.75559972558156
-                ],
-                [
-                  35.20582751767371,
-                  31.75552645168937
+                  [
+                    [
+                      35.20582751767371,
+                      31.75552645168937
+                    ],
+                    [
+                      35.205590202759076,
+                      31.75568878612241
+                    ],
+                    [
+                      35.20536162842391,
+                      31.75584548351618
+                    ],
+                    [
+                      35.20525755055125,
+                      31.75591734592475
+                    ],
+                    [
+                      35.20527888934364,
+                      31.755936471188065
+                    ],
+                    [
+                      35.20542806587022,
+                      31.756070169366282
+                    ],
+                    [
+                      35.205513519703366,
+                      31.755986395427488
+                    ],
+                    [
+                      35.205707461336644,
+                      31.75579700627382
+                    ],
+                    [
+                      35.205909813131306,
+                      31.75559972558156
+                    ],
+                    [
+                      35.20582751767371,
+                      31.75552645168937
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 1303.2,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20610591033272,
-                  31.75614195694334
-                ],
-                [
-                  35.206276598100665,
-                  31.756017950946486
-                ],
-                [
-                  35.206365819475266,
-                  31.755997658097158
-                ],
-                [
-                  35.20628335867473,
-                  31.755925511811842
-                ],
-                [
-                  35.20612750733967,
-                  31.75579023739771
-                ],
-                [
-                  35.20610640024948,
-                  31.755865767140726
-                ],
-                [
-                  35.205964242618045,
-                  31.75601795519491
-                ],
-                [
-                  35.20578267037345,
-                  31.756216363040064
-                ],
-                [
-                  35.20567563978326,
-                  31.756332475705193
-                ],
-                [
-                  35.2057506781938,
-                  31.756396732224157
-                ],
-                [
-                  35.20588343755346,
-                  31.75630203709535
-                ],
-                [
-                  35.20610591033272,
-                  31.75614195694334
+                  [
+                    [
+                      35.20610591033272,
+                      31.75614195694334
+                    ],
+                    [
+                      35.206276598100665,
+                      31.756017950946486
+                    ],
+                    [
+                      35.206365819475266,
+                      31.755997658097158
+                    ],
+                    [
+                      35.20628335867473,
+                      31.755925511811842
+                    ],
+                    [
+                      35.20612750733967,
+                      31.75579023739771
+                    ],
+                    [
+                      35.20610640024948,
+                      31.755865767140726
+                    ],
+                    [
+                      35.205964242618045,
+                      31.75601795519491
+                    ],
+                    [
+                      35.20578267037345,
+                      31.756216363040064
+                    ],
+                    [
+                      35.20567563978326,
+                      31.756332475705193
+                    ],
+                    [
+                      35.2057506781938,
+                      31.756396732224157
+                    ],
+                    [
+                      35.20588343755346,
+                      31.75630203709535
+                    ],
+                    [
+                      35.20610591033272,
+                      31.75614195694334
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "לשדרוג+תצפית",
+            "label": "1,350 מ\"ר",
+            "area_m2": 1429.5,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20691815489846,
-                  31.75684650915097
-                ],
-                [
-                  35.2070939567796,
-                  31.756724756581473
-                ],
-                [
-                  35.20694627054244,
-                  31.756599084946856
-                ],
-                [
-                  35.20688994534026,
-                  31.756551155754526
-                ],
-                [
-                  35.20674003724259,
-                  31.7566931990634
-                ],
-                [
-                  35.206651477691416,
-                  31.756782257775466
-                ],
-                [
-                  35.20654856983195,
-                  31.75687920780482
-                ],
-                [
-                  35.20643626080182,
-                  31.756989685562516
-                ],
-                [
-                  35.20655912977958,
-                  31.75709565020744
-                ],
-                [
-                  35.206693867387315,
-                  31.757004336126165
-                ],
-                [
-                  35.20691815489846,
-                  31.75684650915097
+                  [
+                    [
+                      35.20691815489846,
+                      31.75684650915097
+                    ],
+                    [
+                      35.2070939567796,
+                      31.756724756581473
+                    ],
+                    [
+                      35.20694627054244,
+                      31.756599084946856
+                    ],
+                    [
+                      35.20688994534026,
+                      31.756551155754526
+                    ],
+                    [
+                      35.20674003724259,
+                      31.7566931990634
+                    ],
+                    [
+                      35.206651477691416,
+                      31.756782257775466
+                    ],
+                    [
+                      35.20654856983195,
+                      31.75687920780482
+                    ],
+                    [
+                      35.20643626080182,
+                      31.756989685562516
+                    ],
+                    [
+                      35.20655912977958,
+                      31.75709565020744
+                    ],
+                    [
+                      35.206693867387315,
+                      31.757004336126165
+                    ],
+                    [
+                      35.20691815489846,
+                      31.75684650915097
+                    ]
+                  ]
                 ]
               ]
-            ],
-            [
-              [
+            }
+          },
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 449.7,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.205891479354854,
-                  31.756763763172106
-                ],
-                [
-                  35.20584427011105,
-                  31.756803908409847
-                ],
-                [
-                  35.20602361736459,
-                  31.75696633647323
-                ],
-                [
-                  35.206025351563,
-                  31.756967906561517
-                ],
-                [
-                  35.20604615807815,
-                  31.756947282019706
-                ],
-                [
-                  35.20615731809858,
-                  31.75683709772044
-                ],
-                [
-                  35.20611606051265,
-                  31.756802990542404
-                ],
-                [
-                  35.20599997305033,
-                  31.756707021420052
-                ],
-                [
-                  35.20597880917123,
-                  31.756689499756458
-                ],
-                [
-                  35.205891479354854,
-                  31.756763763172106
+                  [
+                    [
+                      35.205891479354854,
+                      31.756763763172106
+                    ],
+                    [
+                      35.20584427011105,
+                      31.756803908409847
+                    ],
+                    [
+                      35.20602361736459,
+                      31.75696633647323
+                    ],
+                    [
+                      35.206025351563,
+                      31.756967906561517
+                    ],
+                    [
+                      35.20604615807815,
+                      31.756947282019706
+                    ],
+                    [
+                      35.20615731809858,
+                      31.75683709772044
+                    ],
+                    [
+                      35.20611606051265,
+                      31.756802990542404
+                    ],
+                    [
+                      35.20599997305033,
+                      31.756707021420052
+                    ],
+                    [
+                      35.20597880917123,
+                      31.756689499756458
+                    ],
+                    [
+                      35.205891479354854,
+                      31.756763763172106
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [
+          {
+            "label": "הסדרה סטטוטורית של השביל",
+            "kind": "yellow_trail",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  35.204691,
+                  31.755225
+                ],
+                [
+                  35.205957,
+                  31.75626
+                ],
+                [
+                  35.206965,
+                  31.757232
+                ]
+              ]
+            }
+          }
+        ],
         "inner_shatzap_count": 6,
-        "inner_shatzap_total_m2": 6725.8,
+        "inner_shatzap_total_m2": 6725.9,
         "is_metaham_pdf_tichnun": true,
         "road_bearing_deg": null,
         "obstacles": "תכנון השצ\"פים המסומנים, הוספת פינות תצפית,.\nהאתגר יהיה שימור השלד הנופי במידה ויוצעו יוזמות להתחדשות",
@@ -13915,59 +14190,67 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 1429.5,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.20691815489846,
-                  31.75684650915097
-                ],
-                [
-                  35.2070939567796,
-                  31.756724756581473
-                ],
-                [
-                  35.20694627054244,
-                  31.756599084946856
-                ],
-                [
-                  35.20688994534026,
-                  31.756551155754526
-                ],
-                [
-                  35.20674003724259,
-                  31.7566931990634
-                ],
-                [
-                  35.206651477691416,
-                  31.756782257775466
-                ],
-                [
-                  35.20654856983195,
-                  31.75687920780482
-                ],
-                [
-                  35.20643626080182,
-                  31.756989685562516
-                ],
-                [
-                  35.20655912977958,
-                  31.75709565020744
-                ],
-                [
-                  35.206693867387315,
-                  31.757004336126165
-                ],
-                [
-                  35.20691815489846,
-                  31.75684650915097
+                  [
+                    [
+                      35.20691815489846,
+                      31.75684650915097
+                    ],
+                    [
+                      35.2070939567796,
+                      31.756724756581473
+                    ],
+                    [
+                      35.20694627054244,
+                      31.756599084946856
+                    ],
+                    [
+                      35.20688994534026,
+                      31.756551155754526
+                    ],
+                    [
+                      35.20674003724259,
+                      31.7566931990634
+                    ],
+                    [
+                      35.206651477691416,
+                      31.756782257775466
+                    ],
+                    [
+                      35.20654856983195,
+                      31.75687920780482
+                    ],
+                    [
+                      35.20643626080182,
+                      31.756989685562516
+                    ],
+                    [
+                      35.20655912977958,
+                      31.75709565020744
+                    ],
+                    [
+                      35.206693867387315,
+                      31.757004336126165
+                    ],
+                    [
+                      35.20691815489846,
+                      31.75684650915097
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [],
         "inner_shatzap_count": 1,
         "inner_shatzap_total_m2": 1429.5,
         "is_metaham_pdf_tichnun": true,
@@ -14042,7 +14325,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14071,147 +14355,151 @@
     {
       "type": "Feature",
       "geometry": {
-        "type": "LineString",
+        "type": "MultiLineString",
         "coordinates": [
           [
-            35.200043,
-            31.759621
+            [
+              35.200043,
+              31.759621
+            ],
+            [
+              35.201251,
+              31.759883
+            ],
+            [
+              35.201695,
+              31.759132
+            ],
+            [
+              35.201362,
+              31.759023
+            ],
+            [
+              35.201448,
+              31.758708
+            ],
+            [
+              35.201645,
+              31.758328
+            ],
+            [
+              35.201437,
+              31.758018
+            ],
+            [
+              35.201155,
+              31.757418
+            ],
+            [
+              35.201164,
+              31.756659
+            ],
+            [
+              35.201391,
+              31.756117
+            ],
+            [
+              35.20140106607005,
+              31.755769301163856
+            ]
           ],
           [
-            35.201251,
-            31.759883
+            [
+              35.20318126873162,
+              31.752837122989472
+            ],
+            [
+              35.203489,
+              31.752956
+            ],
+            [
+              35.203758,
+              31.752716
+            ],
+            [
+              35.20376463552337,
+              31.75253978999057
+            ]
           ],
           [
-            35.201695,
-            31.759132
+            [
+              35.203903909209664,
+              31.752473792192838
+            ],
+            [
+              35.204834,
+              31.752452
+            ],
+            [
+              35.205247,
+              31.752061
+            ],
+            [
+              35.20586,
+              31.7526
+            ],
+            [
+              35.2062,
+              31.752956
+            ],
+            [
+              35.206537,
+              31.753645
+            ],
+            [
+              35.207181,
+              31.755217
+            ],
+            [
+              35.2076,
+              31.754943
+            ],
+            [
+              35.208148,
+              31.755637
+            ],
+            [
+              35.208586,
+              31.755899
+            ],
+            [
+              35.209408,
+              31.756429
+            ],
+            [
+              35.209749,
+              31.756706
+            ],
+            [
+              35.210271,
+              31.757285
+            ],
+            [
+              35.210481,
+              31.757399
+            ],
+            [
+              35.210635,
+              31.757455
+            ],
+            [
+              35.21074,
+              31.75775
+            ],
+            [
+              35.2114203925673,
+              31.758598892861503
+            ]
           ],
           [
-            35.201362,
-            31.759023
-          ],
-          [
-            35.201448,
-            31.758708
-          ],
-          [
-            35.201645,
-            31.758328
-          ],
-          [
-            35.201437,
-            31.758018
-          ],
-          [
-            35.201155,
-            31.757418
-          ],
-          [
-            35.201164,
-            31.756659
-          ],
-          [
-            35.201391,
-            31.756117
-          ],
-          [
-            35.201415,
-            31.755288
-          ],
-          [
-            35.201535,
-            31.754574
-          ],
-          [
-            35.201909,
-            31.753832
-          ],
-          [
-            35.202486,
-            31.753315
-          ],
-          [
-            35.202752,
-            31.753039
-          ],
-          [
-            35.203124,
-            31.752815
-          ],
-          [
-            35.203489,
-            31.752956
-          ],
-          [
-            35.203758,
-            31.752716
-          ],
-          [
-            35.203767,
-            31.752477
-          ],
-          [
-            35.204834,
-            31.752452
-          ],
-          [
-            35.205247,
-            31.752061
-          ],
-          [
-            35.20586,
-            31.7526
-          ],
-          [
-            35.2062,
-            31.752956
-          ],
-          [
-            35.206537,
-            31.753645
-          ],
-          [
-            35.207181,
-            31.755217
-          ],
-          [
-            35.2076,
-            31.754943
-          ],
-          [
-            35.208148,
-            31.755637
-          ],
-          [
-            35.208586,
-            31.755899
-          ],
-          [
-            35.209408,
-            31.756429
-          ],
-          [
-            35.209749,
-            31.756706
-          ],
-          [
-            35.210271,
-            31.757285
-          ],
-          [
-            35.210481,
-            31.757399
-          ],
-          [
-            35.210635,
-            31.757455
-          ],
-          [
-            35.21074,
-            31.75775
-          ],
-          [
-            35.211911,
-            31.759211
+            [
+              35.21153368607719,
+              31.75874024368811
+            ],
+            [
+              35.211911,
+              31.759211
+            ]
           ]
         ]
       },
@@ -14248,7 +14536,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14271,8 +14560,8 @@
         "ps_unique_feature": null,
         "ps_page": 20,
         "display_point": [
-          35.2045303,
-          31.7524591
+          35.2059744,
+          31.7527197
         ]
       }
     },
@@ -14324,7 +14613,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14473,7 +14763,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14556,7 +14847,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14633,7 +14925,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -14712,7 +15005,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -15073,7 +15367,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -15434,7 +15729,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -15795,7 +16091,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -16156,7 +16453,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -16517,7 +16815,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -16878,7 +17177,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17013,7 +17313,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17100,7 +17401,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17195,7 +17497,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17310,7 +17613,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17430,7 +17734,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17706,7 +18011,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -17845,7 +18151,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -18044,7 +18351,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -18243,7 +18551,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -18442,7 +18751,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -18529,7 +18839,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -19012,7 +19323,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -19495,7 +19807,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -19978,7 +20291,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -20461,7 +20775,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -20944,7 +21259,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -21427,7 +21743,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -21910,7 +22227,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -22393,7 +22711,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -22536,7 +22855,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -22672,7 +22992,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -22808,7 +23129,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -22944,7 +23266,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -23280,7 +23603,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -23623,7 +23947,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -23820,7 +24145,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24017,7 +24343,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24212,7 +24539,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24382,7 +24710,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24464,7 +24793,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24541,7 +24871,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24618,7 +24949,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24695,7 +25027,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24772,7 +25105,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24859,7 +25193,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -24946,7 +25281,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25019,7 +25355,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25092,7 +25429,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25165,7 +25503,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25312,7 +25651,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25426,7 +25766,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -25929,7 +26270,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -26437,7 +26779,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -26945,7 +27288,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -27101,7 +27445,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -27255,7 +27600,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -27466,7 +27812,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -27677,7 +28024,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -27936,7 +28284,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28086,7 +28435,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28224,7 +28574,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28294,7 +28645,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28355,7 +28707,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28416,7 +28769,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28493,7 +28847,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28558,7 +28913,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28720,7 +29076,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28803,7 +29160,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28868,7 +29226,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28929,7 +29288,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -28990,7 +29350,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29050,7 +29411,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29130,7 +29492,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29395,7 +29758,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29456,7 +29820,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29553,7 +29918,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": true,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29614,7 +29980,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29687,7 +30054,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29748,7 +30116,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29809,7 +30178,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29870,7 +30240,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29925,7 +30296,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -29980,7 +30352,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -30035,7 +30408,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -30090,7 +30464,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -30307,7 +30682,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -30373,7 +30749,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -30717,151 +31094,159 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": true,
-        "inner_shatzap_geom": {
-          "type": "MultiPolygon",
-          "coordinates": [
-            [
-              [
+        "inner_shatzaps": [
+          {
+            "category": "מוצלח",
+            "label": null,
+            "area_m2": 5967.4,
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
                 [
-                  35.197003744717755,
-                  31.755648373630923
-                ],
-                [
-                  35.196966265161905,
-                  31.755630411224583
-                ],
-                [
-                  35.1971050886634,
-                  31.755428080547105
-                ],
-                [
-                  35.196696957201276,
-                  31.75525084776449
-                ],
-                [
-                  35.19676546463202,
-                  31.755135183129536
-                ],
-                [
-                  35.196690792835,
-                  31.75510279882106
-                ],
-                [
-                  35.19674306032399,
-                  31.755017815762525
-                ],
-                [
-                  35.196516321001695,
-                  31.754923409513918
-                ],
-                [
-                  35.19642323662932,
-                  31.755090755381428
-                ],
-                [
-                  35.196220275102675,
-                  31.755007637575257
-                ],
-                [
-                  35.19600918938659,
-                  31.754919694043366
-                ],
-                [
-                  35.19608028024494,
-                  31.754791185872833
-                ],
-                [
-                  35.19564755762229,
-                  31.754596133071136
-                ],
-                [
-                  35.1954796490053,
-                  31.754840746738413
-                ],
-                [
-                  35.19526526681321,
-                  31.754744910602863
-                ],
-                [
-                  35.19522287733339,
-                  31.75480803666885
-                ],
-                [
-                  35.195775819089405,
-                  31.755058337055786
-                ],
-                [
-                  35.195805338350915,
-                  31.755070739407458
-                ],
-                [
-                  35.196343275661725,
-                  31.755331182058907
-                ],
-                [
-                  35.196359153490626,
-                  31.75533917340105
-                ],
-                [
-                  35.196370155252886,
-                  31.755344711417944
-                ],
-                [
-                  35.196930028922395,
-                  31.755613044097185
-                ],
-                [
-                  35.19692689178122,
-                  31.7556558815168
-                ],
-                [
-                  35.19698355931852,
-                  31.755681008400167
-                ],
-                [
-                  35.197036228883086,
-                  31.755704362001804
-                ],
-                [
-                  35.19710961039942,
-                  31.75579116872493
-                ],
-                [
-                  35.197112573725676,
-                  31.75586444373965
-                ],
-                [
-                  35.19716452293741,
-                  31.75585542825277
-                ],
-                [
-                  35.197188583326174,
-                  31.75584545070789
-                ],
-                [
-                  35.197217030778866,
-                  31.755828931427196
-                ],
-                [
-                  35.19725842438101,
-                  31.75580288397875
-                ],
-                [
-                  35.19726027049963,
-                  31.755801722506618
-                ],
-                [
-                  35.19728365078575,
-                  31.755782523548113
-                ],
-                [
-                  35.197003744717755,
-                  31.755648373630923
+                  [
+                    [
+                      35.197003744717755,
+                      31.755648373630923
+                    ],
+                    [
+                      35.196966265161905,
+                      31.755630411224583
+                    ],
+                    [
+                      35.1971050886634,
+                      31.755428080547105
+                    ],
+                    [
+                      35.196696957201276,
+                      31.75525084776449
+                    ],
+                    [
+                      35.19676546463202,
+                      31.755135183129536
+                    ],
+                    [
+                      35.196690792835,
+                      31.75510279882106
+                    ],
+                    [
+                      35.19674306032399,
+                      31.755017815762525
+                    ],
+                    [
+                      35.196516321001695,
+                      31.754923409513918
+                    ],
+                    [
+                      35.19642323662932,
+                      31.755090755381428
+                    ],
+                    [
+                      35.196220275102675,
+                      31.755007637575257
+                    ],
+                    [
+                      35.19600918938659,
+                      31.754919694043366
+                    ],
+                    [
+                      35.19608028024494,
+                      31.754791185872833
+                    ],
+                    [
+                      35.19564755762229,
+                      31.754596133071136
+                    ],
+                    [
+                      35.1954796490053,
+                      31.754840746738413
+                    ],
+                    [
+                      35.19526526681321,
+                      31.754744910602863
+                    ],
+                    [
+                      35.19522287733339,
+                      31.75480803666885
+                    ],
+                    [
+                      35.195775819089405,
+                      31.755058337055786
+                    ],
+                    [
+                      35.195805338350915,
+                      31.755070739407458
+                    ],
+                    [
+                      35.196343275661725,
+                      31.755331182058907
+                    ],
+                    [
+                      35.196359153490626,
+                      31.75533917340105
+                    ],
+                    [
+                      35.196370155252886,
+                      31.755344711417944
+                    ],
+                    [
+                      35.196930028922395,
+                      31.755613044097185
+                    ],
+                    [
+                      35.19692689178122,
+                      31.7556558815168
+                    ],
+                    [
+                      35.19698355931852,
+                      31.755681008400167
+                    ],
+                    [
+                      35.197036228883086,
+                      31.755704362001804
+                    ],
+                    [
+                      35.19710961039942,
+                      31.75579116872493
+                    ],
+                    [
+                      35.197112573725676,
+                      31.75586444373965
+                    ],
+                    [
+                      35.19716452293741,
+                      31.75585542825277
+                    ],
+                    [
+                      35.197188583326174,
+                      31.75584545070789
+                    ],
+                    [
+                      35.197217030778866,
+                      31.755828931427196
+                    ],
+                    [
+                      35.19725842438101,
+                      31.75580288397875
+                    ],
+                    [
+                      35.19726027049963,
+                      31.755801722506618
+                    ],
+                    [
+                      35.19728365078575,
+                      31.755782523548113
+                    ],
+                    [
+                      35.197003744717755,
+                      31.755648373630923
+                    ]
+                  ]
                 ]
               ]
-            ]
-          ]
-        },
+            }
+          }
+        ],
+        "inner_trails": [],
         "inner_shatzap_count": 1,
         "inner_shatzap_total_m2": 5967.4,
         "is_metaham_pdf_tichnun": true,
@@ -30922,7 +31307,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -31499,7 +31885,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -32076,7 +32463,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -32653,7 +33041,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -33230,7 +33619,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -33807,7 +34197,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -34384,7 +34775,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -34961,7 +35353,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -35538,7 +35931,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36115,7 +36509,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36190,7 +36585,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36277,7 +36673,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36364,7 +36761,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36655,7 +37053,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -36934,7 +37333,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -37213,7 +37613,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -37492,7 +37893,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -37771,7 +38173,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -38050,7 +38453,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -38329,7 +38733,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -38608,7 +39013,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -38887,7 +39293,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39166,7 +39573,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39445,7 +39853,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39546,7 +39955,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39664,7 +40074,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39782,7 +40193,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -39900,7 +40312,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40482,7 +40895,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40600,7 +41014,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40678,7 +41093,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40751,7 +41167,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40824,7 +41241,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40897,7 +41315,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -40970,7 +41389,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -41043,7 +41463,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -41196,7 +41617,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -41378,7 +41800,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -41496,7 +41919,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -41614,7 +42038,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -42196,7 +42621,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -42778,7 +43204,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -43360,7 +43787,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -43942,7 +44370,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -44244,7 +44673,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -44546,7 +44976,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -45896,7 +46327,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -47241,7 +47673,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -48586,7 +49019,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -48803,7 +49237,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49025,7 +49460,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49247,7 +49683,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49469,7 +49906,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49675,7 +50113,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49835,7 +50274,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -49987,7 +50427,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -50398,7 +50839,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -50814,7 +51256,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -51230,7 +51673,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -51392,7 +51836,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -51554,7 +51999,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -51716,7 +52162,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -51874,7 +52321,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52032,7 +52480,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52190,7 +52639,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52348,7 +52798,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52554,7 +53005,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52760,7 +53212,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -52942,7 +53395,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53034,7 +53488,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53181,7 +53636,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53328,7 +53784,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53415,7 +53872,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53504,7 +53962,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53569,7 +54028,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53630,7 +54090,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53731,7 +54192,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53796,7 +54258,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -53953,7 +54416,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54115,7 +54579,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54201,7 +54666,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54358,7 +54824,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54513,7 +54980,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54668,7 +55136,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54823,7 +55292,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -54893,7 +55363,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55048,7 +55519,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55109,7 +55581,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55182,7 +55655,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55291,7 +55765,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55417,7 +55892,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55543,7 +56019,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55681,7 +56158,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55819,7 +56297,8 @@
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,
@@ -55957,7 +56436,8 @@
         "is_eivuy_brown": true,
         "is_shatzap_polygon": false,
         "is_metaham_polygon": false,
-        "inner_shatzap_geom": null,
+        "inner_shatzaps": [],
+        "inner_trails": [],
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "is_metaham_pdf_tichnun": false,

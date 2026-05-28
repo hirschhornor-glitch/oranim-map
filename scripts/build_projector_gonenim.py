@@ -115,6 +115,44 @@ FORCE_POINT_FEATURES = {
     ("סן מרטין 1", "קטמונים ח-ט"),
 }
 
+# Per-compound categorization of inner שצ"פים. Keyed by (project_name, area) →
+# dict of {(centroid_lon, centroid_lat) → {category, label}}. The matcher picks
+# the NEAREST override centroid within ~60m. Categories:
+#   "מוצלח"          — successful, no upgrade needed
+#   "לשדרוג"          — upgrade only
+#   "לשדרוג+תצפית"   — upgrade + add a viewpoint
+INNER_SHATZAP_CATEGORIES = {
+    # מתחם בן זכאי-אנטיגונוס-אליעזר הגדול — page 18 PDF:
+    # 5 שצ"פים labeled with categories + sizes. The 6th (450 m²) is unlabeled
+    # in PDF — defaults to "מוצלח". Centroids match yiud_karka_kayam polygons.
+    ("מתחם בן זכאי-אנטיגונוס-אליעזר הגדול", "גוננים א-ו"): {
+        (35.20676, 31.75682): {"category": "לשדרוג+תצפית", "label": "1,350 מ\"ר"},
+        (35.20641, 31.75645): {"category": "לשדרוג",        "label": "1,100 מ\"ר"},
+        (35.20602, 31.75609): {"category": "מוצלח",         "label": None},
+        (35.20557, 31.75580): {"category": "מוצלח",         "label": None},
+        (35.20531, 31.75536): {"category": "לשדרוג+תצפית", "label": "1,200 מ\"ר"},
+    },
+}
+
+# Per-compound extra trail features (e.g. the yellow path inside the בן זכאי
+# compound shown on PDF page 18). Keyed by (project_name, area) → list of trails.
+INNER_TRAILS_BY_COMPOUND = {
+    ("מתחם בן זכאי-אנטיגונוס-אליעזר הגדול", "גוננים א-ו"): [
+        {
+            "label": "הסדרה סטטוטורית של השביל",
+            "kind": "yellow_trail",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [35.204691, 31.755225],
+                    [35.205957, 31.756260],
+                    [35.206965, 31.757232],
+                ],
+            },
+        },
+    ],
+}
+
 SKIP_FEATURES = {
     # User-removed 2026-05-20: too generic to map (whole-neighborhood transit route).
     ("מסלול תח\"צ שכונת רסקו", "רסקו"),
@@ -4712,41 +4750,54 @@ def main():
 
         # For metaham compounds, detect inner שצ"פ polygons from yiud_karka_kayam
         # so the frontend can render them prominently (compound = faint outline,
-        # שצ"פים inside = green fill). Filters by centroid-in-polygon + min area.
-        inner_shatzap_geom = None
-        inner_shatzap_count = 0
-        inner_shatzap_total_m2 = 0
+        # שצ"פים inside = colored fill per category). Filters by centroid-in-polygon
+        # + min area. Categories + extra trail features come from per-compound
+        # overrides INNER_SHATZAP_CATEGORIES / INNER_TRAILS_BY_COMPOUND.
+        inner_shatzaps = []  # list of {category, label, area_m2, geometry}
+        inner_trails = []    # list of {label, kind, geometry}
         if is_metaham_polygon and yiud_kayam_shatzap_features and shape:
             try:
                 compound_shape = shape(geometry)
                 if not compound_shape.is_valid:
                     compound_shape = compound_shape.buffer(0)
-                inner_polys = []
+                cat_overrides = INNER_SHATZAP_CATEGORIES.get(
+                    (str(proj_name or "").strip(), area), {}
+                )
                 for s in yiud_kayam_shatzap_features:
                     if not compound_shape.intersects(s["geom"]):
                         continue
-                    # Centroid-in-compound test (more permissive than full containment)
                     if not compound_shape.contains(s["geom"].centroid):
                         continue
-                    # Filter by minimum area (skip < 100 m² as too small to be meaningful)
                     a = polygon_area_m2(s["raw"])
                     if a < 100:
                         continue
-                    inner_polys.append(s)
-                    inner_shatzap_total_m2 += a
-                inner_shatzap_count = len(inner_polys)
-                if inner_polys:
-                    # Build a MultiPolygon GeoJSON
-                    mp_coords = []
-                    for s in inner_polys:
-                        raw = s["raw"]
-                        if raw["type"] == "Polygon":
-                            mp_coords.append(raw["coordinates"])
-                        elif raw["type"] == "MultiPolygon":
-                            mp_coords.extend(raw["coordinates"])
-                    inner_shatzap_geom = {"type": "MultiPolygon", "coordinates": mp_coords}
+                    # Match to nearest category override (within ~30m — tighter
+                    # to avoid mis-matching small extra polygons not labeled in PDF)
+                    cx, cy = s["geom"].centroid.x, s["geom"].centroid.y
+                    cat_info = None
+                    best_dist = 999.0
+                    for ((ox, oy), info) in cat_overrides.items():
+                        d = ((ox - cx) ** 2 + (oy - cy) ** 2) ** 0.5
+                        if d < best_dist and d < 0.00027:  # ~30m
+                            best_dist = d
+                            cat_info = info
+                    inner_shatzaps.append({
+                        "category": (cat_info or {}).get("category", "מוצלח"),
+                        "label": (cat_info or {}).get("label"),
+                        "area_m2": round(a, 1),
+                        "geometry": s["raw"],
+                    })
+                # Inner trails for this compound (e.g. yellow path on PDF p18)
+                for trail in INNER_TRAILS_BY_COMPOUND.get(
+                    (str(proj_name or "").strip(), area), []
+                ):
+                    inner_trails.append(trail)
             except Exception as e:
-                print(f"      [inner_shatzap] failed for {proj_name!r}: {e}")
+                print(f"      [inner_features] failed for {proj_name!r}: {e}")
+
+        inner_shatzap_count = len(inner_shatzaps)
+        inner_shatzap_total_m2 = round(sum(x["area_m2"] for x in inner_shatzaps), 1)
+        inner_trail_count = len(inner_trails)
 
         road_bearing_deg = None
         if marker_kind == "crossing_point" and geometry and geometry.get("type") == "Point":
@@ -4786,9 +4837,10 @@ def main():
             "is_eivuy_brown": is_eivuy_brown,
             "is_shatzap_polygon": is_shatzap_polygon,
             "is_metaham_polygon": is_metaham_polygon,
-            "inner_shatzap_geom": inner_shatzap_geom,
+            "inner_shatzaps": inner_shatzaps if is_metaham_polygon else [],
+            "inner_trails": inner_trails if is_metaham_polygon else [],
             "inner_shatzap_count": inner_shatzap_count if is_metaham_polygon else 0,
-            "inner_shatzap_total_m2": round(inner_shatzap_total_m2, 1) if inner_shatzap_total_m2 else 0,
+            "inner_shatzap_total_m2": inner_shatzap_total_m2 if is_metaham_polygon else 0,
             # Master-plan compound *proposals* (a specific service category) —
             # rendered in pink to distinguish from generic metaham polygons.
             # Covers the 4 compounds from "תכנון מתחמי 09.2023" PDF + מתחם הפסגה
@@ -5073,8 +5125,8 @@ def main():
     n_eivuy = sum(1 for f in out_features if f["properties"].get("is_eivuy_brown"))
     n_shatzap = sum(1 for f in out_features if f["properties"].get("is_shatzap_polygon"))
     n_metaham = sum(1 for f in out_features if f["properties"].get("is_metaham_polygon"))
-    n_inner_shatzap = sum(1 for f in out_features if f["properties"].get("inner_shatzap_geom"))
-    inner_counts = [f["properties"].get("inner_shatzap_count", 0) for f in out_features if f["properties"].get("inner_shatzap_geom")]
+    n_inner_shatzap = sum(1 for f in out_features if f["properties"].get("inner_shatzaps"))
+    inner_counts = [f["properties"].get("inner_shatzap_count", 0) for f in out_features if f["properties"].get("inner_shatzaps")]
     n_bearing = sum(1 for f in out_features if f["properties"].get("road_bearing_deg") is not None)
     n_crossing = sum(1 for f in out_features if f["properties"].get("marker_kind") == "crossing_point")
     print(f"      polygon-render flags: is_eivuy_brown={n_eivuy}, "
@@ -5112,6 +5164,57 @@ def main():
             prop["related_features"] = rel_list
             n_related += 1
     print(f"      related_features attached to {n_related} features")
+
+    # שביל גוננים — trim overlapping sub-segments so each child feature owns
+    # its piece. The trail mentions itself in the children's descriptions; we
+    # detect those, subtract their buffered geometries from the trail, and
+    # append a "(חלק משביל גוננים)" note to each child for popup discoverability.
+    try:
+        from shapely.geometry import shape as _shape, mapping as _mapping
+        from shapely.ops import unary_union as _uu
+        SHVIL_NAME = "שביל גוננים"
+        SHVIL_BUFFER_M = 10.0  # ~10m around child geometries
+        BUFFER_DEG = SHVIL_BUFFER_M / 111000.0
+        shvil_feat = next((f for f in out_features
+                           if (f.get("properties") or {}).get("project_name") == SHVIL_NAME), None)
+        if shvil_feat:
+            shvil_geom = _shape(shvil_feat["geometry"])
+            children = []
+            for f in out_features:
+                prop = f.get("properties") or {}
+                if prop.get("project_name") == SHVIL_NAME:
+                    continue
+                desc = str(prop.get("description") or "")
+                if SHVIL_NAME in desc and f.get("geometry"):
+                    children.append(f)
+            trimmed_len_m = None
+            if children:
+                child_geoms = []
+                for c in children:
+                    try:
+                        cg = _shape(c["geometry"])
+                        child_geoms.append(cg.buffer(BUFFER_DEG))
+                    except Exception:
+                        pass
+                if child_geoms:
+                    union = _uu(child_geoms)
+                    trimmed = shvil_geom.difference(union)
+                    if not trimmed.is_empty and hasattr(trimmed, "length") and trimmed.length > 0:
+                        shvil_feat["geometry"] = _mapping(trimmed)
+                        shvil_feat["properties"]["display_point"] = feature_display_point(shvil_feat["geometry"])
+                        trimmed_len_m = trimmed.length * 111000
+                # Append the "part of שביל גוננים" note to each child.
+                NOTE_MARK = "חלק משביל גוננים"
+                for c in children:
+                    prop = c["properties"]
+                    existing_note = prop.get("manual_note") or ""
+                    if NOTE_MARK not in existing_note:
+                        prop["manual_note"] = (existing_note + " " + NOTE_MARK).strip() if existing_note else NOTE_MARK
+                if trimmed_len_m is not None:
+                    print(f"      שביל גוננים: trimmed {len(children)} overlapping child segments "
+                          f"(remaining trail length: {trimmed_len_m:.0f}m)")
+    except Exception as e:
+        print(f"      [warn] שביל גוננים trim failed: {e}")
 
     # Convert defaultdicts in summary
     summary_out = {}
