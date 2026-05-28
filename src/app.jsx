@@ -11370,19 +11370,54 @@
                                 }),
                             });
                         }
+                        // --- מתחם מ"תכנון מתחמי 09.2023" → pink polygon
+                        // (the 4 master-plan compound proposals along the rakelet from
+                        // that specific PDF — distinguished from the generic metaham
+                        // brown style so the user can see which compounds came from
+                        // the תכנון מתחמי deliverable).
+                        else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_metaham_pdf_tichnun) {
+                            lyr = L.geoJSON(f, {
+                                pane: 'projectorPane',
+                                style: () => ({
+                                    color: '#c2185b', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
+                                    fillColor: '#ec407a', fillOpacity: 0.10,
+                                }),
+                            });
+                        }
                         // --- מתחם תכנון אב מתחמית להתחדשות → light brown (tan) polygon
                         // Differentiated from is_eivuy_brown (darker) so users can tell
                         // a master-plan compound proposal from a brown-lot densification.
                         // Master-plan compounds are inherently large — always use the
                         // light outline+5% style.
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_metaham_polygon) {
-                            lyr = L.geoJSON(f, {
+                            // Compound: faint outline + 5% fill (just a border showing extent)
+                            const compoundLayer = L.geoJSON(f, {
                                 pane: 'projectorPane',
                                 style: () => ({
                                     color: '#a1887f', weight: 2.5, dashArray: isOverlap ? '5,3' : '4,3',
                                     fillColor: '#d2b48c', fillOpacity: 0.05,
                                 }),
                             });
+                            compoundLayer.feature = f;
+                            compoundLayer.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
+                            layerGroup.addLayer(compoundLayer);
+                            // Inner שצ"פים (detected from yiud_karka_kayam at build time) —
+                            // rendered prominently in green to show the actual project subjects
+                            // inside the compound outline.
+                            if (p.inner_shatzap_geom) {
+                                const innerFeat = { type: 'Feature', geometry: p.inner_shatzap_geom, properties: p };
+                                const innerLayer = L.geoJSON(innerFeat, {
+                                    pane: 'projectorPane',
+                                    style: () => ({
+                                        color: '#2e7d32', weight: 1.5,
+                                        fillColor: '#66bb6a', fillOpacity: 0.45,
+                                    }),
+                                });
+                                innerLayer.feature = innerFeat;
+                                innerLayer.bindPopup(popup, { maxWidth: 340, className: 'projector-popup', autoPan: false });
+                                layerGroup.addLayer(innerLayer);
+                            }
+                            lyr = null;  // already added above
                         }
                         // --- שצ"פ / גינה → render the real lot polygon (green)
                         else if ((gt === 'Polygon' || gt === 'MultiPolygon') && p.is_shatzap_polygon) {

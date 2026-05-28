@@ -72,6 +72,7 @@ BUILDINGS_PATH = DATA_DIRS[0] / "buildings.geojson"
 ROADS_PATH = DATA_DIRS[0] / "roads.geojson"
 GEOCODE_CACHE_PATH = DATA_DIRS[0] / "projector_geocode_cache.json"
 PARCELS_PATH = DATA_DIRS[0] / "parcels_gonenim.geojson"
+YIUD_KAYAM_PATH = DATA_DIRS[0] / "yiud_karka_kayam.geojson"
 # Official projector shapefiles (transport recommendations) — exact LineString/Point
 # geometries provided by the projector team. Cover all 4 sub-neighborhoods.
 PROJECTOR_OFFICIAL_PATHS = [
@@ -221,6 +222,172 @@ MANUAL_LOCATION_OVERRIDES = {
     # צומת ניות (רסקו) — נקודת רמזור. User accepted nominatim geocode 2026-05-28;
     # frozen as Point override so it won't drift on cache rebuild.
     ("צומת ניות", "רסקו"): [35.2046894, 31.7670463],
+    # מגינת ניקנור לרח' יהודה הנשיא — passage from garden to יהודה הנשיא.
+    # User confirmed the street-named match is in the right place 2026-05-28;
+    # frozen as LineString override.
+    ("מגינת ניקנור לרח' יהודה הנשיא", "גוננים א-ו"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.1996924, 31.7569512],
+            [35.1997439, 31.7566296],
+            [35.1997723, 31.7563742],
+        ],
+    },
+    # מתחם אנטיגונוס — רחוב חדש (טוביה בן חפץ extension). User confirmed the
+    # street-named match traces the right segment 2026-05-28; frozen as LineString.
+    ("מתחם אנטיגונוס", "גוננים א-ו", "רחוב חדש"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.207667, 31.757085],
+            [35.208368, 31.757694],
+            [35.208475, 31.757752],
+            [35.208574, 31.757798],
+            [35.208698, 31.757833],
+            [35.208831, 31.757847],
+        ],
+    },
+    # תחנות רח' אליעזר הגדול — 2 bus stops, user-provided ITM 2026-05-28.
+    # Rendered as separate small_circle markers (not a line).
+    ("תחנות רח' אליעזר הגדול", "גוננים א-ו"): {
+        "type": "MultiPoint",
+        "coordinates": [
+            [35.204546, 31.755184],
+            [35.205780, 31.754372],
+        ],
+    },
+    # מתחם ברניקי פת — road/שצ"פ swap proposal. User chose a point at the
+    # מתחם center 2026-05-28 (midpoint of the original LineString match).
+    ("מתחם ברניקי פת", "גוננים א-ו"): [35.200499, 31.757483],
+    # מפרצי העלאה והורדת למתחם מבני ציבור (פת) — pickup/dropoff bays on
+    # ברל לוקר. User-provided ITM 2026-05-28.
+    ("מפרצי העלאה והורדת למתחם מבני ציבור", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.200622, 31.751329],
+            [35.200871, 31.750980],
+        ],
+    },
+    # התחדשות עירונית הנושקת לרח' יעקב פת — חניונים. User-provided 5-point
+    # ITM line along the relevant segment of יעקב פת 2026-05-28.
+    ("התחדשות עירונית הנושקת לרח' יעקב פת - חניונים", "פת"): {
+        "type": "LineString",
+        "coordinates": [
+            [35.199691, 31.753396],
+            [35.200431, 31.752611],
+            [35.201676, 31.751607],
+            [35.202459, 31.751133],
+            [35.202974, 31.750951],
+        ],
+    },
+    # מתחם מכוור/הורקניה — outline polygon from "תכנון מתחמי 09.2023" PDF.
+    # User-provided 15-vertex ring 2026-05-28 (rendered in pink).
+    ("מתחם מכוור/הורקניה", "גוננים א-ו", "הצעה להכנת תוכנית אב מתחמית להתחדשות"): {
+        "type": "Polygon",
+        "coordinates": [[
+            [35.202287, 31.756452],
+            [35.203178, 31.756707],
+            [35.203339, 31.756424],
+            [35.203607, 31.756251],
+            [35.204047, 31.756050],
+            [35.204186, 31.755996],
+            [35.204283, 31.755850],
+            [35.204304, 31.755685],
+            [35.204165, 31.755512],
+            [35.203789, 31.755348],
+            [35.203339, 31.755257],
+            [35.202963, 31.755229],
+            [35.202835, 31.755293],
+            [35.202534, 31.755859],
+            [35.202341, 31.756205],
+            [35.202287, 31.756452],
+        ]],
+    },
+    # מתחם ברניקי, פת — outline polygon from "תכנון מתחמי 09.2023" PDF.
+    # User-provided 25-vertex ring 2026-05-28 (rendered in pink).
+    ("מתחם ברניקי, פת", "גוננים א-ו", "הצעה להכנת תוכנית אב מתחמית להתחדשות"): {
+        "type": "Polygon",
+        "coordinates": [[
+            [35.198618, 31.756069],
+            [35.198361, 31.756379],
+            [35.198221, 31.756616],
+            [35.198232, 31.757017],
+            [35.198597, 31.757072],
+            [35.198693, 31.757282],
+            [35.199037, 31.757236],
+            [35.199101, 31.757519],
+            [35.199316, 31.757911],
+            [35.199766, 31.758185],
+            [35.200067, 31.758304],
+            [35.200678, 31.758468],
+            [35.200925, 31.758358],
+            [35.200657, 31.758021],
+            [35.200496, 31.757592],
+            [35.200485, 31.757291],
+            [35.200560, 31.756671],
+            [35.200485, 31.756871],
+            [35.200582, 31.756616],
+            [35.200560, 31.756415],
+            [35.200496, 31.756251],
+            [35.200206, 31.756333],
+            [35.199788, 31.756370],
+            [35.199552, 31.756278],
+            [35.198961, 31.756123],
+            [35.198618, 31.756069],
+        ]],
+    },
+    # מתחם רשב"ג — outline polygon from "תכנון מתחמי 09.2023" PDF.
+    # User-provided 16-vertex ring 2026-05-28 (rendered in pink).
+    ("מתחם רשב\"ג", "גוננים א-ו", "הצעה להכנת תוכנית אב מתחמית להתחדשות"): {
+        "type": "Polygon",
+        "coordinates": [[
+            [35.210463, 31.759152],
+            [35.210752, 31.759170],
+            [35.211600, 31.759252],
+            [35.212083, 31.759261],
+            [35.212104, 31.758878],
+            [35.211933, 31.758386],
+            [35.211718, 31.758030],
+            [35.211353, 31.757473],
+            [35.211128, 31.757017],
+            [35.210592, 31.757218],
+            [35.210592, 31.757546],
+            [35.210559, 31.757765],
+            [35.210431, 31.757875],
+            [35.210302, 31.757957],
+            [35.210398, 31.758477],
+            [35.210441, 31.758887],
+            [35.210463, 31.759152],
+        ]],
+    },
+    # מתחם אנטיגונוס — outline polygon from "תכנון מתחמי 09.2023" PDF.
+    # User-provided 21-vertex ring 2026-05-28 (rendered in pink).
+    ("מתחם אנטיגונוס", "גוננים א-ו", "הצעה להכנת תוכנית אב מתחמית להתחדשות"): {
+        "type": "Polygon",
+        "coordinates": [[
+            [35.207384, 31.758285],
+            [35.207684, 31.758550],
+            [35.208102, 31.758741],
+            [35.208671, 31.758924],
+            [35.209926, 31.759097],
+            [35.210356, 31.759125],
+            [35.210463, 31.759125],
+            [35.210474, 31.758751],
+            [35.210377, 31.758340],
+            [35.210313, 31.757939],
+            [35.210205, 31.757875],
+            [35.209959, 31.757619],
+            [35.209647, 31.757674],
+            [35.209122, 31.757802],
+            [35.208746, 31.757829],
+            [35.208575, 31.757802],
+            [35.208499, 31.758103],
+            [35.208510, 31.758267],
+            [35.208178, 31.758221],
+            [35.207845, 31.758057],
+            [35.207727, 31.757975],
+            [35.207384, 31.758285],
+        ]],
+    },
     # שצ"פ זהרה (רסקו, פרויקט 8) — 1.4 דונם, gush/helka 30121/136. User wants
     # the whole lot polygon (2026-05-26). Parcel exists in parcels file.
     ("שצ\"פ זהרה", "רסקו"): {"gush_helka": "30121/136"},
@@ -3446,6 +3613,39 @@ def main():
         except Exception as e:
             print(f"      parcels load failed: {e}")
 
+    # Load yiud_karka_kayam — existing-land-use polygons from the city DB.
+    # Used to detect inner שצ"פ polygons inside metaham compounds (so the
+    # compound polygon can be rendered as just an outline + the שצ"פים inside
+    # rendered prominently as the actual project subjects).
+    yiud_kayam_shatzap_features: list = []  # list of {geom_shape, area_m2, descr}
+    if YIUD_KAYAM_PATH.exists() and shape:
+        try:
+            yk_data = load_geojson(YIUD_KAYAM_PATH)
+            # שצ"פ-like Descr values (filter for open-space lots only).
+            _SHATZAP_DESCR_KEYWORDS = ("שטח צבורי פתוח", "שטח ציבורי פתוח", "שטח פרטי פתוח",
+                                      "פרטי פתוח", "שטחים פתוחים", "שפ\"פ", "פס ירק",
+                                      "שטח ירק", "שטח עיצוב נופי")
+            for f in yk_data.get("features", []):
+                d = str(f["properties"].get("Descr") or "")
+                if not any(kw in d for kw in _SHATZAP_DESCR_KEYWORDS):
+                    continue
+                try:
+                    g = shape(f["geometry"])
+                    if not g.is_valid:
+                        g = g.buffer(0)
+                    if g.is_empty:
+                        continue
+                    yiud_kayam_shatzap_features.append({
+                        "geom": g,
+                        "descr": d,
+                        "raw": f["geometry"],
+                    })
+                except Exception:
+                    continue
+            print(f"      yiud_karka שצ\"פ indexed: {len(yiud_kayam_shatzap_features)} polygons")
+        except Exception as e:
+            print(f"      yiud_karka load failed: {e}")
+
     # Index buildings by (street_normalized, house_num) — for address-based lookup from project_name.
     def _norm_street(s: str) -> str:
         if not s:
@@ -4405,12 +4605,19 @@ def main():
             else:
                 geometry, marker_kind = _make_synthetic_polygon(lon, lat, domain, service_he)
         elif geometry and geometry.get("type") == "MultiPoint":
-            polys = []
-            for pt in geometry["coordinates"]:
-                p, mk = _make_synthetic_polygon(pt[0], pt[1], domain, service_he)
-                polys.append(p["coordinates"])
-                marker_kind = mk  # all use same kind
-            geometry = {"type": "MultiPolygon", "coordinates": polys}
+            # Bus stops (תח"צ) keep MultiPoint geometry and get marker_kind=small_circle;
+            # the row is split into separate Point features below (one per coord)
+            # so each renders independently via the existing Point bus-stop path.
+            # Everything else gets the synthetic polygon treatment.
+            if service_he and "תח\"צ" in service_he:
+                marker_kind = "small_circle"
+            else:
+                polys = []
+                for pt in geometry["coordinates"]:
+                    p, mk = _make_synthetic_polygon(pt[0], pt[1], domain, service_he)
+                    polys.append(p["coordinates"])
+                    marker_kind = mk  # all use same kind
+                geometry = {"type": "MultiPolygon", "coordinates": polys}
         else:
             # Real lot polygons: assign marker_kind based on domain/service for consistent styling
             if domain == "programa":
@@ -4503,6 +4710,44 @@ def main():
             ):
                 is_shatzap_polygon = True
 
+        # For metaham compounds, detect inner שצ"פ polygons from yiud_karka_kayam
+        # so the frontend can render them prominently (compound = faint outline,
+        # שצ"פים inside = green fill). Filters by centroid-in-polygon + min area.
+        inner_shatzap_geom = None
+        inner_shatzap_count = 0
+        inner_shatzap_total_m2 = 0
+        if is_metaham_polygon and yiud_kayam_shatzap_features and shape:
+            try:
+                compound_shape = shape(geometry)
+                if not compound_shape.is_valid:
+                    compound_shape = compound_shape.buffer(0)
+                inner_polys = []
+                for s in yiud_kayam_shatzap_features:
+                    if not compound_shape.intersects(s["geom"]):
+                        continue
+                    # Centroid-in-compound test (more permissive than full containment)
+                    if not compound_shape.contains(s["geom"].centroid):
+                        continue
+                    # Filter by minimum area (skip < 100 m² as too small to be meaningful)
+                    a = polygon_area_m2(s["raw"])
+                    if a < 100:
+                        continue
+                    inner_polys.append(s)
+                    inner_shatzap_total_m2 += a
+                inner_shatzap_count = len(inner_polys)
+                if inner_polys:
+                    # Build a MultiPolygon GeoJSON
+                    mp_coords = []
+                    for s in inner_polys:
+                        raw = s["raw"]
+                        if raw["type"] == "Polygon":
+                            mp_coords.append(raw["coordinates"])
+                        elif raw["type"] == "MultiPolygon":
+                            mp_coords.extend(raw["coordinates"])
+                    inner_shatzap_geom = {"type": "MultiPolygon", "coordinates": mp_coords}
+            except Exception as e:
+                print(f"      [inner_shatzap] failed for {proj_name!r}: {e}")
+
         road_bearing_deg = None
         if marker_kind == "crossing_point" and geometry and geometry.get("type") == "Point":
             cx, cy = geometry["coordinates"][:2]
@@ -4541,6 +4786,13 @@ def main():
             "is_eivuy_brown": is_eivuy_brown,
             "is_shatzap_polygon": is_shatzap_polygon,
             "is_metaham_polygon": is_metaham_polygon,
+            "inner_shatzap_geom": inner_shatzap_geom,
+            "inner_shatzap_count": inner_shatzap_count if is_metaham_polygon else 0,
+            "inner_shatzap_total_m2": round(inner_shatzap_total_m2, 1) if inner_shatzap_total_m2 else 0,
+            # Sourced from "פרוייקטור אורנים — תכנון מתחמי 09.2023" PDF
+            # (the 4 master-plan compound proposals along the rakelet axis).
+            # Rendered in pink to distinguish from other master-plan compounds.
+            "is_metaham_pdf_tichnun": is_metaham_polygon and isinstance(pdf_link, str) and pdf_link.strip().startswith("מתחם מס'") and "תכנון מתחמי" in pdf_link,
             "road_bearing_deg": road_bearing_deg,
             "obstacles": str(obstacles).strip() if obstacles else None,
             "related_projects_text": str(related_projects).strip() if related_projects else None,
@@ -4600,7 +4852,21 @@ def main():
         # Reliable [lon, lat] for marker placement (always inside the polygon).
         props["display_point"] = feature_display_point(geometry)
 
-        out_features.append({"type": "Feature", "geometry": geometry, "properties": props})
+        # Split MultiPoint bus stops into separate Point features so each renders
+        # independently via the existing Point + small_circle path. Each split
+        # feature gets a unique project_id suffix; project_name stays the same so
+        # they share a popup and group in the sibling index.
+        if (geometry and geometry.get("type") == "MultiPoint"
+                and props.get("marker_kind") == "small_circle"):
+            base_id = props.get("project_id") or ""
+            for i, pt in enumerate(geometry["coordinates"]):
+                sub_props = dict(props)
+                sub_props["project_id"] = f"{base_id}-{i+1}" if base_id else None
+                sub_geom = {"type": "Point", "coordinates": list(pt)}
+                sub_props["display_point"] = feature_display_point(sub_geom)
+                out_features.append({"type": "Feature", "geometry": sub_geom, "properties": sub_props})
+        else:
+            out_features.append({"type": "Feature", "geometry": geometry, "properties": props})
 
         overlap_idx[pid] = {
             "plan_number": plan_number,
@@ -4802,10 +5068,13 @@ def main():
     n_eivuy = sum(1 for f in out_features if f["properties"].get("is_eivuy_brown"))
     n_shatzap = sum(1 for f in out_features if f["properties"].get("is_shatzap_polygon"))
     n_metaham = sum(1 for f in out_features if f["properties"].get("is_metaham_polygon"))
+    n_inner_shatzap = sum(1 for f in out_features if f["properties"].get("inner_shatzap_geom"))
+    inner_counts = [f["properties"].get("inner_shatzap_count", 0) for f in out_features if f["properties"].get("inner_shatzap_geom")]
     n_bearing = sum(1 for f in out_features if f["properties"].get("road_bearing_deg") is not None)
     n_crossing = sum(1 for f in out_features if f["properties"].get("marker_kind") == "crossing_point")
     print(f"      polygon-render flags: is_eivuy_brown={n_eivuy}, "
-          f"is_shatzap_polygon={n_shatzap}, is_metaham_polygon={n_metaham}, "
+          f"is_shatzap_polygon={n_shatzap}, is_metaham_polygon={n_metaham} "
+          f"(inner_שצ\"פ on {n_inner_shatzap}/{n_metaham}, total {sum(inner_counts)} sub-polys), "
           f"road_bearing_deg={n_bearing}/{n_crossing} crossings")
 
     # Resolve RELATED_FEATURES — second pass after all features are built.

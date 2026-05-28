@@ -353,13 +353,13 @@
   },
   "4f8b19189625": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "b48439b2d47e": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -371,7 +371,7 @@
   },
   "76dc4b2128bf": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -389,7 +389,7 @@
   },
   "1cfbcb4c9323": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1067,7 +1067,7 @@
   },
   "6cd066861cc4": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1111,13 +1111,13 @@
   },
   "b955b35e2e7e": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "1ce8340d5cd1": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1975,7 +1975,7 @@
   },
   "84732f0bad91": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1987,7 +1987,7 @@
   },
   "3d480b490ccf": {
     "plan_number": null,
-    "match_quality": "street",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
