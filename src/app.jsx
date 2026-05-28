@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-green-uniform';
+        const APP_VERSION = '2026-05-28-balance-tab';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3103,6 +3103,99 @@
                             `<table style="width:100%;border-collapse:collapse"><thead>${normHeader}</thead><tbody>${normRows}</tbody></table>` +
                             `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">סה״כ יח״ד ב-4 השכונות: ${totalUnitsAll.toLocaleString()}</div>`;
 
+                        // ── Tab: Programmatic Balance — by category × sub_neighborhood ──
+                        // Aggregates "what's planned" from all projector features. Same category
+                        // grouping as the filter panel (SERVICE_CATEGORIES) so the user sees a
+                        // unified view of planning intensity per service category per area.
+                        const BAL_CATS = {
+                            'גני ילדים / מעון':       ['גני ילדים', 'גן ילדים', 'מעון יום', 'מעון יום + גני ילדים'],
+                            'בי"ס יסודי':              ['יסודי', 'בי"ס יסודי'],
+                            'בי"ס על-יסודי':           ['על יסודי', 'בי"ס על-יסודי'],
+                            'שירותי רווחה':           ['שירותי רווחה', 'שירותי רווחה נוספים', 'מוסדות רווחה נוספים', 'משרדי שירותים חברתיים'],
+                            'בית כנסת / דת':          ['בית כנסת', 'מקווה'],
+                            'מועדון נוער/קשיש':       ['מועדון נוער', 'מועדון לקשיש'],
+                            'שירותי קהילה/תרבות':     ['שירותי קהילה', 'שירותי תרבות', 'ספרייה', 'אולם מופעים'],
+                            'בריאות':                 ['תחנה לבריאות המשפחה', 'מרפאה שכונתית'],
+                            'ספורט':                  ['מגרש ספורט', 'אולם ספורט'],
+                            'שצ״פ':                   ['שצ"פ', 'תוספת שצ"פ', 'חיבור לשצ"פ', 'מתחם, שצ"פ'],
+                            'מעבר ה״ר / שביל':         ['הוספת מעבר ה"ר', 'שדרוג מעבר ה"ר', 'מעבר ה"ר', 'הוספת שביל ה"ר', 'מעבר הולכי רגל'],
+                            'מעבר חציה':              ['מעבר חציה', 'הוספת מעבר חציה'],
+                            'כביש / רחוב':             ['רחוב', 'רחוב חדש', 'שדרוג רחובות'],
+                            'תח״צ / נגישות':           ['תח"צ', 'שיפור רמת שירות', 'הנגשה'],
+                            'גשר':                    ['גשר'],
+                            'מתחם / תוכנית אב':       ['הצעה להכנת תוכנית אב מתחמית להתחדשות'],
+                        };
+                        const BAL_SVC2CAT = {};
+                        Object.entries(BAL_CATS).forEach(([cat, svcs]) => svcs.forEach(s => { BAL_SVC2CAT[s] = cat; }));
+                        const balance = {};
+                        Object.keys(BAL_CATS).forEach(cat => {
+                            balance[cat] = {};
+                            AREAS.forEach(a => { balance[cat][a] = { count: 0, units: 0, estimate: 0, unitLabel: '' }; });
+                        });
+                        balance['אחר'] = {};
+                        AREAS.forEach(a => { balance['אחר'][a] = { count: 0, units: 0, estimate: 0, unitLabel: '' }; });
+                        allFeatures.forEach(w => {
+                            const p = w.feature.properties;
+                            const area = p.sub_neighborhood;
+                            if (!AREAS.includes(area)) return;
+                            const svc = String(p.service_he || '').trim();
+                            const cat = BAL_SVC2CAT[svc] || 'אחר';
+                            const cell = balance[cat][area];
+                            cell.count++;
+                            const u = parseFloat(p.units_required);
+                            if (!isNaN(u) && u > 0) {
+                                cell.units += u;
+                                if (!cell.unitLabel) cell.unitLabel = p.units_label || '';
+                            }
+                            cell.estimate += parseFloat(p.estimate_nis) || 0;
+                        });
+                        let balMaxCount = 0;
+                        Object.values(balance).forEach(byArea => Object.values(byArea).forEach(c => { if (c.count > balMaxCount) balMaxCount = c.count; }));
+                        const balHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">קטגוריה</th>` +
+                            AREAS.map(a => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${a}</th>`).join('') +
+                            `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;background:#eceff1">סה״כ</th></tr>`;
+                        const balCell = (c) => {
+                            if (!c.count) return `<td style="padding:5px 9px;text-align:center;color:#ccc">·</td>`;
+                            const intensity = Math.min(0.85, c.count / Math.max(balMaxCount, 1) * 0.8 + 0.1);
+                            const bg = `rgba(46,125,50,${intensity.toFixed(2)})`;
+                            const txtCol = intensity > 0.45 ? '#fff' : '#1b5e20';
+                            const unitsStr = c.units > 0 ? `<div style="font-size:10px;opacity:0.92;margin-top:1px;font-weight:400">${c.units.toLocaleString()} ${c.unitLabel}</div>` : '';
+                            return `<td style="padding:5px 9px;text-align:center;background:${bg};color:${txtCol};font-weight:700"><div>${c.count}</div>${unitsStr}</td>`;
+                        };
+                        const balRows = Object.entries(balance)
+                            .filter(([cat, byArea]) => Object.values(byArea).some(c => c.count > 0))
+                            .map(([cat, byArea]) => {
+                                const totals = AREAS.reduce((acc, a) => {
+                                    acc.count += byArea[a].count;
+                                    acc.units += byArea[a].units;
+                                    if (byArea[a].unitLabel) acc.unitLabel = byArea[a].unitLabel;
+                                    return acc;
+                                }, { count: 0, units: 0, unitLabel: '' });
+                                return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">` +
+                                    `<td style="padding:6px 9px;font-weight:600;background:#fafafa;border-right:3px solid #2e7d32">${cat}</td>` +
+                                    AREAS.map(a => balCell(byArea[a])).join('') +
+                                    `<td style="padding:6px 9px;text-align:center;background:#eceff1;font-weight:700"><div>${totals.count}</div>${totals.units ? `<div style="font-size:10px;color:#555;margin-top:1px;font-weight:400">${totals.units.toLocaleString()} ${totals.unitLabel}</div>` : ''}</td>` +
+                                `</tr>`;
+                            }).join('');
+                        const balAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0));
+                        const balGrand = balAreaTotals.reduce((a, b) => a + b, 0);
+                        const balEstAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].estimate, 0));
+                        const balEstGrand = balEstAreaTotals.reduce((a, b) => a + b, 0);
+                        const balTotalRow = `<tr style="border-top:2px solid #2e7d32;background:#f5f5f5;font-weight:700;font-size:12.5px">` +
+                            `<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ פרויקטים</td>` +
+                            balAreaTotals.map(t => `<td style="padding:6px 9px;text-align:center">${t}</td>`).join('') +
+                            `<td style="padding:6px 9px;text-align:center;background:#eceff1">${balGrand}</td>` +
+                        `</tr>`;
+                        const fmtMil = (n) => n >= 1e9 ? (n/1e9).toFixed(2)+'B ₪' : n >= 1e6 ? (n/1e6).toFixed(1)+'M ₪' : n >= 1e3 ? Math.round(n/1e3)+'K ₪' : Math.round(n)+' ₪';
+                        const balEstRow = `<tr style="background:#fafafa;font-weight:600;font-size:11.5px;color:#555">` +
+                            `<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ אומדן</td>` +
+                            balEstAreaTotals.map(t => `<td style="padding:6px 9px;text-align:center">${t ? fmtMil(t) : '·'}</td>`).join('') +
+                            `<td style="padding:6px 9px;text-align:center;background:#eceff1">${fmtMil(balEstGrand)}</td>` +
+                        `</tr>`;
+                        const tabBalanceHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:14px">היקף התכנון לפי קטגוריית שירות × תת-שכונה. צבע התא מציין את עוצמת התכנון (ירוק כהה = הרבה פרויקטים). מספר עליון = פרויקטים, מספר תחתון = סה״כ יחידות באותה היחידה (כיתות/מ״ר/דונם/מ׳). מבוסס על ${T.total} השורות בקובץ "תכנית עבודה" אחרי סינון לארבע שכונות מינהל גוננים.</div>` +
+                            `<table style="width:100%;border-collapse:collapse"><thead>${balHeader}</thead><tbody>${balRows}${balTotalRow}${balEstRow}</tbody></table>` +
+                            `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">לפירוט: לחיצה על תא תוביל לסינון פיצ'רי הפרוייקטור לאותה קטגוריה × אזור (TBD).</div>`;
+
                         // ── Shell with tabs + export/print buttons ──
                         const tabBtn = (id, label, active) =>
                             `<button data-tab-btn="${id}" style="background:${active ? '#1976d2' : 'transparent'};color:${active ? '#fff' : '#1976d2'};border:1.5px solid #1976d2;border-radius:5px 5px 0 0;padding:6px 14px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:600;border-bottom-color:${active ? '#1976d2' : 'transparent'}">${label}</button>`;
@@ -3122,12 +3215,14 @@
                                     tabBtn('obstacles', `🚧 חסמים (${obstacleFeats.length})`, false) +
                                     tabBtn('overlap', `🔗 תב״עות (${overlapItems.length})`, false) +
                                     tabBtn('normalized', '📈 מנורמל ליח״ד', false) +
+                                    tabBtn('balance', '🟢 מאזן פרוגרמתי', false) +
                                 `</div>` +
                                 `<div data-tab-pane="pivot" data-tab-label="סיכום + ציר זמן" style="display:block">${tabPivotHTML}</div>` +
                                 `<div data-tab-pane="body" data-tab-label="גורם מנהל" style="display:none">${tabBodyHTML}</div>` +
                                 `<div data-tab-pane="obstacles" data-tab-label="חסמים" style="display:none">${tabObstaclesHTML}</div>` +
                                 `<div data-tab-pane="overlap" data-tab-label="חפיפת תב״עות" style="display:none">${tabOverlapHTML}</div>` +
                                 `<div data-tab-pane="normalized" data-tab-label="מנורמל ליח״ד" style="display:none">${tabNormalizedHTML}</div>` +
+                                `<div data-tab-pane="balance" data-tab-label="מאזן פרוגרמתי" style="display:none">${tabBalanceHTML}</div>` +
                             `</div>` +
                         `</div>`;
                         const wrap = document.createElement('div');
