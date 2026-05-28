@@ -2578,7 +2578,7 @@
                                 mkChip('chumashim', 'unknown', 'ללא חומש', '#546e7a') +
                             `</div>` +
                             `<div style="margin-bottom:10px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="color:#9aa3b3;font-size:11px;font-weight:600">שירות</div><div><button id="pf-svc-all" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer;margin-left:4px">הכל</button><button id="pf-svc-none" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer">אף אחד</button></div></div>` +
-                                `<div id="pf-services" style="max-height:280px;overflow-y:auto;background:#16162a;border-radius:4px;padding:6px 8px"></div>` +
+                                `<div id="pf-services" style="background:#16162a;border-radius:4px;padding:6px 8px"></div>` +
                             `</div>` +
                         `</div>` +
                         `<div style="border-top:1px solid #2a2a4a;padding:10px 14px;background:#0c0c1d">` +
@@ -15239,7 +15239,7 @@
                             {/* ══ כלים ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${(measureMode || showFilter || showAnnotations || showPrint) ? 'active' : ''}`}
+                                className={`toolbar-btn ${(measureMode || showFilter || showAnnotations || showPrint || markerCoordsMode) ? 'active' : ''}`}
                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'tools' ? null : 'tools'); }}
                                 title="כלים"
                             >
@@ -15332,6 +15332,35 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                         <span className="sub-label">ייצוא</span>
                                     </button>
+                                    <button className={`toolbar-dropdown-item ${markerCoordsMode ? 'sub-active' : ''}`} data-tip="סימון קואורדינטות לעדכון פוליגונים והמלצות" onClick={() => {
+                                        if (markerCoordsMode) { setMarkerCoordsMode(null); setActiveDropdown(null); }
+                                        else { setActiveDropdown('marker-coords'); }
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        <span className="sub-label">סימון</span>
+                                    </button>
+                                </div>
+                            )}
+                            {activeDropdown === 'marker-coords' && (
+                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
+                                    <button className="toolbar-dropdown-item" data-tip="לחץ על המפה לסימון נקודה — יוצג פלט קואורדינטות" onClick={() => {
+                                        cancelAllModes('marker-coords');
+                                        setMarkerCoordsResult(null);
+                                        setMarkerCoordsMode('point');
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        <span className="sub-label">נקודה</span>
+                                    </button>
+                                    <button className="toolbar-dropdown-item" data-tip="ציור פוליגון לסימון גבול — יוצג GeoJSON להעתקה" onClick={() => {
+                                        cancelAllModes('marker-coords');
+                                        setMarkerCoordsResult(null);
+                                        setMarkerCoordsMode('polygon');
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                        <span className="sub-label">פוליגון</span>
+                                    </button>
                                 </div>
                             )}
                             {activeDropdown === 'measure' && (
@@ -15369,59 +15398,6 @@
                                 <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                 <span className="toolbar-label">הערות</span>
                             </button>
-
-                            {/* ══ סימון קואורדינטות ══ */}
-                            <div style={{position:'relative'}}>
-                            <button
-                                className={`toolbar-btn ${markerCoordsMode ? 'active' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // If polygon mode is active with ≥3 vertices, this click finishes & shows the modal.
-                                    if (markerCoordsMode === 'polygon') {
-                                        const r = markerCoordsRef.current;
-                                        if (r.points.length >= 3) {
-                                            setMarkerCoordsResult({ type: 'polygon', points: [...r.points] });
-                                            setMarkerCoordsMode(null);
-                                            setActiveDropdown(null);
-                                            return;
-                                        }
-                                        // Not enough points yet — cancel.
-                                        setMarkerCoordsMode(null);
-                                        setActiveDropdown(null);
-                                        return;
-                                    }
-                                    setActiveDropdown(prev => prev === 'marker-coords' ? null : 'marker-coords');
-                                }}
-                                title="סימון קואורדינטות לעדכון פוליגונים והמלצות"
-                            >
-                                <svg className="toolbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                                </svg>
-                                <span className="toolbar-label">{markerCoordsMode === 'polygon' ? (markerCoordsPts >= 3 ? 'סיום ✓' : markerCoordsPts + ' נק\'') : markerCoordsMode === 'point' ? 'בחר נקודה...' : 'סימון ▾'}</span>
-                            </button>
-                            {activeDropdown === 'marker-coords' && (
-                                <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className="toolbar-dropdown-item" data-tip="לחץ על המפה לסימון נקודה — יוצג פלט קואורדינטות" onClick={() => {
-                                        cancelAllModes('marker-coords');
-                                        setMarkerCoordsResult(null);
-                                        setMarkerCoordsMode('point');
-                                        setActiveDropdown(null);
-                                    }}>
-                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                        <span className="sub-label">נקודה</span>
-                                    </button>
-                                    <button className="toolbar-dropdown-item" data-tip="ציור פוליגון לסימון גבול — יוצג GeoJSON להעתקה" onClick={() => {
-                                        cancelAllModes('marker-coords');
-                                        setMarkerCoordsResult(null);
-                                        setMarkerCoordsMode('polygon');
-                                        setActiveDropdown(null);
-                                    }}>
-                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
-                                        <span className="sub-label">פוליגון</span>
-                                    </button>
-                                </div>
-                            )}
-                            </div>
 
                             <button
                                 className={`toolbar-btn ${showReportsMenu ? 'active' : ''}`}
@@ -16061,12 +16037,28 @@
 
                         {/* Marker-coords active-mode banner */}
                         {markerCoordsMode && (
-                            <div style={{position:'fixed',top:'60px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'10px 18px',borderRadius:'8px',fontSize:'14px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl'}}>
+                            <div style={{position:'fixed',top:'60px',left:'50%',transform:'translateX(-50%)',background:'#2196F3',color:'#fff',padding:'8px 14px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold',boxShadow:'0 4px 12px rgba(0,0,0,0.3)',zIndex:9999,direction:'rtl',display:'flex',alignItems:'center',gap:10}}>
+                                <span>
                                 {markerCoordsMode === 'point'
-                                    ? 'לחץ על המפה לסימון נקודה · ESC לביטול'
+                                    ? 'לחץ על המפה לסימון נקודה'
                                     : (markerCoordsPts < 3
-                                        ? `סמן קדקודים (${markerCoordsPts}/3 לפחות) · ESC לביטול`
-                                        : `${markerCoordsPts} קדקודים · לחץ "סיום" בסרגל · ESC לביטול`)}
+                                        ? `סמן קדקודים (${markerCoordsPts}/3 לפחות)`
+                                        : `${markerCoordsPts} קדקודים`)}
+                                </span>
+                                {markerCoordsMode === 'polygon' && markerCoordsPts >= 3 && (
+                                    <button onClick={() => {
+                                        const r = markerCoordsRef.current;
+                                        if (r.points.length >= 3) {
+                                            setMarkerCoordsResult({ type: 'polygon', points: [...r.points] });
+                                            setMarkerCoordsMode(null);
+                                        }
+                                    }} style={{background:'#fff',color:'#1976D2',border:'none',padding:'4px 12px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                                        סיום ✓
+                                    </button>
+                                )}
+                                <button onClick={() => setMarkerCoordsMode(null)} style={{background:'rgba(255,255,255,0.18)',color:'#fff',border:'1px solid rgba(255,255,255,0.4)',padding:'4px 10px',borderRadius:6,fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
+                                    ביטול (ESC)
+                                </button>
                             </div>
                         )}
 
