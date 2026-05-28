@@ -132,6 +132,30 @@ INNER_SHATZAP_CATEGORIES = {
         (35.20557, 31.75580): {"category": "מוצלח",         "label": None},
         (35.20531, 31.75536): {"category": "לשדרוג+תצפית", "label": "1,200 מ\"ר"},
     },
+    # מתחם הפסגה (בית שוויץ) — page 11 PDF (מצגת קטמונים מתחם הפסגה 05.2024):
+    # גן הנוטרים (5.8 דונם) → "הגדלת שטח הפארק כדי שיוכל לשאת את נפח התושבים
+    # ההולך וגדל ולהוסיף לו פרוגרמות" + שילוב שב"צ ב-הפרשה מבונה במגורים החדשים.
+    ("מתחם הפסגה (בית שוויץ)", "קטמונים ח-ט"): {
+        (35.19627, 31.75513): {"category": "לשדרוג+הרחבה", "label": "5.8 דונם → להרחבה"},
+    },
+}
+
+# Per-compound design principles (extracted from PDF deep-dive booklets like
+# "מצגת קטמונים מתחם הפסגה"). Rendered in popup as a structured list.
+# Keyed by (project_name, area) → list of {label, items[], source}.
+COMPOUND_PRINCIPLES = {
+    ("מתחם הפסגה (בית שוויץ)", "קטמונים ח-ט"): {
+        "source": "מצגת מתחם הפסגה — עמ' 11 (סיכום המלצות לאחר הצגה לעירייה)",
+        "headline": "פינוי בינוי של כל המתחם",
+        "items": [
+            "כל המתחם יתפס כמרחב תכנוני אחד",
+            "מענה לשב\"צים במסגרת הפרשות מבונות במגורים החדשים",
+            "הגדלת שטח הפארק (גן הנוטרים) להוספת פרוגרמות לנפח התושבים הגדל",
+            "שימור עצים ערכיים במגרש בית שוויץ (חורשת האורנים)",
+            "הקצאת שטח לכיכר עירונית ולרחבה מסחרית (ניתן לאחד לרחבה אחת)",
+            "הגדלת רוחב רצועת הדרך ושינוי חתך הרחוב (השומר/נוטרים)",
+        ],
+    },
 }
 
 # Per-compound extra trail features (e.g. the yellow path inside the בן זכאי
@@ -4870,6 +4894,9 @@ def main():
             "inner_trails": inner_trails if is_metaham_polygon else [],
             "inner_shatzap_count": inner_shatzap_count if is_metaham_polygon else 0,
             "inner_shatzap_total_m2": inner_shatzap_total_m2 if is_metaham_polygon else 0,
+            "compound_principles": COMPOUND_PRINCIPLES.get(
+                (str(proj_name or "").strip(), area)
+            ) if is_metaham_polygon else None,
             # Master-plan compound *proposals* (a specific service category) —
             # rendered in pink to distinguish from generic metaham polygons.
             # Covers the 4 compounds from "תכנון מתחמי 09.2023" PDF + מתחם הפסגה

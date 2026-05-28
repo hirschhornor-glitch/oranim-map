@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-balance-export-filter';
+        const APP_VERSION = '2026-05-28-hapsaga-categories';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11355,11 +11355,24 @@
                         ? `<div class="pp-hero" style="background:${cfg.color}14;border-right:3px solid ${cfg.color};padding:6px 10px;margin:6px 0 8px;font-size:12.5px;line-height:1.5;color:#263238"><b style="color:${cfg.color}">המלצה:</b> ${escape(heroText)}</div>`
                         : '';
 
+                    // Compound design principles — extracted from dedicated PDF deep-dives
+                    // (e.g. מצגת מתחם הפסגה). Structured list with source ref.
+                    const principlesBlock = (p.compound_principles && p.compound_principles.items && p.compound_principles.items.length)
+                        ? `<div class="pp-principles" style="background:#e8f5e9;border:1px solid #66bb6a;border-right:4px solid #2e7d32;border-radius:4px;padding:8px 10px;margin:8px 0;font-size:12px;line-height:1.55;color:#1b3a1f">` +
+                            `<div style="font-weight:700;color:#1b5e20;margin-bottom:4px">📐 עקרונות תכנון: ${escape(p.compound_principles.headline || '')}</div>` +
+                            `<ul style="margin:4px 0 4px 18px;padding:0">` +
+                                p.compound_principles.items.map(it => `<li style="margin-bottom:2px">${escape(it)}</li>`).join('') +
+                            `</ul>` +
+                            (p.compound_principles.source ? `<div style="font-size:10.5px;color:#666;margin-top:4px;font-style:italic">מקור: ${escape(p.compound_principles.source)}</div>` : '') +
+                        `</div>`
+                        : '';
+
                     return `<div class="pp-root" style="--pp-accent:${cfg.color}">` +
                         `<div class="pp-header"><div class="pp-title">${escape(p.project_name || '')}</div>${subtitle}</div>` +
                         (pillsRow ? `<div class="pp-pills">${pillsRow}</div>` : '') +
                         obstaclesBlock +
                         heroBlock +
+                        principlesBlock +
                         servicesTable +
                         psCard + karCard + descBlock + overlapDetail +
                         noteBlock +
@@ -11672,14 +11685,16 @@
                         // variant — brown is_metaham_polygon OR pink is_metaham_pdf_tichnun).
                         // Categorized by build script using PDF-derived metadata:
                         // All under "מרחב ציבורי" → uniform green palette per user
-                        // request 2026-05-28. Categories differentiated by shade:
+                        // request 2026-05-28. Categories differentiated by shade/hue:
                         //   מוצלח           → bright green   (#66bb6a) — successful
                         //   לשדרוג           → medium green   (#388e3c) — upgrade
                         //   לשדרוג+תצפית    → dark green     (#1b5e20) — upgrade + viewpoint
+                        //   לשדרוג+הרחבה    → teal-green     (#00897b) — upgrade + expand area
                         const INNER_CAT_COLORS = {
                             'מוצלח':         { fill: '#66bb6a', stroke: '#2e7d32' },
                             'לשדרוג':         { fill: '#388e3c', stroke: '#1b5e20' },
                             'לשדרוג+תצפית':  { fill: '#1b5e20', stroke: '#0d3712' },
+                            'לשדרוג+הרחבה':  { fill: '#00897b', stroke: '#004d40' },
                         };
                         if (p.inner_shatzaps && p.inner_shatzaps.length) {
                             p.inner_shatzaps.forEach(sub => {
