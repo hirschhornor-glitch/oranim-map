@@ -4789,10 +4789,12 @@ def main():
             "inner_shatzap_geom": inner_shatzap_geom,
             "inner_shatzap_count": inner_shatzap_count if is_metaham_polygon else 0,
             "inner_shatzap_total_m2": round(inner_shatzap_total_m2, 1) if inner_shatzap_total_m2 else 0,
-            # Sourced from "פרוייקטור אורנים — תכנון מתחמי 09.2023" PDF
-            # (the 4 master-plan compound proposals along the rakelet axis).
-            # Rendered in pink to distinguish from other master-plan compounds.
-            "is_metaham_pdf_tichnun": is_metaham_polygon and isinstance(pdf_link, str) and pdf_link.strip().startswith("מתחם מס'") and "תכנון מתחמי" in pdf_link,
+            # Master-plan compound *proposals* (a specific service category) —
+            # rendered in pink to distinguish from generic metaham polygons.
+            # Covers the 4 compounds from "תכנון מתחמי 09.2023" PDF + מתחם הפסגה
+            # in קטמונים ח-ט (separate "מצגת מתחם הפסגה" PDF) — all 5 share the
+            # same xlsx service "הצעה להכנת תוכנית אב מתחמית להתחדשות".
+            "is_metaham_pdf_tichnun": is_metaham_polygon and isinstance(service_he, str) and "הצעה להכנת תוכנית אב מתחמית" in service_he,
             "road_bearing_deg": road_bearing_deg,
             "obstacles": str(obstacles).strip() if obstacles else None,
             "related_projects_text": str(related_projects).strip() if related_projects else None,

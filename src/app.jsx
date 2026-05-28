@@ -323,7 +323,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-27-left-filter-timeline';
+        const APP_VERSION = '2026-05-28-inner-shatzap';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
