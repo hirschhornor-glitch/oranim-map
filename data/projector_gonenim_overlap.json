@@ -485,13 +485,13 @@
   },
   "a887f98eff46": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "177775ef0439": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -503,7 +503,7 @@
   },
   "6ee07b669851": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -521,13 +521,13 @@
   },
   "2c4599f31fd8": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "f08121547992": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -539,7 +539,7 @@
   },
   "5a60bb92a942": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -551,7 +551,7 @@
   },
   "2662a35ab4ce": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -563,7 +563,7 @@
   },
   "5965724ebdb1": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },

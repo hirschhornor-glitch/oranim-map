@@ -13218,8 +13218,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.199978,
-          31.757845
+          35.201778,
+          31.758883
         ]
       },
       "properties": {
@@ -13247,9 +13247,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13260,9 +13260,17 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "ניקנור",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "50 / 150",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מתומרר שלא בצומת",
+          "implications": "",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 13.5,
+        "road_bearing_deg": 241.1,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "tik_title": "שקופית 75: ניקנור |סיכום מצב מוצע",
@@ -13271,8 +13279,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "ניקנור|\n סיכום מצב מוצע\nקונספט ת כנוני\nטיפול מוצע\nרחוב מקומי\nמיתון תנועה מסוג ב '\n– \n מיסעה דו סטרית5.5\n מ '\n ורכיבה\nמשותפת.\nחיבור מוטורי לפת\nפתיחת גישה חדשה לרחוב מכיוון פת, דרך פרויקטים מגדל \nעמק הצבאים, מתחם בזק\nהלי כתיות\nטיפול במדרכות, נטיעות עצים ב\"אוזניים\" בין כל שתי חניות. \nיצירת חיבורים חדשים להולכי רגל ושיפור חיבורים קיימים אל \nרח' פת, הרצוג.\nתשתית רכיבה\nרכיבה משולבת במיתון תנועה,\n שילוב מסילות במדרגות \nבמעברים אל הרחובות הסמוכים. שיפוע מרחוב פת אל ניקנור \n– \n9%\n, מרחוב הרצוג אל ניקנור – \n14%\nמיתון תנועה ורכיבה משותפת כולל רצועת חניה\n חתך מוצע12מ '(מצב קיים)",
         "display_point": [
-          35.199978,
-          31.757845
+          35.201778,
+          31.758883
         ]
       }
     },
@@ -13281,8 +13289,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.199978,
-          31.757845
+          35.199932,
+          31.758272
         ]
       },
       "properties": {
@@ -13310,9 +13318,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13323,9 +13331,17 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "ניקנור",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "80 / 160",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מתומרר שלא בצומת",
+          "implications": "ביטול כ-5 חניות",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 13.5,
+        "road_bearing_deg": 247.8,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "tik_title": "שקופית 75: ניקנור |סיכום מצב מוצע",
@@ -13334,8 +13350,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "ניקנור|\n סיכום מצב מוצע\nקונספט ת כנוני\nטיפול מוצע\nרחוב מקומי\nמיתון תנועה מסוג ב '\n– \n מיסעה דו סטרית5.5\n מ '\n ורכיבה\nמשותפת.\nחיבור מוטורי לפת\nפתיחת גישה חדשה לרחוב מכיוון פת, דרך פרויקטים מגדל \nעמק הצבאים, מתחם בזק\nהלי כתיות\nטיפול במדרכות, נטיעות עצים ב\"אוזניים\" בין כל שתי חניות. \nיצירת חיבורים חדשים להולכי רגל ושיפור חיבורים קיימים אל \nרח' פת, הרצוג.\nתשתית רכיבה\nרכיבה משולבת במיתון תנועה,\n שילוב מסילות במדרגות \nבמעברים אל הרחובות הסמוכים. שיפוע מרחוב פת אל ניקנור \n– \n9%\n, מרחוב הרצוג אל ניקנור – \n14%\nמיתון תנועה ורכיבה משותפת כולל רצועת חניה\n חתך מוצע12מ '(מצב קיים)",
         "display_point": [
-          35.199978,
-          31.757845
+          35.199932,
+          31.758272
         ]
       }
     },
@@ -13344,8 +13360,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.199978,
-          31.757845
+          35.199026,
+          31.756826
         ]
       },
       "properties": {
@@ -13373,9 +13389,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13386,9 +13402,17 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "ניקנור",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "60",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חצייה מוגבה",
+          "implications": "ביטול 2 חניות, אין צורך לבטל את חניית רכב הנכה",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 13.5,
+        "road_bearing_deg": 159.2,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "tik_title": "שקופית 75: ניקנור |סיכום מצב מוצע",
@@ -13397,8 +13421,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "ניקנור|\n סיכום מצב מוצע\nקונספט ת כנוני\nטיפול מוצע\nרחוב מקומי\nמיתון תנועה מסוג ב '\n– \n מיסעה דו סטרית5.5\n מ '\n ורכיבה\nמשותפת.\nחיבור מוטורי לפת\nפתיחת גישה חדשה לרחוב מכיוון פת, דרך פרויקטים מגדל \nעמק הצבאים, מתחם בזק\nהלי כתיות\nטיפול במדרכות, נטיעות עצים ב\"אוזניים\" בין כל שתי חניות. \nיצירת חיבורים חדשים להולכי רגל ושיפור חיבורים קיימים אל \nרח' פת, הרצוג.\nתשתית רכיבה\nרכיבה משולבת במיתון תנועה,\n שילוב מסילות במדרגות \nבמעברים אל הרחובות הסמוכים. שיפוע מרחוב פת אל ניקנור \n– \n9%\n, מרחוב הרצוג אל ניקנור – \n14%\nמיתון תנועה ורכיבה משותפת כולל רצועת חניה\n חתך מוצע12מ '(מצב קיים)",
         "display_point": [
-          35.199978,
-          31.757845
+          35.199026,
+          31.756826
         ]
       }
     },
@@ -13407,8 +13431,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.201817,
-          31.7534191
+          35.201944,
+          31.753277
         ]
       },
       "properties": {
@@ -13436,9 +13460,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13449,14 +13473,22 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "אלעזר בן יאיר",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "אין מעברים קרובים",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מוגבה",
+          "implications": "ביטול כ-5 חניות",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 143.5,
+        "road_bearing_deg": 49.3,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.201817,
-          31.7534191
+          35.201944,
+          31.753277
         ]
       }
     },
@@ -13465,8 +13497,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2088725,
-          31.7554245
+          35.208907,
+          31.75543
         ]
       },
       "properties": {
@@ -13494,9 +13526,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13507,7 +13539,15 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "רשב\"ג",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "אין מעברים קרובים",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מתומרר שלא בצומת",
+          "implications": "ביטול כ-5 חניות",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
         "road_bearing_deg": 47.1,
         "obstacles": "כרגע לא חלק מפרויקט",
@@ -13518,8 +13558,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "רשב\"ג מתוכנן\nחתך א-א\n מתוכנן בתוכנית101-0778035מתחם נהוראי",
         "display_point": [
-          35.2088725,
-          31.7554245
+          35.208907,
+          31.75543
         ]
       }
     },
@@ -13528,8 +13568,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2076583,
-          31.7570765
+          35.207427,
+          31.756853
         ]
       },
       "properties": {
@@ -13557,9 +13597,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13570,34 +13610,32 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "אנטיגונוס",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "אין מעברים קרובים",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מתומרר שלא בצומת",
+          "implications": "ביטול כ-5 חניות",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 40.8,
+        "road_bearing_deg": 136.3,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.2076583,
-          31.7570765
+          35.207427,
+          31.756853
         ]
       }
     },
     {
       "type": "Feature",
       "geometry": {
-        "type": "LineString",
+        "type": "Point",
         "coordinates": [
-          [
-            35.2138771,
-            31.7585618
-          ],
-          [
-            35.2115869,
-            31.7562235
-          ],
-          [
-            35.2105815,
-            31.7554314
-          ]
+          35.211729,
+          31.758071
         ]
       },
       "properties": {
@@ -13628,7 +13666,7 @@
         "match_quality": "manual_override",
         "overlap_plan_names": [],
         "geometry_source": "manual_override",
-        "marker_kind": "passage_line",
+        "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
         "is_shatzap_polygon": false,
@@ -13638,14 +13676,22 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "מעגלי יבנה",
+          "secondary_street": "מעבר לה\"ר",
+          "distance": "אין מעברים קרובים",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "מעבר חציה מתומרר שלא בצומת",
+          "implications": "מתוכננת במסגרת מעגלי יבנה",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": null,
+        "road_bearing_deg": 215.4,
         "obstacles": null,
         "related_projects_text": "מתכונן במסגרת מעגלי יבנה",
         "display_point": [
-          35.2122842,
-          31.7569354
+          35.211729,
+          31.758071
         ]
       }
     },
@@ -13654,8 +13700,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2105822,
-          31.7574114
+          35.210581,
+          31.757615
         ]
       },
       "properties": {
@@ -13683,9 +13729,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13696,9 +13742,17 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "רשב\"ג",
+          "secondary_street": "רשב\"ג / יוסי בן יועזר",
+          "distance": "צמוד לצומת",
+          "justification": "מעבר המשכי לה\"ר",
+          "type": "",
+          "implications": "צמוד לצומת נוסף, אין אפשרות לתכנן מעבר בשלב זה. כאשר יתוכנן מתחמית (בהתאם להמלצת הפרויקטור) אזי יש לשלב בתכנון את המעבר, באזור החיבור לאמוראים.",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 355.2,
+        "road_bearing_deg": 2.9,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": "מתחם ציבורי מס' 2 רשב\"ג\nשורה 30 בטבלה",
         "tik_title": "שקופית 58: רשב\"ג מתוכנן",
@@ -13707,8 +13761,8 @@
         "tik_label": "תיק שכונה — גוננים א-ו",
         "tik_excerpt": "רשב\"ג מתוכנן\nחתך א-א\n מתוכנן בתוכנית101-0778035מתחם נהוראי",
         "display_point": [
-          35.2105822,
-          31.7574114
+          35.210581,
+          31.757615
         ]
       }
     },
@@ -13717,8 +13771,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          35.2095521,
-          31.7577338
+          35.209352,
+          31.757797
         ]
       },
       "properties": {
@@ -13746,9 +13800,9 @@
         "estimate_nis": null,
         "pdf_link": "עמ' 13 חוברת מרחב ציבורי גוננים",
         "pdf_excerpt": "[עמ' 13]\n.פרק המסקנות מכיל המלצות לפרוייקטים שנולדו מתוך למידת העומק והניתוח של השכונות\nההמלצות נחלקות לסלי פרוייקטים לשדרוג פיזי ולמתחמים להתחדשות עירונית.\n מקרא אייקונים לסלי הפרוייקטים:\nהצעה מתחמית\nשימור\nהסדרה\nסטטוטורית\nיצירת מקום\nבמסגרת\nהתחדשות\nעירונית\nפינת ישיבה\nתצפית\nשדרוג הקיים\nמעבר חדש\nהנגשה מכאנית\n פרק ג': המלצות\nגוננים\nסלי פרוייקטים",
-        "match_quality": "parcels",
+        "match_quality": "manual_override",
         "overlap_plan_names": [],
-        "geometry_source": "parcels_centroid_crossing_snapped",
+        "geometry_source": "manual_override",
         "marker_kind": "crossing_point",
         "lot_area_m2": null,
         "is_eivuy_brown": false,
@@ -13759,14 +13813,22 @@
         "inner_shatzap_count": 0,
         "inner_shatzap_total_m2": 0,
         "compound_principles": null,
-        "crosswalk_table_row": null,
+        "crosswalk_table_row": {
+          "main_street": "אנטיגונוס",
+          "secondary_street": "רחובות ללא מוצא",
+          "distance": "50",
+          "justification": "מעבר לה\"ר",
+          "type": "",
+          "implications": "ביטול 2 מקומות חנייה. לתכנן כמעבר חציה בצומת, ובמידה ויתוכנן המתחם שמבטל את כניסת הרכבים לרח' ללא מוצא אנטיגונוס (בהתאם להמלצת הפרויקטור) אזי יש לשלב בתכנון את המעבר.",
+          "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')"
+        },
         "is_metaham_pdf_tichnun": false,
-        "road_bearing_deg": 109.1,
+        "road_bearing_deg": 195.4,
         "obstacles": "כרגע לא חלק מפרויקט",
         "related_projects_text": null,
         "display_point": [
-          35.2095521,
-          31.7577338
+          35.209352,
+          31.757797
         ]
       }
     },
