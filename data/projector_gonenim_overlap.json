@@ -1213,19 +1213,19 @@
   },
   "c1d6ade2ad9c": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d674f374fc59": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "848e838e74ba": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1237,25 +1237,25 @@
   },
   "6be28a4e18ce": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "1584b2a13ddb": {
     "plan_number": "101-0511923",
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "019975bd1129": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "4fa1f2a6a3b5": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
