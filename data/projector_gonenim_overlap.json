@@ -1261,7 +1261,7 @@
   },
   "87d3b5c5f862": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
