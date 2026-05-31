@@ -140,6 +140,126 @@ INNER_SHATZAP_CATEGORIES = {
     },
 }
 
+# Extra features not in xlsx — crosswalks from PDF tables that the xlsx
+# skipped (e.g. feasible-but-not-prioritized rows). Each entry creates a
+# new feature in the geojson at build time. Coords are user-provided.
+# Keyed by synthetic project_id; value contains all needed fields.
+EXTRA_FEATURES = {
+    # === גוננים א-ו crosswalks missing from xlsx (5 feasible rows) ===
+    # Per "גוננים מרחב ציבורי 05.2024.pdf" עמ' 12 — these 5 of 14 feasible
+    # crosswalks didn't make it to the xlsx. Coords user-provided.
+    "extra_gonenim_cw_4": {
+        "geometry": {"type": "Point", "coordinates": [35.198876, 31.757731]},
+        "properties": {
+            "project_name": "חננאל",
+            "project_num": "ממעבר חציה מס'4 (לא ב-xlsx)",
+            "service_he": "מעבר חציה",
+            "sub_neighborhood": "גוננים א-ו",
+            "service_key": "crosswalk",
+            "description": "מעבר חציה מומלץ עפ\"י יועצת התנועה (לא נכלל בתכנית העבודה)",
+            "plan_status": "המלצת יועצת",
+            "is_xlsx_gap": True,
+            "crosswalk_table_row": {
+                "main_street": "חננאל",
+                "secondary_street": "מעבר לה\"ר",
+                "distance": "אין מעברים קרובים",
+                "justification": "מעבר המשכי לה\"ר",
+                "type": "מעבר חציה מוגבה",
+                "implications": "ביטול 2 חניות",
+                "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 — שורה 4 (יועצת תנועה: יורוברידג'). לא ב-xlsx.",
+            },
+        },
+    },
+    "extra_gonenim_cw_7": {
+        "geometry": {"type": "Point", "coordinates": [35.199747, 31.755081]},
+        "properties": {
+            "project_name": "ניתאי הארבלי",
+            "project_num": "ממעבר חציה מס'7 (לא ב-xlsx)",
+            "service_he": "מעבר חציה",
+            "sub_neighborhood": "גוננים א-ו",
+            "service_key": "crosswalk",
+            "description": "מעבר חציה מומלץ עפ\"י יועצת התנועה (לא נכלל בתכנית העבודה)",
+            "plan_status": "המלצת יועצת",
+            "is_xlsx_gap": True,
+            "crosswalk_table_row": {
+                "main_street": "ניתאי הארבלי",
+                "secondary_street": "מעבר לה\"ר מונגש (רח' ללא מוצא)",
+                "distance": "אין מעברים קרובים",
+                "justification": "מומלץ גם להסדיר את המדרכה עם הרחוב ללא מוצא כך שכ\"ר יכנסו דרך אבן עליה לרכב.",
+                "type": "מעבר המשכי מומלץ לה\"ר",
+                "implications": "ביטול 2 מקומות חנייה.",
+                "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 — שורה 7 (יועצת תנועה: יורוברידג'). לא ב-xlsx.",
+            },
+        },
+    },
+    "extra_gonenim_cw_8": {
+        "geometry": {"type": "Point", "coordinates": [35.201968, 31.752337]},
+        "properties": {
+            "project_name": "קנאי הגליל",
+            "project_num": "ממעבר חציה מס'8 (לא ב-xlsx)",
+            "service_he": "מעבר חציה",
+            "sub_neighborhood": "גוננים א-ו",
+            "service_key": "crosswalk",
+            "description": "מעבר חציה מומלץ עפ\"י יועצת התנועה (לא נכלל בתכנית העבודה)",
+            "plan_status": "המלצת יועצת",
+            "is_xlsx_gap": True,
+            "crosswalk_table_row": {
+                "main_street": "קנאי הגליל",
+                "secondary_street": "רחוב ללא שם",
+                "distance": "100 / 190",
+                "justification": "מעבר חציה מערבית לצומת, כולל הסדרת צומת.",
+                "type": "מעבר המשכי לה\"ר, וצומת.",
+                "implications": "ללא",
+                "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 — שורה 8 (יועצת תנועה: יורוברידג'). לא ב-xlsx.",
+            },
+        },
+    },
+    "extra_gonenim_cw_11": {
+        "geometry": {"type": "Point", "coordinates": [35.208194, 31.756187]},
+        "properties": {
+            "project_name": "יוסי בן יועזר",
+            "project_num": "ממעבר חציה מס'11 (לא ב-xlsx)",
+            "service_he": "מעבר חציה",
+            "sub_neighborhood": "גוננים א-ו",
+            "service_key": "crosswalk",
+            "description": "מעבר חציה מומלץ עפ\"י יועצת התנועה (לא נכלל בתכנית העבודה)",
+            "plan_status": "המלצת יועצת",
+            "is_xlsx_gap": True,
+            "crosswalk_table_row": {
+                "main_street": "יוסי בן יועזר",
+                "secondary_street": "מעבר לה\"ר",
+                "distance": "אין מעברים קרובים",
+                "justification": "מעבר המשכי לה\"ר",
+                "type": "מעבר חציה מתומרר שלא בצומת",
+                "implications": "ביטול כ-5 חניות",
+                "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 — שורה 11 (יועצת תנועה: יורוברידג'). לא ב-xlsx.",
+            },
+        },
+    },
+    "extra_gonenim_cw_15": {
+        "geometry": {"type": "Point", "coordinates": [35.210431, 31.758637]},
+        "properties": {
+            "project_name": "יוסי בן יועזר",
+            "project_num": "ממעבר חציה מס'15 (לא ב-xlsx)",
+            "service_he": "מעבר חציה",
+            "sub_neighborhood": "גוננים א-ו",
+            "service_key": "crosswalk",
+            "description": "מעבר חציה מומלץ עפ\"י יועצת התנועה (לא נכלל בתכנית העבודה)",
+            "plan_status": "המלצת יועצת",
+            "is_xlsx_gap": True,
+            "crosswalk_table_row": {
+                "main_street": "יוסי בן יועזר",
+                "secondary_street": "מעבר לה\"ר",
+                "distance": "50 / 50",
+                "justification": "במידה ויתוכננו מעברים לה\"ר בין שני צידי הכביש, יש לתכנון גם מעבר חציה, דיוק מיקום המעבר צריך לקחת בחשבון את חציית הכביש, יש לתאם בין אדריכל הנוף ליועץ התנועה.",
+                "type": "מעבר לה\"ר",
+                "implications": "ביטול 4-6 חניות, מתוכן 1 חניות נכים.",
+                "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 — שורה 15 (יועצת תנועה: יורוברידג'). לא ב-xlsx.",
+            },
+        },
+    },
+}
+
 # Per-compound design principles (extracted from PDF deep-dive booklets like
 # "מצגת קטמונים מתחם הפסגה"). Rendered in popup as a structured list.
 # Keyed by (project_name, area) → list of {label, items[], source}.
@@ -204,16 +324,16 @@ CROSSWALK_TABLE_DATA = {
     },
     # === גוננים א-ו — מ-"גוננים מרחב ציבורי 05.2024.pdf" עמ' 12 (16 רשומות, 14 ישימים) ===
     # פיצ'רים #72-#80 (9 מתוך 16). הקידומת בxlsx היא "ממעבר חציה מס'".
-    # NOTE: PDF text extraction had a 1-row shift in implications column —
-    # text appearing AFTER row N's marker is actually row N+1's implication.
-    # User-confirmed 2026-05-28.
+    # NOTE: simple rule applies — implication is in the השלכות column of the
+    # row itself, same as Rasko. (Earlier shift-rule was a parsing mistake.)
+    # User-confirmed via PDF p12 image 2026-05-28.
     ("גוננים א-ו", "ממעבר חציה מס' 1"): {
         "main_street": "ניקנור",
         "secondary_street": "מעבר לה\"ר",
         "distance": "50 / 150",
         "justification": "מעבר המשכי לה\"ר",
         "type": "מעבר חציה מתומרר שלא בצומת",
-        "implications": "",  # PDF text-extract showed nothing visible for row 1
+        "implications": "ביטול כ-5 חניות",
         "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')",
     },
     ("גוננים א-ו", "ממעבר חציה מס' 2"): {
@@ -222,7 +342,7 @@ CROSSWALK_TABLE_DATA = {
         "distance": "80 / 160",
         "justification": "מעבר המשכי לה\"ר",
         "type": "מעבר חציה מתומרר שלא בצומת",
-        "implications": "ביטול כ-5 חניות",
+        "implications": "ביטול 4-6 חניות, מתוכן 5 חניות נכים, סיכוי נמוך עד אפסי לביצוע.",
         "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')",
     },
     ("גוננים א-ו", "ממעבר חציה מס'5"): {  # NOTE: xlsx has no space after מס'
@@ -249,7 +369,7 @@ CROSSWALK_TABLE_DATA = {
         "distance": "אין מעברים קרובים",
         "justification": "מעבר המשכי לה\"ר",
         "type": "מעבר חציה מתומרר שלא בצומת",
-        "implications": "ביטול כ-5 חניות",
+        "implications": "יש לתכנן כך שלא יבוטלו חניות.",
         "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')",
     },
     ("גוננים א-ו", "ממעבר חציה מס'12"): {
@@ -287,6 +407,38 @@ CROSSWALK_TABLE_DATA = {
         "type": "",
         "implications": "ביטול 2 מקומות חנייה. לתכנן כמעבר חציה בצומת, ובמידה ויתוכנן המתחם שמבטל את כניסת הרכבים לרח' ללא מוצא אנטיגונוס (בהתאם להמלצת הפרויקטור) אזי יש לשלב בתכנון את המעבר.",
         "source": "גוננים מרחב ציבורי 05.2024, עמ' 12 (יועצת תנועה: יורוברידג')",
+    },
+    # === קטמונים ח-ט — מ-"קטמונים ופת 05.2024.pdf" עמ' 16 (12 רשומות, 4 ישימים) ===
+    # פיצ'רים #168-#171 (4 מתוך 12). הקידומת בxlsx היא "מעבר חציה מס' " (כמו רסקו).
+    # שאר 8 השורות (3,4,5,7,8,9,10,12) אין להן פיצ'ר ב-xlsx.
+    # NOTE: same 1-row shift in implications column as the יורוברידג' tables —
+    # text appearing AFTER row N's marker is actually row N+1's implication.
+    ("קטמונים ח-ט", "מעבר חציה מס' 1"): {
+        "main_street": "דב הוז",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "אין בקרבתו",
+        "justification": "מעבר המשכי לה\"ר",
+        "type": "מעבר חצייה מוגבה",
+        "implications": "",  # row 1 — no preceding text in PDF
+        "source": "קטמונים ופת 05.2024, עמ' 16 (יועצת תנועה: ברידג')",
+    },
+    ("קטמונים ח-ט", "מעבר חציה מס' 2"): {
+        "main_street": "אלמליח",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "60 / ללא",
+        "justification": "מעבר המשכי לה\"ר",
+        "type": "מעבר חציה מתומרר שלא בצומת",
+        "implications": "ביטול 5-6 חניות",  # shifted from row 1 visible text
+        "source": "קטמונים ופת 05.2024, עמ' 16 (יועצת תנועה: ברידג')",
+    },
+    ("קטמונים ח-ט", "מעבר חציה מס' 6"): {
+        "main_street": "יצחק שדה",
+        "secondary_street": "מעבר לה\"ר",
+        "distance": "אין בקרבתו",
+        "justification": "מעבר המשכי לה\"ר",
+        "type": "מעבר חצייה מוגבה",
+        "implications": "ביטול 6-5 חניות",  # shifted from row 5 (השומר) visible text
+        "source": "קטמונים ופת 05.2024, עמ' 16 (יועצת תנועה: ברידג')",
     },
 }
 
@@ -1209,6 +1361,14 @@ MANUAL_LOCATION_OVERRIDES = {
     ("רשב\"ג", "גוננים א-ו", "מעבר חציה", "ממעבר חציה מס'14"): [35.210581, 31.757615],
     # אנטיגונוס #16 (גוננים, ממעבר חציה מס'16) — 50מ', מעבר לה"ר, מותנה במתחם.
     ("אנטיגונוס", "גוננים א-ו", "מעבר חציה", "ממעבר חציה מס'16"): [35.209352, 31.757797],
+    # === קטמונים ח-ט crosswalks (#168-#171) ===
+    # דב הוז #1 (קטמונים, מעבר חציה מס' 1) — מוגבה, אין בקרבתו, מעבר לה"ר.
+    ("דב הוז", "קטמונים ח-ט", "מעבר חציה", "מעבר חציה מס' 1"): [35.195862, 31.756168],
+    # אלמליח #2 (קטמונים, מעבר חציה מס' 2) — מתומרר שלא בצומת, 60/ללא, ביטול 5-6 חניות.
+    # 4-tuple — אלמליח חוזרת ב-#171 (מעבר חציה מס' 11).
+    ("אלמליח", "קטמונים ח-ט", "מעבר חציה", "מעבר חציה מס' 2"): [35.193498, 31.756228],
+    # יצחק שדה #6 (קטמונים, מעבר חציה מס' 6) — מוגבה, אין בקרבתו, ביטול 6-5 חניות.
+    ("יצחק שדה", "קטמונים ח-ט", "מעבר חציה", "מעבר חציה מס' 6"): [35.197223, 31.754162],
     # מתחם לוריא — has 4 public-services (school/kindergartens/daycare/synagogue)
     # all on the same complex at גוש 30185 / חלקות 178,203 (per PDF #10).
     # The 5th service (רחוב חדש) and 6th (מעבר ה"ר) keep their own dedicated coords.
@@ -5358,6 +5518,26 @@ def main():
         out_features.append({"type": "Feature", "geometry": feat.get("geometry"), "properties": props})
         standalone_poly += 1
     print(f"      [shp] emitted {standalone_poly} standalone polyline features (unmatched in xlsx)")
+
+    # Emit EXTRA_FEATURES — crosswalks/items not in xlsx but present in PDF tables.
+    # Each has Point geometry from user-provided coords + crosswalk_table_row data.
+    extra_emitted = 0
+    for ext_pid, ext_def in EXTRA_FEATURES.items():
+        if not ext_def or not ext_def.get("geometry"):
+            continue
+        ext_props = dict(ext_def.get("properties") or {})
+        ext_props["project_id"] = ext_pid
+        ext_props.setdefault("geometry_source", "extra_features_manual")
+        ext_props.setdefault("match_quality", "manual_override")
+        ext_props.setdefault("marker_kind", "crossing_point")
+        ext_props.setdefault("domain", "transport")
+        ext_props.setdefault("domain_he", "תנועה")
+        if "display_point" not in ext_props:
+            ext_props["display_point"] = feature_display_point(ext_def["geometry"])
+        out_features.append({"type": "Feature", "geometry": ext_def["geometry"], "properties": ext_props})
+        extra_emitted += 1
+    if extra_emitted:
+        print(f"      [extra] emitted {extra_emitted} EXTRA_FEATURES not in xlsx")
 
     print("[4/6] Match-quality distribution by domain:")
     for dom, stats in match_stats.items():

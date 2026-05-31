@@ -1201,13 +1201,13 @@
   },
   "8290e7397a06": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
   "d3b6532b2985": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
@@ -1231,7 +1231,7 @@
   },
   "b0a11332a528": {
     "plan_number": null,
-    "match_quality": "parcels",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
