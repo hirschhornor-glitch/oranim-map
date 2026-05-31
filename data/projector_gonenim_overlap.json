@@ -1267,7 +1267,7 @@
   },
   "f186c8b59d24": {
     "plan_number": null,
-    "match_quality": "shapefile",
+    "match_quality": "manual_override",
     "overlap_plan_names": [],
     "overlap_features": []
   },
