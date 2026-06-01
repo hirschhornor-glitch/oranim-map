@@ -356,6 +356,7 @@
             master_plan_gonenim: 'data/master_plan_gonenim.geojson',
             master_plan_talpiot: 'data/master_plan_talpiot.geojson',
             buildings: 'data/buildings.geojson',
+            stat_areas: 'data/stat_areas.geojson',
             givat_hamatos_arab_armenian: 'data/givat_hamatos_arab_armenian_plots.geojson',
             givat_hamatos_state: 'data/givat_hamatos_state_plots.geojson',
             givat_hamatos_companies: 'data/givat_hamatos_companies_plots.geojson',
@@ -2132,6 +2133,32 @@
                 if (!minahak) return publicNeedsAssumptionsMap.default;
                 if (publicNeedsAssumptionsMap.perMinahak[minahak]) return publicNeedsAssumptionsMap.perMinahak[minahak];
                 return PN_MINAHAK_PRESETS[minahak] || publicNeedsAssumptionsMap.default;
+            };
+            // Per-statistical-area assumptions (CBS census 2022, data/stat_areas.geojson)
+            // overlaid on a baseline. A unit at (lng,lat) gets the demographic profile of
+            // the stat area its point falls in; fields the area lacks (or a point outside
+            // all areas) keep the baseline value. The matched object carries
+            // _statAreaId/_statAreaName for the UI breakdown; a no-match returns the
+            // baseline unchanged (no _statAreaId).
+            const getStatAreaAssumptions = (lng, lat, base) => {
+                base = base || getPNAssumptions(null);
+                const sa = geoDataRef.current && geoDataRef.current.stat_areas;
+                if (!sa || !sa.features || lng == null || lat == null) return base;
+                const pt = [lng, lat];
+                for (const f of sa.features) {
+                    if (!f.geometry || !pointInGeometry(pt, f.geometry)) continue;
+                    const p = f.properties || {};
+                    const out = { ...base };
+                    if (typeof p.householdSize === 'number') out.householdSize = p.householdSize;
+                    if (typeof p.ageYearPctGeneral === 'number') out.ageYearPctGeneral = p.ageYearPctGeneral;
+                    if (typeof p.ageYearPctHaredi === 'number') out.ageYearPctHaredi = p.ageYearPctHaredi;
+                    if (typeof p.haredi === 'number') out.haredi = p.haredi;
+                    if (typeof p.religious === 'number') out.religious = p.religious;
+                    out._statAreaId = p.stat_area_id;
+                    out._statAreaName = p.name;
+                    return out;
+                }
+                return base;
             };
             // "מותאם" badge ignores targetYear changes — only demographic params trigger override
             const hasPNOverride = (minahak) => {
@@ -5916,6 +5943,7 @@
                         parentModalId: null,
                         radiusInfo: { value: radiusMeters, onChange: (m) => setRadiusMeters(m) },
                         inGonen,
+                        scopeGeom: { type: 'radius', center: radiusCenter, meters: radiusMeters },
                     });
                     return;
                 }
@@ -6445,6 +6473,7 @@
                     scopeLabel: 'תת-שכונה: ' + subName,
                     parentModalId: 'units-modal-public-needs',
                     inGonen,
+                    scopeGeom: { type: 'polygon', rings: [polyCoords] },
                 });
             }
             // Expose to window for use from React-rendered click handlers in the minahak modal
@@ -6549,6 +6578,7 @@
                     scopeLabel: 'מינהל: ' + minahakName,
                     parentModalId: 'units-modal-public-needs',
                     inGonen,
+                    scopeGeom: { type: 'polygon', rings: allRings },
                 });
             }
             window.__openProgramaForMinahakPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForMinahakPolygon(name); };
@@ -6559,7 +6589,7 @@
             // arbitrary scope (polygon or circle) using default assumptions. Sources:
             //   existing units → buildings layer (NUM_APTS_C sum)
             //   planned units → sum of plans.units_add for plans whose centroid is in scope
-            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen }) {
+            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom }) {
                 // Route to the built-allocations report when that scope kind was requested.
                 if (reportKindRef.current === 'allocations') {
                     reportKindRef.current = 'programa';
@@ -6594,15 +6624,91 @@
                     const effectivePct = isFull ? 100 : m.mimushPct;
                     const w = u * effectivePct / 100;
                     plannedUnits += w;
-                    plansInScope.push({ ...p, contributingUnits: Math.round(w), mimushPct: effectivePct, estimatedYear: m.estimatedYear, isFullMimush: isFull });
+                    plansInScope.push({ ...p, contributingUnits: Math.round(w), _rawUnits: w, mimushPct: effectivePct, estimatedYear: m.estimatedYear, isFullMimush: isFull });
                 });
                 plannedUnits = Math.round(plannedUnits);
 
                 const totalUnits = existingUnits + plannedUnits;
-                const needs = computePublicNeeds(totalUnits, assumpt);
+
+                // ── Per-statistical-area bucketing (CBS census 2022) ──
+                // Partition existing + planned units into stat-area buckets so each area's
+                // population uses its own household-size / age / religiosity profile.
+                // Units that don't resolve to a stat area (no coverage, fallback sources)
+                // stay in the base bucket using the user assumptions. Bucket sums are kept
+                // identical to the scalar totals, so a single-area selection reproduces the
+                // old result exactly. Classes are ceiled per bucket then summed.
+                const gdBkt = geoDataRef.current;
+                const buckets = new Map();   // key: stat_area_id | '__base__'
+                const BASE_KEY = '__base__';
+                const getBucket = (key, name, assumptions) => {
+                    let b = buckets.get(key);
+                    if (!b) { b = { key, name, assumptions, existing: 0, planned: 0 }; buckets.set(key, b); }
+                    return b;
+                };
+                const baseBucket = () => getBucket(BASE_KEY, null, assumpt);
+                const bucketForPoint = (lng, lat) => {
+                    const a = getStatAreaAssumptions(lng, lat, assumpt);
+                    if (a._statAreaId == null) return baseBucket();
+                    return getBucket(a._statAreaId, a._statAreaName, a);
+                };
+                const pipRing = (pt, ring) => {
+                    const x = pt[0], y = pt[1]; let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+                    }
+                    return inside;
+                };
+                const inScope = (c) => {
+                    if (!scopeGeom) return false;
+                    if (scopeGeom.type === 'radius') return scopeGeom.center.distanceTo(L.latLng(c[1], c[0])) <= scopeGeom.meters;
+                    if (scopeGeom.type === 'polygon') { for (const r of scopeGeom.rings || []) { if (pipRing(c, r)) return true; } }
+                    return false;
+                };
+                baseBucket();  // guarantee ≥1 bucket so sums work when everything is empty
+                // Existing units → bucket from municipal buildings inside the scope geometry.
+                let bucketedExisting = 0;
+                if (scopeGeom && gdBkt && gdBkt.buildings && gdBkt.buildings.features) {
+                    for (const f of gdBkt.buildings.features) {
+                        const c = f.geometry && f.geometry.coordinates;
+                        if (!c) continue;
+                        const u = (f.properties && f.properties.units) || 0;
+                        if (!u || !inScope(c)) continue;
+                        bucketForPoint(c[0], c[1]).existing += u;
+                        bucketedExisting += u;
+                    }
+                }
+                // Existing units not resolved from buildings (no coverage / __unitsData fallback)
+                // stay in the base bucket so Σ buckets === existingUnits exactly.
+                if (existingUnits > bucketedExisting) baseBucket().existing += (existingUnits - bucketedExisting);
+                // Planned units → bucket each contributing plan by its centroid (raw weighted units).
+                plansInScope.forEach(p => {
+                    const w = p._rawUnits || 0;
+                    if (!w) return;
+                    const ctr = geomCentroid(p.geometry);
+                    if (ctr) bucketForPoint(ctr[0], ctr[1]).planned += w;
+                    else baseBucket().planned += w;
+                });
+
+                const needs = sumPublicNeeds(buckets, b => b.existing + b.planned);
                 // Current-state needs (existing units only) — used for "כיום" delta when targetYear != 'existing'
-                const currentNeeds = computePublicNeeds(existingUnits, assumpt);
-                const nonEdu = computeNeighborhoodProgramServices(totalUnits, assumpt);
+                const currentNeeds = sumPublicNeeds(buckets, b => b.existing);
+                const nonEdu = sumNonEduServices(buckets, b => b.existing + b.planned);
+                // Stat areas actually carrying units, for the UI breakdown line.
+                const statBuckets = [...buckets.values()].filter(b => b.key !== BASE_KEY && (b.existing + b.planned) > 0);
+                // Breakdown line shown when the selection spans ≥2 statistical areas:
+                // units-weighted blended household size + per-area tooltip.
+                const statBreakdownHtml = (() => {
+                    if (statBuckets.length < 2) return '';
+                    let uw = 0, hw = 0;
+                    statBuckets.forEach(b => { const u = b.existing + b.planned; uw += u; hw += u * (b.assumptions.householdSize || 0); });
+                    const blended = uw > 0 ? (hw / uw) : 0;
+                    const tip = statBuckets
+                        .slice().sort((a, b) => (b.existing + b.planned) - (a.existing + a.planned))
+                        .map(b => (b.name || ('אז"ס ' + b.key)) + ': ' + Math.round(b.existing + b.planned) + ' יח"ד · ' + (b.assumptions.householdSize || 0).toFixed(1) + ' נפ\'')
+                        .join('&#10;');
+                    return '<div title="' + tip.replace(/"/g, '&quot;') + '" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 ' + statBuckets.length + ' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: ' + blended.toFixed(1) + ' נפ\' · כיתות מעוגלות לפי אזור</div>';
+                })();
                 const existingEdu = aggregateEduFeatures(eduFeats || []);
                 const hasExistingEdu = (eduFeats || []).length > 0;
                 const showFutureBalance = (tY !== 'existing');
@@ -6676,7 +6782,7 @@
                 const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
 
                 // Closure for re-rendering after assumption tweaks
-                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen });
+                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom });
 
                 // Build education table — rows = service, cols = stream
                 const eduRows = PUBLIC_NEEDS_SERVICES.map(svc => {
@@ -6943,7 +7049,8 @@
                             '<th style="padding:6px;text-align:center">מנה</th>' +
                             '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>' +
                         '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' +
-                    '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">הנחות: ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' + Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · שנתון כללי ' + assumpt.ageYearPctGeneral + '%</div>' +
+                    statBreakdownHtml +
+                    '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">הנחות' + (statBuckets.length > 1 ? ' (בסיס/גיבוי)' : '') + ': ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' + Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · שנתון כללי ' + assumpt.ageYearPctGeneral + '%</div>' +
                     '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
                         '<button id="programa-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' +
                         '<button id="programa-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
@@ -7816,6 +7923,7 @@
                     scopeLabel: 'אזור נבחר' + (inGonen ? ' · גוננים' : ''),
                     parentModalId: null,
                     inGonen,
+                    scopeGeom: { type: 'polygon', rings: [polyCoords] },
                 });
 
                 // Clean up drawing layers
@@ -9190,6 +9298,61 @@
                     totalDunam += totalDunamSvc;
                 });
                 return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+            }
+
+            // Aggregate computePublicNeeds across statistical-area buckets — each bucket
+            // computed with its own (units, assumptions), classes ceiled per bucket then
+            // summed (each stat area is served by its own institutions). With a single
+            // bucket the output is identical to a plain computePublicNeeds call.
+            function sumPublicNeeds(buckets, unitsFn) {
+                let population = 0, totalClasses = 0, totalDunam = 0;
+                const byService = {};
+                for (const b of buckets.values()) {
+                    const n = computePublicNeeds(unitsFn(b), b.assumptions);
+                    population += n.population;
+                    totalClasses += n.totalClasses;
+                    totalDunam += n.totalDunam;
+                    for (const key of Object.keys(n.byService)) {
+                        const s = n.byService[key];
+                        if (!byService[key]) {
+                            byService[key] = {
+                                mam:      { children: 0, classes: 0, dunam: 0, classSize: s.mam.classSize, dunamPerClass: s.mam.dunamPerClass },
+                                haredi_b: { children: 0, classes: 0, dunam: 0, classSize: s.haredi_b.classSize, dunamPerClass: s.haredi_b.dunamPerClass },
+                                haredi_g: { children: 0, classes: 0, dunam: 0, classSize: s.haredi_g.classSize, dunamPerClass: s.haredi_g.dunamPerClass },
+                                totalClasses: 0, totalDunam: 0,
+                            };
+                        }
+                        const agg = byService[key];
+                        ['mam', 'haredi_b', 'haredi_g'].forEach(st => {
+                            agg[st].children += s[st].children;
+                            agg[st].classes += s[st].classes;
+                            agg[st].dunam += s[st].dunam;
+                        });
+                        agg.totalClasses += s.totalClasses;
+                        agg.totalDunam += s.totalDunam;
+                    }
+                }
+                for (const key of Object.keys(byService)) {
+                    const agg = byService[key];
+                    ['mam', 'haredi_b', 'haredi_g'].forEach(st => {
+                        agg[st].children = Math.round(agg[st].children * 10) / 10;
+                        agg[st].dunam = Math.round(agg[st].dunam * 100) / 100;
+                    });
+                    agg.totalDunam = Math.round(agg.totalDunam * 100) / 100;
+                }
+                return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+            }
+
+            // Aggregate computeNeighborhoodProgramServices across buckets (count + basisValue
+            // summed per service, ceiled per bucket). Single bucket → identical to a plain call.
+            function sumNonEduServices(buckets, unitsFn) {
+                let out = null;
+                for (const b of buckets.values()) {
+                    const arr = computeNeighborhoodProgramServices(unitsFn(b), b.assumptions);
+                    if (!out) { out = arr.map(s => ({ ...s })); }
+                    else { arr.forEach((s, i) => { out[i].count += s.count; out[i].basisValue += s.basisValue; }); }
+                }
+                return out || [];
             }
 
             // Existing education classes from education_shanaton, grouped by sub-neighborhood.
