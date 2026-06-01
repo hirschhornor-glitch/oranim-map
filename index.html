@@ -916,6 +916,39 @@
             direction: rtl;
         }
 
+        .load-error-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #c0392b;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            text-align: center;
+            padding: 7px 12px;
+            font-size: 0.82em;
+            font-weight: 700;
+            z-index: 10000;
+            direction: rtl;
+        }
+        .load-error-banner.warn { background: #d68910; }
+        .load-error-banner button {
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: #fff;
+            border-radius: 6px;
+            padding: 3px 12px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .load-error-banner button:hover { background: rgba(255,255,255,0.3); }
+
         .install-banner {
             position: fixed;
             bottom: 0;
@@ -1484,9 +1517,8 @@
         .global-search-trigger {
             position: absolute;
             top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 900;
+            left: 52px; /* beside the top-left zoom control, clear of the centered toolbar */
+            z-index: 1000;
             background: rgba(21, 21, 43, 0.92);
             border: 1px solid #3a3a5a;
             color: #c5c5e8;
@@ -1512,7 +1544,8 @@
             font-family: ui-monospace, monospace;
         }
         @media (max-width: 640px) {
-            .global-search-trigger { padding: 6px 10px; font-size: 11.5px; }
+            /* Drop below the zoom control so the wrapped, centered toolbar never overlaps it */
+            .global-search-trigger { top: 78px; left: 10px; padding: 6px 10px; font-size: 11.5px; }
             .global-search-trigger .gs-label-full { display: none; }
         }
 

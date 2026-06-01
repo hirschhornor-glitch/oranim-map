@@ -1952,6 +1952,15 @@
                 return initial;
             });
             const [opacity, setOpacity] = useState(0.85);
+            // Immediate thumb value; the committed `opacity` (which triggers a full layer
+            // rebuild) is debounced so dragging the slider rebuilds once, not per tick.
+            const [opacitySlider, setOpacitySlider] = useState(0.85);
+            const opacityTimerRef = useRef(null);
+            const handleOpacityChange = (v) => {
+                setOpacitySlider(v);
+                if (opacityTimerRef.current) clearTimeout(opacityTimerRef.current);
+                opacityTimerRef.current = setTimeout(() => setOpacity(v), 150);
+            };
             const [basemapOpacity, setBasemapOpacity] = useState(1);
             const [basemap, setBasemap] = useState('cartoLight');
             const [loading, setLoading] = useState(true);
@@ -1959,6 +1968,7 @@
             const [dataLoaded, setDataLoaded] = useState(false);
             const [deferredTick, setDeferredTick] = useState(0); // bumps when a deferred geojson arrives
             const [isOnline, setIsOnline] = useState(navigator.onLine);
+            const [loadError, setLoadError] = useState(null); // { failed: string[], critical: boolean }
             const [deferredPrompt, setDeferredPrompt] = useState(null);
             const [showInstallBanner, setShowInstallBanner] = useState(false);
             const [cursorPos, setCursorPos] = useState(null);
@@ -2164,6 +2174,13 @@
             });
             const [overlapEditingKey, setOverlapEditingKey] = useState(null);
             const [showToast, setShowToast] = useState(false);
+            const [toastMsg, setToastMsg] = useState('');
+            // Show a transient toast with a custom message (falls back to the share-copied text).
+            const notifyToast = React.useCallback((msg) => {
+                setToastMsg(msg || '');
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 2600);
+            }, []);
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
             const [showHeatMap, setShowHeatMap] = useState(false);
@@ -2203,6 +2220,14 @@
                 };
             }
             const [filters, setFilters] = useState({ minUnits: '', maxUnits: '', planTypes: [], statuses: [], freeText: '' });
+            // Debounced copy of filters.freeText. The sidebar plan list filters live off
+            // filters.freeText, but the expensive map rebuild keys off this debounced value
+            // so typing doesn't rebuild every layer on each keystroke.
+            const [appliedFreeText, setAppliedFreeText] = useState('');
+            useEffect(() => {
+                const t = setTimeout(() => setAppliedFreeText(filters.freeText), 180);
+                return () => clearTimeout(t);
+            }, [filters.freeText]);
             const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
@@ -2331,6 +2356,46 @@
                 document.addEventListener('keydown', onKey);
                 return () => document.removeEventListener('keydown', onKey);
             }, [globalSearchOpen]);
+
+            // Escape closes the top-most open report/table modal (drill-downs first,
+            // then their parent modal). Global search and the draw/measure modes keep
+            // their own Escape handlers above.
+            useEffect(() => {
+                const onEsc = (e) => {
+                    if (e.key !== 'Escape') return;
+                    // Ordered top-of-stack → bottom: close only the first open one.
+                    const closers = [
+                        [commerceCellReport, () => setCommerceCellReport(null)],
+                        [mimushCellReport, () => setMimushCellReport(null)],
+                        [cellReport, () => setCellReport(null)],
+                        [unitsDrilldown, () => setUnitsDrilldown(null)],
+                        [masterPlanReport, () => setMasterPlanReport(null)],
+                        [minahakReport, () => setMinahakReport(null)],
+                        [showPrint, () => setShowPrint(false)],
+                        [showUnits, () => setShowUnits(false)],
+                        [showCommerceTable, () => setShowCommerceTable(false)],
+                        [showMimush, () => setShowMimush(false)],
+                        [showPermitsGap, () => setShowPermitsGap(false)],
+                        [showPermitsBySub, () => setShowPermitsBySub(false)],
+                        [showPublicNeeds, () => setShowPublicNeeds(false)],
+                        [objectionsReport, () => setObjectionsReport(false)],
+                        [meetingsReport, () => setMeetingsReport(false)],
+                        [overlapReport, () => setOverlapReport(false)],
+                        [shavazKayamReport, () => setShavazKayamReport(false)],
+                        [specialHousingReport, () => setSpecialHousingReport(false)],
+                        [showAnnotations, () => setShowAnnotations(false)],
+                        [showFilter, () => setShowFilter(false)],
+                        [showReportsMenu, () => setShowReportsMenu(false)],
+                    ];
+                    const hit = closers.find(([open]) => open);
+                    if (hit) { e.preventDefault(); hit[1](); }
+                };
+                document.addEventListener('keydown', onEsc);
+                return () => document.removeEventListener('keydown', onEsc);
+            }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
+                minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap,
+                showPermitsBySub, showPublicNeeds, objectionsReport, meetingsReport, overlapReport,
+                shavazKayamReport, specialHousingReport, showAnnotations, showFilter, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -2518,7 +2583,10 @@
                                 if (pn === planName) found = l;
                             });
                             if (!found) {
-                                alert('תב"ע ' + planName + ' לא נמצאה בשכבת התב"עות. ודאי ששכבת "תב"ע" דלוקה.');
+                                // Plan isn't in the current view — make sure the plans layer is on
+                                // and let the user know without a blocking native alert.
+                                setLayers(prev => (prev.plans ? prev : { ...prev, plans: true }));
+                                notifyToast('תב"ע ' + planName + ' לא נמצאה בתצוגה הנוכחית');
                                 return;
                             }
                             map.closePopup();
@@ -4031,6 +4099,14 @@
                     geoResults.forEach(([key, data]) => {
                         if (data) gd[key] = data;
                     });
+
+                    // Surface failed layer loads instead of silently swallowing them.
+                    // 'plans' is the core layer — without it the map is meaningless (critical).
+                    const failedKeys = geoResults.filter(([, data]) => data === null).map(([key]) => key);
+                    const CRITICAL_LAYERS = ['plans'];
+                    setLoadError(failedKeys.length
+                        ? { failed: failedKeys, critical: failedKeys.some(k => CRITICAL_LAYERS.includes(k)) }
+                        : null);
 
                     // Force-hide specific plans (instant; not CSV-dependent)
                     if (gd.plans && gd.plans.features) {
@@ -9149,7 +9225,7 @@
                         const t = String(p.taba || '').trim();
                         if (t && shk(t)) return false;
                     }
-                    const af = filters;
+                    const af = { ...filters, freeText: appliedFreeText }; // debounced text for the map
                     const units = parseFloat(p.units_add) || 0;
                     if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
                     if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
@@ -9230,7 +9306,7 @@
                         const t = String(props.taba || '').trim();
                         if (t && shk(t)) return false;
                     }
-                    const af = filters;
+                    const af = { ...filters, freeText: appliedFreeText }; // debounced text for the map
                     const units = parseFloat(props.units_add) || 0;
                     if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
                     if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
@@ -13153,7 +13229,9 @@
 
                 window.__geoLayersForPrint = geoLayersRef.current;
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
-            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel, filters, showHeatMap, showCommerceHeatMap, eduFilters, deferredTick]);
+            }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
+                filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
+                showHeatMap, showCommerceHeatMap, eduFilters, deferredTick]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -15473,12 +15551,12 @@
                                 min="0"
                                 max="1"
                                 step="0.05"
-                                value={opacity}
-                                onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                                value={opacitySlider}
+                                onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
                             />
                             <div className="opacity-label">
                                 <span>שקוף</span>
-                                <span>{Math.round(opacity * 100)}%</span>
+                                <span>{Math.round(opacitySlider * 100)}%</span>
                                 <span>אטום</span>
                             </div>
 
@@ -15612,12 +15690,12 @@
                                     <button className="toolbar-dropdown-item" data-tip="העתקת קישור לתצוגה הנוכחית" onClick={() => {
                                         updateHash();
                                         navigator.clipboard.writeText(window.location.href).then(() => {
-                                            setShowToast(true); setTimeout(() => setShowToast(false), 2000);
+                                            notifyToast('הקישור הועתק!');
                                         }).catch(() => {
                                             const ta = document.createElement('textarea'); ta.value = window.location.href;
                                             document.body.appendChild(ta); ta.select(); document.execCommand('copy');
                                             document.body.removeChild(ta);
-                                            setShowToast(true); setTimeout(() => setShowToast(false), 2000);
+                                            notifyToast('הקישור הועתק!');
                                         });
                                         setActiveDropdown(null);
                                     }}>
@@ -16256,7 +16334,7 @@
 
                         {/* Toast notification */}
                         <div className={`share-toast ${showToast ? 'visible' : ''}`}>
-                            הקישור הועתק!
+                            {toastMsg || 'הקישור הועתק!'}
                         </div>
 
                         {/* Master plan compliance disclaimer — shown when any master plan layer is active */}
@@ -16364,6 +16442,18 @@
 
                         {!isOnline && (
                             <div className="offline-banner">אין חיבור לאינטרנט — מציג נתונים שמורים</div>
+                        )}
+
+                        {loadError && (
+                            <div className={`load-error-banner ${loadError.critical ? '' : 'warn'}`}>
+                                <span>
+                                    {loadError.critical
+                                        ? 'שגיאה בטעינת נתוני הליבה (תב"עות). חלק מהמפה עלול להיות חסר.'
+                                        : `חלק מהשכבות לא נטענו: ${loadError.failed.join(', ')}`}
+                                </span>
+                                <button onClick={() => window.location.reload()}>נסה שוב</button>
+                                <button onClick={() => setLoadError(null)}>סגור</button>
+                            </div>
                         )}
 
                         {showInstallBanner && (

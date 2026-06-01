@@ -4,7 +4,8 @@
   "private": true,
   "description": "Oranim urban planning GIS map — Jerusalem",
   "scripts": {
-    "build": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js --source-maps"
+    "build": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js",
+    "build:debug": "babel src/app.jsx --presets=@babel/preset-react --out-file app.js --source-maps"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.0",

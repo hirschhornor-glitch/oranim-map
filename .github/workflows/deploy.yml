@@ -48,7 +48,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add app.js
-          [ -f app.js.map ] && git add app.js.map || true
           if git diff --cached --quiet; then
             echo "app.js unchanged — nothing to commit."
           else

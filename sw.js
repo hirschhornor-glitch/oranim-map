@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v9-swr';
+const CACHE_VERSION = 'v10-swr';
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
@@ -13,16 +13,16 @@ const STATIC_ASSETS = [
   './icons/icon-512-v2.png',
 ];
 
-// CDN libraries to pre-cache (versioned URLs, rarely change)
+// CDN libraries to pre-cache (versioned URLs, rarely change).
+// Keep this list in sync with the <script>/<link> tags in index.html.
 const CDN_ASSETS = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js',
   'https://unpkg.com/react@18/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js',
-  'https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js',
 ];
 
 // Install: pre-cache static + CDN assets
@@ -82,6 +82,15 @@ self.addEventListener('fetch', (event) => {
 
   // Strategy 4: Network-first for HTML (get updates when online)
   if (event.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirst(event.request, STATIC_CACHE));
+    return;
+  }
+
+  // Strategy 4b: Network-first for the app bundle. It's versioned via ?v= in
+  // index.html, so fetch the exact build when online; networkFirst strips the
+  // cache-buster so only ONE copy is kept (no accumulation) and it stays
+  // available offline.
+  if (url.origin === self.location.origin && url.pathname.endsWith('/app.js')) {
     event.respondWith(networkFirst(event.request, STATIC_CACHE));
     return;
   }
