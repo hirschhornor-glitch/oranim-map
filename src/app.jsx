@@ -2025,6 +2025,8 @@
             // and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
             const programaAreaActiveRef = useRef(false);
             const programaRadiusActiveRef = useRef(false);
+            // Which report the 4 programa scope collectors should render: 'programa' (default) or 'allocations'.
+            const reportKindRef = useRef('programa');
             const [programaActive, setProgramaActive] = useState(null); // null | 'area' | 'radius' — for toolbar UI state
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
@@ -2091,6 +2093,8 @@
             const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
             // Neighborhood Program report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
+            const [showAllocChooser, setShowAllocChooser] = useState(false); // scope chooser for the built-allocations report
+            const [dashSub, setDashSub] = useState('גוננים א-ו'); // selected sub-neighborhood for the neighborhood dashboard
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
             const [plannedDrilldown, setPlannedDrilldown] = useState(null); // { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
@@ -2184,6 +2188,7 @@
             const [dashboardOpen, setDashboardOpen] = useState(false);
             const [showFilter, setShowFilter] = useState(false);
             const [showHeatMap, setShowHeatMap] = useState(false);
+            const [densityMode, setDensityMode] = useState('planned'); // 'planned' = units_total | 'realized' = issued-permit units
             const [showCommerceHeatMap, setShowCommerceHeatMap] = useState(false);
             const [showAnnotations, setShowAnnotations] = useState(false);
             const [annotationSubtitle, setAnnotationSubtitle] = useState('');
@@ -2384,6 +2389,7 @@
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [showAnnotations, () => setShowAnnotations(false)],
+                        [showAllocChooser, () => setShowAllocChooser(false)],
                         [showFilter, () => setShowFilter(false)],
                         [showReportsMenu, () => setShowReportsMenu(false)],
                     ];
@@ -2395,7 +2401,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, showAnnotations, showFilter, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -6442,7 +6448,8 @@
                 });
             }
             // Expose to window for use from React-rendered click handlers in the minahak modal
-            window.__openProgramaForSubPolygon = openProgramaForSubPolygon;
+            window.__openProgramaForSubPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForSubPolygon(name); };
+            window.__openAllocationsForSubPolygon = (name) => { reportKindRef.current = 'allocations'; openProgramaForSubPolygon(name); };
 
             // Minahak Hebrew name → geojson layer key (matches dataFiles)
             const MINAHAK_HEB_TO_LAYER = {
@@ -6544,7 +6551,8 @@
                     inGonen,
                 });
             }
-            window.__openProgramaForMinahakPolygon = openProgramaForMinahakPolygon;
+            window.__openProgramaForMinahakPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForMinahakPolygon(name); };
+            window.__openAllocationsForMinahakPolygon = (name) => { reportKindRef.current = 'allocations'; openProgramaForMinahakPolygon(name); };
 
             // ── Programa report — DOM modal triggered from area-select / radius-select ──
             // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
@@ -6552,6 +6560,11 @@
             //   existing units → buildings layer (NUM_APTS_C sum)
             //   planned units → sum of plans.units_add for plans whose centroid is in scope
             function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen }) {
+                // Route to the built-allocations report when that scope kind was requested.
+                if (reportKindRef.current === 'allocations') {
+                    reportKindRef.current = 'programa';
+                    return renderAllocationsModal({ candidatePlans: candidatePlans || [], scopeLabel });
+                }
                 candidatePlans = candidatePlans || [];
                 if (!window.__programaUserAssumptions) {
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
@@ -7454,6 +7467,283 @@
                 if (rst) rst.addEventListener('click', () => {
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
                     reRender();
+                });
+            }
+
+            // ── הפרשות מבונות ומבני ציבור עתידיים — report for any scope (radius/area/sub/minahak) ──
+            // Shares the 4 programa scope collectors via reportKindRef. Re-derives allocation data
+            // per plan from authoritative plan properties (shavatz_out_*, hafrash_*) keyed by taba,
+            // so it is uniform regardless of which collector built candidatePlans.
+            const ALLOC_LBLS = { maon:'מעון יום', gan:'גן ילדים', yesodi:'בי"ס יסודי', al_yesodi:'בי"ס על-יסודי', tipat_chalav:'טיפת חלב', clinic:'מרפאה', matnas:'מתנ"ס/מרכז קהילתי', welfare_dept:'לשכת רווחה', noar_club:'מועדון נוער', elderly_club:'מועדון קשיש', elderly_day:'מרכז יום לקשיש', synagogue:'בית כנסת', mikve:'מקווה', sport_hall:'אולם ספורט', library:'ספרייה' };
+            function renderAllocationsModal({ candidatePlans, scopeLabel }) {
+                const gd = geoDataRef.current || {};
+                const propsByTaba = {};
+                if (gd.plans) gd.plans.features.forEach(f => {
+                    const t = String((f.properties || {}).taba || '').trim();
+                    if (t && !propsByTaba[t]) propsByTaba[t] = f.properties;
+                });
+                // Build per-plan allocation rows
+                const rows = [];
+                const seen = new Set();
+                (candidatePlans || []).forEach(cp => {
+                    const taba = String(cp.taba || '').trim();
+                    if (taba && seen.has(taba)) return;
+                    if (taba) seen.add(taba);
+                    const p = (taba && propsByTaba[taba]) || {};
+                    const outSqm = parseFloat(p.shavatz_out_sqm != null ? p.shavatz_out_sqm : cp.shavatz_out_sqm) || 0;
+                    const outPrg = p.shavatz_out_prog || cp.shavatz_out_prog || '';
+                    const hafSqm = parseFloat(p.hafrash_sqm != null ? p.hafrash_sqm : cp.hafrash_sqm) || 0;
+                    const hafPrg = p.hafrash_prg || cp.hafrash_prg || '';
+                    if (outSqm <= 0 && hafSqm <= 0 && !outPrg && !hafPrg) return;
+                    rows.push({
+                        taba,
+                        name: p.plan_name_he || cp.plan_name_he || cp.plan_name || taba || '—',
+                        status: p.status_mavat || cp.status_mavat || '',
+                        sub: p.sub_neighborhood || '',
+                        outSqm, outPrg, hafSqm, hafPrg,
+                    });
+                });
+                rows.sort((a, b) => (b.outSqm + b.hafSqm) - (a.outSqm + a.hafSqm));
+
+                // Aggregate by facility use (from the program free text)
+                const useCounts = {}; PARSER_KEYS.forEach(k => useCounts[k] = 0);
+                let totalOut = 0, totalHaf = 0;
+                rows.forEach(r => {
+                    totalOut += r.outSqm; totalHaf += r.hafSqm;
+                    const parsed = parseFacilitiesFromText([r.outPrg, r.hafPrg].filter(Boolean).join('; '));
+                    PARSER_KEYS.forEach(k => { useCounts[k] += parsed.counts[k] || 0; });
+                });
+                const useRows = PARSER_KEYS.filter(k => useCounts[k] > 0)
+                    .map(k => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + useCounts[k] + '</td></tr>')
+                    .join('');
+
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                const planRows = rows.map(r =>
+                    '<tr style="border-bottom:1px solid #222">' +
+                    '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
+                    '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.outSqm > 0 ? Math.round(r.outSqm).toLocaleString() : '—') + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.hafSqm > 0 ? Math.round(r.hafSqm).toLocaleString() : '—') + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc([r.outPrg, r.hafPrg].filter(Boolean).join(' · ')) + '</td>' +
+                    '</tr>'
+                ).join('');
+
+                const kpi = (label, val, color) =>
+                    '<div style="background:#1f1a16;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px">' +
+                    '<div style="font-size:11px;color:#aaa">' + label + '</div>' +
+                    '<div style="font-size:20px;font-weight:bold;color:' + color + '">' + val + '</div></div>';
+
+                const prevA = document.getElementById('alloc-result');
+                if (prevA) prevA.remove();
+                const div = document.createElement('div');
+                div.id = 'alloc-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(28,22,18,0.98);color:#e8d9c8;padding:20px;border-radius:14px;border:2px solid #8d6e63;direction:rtl;width:min(920px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #3a2e26">' +
+                        '<h3 id="alloc-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e8d9c8;font-size:16px;outline:none;border-bottom:1px dashed #5c4636;padding-bottom:2px;cursor:text">🏛️ הפרשות מבונות ומבני ציבור עתידיים — ' + esc(scopeLabel) + '</h3>' +
+                        '<button id="alloc-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' +
+                        kpi('תכניות תורמות', rows.length, '#d4a373') +
+                        kpi('שב"צ עתידי (מ"ר)', Math.round(totalOut).toLocaleString(), '#c9a227') +
+                        kpi('הפרשה מבונה (מ"ר)', Math.round(totalHaf).toLocaleString(), '#b5651d') +
+                        kpi('סה"כ שטח ציבור (מ"ר)', Math.round(totalOut + totalHaf).toLocaleString(), '#e8d9c8') +
+                    '</div>' +
+                    (useRows
+                        ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
+                          '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + useRows + '</tbody></table>'
+                        : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') +
+                    '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית (' + rows.length + ')</h4>' +
+                    (planRows
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">שב"צ עתידי</th><th style="padding:6px;color:#d4a373">הפרשה מבונה</th><th style="padding:6px;text-align:right;color:#d4a373">תיאור</th></tr></thead><tbody>' + planRows + '</tbody></table>'
+                        : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') +
+                    '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' +
+                        '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
+                        '<button id="alloc-print" style="background:#3a2e26;border:1px solid #5c4636;color:#e8d9c8;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+                document.getElementById('alloc-close').addEventListener('click', () => div.remove());
+
+                document.getElementById('alloc-csv').addEventListener('click', () => {
+                    const title = document.getElementById('alloc-title')?.textContent || 'הפרשות_מבונות';
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    lines.push(['מדד', 'ערך'].join(','));
+                    lines.push(['תכניות תורמות', rows.length].join(','));
+                    lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(totalOut)].join(','));
+                    lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(totalHaf)].join(','));
+                    lines.push([q('סה"כ שטח ציבור (מ"ר)'), Math.round(totalOut + totalHaf)].join(','));
+                    lines.push('');
+                    lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
+                    PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
+                    lines.push('');
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('שב"צ עתידי (מ"ר)'), q('הפרשה מבונה (מ"ר)'), q('תיאור שב"צ עתידי'), q('תיאור הפרשה מבונה')].join(','));
+                    rows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.sub), Math.round(r.outSqm), Math.round(r.hafSqm), q(r.outPrg), q(r.hafPrg)].join(',')));
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+
+                document.getElementById('alloc-print').addEventListener('click', async () => {
+                    const title = document.getElementById('alloc-title')?.textContent || 'הפרשות מבונות';
+                    let mapImg = '';
+                    try {
+                        const mapEl = mapInstanceRef.current && mapInstanceRef.current.getContainer();
+                        if (mapEl && window.html2canvas) {
+                            const prevDisplay = div.style.display;
+                            div.style.display = 'none';
+                            await new Promise(r => setTimeout(r, 100));
+                            const canvas = await window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
+                            div.style.display = prevDisplay;
+                            mapImg = canvas.toDataURL('image/jpeg', 0.85);
+                        }
+                    } catch (e) { console.warn('[Allocations] map capture failed', e); }
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
+                });
+            }
+
+            // ── דשבורד שכונתי — one-page printable profile for a sub-neighborhood ──
+            // Aggregates planned/realized units, future public allocations, commerce, permits and
+            // tree-removal exposure for all plans whose sub_neighborhood includes `subName`.
+            function renderSubDashboard(subName) {
+                if (!subName) return;
+                const gd = geoDataRef.current || {};
+                const inSub = (p) => String(p.sub_neighborhood || '').split(',').map(s => s.trim()).includes(subName);
+                const seen = new Set();
+                let plansCount = 0, unitsPlanned = 0, unitsAdd = 0, issuedUnits = 0, futureSqm = 0, hafSqm = 0,
+                    trees = 0, commerceOut = 0, employment = 0, activePermits = 0;
+                const byStatus = {};
+                const planList = [];
+                (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+                    const p = f.properties || {};
+                    if (!inSub(p)) return;
+                    const taba = String(p.taba || '').trim();
+                    if (taba && seen.has(taba)) return;
+                    if (taba) seen.add(taba);
+                    const st = normalizeStatus((p.status_mavat || '').trim());
+                    if (st === 'נגנזה' || st === 'נדחתה' || st === 'נגנזה/נדחתה') return;
+                    if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                    plansCount++;
+                    const ut = parseInt(p.units_total) || 0, ua = parseFloat(p.units_add) || 0;
+                    unitsPlanned += ut; unitsAdd += ua;
+                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
+                    hafSqm += parseFloat(p.hafrash_sqm) || 0;
+                    commerceOut += parseFloat(p.commerce_out) || 0;
+                    employment += parseFloat(p.employment) || 0;
+                    byStatus[st] = (byStatus[st] || 0) + 1;
+                    const rec = (window.__allPermits || {})[taba];
+                    if (rec && rec.permits) rec.permits.forEach(pm => {
+                        if (pm.filtered) return;
+                        const s = String(pm.status || '');
+                        if (s.indexOf('הופק') !== -1 || s.indexOf('הוצא היתר') !== -1) { issuedUnits += parseFloat(pm.units) || 0; activePermits++; }
+                    });
+                    const tr = (window.__treeSurveys || {})[taba];
+                    if (tr) trees += (tr.krita || 0) + (tr.haataka || 0);
+                    planList.push({ taba, name: p.plan_name_he || p.plan_name || taba, status: p.status_mavat || '', units: ut || ua });
+                });
+                planList.sort((a, b) => b.units - a.units);
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const num = (n) => Math.round(n).toLocaleString();
+
+                const STATUS_ORDER = ['בהליכי אישור', 'מאושרת', 'בביצוע', 'הסתיים'];
+                const statusRows = Object.keys(byStatus).sort((a, b) => (STATUS_ORDER.indexOf(a) + 1 || 99) - (STATUS_ORDER.indexOf(b) + 1 || 99))
+                    .map(s => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#cfe">' + esc(s) + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#8fd">' + byStatus[s] + '</td></tr>').join('');
+                const topRows = planList.slice(0, 12).map(r =>
+                    '<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px;direction:ltr;text-align:left;color:#8fd;font-weight:bold">' + esc(r.taba) + '</td>' +
+                    '<td style="padding:5px 6px;color:#cfe">' + esc(r.name) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.units || '—') + '</td></tr>').join('');
+
+                const kpi = (label, val, sub2, color) =>
+                    '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
+                    '<div style="font-size:11px;color:#9ab">' + label + '</div>' +
+                    '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+
+                const prevD = document.getElementById('subdash-result');
+                if (prevD) prevD.remove();
+                const div = document.createElement('div');
+                div.id = 'subdash-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(880px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' +
+                        '<h3 id="subdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">📋 דשבורד שכונתי — ' + esc(subName) + '</h3>' +
+                        '<button id="subdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    (plansCount === 0
+                        ? '<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">לא נמצאו תכניות פעילות בתת-שכונה זו.</div>'
+                        : '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+                            kpi('תכניות פעילות', plansCount, '', '#4db8c4') +
+                            kpi('יח"ד מתוכננות', num(unitsPlanned), 'תוספת: ' + num(unitsAdd), '#5fd3a0') +
+                            kpi('יח"ד בהיתר', num(issuedUnits), unitsPlanned > 0 ? Math.round(issuedUnits / unitsPlanned * 100) + '% מימוש' : '', '#8fd14f') +
+                            kpi('היתרים פעילים', activePermits, '', '#c4a24d') +
+                          '</div>' +
+                          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' +
+                            kpi('שב"צ + הפרשה (מ"ר)', num(futureSqm + hafSqm), 'עתידי ' + num(futureSqm) + ' · מבונה ' + num(hafSqm), '#b08fd1') +
+                            kpi('מסחר עתידי (מ"ר)', num(commerceOut), '', '#d18f8f') +
+                            kpi('תעסוקה (מ"ר)', num(employment), '', '#d1b88f') +
+                            kpi('עצים לכריתה/העתקה', num(trees), '', '#8fb0d1') +
+                          '</div>' +
+                          '<div style="display:flex;gap:18px;flex-wrap:wrap">' +
+                            '<div style="flex:1;min-width:220px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות לפי סטטוס</h4>' +
+                              '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + (statusRows || '<tr><td style="color:#789;padding:6px">—</td></tr>') + '</tbody></table></div>' +
+                            '<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד)</h4>' +
+                              '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:left;color:#4db8c4">תב"ע</th><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">סטטוס</th><th style="padding:5px;color:#4db8c4">יח"ד</th></tr></thead><tbody>' + topRows + '</tbody></table></div>' +
+                          '</div>') +
+                    '<div style="display:flex;gap:8px;margin-top:16px">' +
+                        '<button id="subdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
+                        '<button id="subdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+                document.getElementById('subdash-close').addEventListener('click', () => div.remove());
+
+                document.getElementById('subdash-csv').addEventListener('click', () => {
+                    const title = document.getElementById('subdash-title')?.textContent || 'דשבורד';
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    lines.push(['מדד', 'ערך'].join(','));
+                    lines.push([q('תכניות פעילות'), plansCount].join(','));
+                    lines.push([q('יח"ד מתוכננות'), Math.round(unitsPlanned)].join(','));
+                    lines.push([q('תוספת יח"ד'), Math.round(unitsAdd)].join(','));
+                    lines.push([q('יח"ד בהיתר'), Math.round(issuedUnits)].join(','));
+                    lines.push([q('היתרים פעילים'), activePermits].join(','));
+                    lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(futureSqm)].join(','));
+                    lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(hafSqm)].join(','));
+                    lines.push([q('מסחר עתידי (מ"ר)'), Math.round(commerceOut)].join(','));
+                    lines.push([q('תעסוקה (מ"ר)'), Math.round(employment)].join(','));
+                    lines.push([q('עצים לכריתה/העתקה'), Math.round(trees)].join(','));
+                    lines.push('');
+                    lines.push([q('תב"ע'), q('שם'), q('סטטוס'), q('יח"ד')].join(','));
+                    planList.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), r.units].join(',')));
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+
+                document.getElementById('subdash-print').addEventListener('click', () => {
+                    const title = document.getElementById('subdash-title')?.textContent || 'דשבורד שכונתי';
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
                 });
             }
 
@@ -9200,6 +9490,31 @@
                 if (!unitsData) ensureUnitsData().then(open);
                 else open();
             }, [buildMimushData, ensureUnitsData, unitsData]);
+
+            // Activate the built-allocations report for a drawn area / radius (mirrors the
+            // programa area/radius activation, but flags the scope collector for allocations).
+            const startAllocArea = useCallback(() => {
+                cancelAllModes('programa-area');
+                setAreaFinished(null);
+                const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
+                const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
+                const prev3 = document.getElementById('alloc-result'); if (prev3) prev3.remove();
+                reportKindRef.current = 'allocations';
+                programaAreaActiveRef.current = true;
+                setProgramaActive('area');
+                setAreaMode(true);
+            }, []);
+            const startAllocRadius = useCallback(() => {
+                cancelAllModes('programa-radius');
+                const prev = document.getElementById('programa-result'); if (prev) prev.remove();
+                const prev2 = document.getElementById('radius-select-result'); if (prev2) prev2.remove();
+                const prev3 = document.getElementById('alloc-result'); if (prev3) prev3.remove();
+                setRadiusCenter(null);
+                reportKindRef.current = 'allocations';
+                programaRadiusActiveRef.current = true;
+                setProgramaActive('radius');
+                setRadiusMode(true);
+            }, []);
 
             // GeoJSON rendering: add/remove L.geoJSON layers based on state
             useEffect(() => {
@@ -13035,6 +13350,24 @@
                         }
                         return densityColors[0][1];
                     }
+                    // Realized-density helper: sum units of permits that reached issuance ("הופק"/"הוצא היתר").
+                    // Inlined (not getPermitStage) because the permit-stage consts are declared later in this
+                    // same effect — L.geoJSON evaluates style/filter synchronously, before those consts init (TDZ).
+                    function issuedUnitsForTaba(taba) {
+                        const rec = (window.__allPermits || {})[String(taba)];
+                        if (!rec || !rec.permits) return 0;
+                        let s = 0;
+                        rec.permits.forEach(p => {
+                            if (p.filtered) return;
+                            const st = String(p.status || '');
+                            if (st.indexOf('הופק') !== -1 || st.indexOf('הוצא היתר') !== -1) s += parseFloat(p.units) || 0;
+                        });
+                        return s;
+                    }
+                    const realizedMode = densityMode === 'realized';
+                    function densityUnits(f) {
+                        return realizedMode ? issuedUnitsForTaba(f.properties.taba) : (parseFloat(f.properties.units_total) || 0);
+                    }
                     const heatLayer = L.geoJSON(gd.plans, {
                         pane: 'plansPane',
                         filter: f => {
@@ -13047,10 +13380,9 @@
                             return true;
                         },
                         style: f => {
-                            const total = parseFloat(f.properties.units_total) || 0;
                             const areaSqm = geojsonAreaSqm(f.geometry);
                             const areaDunam = areaSqm / 1000;
-                            const density = areaDunam > 0 ? total / areaDunam : 0;
+                            const density = areaDunam > 0 ? densityUnits(f) / areaDunam : 0;
                             return {
                                 fillColor: densityToColor(density),
                                 fillOpacity: 0.7,
@@ -13059,11 +13391,14 @@
                             };
                         },
                         onEachFeature: (f, layer) => {
-                            const total = parseFloat(f.properties.units_total) || 0;
+                            const planned = parseFloat(f.properties.units_total) || 0;
                             const areaSqm = geojsonAreaSqm(f.geometry);
                             const areaDunam = areaSqm / 1000;
-                            const density = areaDunam > 0 ? (total / areaDunam).toFixed(1) : '—';
-                            const tip = `<b>${density}</b> יח"ד/דונם`;
+                            const val = densityUnits(f);
+                            const density = areaDunam > 0 ? (val / areaDunam).toFixed(1) : '—';
+                            const tip = realizedMode
+                                ? `<b>${density}</b> יח"ד/דונם <span style="opacity:.7">(ממומש)</span><br><span style="opacity:.7;font-size:11px">${Math.round(val)} בהיתר / ${Math.round(planned)} מתוכנן</span>`
+                                : `<b>${density}</b> יח"ד/דונם`;
                             layer.bindTooltip(tip, { sticky: true, className: 'heatmap-tip', direction: 'right', offset: [15, 0] });
                             // Click opens plan popup
                             layer.on('click', (e) => {
@@ -13231,7 +13566,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, showCommerceHeatMap, eduFilters, deferredTick]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, deferredTick]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -15926,6 +16261,7 @@
                                             setAreaFinished(null);
                                             const prev = document.getElementById('area-select-result'); if (prev) prev.remove();
                                             const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
+                                            reportKindRef.current = 'programa';
                                             programaAreaActiveRef.current = true;
                                             setProgramaActive('area');
                                             setAreaMode(true);
@@ -15946,6 +16282,7 @@
                                             // Activating: clear every other mode first
                                             cancelAllModes('programa-radius');
                                             setRadiusCenter(null);
+                                            reportKindRef.current = 'programa';
                                             programaRadiusActiveRef.current = true;
                                             setProgramaActive('radius');
                                             setRadiusMode(true);
@@ -15953,6 +16290,10 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
                                         <span className="sub-label">{(radiusMode && programaRadiusActiveRef.current) ? 'בחר נקודה...' : 'רדיוס'}</span>
+                                    </button>
+                                    <button className="toolbar-dropdown-item" data-tip="דוח שב&quot;צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל" onClick={() => { setActiveDropdown(null); setShowAllocChooser(true); }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5"/><path d="M9 12h.01M15 12h.01"/></svg>
+                                        <span className="sub-label">הפרשות מבונות</span>
                                     </button>
                                 </div>
                             )}
@@ -16363,8 +16704,16 @@
                                 borderRadius:10, padding:'12px 16px', direction:'rtl',
                                 border:'1px solid #2a2a4a', maxWidth:280
                             }}>
-                                <div style={{color:'#e94560',fontWeight:'bold',fontSize:13,marginBottom:6}}>צפיפות — סה"כ יח"ד/דונם</div>
-                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>רחף על תכנית לפרטים</div>
+                                <div style={{color:'#e94560',fontWeight:'bold',fontSize:13,marginBottom:6}}>
+                                    {densityMode === 'realized' ? 'צפיפות ממומשת — יח"ד/דונם' : 'צפיפות מתוכננת — יח"ד/דונם'}
+                                </div>
+                                <div style={{display:'flex',gap:4,marginBottom:6}}>
+                                    <button onClick={() => setDensityMode('planned')} style={{flex:1,fontSize:10,padding:'3px 6px',borderRadius:5,cursor:'pointer',border:'1px solid #2a2a4a',background:densityMode==='planned'?'#e94560':'transparent',color:densityMode==='planned'?'#fff':'#aaa',fontFamily:'inherit'}}>מתוכנן</button>
+                                    <button onClick={() => setDensityMode('realized')} style={{flex:1,fontSize:10,padding:'3px 6px',borderRadius:5,cursor:'pointer',border:'1px solid #2a2a4a',background:densityMode==='realized'?'#e94560':'transparent',color:densityMode==='realized'?'#fff':'#aaa',fontFamily:'inherit'}}>ממומש</button>
+                                </div>
+                                <div style={{color:'#aaa',fontSize:11,marginBottom:8}}>
+                                    {densityMode === 'realized' ? 'רק יח"ד שהופק להן היתר בנייה' : 'רחף על תכנית לפרטים'}
+                                </div>
                                 <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'nowrap'}}>
                                     {[[0,'#fee5d9','0'],[5,'#fcbba1','5'],[15,'#fc9272','15'],[30,'#fb6a4a','30'],[50,'#ef3b2c','50'],[80,'#cb181d','80'],[110,'#99000d','110'],[150,'#67000d','150+']].map(([v,c,l]) =>
                                         <div key={l} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
@@ -17394,6 +17743,27 @@
                                                     <span className="report-desc">מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל</span>
                                                 </div>
                                             </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowAllocChooser(true); }}>
+                                                <span className="report-icon">🏗️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">הפרשות מבונות ומבני ציבור עתידיים</span>
+                                                    <span className="report-desc">שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל</span>
+                                                </div>
+                                            </button>
+                                            <div className="reports-menu-item" onClick={(e) => {
+                                                if (e.target.tagName === 'SELECT') return;
+                                                setShowReportsMenu(false);
+                                                renderSubDashboard(dashSub);
+                                            }}>
+                                                <span className="report-icon">📋</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דשבורד שכונתי</span>
+                                                    <span className="report-desc">פרופיל מרוכז לתת-שכונה: יח"ד, מימוש, ציבור, מסחר, עצים</span>
+                                                    <select value={dashSub} onClick={e => e.stopPropagation()} onChange={e => setDashSub(e.target.value)}>
+                                                        {Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => <option key={sn} value={sn}>{sn}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
                                             <div className="reports-menu-item" onClick={(e) => {
                                                 if (e.target.tagName === 'SELECT') return;
                                                 setShowReportsMenu(false);
@@ -18328,6 +18698,44 @@
                             </div>
                         );
                     })()}
+
+                    {showAllocChooser && (
+                        <div className="units-overlay" onClick={() => setShowAllocChooser(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+                                <div className="units-header">
+                                    <h2>🏛️ הפרשות מבונות ומבני ציבור עתידיים</h2>
+                                    <button className="units-close" onClick={() => setShowAllocChooser(false)}>&times;</button>
+                                </div>
+                                <div className="units-body" style={{ padding: '12px 6px' }}>
+                                    <div style={{ color: '#bbb', fontSize: 13, marginBottom: 14 }}>
+                                        דוח שב"צ עתידי + הפרשה מבונה לפי תחום. בחר אופן בחירה:
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                        <button onClick={() => { setShowAllocChooser(false); startAllocArea(); }}
+                                            style={{ flex: 1, background: '#5c4636', color: '#fff', border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>✏️ ציור אזור על המפה</button>
+                                        <button onClick={() => { setShowAllocChooser(false); startAllocRadius(); }}
+                                            style={{ flex: 1, background: '#5c4636', color: '#fff', border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>⊙ רדיוס סביב נקודה</button>
+                                    </div>
+                                    <div style={{ marginBottom: 12 }}>
+                                        <label style={{ display: 'block', color: '#aaa', fontSize: 12, marginBottom: 4 }}>לפי תת-שכונה:</label>
+                                        <select defaultValue="" onChange={e => { const v = e.target.value; if (!v) return; setShowAllocChooser(false); window.__openAllocationsForSubPolygon(v); }}
+                                            style={{ width: '100%', padding: '8px', background: '#2a2a4a', border: '1px solid #444', color: '#fff', borderRadius: 6, fontFamily: 'inherit', fontSize: 13 }}>
+                                            <option value="">— בחר תת-שכונה —</option>
+                                            {Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => <option key={sn} value={sn}>{sn}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#aaa', fontSize: 12, marginBottom: 4 }}>לפי מינהל קהילתי:</label>
+                                        <select defaultValue="" onChange={e => { const v = e.target.value; if (!v) return; setShowAllocChooser(false); window.__openAllocationsForMinahakPolygon(v); }}
+                                            style={{ width: '100%', padding: '8px', background: '#2a2a4a', border: '1px solid #444', color: '#fff', borderRadius: 6, fontFamily: 'inherit', fontSize: 13 }}>
+                                            <option value="">— בחר מינהל —</option>
+                                            {Object.keys(MINAHAK_HEB_TO_LAYER).map(mn => <option key={mn} value={mn}>{mn}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {showPublicNeeds && (() => {
                         const gd = geoDataRef.current;
