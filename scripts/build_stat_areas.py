@@ -22,6 +22,11 @@ Plus reference-only: pop_approx, datiyut, main_function.
 
 A property is OMITTED when its source value is null/blank, so the runtime overlay
 (getStatAreaAssumptions) only overrides the minahak baseline with real data.
+
+NOTE: haredi/religious written here are a DOMINANT-CATEGORY PROXY. After running this
+script, run enrich_stat_areas_datiyut.py to overwrite them with REAL per-sector
+lifestyle fractions from the CBS census explorer. Re-running this script reverts to the
+proxy, so always follow it with the enrichment step.
 """
 import json
 import urllib.parse
