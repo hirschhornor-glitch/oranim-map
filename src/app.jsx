@@ -7910,9 +7910,13 @@
                 });
                 const tamaCount = tamaFeatures.length;
                 const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
-                // Union of declared subs + subs that actually carry plans
-                const subNames = Array.from(new Set([...subsList.map(s => SUB_NORMALIZE[s] || s), ...Object.keys(subStats)]))
-                    .sort((a, b) => (subStats[b] ? subStats[b].units : 0) - (subStats[a] ? subStats[a].units : 0));
+                // The minhak's own sub-neighborhoods only: the declared list, plus any sub
+                // that carries plans AND canonically belongs to this minhak (drops cross-minhak
+                // subs that leak in via plans tagged to this minhak but located elsewhere).
+                const subNames = Array.from(new Set([
+                    ...subsList.map(s => SUB_NORMALIZE[s] || s),
+                    ...Object.keys(subStats).filter(sn => SUB_TO_MINAHAK[sn] === minhakName),
+                ])).sort((a, b) => (subStats[b] ? subStats[b].units : 0) - (subStats[a] ? subStats[a].units : 0));
 
                 const kpi = (label, val, sub2, color) =>
                     '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
