@@ -6707,7 +6707,7 @@
                         .slice().sort((a, b) => (b.existing + b.planned) - (a.existing + a.planned))
                         .map(b => (b.name || ('אז"ס ' + b.key)) + ': ' + Math.round(b.existing + b.planned) + ' יח"ד · ' + (b.assumptions.householdSize || 0).toFixed(1) + ' נפ\'')
                         .join('&#10;');
-                    return '<div title="' + tip.replace(/"/g, '&quot;') + '" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 ' + statBuckets.length + ' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: ' + blended.toFixed(1) + ' נפ\' · כיתות מעוגלות לפי אזור</div>';
+                    return '<div title="' + tip.replace(/"/g, '&quot;') + '" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 ' + statBuckets.length + ' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: ' + blended.toFixed(1) + ' נפ\' · כיתות מעוגלות ברמת הבחירה</div>';
                 })();
                 const existingEdu = aggregateEduFeatures(eduFeats || []);
                 const hasExistingEdu = (eduFeats || []).length > 0;
@@ -9266,20 +9266,30 @@
             }
 
             // Compute class/dunam needs for a given (units, assumptions)
-            function computePublicNeeds(totalUnits, assumptions) {
+            // Raw (unrounded) child counts per service×stream for a (units, assumptions).
+            // Kept separate so callers can POOL raw children across buckets before any
+            // rounding/ceiling (see sumPublicNeeds) — round-then-sum would drift at class
+            // boundaries.
+            function rawChildrenPerService(totalUnits, assumptions) {
                 const { householdSize, haredi, ageYearPctGeneral, ageYearPctHaredi } = assumptions;
                 const population = Math.max(0, totalUnits) * householdSize;
                 const haredi_frac = Math.max(0, Math.min(1, haredi));
                 const mam_frac = 1 - haredi_frac;
-                // Mixed age-year % (weighted)
                 const byService = {};
-                let totalDunam = 0, totalClasses = 0;
                 PUBLIC_NEEDS_SERVICES.forEach(svc => {
                     const ageSpan = svc.ageTo - svc.ageFrom;
                     const children_mam = population * mam_frac * (ageYearPctGeneral / 100) * ageSpan * svc.participation;
-                    const children_hrd_total = population * haredi_frac * (ageYearPctHaredi / 100) * ageSpan * svc.participation;
-                    const children_hrd_b = children_hrd_total * 0.5;
-                    const children_hrd_g = children_hrd_total * 0.5;
+                    const children_hrd = population * haredi_frac * (ageYearPctHaredi / 100) * ageSpan * svc.participation;
+                    byService[svc.key] = { mam: children_mam, haredi_b: children_hrd * 0.5, haredi_g: children_hrd * 0.5 };
+                });
+                return { population, byService };
+            }
+            // Turn raw per-service×stream children into classes/dunams (ceil per stream).
+            function classesFromChildren(rawByService) {
+                const byService = {};
+                let totalClasses = 0, totalDunam = 0;
+                PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                    const raw = rawByService[svc.key] || { mam: 0, haredi_b: 0, haredi_g: 0 };
                     const calcStream = (streamKey, children) => {
                         const s = svc.streams[streamKey];
                         const classSize = s.classSize;
@@ -9288,71 +9298,60 @@
                         const dunam = classes * dpc;
                         return { children: Math.round(children * 10) / 10, classes, dunam: Math.round(dunam * 100) / 100, classSize, dunamPerClass: dpc };
                     };
-                    const mam = calcStream('mamlakhti', children_mam);
-                    const hb  = calcStream('haredi_b',  children_hrd_b);
-                    const hg  = calcStream('haredi_g',  children_hrd_g);
+                    const mam = calcStream('mamlakhti', raw.mam);
+                    const hb  = calcStream('haredi_b',  raw.haredi_b);
+                    const hg  = calcStream('haredi_g',  raw.haredi_g);
                     const totalClsSvc = mam.classes + hb.classes + hg.classes;
                     const totalDunamSvc = mam.dunam + hb.dunam + hg.dunam;
                     byService[svc.key] = { mam, haredi_b: hb, haredi_g: hg, totalClasses: totalClsSvc, totalDunam: Math.round(totalDunamSvc * 100) / 100 };
                     totalClasses += totalClsSvc;
                     totalDunam += totalDunamSvc;
                 });
-                return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+                return { byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+            }
+            function computePublicNeeds(totalUnits, assumptions) {
+                const raw = rawChildrenPerService(totalUnits, assumptions);
+                return { population: Math.round(raw.population), ...classesFromChildren(raw.byService) };
             }
 
-            // Aggregate computePublicNeeds across statistical-area buckets — each bucket
-            // computed with its own (units, assumptions), classes ceiled per bucket then
-            // summed (each stat area is served by its own institutions). With a single
-            // bucket the output is identical to a plain computePublicNeeds call.
+            // Aggregate computePublicNeeds across statistical-area buckets. Each bucket's
+            // CHILDREN are computed with its own (units, assumptions) — so household size,
+            // age and religiosity stay per-area-accurate — then children are POOLED per
+            // service×stream and classes/dunams are ceiled ONCE (institutions serve the
+            // whole selection per stream, not per stat area). This avoids boundary
+            // over-counting while keeping the demographic accuracy. With a single bucket
+            // the output is identical to a plain computePublicNeeds call.
             function sumPublicNeeds(buckets, unitsFn) {
-                let population = 0, totalClasses = 0, totalDunam = 0;
-                const byService = {};
+                let population = 0;
+                const rawSum = {};
+                PUBLIC_NEEDS_SERVICES.forEach(svc => { rawSum[svc.key] = { mam: 0, haredi_b: 0, haredi_g: 0 }; });
                 for (const b of buckets.values()) {
-                    const n = computePublicNeeds(unitsFn(b), b.assumptions);
-                    population += n.population;
-                    totalClasses += n.totalClasses;
-                    totalDunam += n.totalDunam;
-                    for (const key of Object.keys(n.byService)) {
-                        const s = n.byService[key];
-                        if (!byService[key]) {
-                            byService[key] = {
-                                mam:      { children: 0, classes: 0, dunam: 0, classSize: s.mam.classSize, dunamPerClass: s.mam.dunamPerClass },
-                                haredi_b: { children: 0, classes: 0, dunam: 0, classSize: s.haredi_b.classSize, dunamPerClass: s.haredi_b.dunamPerClass },
-                                haredi_g: { children: 0, classes: 0, dunam: 0, classSize: s.haredi_g.classSize, dunamPerClass: s.haredi_g.dunamPerClass },
-                                totalClasses: 0, totalDunam: 0,
-                            };
-                        }
-                        const agg = byService[key];
-                        ['mam', 'haredi_b', 'haredi_g'].forEach(st => {
-                            agg[st].children += s[st].children;
-                            agg[st].classes += s[st].classes;
-                            agg[st].dunam += s[st].dunam;
-                        });
-                        agg.totalClasses += s.totalClasses;
-                        agg.totalDunam += s.totalDunam;
-                    }
-                }
-                for (const key of Object.keys(byService)) {
-                    const agg = byService[key];
-                    ['mam', 'haredi_b', 'haredi_g'].forEach(st => {
-                        agg[st].children = Math.round(agg[st].children * 10) / 10;
-                        agg[st].dunam = Math.round(agg[st].dunam * 100) / 100;
+                    const raw = rawChildrenPerService(unitsFn(b), b.assumptions);
+                    population += raw.population;
+                    PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                        const r = raw.byService[svc.key];
+                        rawSum[svc.key].mam += r.mam;
+                        rawSum[svc.key].haredi_b += r.haredi_b;
+                        rawSum[svc.key].haredi_g += r.haredi_g;
                     });
-                    agg.totalDunam = Math.round(agg.totalDunam * 100) / 100;
                 }
-                return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam * 100) / 100 };
+                return { population: Math.round(population), ...classesFromChildren(rawSum) };
             }
 
-            // Aggregate computeNeighborhoodProgramServices across buckets (count + basisValue
-            // summed per service, ceiled per bucket). Single bucket → identical to a plain call.
+            // Aggregate computeNeighborhoodProgramServices across buckets: pool each
+            // service's basis value (residents/elderly/religious-households — all additive
+            // and per-bucket accurate) then apply the entry threshold + per ratio ONCE,
+            // mirroring sumPublicNeeds' pool-then-ceil. Single bucket → identical to a plain call.
             function sumNonEduServices(buckets, unitsFn) {
                 let out = null;
                 for (const b of buckets.values()) {
                     const arr = computeNeighborhoodProgramServices(unitsFn(b), b.assumptions);
-                    if (!out) { out = arr.map(s => ({ ...s })); }
-                    else { arr.forEach((s, i) => { out[i].count += s.count; out[i].basisValue += s.basisValue; }); }
+                    if (!out) out = arr.map(s => ({ ...s, basisValue: 0, count: 0 }));
+                    arr.forEach((s, i) => { out[i].basisValue += s.basisValue; });
                 }
-                return out || [];
+                if (!out) return [];
+                out.forEach(s => { s.count = s.basisValue < s.entry ? 0 : Math.ceil(s.basisValue / s.per); });
+                return out;
             }
 
             // Existing education classes from education_shanaton, grouped by sub-neighborhood.

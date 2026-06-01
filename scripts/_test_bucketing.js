@@ -12,16 +12,24 @@ const PUBLIC_NEEDS_SERVICES = [
     streams:{ mamlakhti:{classSize:27,dunamPerClass:0.4}, haredi_b:{classSize:20,dunamPerClass:0.3}, haredi_g:{classSize:27,dunamPerClass:0.4} } },
 ];
 
-function computePublicNeeds(totalUnits, assumptions) {
+function rawChildrenPerService(totalUnits, assumptions) {
   const { householdSize, haredi, ageYearPctGeneral, ageYearPctHaredi } = assumptions;
   const population = Math.max(0, totalUnits) * householdSize;
   const haredi_frac = Math.max(0, Math.min(1, haredi));
   const mam_frac = 1 - haredi_frac;
-  const byService = {}; let totalDunam = 0, totalClasses = 0;
+  const byService = {};
   PUBLIC_NEEDS_SERVICES.forEach(svc => {
     const ageSpan = svc.ageTo - svc.ageFrom;
     const children_mam = population * mam_frac * (ageYearPctGeneral/100) * ageSpan * svc.participation;
-    const children_hrd_total = population * haredi_frac * (ageYearPctHaredi/100) * ageSpan * svc.participation;
+    const children_hrd = population * haredi_frac * (ageYearPctHaredi/100) * ageSpan * svc.participation;
+    byService[svc.key] = { mam: children_mam, haredi_b: children_hrd*0.5, haredi_g: children_hrd*0.5 };
+  });
+  return { population, byService };
+}
+function classesFromChildren(rawByService) {
+  const byService = {}; let totalClasses=0, totalDunam=0;
+  PUBLIC_NEEDS_SERVICES.forEach(svc => {
+    const raw = rawByService[svc.key] || { mam:0, haredi_b:0, haredi_g:0 };
     const calcStream = (k, children) => {
       const s = svc.streams[k]; const classSize = s.classSize;
       const dpc = s.dunamPerClass !== undefined ? s.dunamPerClass : svc.dunamPerClass;
@@ -29,38 +37,28 @@ function computePublicNeeds(totalUnits, assumptions) {
       const dunam = classes * dpc;
       return { children: Math.round(children*10)/10, classes, dunam: Math.round(dunam*100)/100, classSize, dunamPerClass: dpc };
     };
-    const mam = calcStream('mamlakhti', children_mam);
-    const hb = calcStream('haredi_b', children_hrd_total*0.5);
-    const hg = calcStream('haredi_g', children_hrd_total*0.5);
+    const mam = calcStream('mamlakhti', raw.mam);
+    const hb = calcStream('haredi_b', raw.haredi_b);
+    const hg = calcStream('haredi_g', raw.haredi_g);
     const tc = mam.classes+hb.classes+hg.classes, td = mam.dunam+hb.dunam+hg.dunam;
     byService[svc.key] = { mam, haredi_b:hb, haredi_g:hg, totalClasses:tc, totalDunam: Math.round(td*100)/100 };
     totalClasses += tc; totalDunam += td;
   });
-  return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam*100)/100 };
+  return { byService, totalClasses, totalDunam: Math.round(totalDunam*100)/100 };
 }
-
+function computePublicNeeds(totalUnits, assumptions) {
+  const raw = rawChildrenPerService(totalUnits, assumptions);
+  return { population: Math.round(raw.population), ...classesFromChildren(raw.byService) };
+}
 function sumPublicNeeds(buckets, unitsFn) {
-  let population=0, totalClasses=0, totalDunam=0; const byService={};
+  let population=0; const rawSum={};
+  PUBLIC_NEEDS_SERVICES.forEach(svc => { rawSum[svc.key]={mam:0,haredi_b:0,haredi_g:0}; });
   for (const b of buckets.values()) {
-    const n = computePublicNeeds(unitsFn(b), b.assumptions);
-    population += n.population; totalClasses += n.totalClasses; totalDunam += n.totalDunam;
-    for (const key of Object.keys(n.byService)) {
-      const s = n.byService[key];
-      if (!byService[key]) byService[key] = {
-        mam:{children:0,classes:0,dunam:0,classSize:s.mam.classSize,dunamPerClass:s.mam.dunamPerClass},
-        haredi_b:{children:0,classes:0,dunam:0,classSize:s.haredi_b.classSize,dunamPerClass:s.haredi_b.dunamPerClass},
-        haredi_g:{children:0,classes:0,dunam:0,classSize:s.haredi_g.classSize,dunamPerClass:s.haredi_g.dunamPerClass},
-        totalClasses:0,totalDunam:0 };
-      const agg = byService[key];
-      ['mam','haredi_b','haredi_g'].forEach(st => { agg[st].children+=s[st].children; agg[st].classes+=s[st].classes; agg[st].dunam+=s[st].dunam; });
-      agg.totalClasses += s.totalClasses; agg.totalDunam += s.totalDunam;
-    }
+    const raw = rawChildrenPerService(unitsFn(b), b.assumptions);
+    population += raw.population;
+    PUBLIC_NEEDS_SERVICES.forEach(svc => { const r=raw.byService[svc.key]; rawSum[svc.key].mam+=r.mam; rawSum[svc.key].haredi_b+=r.haredi_b; rawSum[svc.key].haredi_g+=r.haredi_g; });
   }
-  for (const key of Object.keys(byService)) { const agg=byService[key];
-    ['mam','haredi_b','haredi_g'].forEach(st => { agg[st].children=Math.round(agg[st].children*10)/10; agg[st].dunam=Math.round(agg[st].dunam*100)/100; });
-    agg.totalDunam = Math.round(agg.totalDunam*100)/100;
-  }
-  return { population: Math.round(population), byService, totalClasses, totalDunam: Math.round(totalDunam*100)/100 };
+  return { population: Math.round(population), ...classesFromChildren(rawSum) };
 }
 
 const A = { householdSize:3.5, haredi:0.15, religious:0.30, ageYearPctGeneral:2.2, ageYearPctHaredi:3.0 };
@@ -78,13 +76,12 @@ const multi = new Map([['a',{assumptions:A,existing:300,planned:100}],['b',{assu
 const sm = sumPublicNeeds(multi, b=>b.existing+b.planned);
 approx(sm.population, computePublicNeeds(400,A).population + computePublicNeeds(200,B).population, 'population additivity', 0);
 
-// (3) ceil-per-bucket >= single combined call (same assumptions split in two)
+// (3) pool-then-ceil: same-assumptions split == single combined call (no boundary inflation)
 const split = new Map([['a',{assumptions:A,existing:130,planned:0}],['b',{assumptions:A,existing:70,planned:0}]]);
 const combined = computePublicNeeds(200, A);
 const splitSum = sumPublicNeeds(split, b=>b.existing+b.planned);
-const ge = splitSum.totalClasses >= combined.totalClasses;
-if (ge) pass++; else { fail++; console.log('FAIL ceil-per-bucket>=combined', splitSum.totalClasses, combined.totalClasses); }
-console.log('split totalClasses', splitSum.totalClasses, 'vs combined', combined.totalClasses, '(ceil overhead expected >=0)');
+eq(splitSum, combined, 'pool-then-ceil: same-assumptions split == combined');
+console.log('split totalClasses', splitSum.totalClasses, 'vs combined', combined.totalClasses, '(must match under pool-then-ceil)');
 
 // (4) zero units -> zero needs
 const zero = new Map([['__base__',{assumptions:A,existing:0,planned:0}]]);
