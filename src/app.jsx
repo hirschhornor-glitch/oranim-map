@@ -7854,6 +7854,193 @@
                 });
             }
 
+            // ── דשבורד מינהל קהילתי — same one-page style as renderSubDashboard, with
+            // clickable links into each sub-neighborhood's dashboard. Replaces the old
+            // minahakReport React modal. ──
+            function renderMinhakDashboard(minhakName) {
+                if (!minhakName) return;
+                const gd = geoDataRef.current || {};
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const num = (n) => Math.round(n).toLocaleString();
+                const rejected = new Set(['נגנזה/נדחתה', 'נגנזה', 'נדחתה']);
+                const approvedStatuses = new Set(['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף']);
+                const seen = new Set();
+                let plansCount = 0, unitsAdd = 0, unitsPlanned = 0, issuedUnits = 0, activePermits = 0,
+                    futureSqm = 0, hafSqm = 0, commerceOut = 0, employment = 0, trees = 0;
+                const byStatus = {}; const planFeats = []; const subStats = {};
+                (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+                    const p = f.properties || {};
+                    if ((p.minahak || '') !== minhakName) return;
+                    const planId = p.plan_name || '';
+                    if (planId && seen.has(planId)) return; if (planId) seen.add(planId);
+                    const st = (p.status_mavat || '').trim();
+                    if (rejected.has(st)) return;
+                    if (approvedStatuses.has(st)) {
+                        const d = p.mavat_date || '';
+                        if (d) { const y = parseInt(d.split('/').pop()) || 0; if (y < 2020) return; }
+                    }
+                    plansCount++;
+                    const ua = parseFloat(p.units_add) || 0, ut = parseInt(p.units_total) || 0;
+                    unitsAdd += ua; unitsPlanned += ut;
+                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0; hafSqm += parseFloat(p.hafrash_sqm) || 0;
+                    commerceOut += parseFloat(p.commerce_out) || 0; employment += parseFloat(p.employment) || 0;
+                    const stN = normalizeStatus(st) || 'לא ידוע'; byStatus[stN] = (byStatus[stN] || 0) + 1;
+                    const taba = String(p.taba || '').trim();
+                    const rec = (window.__allPermits || {})[taba];
+                    if (rec && rec.permits) rec.permits.forEach(pm => {
+                        if (pm.filtered) return;
+                        const s = String(pm.status || '');
+                        if (s.indexOf('הופק') !== -1 || s.indexOf('הוצא היתר') !== -1) { issuedUnits += parseFloat(pm.units) || 0; activePermits++; }
+                    });
+                    const tr = (window.__treeSurveys || {})[taba];
+                    if (tr) trees += (tr.krita || 0) + (tr.haataka || 0);
+                    planFeats.push({ feat: f, taba, name: p.plan_summary || p.plan_name_he || p.plan_name || taba, status: st, units: ua });
+                    String(p.sub_neighborhood || '').split(',').map(s => s.trim()).filter(Boolean).forEach(sn => {
+                        const n = SUB_NORMALIZE[sn] || sn;
+                        if (!subStats[n]) subStats[n] = { units: 0, plans: 0 };
+                        subStats[n].units += ua; subStats[n].plans++;
+                    });
+                });
+                planFeats.sort((a, b) => b.units - a.units);
+                // TAMA-38 projects in this minhak (by sub-neighborhood membership)
+                const subsList = MINAHAK_SUBS[minhakName] || [];
+                const tamaFeatures = (gd.tama38 && gd.tama38.features ? gd.tama38.features : []).filter(f => {
+                    const n = (f.properties.neighborho || '').trim(); const nn = SUB_NORMALIZE[n] || n;
+                    return subsList.includes(n) || subsList.includes(nn);
+                });
+                const tamaCount = tamaFeatures.length;
+                const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
+                // Union of declared subs + subs that actually carry plans
+                const subNames = Array.from(new Set([...subsList.map(s => SUB_NORMALIZE[s] || s), ...Object.keys(subStats)]))
+                    .sort((a, b) => (subStats[b] ? subStats[b].units : 0) - (subStats[a] ? subStats[a].units : 0));
+
+                const kpi = (label, val, sub2, color) =>
+                    '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
+                    '<div style="font-size:11px;color:#9ab">' + label + '</div>' +
+                    '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+
+                // Status breakdown (grouped) — same grouping as the old minahak report.
+                const STATUS_GROUPS = {
+                    'אישור': 'אישור / מאושרת', 'מאושרת': 'אישור / מאושרת', 'תבע מאושרת': 'אישור / מאושרת',
+                    'תבע - טרום אישור': 'אישור / מאושרת', 'תחילת תוקף': 'אישור / מאושרת', 'בהליך אישור': 'בהליך אישור',
+                    'דיון בהתנגדויות ותיקונים': 'התנגדויות', 'הפקדה להתנגדויות/השגות': 'הפקדה',
+                    'במילוי תנאים להפקדה': 'במילוי תנאים להפקדה', 'נפתח תיק למתכנן': 'פתיחת תיק / בבדיקה',
+                    'נפתח תיק תב"ע': 'פתיחת תיק / בבדיקה', 'בבדיקה תכנונית': 'פתיחת תיק / בבדיקה',
+                    'תכנית עומדת בתנאי סף': 'פתיחת תיק / בבדיקה', 'נקלטה מקובץ מבאת': 'פתיחת תיק / בבדיקה',
+                    'בבדיקת תנאי סף': 'פתיחת תיק / בבדיקה',
+                };
+                const GROUP_COLORS = { 'אישור / מאושרת': '#50d25a', 'בהליך אישור': '#50d25a', 'התנגדויות': '#fafa3c', 'הפקדה': '#f56e05', 'במילוי תנאים להפקדה': '#f56e05', 'פתיחת תיק / בבדיקה': '#eb0000' };
+                const GROUP_ORDER = ['אישור / מאושרת', 'בהליך אישור', 'התנגדויות', 'הפקדה', 'במילוי תנאים להפקדה', 'פתיחת תיק / בבדיקה'];
+                const grouped = {};
+                Object.keys(byStatus).forEach(s => { const g = STATUS_GROUPS[s] || s; grouped[g] = (grouped[g] || 0) + byStatus[s]; });
+                const maxCount = Math.max(...Object.values(grouped), 1);
+                const statusBars = [...GROUP_ORDER.filter(g => grouped[g]), ...Object.keys(grouped).filter(s => !GROUP_ORDER.includes(s))].map(s =>
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+                    '<span style="font-size:10px;color:#9ab;min-width:140px;text-align:right">' + esc(s) + '</span>' +
+                    '<div style="flex:1;height:14px;background:#13212b;border-radius:3px"><div style="width:' + (grouped[s] / maxCount * 100) + '%;height:100%;background:' + (GROUP_COLORS[s] || '#4db8c4') + ';border-radius:3px"></div></div>' +
+                    '<span style="font-size:10px;color:#cfe;min-width:20px">' + grouped[s] + '</span></div>').join('');
+
+                const subCards = subNames.map(sn => {
+                    const s = subStats[sn] || { units: 0, plans: 0 };
+                    return '<button class="minhak-sub-link" data-sub="' + esc(sn) + '" title="פתח דשבורד שכונתי" style="background:#10202a;border:1px solid #2e7d8f;border-radius:8px;padding:8px 12px;cursor:pointer;text-align:right;min-width:150px;flex:1;font-family:inherit" onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">' +
+                        '<div style="font-size:13px;font-weight:bold;color:#cfe">' + esc(sn) + ' <span style="color:#4db8c4;font-size:11px">↗</span></div>' +
+                        '<div style="font-size:11px;color:#789;margin-top:2px">' + num(s.units) + ' יח"ד תוספת · ' + s.plans + ' תכניות</div></button>';
+                }).join('');
+
+                const topRows = planFeats.slice(0, 12).map((r, i) =>
+                    '<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px"><a href="#" class="minhak-plan-zoom" data-idx="' + i + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + esc(r.name) + '</a></td>' +
+                    '<td style="padding:5px 6px;text-align:center;color:#5fd3a0">' + num(r.units) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td></tr>').join('');
+
+                const prevD = document.getElementById('minhakdash-result');
+                if (prevD) prevD.remove();
+                const div = document.createElement('div');
+                div.id = 'minhakdash-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' +
+                        '<h3 id="minhakdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">🏛️ דשבורד מינהל — ' + esc(minhakName) + '</h3>' +
+                        '<button id="minhakdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+                        kpi('תכניות פעילות', plansCount, '', '#4db8c4') +
+                        kpi('יח"ד תוספת', num(unitsAdd), '', '#5fd3a0') +
+                        kpi('תכניות תמ"א 38', tamaCount, '', '#e0a64d') +
+                        kpi('יח"ד תמ"א תוספת', num(tamaUnitsAdd), '', '#c47bd1') +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' +
+                        kpi('יח"ד בהיתר', num(issuedUnits), activePermits + ' היתרים פעילים', '#8fd14f') +
+                        kpi('שב"צ + הפרשה (מ"ר)', num(futureSqm + hafSqm), 'עתידי ' + num(futureSqm) + ' · מבונה ' + num(hafSqm), '#b08fd1') +
+                        kpi('מסחר עתידי (מ"ר)', num(commerceOut), '', '#d18f8f') +
+                        kpi('עצים לכריתה/העתקה', num(trees), '', '#8fb0d1') +
+                    '</div>' +
+                    '<h4 style="color:#4db8c4;margin:6px 0 8px;font-size:13px">תת-שכונות (לחץ לפתיחת דשבורד שכונתי)</h4>' +
+                    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' + (subCards || '<span style="color:#789;font-size:12px">—</span>') + '</div>' +
+                    '<div style="display:flex;gap:18px;flex-wrap:wrap">' +
+                        '<div style="flex:1;min-width:260px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">פילוח לפי סטטוס</h4>' + (statusBars || '<div style="color:#789;font-size:12px">—</div>') + '</div>' +
+                        '<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד תוספת)</h4>' +
+                            '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">תוספת יח"ד</th><th style="padding:5px;color:#4db8c4">סטטוס</th></tr></thead><tbody>' + topRows + '</tbody></table></div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;margin-top:16px">' +
+                        '<button id="minhakdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
+                        '<button id="minhakdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+                document.getElementById('minhakdash-close').addEventListener('click', () => div.remove());
+                div.querySelectorAll('.minhak-sub-link').forEach(b =>
+                    b.addEventListener('click', () => { div.remove(); renderSubDashboard(b.getAttribute('data-sub')); }));
+                div.querySelectorAll('.minhak-plan-zoom').forEach(el => el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const f = (planFeats[+el.getAttribute('data-idx')] || {}).feat;
+                    if (!f) return;
+                    div.remove();
+                    const map = mapInstanceRef.current;
+                    if (!map || !f.geometry) return;
+                    try {
+                        const center = visualCenter(f.geometry) || L.geoJSON(f).getBounds().getCenter();
+                        const latlng = center.lat ? [center.lat, center.lng] : center;
+                        map.setView(latlng, 18);
+                        setTimeout(() => {
+                            const mapped = mapPlanProps(f.properties);
+                            const popup = L.popup({ maxWidth: popupMaxWidth(), minWidth: Math.min(300, window.innerWidth * 0.85), closeButton: true })
+                                .setLatLng(latlng).setContent(buildPlanPopup(mapped, { properties: mapped })).openOn(map);
+                            bindPopupEvents(popup, [{ type: 'plan', properties: mapped }], 0);
+                        }, 500);
+                    } catch (err) { console.warn('zoom to plan failed', err); }
+                }));
+                document.getElementById('minhakdash-csv').addEventListener('click', () => {
+                    const title = document.getElementById('minhakdash-title')?.textContent || 'דשבורד מינהל';
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    lines.push(['מדד', 'ערך'].join(','));
+                    [['תכניות פעילות', plansCount], ['יח"ד תוספת', Math.round(unitsAdd)], ['תכניות תמ"א 38', tamaCount],
+                     ['יח"ד תמ"א תוספת', Math.round(tamaUnitsAdd)], ['יח"ד בהיתר', Math.round(issuedUnits)], ['היתרים פעילים', activePermits],
+                     ['שב"צ עתידי (מ"ר)', Math.round(futureSqm)], ['הפרשה מבונה (מ"ר)', Math.round(hafSqm)], ['מסחר עתידי (מ"ר)', Math.round(commerceOut)],
+                     ['עצים לכריתה/העתקה', Math.round(trees)]].forEach(r => lines.push([q(r[0]), r[1]].join(',')));
+                    lines.push(''); lines.push([q('תת-שכונה'), q('יח"ד תוספת'), q('תכניות')].join(','));
+                    subNames.forEach(sn => { const s = subStats[sn] || { units: 0, plans: 0 }; lines.push([q(sn), Math.round(s.units), s.plans].join(',')); });
+                    lines.push(''); lines.push([q('תכנית'), q('תוספת יח"ד'), q('סטטוס')].join(','));
+                    planFeats.forEach(r => lines.push([q(r.name), Math.round(r.units), q(r.status)].join(',')));
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+                document.getElementById('minhakdash-print').addEventListener('click', () => {
+                    const title = document.getElementById('minhakdash-title')?.textContent || 'דשבורד מינהל';
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}a{color:#1565c0}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
+                });
+            }
+
             // Aggregate CBS census-2022 stat-area metrics for a list of area-property objects.
             // Counts are summed; percentages/averages are weighted (population for people-metrics,
             // households for housing-metrics); areas missing a value are skipped from that metric.
@@ -16099,7 +16286,7 @@
                                             )}
                                             {layer.minahak && (
                                                 <button className="layer-legend-btn" title={"דוח מינהל " + layer.minahak}
-                                                    onClick={(e) => { e.stopPropagation(); setMinahakReport(layer.minahak); }}
+                                                    onClick={(e) => { e.stopPropagation(); renderMinhakDashboard(layer.minahak); }}
                                                     style={{fontSize:'11px'}}>📊</button>
                                             )}
                                         </div>
@@ -18155,7 +18342,7 @@
                                             <div className="reports-menu-item" onClick={(e) => {
                                                 if (e.target.tagName === 'SELECT') return;
                                                 setShowReportsMenu(false);
-                                                setMinahakReport(reportsMenuMinahak);
+                                                renderMinhakDashboard(reportsMenuMinahak);
                                             }}>
                                                 <span className="report-icon">🏛️</span>
                                                 <div className="report-text">
