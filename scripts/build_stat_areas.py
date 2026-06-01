@@ -41,8 +41,10 @@ BUFFER_DEG = 0.003  # ~300m — match buildings.geojson edge coverage
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
-OUT_FIELDS = ("STAT_2022,YISHUV_STAT_2022,size_avg,age0_19_pcnt,age65_pcnt,"
-              "hh_MidatDatiyut_Name,Main_Function_Txt,pop_approx")
+OUT_FIELDS = ("STAT_2022,YISHUV_STAT_2022,size_avg,age0_19_pcnt,age20_64_pcnt,age65_pcnt,"
+              "hh_MidatDatiyut_Name,Main_Function_Txt,pop_approx,hh_total_approx,"
+              "age_median,ChldBorn_avg,pop_density,"
+              "own_pcnt,rent_pcnt,Vehicle0_pcnt,Vehicle2up_pcnt,Parking_pcnt")
 
 # Dominant-lifestyle (hh_MidatDatiyut_Name) -> (haredi, religious) fractions.
 # Proxy: CBS publishes only the *dominant* household lifestyle per stat area, not
@@ -145,6 +147,23 @@ def derive_props(attrs):
         props["datiyut"] = datiyut
     if func:
         props["main_function"] = func
+
+    # Population-dashboard fields (computePopulationByGeography aggregates these).
+    # raw census percentages / counts, omitted when null.
+    hh_total = num(attrs.get("hh_total_approx"))
+    if hh_total is not None:
+        props["hh_total"] = int(hh_total)
+    for src, dst in (("age_median", "age_median"), ("age20_64_pcnt", "age20_64_pcnt"),
+                     ("age65_pcnt", "age65_pcnt"), ("ChldBorn_avg", "children_per_woman"),
+                     ("pop_density", "pop_density"), ("own_pcnt", "own_pcnt"),
+                     ("rent_pcnt", "rent_pcnt"), ("Vehicle0_pcnt", "vehicle0_pcnt"),
+                     ("Vehicle2up_pcnt", "vehicle2up_pcnt"), ("Parking_pcnt", "parking_pcnt")):
+        v = num(attrs.get(src))
+        if v is not None:
+            props[dst] = round(v, 2)
+    # age0_19_pcnt as a display field (separate from the per-year ageYearPct above)
+    if age0_19 is not None:
+        props["age0_19_pcnt"] = round(age0_19, 2)
     return props
 
 

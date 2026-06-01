@@ -7854,6 +7854,225 @@
                 });
             }
 
+            // Aggregate CBS census-2022 stat-area metrics for a list of area-property objects.
+            // Counts are summed; percentages/averages are weighted (population for people-metrics,
+            // households for housing-metrics); areas missing a value are skipped from that metric.
+            function aggregatePopulationAreas(areas) {
+                const sum = (k) => areas.reduce((s, a) => s + (typeof a[k] === 'number' ? a[k] : 0), 0);
+                const wavg = (vk, wk) => {
+                    let sv = 0, sw = 0;
+                    for (const a of areas) {
+                        const v = a[vk], w = a[wk];
+                        if (typeof v === 'number' && typeof w === 'number' && w > 0) { sv += v * w; sw += w; }
+                    }
+                    return sw > 0 ? sv / sw : null;
+                };
+                const LIFE = ['חרדי', 'דתי/דתי מאוד', 'מסורתי', 'חילוני', 'מעורב', 'אחר'];
+                const lifeRaw = {}; let lifeSum = 0;
+                LIFE.forEach(c => {
+                    let sv = 0, sw = 0;
+                    for (const a of areas) {
+                        const bd = a.datiyut_breakdown, w = a.pop_approx;
+                        if (bd && typeof bd[c] === 'number' && typeof w === 'number' && w > 0) { sv += bd[c] * w; sw += w; }
+                    }
+                    lifeRaw[c] = sw > 0 ? sv / sw : 0; lifeSum += lifeRaw[c];
+                });
+                const lifestyle = {};
+                LIFE.forEach(c => lifestyle[c] = lifeSum > 0 ? lifeRaw[c] / lifeSum * 100 : 0);
+                return {
+                    pop: sum('pop_approx'), hh: sum('hh_total'),
+                    householdSize: wavg('householdSize', 'pop_approx'),
+                    age_median: wavg('age_median', 'pop_approx'),
+                    age0_19: wavg('age0_19_pcnt', 'pop_approx'),
+                    age20_64: wavg('age20_64_pcnt', 'pop_approx'),
+                    age65: wavg('age65_pcnt', 'pop_approx'),
+                    children_per_woman: wavg('children_per_woman', 'pop_approx'),
+                    pop_density: wavg('pop_density', 'pop_approx'),
+                    own: wavg('own_pcnt', 'hh_total'), rent: wavg('rent_pcnt', 'hh_total'),
+                    vehicle0: wavg('vehicle0_pcnt', 'hh_total'), vehicle2up: wavg('vehicle2up_pcnt', 'hh_total'),
+                    parking: wavg('parking_pcnt', 'hh_total'),
+                    lifestyle, hasLifestyle: lifeSum > 0, areaCount: areas.length,
+                };
+            }
+
+            // Build the minhak → sub-neighborhood hierarchy of existing-population census metrics
+            // by assigning each stat-area centroid to its sub-neighborhood (and minhak).
+            function computePopulationByGeography(gd) {
+                const stat = gd && gd.stat_areas && gd.stat_areas.features;
+                if (!stat) return { minhaks: [], unassigned: 0, unassignedPop: 0 };
+                const subFeats = (gd.sub_neighborhoods && gd.sub_neighborhoods.features) || [];
+                const normSub = (s) => SUB_NORMALIZE[s] || s;
+                const findSub = (c) => {
+                    for (const sf of subFeats) { if (sf.geometry && pointInGeometry(c, sf.geometry)) return normSub(sf.properties.schn_nama); }
+                    return null;
+                };
+                const findMinhak = (c) => {
+                    for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
+                        const layer = gd[MINAHAK_HEB_TO_LAYER[heb]];
+                        if (layer && pointInLayer(c, layer)) return heb;
+                    }
+                    return null;
+                };
+                const tree = {}; let unassigned = 0, unassignedPop = 0;
+                for (const f of stat) {
+                    const p = f.properties || {};
+                    if (typeof p.pop_approx !== 'number' || p.pop_approx <= 0) continue; // skip non-residential/empty
+                    const c = geomCentroid(f.geometry);
+                    if (!c) { unassigned++; unassignedPop += p.pop_approx; continue; }
+                    const sub = findSub(c);
+                    const minhak = (sub && SUB_TO_MINAHAK[sub]) || findMinhak(c);
+                    if (!minhak) { unassigned++; unassignedPop += p.pop_approx; continue; }
+                    const subName = sub || 'לא ידוע';
+                    (tree[minhak] = tree[minhak] || {});
+                    (tree[minhak][subName] = tree[minhak][subName] || []).push(p);
+                }
+                const minhaks = Object.keys(tree).map(mn => {
+                    const subsObj = tree[mn], allAreas = [];
+                    const subs = Object.keys(subsObj).map(sn => {
+                        allAreas.push(...subsObj[sn]);
+                        return { name: sn, metrics: aggregatePopulationAreas(subsObj[sn]) };
+                    }).sort((a, b) => b.metrics.pop - a.metrics.pop);
+                    return { name: mn, metrics: aggregatePopulationAreas(allAreas), subs };
+                }).sort((a, b) => b.metrics.pop - a.metrics.pop);
+                return { minhaks, unassigned, unassignedPop };
+            }
+
+            // "אוכלוסייה קיימת לפי מינהק/תת-שכונה" dashboard (CBS census 2022).
+            function openPopulationDashboard() {
+                const data = computePopulationByGeography(geoDataRef.current || {});
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const n0 = (v) => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString();
+                const p1 = (v) => (v == null || isNaN(v)) ? '—' : v.toFixed(1) + '%';
+                const f1 = (v) => (v == null || isNaN(v)) ? '—' : v.toFixed(1);
+                const kpi = (label, val, sub2, color) =>
+                    '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:110px;flex:1">' +
+                    '<div style="font-size:11px;color:#9ab">' + label + '</div>' +
+                    '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+                const lf = (m, c) => m.hasLifestyle ? p1(m.lifestyle[c]) : '—';
+                // Column specs reused for tables, CSV and print.
+                const BLOCKS = [
+                    { title: 'אוכלוסייה וגיל', cols: [
+                        ['אוכלוסייה', m => n0(m.pop)], ['משקי בית', m => n0(m.hh)], ['גודל מ"ב', m => f1(m.householdSize)],
+                        ['גיל חציוני', m => f1(m.age_median)], ['% 0-19', m => p1(m.age0_19)], ['% 20-64', m => p1(m.age20_64)],
+                        ['% 65+', m => p1(m.age65)], ['ילדים/אישה', m => f1(m.children_per_woman)]] },
+                    { title: 'אורח חיים / דתיות', cols: [
+                        ['% חרדי', m => lf(m, 'חרדי')], ['% דתי', m => lf(m, 'דתי/דתי מאוד')], ['% מסורתי', m => lf(m, 'מסורתי')],
+                        ['% חילוני', m => lf(m, 'חילוני')], ['% מעורב', m => lf(m, 'מעורב')], ['% אחר', m => lf(m, 'אחר')]] },
+                    { title: 'דיור: בעלות / שכירות / רכב / חניה', cols: [
+                        ['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)], ['% ללא רכב', m => p1(m.vehicle0)],
+                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
+                ];
+                const buildTable = (spec, subs, total) => {
+                    const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
+                        spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + c[0] + '</th>').join('');
+                    const mkRow = (label, m, isTotal) => {
+                        const st = isTotal ? 'font-weight:bold;background:#13212b;color:#8fd' : 'color:#cfe';
+                        return '<tr style="border-bottom:1px solid #222;' + st + '"><td style="padding:5px 7px;text-align:right">' + esc(label) + '</td>' +
+                            spec.cols.map(c => '<td style="padding:5px 7px;text-align:center">' + c[1](m) + '</td>').join('') + '</tr>';
+                    };
+                    const body = subs.map(s => mkRow(s.name, s.metrics, false)).join('') + mkRow('סה"כ מינהק', total, true);
+                    return '<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">' + spec.title + '</h4>' +
+                        '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+                };
+
+                const prevD = document.getElementById('popdash-result');
+                if (prevD) prevD.remove();
+                const div = document.createElement('div');
+                div.id = 'popdash-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                document.body.appendChild(div);
+                let current = null; // null = minhak grid; else minhak name
+
+                const coverageNote = data.unassigned > 0
+                    ? '<div style="font-size:10px;color:#789;margin-top:10px">' + data.unassigned + ' אזורים סטטיסטיים נוספים שבמיפוי נמצאים מחוץ למינהלים הקהילתיים ואינם נכללים בדוח.</div>'
+                    : '';
+
+                function paint(minhakName) {
+                    current = minhakName;
+                    const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' +
+                        '<div style="display:flex;align-items:center;gap:10px">' +
+                        (minhakName ? '<button id="popdash-back" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px">← חזרה</button>' : '') +
+                        '<h3 id="popdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">👥 אוכלוסייה קיימת — ' + esc(minhakName || 'לפי מינהק') + '</h3>' +
+                        '</div>' +
+                        '<button id="popdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '</div>';
+                    const footer = '<div style="display:flex;gap:8px;margin-top:16px">' +
+                        '<button id="popdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
+                        '<button id="popdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                        '</div>';
+                    let bodyHtml;
+                    if (!minhakName) {
+                        if (!data.minhaks.length) {
+                            bodyHtml = '<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">אין נתוני אוכלוסייה (ודא ששכבת stat_areas נטענה).</div>';
+                        } else {
+                            const cards = data.minhaks.map(mh =>
+                                '<button class="popdash-card" data-minhak="' + esc(mh.name) + '" style="background:#10202a;border:1px solid #2e7d8f;border-radius:10px;padding:12px 14px;cursor:pointer;text-align:right;min-width:160px;flex:1;font-family:inherit" ' +
+                                'onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">' +
+                                '<div style="font-size:14px;font-weight:bold;color:#cfe;margin-bottom:4px">' + esc(mh.name) + '</div>' +
+                                '<div style="font-size:22px;font-weight:bold;color:#4db8c4">' + n0(mh.metrics.pop) + '</div><div style="font-size:11px;color:#9ab">תושבים</div>' +
+                                '<div style="font-size:11px;color:#789;margin-top:4px">' + n0(mh.metrics.hh) + ' משקי בית · ' + f1(mh.metrics.householdSize) + ' נפ\'/מ"ב</div>' +
+                                '</button>').join('');
+                            bodyHtml = '<div style="font-size:12px;color:#9ab;margin-bottom:10px">בחר מינהל קהילתי לצפייה בפילוח תת-שכונות (מקור: מפקד הלמ"ס 2022).</div>' +
+                                '<div style="display:flex;gap:10px;flex-wrap:wrap">' + cards + '</div>' + coverageNote;
+                        }
+                    } else {
+                        const mh = data.minhaks.find(m => m.name === minhakName);
+                        const t = mh.metrics;
+                        const kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">' +
+                            kpi('אוכלוסייה', n0(t.pop), t.areaCount + ' אזורים סטטיסטיים', '#4db8c4') +
+                            kpi('משקי בית', n0(t.hh), '', '#5fd3a0') +
+                            kpi('גודל משק בית', f1(t.householdSize), 'נפ\'/מ"ב', '#8fd14f') +
+                            kpi('גיל חציוני', f1(t.age_median), '', '#c4a24d') +
+                            '</div>';
+                        bodyHtml = kpis + BLOCKS.map(spec => buildTable(spec, mh.subs, t)).join('');
+                    }
+                    div.innerHTML = head + bodyHtml + footer;
+                    document.getElementById('popdash-close').addEventListener('click', () => div.remove());
+                    const backBtn = document.getElementById('popdash-back');
+                    if (backBtn) backBtn.addEventListener('click', () => paint(null));
+                    div.querySelectorAll('.popdash-card').forEach(b =>
+                        b.addEventListener('click', () => paint(b.getAttribute('data-minhak'))));
+                    document.getElementById('popdash-csv').addEventListener('click', exportCsv);
+                    document.getElementById('popdash-print').addEventListener('click', printView);
+                }
+
+                function exportCsv() {
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    const dumpMinhak = (mh) => {
+                        BLOCKS.forEach(spec => {
+                            lines.push(q(mh.name + ' — ' + spec.title));
+                            lines.push(['תת-שכונה'].concat(spec.cols.map(c => c[0])).map(q).join(','));
+                            mh.subs.forEach(s => lines.push([q(s.name)].concat(spec.cols.map(c => q(c[1](s.metrics).replace(/,/g, '')))).join(',')));
+                            lines.push([q('סה"כ מינהק')].concat(spec.cols.map(c => q(c[1](mh.metrics).replace(/,/g, '')))).join(','));
+                            lines.push('');
+                        });
+                    };
+                    if (current) { const mh = data.minhaks.find(m => m.name === current); if (mh) dumpMinhak(mh); }
+                    else data.minhaks.forEach(dumpMinhak);
+                    const title = document.getElementById('popdash-title')?.textContent || 'אוכלוסייה';
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                }
+                function printView() {
+                    const title = document.getElementById('popdash-title')?.textContent || 'אוכלוסייה קיימת';
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#e0eef0;color:#1a5a66}td:first-child,th:first-child{text-align:right}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
+                }
+
+                paint(null);
+            }
+
             // ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3 || !programaAreaActiveRef.current) return;
@@ -17926,6 +18145,13 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openPopulationDashboard(); }}>
+                                                <span className="report-icon">👥</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">אוכלוסייה קיימת</span>
+                                                    <span className="report-desc">פרופיל דמוגרפי לפי מינהל/תת-שכונה: גיל, אורח חיים, דיור (מפקד 2022)</span>
+                                                </div>
+                                            </button>
                                             <div className="reports-menu-item" onClick={(e) => {
                                                 if (e.target.tagName === 'SELECT') return;
                                                 setShowReportsMenu(false);
