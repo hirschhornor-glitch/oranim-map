@@ -15698,7 +15698,7 @@
                         title="חיפוש אחוד — Ctrl+K או /"
                     >
                         <span>🔍</span>
-                        <span className="gs-label-full">חיפוש (תכנית, היתר, כתובת, שכבה, דוח)</span>
+                        <span className="gs-label-full">חיפוש</span>
                         <span className="gs-kbd">Ctrl K</span>
                     </button>
 

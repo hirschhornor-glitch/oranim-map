@@ -1516,8 +1516,8 @@
         }
         .global-search-trigger {
             position: absolute;
-            top: 10px;
-            left: 52px; /* beside the top-left zoom control, clear of the centered toolbar */
+            top: 76px; /* below the top-left zoom control, under the centered toolbar's row */
+            left: 10px;
             z-index: 1000;
             background: rgba(21, 21, 43, 0.92);
             border: 1px solid #3a3a5a;
@@ -1544,8 +1544,9 @@
             font-family: ui-monospace, monospace;
         }
         @media (max-width: 640px) {
-            /* Drop below the zoom control so the wrapped, centered toolbar never overlaps it */
-            .global-search-trigger { top: 78px; left: 10px; padding: 6px 10px; font-size: 11.5px; }
+            /* On mobile the toolbar drops to ~top:60 and wraps tall, so place the pill
+               beside the zoom control on the top row, above the toolbar. */
+            .global-search-trigger { top: 10px; left: 52px; padding: 6px 10px; font-size: 11.5px; }
             .global-search-trigger .gs-label-full { display: none; }
         }
 
