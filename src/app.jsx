@@ -2037,6 +2037,7 @@
             const [fullReportDrill, setFullReportDrill] = useState(null); // expanded institution category in the report
             const [fullAreaLoading, setFullAreaLoading] = useState(false); // true while lazy layers are being fetched
             const [fullAreaCollapsed, setFullAreaCollapsed] = useState({}); // {sectionId: true} = collapsed
+            const [fullReportTables, setFullReportTables] = useState({}); // {tableId: true} = detailed record-table expanded
             const fullReportAreaActiveRef = useRef(false);
             const fullReportPolyRef = useRef(null); // highlighted polygon kept on the map while report is open
             // Expose function to trigger area analysis from landuse panel
@@ -8416,6 +8417,7 @@
                 setFullAreaLoading(true);   // show spinner while lazy layers are fetched
                 setFullAreaReport(null);
                 setFullAreaCollapsed({});
+                setFullReportTables({});
                 const gdRoot = geoDataRef.current;
                 if (!gdRoot || !gdRoot.plans) { setFullAreaLoading(false); return; }
 
@@ -8648,13 +8650,15 @@
 
                 // 7d. מסחר/תעסוקה (מתוך התב"עות), שימור עירוני, זיקות הנאה, יעודי קרקע קיים
                 let commerceIn = 0, employment = 0;
-                plansInside.forEach(x => { commerceIn += parseFloat(x.props.commerce_in) || 0; employment += parseFloat(x.props.employment) || 0; });
+                const commerceRows = [];
+                plansInside.forEach(x => { const ci = parseFloat(x.props.commerce_in) || 0, em = parseFloat(x.props.employment) || 0; commerceIn += ci; employment += em; if (ci || em) commerceRows.push({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', commerce: ci, employment: em }); });
+                commerceRows.sort((a, b) => (b.commerce + b.employment) - (a.commerce + a.employment));
                 const consCity = { total: 0, byGrade: {}, byType: {}, list: [] };
                 feats('mivnei_lashimur').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; consCity.total++; const g = ((p.mp_grade || 'ללא דרגה') + '').trim() || 'ללא דרגה'; consCity.byGrade[g] = (consCity.byGrade[g] || 0) + 1; const sug = ((p.sugMivne || '') + '').trim(); if (sug) consCity.byType[sug] = (consCity.byType[sug] || 0) + 1; const nm = ((p.shem || '') + '').trim(); const street = [p.mp_street, p.mp_house_num].filter(Boolean).join(' '); if (nm || street) consCity.list.push({ name: nm || street, street: nm ? street : '', grade: g }); });
                 const yiud = { total: 0, byYeud: {} };
                 feats('yiud_karka_kayam').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; const y = ((p.Descr || p.YEUD || 'אחר') + '').trim() || 'אחר'; yiud.total++; yiud.byYeud[y] = (yiud.byYeud[y] || 0) + geomAreaSqm(f.geometry); });
 
-                const existing = { moch, eduInst, eduStudents, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, consCity, yiud };
+                const existing = { moch, eduInst, eduStudents, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
                     title: 'סיכום אזור נבחר', areaSqm,
@@ -21685,6 +21689,16 @@
                                     // Thematic per-section colors (matches the app palette: כחול=היתרים, חום=ציבור, ירוק=שצ"פ, סגול=מסחר)
                                     const secColors = { plans:'#e94560', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6' };
                                     const toggleSec = k => setFullAreaCollapsed(s => ({ ...s, [k]: !s[k] }));
+                                    const toggleTbl = id => setFullReportTables(s => ({ ...s, [id]: !s[id] }));
+                                    // Clickable "📋 detail" toggle row that reveals a record-level table.
+                                    const detailRow = (id, label) => (
+                                        <div onClick={()=>toggleTbl(id)} title="הצג/הסתר טבלה מפורטת" style={{display:'flex',justifyContent:'space-between',cursor:'pointer',fontSize:11,color:'#9fd6ff',borderTop:'1px dashed #2a2a3e',marginTop:6,paddingTop:6,userSelect:'none'}}>
+                                            <span>📋 {label}</span><span style={{color:'#9aa6b2'}}>{fullReportTables[id]?'▾':'▸'}</span>
+                                        </div>
+                                    );
+                                    const tblWrap = { width:'100%', borderCollapse:'collapse', fontSize:10, marginTop:4 };
+                                    const th = { textAlign:'right', color:'#9aa6b2', fontWeight:'normal', padding:'2px 4px', borderBottom:'1px solid #2a2a3e', position:'sticky', top:0, background:'#15152a' };
+                                    const td = { textAlign:'right', color:'#dfe3ea', padding:'2px 4px', borderBottom:'1px solid #20203a' };
                                     const section = (k, title, body) => (
                                         <div id={'fa-' + k} style={{background:'#15152a', border:'1px solid #2a2a3e', borderRight:'3px solid '+(secColors[k]||'#e94560'), borderRadius:8, padding:'10px 12px', marginBottom:10}}>
                                             <h3 onClick={()=>toggleSec(k)} style={{color:secColors[k]||'#e94560', fontSize:13, margin:fullAreaCollapsed[k]?'0':'0 0 8px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', userSelect:'none'}}>
@@ -21699,10 +21713,10 @@
                                         d.plans.count>0 && {k:'plans', label:'תב"ע'},
                                         d.permits.totalPermits>0 && {k:'permits', label:'היתרים'},
                                         d.projector.count>0 && {k:'projector', label:'פרויקטור'},
-                                        d.masterPlans.length>0 && {k:'master', label:'תכניות אב'},
+                                        (d.masterPlans.length>0 || (ex&&ex.consCity.total)) && {k:'master', label:'אב ושימור'},
                                         ex && (ex.moch.total||ex.eduInst||ex.vacant.count||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
                                         ex && (ex.green.count||ex.sportCount||(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)) && {k:'green', label:'ירוק ועצים'},
-                                        ex && (ex.commerceIn||ex.employment||ex.consCity.total||ex.yiud.total) && {k:'commerce', label:'מסחר/שימור'},
+                                        ex && (ex.commerceIn||ex.employment||ex.yiud.total) && {k:'commerce', label:'מסחר/יעודים'},
                                     ].filter(Boolean);
                                     const navTo = k => { setFullAreaCollapsed(s => ({ ...s, [k]: false })); const el = document.getElementById('fa-' + k); if (el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 30); };
                                     return (
@@ -21759,6 +21773,11 @@
                                                     {Object.entries(d.permits.catAgg).sort((a,b)=>b[1].units-a[1].units).map(([cat,a]) => (
                                                         <div key={cat} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{getPermitCategoryLabel(cat)}</span><span style={{color:'#c2c9d4'}}>{a.count} · <b style={{color:'#fff'}}>{Math.round(a.units)}</b> יח"ד</span></div>
                                                     ))}
+                                                    {d.permits.rows && d.permits.rows.length > 0 && detailRow('permits', 'פירוט כל ההיתרים (' + d.permits.rows.length + ')')}
+                                                    {fullReportTables['permits'] && d.permits.rows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>מס' היתר</th><th style={th}>סטטוס</th><th style={th}>שלב</th><th style={th}>קטגוריה</th><th style={th}>יח"ד</th></tr></thead>
+                                                        <tbody>{d.permits.rows.map((r,i) => (<tr key={i}><td style={td}>{r.file||'—'}</td><td style={td}>{r.status||'—'}</td><td style={td}>{getPermitStageLabel(r.stage)}</td><td style={td}>{getPermitCategoryLabel(r.cat)}</td><td style={{...td,color:'#7bdc8a'}}>{r.units||''}</td></tr>))}</tbody></table>
+                                                    )}
                                             </>)}
 
                                             {/* פרויקטור */}
@@ -21771,8 +21790,8 @@
                                                     ))}
                                             </>)}
 
-                                            {/* תכניות אב */}
-                                            {d.masterPlans.length > 0 && section('master', '📐 תכניות אב', <>
+                                            {/* תכניות אב + שימור */}
+                                            {(d.masterPlans.length > 0 || (ex && ex.consCity.total > 0)) && section('master', '📐 תכניות אב ושימור', <>
                                                     {d.masterPlans.map(mp => (
                                                         <div key={mp.name} style={{marginBottom:8,borderBottom:'1px solid #21213a',paddingBottom:6}}>
                                                             <div style={{fontWeight:'bold',color:'#ffd479',fontSize:12,marginBottom:3}}>תכנית אב {mp.name}</div>
@@ -21782,6 +21801,18 @@
                                                             {mp.cons.total > 0 && <div style={{fontSize:11,color:'#ef9a9a',marginTop:3}}>🛡️ מבני שימור: {mp.cons.total} (א׳={mp.cons['א']} · ב׳={mp.cons['ב']} · ג׳={mp.cons['ג']})</div>}
                                                         </div>
                                                     ))}
+                                                    {ex && ex.consCity.total > 0 && (
+                                                        <div style={{marginTop: d.masterPlans.length?6:0, paddingTop: d.masterPlans.length?6:0, borderTop: d.masterPlans.length?'1px solid #2a2a3e':'none'}}>
+                                                            <div style={{fontWeight:'bold',color:'#ef9a9a',fontSize:12,marginBottom:3}}>🛡️ מבני שימור (רשימה עירונית) — {ex.consCity.total}</div>
+                                                            {Object.entries(ex.consCity.byGrade).filter(([g])=>g && g!=='ללא דרגה').sort((a,b)=>b[1]-a[1]).map(([g,c]) => (<div key={'g'+g} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· דרגה {g}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
+                                                            {Object.entries(ex.consCity.byType).filter(([t])=>t && t.length<=22).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([t,c]) => (<div key={'t'+t} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {t}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
+                                                            {ex.consCity.list && ex.consCity.list.length > 0 && detailRow('cons', 'פירוט מבני שימור (' + ex.consCity.list.length + ')')}
+                                                            {fullReportTables['cons'] && ex.consCity.list && (
+                                                                <table style={tblWrap}><thead><tr><th style={th}>שם / מבנה</th><th style={th}>כתובת</th><th style={th}>דרגה</th></tr></thead>
+                                                                <tbody>{ex.consCity.list.map((m,i)=>(<tr key={i}><td style={td}>{m.name}</td><td style={td}>{m.street||'—'}</td><td style={td}>{m.grade||'—'}</td></tr>))}</tbody></table>
+                                                            )}
+                                                        </div>
+                                                    )}
                                             </>)}
 
                                             {/* ───── מצב קיים ───── */}
@@ -21815,16 +21846,12 @@
                                                     {(ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>עצים (סקר)</span><span style={{color:'#aaa'}}>שימור {ex.trees.shimur} · כריתה {ex.trees.krita} · העתקה {ex.trees.haataka}</span></div>}
                                             </>)}
 
-                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.consCity.total > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, שימור ויעודי קרקע', <>
+                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, תעסוקה ויעודי קרקע', <>
                                                     {(ex.commerceIn > 0 || ex.employment > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
-                                                    {ex.consCity.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מבני שימור (רשימה עירונית)</span><span style={{color:'#c2c9d4',fontWeight:'bold'}}>{ex.consCity.total}</span></div>}
-                                                    {ex.consCity.total > 0 && Object.entries(ex.consCity.byGrade).filter(([g])=>g && g!=='ללא דרגה').sort((a,b)=>b[1]-a[1]).map(([g,c]) => (<div key={'g'+g} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· דרגה {g}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
-                                                    {ex.consCity.byType && Object.entries(ex.consCity.byType).filter(([t])=>t && t.length<=22).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([t,c]) => (<div key={'t'+t} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {t}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
-                                                    {ex.consCity.list && ex.consCity.list.length > 0 && (
-                                                        <div style={{marginTop:4,marginBottom:4}}>
-                                                            {ex.consCity.list.slice(0,40).map((m,i) => (<div key={i} style={{...rowStyle,fontSize:10}}><span style={{color:'#cdd3dd'}}>{m.name}</span>{m.street ? <span style={{color:'#9aa6b2',whiteSpace:'nowrap',marginRight:8}}>{m.street}</span> : null}</div>))}
-                                                            {ex.consCity.list.length > 40 && <div style={{fontSize:10,color:'#9aa6b2'}}>ועוד {ex.consCity.list.length - 40}…</div>}
-                                                        </div>
+                                                    {ex.commerceRows && ex.commerceRows.length > 0 && detailRow('commerce', 'פירוט לפי תכנית (' + ex.commerceRows.length + ')')}
+                                                    {fullReportTables['commerce'] && ex.commerceRows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>מסחר (מ"ר)</th><th style={th}>תעסוקה (מ"ר)</th></tr></thead>
+                                                        <tbody>{ex.commerceRows.map((r,i)=>(<tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.taba||'—'}</td><td style={td}>{r.commerce?Math.round(r.commerce).toLocaleString():'—'}</td><td style={td}>{r.employment?Math.round(r.employment).toLocaleString():'—'}</td></tr>))}</tbody></table>
                                                     )}
                                                     {ex.yiud.total > 0 && <div style={{borderTop:'1px solid #2a2a3e',margin:'6px 0',paddingTop:6,fontSize:11,color:'#aeb6c2'}}>יעודי קרקע קיים (שטח):</div>}
                                                     {Object.entries(ex.yiud.byYeud).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([y,ar]) => (<div key={y} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{y}</span><span style={{color:'#c2c9d4'}}>{fmtArea(ar)}</span></div>))}
