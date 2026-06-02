@@ -45,24 +45,26 @@ session = requests.Session()
 session.headers.update({"User-Agent": UA})
 
 
-def resolve_ids(stats):
-    """STAT_2022 (int) -> area id, pooling search results across queries."""
-    id_by_stat = {}
-    pat = re.compile(r'data-id="([a-z0-9]+)"\s+data-search="ירושלים אזור סטטיסטי (\d+)"')
-    for stat in stats:
-        if stat in id_by_stat:
+def resolve_search_ids(queries):
+    """search-key (area-number string OR unified 'a+b') -> census area id, pooled across
+    queries. The site lists unified areas as data-search='ירושלים אזור סטטיסטי 1818+1817',
+    so the key is the raw string after the prefix (not necessarily pure digits)."""
+    id_by_key = {}
+    pat = re.compile(r'data-id="([a-z0-9]+)"\s+data-search="ירושלים אזור סטטיסטי ([^"]+?)"')
+    for q in queries:
+        q = str(q)
+        if q in id_by_key:
             continue
-        q = f"ירושלים אזור סטטיסטי {stat}"
         try:
             r = session.get(SEARCH_URL, params={"search": q},
                             headers={"HX-Request": "true"}, timeout=40)
             r.encoding = "utf-8"
             for m in pat.finditer(r.text):
-                id_by_stat.setdefault(int(m.group(2)), m.group(1))
+                id_by_key.setdefault(m.group(2).strip(), m.group(1))
         except Exception as e:
-            print(f"  search {stat} failed: {e}")
+            print(f"  search {q} failed: {e}")
         time.sleep(SLEEP)
-    return id_by_stat
+    return id_by_key
 
 
 def fetch_lifestyle(area_id):
@@ -108,33 +110,46 @@ def main():
     feats = gj["features"]
     stats = [f["properties"]["stat_area_id"] for f in feats
              if isinstance(f["properties"].get("stat_area_id"), int)]
-    print(f"{len(feats)} areas, resolving census ids for {len(stats)} stats...")
-    id_by_stat = resolve_ids(stats)
-    print(f"resolved {len(id_by_stat)}/{len(stats)} ids")
+    unites = sorted({f["properties"].get("unite_id") for f in feats if f["properties"].get("unite_id")})
+    print(f"{len(feats)} areas, resolving census ids for {len(stats)} stats + {len(unites)} unified...")
+    id_by_key = resolve_search_ids([str(s) for s in stats] + list(unites))
+    print(f"resolved {len(id_by_key)} ids")
 
     enriched = 0
+    unified_used = 0
     for f in feats:
         p = f["properties"]
         stat = p.get("stat_area_id")
-        aid = id_by_stat.get(stat)
-        if not aid:
-            continue
-        bd = fetch_lifestyle(aid)
+        aid = id_by_key.get(str(stat))
+        bd = fetch_lifestyle(aid) if aid else None
         time.sleep(SLEEP)
+        src_id, unified = aid, None
+        # Fallback: unified-publication area (e.g. 1818+1817) when the area has no own breakdown
+        if not bd and p.get("unite_id"):
+            uid = id_by_key.get(p["unite_id"])
+            if uid:
+                bd = fetch_lifestyle(uid)
+                time.sleep(SLEEP)
+                if bd:
+                    src_id, unified = uid, p["unite_id"]
         if not bd:
             continue
         haredi_frac, religious_frac = derive(bd)
         p["haredi"] = haredi_frac
         p["religious"] = religious_frac
         p["datiyut_breakdown"] = {k: bd[k] for k in bd}
-        p["census_id"] = aid
+        p["census_id"] = src_id
+        if unified:
+            p["datiyut_unified"] = unified
+            unified_used += 1
         enriched += 1
-        print(f"  STAT {stat}: haredi={haredi_frac} religious={religious_frac} "
+        tag = f" [מאוחד {unified}]" if unified else ""
+        print(f"  STAT {stat}{tag}: haredi={haredi_frac} religious={religious_frac} "
               f"(חרדי={bd.get('חרדי')}% דתי={bd.get('דתי/דתי מאוד')}% מסורתי={bd.get('מסורתי')}%)")
 
     with open(GEOJSON, "w", encoding="utf-8") as fh:
         json.dump(gj, fh, ensure_ascii=False, separators=(",", ":"))
-    print(f"\nenriched {enriched}/{len(feats)} areas with real lifestyle fractions")
+    print(f"\nenriched {enriched}/{len(feats)} areas ({unified_used} via unified-area fallback)")
 
 
 if __name__ == "__main__":

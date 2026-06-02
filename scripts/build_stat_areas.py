@@ -41,7 +41,7 @@ BUFFER_DEG = 0.003  # ~300m — match buildings.geojson edge coverage
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
-OUT_FIELDS = ("STAT_2022,YISHUV_STAT_2022,size_avg,age0_19_pcnt,age20_64_pcnt,age65_pcnt,"
+OUT_FIELDS = ("STAT_2022,YISHUV_STAT_2022,Stat2022_Unite,size_avg,age0_19_pcnt,age20_64_pcnt,age65_pcnt,"
               "hh_MidatDatiyut_Name,Main_Function_Txt,pop_approx,hh_total_approx,"
               "age_median,ChldBorn_avg,pop_density,"
               "own_pcnt,rent_pcnt,Vehicle0_pcnt,Vehicle2up_pcnt,Parking_pcnt")
@@ -147,6 +147,11 @@ def derive_props(attrs):
         props["datiyut"] = datiyut
     if func:
         props["main_function"] = func
+    # Unified-publication area (e.g. "1818+1817") — used by enrich as a lifestyle fallback
+    # for areas whose breakdown is only published under the merged unit.
+    unite = (attrs.get("Stat2022_Unite") or "").strip()
+    if unite and "+" in unite:
+        props["unite_id"] = unite
 
     # Population-dashboard fields (computePopulationByGeography aggregates these).
     # raw census percentages / counts, omitted when null.
