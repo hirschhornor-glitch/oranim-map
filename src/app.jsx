@@ -8162,6 +8162,18 @@
                     '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
                     (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
                 const lf = (m, c) => m.hasLifestyle ? p1(m.lifestyle[c]) : '—';
+                // Inline horizontal stacked composition bar (segment widths = their % of the row).
+                const segBar = (segs) => {
+                    if (!segs.some(s => typeof s.w === 'number')) return '—';
+                    return '<div style="display:inline-flex;width:110px;height:11px;border-radius:3px;overflow:hidden;background:#0c1a22;vertical-align:middle">' +
+                        segs.map(s => '<div style="width:' + Math.max(0, s.w || 0) + '%;background:' + s.color + '" title="' + s.title + ' ' + (s.w || 0).toFixed(1) + '%"></div>').join('') + '</div>';
+                };
+                const barTenure = (m) => (m.own == null && m.rent == null) ? '—' : segBar([
+                    { w: m.own, color: '#5fd3a0', title: 'בעלות' }, { w: m.rent, color: '#e0a64d', title: 'שכירות' }]);
+                const barVehicles = (m) => (m.vehicle0 == null && m.vehicle2up == null) ? '—' : segBar([
+                    { w: m.vehicle0, color: '#54c8e8', title: 'ללא רכב' },
+                    { w: Math.max(0, 100 - (m.vehicle0 || 0) - (m.vehicle2up || 0)), color: '#3a4a55', title: 'רכב אחד' },
+                    { w: m.vehicle2up, color: '#b08fd1', title: '2+ רכב' }]);
                 // Column specs reused for tables, CSV and print.
                 const BLOCKS = [
                     { title: 'אוכלוסייה וגיל', cols: [
@@ -8171,18 +8183,20 @@
                     { title: 'אורח חיים / דתיות', cols: [
                         ['% חרדי', m => lf(m, 'חרדי')], ['% דתי', m => lf(m, 'דתי/דתי מאוד')], ['% מסורתי', m => lf(m, 'מסורתי')],
                         ['% חילוני', m => lf(m, 'חילוני')], ['% מעורב', m => lf(m, 'מעורב')], ['% אחר', m => lf(m, 'אחר')]] },
-                    { title: 'דיור: בעלות / שכירות', cols: [
+                    { title: 'דיור: בעלות / שכירות', bar: barTenure, barLabel: 'בעלות ↔ שכירות', cols: [
                         ['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)]] },
-                    { title: 'כלי רכב וחניה', cols: [
+                    { title: 'כלי רכב וחניה', bar: barVehicles, barLabel: '0 / 1 / 2+ רכב', cols: [
                         ['% ללא רכב', m => p1(m.vehicle0)], ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
                 ];
                 const buildTable = (spec, subs, total) => {
                     const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
-                        spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + c[0] + '</th>').join('');
+                        spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + c[0] + '</th>').join('') +
+                        (spec.bar ? '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + spec.barLabel + '</th>' : '');
                     const mkRow = (label, m, isTotal) => {
                         const st = isTotal ? 'font-weight:bold;background:#13212b;color:#8fd' : 'color:#cfe';
                         return '<tr style="border-bottom:1px solid #222;' + st + '"><td style="padding:5px 7px;text-align:right">' + esc(label) + '</td>' +
-                            spec.cols.map(c => '<td style="padding:5px 7px;text-align:center">' + c[1](m) + '</td>').join('') + '</tr>';
+                            spec.cols.map(c => '<td style="padding:5px 7px;text-align:center">' + c[1](m) + '</td>').join('') +
+                            (spec.bar ? '<td style="padding:5px 7px;text-align:center">' + spec.bar(m) + '</td>' : '') + '</tr>';
                     };
                     const body = subs.map(s => mkRow(s.name, s.metrics, false)).join('') + mkRow('סה"כ מינהק', total, true);
                     return '<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">' + spec.title + '</h4>' +
