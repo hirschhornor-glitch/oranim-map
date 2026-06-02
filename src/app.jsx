@@ -2035,7 +2035,10 @@
             // the aggregated result object rendered by the React modal.
             const [fullAreaReport, setFullAreaReport] = useState(null);
             const [fullReportDrill, setFullReportDrill] = useState(null); // expanded institution category in the report
+            const [fullAreaLoading, setFullAreaLoading] = useState(false); // true while lazy layers are being fetched
+            const [fullAreaCollapsed, setFullAreaCollapsed] = useState({}); // {sectionId: true} = collapsed
             const fullReportAreaActiveRef = useRef(false);
+            const fullReportPolyRef = useRef(null); // highlighted polygon kept on the map while report is open
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -8210,7 +8213,9 @@
                     { title: 'דיור: בעלות / שכירות', bar: barTenure, barLabel: 'בעלות ↔ שכירות', cols: [
                         ['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)]] },
                     { title: 'כלי רכב וחניה', bar: barVehicles, barLabel: '0 / 1 / 2+ רכב', cols: [
-                        ['% ללא רכב', m => p1(m.vehicle0)], ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
+                        ['% ללא רכב', m => p1(m.vehicle0)],
+                        ['% רכב 1', m => (m.vehicle0 != null && m.vehicle2up != null) ? p1(Math.max(0, 100 - m.vehicle0 - m.vehicle2up)) : '—'],
+                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
                 ];
                 const buildTable = (spec, subs, total) => {
                     const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
@@ -8408,8 +8413,11 @@
                 if (!areaFinished || areaFinished.length < 3 || !fullReportAreaActiveRef.current) return;
                 fullReportAreaActiveRef.current = false;
                 window.__fullReportHandledArea = true;  // signal the default handler to skip this draw
+                setFullAreaLoading(true);   // show spinner while lazy layers are fetched
+                setFullAreaReport(null);
+                setFullAreaCollapsed({});
                 const gdRoot = geoDataRef.current;
-                if (!gdRoot || !gdRoot.plans) return;
+                if (!gdRoot || !gdRoot.plans) { setFullAreaLoading(false); return; }
 
                 // ray-casting point-in-polygon ([x,y] in a closed ring of [lng,lat])
                 function pip(pt, ring) {
@@ -8446,12 +8454,17 @@
                 const APPROVED = ['אישור', 'תבע מאושרת', 'מאושרת', 'תחילת תוקף'];
                 const groupStatus = s => APPROVED.includes(s) ? 'תכניות מאושרות' : s;
 
-                // Clear the drawing layers immediately (the heavy aggregation runs async below).
+                // Clear the drawing layers immediately, but keep a highlighted polygon on the map
+                // so the user retains spatial context of what was selected while the report is open.
                 {
                     const r0 = areaRef.current, map0 = mapInstanceRef.current;
                     if (map0 && r0) { r0.markers.forEach(m => { try { map0.removeLayer(m); } catch (e) {} }); if (r0.polygon) { try { map0.removeLayer(r0.polygon); } catch (e) {} } }
                     if (r0) { r0.points = []; r0.markers = []; r0.polygon = null; }
-                    if (map0) map0.getContainer().classList.remove('measuring');
+                    if (map0) {
+                        map0.getContainer().classList.remove('measuring');
+                        if (fullReportPolyRef.current) { try { map0.removeLayer(fullReportPolyRef.current); } catch (e) {} }
+                        try { fullReportPolyRef.current = L.polygon(areaFinished, { color: '#e94560', weight: 2, fillColor: '#e94560', fillOpacity: 0.08, dashArray: '6,4', interactive: false }).addTo(map0); } catch (e) {}
+                    }
                 }
 
                 // Master plans + the גוננים projector are lazy-loaded and may not be in geoDataRef yet.
@@ -8653,7 +8666,8 @@
                     masterPlans,
                     existing,
                 });
-                })();
+                setFullAreaLoading(false);
+                })().catch(() => setFullAreaLoading(false));
             }, [areaFinished]);
 
             // ── Area select: analyze results when drawing is finished ──
@@ -8886,6 +8900,8 @@
                 fullReportAreaActiveRef.current = false;
                 setFullAreaReport(null);
                 setFullReportDrill(null);
+                setFullAreaLoading(false);
+                if (fullReportPolyRef.current && map) { try { map.removeLayer(fullReportPolyRef.current); } catch (e) {} fullReportPolyRef.current = null; }
                 const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
                 const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
                 const prev3 = document.getElementById('tree-panel'); if (prev3) prev3.remove();
@@ -21592,10 +21608,18 @@
                         </div>
                     )}
 
-                    {fullAreaReport && (
-                        <div className="units-overlay" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); }}>
+                    {(fullAreaReport || fullAreaLoading) && (
+                        <div className="units-overlay" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); setFullAreaLoading(false); const mp=mapInstanceRef.current; if(fullReportPolyRef.current&&mp){try{mp.removeLayer(fullReportPolyRef.current)}catch(e){} fullReportPolyRef.current=null;} }}>
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(680px, 96vw)', maxHeight:'90vh', overflowY:'auto', background:'#13132a', color:'#e6e9ef'}} id="full-area-report-modal">
-                                <button className="units-close" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); }}>&times;</button>
+                                <button className="units-close" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); setFullAreaLoading(false); const mp=mapInstanceRef.current; if(fullReportPolyRef.current&&mp){try{mp.removeLayer(fullReportPolyRef.current)}catch(e){} fullReportPolyRef.current=null;} }}>&times;</button>
+                                {(fullAreaLoading && !fullAreaReport) ? (
+                                    <div style={{padding:'52px 24px',textAlign:'center'}}>
+                                        <style>{'@keyframes far-spin{to{transform:rotate(360deg)}}'}</style>
+                                        <div style={{width:38,height:38,border:'3px solid #2a2a3e',borderTopColor:'#e94560',borderRadius:'50%',margin:'0 auto 14px',animation:'far-spin 0.8s linear infinite'}}></div>
+                                        <div style={{color:'#e6e9ef',fontSize:14,fontWeight:'bold'}}>טוען נתוני אזור מקיף…</div>
+                                        <div style={{color:'#9aa6b2',fontSize:11,marginTop:5}}>שאיבת שכבות (תכניות אב, יעודי קרקע) — מספר שניות</div>
+                                    </div>
+                                ) : (<>
                                 <div style={{display:'flex',gap:6,position:'absolute',top:14,left:50}}>
                                     <button onClick={() => {
                                         const m = document.getElementById('full-area-report-modal');
@@ -21647,7 +21671,7 @@
                                     const ex = d.existing || null;
                                     const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.vacant.count || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
                                     const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
-                                    const zoomTo = (feat) => { setFullAreaReport(null); const map = mapInstanceRef.current; if (!map || !feat || !feat.geometry) return; try { const b = L.geoJSON(feat).getBounds(); if (b.isValid && b.isValid()) map.fitBounds(b, { padding:[40,40], maxZoom:18 }); } catch(e){} };
+                                    const zoomTo = (feat) => { setFullAreaReport(null); const map = mapInstanceRef.current; if(fullReportPolyRef.current&&map){try{map.removeLayer(fullReportPolyRef.current)}catch(e){} fullReportPolyRef.current=null;} if (!map || !feat || !feat.geometry) return; try { const b = L.geoJSON(feat).getBounds(); if (b.isValid && b.isValid()) map.fitBounds(b, { padding:[40,40], maxZoom:18 }); } catch(e){} };
                                     const floorsTxt = z => z.floorsMax == null ? '' : (z.floorsMin != null && z.floorsMin !== z.floorsMax ? z.floorsMin + '–' + z.floorsMax : z.floorsMax) + ' קומות';
                                     const farTxt = z => z.farMax == null ? '' : (z.farMin != null && z.farMin !== z.farMax ? z.farMin + '–' + z.farMax : z.farMax) + '% תכס';
                                     const card = (val, label, color) => (
@@ -21656,10 +21680,31 @@
                                             <div style={{fontSize:10,color:'#b6bdc9'}}>{label}</div>
                                         </div>
                                     );
-                                    const sectionStyle = {background:'#15152a',border:'1px solid #2a2a3e',borderRadius:8,padding:'10px 12px',marginBottom:10};
-                                    const h3Style = {color:'#e94560',fontSize:13,margin:'0 0 8px'};
                                     const rowStyle = {display:'flex',justifyContent:'space-between',padding:'2px 0',fontSize:12};
                                     const STAGE_COLORS = {pre_licensing:'#90a4ae', licensing:'#42a5f5', issued:'#66bb6a', done:'#bdbdbd'};
+                                    // Thematic per-section colors (matches the app palette: כחול=היתרים, חום=ציבור, ירוק=שצ"פ, סגול=מסחר)
+                                    const secColors = { plans:'#e94560', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6' };
+                                    const toggleSec = k => setFullAreaCollapsed(s => ({ ...s, [k]: !s[k] }));
+                                    const section = (k, title, body) => (
+                                        <div id={'fa-' + k} style={{background:'#15152a', border:'1px solid #2a2a3e', borderRight:'3px solid '+(secColors[k]||'#e94560'), borderRadius:8, padding:'10px 12px', marginBottom:10}}>
+                                            <h3 onClick={()=>toggleSec(k)} style={{color:secColors[k]||'#e94560', fontSize:13, margin:fullAreaCollapsed[k]?'0':'0 0 8px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', userSelect:'none'}}>
+                                                <span>{title}</span><span style={{fontSize:11,color:'#9aa6b2'}}>{fullAreaCollapsed[k]?'▸':'▾'}</span>
+                                            </h3>
+                                            {!fullAreaCollapsed[k] && body}
+                                        </div>
+                                    );
+                                    const sectionStyle = {background:'#15152a',border:'1px solid #2a2a3e',borderRadius:8,padding:'10px 12px',marginBottom:10};
+                                    const h3Style = {color:'#e94560',fontSize:13,margin:'0 0 8px'};
+                                    const navItems = [
+                                        d.plans.count>0 && {k:'plans', label:'תב"ע'},
+                                        d.permits.totalPermits>0 && {k:'permits', label:'היתרים'},
+                                        d.projector.count>0 && {k:'projector', label:'פרויקטור'},
+                                        d.masterPlans.length>0 && {k:'master', label:'תכניות אב'},
+                                        ex && (ex.moch.total||ex.eduInst||ex.vacant.count||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
+                                        ex && (ex.green.count||ex.sportCount||(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)) && {k:'green', label:'ירוק ועצים'},
+                                        ex && (ex.commerceIn||ex.employment||ex.consCity.total||ex.yiud.total) && {k:'commerce', label:'מסחר/שימור'},
+                                    ].filter(Boolean);
+                                    const navTo = k => { setFullAreaCollapsed(s => ({ ...s, [k]: false })); const el = document.getElementById('fa-' + k); if (el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 30); };
                                     return (
                                         <>
                                             <h2 id="full-area-report-title" contentEditable suppressContentEditableWarning title="לחץ לעריכת הכותרת"
@@ -21677,10 +21722,17 @@
                                                 {ex && ex.moch.total > 0 && card(fmt(ex.moch.total), 'מוסדות ציבור', '#bcaaa4')}
                                             </div>
 
+                                            {/* ניווט מהיר בין המקטעים */}
+                                            {navItems.length > 1 && (
+                                                <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',marginBottom:12}}>
+                                                    {navItems.map(n => (
+                                                        <button key={n.k} onClick={()=>navTo(n.k)} style={{background:'#1c1c33',border:'1px solid '+(secColors[n.k]||'#2a2a3e'),color:secColors[n.k]||'#cfd3dc',borderRadius:12,padding:'3px 10px',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>{n.label}</button>
+                                                    ))}
+                                                </div>
+                                            )}
+
                                             {/* תב"ע */}
-                                            {d.plans.count > 0 && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>🏗️ תכניות מקודמות (תב"ע) — {d.plans.count}</h3>
+                                            {d.plans.count > 0 && section('plans', '🏗️ תכניות מקודמות (תב"ע) — ' + d.plans.count, <>
                                                     {Object.entries(d.plans.byStatus).sort((a,b)=>b[1]-a[1]).map(([st,c]) => (
                                                         <div key={st} style={rowStyle}><span style={{color:'#cfd3dc'}}>{st}</span><span style={{fontWeight:'bold'}}>{c}</span></div>
                                                     ))}
@@ -21692,13 +21744,10 @@
                                                             <span style={{color:'#7bdc8a',fontWeight:'bold',whiteSpace:'nowrap'}}>+{Math.round(p.unitsAdd)}</span>
                                                         </div>
                                                     ))}
-                                                </div>
-                                            )}
+                                            </>)}
 
                                             {/* היתרים */}
-                                            {d.permits.totalPermits > 0 && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>📄 היתרי בנייה — {d.permits.totalPermits}</h3>
+                                            {d.permits.totalPermits > 0 && section('permits', '📄 היתרי בנייה — ' + d.permits.totalPermits, <>
                                                     <div style={{fontSize:10,color:'#9aa6b2',marginBottom:6}}>נצברים דרך התב"עות שבאזור (להיתרים אין מיקום עצמאי). סה"כ יח"ד נספרות: {fmt(d.permits.totalIncludedUnits)}</div>
                                                     {PERMIT_STAGES_ALL.map(st => { const a = d.permits.stageAgg[st]; if (!a || (!a.count && !a.units)) return null; return (
                                                         <div key={st} style={rowStyle}>
@@ -21710,42 +21759,33 @@
                                                     {Object.entries(d.permits.catAgg).sort((a,b)=>b[1].units-a[1].units).map(([cat,a]) => (
                                                         <div key={cat} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{getPermitCategoryLabel(cat)}</span><span style={{color:'#c2c9d4'}}>{a.count} · <b style={{color:'#fff'}}>{Math.round(a.units)}</b> יח"ד</span></div>
                                                     ))}
-                                                </div>
-                                            )}
+                                            </>)}
 
                                             {/* פרויקטור */}
-                                            {d.projector.count > 0 && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>📌 המלצות פרויקטור — {d.projector.count}</h3>
+                                            {d.projector.count > 0 && section('projector', '📌 המלצות פרויקטור — ' + d.projector.count, <>
                                                     {d.projector.byDomain.sort((a,b)=>b.count-a.count).map(dm => (
                                                         <div key={dm.domain} style={{marginBottom:6}}>
                                                             <div style={rowStyle}><span style={{color:'#cfd3dc',fontWeight:'bold'}}>{dm.label}</span><span style={{fontWeight:'bold'}}>{dm.count}</span></div>
                                                             {dm.names.length > 0 && <div style={{fontSize:10,color:'#9aa6b2',lineHeight:1.5}}>{dm.names.join(' · ')}</div>}
                                                         </div>
                                                     ))}
-                                                </div>
-                                            )}
+                                            </>)}
 
                                             {/* תכניות אב */}
-                                            {d.masterPlans.length > 0 && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>📐 תכניות אב</h3>
+                                            {d.masterPlans.length > 0 && section('master', '📐 תכניות אב', <>
                                                     {d.masterPlans.map(mp => (
                                                         <div key={mp.name} style={{marginBottom:8,borderBottom:'1px solid #21213a',paddingBottom:6}}>
                                                             <div style={{fontWeight:'bold',color:'#ffd479',fontSize:12,marginBottom:3}}>תכנית אב {mp.name}</div>
                                                             {mp.zones.slice(0,12).map((z,i) => { const rules = [floorsTxt(z), farTxt(z)].filter(Boolean).join(' · '); return (
-                                                                <div key={i} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{z.name}</span><span style={{color:'#aaa'}}>{rules || '—'}</span></div>
+                                                                <div key={i} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{z.name}</span><span style={{color:'#c2c9d4'}}>{rules || '—'}</span></div>
                                                             ); })}
                                                             {mp.cons.total > 0 && <div style={{fontSize:11,color:'#ef9a9a',marginTop:3}}>🛡️ מבני שימור: {mp.cons.total} (א׳={mp.cons['א']} · ב׳={mp.cons['ב']} · ג׳={mp.cons['ג']})</div>}
                                                         </div>
                                                     ))}
-                                                </div>
-                                            )}
+                                            </>)}
 
                                             {/* ───── מצב קיים ───── */}
-                                            {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.vacant.count > 0 || ex.shchunaCount > 0) && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>🏛️ מבני ציבור ומוסדות קיימים</h3>
+                                            {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.vacant.count > 0 || ex.shchunaCount > 0) && section('inst', '🏛️ מבני ציבור ומוסדות קיימים', <>
                                                     {ex.moch.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות (משב"ש)</span><span style={{color:'#aaa'}}>{ex.moch.total}{ex.moch.area > 0 ? ' · ' + fmt(ex.moch.area) + ' מ"ר' : ''}</span></div>}
                                                     {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([cat,c]) => {
                                                         const open = fullReportDrill === cat;
@@ -21767,22 +21807,16 @@
                                                     {ex.eduInst > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות חינוך (שנתון)</span><span style={{color:'#c2c9d4'}}>{ex.eduInst}{ex.eduStudents > 0 ? ' · ' + fmt(ex.eduStudents) + ' תלמידים' : ''}</span></div>}
                                                     {ex.shchunaCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות שכונה</span><span style={{color:'#aaa'}}>{ex.shchunaCount}</span></div>}
                                                     {ex.vacant.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגרשים פנויים</span><span style={{color:'#aaa'}}>{ex.vacant.count}{ex.vacant.area > 0 ? ' · ' + fmt(ex.vacant.area) + ' מ"ר' : ''}</span></div>}
-                                                </div>
-                                            )}
+                                            </>)}
 
-                                            {ex && (ex.green.count > 0 || ex.sportCount > 0 || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0) && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>🌳 שטחים ירוקים ועצים</h3>
-                                                    {ex.green.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>שצ"פ קיים</span><span style={{color:'#aaa'}}>{ex.green.count} · {fmtArea(ex.green.area)}</span></div>}
+                                            {ex && (ex.green.count > 0 || ex.sportCount > 0 || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0) && section('green', '🌳 שטחים ירוקים ועצים', <>
+                                                    {ex.green.count > 0 &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>שצ"פ קיים</span><span style={{color:'#aaa'}}>{ex.green.count} · {fmtArea(ex.green.area)}</span></div>}
                                                     {ex.sportCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מתקני ספורט</span><span style={{color:'#aaa'}}>{ex.sportCount}</span></div>}
                                                     {(ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>עצים (סקר)</span><span style={{color:'#aaa'}}>שימור {ex.trees.shimur} · כריתה {ex.trees.krita} · העתקה {ex.trees.haataka}</span></div>}
-                                                </div>
-                                            )}
+                                            </>)}
 
-                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.consCity.total > 0 || ex.yiud.total > 0) && (
-                                                <div style={sectionStyle}>
-                                                    <h3 style={h3Style}>🏪 מסחר, שימור ויעודי קרקע</h3>
-                                                    {(ex.commerceIn > 0 || ex.employment > 0) && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
+                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.consCity.total > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, שימור ויעודי קרקע', <>
+                                                    {(ex.commerceIn > 0 || ex.employment > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
                                                     {ex.consCity.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מבני שימור (רשימה עירונית)</span><span style={{color:'#c2c9d4',fontWeight:'bold'}}>{ex.consCity.total}</span></div>}
                                                     {ex.consCity.total > 0 && Object.entries(ex.consCity.byGrade).filter(([g])=>g && g!=='ללא דרגה').sort((a,b)=>b[1]-a[1]).map(([g,c]) => (<div key={'g'+g} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· דרגה {g}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
                                                     {ex.consCity.byType && Object.entries(ex.consCity.byType).filter(([t])=>t && t.length<=22).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([t,c]) => (<div key={'t'+t} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {t}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>))}
@@ -21794,8 +21828,7 @@
                                                     )}
                                                     {ex.yiud.total > 0 && <div style={{borderTop:'1px solid #2a2a3e',margin:'6px 0',paddingTop:6,fontSize:11,color:'#aeb6c2'}}>יעודי קרקע קיים (שטח):</div>}
                                                     {Object.entries(ex.yiud.byYeud).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([y,ar]) => (<div key={y} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{y}</span><span style={{color:'#c2c9d4'}}>{fmtArea(ar)}</span></div>))}
-                                                </div>
-                                            )}
+                                            </>)}
 
                                             {d.plans.count === 0 && d.permits.totalPermits === 0 && d.projector.count === 0 && d.masterPlans.length === 0 && d.tama.count === 0 && !hasExisting && (
                                                 <div style={{textAlign:'center',color:'#888',padding:'20px 0'}}>לא נמצא מידע בתוך האזור שנבחר</div>
@@ -21803,6 +21836,7 @@
                                         </>
                                     );
                                 })()}
+                                </>)}
                             </div>
                         </div>
                     )}
