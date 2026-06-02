@@ -2034,6 +2034,7 @@
             // Full-area comprehensive report ("דוח אזור מקיף"): own draw-ownership flag +
             // the aggregated result object rendered by the React modal.
             const [fullAreaReport, setFullAreaReport] = useState(null);
+            const [fullReportDrill, setFullReportDrill] = useState(null); // expanded institution category in the report
             const fullReportAreaActiveRef = useRef(false);
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
@@ -8616,7 +8617,7 @@
 
                 // 7a. מבני ציבור ומוסדות קיימים
                 const moch = { total: 0, area: 0, byCat: {}, list: [] };
-                feats('mosadot_moch').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; moch.total++; moch.area += parseFloat(p.gross_area) || 0; const cat = ((p.category || p.type || 'אחר') + '').trim() || 'אחר'; moch.byCat[cat] = (moch.byCat[cat] || 0) + 1; const nm = ((p.name || '') + '').trim(); if (nm) moch.list.push({ name: nm, cat }); });
+                feats('mosadot_moch').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; moch.total++; moch.area += parseFloat(p.gross_area) || 0; const cat = ((p.category || p.type || 'אחר') + '').trim() || 'אחר'; moch.byCat[cat] = (moch.byCat[cat] || 0) + 1; const nm = ((p.name || '') + '').trim(); if (nm) moch.list.push({ name: nm, cat, address: ((p.address || '') + '').trim() }); });
                 let eduInst = 0, eduStudents = 0;
                 feats('education_shanaton').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; eduInst += parseInt(p.institutions_count) || 0; eduStudents += parseInt(p.total_students) || 0; });
                 let shchunaCount = 0; feats('mosadot_shchuna').forEach(f => { if (inPoly(f)) shchunaCount++; });
@@ -8884,6 +8885,7 @@
                 setTreeAreaActive(false);
                 fullReportAreaActiveRef.current = false;
                 setFullAreaReport(null);
+                setFullReportDrill(null);
                 const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
                 const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
                 const prev3 = document.getElementById('tree-panel'); if (prev3) prev3.remove();
@@ -21591,9 +21593,9 @@
                     )}
 
                     {fullAreaReport && (
-                        <div className="units-overlay" onClick={() => setFullAreaReport(null)}>
+                        <div className="units-overlay" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); }}>
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(680px, 96vw)', maxHeight:'90vh', overflowY:'auto', background:'#13132a', color:'#e6e9ef'}} id="full-area-report-modal">
-                                <button className="units-close" onClick={() => setFullAreaReport(null)}>&times;</button>
+                                <button className="units-close" onClick={() => { setFullAreaReport(null); setFullReportDrill(null); }}>&times;</button>
                                 <div style={{display:'flex',gap:6,position:'absolute',top:14,left:50}}>
                                     <button onClick={() => {
                                         const m = document.getElementById('full-area-report-modal');
@@ -21619,7 +21621,7 @@
                                         d.masterPlans.forEach(mp => { mp.zones.forEach(z => { const fl = z.floorsMax!=null ? (z.floorsMin!=null&&z.floorsMin!==z.floorsMax ? z.floorsMin+'-'+z.floorsMax : String(z.floorsMax))+' קומות' : ''; const fr = z.farMax!=null ? ((z.farMin!=null&&z.farMin!==z.farMax ? z.farMin+'-'+z.farMax : z.farMax))+'% תכס' : ''; lines.push(['תכנית אב — '+mp.name, z.name, [fl,fr].filter(Boolean).join(' · '), '']); }); if (mp.cons.total) lines.push(['תכנית אב — '+mp.name, 'מבני שימור', "א'="+mp.cons['א']+" ב'="+mp.cons['ב']+" ג'="+mp.cons['ג'], String(mp.cons.total)]); });
                                         const ex = d.existing;
                                         if (ex) {
-                                            if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); (ex.moch.list||[]).forEach(m=>lines.push(['מצב קיים — שם מוסד', m.name, m.cat, ''])); }
+                                            if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); (ex.moch.list||[]).forEach(m=>lines.push(['מצב קיים — מוסד ('+m.cat+')', m.name, m.address||'', ''])); }
                                             if (ex.eduInst) lines.push(['מצב קיים — מבני ציבור','מוסדות חינוך (שנתון)', ex.eduStudents+' תלמידים', String(ex.eduInst)]);
                                             if (ex.shchunaCount) lines.push(['מצב קיים — מבני ציבור','מוסדות שכונה','', String(ex.shchunaCount)]);
                                             if (ex.vacant.count) lines.push(['מצב קיים — מבני ציבור','מגרשים פנויים', Math.round(ex.vacant.area)+' מ"ר', String(ex.vacant.count)]);
@@ -21745,18 +21747,23 @@
                                                 <div style={sectionStyle}>
                                                     <h3 style={h3Style}>🏛️ מבני ציבור ומוסדות קיימים</h3>
                                                     {ex.moch.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות (משב"ש)</span><span style={{color:'#aaa'}}>{ex.moch.total}{ex.moch.area > 0 ? ' · ' + fmt(ex.moch.area) + ' מ"ר' : ''}</span></div>}
-                                                    {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([cat,c]) => (
-                                                        <div key={cat} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {cat}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>
-                                                    ))}
-                                                    {ex.moch.list && ex.moch.list.length > 0 && (
-                                                        <div style={{marginTop:5,borderTop:'1px dashed #2a2a3e',paddingTop:5}}>
-                                                            <div style={{fontSize:10,color:'#aeb6c2',marginBottom:2}}>שמות המוסדות:</div>
-                                                            {ex.moch.list.slice(0,50).map((m,i) => (
-                                                                <div key={i} style={{...rowStyle,fontSize:11}}><span style={{color:'#dfe3ea'}}>{m.name}</span><span style={{color:'#9aa6b2',fontSize:10,whiteSpace:'nowrap',marginRight:8}}>{m.cat}</span></div>
-                                                            ))}
-                                                            {ex.moch.list.length > 50 && <div style={{fontSize:10,color:'#9aa6b2'}}>ועוד {ex.moch.list.length - 50}…</div>}
-                                                        </div>
-                                                    )}
+                                                    {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([cat,c]) => {
+                                                        const open = fullReportDrill === cat;
+                                                        const names = open ? (ex.moch.list||[]).filter(m=>m.cat===cat) : [];
+                                                        return (
+                                                            <React.Fragment key={cat}>
+                                                                <div style={{...rowStyle,fontSize:11,cursor:'pointer'}} title="לחץ לרשימת המוסדות בתחום" onClick={()=>setFullReportDrill(open?null:cat)}>
+                                                                    <span style={{color:'#9fd6ff'}}>{open?'▾':'▸'} {cat}</span><span style={{color:'#c2c9d4'}}>{c}</span>
+                                                                </div>
+                                                                {open && names.map((m,i) => (
+                                                                    <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'1px 0 1px 12px',fontSize:10}}>
+                                                                        <span style={{color:'#dfe3ea'}}>{m.name}</span>
+                                                                        {m.address ? <span style={{color:'#9aa6b2',whiteSpace:'nowrap',marginRight:8}}>{m.address}</span> : null}
+                                                                    </div>
+                                                                ))}
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
                                                     {ex.eduInst > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות חינוך (שנתון)</span><span style={{color:'#c2c9d4'}}>{ex.eduInst}{ex.eduStudents > 0 ? ' · ' + fmt(ex.eduStudents) + ' תלמידים' : ''}</span></div>}
                                                     {ex.shchunaCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות שכונה</span><span style={{color:'#aaa'}}>{ex.shchunaCount}</span></div>}
                                                     {ex.vacant.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגרשים פנויים</span><span style={{color:'#aaa'}}>{ex.vacant.count}{ex.vacant.area > 0 ? ' · ' + fmt(ex.vacant.area) + ' מ"ר' : ''}</span></div>}
