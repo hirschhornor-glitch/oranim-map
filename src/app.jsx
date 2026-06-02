@@ -7918,6 +7918,20 @@
                     ...Object.keys(subStats).filter(sn => SUB_TO_MINAHAK[sn] === minhakName),
                 ])).sort((a, b) => (subStats[b] ? subStats[b].units : 0) - (subStats[a] ? subStats[a].units : 0));
 
+                // Existing state: population from census stat-areas (same source/number as the
+                // population dashboard), housing units from the municipal buildings layer, both
+                // within the minhak polygon.
+                const mhPop = (computePopulationByGeography(gd).minhaks.find(m => m.name === minhakName) || {}).metrics;
+                const existingPop = mhPop ? mhPop.pop : 0;
+                const minhakLayer = gd[MINAHAK_HEB_TO_LAYER[minhakName]];
+                let existingUnits = 0;
+                if (minhakLayer && gd.buildings && gd.buildings.features) {
+                    for (const bf of gd.buildings.features) {
+                        const c = bf.geometry && bf.geometry.coordinates;
+                        if (c && pointInLayer(c, minhakLayer)) existingUnits += (bf.properties && bf.properties.units) || 0;
+                    }
+                }
+
                 const kpi = (label, val, sub2, color) =>
                     '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
                     '<div style="font-size:11px;color:#9ab">' + label + '</div>' +
@@ -7966,6 +7980,10 @@
                     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' +
                         '<h3 id="minhakdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">🏛️ דשבורד מינהל — ' + esc(minhakName) + '</h3>' +
                         '<button id="minhakdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+                        kpi('אוכלוסייה קיימת', num(existingPop), 'מפקד הלמ"ס 2022', '#54c8e8') +
+                        kpi('יח"ד קיים', num(existingUnits), 'שכבת מבנים עירונית', '#54c8e8') +
                     '</div>' +
                     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
                         kpi('תכניות פעילות', plansCount, '', '#4db8c4') +
@@ -8018,7 +8036,8 @@
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                     const lines = [];
                     lines.push(['מדד', 'ערך'].join(','));
-                    [['תכניות פעילות', plansCount], ['יח"ד תוספת', Math.round(unitsAdd)], ['תכניות תמ"א 38', tamaCount],
+                    [['אוכלוסייה קיימת', Math.round(existingPop)], ['יח"ד קיים', Math.round(existingUnits)],
+                     ['תכניות פעילות', plansCount], ['יח"ד תוספת', Math.round(unitsAdd)], ['תכניות תמ"א 38', tamaCount],
                      ['יח"ד תמ"א תוספת', Math.round(tamaUnitsAdd)], ['יח"ד בהיתר', Math.round(issuedUnits)], ['היתרים פעילים', activePermits],
                      ['שב"צ עתידי (מ"ר)', Math.round(futureSqm)], ['הפרשה מבונה (מ"ר)', Math.round(hafSqm)], ['מסחר עתידי (מ"ר)', Math.round(commerceOut)],
                      ['עצים לכריתה/העתקה', Math.round(trees)]].forEach(r => lines.push([q(r[0]), r[1]].join(',')));
