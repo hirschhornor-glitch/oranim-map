@@ -8004,12 +8004,14 @@
                         '<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד תוספת)</h4>' +
                             '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">תוספת יח"ד</th><th style="padding:5px;color:#4db8c4">סטטוס</th></tr></thead><tbody>' + topRows + '</tbody></table></div>' +
                     '</div>' +
-                    '<div style="display:flex;gap:8px;margin-top:16px">' +
+                    '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">' +
+                        '<button id="minhakdash-demo" style="background:#1d5a6b;border:1px solid #54c8e8;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📈 נתונים דמוגרפיים</button>' +
                         '<button id="minhakdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                         '<button id="minhakdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
                     '</div>';
                 document.body.appendChild(div);
                 document.getElementById('minhakdash-close').addEventListener('click', () => div.remove());
+                document.getElementById('minhakdash-demo').addEventListener('click', () => { div.remove(); openPopulationDashboard(minhakName); });
                 div.querySelectorAll('.minhak-sub-link').forEach(b =>
                     b.addEventListener('click', () => { div.remove(); renderSubDashboard(b.getAttribute('data-sub')); }));
                 div.querySelectorAll('.minhak-plan-zoom').forEach(el => el.addEventListener('click', (e) => {
@@ -8148,7 +8150,7 @@
             }
 
             // "אוכלוסייה קיימת לפי מינהק/תת-שכונה" dashboard (CBS census 2022).
-            function openPopulationDashboard() {
+            function openPopulationDashboard(initialMinhak) {
                 const data = computePopulationByGeography(geoDataRef.current || {});
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const n0 = (v) => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString();
@@ -8169,9 +8171,10 @@
                     { title: 'אורח חיים / דתיות', cols: [
                         ['% חרדי', m => lf(m, 'חרדי')], ['% דתי', m => lf(m, 'דתי/דתי מאוד')], ['% מסורתי', m => lf(m, 'מסורתי')],
                         ['% חילוני', m => lf(m, 'חילוני')], ['% מעורב', m => lf(m, 'מעורב')], ['% אחר', m => lf(m, 'אחר')]] },
-                    { title: 'דיור: בעלות / שכירות / רכב / חניה', cols: [
-                        ['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)], ['% ללא רכב', m => p1(m.vehicle0)],
-                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
+                    { title: 'דיור: בעלות / שכירות', cols: [
+                        ['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)]] },
+                    { title: 'כלי רכב וחניה', cols: [
+                        ['% ללא רכב', m => p1(m.vehicle0)], ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
                 ];
                 const buildTable = (spec, subs, total) => {
                     const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
@@ -8280,7 +8283,7 @@
                     win.print();
                 }
 
-                paint(null);
+                paint(initialMinhak && data.minhaks.some(m => m.name === initialMinhak) ? initialMinhak : null);
             }
 
             // ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
