@@ -8125,6 +8125,23 @@
                     }
                     return null;
                 };
+                // Sub-neighborhood centroids, for snapping areas that fall in a minhak polygon
+                // but in a gap between sub polygons to the nearest sub OF THAT MINHAK.
+                const subCentroids = {};
+                for (const sf of subFeats) {
+                    const nm = normSub(sf.properties.schn_nama);
+                    if (nm && !subCentroids[nm]) { const cc = geomCentroid(sf.geometry); if (cc) subCentroids[nm] = cc; }
+                }
+                const nearestSubInMinhak = (c, minhak) => {
+                    let best = null, bestD = Infinity;
+                    (MINAHAK_SUBS[minhak] || []).forEach(s => {
+                        const cc = subCentroids[SUB_NORMALIZE[s] || s];
+                        if (!cc) return;
+                        const dx = cc[0] - c[0], dy = cc[1] - c[1], d = dx * dx + dy * dy;
+                        if (d < bestD) { bestD = d; best = SUB_NORMALIZE[s] || s; }
+                    });
+                    return best;
+                };
                 const tree = {}; let unassigned = 0, unassignedPop = 0;
                 for (const f of stat) {
                     const p = f.properties || {};
@@ -8134,7 +8151,7 @@
                     const sub = findSub(c);
                     const minhak = (sub && SUB_TO_MINAHAK[sub]) || findMinhak(c);
                     if (!minhak) { unassigned++; unassignedPop += p.pop_approx; continue; }
-                    const subName = sub || 'לא ידוע';
+                    const subName = sub || nearestSubInMinhak(c, minhak) || 'לא ידוע';
                     (tree[minhak] = tree[minhak] || {});
                     (tree[minhak][subName] = tree[minhak][subName] || []).push(p);
                 }
