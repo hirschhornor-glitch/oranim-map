@@ -2029,6 +2029,10 @@
             // Which report the 4 programa scope collectors should render: 'programa' (default) or 'allocations'.
             const reportKindRef = useRef('programa');
             const [programaActive, setProgramaActive] = useState(null); // null | 'area' | 'radius' — for toolbar UI state
+            // Full-area comprehensive report ("דוח אזור מקיף"): own draw-ownership flag +
+            // the aggregated result object rendered by the React modal.
+            const [fullAreaReport, setFullAreaReport] = useState(null);
+            const fullReportAreaActiveRef = useRef(false);
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -8396,6 +8400,261 @@
                 if (r) { r.points = []; r.markers = []; r.polygon = null; }
             }, [areaFinished]);
 
+            // ── Full-area comprehensive report: aggregate ALL knowledge inside the drawn polygon ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3 || !fullReportAreaActiveRef.current) return;
+                fullReportAreaActiveRef.current = false;
+                window.__fullReportHandledArea = true;  // signal the default handler to skip this draw
+                const gdRoot = geoDataRef.current;
+                if (!gdRoot || !gdRoot.plans) return;
+
+                // ray-casting point-in-polygon ([x,y] in a closed ring of [lng,lat])
+                function pip(pt, ring) {
+                    const x = pt[0], y = pt[1];
+                    let inside = false;
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+                    }
+                    return inside;
+                }
+                // centroid of a feature's geometry → [lng,lat] (Point / Line / Polygon / Multi*)
+                function geomCentroid(geom) {
+                    if (!geom || !geom.coordinates) return null;
+                    try {
+                        const t = geom.type;
+                        if (t === 'Point') return geom.coordinates.slice(0, 2);
+                        if (t === 'MultiPoint' || t === 'LineString') return geom.coordinates[0].slice(0, 2);
+                        if (t === 'MultiLineString') return geom.coordinates[0][0].slice(0, 2);
+                        let ring;
+                        if (t === 'Polygon') ring = geom.coordinates[0];
+                        else if (t === 'MultiPolygon') ring = geom.coordinates[0][0];
+                        else return null;
+                        let cx = 0, cy = 0, n = 0;
+                        for (const c of ring) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                        return n ? [cx / n, cy / n] : null;
+                    } catch (e) { return null; }
+                }
+
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
+                const areaSqm = polygonArea(areaFinished);
+
+                const APPROVED = ['אישור', 'תבע מאושרת', 'מאושרת', 'תחילת תוקף'];
+                const groupStatus = s => APPROVED.includes(s) ? 'תכניות מאושרות' : s;
+
+                // Clear the drawing layers immediately (the heavy aggregation runs async below).
+                {
+                    const r0 = areaRef.current, map0 = mapInstanceRef.current;
+                    if (map0 && r0) { r0.markers.forEach(m => { try { map0.removeLayer(m); } catch (e) {} }); if (r0.polygon) { try { map0.removeLayer(r0.polygon); } catch (e) {} } }
+                    if (r0) { r0.points = []; r0.markers = []; r0.polygon = null; }
+                    if (map0) map0.getContainer().classList.remove('measuring');
+                }
+
+                // Master plans + the גוננים projector are lazy-loaded and may not be in geoDataRef yet.
+                // Fetch the layers we need on demand (cached on window) so the report is complete
+                // regardless of which layers the user has currently toggled on.
+                (async () => {
+                    const cache = window.__fullReportCache = window.__fullReportCache || {};
+                    const gd = Object.assign({}, gdRoot);
+                    const need = ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs',
+                        // existing-state layers (מצב קיים)
+                        'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'migrash_panui', 'stat_areas', 'shavaz_kayam', 'sport_kayam', 'easements', 'mivnei_lashimur', 'yiud_karka_kayam'];
+                    await Promise.all(need.map(async key => {
+                        if (gd[key] && gd[key].features) return;
+                        if (cache[key]) { gd[key] = cache[key]; return; }
+                        const path = GEOJSON_FILES[key];
+                        if (!path) return;
+                        try { const resp = await fetch(path); if (resp.ok) { const j = await resp.json(); cache[key] = j; gd[key] = j; } } catch (e) {}
+                    }));
+                    // Tree points (separate JSON, not in GEOJSON_FILES)
+                    let treeData = cache.__trees;
+                    if (!treeData) { try { const tr = await fetch('data/tree_points_xplan.json'); if (tr.ok) { treeData = await tr.json(); cache.__trees = treeData; } } catch (e) {} }
+
+                // ── 1. תב"ע (plans) — centroid inside polygon, dedup MultiPolygon, drop rejected/infra ──
+                const plansInside = [];
+                const seenPlan = new Set();
+                gd.plans.features.forEach(f => {
+                    const p = f.properties || {};
+                    const s = normalizeStatus((p.status_mavat || '').trim());
+                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                    if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                    const c = geomCentroid(f.geometry);
+                    if (!c || !pip(c, polyCoords)) return;
+                    const pn = p.plan_name || '';
+                    if (pn && seenPlan.has(pn)) return; if (pn) seenPlan.add(pn);
+                    plansInside.push({ props: p, feat: f });
+                });
+                const planUnitsAdd = plansInside.reduce((s, x) => s + (parseFloat(x.props.units_add) || 0), 0);
+                const planByStatus = {};
+                plansInside.forEach(x => { const st = groupStatus(normalizeStatus(x.props.status_mavat || '')); planByStatus[st] = (planByStatus[st] || 0) + 1; });
+                const topPlans = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0)).slice(0, 8)
+                    .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: normalizeStatus(x.props.status_mavat || ''), feat: x.feat }));
+
+                // ── 2. תמ"א 38 ──
+                let tamaCount = 0, tamaUnits = 0;
+                if (gd.tama38 && gd.tama38.features) {
+                    gd.tama38.features.forEach(f => {
+                        const c = geomCentroid(f.geometry);
+                        if (!c || !pip(c, polyCoords)) return;
+                        tamaCount++; tamaUnits += parseFloat((f.properties || {}).units_tose) || 0;
+                    });
+                }
+
+                // ── 3. יח"ד קיימות (existing units from municipal buildings layer) ──
+                const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+
+                // ── 4. היתרים — aggregated through the תב"עות inside the polygon (permits have no own geometry) ──
+                const stageAgg = {}; PERMIT_STAGES_ALL.forEach(st => { stageAgg[st] = { count: 0, units: 0 }; });
+                const catAgg = {};
+                let totalPermits = 0, totalIncludedUnits = 0;
+                const permitRows = [];
+                function addPermit(p, included, scope) {
+                    totalPermits++;
+                    const stage = getPermitStage(p), cat = classifyPermitCategory(p), u = Number(p.units) || 0;
+                    if (included) {
+                        if (!stageAgg[stage]) stageAgg[stage] = { count: 0, units: 0 };
+                        stageAgg[stage].count++; stageAgg[stage].units += u;
+                        if (!catAgg[cat]) catAgg[cat] = { count: 0, units: 0 };
+                        catAgg[cat].count++; catAgg[cat].units += u;
+                        totalIncludedUnits += u;
+                    }
+                    permitRows.push({ scope, file: p.file_number || '', status: p.status || '', units: u, included, stage, cat });
+                }
+                const seenTaba = new Set();
+                plansInside.forEach(x => {
+                    const taba = String(x.props.taba || '').trim();
+                    if (!taba || seenTaba.has(taba)) return; seenTaba.add(taba);
+                    const permits = getPermitsForTaba(taba);
+                    if (!permits.length) return;
+                    const planUnits = parsePlanUnits(x.props.units_total) || parsePlanUnits(x.props.units_add);
+                    const inclusion = getEffectivePermitInclusion(permits, 'plan:' + taba, planUnits);
+                    permits.forEach((p, i) => addPermit(p, inclusion[i], 'תב"ע ' + (x.props.plan_summary || x.props.plan_name || taba)));
+                });
+
+                // ── 5. פרויקטור (recommendations) — by domain, with project names ──
+                const PROJ_DOMAIN_LABEL = { programa: 'פרוגרמה / מבני ציבור', public_space: 'מרחב ציבורי', transport: 'תנועה ותחבורה', metaham: 'מתחם תכנון', other: 'אחר' };
+                const projByDomain = {};
+                let projCount = 0;
+                ['projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs'].forEach(key => {
+                    const fc = gd[key];
+                    if (!fc || !fc.features) return;
+                    fc.features.forEach(f => {
+                        const c = geomCentroid(f.geometry);
+                        if (!c || !pip(c, polyCoords)) return;
+                        const p = f.properties || {};
+                        const isMeta = !!(p.is_metaham_polygon || p.is_metaham_pdf_tichnun);
+                        const dom = isMeta ? 'metaham' : (p.domain || 'other');
+                        if (!projByDomain[dom]) projByDomain[dom] = { count: 0, names: new Set() };
+                        projByDomain[dom].count++;
+                        const nm = (p.project_name || p.service_he || '').trim();
+                        if (nm) projByDomain[dom].names.add(nm);
+                        projCount++;
+                    });
+                });
+                const projector = Object.entries(projByDomain).map(([dom, v]) => ({ domain: dom, label: PROJ_DOMAIN_LABEL[dom] || dom, count: v.count, names: [...v.names].slice(0, 30) }));
+
+                // ── 6. תכניות אב — sub-zone rule aggregation (floors / FAR / conservation grades) ──
+                const MP_KEYS = { master_plan_moshavot: 'מושבות', master_plan_rasko: 'רסקו', master_plan_baka: 'בקעה', master_plan_arnona: 'ארנונה', master_plan_gonenim: 'גוננים', master_plan_talpiot: 'תלפיות' };
+                const ZONE_FTS = new Set(['subzone', 'landuse', 'texture']);
+                const CONS_FTS = new Set(['conservation', 'conservation_point', 'building_height']);
+                const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+                const firstNum = (p, keys) => { for (const k of keys) { const n = num(p[k]); if (n != null) return n; } return null; };
+                const FLOOR_KEYS = ['max_floors', 'floors_max', 'zone_max_floors', 'zone_floors_max', 'floors_max_int', 'floors_per_master_plan'];
+                const FAR_KEYS = ['far_pct', 'zone_far_pct', 'far_pct_max', 'zone_far_pct_max'];
+                const masterPlans = [];
+                Object.keys(MP_KEYS).forEach(key => {
+                    const fc = gd[key];
+                    if (!fc || !fc.features) return;
+                    const zones = {};
+                    const cons = { 'א': 0, 'ב': 0, 'ג': 0, strict: 0, total: 0 };
+                    fc.features.forEach(f => {
+                        const p = f.properties || {};
+                        const ft = p.feature_type;
+                        const isZone = ZONE_FTS.has(ft), isCons = CONS_FTS.has(ft);
+                        if (!isZone && !isCons) return;
+                        const c = geomCentroid(f.geometry);
+                        if (!c || !pip(c, polyCoords)) return;
+                        if (isCons) {
+                            // Only features that actually carry a preservation grade count as שימור
+                            // (skips plain building_height/floor features with no grade).
+                            const g = (p.conservation_grade || p.conservation_type || p.zone_conservation_level || p.conservation_level || '').toString().trim();
+                            if (!g) return;
+                            const last = g.slice(-1);
+                            if (!!p.is_strict || /מחמיר|שימור מלא/.test(g)) cons.strict++;
+                            if (/שימור מלא|דרגה א|רמה א/.test(g) || last === 'א' || g.includes("א'")) cons['א']++;
+                            else if (/שימור עם תוספות|דרגה ב/.test(g) || last === 'ב' || g.includes("ב'")) cons['ב']++;
+                            else if (/דרגה ג/.test(g) || last === 'ג' || g.includes("ג'")) cons['ג']++;
+                            cons.total++;
+                            return;
+                        }
+                        const name = (p.zone_subzone_name || p.zone_name || p.zone_character || p.zone_subzone_code || p.zone_code || p.zone_category || p.category || p.zone_sog || p.sog || p.zone_merkam || p.merkam || p.zone_aizor || p.character || p.land_use || 'ללא שם').toString().trim() || 'ללא שם';
+                        if (!zones[name]) zones[name] = { name, count: 0, floorsMin: null, floorsMax: null, farMin: null, farMax: null };
+                        const z = zones[name];
+                        z.count++;
+                        const fl = firstNum(p, FLOOR_KEYS);
+                        if (fl != null) { z.floorsMin = z.floorsMin == null ? fl : Math.min(z.floorsMin, fl); z.floorsMax = z.floorsMax == null ? fl : Math.max(z.floorsMax, fl); }
+                        const fr = firstNum(p, FAR_KEYS);
+                        if (fr != null) { z.farMin = z.farMin == null ? fr : Math.min(z.farMin, fr); z.farMax = z.farMax == null ? fr : Math.max(z.farMax, fr); }
+                    });
+                    const zoneList = Object.values(zones).sort((a, b) => b.count - a.count);
+                    if (zoneList.length || cons.total) masterPlans.push({ name: MP_KEYS[key], zones: zoneList, cons });
+                });
+
+                // ── 7. מצב קיים (existing state): public institutions, population, green space, trees, etc. ──
+                // spherical ring area (m²) for a [lng,lat] ring, and full geometry area.
+                function ringAreaSqm(ring) {
+                    const R = 6378137, toRad = Math.PI / 180; let a = 0; const n = ring.length;
+                    for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += (ring[j][0] * toRad - ring[i][0] * toRad) * (2 + Math.sin(ring[i][1] * toRad) + Math.sin(ring[j][1] * toRad)); }
+                    return Math.abs(a * R * R / 2);
+                }
+                function geomAreaSqm(g) { if (!g || !g.coordinates) return 0; try { if (g.type === 'Polygon') return ringAreaSqm(g.coordinates[0]); if (g.type === 'MultiPolygon') return g.coordinates.reduce((s, poly) => s + ringAreaSqm(poly[0]), 0); } catch (e) {} return 0; }
+                const inPoly = f => { const c = geomCentroid(f.geometry); return c && pip(c, polyCoords); };
+                const feats = key => (gd[key] && gd[key].features) || [];
+
+                // 7a. מבני ציבור ומוסדות קיימים
+                const moch = { total: 0, area: 0, byCat: {} };
+                feats('mosadot_moch').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; moch.total++; moch.area += parseFloat(p.gross_area) || 0; const cat = ((p.category || p.type || 'אחר') + '').trim() || 'אחר'; moch.byCat[cat] = (moch.byCat[cat] || 0) + 1; });
+                let eduInst = 0, eduStudents = 0;
+                feats('education_shanaton').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; eduInst += parseInt(p.institutions_count) || 0; eduStudents += parseInt(p.total_students) || 0; });
+                let shchunaCount = 0; feats('mosadot_shchuna').forEach(f => { if (inPoly(f)) shchunaCount++; });
+                const vacant = { count: 0, area: 0 }; feats('migrash_panui').forEach(f => { if (!inPoly(f)) return; vacant.count++; vacant.area += parseFloat((f.properties || {}).gross_area) || 0; });
+
+                // 7b. אוכלוסייה (מפקד 2022) — sum stat areas whose centroid falls inside
+                const demo = { pop: 0, hh: 0, areas: 0 };
+                feats('stat_areas').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; demo.pop += parseFloat(p.pop_approx) || 0; demo.hh += parseFloat(p.hh_total) || 0; demo.areas++; });
+
+                // 7c. שטחים ירוקים, ספורט ועצים
+                const green = { count: 0, area: 0 }; feats('shavaz_kayam').forEach(f => { if (!inPoly(f)) return; green.count++; green.area += parseFloat((f.properties || {}).POLY_AREA) || geomAreaSqm(f.geometry); });
+                let sportCount = 0; feats('sport_kayam').forEach(f => { if (inPoly(f)) sportCount++; });
+                const trees = { shimur: 0, krita: 0, haataka: 0 };
+                if (treeData && treeData.plans) { Object.values(treeData.plans).forEach(pl => { (pl.points || []).forEach(pt => { if (pip([pt.x, pt.y], polyCoords)) { const st = pt.status; if (trees[st] != null) trees[st]++; } }); }); }
+
+                // 7d. מסחר/תעסוקה (מתוך התב"עות), שימור עירוני, זיקות הנאה, יעודי קרקע קיים
+                let commerceIn = 0, employment = 0;
+                plansInside.forEach(x => { commerceIn += parseFloat(x.props.commerce_in) || 0; employment += parseFloat(x.props.employment) || 0; });
+                const consCity = { total: 0, byGrade: {} };
+                feats('mivnei_lashimur').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; consCity.total++; const g = ((p.mp_grade || 'ללא דרגה') + '').trim() || 'ללא דרגה'; consCity.byGrade[g] = (consCity.byGrade[g] || 0) + 1; });
+                const ease = { total: 0, byType: {} };
+                feats('easements').forEach(f => { if (!inPoly(f)) return; const t = (((f.properties || {}).easement_type || 'אחר') + '').trim() || 'אחר'; ease.total++; ease.byType[t] = (ease.byType[t] || 0) + 1; });
+                const yiud = { total: 0, byYeud: {} };
+                feats('yiud_karka_kayam').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; const y = ((p.Descr || p.YEUD || 'אחר') + '').trim() || 'אחר'; yiud.total++; yiud.byYeud[y] = (yiud.byYeud[y] || 0) + geomAreaSqm(f.geometry); });
+
+                const existing = { moch, eduInst, eduStudents, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, consCity, ease, yiud };
+
+                setFullAreaReport({
+                    title: 'סיכום אזור נבחר', areaSqm,
+                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans },
+                    tama: { count: tamaCount, units: tamaUnits },
+                    existingUnits,
+                    permits: { totalPermits, totalIncludedUnits, stageAgg, catAgg, rows: permitRows },
+                    projector: { count: projCount, byDomain: projector },
+                    masterPlans,
+                    existing,
+                });
+                })();
+            }, [areaFinished]);
+
             // ── Area select: analyze results when drawing is finished ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3) return;
@@ -8404,6 +8663,7 @@
                 if (window.__landuseHandledArea) { window.__landuseHandledArea = false; return; }
                 if (window.__treeHandledArea) { window.__treeHandledArea = false; return; }
                 if (window.__programaHandledArea) { window.__programaHandledArea = false; return; }
+                if (window.__fullReportHandledArea) { window.__fullReportHandledArea = false; return; }
                 const gd = geoDataRef.current;
                 if (!gd || !gd.plans) return;
 
@@ -8622,6 +8882,8 @@
                 programaAreaActiveRef.current = false;
                 treeAreaActiveRef.current = false;
                 setTreeAreaActive(false);
+                fullReportAreaActiveRef.current = false;
+                setFullAreaReport(null);
                 const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
                 const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
                 const prev3 = document.getElementById('tree-panel'); if (prev3) prev3.remove();
@@ -16940,8 +17202,8 @@
                             </button>
                             {activeDropdown === 'analysis' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
-                                    <button className={`toolbar-dropdown-item ${(areaMode && !programaAreaActiveRef.current) ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה לניתוח תכניות בתוכו" onClick={() => {
-                                        if (areaMode && !programaAreaActiveRef.current) {
+                                    <button className={`toolbar-dropdown-item ${(areaMode && !programaAreaActiveRef.current && !fullReportAreaActiveRef.current) ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה לניתוח תכניות בתוכו" onClick={() => {
+                                        if (areaMode && !programaAreaActiveRef.current && !fullReportAreaActiveRef.current) {
                                             const r = areaRef.current;
                                             if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); }
                                             else {
@@ -16959,7 +17221,28 @@
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="20" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
-                                        <span className="sub-label">{(areaMode && !programaAreaActiveRef.current) ? 'סיום' : 'אזור'}</span>
+                                        <span className="sub-label">{(areaMode && !programaAreaActiveRef.current && !fullReportAreaActiveRef.current) ? 'סיום' : 'אזור'}</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${(areaMode && fullReportAreaActiveRef.current) ? 'sub-active' : ''}`} data-tip="ציור אזור וקבלת דוח מסכם מלא: תב״ע, היתרים, פרויקטור ותכניות אב" onClick={() => {
+                                        if (areaMode && fullReportAreaActiveRef.current) {
+                                            const r = areaRef.current;
+                                            if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); }
+                                            else {
+                                                const map = mapInstanceRef.current;
+                                                if (map) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); map.getContainer().classList.remove('measuring'); }
+                                                r.points = []; r.markers = []; r.polygon = null; setAreaMode(false);
+                                            }
+                                        } else {
+                                            cancelAllModes('area');
+                                            setAreaFinished(null);
+                                            fullReportAreaActiveRef.current = true;
+                                            setFullAreaReport(null);
+                                            setAreaMode(true);
+                                        }
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 4h18M3 4v16M3 20h18M7 9h10M7 13h10M7 17h6"/></svg>
+                                        <span className="sub-label">{(areaMode && fullReportAreaActiveRef.current) ? 'סיום' : 'דוח מקיף'}</span>
                                     </button>
                                     <button className={`toolbar-dropdown-item ${landuseCompareMode ? 'sub-active' : ''}`} data-tip="השוואת ייעודי קרקע נכנס-יוצא בתכנית" onClick={() => {
                                         if (landuseCompareMode) { setLanduseCompareMode(null); setActiveDropdown(null); }
@@ -18120,6 +18403,27 @@
                                     <button className="units-close" onClick={() => setShowReportsMenu(false)}>&times;</button>
                                 </div>
                                 <div className="reports-menu-body">
+                                    {/* קטגוריה: בחירת אזור — דוח מסכם מלא */}
+                                    <div className="reports-category" style={{border:'1px dashed #e94560', background:'rgba(233,69,96,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                        <h3 style={{color:'#e94560'}}>📋 בחירת אזור</h3>
+                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>ציור פוליגון חופשי על המפה → דוח מסכם של כל מה שידוע על האזור: תב"ע מקודמות, היתרים, המלצות פרויקטור ותכניות אב</div>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => {
+                                                setShowReportsMenu(false);
+                                                cancelAllModes('area');
+                                                setAreaFinished(null);
+                                                fullReportAreaActiveRef.current = true;
+                                                setFullAreaReport(null);
+                                                setAreaMode(true);
+                                            }}>
+                                                <span className="report-icon">🗺️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דוח אזור מקיף</span>
+                                                    <span className="report-desc">צייר אזור וקבל סיכום מלא (דאבל-קליק לסיום)</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
                                     {/* קטגוריה: פרוייקטור תלפיות — סינון מרחבי */}
                                     <div className="reports-category" style={{border:'1px dashed #e65100', background:'rgba(255,152,0,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
                                         <h3 style={{color:'#e65100'}}>📐 פרוייקטור תלפיות</h3>
@@ -21282,6 +21586,209 @@
                                     );
                                 })()}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {fullAreaReport && (
+                        <div className="units-overlay" onClick={() => setFullAreaReport(null)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(680px, 96vw)'}} id="full-area-report-modal">
+                                <button className="units-close" onClick={() => setFullAreaReport(null)}>&times;</button>
+                                <div style={{display:'flex',gap:6,position:'absolute',top:14,left:50}}>
+                                    <button onClick={() => {
+                                        const m = document.getElementById('full-area-report-modal');
+                                        if (!m) return;
+                                        const win = window.open('', '_blank');
+                                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח אזור מקיף</title>' +
+                                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h2,h3{color:#e94560}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}div[style*="background"]{background:none !important;border:none !important}</style></head><body>');
+                                        win.document.write(m.innerHTML.replace(/<button[^>]*>[\s\S]*?<\/button>/g, ''));
+                                        win.document.write('</body></html>');
+                                        win.document.close(); win.print();
+                                    }} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
+                                    <button onClick={() => {
+                                        const d = fullAreaReport;
+                                        const lines = [['מקטע','פריט','פירוט','יח"ד']];
+                                        lines.push(['סיכום','תכניות תב"ע', String(d.plans.count), String(Math.round(d.plans.unitsAdd))]);
+                                        lines.push(['סיכום','תמ"א 38', String(d.tama.count), String(Math.round(d.tama.units))]);
+                                        lines.push(['סיכום','יח"ד קיימות', '', String(Math.round(d.existingUnits))]);
+                                        lines.push(['סיכום','היתרים', String(d.permits.totalPermits), String(Math.round(d.permits.totalIncludedUnits))]);
+                                        d.plans.top.forEach(p => lines.push(['תב"ע', p.name, p.status, String(Math.round(p.unitsAdd))]));
+                                        PERMIT_STAGES_ALL.forEach(st => { const a = d.permits.stageAgg[st]; if (a && (a.count||a.units)) lines.push(['היתרים — שלב', getPermitStageLabel(st), String(a.count)+' היתרים', String(Math.round(a.units))]); });
+                                        Object.entries(d.permits.catAgg).forEach(([cat,a]) => lines.push(['היתרים — קטגוריה', getPermitCategoryLabel(cat), String(a.count)+' היתרים', String(Math.round(a.units))]));
+                                        d.projector.byDomain.forEach(dm => lines.push(['פרויקטור', dm.label, dm.names.join(' · '), String(dm.count)]));
+                                        d.masterPlans.forEach(mp => { mp.zones.forEach(z => { const fl = z.floorsMax!=null ? (z.floorsMin!=null&&z.floorsMin!==z.floorsMax ? z.floorsMin+'-'+z.floorsMax : String(z.floorsMax))+' קומות' : ''; const fr = z.farMax!=null ? ((z.farMin!=null&&z.farMin!==z.farMax ? z.farMin+'-'+z.farMax : z.farMax))+'% תכס' : ''; lines.push(['תכנית אב — '+mp.name, z.name, [fl,fr].filter(Boolean).join(' · '), '']); }); if (mp.cons.total) lines.push(['תכנית אב — '+mp.name, 'מבני שימור', "א'="+mp.cons['א']+" ב'="+mp.cons['ב']+" ג'="+mp.cons['ג'], String(mp.cons.total)]); });
+                                        const ex = d.existing;
+                                        if (ex) {
+                                            if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); }
+                                            if (ex.eduInst) lines.push(['מצב קיים — מבני ציבור','מוסדות חינוך (שנתון)', ex.eduStudents+' תלמידים', String(ex.eduInst)]);
+                                            if (ex.shchunaCount) lines.push(['מצב קיים — מבני ציבור','מוסדות שכונה','', String(ex.shchunaCount)]);
+                                            if (ex.vacant.count) lines.push(['מצב קיים — מבני ציבור','מגרשים פנויים', Math.round(ex.vacant.area)+' מ"ר', String(ex.vacant.count)]);
+                                            if (ex.demo.pop) { lines.push(['מצב קיים — אוכלוסייה','אוכלוסייה משוערת (2022)','', String(Math.round(ex.demo.pop))]); lines.push(['מצב קיים — אוכלוסייה','משקי בית','', String(Math.round(ex.demo.hh))]); }
+                                            if (ex.green.count) lines.push(['מצב קיים — ירוק','שצ"פ קיים', Math.round(ex.green.area)+' מ"ר', String(ex.green.count)]);
+                                            if (ex.sportCount) lines.push(['מצב קיים — ירוק','מתקני ספורט','', String(ex.sportCount)]);
+                                            if ((ex.trees.shimur+ex.trees.krita+ex.trees.haataka)>0) lines.push(['מצב קיים — עצים','עצים (סקר)', "שימור="+ex.trees.shimur+" כריתה="+ex.trees.krita+" העתקה="+ex.trees.haataka, String(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)]);
+                                            if (ex.commerceIn||ex.employment) lines.push(['מצב קיים — מסחר','מסחר/תעסוקה (מתב"עות)', 'מסחר '+Math.round(ex.commerceIn)+' / תעסוקה '+Math.round(ex.employment)+' מ"ר', '']);
+                                            if (ex.consCity.total) lines.push(['מצב קיים — שימור','מבני שימור (רשימה עירונית)','', String(ex.consCity.total)]);
+                                            if (ex.ease.total) { Object.entries(ex.ease.byType).forEach(([t,n])=>lines.push(['מצב קיים — זיקות הנאה', t, '', String(n)])); }
+                                            if (ex.yiud.total) Object.entries(ex.yiud.byYeud).sort((a,b)=>b[1]-a[1]).forEach(([y,ar])=>lines.push(['מצב קיים — יעודי קרקע', y, Math.round(ar)+' מ"ר', '']));
+                                        }
+                                        const csv = lines.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\n');
+                                        const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        const t = (document.getElementById('full-area-report-title')?.textContent || 'דוח_אזור_מקיף');
+                                        a.href = url; a.download = (t + '.csv').replace(/[\\/:"*?<>|\s]+/g,'_');
+                                        document.body.appendChild(a); a.click(); a.remove();
+                                        URL.revokeObjectURL(url);
+                                    }} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 Excel</button>
+                                </div>
+                                {(() => {
+                                    const d = fullAreaReport;
+                                    const ex = d.existing || null;
+                                    const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.vacant.count || ex.demo.pop || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.ease.total || ex.yiud.total));
+                                    const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
+                                    const zoomTo = (feat) => { setFullAreaReport(null); const map = mapInstanceRef.current; if (!map || !feat || !feat.geometry) return; try { const b = L.geoJSON(feat).getBounds(); if (b.isValid && b.isValid()) map.fitBounds(b, { padding:[40,40], maxZoom:18 }); } catch(e){} };
+                                    const floorsTxt = z => z.floorsMax == null ? '' : (z.floorsMin != null && z.floorsMin !== z.floorsMax ? z.floorsMin + '–' + z.floorsMax : z.floorsMax) + ' קומות';
+                                    const farTxt = z => z.farMax == null ? '' : (z.farMin != null && z.farMin !== z.farMax ? z.farMin + '–' + z.farMax : z.farMax) + '% תכס';
+                                    const card = (val, label, color) => (
+                                        <div style={{textAlign:'center',padding:'6px 12px'}}>
+                                            <div style={{fontSize:24,fontWeight:'bold',color:color||'#e0e0e0'}}>{val}</div>
+                                            <div style={{fontSize:10,color:'#9ca3af'}}>{label}</div>
+                                        </div>
+                                    );
+                                    const sectionStyle = {background:'#15152a',border:'1px solid #2a2a3e',borderRadius:8,padding:'10px 12px',marginBottom:10};
+                                    const h3Style = {color:'#e94560',fontSize:13,margin:'0 0 8px'};
+                                    const rowStyle = {display:'flex',justifyContent:'space-between',padding:'2px 0',fontSize:12};
+                                    const STAGE_COLORS = {pre_licensing:'#90a4ae', licensing:'#42a5f5', issued:'#66bb6a', done:'#bdbdbd'};
+                                    return (
+                                        <>
+                                            <h2 id="full-area-report-title" contentEditable suppressContentEditableWarning style={{color:'#fff',fontSize:18,marginBottom:4,outline:'none'}}>🗺️ {d.title}</h2>
+                                            <div style={{fontSize:11,color:'#9ca3af',marginBottom:12}}>שטח האזור: {fmtArea(d.areaSqm)}</div>
+                                            {/* KPI */}
+                                            <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center',background:'#0f0f1f',borderRadius:8,padding:'8px 4px',marginBottom:12}}>
+                                                {card(fmt(d.plans.count), 'תכניות תב"ע')}
+                                                {d.tama.count > 0 && card(fmt(d.tama.count), 'תמ"א 38', '#FF9800')}
+                                                {card(fmt(d.plans.unitsAdd + d.tama.units), 'יח"ד תוספת', '#4CAF50')}
+                                                {card(fmt(d.existingUnits), 'יח"ד קיימות', '#5dade2')}
+                                                {d.permits.totalPermits > 0 && card(fmt(d.permits.totalPermits), 'היתרים', '#42a5f5')}
+                                                {ex && ex.demo.pop > 0 && card(fmt(ex.demo.pop), 'תושבים (2022)', '#ce93d8')}
+                                                {ex && ex.moch.total > 0 && card(fmt(ex.moch.total), 'מוסדות ציבור', '#a1887f')}
+                                            </div>
+
+                                            {/* תב"ע */}
+                                            {d.plans.count > 0 && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>🏗️ תכניות מקודמות (תב"ע) — {d.plans.count}</h3>
+                                                    {Object.entries(d.plans.byStatus).sort((a,b)=>b[1]-a[1]).map(([st,c]) => (
+                                                        <div key={st} style={rowStyle}><span style={{color:'#cfd3dc'}}>{st}</span><span style={{fontWeight:'bold'}}>{c}</span></div>
+                                                    ))}
+                                                    {d.plans.top.length > 0 && <div style={{borderTop:'1px solid #2a2a3e',margin:'6px 0',paddingTop:6,fontSize:11,color:'#888'}}>תכניות מובילות (תוספת יח"ד):</div>}
+                                                    {d.plans.top.map((p,i) => (
+                                                        <div key={i} style={{...rowStyle,cursor:'pointer',fontSize:11}} title="הצג על המפה" onClick={() => zoomTo(p.feat)}>
+                                                            <span style={{color:'#9fd6ff',textDecoration:'underline'}}>{p.name || p.taba}</span>
+                                                            <span style={{color:'#4CAF50',fontWeight:'bold'}}>+{Math.round(p.unitsAdd)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* היתרים */}
+                                            {d.permits.totalPermits > 0 && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>📄 היתרי בנייה — {d.permits.totalPermits}</h3>
+                                                    <div style={{fontSize:10,color:'#777',marginBottom:6}}>נצברים דרך התב"עות שבאזור (להיתרים אין מיקום עצמאי). סה"כ יח"ד נספרות: {fmt(d.permits.totalIncludedUnits)}</div>
+                                                    {PERMIT_STAGES_ALL.map(st => { const a = d.permits.stageAgg[st]; if (!a || (!a.count && !a.units)) return null; return (
+                                                        <div key={st} style={rowStyle}>
+                                                            <span><span style={{display:'inline-block',width:9,height:9,borderRadius:2,background:STAGE_COLORS[st]||'#888',marginLeft:6}}></span>{getPermitStageLabel(st)}</span>
+                                                            <span style={{color:'#aaa'}}>{a.count} · <b style={{color:'#fff'}}>{Math.round(a.units)}</b> יח"ד</span>
+                                                        </div>
+                                                    ); })}
+                                                    {Object.entries(d.permits.catAgg).sort((a,b)=>b[1].units-a[1].units).length > 0 && <div style={{borderTop:'1px solid #2a2a3e',margin:'6px 0',paddingTop:6,fontSize:11,color:'#888'}}>לפי קטגוריה:</div>}
+                                                    {Object.entries(d.permits.catAgg).sort((a,b)=>b[1].units-a[1].units).map(([cat,a]) => (
+                                                        <div key={cat} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{getPermitCategoryLabel(cat)}</span><span style={{color:'#aaa'}}>{a.count} · <b style={{color:'#fff'}}>{Math.round(a.units)}</b> יח"ד</span></div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* פרויקטור */}
+                                            {d.projector.count > 0 && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>📌 המלצות פרויקטור — {d.projector.count}</h3>
+                                                    {d.projector.byDomain.sort((a,b)=>b.count-a.count).map(dm => (
+                                                        <div key={dm.domain} style={{marginBottom:6}}>
+                                                            <div style={rowStyle}><span style={{color:'#cfd3dc',fontWeight:'bold'}}>{dm.label}</span><span style={{fontWeight:'bold'}}>{dm.count}</span></div>
+                                                            {dm.names.length > 0 && <div style={{fontSize:10,color:'#888',lineHeight:1.5}}>{dm.names.join(' · ')}</div>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* תכניות אב */}
+                                            {d.masterPlans.length > 0 && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>📐 תכניות אב</h3>
+                                                    {d.masterPlans.map(mp => (
+                                                        <div key={mp.name} style={{marginBottom:8,borderBottom:'1px solid #21213a',paddingBottom:6}}>
+                                                            <div style={{fontWeight:'bold',color:'#ffd479',fontSize:12,marginBottom:3}}>תכנית אב {mp.name}</div>
+                                                            {mp.zones.slice(0,12).map((z,i) => { const rules = [floorsTxt(z), farTxt(z)].filter(Boolean).join(' · '); return (
+                                                                <div key={i} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{z.name}</span><span style={{color:'#aaa'}}>{rules || '—'}</span></div>
+                                                            ); })}
+                                                            {mp.cons.total > 0 && <div style={{fontSize:11,color:'#ef9a9a',marginTop:3}}>🛡️ מבני שימור: {mp.cons.total} (א׳={mp.cons['א']} · ב׳={mp.cons['ב']} · ג׳={mp.cons['ג']})</div>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* ───── מצב קיים ───── */}
+                                            {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.vacant.count > 0 || ex.shchunaCount > 0) && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>🏛️ מבני ציבור ומוסדות קיימים</h3>
+                                                    {ex.moch.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות (משב"ש)</span><span style={{color:'#aaa'}}>{ex.moch.total}{ex.moch.area > 0 ? ' · ' + fmt(ex.moch.area) + ' מ"ר' : ''}</span></div>}
+                                                    {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([cat,c]) => (
+                                                        <div key={cat} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {cat}</span><span style={{color:'#aaa'}}>{c}</span></div>
+                                                    ))}
+                                                    {ex.eduInst > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות חינוך (שנתון)</span><span style={{color:'#aaa'}}>{ex.eduInst}{ex.eduStudents > 0 ? ' · ' + fmt(ex.eduStudents) + ' תלמידים' : ''}</span></div>}
+                                                    {ex.shchunaCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות שכונה</span><span style={{color:'#aaa'}}>{ex.shchunaCount}</span></div>}
+                                                    {ex.vacant.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגרשים פנויים</span><span style={{color:'#aaa'}}>{ex.vacant.count}{ex.vacant.area > 0 ? ' · ' + fmt(ex.vacant.area) + ' מ"ר' : ''}</span></div>}
+                                                </div>
+                                            )}
+
+                                            {ex && ex.demo.pop > 0 && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>👥 אוכלוסייה (מפקד 2022)</h3>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>אוכלוסייה משוערת</span><span style={{fontWeight:'bold'}}>{fmt(ex.demo.pop)}</span></div>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>משקי בית</span><span style={{color:'#aaa'}}>{fmt(ex.demo.hh)}</span></div>
+                                                    <div style={{fontSize:10,color:'#777',marginTop:3}}>סכימה לפי {ex.demo.areas} אזורים סטטיסטיים שמרכזם בתוך האזור</div>
+                                                </div>
+                                            )}
+
+                                            {ex && (ex.green.count > 0 || ex.sportCount > 0 || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0) && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>🌳 שטחים ירוקים ועצים</h3>
+                                                    {ex.green.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>שצ"פ קיים</span><span style={{color:'#aaa'}}>{ex.green.count} · {fmtArea(ex.green.area)}</span></div>}
+                                                    {ex.sportCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מתקני ספורט</span><span style={{color:'#aaa'}}>{ex.sportCount}</span></div>}
+                                                    {(ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>עצים (סקר)</span><span style={{color:'#aaa'}}>שימור {ex.trees.shimur} · כריתה {ex.trees.krita} · העתקה {ex.trees.haataka}</span></div>}
+                                                </div>
+                                            )}
+
+                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.consCity.total > 0 || ex.ease.total > 0 || ex.yiud.total > 0) && (
+                                                <div style={sectionStyle}>
+                                                    <h3 style={h3Style}>🏪 מסחר, שימור, זיקות ויעודי קרקע</h3>
+                                                    {(ex.commerceIn > 0 || ex.employment > 0) && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה (מתב"עות)</span><span style={{color:'#aaa'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
+                                                    {ex.consCity.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מבני שימור (רשימה עירונית)</span><span style={{color:'#aaa'}}>{ex.consCity.total}</span></div>}
+                                                    {ex.ease.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>זיקות הנאה</span><span style={{color:'#aaa'}}>{ex.ease.total}</span></div>}
+                                                    {Object.entries(ex.ease.byType).sort((a,b)=>b[1]-a[1]).map(([t,c]) => (<div key={t} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {t}</span><span style={{color:'#aaa'}}>{c}</span></div>))}
+                                                    {ex.yiud.total > 0 && <div style={{borderTop:'1px solid #2a2a3e',margin:'6px 0',paddingTop:6,fontSize:11,color:'#888'}}>יעודי קרקע קיים (שטח):</div>}
+                                                    {Object.entries(ex.yiud.byYeud).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([y,ar]) => (<div key={y} style={{...rowStyle,fontSize:11}}><span style={{color:'#cfd3dc'}}>{y}</span><span style={{color:'#aaa'}}>{fmtArea(ar)}</span></div>))}
+                                                </div>
+                                            )}
+
+                                            {d.plans.count === 0 && d.permits.totalPermits === 0 && d.projector.count === 0 && d.masterPlans.length === 0 && d.tama.count === 0 && !hasExisting && (
+                                                <div style={{textAlign:'center',color:'#888',padding:'20px 0'}}>לא נמצא מידע בתוך האזור שנבחר</div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}
