@@ -8215,7 +8215,7 @@
                     { title: 'כלי רכב וחניה', bar: barVehicles, barLabel: '0 / 1 / 2+ רכב', cols: [
                         ['% ללא רכב', m => p1(m.vehicle0)],
                         ['% רכב 1', m => (m.vehicle0 != null && m.vehicle2up != null) ? p1(Math.max(0, 100 - m.vehicle0 - m.vehicle2up)) : '—'],
-                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking), 'border-right:2px solid #2e4a55']] },
+                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% עם חניה', m => p1(m.parking), 'border-right:2px solid #2e4a55']] },
                 ];
                 const buildTable = (spec, subs, total) => {
                     const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
