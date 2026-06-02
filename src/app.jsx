@@ -21675,6 +21675,27 @@
                                     const ex = d.existing || null;
                                     const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.vacant.count || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
                                     const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
+                                    // Relative metrics + auto-summary
+                                    const dunam = (d.areaSqm || 0) / 1000;
+                                    const addedUnits = (d.plans.unitsAdd || 0) + (d.tama.units || 0);
+                                    const totalPlanned = (d.existingUnits || 0) + addedUnits;
+                                    const per = v => (dunam > 0 ? v / dunam : 0);
+                                    const densAdd = per(addedUnits), densTotal = per(totalPlanned);
+                                    const shatzapPct = (ex && ex.green && d.areaSqm > 0) ? (ex.green.area / d.areaSqm * 100) : 0;
+                                    const metrics = [];
+                                    if (densAdd > 0) metrics.push({ v: densAdd.toFixed(1), l: 'יח"ד/דונם — תוספת' });
+                                    if (densTotal > 0) metrics.push({ v: densTotal.toFixed(1), l: 'יח"ד/דונם — צפוי' });
+                                    if (shatzapPct > 0) metrics.push({ v: shatzapPct.toFixed(1) + '%', l: 'שצ"פ קיים משטח האזור' });
+                                    const sumParts = [];
+                                    sumParts.push(d.plans.count + ' תב"ע');
+                                    if (d.tama.count > 0) sumParts.push(d.tama.count + ' תמ"א 38');
+                                    if (addedUnits > 0) sumParts.push(Math.round(addedUnits).toLocaleString() + ' יח"ד תוספת');
+                                    if (d.existingUnits > 0) sumParts.push(Math.round(d.existingUnits).toLocaleString() + ' יח"ד קיימות');
+                                    if (d.permits.totalPermits > 0) sumParts.push(d.permits.totalPermits + ' היתרים');
+                                    if (d.projector.count > 0) sumParts.push(d.projector.count + ' המלצות פרויקטור');
+                                    if (ex && ex.moch.total > 0) sumParts.push(ex.moch.total + ' מוסדות ציבור');
+                                    if (d.masterPlans.length > 0) sumParts.push(d.masterPlans.length + ' תכניות אב');
+                                    const summaryText = 'באזור ' + fmtArea(d.areaSqm) + ': ' + sumParts.join(' · ') + '.';
                                     const zoomTo = (feat) => { setFullAreaReport(null); const map = mapInstanceRef.current; if(fullReportPolyRef.current&&map){try{map.removeLayer(fullReportPolyRef.current)}catch(e){} fullReportPolyRef.current=null;} if (!map || !feat || !feat.geometry) return; try { const b = L.geoJSON(feat).getBounds(); if (b.isValid && b.isValid()) map.fitBounds(b, { padding:[40,40], maxZoom:18 }); } catch(e){} };
                                     const floorsTxt = z => z.floorsMax == null ? '' : (z.floorsMin != null && z.floorsMin !== z.floorsMax ? z.floorsMin + '–' + z.floorsMax : z.floorsMax) + ' קומות';
                                     const farTxt = z => z.farMax == null ? '' : (z.farMin != null && z.farMin !== z.farMax ? z.farMin + '–' + z.farMax : z.farMax) + '% תכס';
@@ -21725,9 +21746,11 @@
                                                 onFocus={e=>{e.target.style.borderBottomColor='#e94560';}} onBlur={e=>{e.target.style.borderBottomColor='rgba(233,69,96,0.4)';}}
                                                 style={{color:'#fff',fontSize:18,marginBottom:2,outline:'none',borderBottom:'1px dashed rgba(233,69,96,0.4)',display:'inline-block',cursor:'text'}}>🗺️ {d.title}</h2>
                                             <span style={{fontSize:10,color:'#9aa6b2',marginRight:8}}>✏️ לחץ על הכותרת לעריכה</span>
-                                            <div style={{fontSize:11,color:'#aeb6c2',marginTop:4,marginBottom:12}}>שטח האזור: {fmtArea(d.areaSqm)}</div>
+                                            <div style={{fontSize:11,color:'#aeb6c2',marginTop:4,marginBottom:10}}>שטח האזור: {fmtArea(d.areaSqm)}</div>
+                                            {/* תקציר אוטומטי (ניתן לסימון והעתקה) */}
+                                            <div style={{background:'#101024',border:'1px solid #2a2a3e',borderRight:'3px solid #e94560',borderRadius:6,padding:'7px 10px',marginBottom:10,fontSize:12,lineHeight:1.5,color:'#e6e9ef',userSelect:'text'}}>{summaryText}</div>
                                             {/* KPI */}
-                                            <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center',background:'#0f0f1f',borderRadius:8,padding:'8px 4px',marginBottom:12}}>
+                                            <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center',background:'#0f0f1f',borderRadius:8,padding:'8px 4px',marginBottom:10}}>
                                                 {card(fmt(d.plans.count), 'תכניות תב"ע')}
                                                 {d.tama.count > 0 && card(fmt(d.tama.count), 'תמ"א 38', '#FF9800')}
                                                 {card(fmt(d.plans.unitsAdd + d.tama.units), 'יח"ד תוספת', '#4CAF50')}
@@ -21735,6 +21758,18 @@
                                                 {d.permits.totalPermits > 0 && card(fmt(d.permits.totalPermits), 'היתרים', '#42a5f5')}
                                                 {ex && ex.moch.total > 0 && card(fmt(ex.moch.total), 'מוסדות ציבור', '#bcaaa4')}
                                             </div>
+
+                                            {/* מדדים יחסיים */}
+                                            {metrics.length > 0 && (
+                                                <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center',marginBottom:12}}>
+                                                    {metrics.map((m,i) => (
+                                                        <div key={i} style={{background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6,padding:'5px 12px',textAlign:'center'}}>
+                                                            <div style={{fontSize:17,fontWeight:'bold',color:'#ffd479'}}>{m.v}</div>
+                                                            <div style={{fontSize:9,color:'#b6bdc9'}}>{m.l}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* ניווט מהיר בין המקטעים */}
                                             {navItems.length > 1 && (
