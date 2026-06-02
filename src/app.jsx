@@ -8215,16 +8215,16 @@
                     { title: 'כלי רכב וחניה', bar: barVehicles, barLabel: '0 / 1 / 2+ רכב', cols: [
                         ['% ללא רכב', m => p1(m.vehicle0)],
                         ['% רכב 1', m => (m.vehicle0 != null && m.vehicle2up != null) ? p1(Math.max(0, 100 - m.vehicle0 - m.vehicle2up)) : '—'],
-                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking)]] },
+                        ['% 2+ רכב', m => p1(m.vehicle2up)], ['% חניה', m => p1(m.parking), 'border-right:2px solid #2e4a55']] },
                 ];
                 const buildTable = (spec, subs, total) => {
                     const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
-                        spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + c[0] + '</th>').join('') +
+                        spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px;' + (c[2] || '') + '">' + c[0] + '</th>').join('') +
                         (spec.bar ? '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + spec.barLabel + '</th>' : '');
                     const mkRow = (label, m, isTotal) => {
                         const st = isTotal ? 'font-weight:bold;background:#13212b;color:#8fd' : 'color:#cfe';
                         return '<tr style="border-bottom:1px solid #222;' + st + '"><td style="padding:5px 7px;text-align:right">' + esc(label) + '</td>' +
-                            spec.cols.map(c => '<td style="padding:5px 7px;text-align:center">' + c[1](m) + '</td>').join('') +
+                            spec.cols.map(c => '<td style="padding:5px 7px;text-align:center;' + (c[2] || '') + '">' + c[1](m) + '</td>').join('') +
                             (spec.bar ? '<td style="padding:5px 7px;text-align:center">' + spec.bar(m) + '</td>' : '') + '</tr>';
                     };
                     const body = subs.map(s => mkRow(s.name, s.metrics, false)).join('') + mkRow('סה"כ מינהק', total, true);
