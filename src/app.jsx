@@ -3990,7 +3990,7 @@
                 }
                 const GS_OVERRIDE_FIELDS = [
                     'units_total','units_in','units_add',
-                    'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog',
+                    'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog','shavatz_out_plot',
                     'shatzap_in','shatzap_out',
                     'commerce_in','commerce_out',
                     'employment','hotels','rental','conditional_housing','rental_duration','rental_inclusion',
@@ -15612,15 +15612,17 @@
                 // Section: שב"צ
                 const szIn = v(props.shavatz_in_sqm);
                 const szOut = v(props.shavatz_out_sqm);
+                const szPlot = v(props.shavatz_out_plot);
                 const szProgIn = v(props.shavatz_in_prog);
                 const szProgOut = v(props.shavatz_out_prog);
                 const hfSqm = v(props.hafrash_sqm);
                 const hfPrg = v(props.hafrash_prg);
-                if (szIn || szOut || szProgIn || szProgOut || hfSqm || hfPrg) {
+                if (szIn || szOut || szPlot || szProgIn || szProgOut || hfSqm || hfPrg) {
                     html += '<div class="popup-section-title">שב"צ (מ"ר)</div>';
                     html += '<div class="popup-pair">';
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${szIn ? fmt(szIn) : '-'}</span></div>`;
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">${szOut ? fmt(szOut) : '-'}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא (זכויות)</span><span class="popup-pair-value">${szOut ? fmt(szOut) : '-'}</span></div>`;
+                    if (szPlot) html += `<div class="popup-pair-item"><span class="popup-pair-label">גודל מגרש</span><span class="popup-pair-value">${fmt(szPlot)}</span></div>`;
                     html += '</div>';
                     if (szProgIn) html += `<div class="popup-prog-text">פרוגרמה נכנס: ${szProgIn}</div>`;
                     if (szProgOut) html += `<div class="popup-prog-text">פרוגרמה יוצא: ${szProgOut}</div>`;
