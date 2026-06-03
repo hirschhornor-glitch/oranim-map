@@ -34,31 +34,18 @@ from urllib3.poolmanager import PoolManager
 import gspread
 from google.oauth2.service_account import Credentials
 
+# Shared out-of-scope filter (Gilo exclusion geometry + plan-number blocklist),
+# also used by update_mavat_ui.py so the whole status pipeline is consistent.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from scope_filter import EXCLUDE_PLAN_NUMBERS, load_exclusion_geometry, plan_majority_in
+
 # ─── Config ───────────────────────────────────────────────────────────────────
 
 CREDS_FILE     = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID       = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
 PLANS_GEOJSON  = r"C:\ORANIM\oranim-app\data\plans.geojson"
 BOUNDARY_GEOJSON = r"C:\ORANIM\oranim-app\data\district_oranim.geojson"
-# Areas inside the Rova-4 boundary but out of project scope — plans
-# majority-inside these are dropped during detection (e.g. שכונת גילה).
-EXCLUDE_GEOJSONS = [r"C:\ORANIM\oranim-app\data\exclude_gila.geojson"]
-
-# Specific plans to permanently ignore during detection (normalized numbers,
-# leading zeros stripped — see normalize_plan_number). Large/linear out-of-scope
-# plans that clip the boundary edge. Add more here as needed.
-EXCLUDE_PLAN_NUMBERS = {
-    '184523',   # תכנית מתאר לשכונות דרום נחלאות (מרכז העיר, מחוץ לתחום)
-    '659540',   # רשת חלוקה לגז טבעי, ככר עין כרם → רכס לבן (תשתית קווית)
-    '387068',   # מבנים חקלאיים ותיירות כפרית, מטה יהודה (מחוץ לתחום)
-    '292870',   # תכנית מתאר טבע עירוני ירושלים (עיר-כללית)
-    '347427',   # רמת רחל (מחוץ לתחום)
-    '53751',    # מורדות ארנונה (מחוץ לתחום)
-    '979336',   # גבעת המטוס - מק/14295 (מחוץ לתחום)
-    '1322924',  # בריכות שחיה/ג'קוזי, מטה יהודה (מחוץ לתחום)
-    '1153048',  # גבעת המטוס - מבני ציבור (מחוץ לתחום)
-    '1326313',  # גבעת המטוס - מגרשים 139,141 (מחוץ לתחום)
-}
+# EXCLUDE_PLAN_NUMBERS / exclusion geometry now live in scope_filter.py (imported above).
 
 GITHUB_REPO    = "hirschhornor-glitch/oranim-map"
 BROWSER_DATA   = r"C:\ORANIM\.browser_data"
@@ -315,66 +302,7 @@ def feature_intersects_boundary(feat, boundary_rings):
     return False
 
 
-def load_exclusion_geometry():
-    """Union of EXCLUDE_GEOJSONS as a single shapely geometry (WGS84), or None.
-    Used to drop plans inside the Rova-4 boundary but out of project scope (גילה)."""
-    try:
-        from shapely.geometry import shape
-        from shapely.ops import unary_union
-        from shapely.validation import make_valid
-    except ImportError:
-        print("  shapely not available — exclusion filter disabled")
-        return None
-    geoms = []
-    for path in EXCLUDE_GEOJSONS:
-        if not os.path.exists(path):
-            print(f"  Exclusion file not found, skipping: {path}")
-            continue
-        try:
-            with open(path, encoding='utf-8') as f:
-                data = json.load(f)
-            feats = data.get('features', []) if data.get('type') == 'FeatureCollection' else [data]
-            for feat in feats:
-                g = make_valid(shape(feat['geometry']))
-                if not g.is_empty:
-                    geoms.append(g)
-        except Exception as e:
-            print(f"  Error loading exclusion {path}: {e}")
-    if not geoms:
-        return None
-    return unary_union(geoms)
-
-
-def plan_majority_in(features, exclusion_geom):
-    """True if >=50% of the plan's unioned area lies inside exclusion_geom (WGS84).
-    Tested on the union of all the plan's parcels so a plan straddling the border
-    is classified by where its bulk sits, not by any single small parcel."""
-    try:
-        from shapely.geometry import shape
-        from shapely.ops import unary_union
-        from shapely.validation import make_valid
-    except ImportError:
-        return False
-    polys = []
-    for feat in features:
-        geom = feat.get('geometry')
-        if not geom:
-            continue
-        try:
-            g = make_valid(shape(geom))
-            if not g.is_empty:
-                polys.append(g)
-        except Exception:
-            continue
-    if not polys:
-        return False
-    try:
-        u = unary_union(polys)
-        if u.area <= 0:
-            return False
-        return u.intersection(exclusion_geom).area / u.area >= 0.5
-    except Exception:
-        return False
+# load_exclusion_geometry() and plan_majority_in() are imported from scope_filter.
 
 
 def extract_unique_plans(xplan_features, boundary_rings=None, exclusion_geom=None):
@@ -1111,7 +1039,7 @@ async def run(do_update=False, skip_mavat=False):
     # Load out-of-scope exclusion areas (e.g. גילה, inside Rova-4 but not in scope)
     exclusion_geom = load_exclusion_geometry()
     if exclusion_geom is not None:
-        print(f"Loaded exclusion areas from {len(EXCLUDE_GEOJSONS)} file(s)")
+        print("Loaded out-of-scope exclusion areas (scope_filter)")
 
     xplan_plans = extract_unique_plans(xplan_features, boundary_rings, exclusion_geom)
     print(f"\nUnique plans in XPLAN (inside boundary, excluding out-of-scope): {len(xplan_plans)}")
