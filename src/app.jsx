@@ -2348,6 +2348,22 @@
                 { key: 'emergency', label: 'חירום' },
                 { key: 'other',     label: 'כללי / לא מסווג' },
             ];
+            // Multi-select filter convention for the shavaz/hafrash filters:
+            //   []          → ALL selected (nothing filtered) — the default.
+            //   [NONE_KEY]  → NONE selected (hide everything) — reached by unchecking all or the
+            //                 master "הכל" toggle. NONE_KEY can't match any real status/domain, so
+            //                 the existing predicates hide everything without special-casing.
+            //   [a,b,...]   → exactly those selected.
+            const NONE_KEY = ' __none__';
+            const toggleFilterGroup = (setter, allKeys, key, checked) => setter(prev => {
+                let cur = prev.length === 0 ? [...allKeys] : prev.filter(k => k !== NONE_KEY);
+                if (checked) { if (!cur.includes(key)) cur.push(key); }
+                else cur = cur.filter(k => k !== key);
+                if (cur.length === 0) return [NONE_KEY];
+                if (cur.length === allKeys.length) return [];
+                return cur;
+            });
+            const setFilterAll = (setter, on) => setter(on ? [] : [NONE_KEY]);
 
             // PWA: online/offline detection
             useEffect(() => {
@@ -13509,7 +13525,12 @@
                         const unplaced = [];
                         for (const lot in hafrashLookup[taba]) {
                             if (matched.has(lot)) continue;
-                            (hafrashLookup[taba][lot] || []).forEach(e => unplaced.push({ ...e, lot }));
+                            // Only surface genuine public-facility uses (מעון/גן/בית כנסת/תרבות…).
+                            // Skip residential/commerce/conditional-rights entries that some plans
+                            // lump into hafrash_prg — those aren't public allocations.
+                            (hafrashLookup[taba][lot] || []).forEach(e => {
+                                if (hafrashUseDomain(e.use) !== null) unplaced.push({ ...e, lot });
+                            });
                         }
                         if (!unplaced.length) continue;
                         const planCands = gd.landuse_xplan.features.filter(f =>
@@ -16909,22 +16930,20 @@
                                     )}
                                     {groupKey === 'shavaz_atid_group' && !collapsedGroups[groupKey] && (layers['future_shavaz'] || layers['hafrashah_future']) && (
                                         <div style={{padding:'4px 8px 8px 8px',fontSize:11,direction:'rtl'}}>
-                                            <div style={{fontWeight:'bold',marginBottom:4,color:'#aaa'}}>סינון לפי סטטוס תכנית:</div>
+                                            <label style={{display:'flex',alignItems:'center',gap:4,marginBottom:4,fontWeight:'bold',color:'#aaa',cursor:'pointer'}}>
+                                                <input type="checkbox" style={{margin:0}}
+                                                    title="סמן/נקה הכל"
+                                                    checked={shavazStatusFilter.length === 0}
+                                                    onChange={e => setFilterAll(setShavazStatusFilter, e.target.checked)}
+                                                />
+                                                <span>סינון לפי סטטוס תכנית:</span>
+                                            </label>
                                             <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
                                                 {filterStatusGroups.map(sg => (
                                                     <label key={sg.key} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
                                                         <input type="checkbox"
                                                             checked={shavazStatusFilter.length === 0 || shavazStatusFilter.includes(sg.key)}
-                                                            onChange={e => {
-                                                                setShavazStatusFilter(prev => {
-                                                                    const all = filterStatusGroups.map(g => g.key);
-                                                                    let next = prev.length === 0 ? [...all] : [...prev];
-                                                                    if (e.target.checked) { if (!next.includes(sg.key)) next.push(sg.key); }
-                                                                    else { next = next.filter(x => x !== sg.key); }
-                                                                    if (next.length === all.length) next = [];
-                                                                    return next;
-                                                                });
-                                                            }}
+                                                            onChange={e => toggleFilterGroup(setShavazStatusFilter, filterStatusGroups.map(g => g.key), sg.key, e.target.checked)}
                                                             style={{margin:0}}
                                                         />
                                                         <span>{sg.label}</span>
@@ -16933,22 +16952,20 @@
                                             </div>
                                             {layers['hafrashah_future'] && (
                                                 <>
-                                                    <div style={{fontWeight:'bold',margin:'8px 0 4px',color:'#aaa'}}>תחום ההפרשה המבונה:</div>
+                                                    <label style={{display:'flex',alignItems:'center',gap:4,margin:'8px 0 4px',fontWeight:'bold',color:'#aaa',cursor:'pointer'}}>
+                                                        <input type="checkbox" style={{margin:0}}
+                                                            title="סמן/נקה הכל"
+                                                            checked={hafrashDomainFilter.length === 0}
+                                                            onChange={e => setFilterAll(setHafrashDomainFilter, e.target.checked)}
+                                                        />
+                                                        <span>תחום ההפרשה המבונה:</span>
+                                                    </label>
                                                     <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
                                                         {hafrashDomainGroups.map(dg => (
                                                             <label key={dg.key} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
                                                                 <input type="checkbox"
                                                                     checked={hafrashDomainFilter.length === 0 || hafrashDomainFilter.includes(dg.key)}
-                                                                    onChange={e => {
-                                                                        setHafrashDomainFilter(prev => {
-                                                                            const all = hafrashDomainGroups.map(g => g.key);
-                                                                            let next = prev.length === 0 ? [...all] : [...prev];
-                                                                            if (e.target.checked) { if (!next.includes(dg.key)) next.push(dg.key); }
-                                                                            else { next = next.filter(x => x !== dg.key); }
-                                                                            if (next.length === all.length) next = [];
-                                                                            return next;
-                                                                        });
-                                                                    }}
+                                                                    onChange={e => toggleFilterGroup(setHafrashDomainFilter, hafrashDomainGroups.map(g => g.key), dg.key, e.target.checked)}
                                                                     style={{margin:0}}
                                                                 />
                                                                 <span>{dg.label}</span>
