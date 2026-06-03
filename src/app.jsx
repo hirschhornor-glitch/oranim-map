@@ -13492,8 +13492,50 @@
                             ? { ...f.properties, _hafrash_lot_entries: lotEntries }
                             : { ...f.properties, hafrash_sqm: planProps.hafrash_sqm || '', hafrash_prg: planProps.hafrash_prg || '' };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: centroid } };
-                    }).filter(pf => passesHafrashDomainFilter(pf.properties));
-                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
+                    });
+                    // Surface per-lot GS entries whose lot id has NO matching landuse_xplan polygon
+                    // (e.g. "מגרש 30199/40" — block/parcel-style ids absent from the `num` field).
+                    // Without this they'd be silently dropped (a real allocation lost). Group the
+                    // unmatched entries per plan and drop a single marker on the plan's largest
+                    // residential/mixed lot (preferring one not already used) so they stay visible.
+                    const matchedLotsByTaba = {};
+                    hafrashah.forEach(f => {
+                        const t = tabaFromPlNum(f.properties.pl_number);
+                        (matchedLotsByTaba[t] = matchedLotsByTaba[t] || new Set()).add(String(f.properties.num || ''));
+                    });
+                    for (const taba in hafrashLookup) {
+                        if (!passesShavazStatusFilter(taba)) continue;
+                        const matched = matchedLotsByTaba[taba] || new Set();
+                        const unplaced = [];
+                        for (const lot in hafrashLookup[taba]) {
+                            if (matched.has(lot)) continue;
+                            (hafrashLookup[taba][lot] || []).forEach(e => unplaced.push({ ...e, lot }));
+                        }
+                        if (!unplaced.length) continue;
+                        const planCands = gd.landuse_xplan.features.filter(f =>
+                            tabaFromPlNum(f.properties.pl_number) === taba
+                            && RESIDENTIAL_MIXED_CODES.has(f.properties.mavat_code)
+                            && inDistrict(f));
+                        if (!planCands.length) continue;
+                        // Prefer an anchor lot that isn't already showing a marker, to reduce overlap.
+                        const free = planCands.filter(f => !matched.has(String(f.properties.num || '')));
+                        const pool = free.length ? free : planCands;
+                        pool.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
+                        const f = pool[0];
+                        const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                        const centroid = polygonInteriorPoint(ring);
+                        // If the anchor lot already carries a matched marker, nudge slightly (~12m)
+                        // so the unplaced marker doesn't sit exactly on top of it.
+                        const anchorUsed = matched.has(String(f.properties.num || ''));
+                        const coords = anchorUsed ? [centroid[0] + 0.00013, centroid[1] + 0.00009] : centroid;
+                        const planProps = (window.__planByTaba || {})[taba] || {};
+                        pointFeatures.push({
+                            type: 'Feature',
+                            properties: { ...f.properties, _hafrash_lot_entries: unplaced, _hafrash_unplaced: true, pl_name: planProps.plan_name_he || f.properties.pl_name },
+                            geometry: { type: 'Point', coordinates: coords }
+                        });
+                    }
+                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
