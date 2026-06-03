@@ -23222,27 +23222,42 @@
                         const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
                         const meetings = window.__meetings || {};
                         // Build rows: match meeting plan_id with plans in geojson
-                        const rows = [];
+                        const rawRows = [];
                         gd.plans.features.forEach(f => {
                             const pn = (f.properties.plan_name || '').trim();
                             const mt = meetings[pn];
                             if (!mt) return;
                             if (!checkMinahak(f.properties)) return;
-                            rows.push({ ...f.properties, _meeting: mt });
+                            rawRows.push({ ...f.properties, _meeting: mt });
                         });
                         // Also include meetings whose plan_id has no matching feature (edge case)
                         Object.values(meetings).forEach(mt => {
-                            if (!rows.some(r => r.plan_name === mt.plan_id)) {
-                                rows.push({ plan_name: mt.plan_id, plan_summary: mt.plan_name, minahak: mt.minahak, _meeting: mt, _unmatched: true });
+                            if (!rawRows.some(r => r.plan_name === mt.plan_id)) {
+                                rawRows.push({ plan_name: mt.plan_id, plan_summary: mt.plan_name, minahak: mt.minahak, _meeting: mt, _unmatched: true });
                             }
                         });
-                        // Sort by meeting date ascending (earliest first)
-                        rows.sort((a, b) => {
-                            const da = a._meeting.meeting_date.split('/'), db = b._meeting.meeting_date.split('/');
-                            const ta = da.length === 3 ? (da[2]+da[1]+da[0]) : '';
-                            const tb = db.length === 3 ? (db[2]+db[1]+db[0]) : '';
-                            return ta.localeCompare(tb);
+                        // Dedupe by plan + date + time + committee.
+                        // plans.geojson sometimes has 2 features per plan_name; without
+                        // dedupe they both produce identical report rows.
+                        const seenRow = new Set();
+                        const rows = rawRows.filter(r => {
+                            const key = r.plan_name + '|' + (r._meeting.meeting_date || '')
+                                      + '|' + (r._meeting.meeting_time || '')
+                                      + '|' + (r._meeting.committee || '');
+                            if (seenRow.has(key)) return false;
+                            seenRow.add(key);
+                            return true;
                         });
+                        // Sort by meeting date then by time (HH:MM ascending).
+                        const meetingSortKey = (m) => {
+                            const dp = (m.meeting_date || '').split('/');
+                            const ds = dp.length === 3
+                                ? dp[2] + dp[1].padStart(2, '0') + dp[0].padStart(2, '0')
+                                : '99999999';
+                            const tp = (m.meeting_time || '').replace(':', '').padStart(4, '0');
+                            return ds + tp;
+                        };
+                        rows.sort((a, b) => meetingSortKey(a._meeting).localeCompare(meetingSortKey(b._meeting)));
                         return (
                         <div className="units-overlay" onClick={() => setMeetingsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(850px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
