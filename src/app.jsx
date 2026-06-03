@@ -469,6 +469,9 @@
         //   • Generic "מבנים ומוסדות ציבור (5000)" → adds 5000 to uncategorizedSqm
         // Education keys are measured in classrooms (כיתות); all other keys count facilities (מתקנים).
         const EDU_PARSER_KEYS = ['maon', 'gan', 'yesodi', 'al_yesodi'];
+        // Max plausible classroom count for a school. A school's parenthetical value at or below this
+        // is read as classes; above it, as an area in m² (real school areas are ≥ ~1000 m²).
+        const SCHOOL_CLASS_CAP = 150;
         // Per-item breakdown of a program description. Returns { items, uncategorizedSqm } where each
         // item = { key, count, sqm, isClasses } for one recognized facility phrase. This is the single
         // source of truth; parseFacilitiesFromText() aggregates it into the legacy {counts} shape.
@@ -486,11 +489,12 @@
                 // "N כיתות" — explicit class count (highest priority)
                 const classesMatch = t.match(/(\d+)\s*כיתות?/);
                 const explicitClasses = classesMatch ? parseInt(classesMatch[1]) : 0;
-                // Leading "N " — number of facilities (e.g., "2 בתי כנסת")
-                const leadMatch = t.match(/^(\d+)\s/);
+                // Leading "N " — number of facilities (e.g., "2 בתי כנסת"). The number must be
+                // directly followed by a Hebrew word; a number followed by a dash/separator is a
+                // leftover lot id (e.g. comma-splitting "מגרש 30169/61, 122, 123 - בית ספר" leaves
+                // the fragment "123 - בית ספר" — "123" is NOT a facility count).
+                const leadMatch = t.match(/^(\d+)\s+(?=[א-ת])/);
                 const leadCount = leadMatch ? parseInt(leadMatch[1]) : 0;
-                const count = explicitClasses || leadCount || 1;
-                const isClasses = explicitClasses > 0;
                 let key = null;
                 // Education — al_yesodi (longer/more-specific phrases first)
                 if (/(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/.test(t)) { key = 'al_yesodi'; }
@@ -513,7 +517,18 @@
                 else if (/(מועדון נוער|מועדונית|מרכז נוער)/.test(t)) { key = 'noar_club'; }
                 else if (/(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/.test(t)) { key = 'elderly_club'; }
                 else if (/(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/.test(t)) { key = 'elderly_day'; }
-                if (key) { out.push({ key, count, sqm, isClasses }); }
+                if (key) {
+                    let count, isClasses, itemSqm = sqm;
+                    if (explicitClasses) { count = explicitClasses; isClasses = true; }
+                    else if ((key === 'yesodi' || key === 'al_yesodi') && sqm > 0 && sqm <= SCHOOL_CLASS_CAP) {
+                        // "2 בתי ספר יסודיים (48)" — for a school with no explicit "כיתות", the
+                        // parenthetical is the classroom count, not an area. School areas run to the
+                        // thousands of m², so a small parenthetical (≤ cap) can only be classes.
+                        count = sqm; isClasses = true; itemSqm = 0;
+                    }
+                    else { count = leadCount || 1; isClasses = false; }
+                    out.push({ key, count, sqm: itemSqm, isClasses });
+                }
                 // Uncategorized generic public buildings — accumulate sqm
                 else if (/(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
                     uncategorizedSqm += sqm;
@@ -3895,6 +3910,10 @@
                 minahakLabelsP.style.pointerEvents = 'none';
                 const shavazP = map.createPane('shavazPane');
                 shavazP.style.zIndex = 440;
+                // Future-shavaz / hafrashah point markers sit ABOVE the label panes (550/560) so
+                // plan-label text never covers the marker dots.
+                const shavazMarkersP = map.createPane('shavazMarkersPane');
+                shavazMarkersP.style.zIndex = 565;
                 const landuseP = map.createPane('landusePane');
                 landuseP.style.zIndex = 295;
 
@@ -13397,6 +13416,7 @@
                     const fallbackLayer = L.geoJSON({ type: 'FeatureCollection', features: fbPoints }, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            pane: 'shavazMarkersPane',
                             radius: 5, fillColor: '#D2B48C', fillOpacity: 0.8, color: '#8B4513', weight: 1
                         }),
                         onEachFeature: (f, layer) => {
@@ -13560,6 +13580,7 @@
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                            pane: 'shavazMarkersPane',
                             radius: 5, fillColor: PUBLIC_PALETTE.shavaz_future_stroke, fillOpacity: 0.8, color: PUBLIC_PALETTE.shavaz_kayam_fill, weight: 1
                         }),
                         onEachFeature: (f, layer) => {
@@ -15864,10 +15885,17 @@
                                 else if (e.count != null && m.sqm == null) { m.count = Math.max(m.count || 0, e.count); if (e.unit) m.unit = e.unit; }
                             }
                         }
-                        // m² per class for educational facilities (data-grounded: גן≈130, מעון≈147),
-                        // used to estimate area when the source gives only a class count so the total
-                        // isn't undercounted. Marked with ≈ to flag it as an estimate.
-                        const classSqm = (use) => /מעון|פעוטון/.test(use) ? 147 : (/גן/.test(use) ? 130 : 0);
+                        // Built-area estimate from class count, per the מינהל התכנון 2018 guide,
+                        // used only when the source gives a class count but no מ"ר (so the total
+                        // isn't undercounted). Flagged with ≈ / "משוער".
+                        //   מעון יום — 440 מ"ר בנוי per 3-class אשכול (day-cares come in clusters,
+                        //               there is no single per-class size), so round up to clusters.
+                        //   גן ילדים — ~130 מ"ר בנוי לכיתה.
+                        const estClassSqm = (use, count) => {
+                            if (/מעון|פעוטון/.test(use)) return Math.ceil(count / 3) * 440;
+                            if (/גן/.test(use)) return count * 130;
+                            return 0;
+                        };
                         let total = 0, estimated = false;
                         for (const e of merged) {
                             let valueDisplay;
@@ -15876,8 +15904,8 @@
                                 total += sqm;
                                 valueDisplay = sqm.toLocaleString() + ' מ"ר';
                             } else if (e.count != null && e.unit === 'כיתות') {
-                                const f = classSqm(e.use || '');
-                                if (f) { const est = e.count * f; total += est; estimated = true; valueDisplay = e.count + ' כיתות (≈' + est.toLocaleString() + ' מ"ר)'; }
+                                const est = estClassSqm(e.use || '', e.count);
+                                if (est) { total += est; estimated = true; valueDisplay = e.count + ' כיתות (≈' + est.toLocaleString() + ' מ"ר)'; }
                                 else { valueDisplay = e.count + ' כיתות'; }
                             } else if (e.count != null && e.unit) {
                                 valueDisplay = e.count + ' ' + e.unit;
