@@ -40,6 +40,25 @@ CREDS_FILE     = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID       = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
 PLANS_GEOJSON  = r"C:\ORANIM\oranim-app\data\plans.geojson"
 BOUNDARY_GEOJSON = r"C:\ORANIM\oranim-app\data\district_oranim.geojson"
+# Areas inside the Rova-4 boundary but out of project scope — plans
+# majority-inside these are dropped during detection (e.g. שכונת גילה).
+EXCLUDE_GEOJSONS = [r"C:\ORANIM\oranim-app\data\exclude_gila.geojson"]
+
+# Specific plans to permanently ignore during detection (normalized numbers,
+# leading zeros stripped — see normalize_plan_number). Large/linear out-of-scope
+# plans that clip the boundary edge. Add more here as needed.
+EXCLUDE_PLAN_NUMBERS = {
+    '184523',   # תכנית מתאר לשכונות דרום נחלאות (מרכז העיר, מחוץ לתחום)
+    '659540',   # רשת חלוקה לגז טבעי, ככר עין כרם → רכס לבן (תשתית קווית)
+    '387068',   # מבנים חקלאיים ותיירות כפרית, מטה יהודה (מחוץ לתחום)
+    '292870',   # תכנית מתאר טבע עירוני ירושלים (עיר-כללית)
+    '347427',   # רמת רחל (מחוץ לתחום)
+    '53751',    # מורדות ארנונה (מחוץ לתחום)
+    '979336',   # גבעת המטוס - מק/14295 (מחוץ לתחום)
+    '1322924',  # בריכות שחיה/ג'קוזי, מטה יהודה (מחוץ לתחום)
+    '1153048',  # גבעת המטוס - מבני ציבור (מחוץ לתחום)
+    '1326313',  # גבעת המטוס - מגרשים 139,141 (מחוץ לתחום)
+}
 
 GITHUB_REPO    = "hirschhornor-glitch/oranim-map"
 BROWSER_DATA   = r"C:\ORANIM\.browser_data"
@@ -296,9 +315,74 @@ def feature_intersects_boundary(feat, boundary_rings):
     return False
 
 
-def extract_unique_plans(xplan_features, boundary_rings=None):
+def load_exclusion_geometry():
+    """Union of EXCLUDE_GEOJSONS as a single shapely geometry (WGS84), or None.
+    Used to drop plans inside the Rova-4 boundary but out of project scope (גילה)."""
+    try:
+        from shapely.geometry import shape
+        from shapely.ops import unary_union
+        from shapely.validation import make_valid
+    except ImportError:
+        print("  shapely not available — exclusion filter disabled")
+        return None
+    geoms = []
+    for path in EXCLUDE_GEOJSONS:
+        if not os.path.exists(path):
+            print(f"  Exclusion file not found, skipping: {path}")
+            continue
+        try:
+            with open(path, encoding='utf-8') as f:
+                data = json.load(f)
+            feats = data.get('features', []) if data.get('type') == 'FeatureCollection' else [data]
+            for feat in feats:
+                g = make_valid(shape(feat['geometry']))
+                if not g.is_empty:
+                    geoms.append(g)
+        except Exception as e:
+            print(f"  Error loading exclusion {path}: {e}")
+    if not geoms:
+        return None
+    return unary_union(geoms)
+
+
+def plan_majority_in(features, exclusion_geom):
+    """True if >=50% of the plan's unioned area lies inside exclusion_geom (WGS84).
+    Tested on the union of all the plan's parcels so a plan straddling the border
+    is classified by where its bulk sits, not by any single small parcel."""
+    try:
+        from shapely.geometry import shape
+        from shapely.ops import unary_union
+        from shapely.validation import make_valid
+    except ImportError:
+        return False
+    polys = []
+    for feat in features:
+        geom = feat.get('geometry')
+        if not geom:
+            continue
+        try:
+            g = make_valid(shape(geom))
+            if not g.is_empty:
+                polys.append(g)
+        except Exception:
+            continue
+    if not polys:
+        return False
+    try:
+        u = unary_union(polys)
+        if u.area <= 0:
+            return False
+        return u.intersection(exclusion_geom).area / u.area >= 0.5
+    except Exception:
+        return False
+
+
+def extract_unique_plans(xplan_features, boundary_rings=None, exclusion_geom=None):
     """Group XPLAN features by pl_number and extract unique plan info.
     If boundary_rings provided, only include features that intersect the boundary.
+    If exclusion_geom provided (shapely geometry in WGS84), drop features whose
+    geometry is majority-inside it (e.g. שכונת גילה — inside the Rova-4 district
+    boundary but out of project scope).
     Returns dict: {normalized_number: {pl_number, mp_ids, features, ...}}"""
     plans = defaultdict(lambda: {
         'pl_number': '',
@@ -309,6 +393,7 @@ def extract_unique_plans(xplan_features, boundary_rings=None):
     })
 
     skipped_outside = 0
+    skipped_excluded = 0
     for feat in xplan_features:
         p = feat.get('properties', {})
         pl_num = p.get('pl_number', '')
@@ -344,6 +429,16 @@ def extract_unique_plans(xplan_features, boundary_rings=None):
 
     if boundary_rings:
         print(f"  Filtered: {skipped_outside} features outside district boundary")
+
+    # Exclusion filter (per-PLAN): drop a whole plan if its unioned geometry is
+    # majority-inside an excluded area (e.g. שכונת גילה). Done after grouping so a
+    # plan straddling the border isn't kept just because one parcel is small.
+    if exclusion_geom is not None:
+        for norm in list(plans.keys()):
+            if plan_majority_in(plans[norm]['features'], exclusion_geom):
+                del plans[norm]
+                skipped_excluded += 1
+        print(f"  Excluded: {skipped_excluded} plans majority-inside excluded areas (e.g. גילה)")
 
     # Convert sets to lists for JSON serialization
     for norm in plans:
@@ -406,11 +501,17 @@ def load_existing_plan_numbers():
 
 
 def find_new_plans(xplan_plans, existing_numbers):
-    """Find plans in XPLAN that are not in our existing data."""
+    """Find plans in XPLAN that are not in our existing data and not blocklisted."""
     new_plans = {}
+    blocked = 0
     for norm, info in xplan_plans.items():
+        if norm in EXCLUDE_PLAN_NUMBERS:
+            blocked += 1
+            continue
         if norm not in existing_numbers:
             new_plans[norm] = info
+    if blocked:
+        print(f"  Blocklisted: {blocked} plans skipped (EXCLUDE_PLAN_NUMBERS)")
     return new_plans
 
 
@@ -448,23 +549,43 @@ async def enrich_from_mavat(new_plans):
 
         print("\n" + "=" * 60)
         print("If you see a captcha in the browser, please solve it.")
-        print("Once the Mavat page is loaded, press Enter.")
         print("=" * 60)
-        input(">>> Press Enter to continue... ")
-        await asyncio.sleep(3)
+        # Best-effort interactive gate. In a real terminal this waits for Enter;
+        # under a non-interactive stdin (background/scheduled run) input() raises
+        # EOFError (even when isatty() lies and returns True), so we fall through
+        # to the polling loop below, which gives time to solve a captcha.
+        try:
+            input(">>> Press Enter once the Mavat page is loaded "
+                  "(or just wait — it will auto-poll)... ")
+            await asyncio.sleep(3)
+        except (EOFError, OSError):
+            print("Non-interactive stdin: polling the Mavat API for up to 180s "
+                  "while you solve any captcha in the browser window...")
 
-        # Test API
-        test_result = await page.evaluate("""
-            async () => {
-                try {
-                    const resp = await fetch('/rest/api/SV4/1?mid=1000247867&guid=0');
-                    const data = JSON.parse(await resp.text());
-                    return { ok: !!data.planDetails };
-                } catch(e) {
-                    return { ok: false, error: e.message };
+        async def _mavat_ok():
+            return await page.evaluate("""
+                async () => {
+                    try {
+                        const resp = await fetch('/rest/api/SV4/1?mid=1000247867&guid=0');
+                        const data = JSON.parse(await resp.text());
+                        return { ok: !!data.planDetails };
+                    } catch(e) {
+                        return { ok: false, error: e.message };
+                    }
                 }
-            }
-        """)
+            """)
+
+        # Poll the API until it works (gives time to solve a captcha) or time out.
+        # Breaks immediately once the session is valid, so interactive runs aren't slowed.
+        test_result = {}
+        for attempt in range(18):  # up to ~180s at 10s/attempt
+            test_result = await _mavat_ok()
+            if test_result.get('ok'):
+                break
+            if attempt < 17:
+                print(f"  Mavat API not ready yet ({test_result}); retrying in 10s...")
+                await asyncio.sleep(10)
+
         if not test_result.get('ok'):
             print(f"Mavat API test failed: {test_result}. Skipping enrichment.")
             await context.close()
@@ -666,8 +787,8 @@ def create_plan_geometry(features, pl_number=None):
             return None
         merged = unary_union(polys)
 
-    # Enforce GeoJSON RFC 7946 winding: outer CCW, holes CW.
-    # Without this, Leaflet fills on the wrong side and the polygon shows
+    # Enforce GeoJSON RFC 7946 winding: outer rings CCW, holes CW.
+    # Without this, Leaflet may fill on the wrong side and the polygon shows
     # only its outline. shapely.mapping doesn't enforce this on its own.
     if merged.geom_type == 'Polygon':
         merged = orient(merged, sign=1.0)
@@ -987,8 +1108,13 @@ async def run(do_update=False, skip_mavat=False):
     else:
         print("Warning: could not load district boundary, using all XPLAN features")
 
-    xplan_plans = extract_unique_plans(xplan_features, boundary_rings)
-    print(f"\nUnique plans in XPLAN (inside boundary): {len(xplan_plans)}")
+    # Load out-of-scope exclusion areas (e.g. גילה, inside Rova-4 but not in scope)
+    exclusion_geom = load_exclusion_geometry()
+    if exclusion_geom is not None:
+        print(f"Loaded exclusion areas from {len(EXCLUDE_GEOJSONS)} file(s)")
+
+    xplan_plans = extract_unique_plans(xplan_features, boundary_rings, exclusion_geom)
+    print(f"\nUnique plans in XPLAN (inside boundary, excluding out-of-scope): {len(xplan_plans)}")
 
     # Step 2: Compare
     existing = load_existing_plan_numbers()
