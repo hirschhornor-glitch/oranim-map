@@ -8656,7 +8656,21 @@
                 const moch = { total: 0, area: 0, byCat: {}, list: [] };
                 feats('mosadot_moch').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; moch.total++; moch.area += parseFloat(p.gross_area) || 0; const cat = ((p.category || p.type || 'אחר') + '').trim() || 'אחר'; moch.byCat[cat] = (moch.byCat[cat] || 0) + 1; const nm = ((p.name || '') + '').trim(); if (nm) { const cc = geomCentroid(f.geometry); moch.list.push({ name: nm, cat, address: ((p.address || '') + '').trim(), lng: cc && cc[0], lat: cc && cc[1] }); } });
                 let eduInst = 0, eduStudents = 0;
-                feats('education_shanaton').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; eduInst += parseInt(p.institutions_count) || 0; eduStudents += parseInt(p.total_students) || 0; });
+                const eduList = [];
+                feats('education_shanaton').forEach(f => {
+                    if (!inPoly(f)) return;
+                    const p = f.properties || {};
+                    eduInst += parseInt(p.institutions_count) || 0;
+                    eduStudents += parseInt(p.total_students) || 0;
+                    const cc = geomCentroid(f.geometry);
+                    const insts = Array.isArray(p.institutions) ? p.institutions : [];
+                    if (insts.length) {
+                        insts.forEach(it => eduList.push({ name: ((it.name || '') + '').trim(), type: ((it.type || '') + '').trim(), pikuach: ((it.pikuach || '') + '').trim(), students: parseInt(it.students) || 0, address: ((p.address || '') + '').trim(), lng: cc && cc[0], lat: cc && cc[1] }));
+                    } else {
+                        eduList.push({ name: ((p.address || 'מוסד חינוך') + '').trim(), type: ((p.primary_type || '') + '').trim(), pikuach: '', students: parseInt(p.total_students) || 0, address: ((p.address || '') + '').trim(), lng: cc && cc[0], lat: cc && cc[1] });
+                    }
+                });
+                eduList.sort((a, b) => b.students - a.students);
                 let shchunaCount = 0; feats('mosadot_shchuna').forEach(f => { if (inPoly(f)) shchunaCount++; });
                 const vacant = { count: 0, area: 0 }; feats('migrash_panui').forEach(f => { if (!inPoly(f)) return; vacant.count++; vacant.area += parseFloat((f.properties || {}).gross_area) || 0; });
 
@@ -8685,7 +8699,7 @@
                 feats('roads').forEach(f => { const c = geomCentroid(f.geometry); if (!c || !pip(c, polyCoords)) return; const s = (((f.properties || {}).street || '') + '').trim(); if (s) streetSet.add(s); });
                 const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
 
-                const existing = { moch, eduInst, eduStudents, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
+                const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
                     title: 'סיכום אזור נבחר', areaSqm, streets,
@@ -21677,7 +21691,7 @@
                                         const ex = d.existing;
                                         if (ex) {
                                             if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); (ex.moch.list||[]).forEach(m=>lines.push(['מצב קיים — מוסד ('+m.cat+')', m.name, m.address||'', ''])); }
-                                            if (ex.eduInst) lines.push(['מצב קיים — מבני ציבור','מוסדות חינוך (שנתון)', ex.eduStudents+' תלמידים', String(ex.eduInst)]);
+                                            if (ex.eduInst) { lines.push(['מצב קיים — מבני ציבור','מוסדות חינוך (שנתון)', ex.eduStudents+' תלמידים', String(ex.eduInst)]); (ex.eduList||[]).forEach(m=>lines.push(['מצב קיים — מוסד חינוך', m.name, m.address||'', String(m.students||'')])); }
                                             if (ex.shchunaCount) lines.push(['מצב קיים — מבני ציבור','מוסדות שכונה','', String(ex.shchunaCount)]);
                                             if (ex.vacant.count) lines.push(['מצב קיים — מבני ציבור','מגרשים פנויים', Math.round(ex.vacant.area)+' מ"ר', String(ex.vacant.count)]);
                                             if (ex.green.count) lines.push(['מצב קיים — ירוק','שצ"פ קיים', Math.round(ex.green.area)+' מ"ר', String(ex.green.count)]);
@@ -21929,6 +21943,11 @@
                                                         );
                                                     })}
                                                     {ex.eduInst > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות חינוך (שנתון)</span><span style={{color:'#c2c9d4'}}>{ex.eduInst}{ex.eduStudents > 0 ? ' · ' + fmt(ex.eduStudents) + ' תלמידים' : ''}</span></div>}
+                                                    {ex.eduList && ex.eduList.length > 0 && detailRow('eduTbl', 'פירוט מוסדות חינוך (' + ex.eduList.length + ')')}
+                                                    {fullReportTables['eduTbl'] && ex.eduList && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>שם מוסד</th><th style={th}>סוג</th><th style={th}>תלמידים</th><th style={th}>כתובת</th></tr></thead>
+                                                        <tbody>{ex.eduList.map((m,i)=>(<tr key={i} onClick={()=>zoomPt(m.lng,m.lat)} title={m.lat?'הצג על המפה':''} style={{cursor:m.lat?'pointer':'default'}}><td style={{...td,color:m.lat?'#9fd6ff':'#dfe3ea'}}>{m.name||'—'}</td><td style={td}>{m.type||'—'}</td><td style={{...td,color:'#7bdc8a'}}>{m.students||''}</td><td style={td}>{m.address||'—'}</td></tr>))}</tbody></table>
+                                                    )}
                                                     {ex.shchunaCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות שכונה</span><span style={{color:'#aaa'}}>{ex.shchunaCount}</span></div>}
                                                     {ex.vacant.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגרשים פנויים</span><span style={{color:'#aaa'}}>{ex.vacant.count}{ex.vacant.area > 0 ? ' · ' + fmt(ex.vacant.area) + ' מ"ר' : ''}</span></div>}
                                             </>)}
