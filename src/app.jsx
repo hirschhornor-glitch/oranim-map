@@ -15885,28 +15885,35 @@
                                 else if (e.count != null && m.sqm == null) { m.count = Math.max(m.count || 0, e.count); if (e.unit) m.unit = e.unit; }
                             }
                         }
-                        // Built-area estimate from class count, per the מינהל התכנון 2018 guide,
-                        // used only when the source gives a class count but no מ"ר (so the total
-                        // isn't undercounted). Flagged with ≈ / "משוער".
-                        //   מעון יום — 440 מ"ר בנוי per 3-class אשכול (day-cares come in clusters,
-                        //               there is no single per-class size), so round up to clusters.
-                        //   גן ילדים — ~130 מ"ר בנוי לכיתה.
-                        const estClassSqm = (use, count) => {
-                            if (/מעון|פעוטון/.test(use)) return Math.ceil(count / 3) * 440;
-                            if (/גן/.test(use)) return count * 130;
+                        // Built-area estimate for גן/מעון class counts, per the מינהל התכנון 2018
+                        // guide. מעון יום = 440 מ"ר per 3-class אשכול (day-cares come in clusters,
+                        // no single per-class size) → ⌈count/3⌉×440; גן ילדים ≈ 130 מ"ר/כיתה.
+                        // Works whether the class count is a structured field OR embedded in the
+                        // use text ("3 כיתות מעון"), and it OVERRIDES any parenthetical sqm — that
+                        // sqm is often a mis-attributed lot total (e.g. "3 כיתות גן, בית כנסת,
+                        // 3 כיתות מעון (1015)" where 1015 is the whole lot, not the מעון). Flagged ≈.
+                        const classEst = (e) => {
+                            const useStr = String(e.use || '');
+                            let count = (e.count != null && e.unit === 'כיתות') ? e.count : 0;
+                            if (!count) { const m = useStr.match(/(\d+)\s*כיתות?/); if (m) count = parseInt(m[1]); }
+                            if (!count) return 0;
+                            if (/מעון|פעוטון/.test(useStr)) return Math.ceil(count / 3) * 440;
+                            if (/גן/.test(useStr)) return count * 130;
                             return 0;
                         };
                         let total = 0, estimated = false;
                         for (const e of merged) {
                             let valueDisplay;
-                            if (e.sqm != null) {
+                            const ce = classEst(e);
+                            if (ce) {
+                                total += ce; estimated = true;
+                                valueDisplay = (e.count != null && e.unit === 'כיתות')
+                                    ? e.count + ' כיתות (≈' + ce.toLocaleString() + ' מ"ר)'
+                                    : '≈ ' + ce.toLocaleString() + ' מ"ר';
+                            } else if (e.sqm != null) {
                                 const sqm = parseInt(e.sqm) || 0;
                                 total += sqm;
                                 valueDisplay = sqm.toLocaleString() + ' מ"ר';
-                            } else if (e.count != null && e.unit === 'כיתות') {
-                                const est = estClassSqm(e.use || '', e.count);
-                                if (est) { total += est; estimated = true; valueDisplay = e.count + ' כיתות (≈' + est.toLocaleString() + ' מ"ר)'; }
-                                else { valueDisplay = e.count + ' כיתות'; }
                             } else if (e.count != null && e.unit) {
                                 valueDisplay = e.count + ' ' + e.unit;
                             } else if (e.count != null) {
