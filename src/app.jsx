@@ -515,6 +515,38 @@
             return { counts, uncategorizedSqm };
         }
 
+        // Classify a single free-text public-use string into a coarse allocation domain.
+        // Coarser than parseFacilitiesFromText (which pins exact facility types) — here we only
+        // need the domain bucket, so the keyword set is broader/looser. Returns null if no domain
+        // is recognized (caller buckets those as 'other' / כללי-לא-מסווג). Order matters: the more
+        // specific / higher-priority domains are tested first (e.g. חירום before רווחה/קהילה).
+        function hafrashUseDomain(t) {
+            if (!t || !t.trim()) return null;
+            if (/(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/.test(t)) return 'education';
+            if (/(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)/.test(t)) return 'religion';
+            if (/(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/.test(t)) return 'sport';
+            if (/(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/.test(t)) return 'health';
+            if (/(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/.test(t)) return 'emergency';
+            if (/(רווחה|שירותים חברתיים|חברתי|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום)/.test(t)) return 'welfare';
+            if (/(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון)/.test(t)) return 'culture';
+            return null;
+        }
+        // Resolve the set of allocation domains present on a hafrashah feature, from its per-lot
+        // use entries (preferred) or the free-text hafrash_prg fallback. Features with no recognized
+        // domain (sqm-only, "מבנים ומוסדות ציבור", "בתיאום…", noise) collapse to the 'other' bucket.
+        function hafrashahFeatureDomains(props) {
+            const domains = new Set();
+            let uses = [];
+            if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) {
+                uses = props._hafrash_lot_entries.map(e => e.use || '');
+            } else if (props.hafrash_prg) {
+                uses = String(props.hafrash_prg).split(/[;,]/).map(s => s.trim());
+            }
+            uses.forEach(u => { const d = hafrashUseDomain(u); if (d) domains.add(d); });
+            if (domains.size === 0) domains.add('other');
+            return domains;
+        }
+
         // Returns true if [lng,lat] (or {lng,lat}) point is inside any feature polygon of layer (e.g. minahak_gonen)
         function pointInLayer(pt, layer) {
             if (!layer || !layer.features) return false;
@@ -2272,6 +2304,11 @@
                 return () => clearTimeout(t);
             }, [filters.freeText]);
             const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
+            // Plan-status filter for the future public-buildings layers (שב"צ עתידי / הפרשה מבונה).
+            // Holds filterStatusGroups keys; empty = show all statuses.
+            const [shavazStatusFilter, setShavazStatusFilter] = useState([]);
+            // Use-domain filter for the הפרשה מבונה layer. Holds hafrashDomainGroups keys; empty = all.
+            const [hafrashDomainFilter, setHafrashDomainFilter] = useState([]);
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
                 { key: 'approved', label: 'אישור / מאושרת' },
@@ -2284,6 +2321,18 @@
                 { key: 'ה-בבנייה', label: 'בבנייה' },
                 { key: 'ד-היתר בנייה', label: 'היתר בנייה' },
                 { key: 'ג-רישוי בתהליך', label: 'רישוי בתהליך' },
+            ];
+            // Allocation-use domains for the הפרשה מבונה filter (aligns with the public-allocation
+            // guide categories + a כללי/לא-מסווג catch-all). Keys match hafrashUseDomain() output.
+            const hafrashDomainGroups = [
+                { key: 'education', label: 'חינוך' },
+                { key: 'religion',  label: 'דת' },
+                { key: 'sport',     label: 'ספורט' },
+                { key: 'health',    label: 'בריאות' },
+                { key: 'welfare',   label: 'רווחה / חברה' },
+                { key: 'culture',   label: 'קהילה ותרבות' },
+                { key: 'emergency', label: 'חירום' },
+                { key: 'other',     label: 'כללי / לא מסווג' },
             ];
 
             // PWA: online/offline detection
@@ -4347,8 +4396,14 @@
                 if (!window.__inFlightLoads) window.__inFlightLoads = new Set();
                 let _pendingTick = null;
                 let _anyArrived = false;
+                // Some layers render FROM landuse_xplan (filtered by mavat_code) rather than
+                // their own file — so turning them on must trigger the landuse on-demand fetch
+                // too, otherwise they'd render empty until landuse is separately loaded.
+                const LANDUSE_DEPENDENTS = ['future_shavaz', 'hafrashah_future'];
                 onDemand.forEach(key => {
-                    if (!layers[key]) return;
+                    const wanted = layers[key]
+                        || (key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d]));
+                    if (!wanted) return;
                     if (geoDataRef.current[key]) return;        // already loaded
                     if (window.__inFlightLoads.has(key)) return; // already fetching
                     const url = filesMap[key];
@@ -13137,6 +13192,27 @@
                 }
                 if (window.__refreshProjectorFilterPanel) window.__refreshProjectorFilterPanel();
 
+                // --- Shavaz/Hafrashah plan-status filter (shared by future_shavaz + hafrashah_future) ---
+                // Resolves a feature's owning plan via __planByTaba and tests its status against the
+                // selected groups (empty selection = show all). Mirrors the advanced plan filter's
+                // grouping (status_mavat + stage fallback). Accepts a pl_number ("101-0095612") or a
+                // bare taba number — both resolve to the same canonical taba key.
+                function passesShavazStatusFilter(plNumberOrTaba) {
+                    if (!shavazStatusFilter.length) return true;
+                    const s = String(plNumberOrTaba || '');
+                    const taba = s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
+                    const planProps = (window.__planByTaba || {})[taba] || {};
+                    const sg = getFilterStatusGroup(normalizeStatus((planProps.status_mavat || '').trim()));
+                    const sgStage = getFilterStatusGroup((planProps.stage || '').trim());
+                    return (!!sg && shavazStatusFilter.includes(sg)) || (!!sgStage && shavazStatusFilter.includes(sgStage));
+                }
+                // Use-domain filter for hafrashah_future features (empty selection = show all).
+                function passesHafrashDomainFilter(props) {
+                    if (!hafrashDomainFilter.length) return true;
+                    const domains = hafrashahFeatureDomains(props);
+                    return hafrashDomainFilter.some(d => domains.has(d));
+                }
+
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 // Strict separation from hafrashah_future: only pure-shavaz codes (no HAFRASHAH spill-over).
                 if (layers['future_shavaz'] && gd.landuse_xplan) {
@@ -13145,7 +13221,7 @@
                     const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code),
+                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number),
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -13184,6 +13260,7 @@
                     const planByTabaFs = window.__planByTaba || {};
                     for (const taba in planByTabaFs) {
                         if (coveredTabasFs.has(taba)) continue;
+                        if (!passesShavazStatusFilter(taba)) continue;
                         const sqm = parseFloat(planByTabaFs[taba].shavatz_out_sqm) || 0;
                         if (sqm <= 0) continue;
                         const candidates = gd.landuse_xplan.features.filter(f =>
@@ -13294,6 +13371,7 @@
                         return pointInPolygon([cx, cy], distRing);
                     };
                     const hafrashah = gd.landuse_xplan.features.filter(f => {
+                        if (!passesShavazStatusFilter(f.properties.pl_number)) return false;
                         const taba = tabaFromPlNum(f.properties.pl_number);
                         const lotNum = String(f.properties.num || '');
                         const planHasLotData = !!hafrashLookup[taba];
@@ -13315,6 +13393,7 @@
                     const planByTaba = window.__planByTaba || {};
                     for (const taba in planByTaba) {
                         if (coveredTabas.has(taba)) continue;
+                        if (!passesShavazStatusFilter(taba)) continue;
                         const sqm = parseFloat(planByTaba[taba].hafrash_sqm) || 0;
                         if (sqm <= 0) continue;
                         const candidates = gd.landuse_xplan.features.filter(f => {
@@ -13362,7 +13441,7 @@
                             ? { ...f.properties, _hafrash_lot_entries: lotEntries }
                             : { ...f.properties, hafrash_sqm: planProps.hafrash_sqm || '', hafrash_prg: planProps.hafrash_prg || '' };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: centroid } };
-                    });
+                    }).filter(pf => passesHafrashDomainFilter(pf.properties));
                     const pointCollection = { type: 'FeatureCollection', features: pointFeatures };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
@@ -14516,7 +14595,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, deferredTick]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -16733,6 +16812,58 @@
                                                     </label>
                                                 ))}
                                             </div>
+                                        </div>
+                                    )}
+                                    {groupKey === 'shavaz_atid_group' && !collapsedGroups[groupKey] && (layers['future_shavaz'] || layers['hafrashah_future']) && (
+                                        <div style={{padding:'4px 8px 8px 8px',fontSize:11,direction:'rtl'}}>
+                                            <div style={{fontWeight:'bold',marginBottom:4,color:'#aaa'}}>סינון לפי סטטוס תכנית:</div>
+                                            <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
+                                                {filterStatusGroups.map(sg => (
+                                                    <label key={sg.key} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
+                                                        <input type="checkbox"
+                                                            checked={shavazStatusFilter.length === 0 || shavazStatusFilter.includes(sg.key)}
+                                                            onChange={e => {
+                                                                setShavazStatusFilter(prev => {
+                                                                    const all = filterStatusGroups.map(g => g.key);
+                                                                    let next = prev.length === 0 ? [...all] : [...prev];
+                                                                    if (e.target.checked) { if (!next.includes(sg.key)) next.push(sg.key); }
+                                                                    else { next = next.filter(x => x !== sg.key); }
+                                                                    if (next.length === all.length) next = [];
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            style={{margin:0}}
+                                                        />
+                                                        <span>{sg.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {layers['hafrashah_future'] && (
+                                                <>
+                                                    <div style={{fontWeight:'bold',margin:'8px 0 4px',color:'#aaa'}}>תחום ההפרשה המבונה:</div>
+                                                    <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
+                                                        {hafrashDomainGroups.map(dg => (
+                                                            <label key={dg.key} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
+                                                                <input type="checkbox"
+                                                                    checked={hafrashDomainFilter.length === 0 || hafrashDomainFilter.includes(dg.key)}
+                                                                    onChange={e => {
+                                                                        setHafrashDomainFilter(prev => {
+                                                                            const all = hafrashDomainGroups.map(g => g.key);
+                                                                            let next = prev.length === 0 ? [...all] : [...prev];
+                                                                            if (e.target.checked) { if (!next.includes(dg.key)) next.push(dg.key); }
+                                                                            else { next = next.filter(x => x !== dg.key); }
+                                                                            if (next.length === all.length) next = [];
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                    style={{margin:0}}
+                                                                />
+                                                                <span>{dg.label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
