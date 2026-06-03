@@ -10640,6 +10640,15 @@
                         const sgStage = getFilterStatusGroup(stageVal);
                         if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
                     }
+                    // Future public-buildings status filter also governs the plan outlines, but only
+                    // while one of those layers (and thus its control) is on — so turning them off
+                    // restores normal plan display instead of leaving a hidden, unresettable filter.
+                    if ((layers['future_shavaz'] || layers['hafrashah_future']) && shavazStatusFilter.length > 0) {
+                        const sg = getFilterStatusGroup(s);
+                        const stageVal = (props.stage || '').trim();
+                        const sgStage = getFilterStatusGroup(stageVal);
+                        if ((!sg || !shavazStatusFilter.includes(sg)) && (!sgStage || !shavazStatusFilter.includes(sgStage))) return false;
+                    }
                     if (af.freeText) {
                         const q = af.freeText.toLowerCase();
                         const searchFields = [
