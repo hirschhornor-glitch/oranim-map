@@ -15848,15 +15848,37 @@
                 // Lot entries — from hafrash_prg or shavatz_out_prog (matched by taba+lot).
                 // Each entry has either {use, sqm} (sqm-based) or {use, count, unit} (e.g., "9 כיתות מעון").
                 if (isHafrashah || hasLotEntries) {
-                    const lotEntries = Array.isArray(props._hafrash_lot_entries) ? props._hafrash_lot_entries : null;
-                    if (lotEntries && lotEntries.length) {
-                        let total = 0;
-                        for (const e of lotEntries) {
+                    const rawEntries = Array.isArray(props._hafrash_lot_entries) ? props._hafrash_lot_entries : null;
+                    if (rawEntries && rawEntries.length) {
+                        // Merge entries repeating the same use within a lot — some plans list a use
+                        // once in a text list and again with its sqm (e.g. "4 כיתות גן, בית כנסת;
+                        // בית כנסת (300)"), which would otherwise show בית כנסת twice. An sqm always
+                        // wins over a bare count for the same use.
+                        const merged = []; const byUse = {};
+                        for (const e of rawEntries) {
+                            const key = (e.use || '').trim();
+                            if (!byUse[key]) { byUse[key] = { ...e }; merged.push(byUse[key]); }
+                            else {
+                                const m = byUse[key];
+                                if (e.sqm != null) m.sqm = (m.sqm != null ? parseInt(m.sqm) || 0 : 0) + (parseInt(e.sqm) || 0);
+                                else if (e.count != null && m.sqm == null) { m.count = Math.max(m.count || 0, e.count); if (e.unit) m.unit = e.unit; }
+                            }
+                        }
+                        // m² per class for educational facilities (data-grounded: גן≈130, מעון≈147),
+                        // used to estimate area when the source gives only a class count so the total
+                        // isn't undercounted. Marked with ≈ to flag it as an estimate.
+                        const classSqm = (use) => /מעון|פעוטון/.test(use) ? 147 : (/גן/.test(use) ? 130 : 0);
+                        let total = 0, estimated = false;
+                        for (const e of merged) {
                             let valueDisplay;
                             if (e.sqm != null) {
                                 const sqm = parseInt(e.sqm) || 0;
                                 total += sqm;
                                 valueDisplay = sqm.toLocaleString() + ' מ"ר';
+                            } else if (e.count != null && e.unit === 'כיתות') {
+                                const f = classSqm(e.use || '');
+                                if (f) { const est = e.count * f; total += est; estimated = true; valueDisplay = e.count + ' כיתות (≈' + est.toLocaleString() + ' מ"ר)'; }
+                                else { valueDisplay = e.count + ' כיתות'; }
                             } else if (e.count != null && e.unit) {
                                 valueDisplay = e.count + ' ' + e.unit;
                             } else if (e.count != null) {
@@ -15866,8 +15888,8 @@
                             }
                             html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
                         }
-                        if (lotEntries.length > 1) {
-                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
+                        if (merged.length > 1) {
+                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ${estimated ? ' (משוער)' : ''}</span><span class="popup-row-value"><strong>${(estimated ? '≈ ' : '') + total.toLocaleString()} מ"ר</strong></span></div>`;
                         }
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
