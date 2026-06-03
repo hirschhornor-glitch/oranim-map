@@ -472,6 +472,9 @@
         // Max plausible classroom count for a school. A school's parenthetical value at or below this
         // is read as classes; above it, as an area in m² (real school areas are ≥ ~1000 m²).
         const SCHOOL_CLASS_CAP = 150;
+        // Standard elementary-school size. A בי"ס יסודי with no class count stated anywhere in its
+        // phrase is assumed to be this many classrooms (overridden by any explicit "N כיתות"/"(N)").
+        const DEFAULT_YESODI_CLASSES = 12;
         // Per-item breakdown of a program description. Returns { items, uncategorizedSqm } where each
         // item = { key, count, sqm, isClasses } for one recognized facility phrase. This is the single
         // source of truth; parseFacilitiesFromText() aggregates it into the legacy {counts} shape.
@@ -525,6 +528,10 @@
                         // parenthetical is the classroom count, not an area. School areas run to the
                         // thousands of m², so a small parenthetical (≤ cap) can only be classes.
                         count = sqm; isClasses = true; itemSqm = 0;
+                    }
+                    else if (key === 'yesodi') {
+                        // בי"ס יסודי with no class count anywhere → standard 12-class assumption.
+                        count = DEFAULT_YESODI_CLASSES; isClasses = true;
                     }
                     else { count = leadCount || 1; isClasses = false; }
                     out.push({ key, count, sqm: itemSqm, isClasses });
