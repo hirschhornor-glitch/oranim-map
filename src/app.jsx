@@ -467,10 +467,15 @@
         //   • "N בתי כנסת" → synagogue += N (no כיתות → use leading count)
         //   • Single-item without numbers → counts as 1
         //   • Generic "מבנים ומוסדות ציבור (5000)" → adds 5000 to uncategorizedSqm
-        function parseFacilitiesFromText(text) {
-            const counts = {}; PARSER_KEYS.forEach(k => counts[k] = 0);
+        // Education keys are measured in classrooms (כיתות); all other keys count facilities (מתקנים).
+        const EDU_PARSER_KEYS = ['maon', 'gan', 'yesodi', 'al_yesodi'];
+        // Per-item breakdown of a program description. Returns { items, uncategorizedSqm } where each
+        // item = { key, count, sqm, isClasses } for one recognized facility phrase. This is the single
+        // source of truth; parseFacilitiesFromText() aggregates it into the legacy {counts} shape.
+        function parseFacilitiesDetailed(text) {
+            const out = [];
             let uncategorizedSqm = 0;
-            if (!text || !text.trim()) return { counts, uncategorizedSqm };
+            if (!text || !text.trim()) return { items: out, uncategorizedSqm };
             const items = text.split(/[;,]/);
             for (const raw of items) {
                 const t = (raw || '').trim();
@@ -485,33 +490,42 @@
                 const leadMatch = t.match(/^(\d+)\s/);
                 const leadCount = leadMatch ? parseInt(leadMatch[1]) : 0;
                 const count = explicitClasses || leadCount || 1;
-                let matched = false;
+                const isClasses = explicitClasses > 0;
+                let key = null;
                 // Education — al_yesodi (longer/more-specific phrases first)
-                if (/(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/.test(t)) { counts.al_yesodi += count; matched = true; }
-                else if (/(מעון|מעונות יום|פעוטון)/.test(t)) { counts.maon += count; matched = true; }
-                else if (/(גן ילדים|גני ילדים|גנון|גן חינוך)/.test(t) || /(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/.test(t)) { counts.gan += count; matched = true; }
-                else if (/(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/.test(t)) { counts.yesodi += count; matched = true; }
+                if (/(תיכון|חטיבה|אולפנה|מדרשייה|מדרשיה|ישיבה גבוהה|ישיבה תיכונית|על[\- ]יסודי|בתי ספר על|בית ספר על|ספר על יסודי)/.test(t)) { key = 'al_yesodi'; }
+                else if (/(מעון|מעונות יום|פעוטון)/.test(t)) { key = 'maon'; }
+                else if (/(גן ילדים|גני ילדים|גנון|גן חינוך)/.test(t) || /(?:^|[^א-ת])(?:כיתות?\s+)?גן(?:[^א-ת]|$)/.test(t)) { key = 'gan'; }
+                else if (/(יסודי|בית ספר|בי"ס|בי״ס|ביה"ס|ביה״ס|בית-ספר)/.test(t)) { key = 'yesodi'; }
                 // Religious
-                else if (/(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת|בית כנסת)/.test(t)) { counts.synagogue += count; matched = true; }
-                else if (/(מקווה|מקוואות)/.test(t)) { counts.mikve += count; matched = true; }
+                else if (/(בית כנסת|ביכ"נ|ביכ״נ|בית-כנסת|בתי כנסת|בית כנסת)/.test(t)) { key = 'synagogue'; }
+                else if (/(מקווה|מקוואות)/.test(t)) { key = 'mikve'; }
                 // Community / culture
-                else if (/(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/.test(t)) { counts.matnas += count; matched = true; }
-                else if (/(ספרייה|ספריה)/.test(t)) { counts.library += count; matched = true; }
+                else if (/(מתנ"ס|מתנ״ס|מרכז קהילתי|שלוחת מתנס|מועדון קהילתי)/.test(t)) { key = 'matnas'; }
+                else if (/(ספרייה|ספריה)/.test(t)) { key = 'library'; }
                 // Sports
-                else if (/(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/.test(t)) { counts.sport_hall += count; matched = true; }
+                else if (/(אולם ספורט|מגרש ספורט|בריכת שחייה|בריכה ציבורית|מרכז ספורט|מתקני ספורט|מבנים ומתקנים לפעילויות ספורט|פעילויות ספורט|פנאי וספורט|אולם)/.test(t)) { key = 'sport_hall'; }
                 // Health
-                else if (/(טיפת חלב|תחנת בריאות)/.test(t)) { counts.tipat_chalav += count; matched = true; }
-                else if (/(מרפאה|קופת חולים)/.test(t)) { counts.clinic += count; matched = true; }
+                else if (/(טיפת חלב|תחנת בריאות)/.test(t)) { key = 'tipat_chalav'; }
+                else if (/(מרפאה|קופת חולים)/.test(t)) { key = 'clinic'; }
                 // Welfare
-                else if (/(לשכת רווחה|מחלקה לשירותים חברתיים)/.test(t)) { counts.welfare_dept += count; matched = true; }
-                else if (/(מועדון נוער|מועדונית|מרכז נוער)/.test(t)) { counts.noar_club += count; matched = true; }
-                else if (/(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/.test(t)) { counts.elderly_club += count; matched = true; }
-                else if (/(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/.test(t)) { counts.elderly_day += count; matched = true; }
+                else if (/(לשכת רווחה|מחלקה לשירותים חברתיים)/.test(t)) { key = 'welfare_dept'; }
+                else if (/(מועדון נוער|מועדונית|מרכז נוער)/.test(t)) { key = 'noar_club'; }
+                else if (/(מועדון קשיש|מועדון לקשיש|מועדון לאזרחים ותיקים|אזרחים ותיקים)/.test(t)) { key = 'elderly_club'; }
+                else if (/(מרכז יום לקשיש|מרכז יום|תשושים|תשושי גוף)/.test(t)) { key = 'elderly_day'; }
+                if (key) { out.push({ key, count, sqm, isClasses }); }
                 // Uncategorized generic public buildings — accumulate sqm
-                if (!matched && /(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
+                else if (/(מבנים ומוסדות|מבני ציבור|מוסדות ציבור|מוסדות כלל ציבור|שב"צ|שבצ|שצ"פ|שצ״פ|שטחי ציבור)/.test(t)) {
                     uncategorizedSqm += sqm;
                 }
             }
+            return { items: out, uncategorizedSqm };
+        }
+
+        function parseFacilitiesFromText(text) {
+            const counts = {}; PARSER_KEYS.forEach(k => counts[k] = 0);
+            const { items, uncategorizedSqm } = parseFacilitiesDetailed(text);
+            items.forEach(it => { counts[it.key] += it.count; });
             return { counts, uncategorizedSqm };
         }
 
@@ -7691,15 +7705,43 @@
                     .join('');
 
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                const planRows = rows.map(r =>
+                // Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
+                // so a plan repeats across its uses and the detail can be filtered by use like the
+                // summary table. Counts of the same use within a source are aggregated.
+                const detailRows = [];
+                rows.forEach(r => {
+                    [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
+                        if (!prg && !(totalSqm > 0)) return;
+                        const { items, uncategorizedSqm } = parseFacilitiesDetailed(prg || '');
+                        const agg = {};
+                        items.forEach(it => {
+                            if (!agg[it.key]) agg[it.key] = { count: 0, sqm: 0 };
+                            agg[it.key].count += it.count; agg[it.key].sqm += it.sqm;
+                        });
+                        const keys = Object.keys(agg);
+                        keys.forEach(key => detailRows.push({
+                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                            use: ALLOC_LBLS[key], count: agg[key].count,
+                            unit: EDU_PARSER_KEYS.includes(key) ? 'כיתות' : 'מתקנים', sqm: agg[key].sqm,
+                        }));
+                        // No recognized facility — keep the plan visible as a generic public-building row
+                        if (!keys.length) detailRows.push({
+                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                            use: 'מבני ציבור (כללי / לא מסווג)', count: 0, unit: '', sqm: uncategorizedSqm || totalSqm || 0,
+                        });
+                    });
+                });
+                detailRows.sort((a, b) => (a.use < b.use ? -1 : a.use > b.use ? 1 : (a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0)));
+                const planRows = detailRows.map(r =>
                     '<tr style="border-bottom:1px solid #222">' +
                     '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                     '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
-                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.outSqm > 0 ? Math.round(r.outSqm).toLocaleString() : '—') + '</td>' +
-                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.hafSqm > 0 ? Math.round(r.hafSqm).toLocaleString() : '—') + '</td>' +
-                    '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc([r.outPrg, r.hafPrg].filter(Boolean).join(' · ')) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.sqm > 0 ? Math.round(r.sqm).toLocaleString() : '—') + '</td>' +
+                    '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.use) + '</td>' +
                     '</tr>'
                 ).join('');
 
@@ -7728,9 +7770,9 @@
                         ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
                           '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + useRows + '</tbody></table>'
                         : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') +
-                    '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית (' + rows.length + ')</h4>' +
+                    '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + detailRows.length + ')</h4>' +
                     (planRows
-                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">שב"צ עתידי</th><th style="padding:6px;color:#d4a373">הפרשה מבונה</th><th style="padding:6px;text-align:right;color:#d4a373">תיאור</th></tr></thead><tbody>' + planRows + '</tbody></table>'
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>'
                         : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') +
                     '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' +
                         '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
@@ -7752,8 +7794,8 @@
                     lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
                     PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
                     lines.push('');
-                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('שב"צ עתידי (מ"ר)'), q('הפרשה מבונה (מ"ר)'), q('תיאור שב"צ עתידי'), q('תיאור הפרשה מבונה')].join(','));
-                    rows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.sub), Math.round(r.outSqm), Math.round(r.hafSqm), q(r.outPrg), q(r.hafPrg)].join(',')));
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
+                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
