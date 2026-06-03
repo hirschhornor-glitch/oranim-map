@@ -11087,9 +11087,12 @@
                             const shortName = f.properties.plan_summary || '';
                             const add = parseFloat(f.properties.units_add) || 0;
                             const zoom = map.getZoom();
+                            // When the future public-buildings layers are on, suppress plan labels
+                            // (name/units + plan number) so the marker dots aren't hidden by text.
+                            const hideLabelsForFuture = layers['future_shavaz'] || layers['hafrashah_future'];
 
                             // Zoom 15: no labels at all
-                            if (zoom >= 16) {
+                            if (zoom >= 16 && !hideLabelsForFuture) {
                                 // Zoom 16: only plans with 100+ units
                                 if (zoom === 16 && add < z16MinUnits) {
                                     // skip label
@@ -11187,7 +11190,7 @@
                             }
                             // Plan number along longest edge (in pixels), rotated to match
                             const planNum = f.properties.plan_name || '';
-                            if (zoom >= 17 && planNum && f.geometry && f.geometry.coordinates) {
+                            if (zoom >= 17 && planNum && !hideLabelsForFuture && f.geometry && f.geometry.coordinates) {
                                 let coords;
                                 try { coords = f.geometry.type === 'MultiPolygon'
                                     ? f.geometry.coordinates[0][0]
@@ -15892,32 +15895,13 @@
                                 else if (e.count != null && m.sqm == null) { m.count = Math.max(m.count || 0, e.count); if (e.unit) m.unit = e.unit; }
                             }
                         }
-                        // Built-area estimate for גן/מעון class counts, per the מינהל התכנון 2018
-                        // guide. מעון יום = 440 מ"ר per 3-class אשכול (day-cares come in clusters,
-                        // no single per-class size) → ⌈count/3⌉×440; גן ילדים ≈ 130 מ"ר/כיתה.
-                        // Works whether the class count is a structured field OR embedded in the
-                        // use text ("3 כיתות מעון"), and it OVERRIDES any parenthetical sqm — that
-                        // sqm is often a mis-attributed lot total (e.g. "3 כיתות גן, בית כנסת,
-                        // 3 כיתות מעון (1015)" where 1015 is the whole lot, not the מעון). Flagged ≈.
-                        const classEst = (e) => {
-                            const useStr = String(e.use || '');
-                            let count = (e.count != null && e.unit === 'כיתות') ? e.count : 0;
-                            if (!count) { const m = useStr.match(/(\d+)\s*כיתות?/); if (m) count = parseInt(m[1]); }
-                            if (!count) return 0;
-                            if (/מעון|פעוטון/.test(useStr)) return Math.ceil(count / 3) * 440;
-                            if (/גן/.test(useStr)) return count * 130;
-                            return 0;
-                        };
-                        let total = 0, estimated = false;
+                        // No estimation — show only the מ"ר fed in the data; class counts with no
+                        // מ"ר show just the count. The total sums the explicit מ"ר (the per-lot
+                        // figure entered in the הפרשה מבונה מ"ר column).
+                        let total = 0;
                         for (const e of merged) {
                             let valueDisplay;
-                            const ce = classEst(e);
-                            if (ce) {
-                                total += ce; estimated = true;
-                                valueDisplay = (e.count != null && e.unit === 'כיתות')
-                                    ? e.count + ' כיתות (≈' + ce.toLocaleString() + ' מ"ר)'
-                                    : '≈ ' + ce.toLocaleString() + ' מ"ר';
-                            } else if (e.sqm != null) {
+                            if (e.sqm != null) {
                                 const sqm = parseInt(e.sqm) || 0;
                                 total += sqm;
                                 valueDisplay = sqm.toLocaleString() + ' מ"ר';
@@ -15930,8 +15914,8 @@
                             }
                             html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
                         }
-                        if (merged.length > 1) {
-                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ${estimated ? ' (משוער)' : ''}</span><span class="popup-row-value"><strong>${(estimated ? '≈ ' : '') + total.toLocaleString()} מ"ר</strong></span></div>`;
+                        if (merged.length > 1 && total > 0) {
+                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
                         }
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
