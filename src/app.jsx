@@ -8170,7 +8170,10 @@
                     const subsObj = tree[mn], allAreas = [];
                     const subs = Object.keys(subsObj).map(sn => {
                         allAreas.push(...subsObj[sn]);
-                        return { name: sn, metrics: aggregatePopulationAreas(subsObj[sn]) };
+                        const areas = subsObj[sn]
+                            .map(a => ({ id: a.stat_area_id, pop: a.pop_approx, unite: a.unite_id || null }))
+                            .sort((x, y) => (y.pop || 0) - (x.pop || 0));
+                        return { name: sn, metrics: aggregatePopulationAreas(subsObj[sn]), areas };
                     }).sort((a, b) => b.metrics.pop - a.metrics.pop);
                     return { name: mn, metrics: aggregatePopulationAreas(allAreas), subs };
                 }).sort((a, b) => b.metrics.pop - a.metrics.pop);
@@ -8282,7 +8285,20 @@
                             kpi('גודל משק בית', f1(t.householdSize), 'נפ\'/מ"ב', '#8fd14f') +
                             kpi('גיל חציוני', f1(t.age_median), '', '#c4a24d') +
                             '</div>';
-                        bodyHtml = kpis + BLOCKS.map(spec => buildTable(spec, mh.subs, t)).join('');
+                        // Verification: which CBS statistical areas feed each sub-neighborhood.
+                        const areasRows = mh.subs.map(s =>
+                            '<tr style="border-bottom:1px solid #222;color:#cfe"><td style="padding:5px 7px;text-align:right;white-space:nowrap">' + esc(s.name) + '</td>' +
+                            '<td style="padding:5px 7px;text-align:center;color:#9ab">' + s.areas.length + '</td>' +
+                            '<td style="padding:5px 7px;text-align:right;color:#9ab;font-size:11px">' +
+                            s.areas.map(a => (a.unite ? esc(a.unite) : a.id) + ' <span style="color:#667">(' + n0(a.pop) + ')</span>').join(' · ') +
+                            '</td></tr>').join('');
+                        const areasTable = '<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">אזורים סטטיסטיים לפי תת-שכונה <span style="color:#789;font-weight:normal;font-size:11px">(מס׳ אזור · אוכלוסייה)</span></h4>' +
+                            '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">' +
+                            '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' +
+                            '<th style="padding:5px 7px;color:#4db8c4;font-size:11px"># אזורים</th>' +
+                            '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">אזורים סטטיסטיים (מפקד 2022)</th>' +
+                            '</tr></thead><tbody>' + areasRows + '</tbody></table>';
+                        bodyHtml = kpis + BLOCKS.map(spec => buildTable(spec, mh.subs, t)).join('') + areasTable;
                     }
                     div.innerHTML = head + bodyHtml + footer;
                     document.getElementById('popdash-close').addEventListener('click', () => div.remove());
