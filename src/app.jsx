@@ -8477,7 +8477,7 @@
                     const gd = Object.assign({}, gdRoot);
                     const need = ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs',
                         // existing-state layers (מצב קיים)
-                        'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'migrash_panui', 'shavaz_kayam', 'sport_kayam', 'mivnei_lashimur', 'yiud_karka_kayam'];
+                        'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'migrash_panui', 'shavaz_kayam', 'sport_kayam', 'mivnei_lashimur', 'yiud_karka_kayam', 'roads'];
                     await Promise.all(need.map(async key => {
                         if (gd[key] && gd[key].features) return;
                         if (cache[key]) { gd[key] = cache[key]; return; }
@@ -8506,17 +8506,23 @@
                 const planUnitsAdd = plansInside.reduce((s, x) => s + (parseFloat(x.props.units_add) || 0), 0);
                 const planByStatus = {};
                 plansInside.forEach(x => { const st = groupStatus(normalizeStatus(x.props.status_mavat || '')); planByStatus[st] = (planByStatus[st] || 0) + 1; });
-                const topPlans = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0)).slice(0, 8)
-                    .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: normalizeStatus(x.props.status_mavat || ''), feat: x.feat }));
+                const planRowsAll = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0))
+                    .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: normalizeStatus(x.props.status_mavat || ''), minahak: x.props.minahak || '', feat: x.feat }));
+                const topPlans = planRowsAll.slice(0, 8);
 
                 // ── 2. תמ"א 38 ──
                 let tamaCount = 0, tamaUnits = 0;
+                const tamaRows = [];
                 if (gd.tama38 && gd.tama38.features) {
                     gd.tama38.features.forEach(f => {
                         const c = geomCentroid(f.geometry);
                         if (!c || !pip(c, polyCoords)) return;
-                        tamaCount++; tamaUnits += parseFloat((f.properties || {}).units_tose) || 0;
+                        const p = f.properties || {};
+                        const u = parseFloat(p.units_tose) || 0;
+                        tamaCount++; tamaUnits += u;
+                        tamaRows.push({ address: p.address || p.tik || p.kvuzat_id || '', status: p.status || '', units: u, lng: c[0], lat: c[1] });
                     });
+                    tamaRows.sort((a, b) => b.units - a.units);
                 }
 
                 // ── 3. יח"ד קיימות (existing units from municipal buildings layer) ──
@@ -8658,12 +8664,17 @@
                 const yiud = { total: 0, byYeud: {} };
                 feats('yiud_karka_kayam').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; const y = ((p.Descr || p.YEUD || 'אחר') + '').trim() || 'אחר'; yiud.total++; yiud.byYeud[y] = (yiud.byYeud[y] || 0) + geomAreaSqm(f.geometry); });
 
+                // Street names within the area (from the roads layer)
+                const streetSet = new Set();
+                feats('roads').forEach(f => { const c = geomCentroid(f.geometry); if (!c || !pip(c, polyCoords)) return; const s = (((f.properties || {}).street || '') + '').trim(); if (s) streetSet.add(s); });
+                const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
+
                 const existing = { moch, eduInst, eduStudents, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
-                    title: 'סיכום אזור נבחר', areaSqm,
-                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans },
-                    tama: { count: tamaCount, units: tamaUnits },
+                    title: 'סיכום אזור נבחר', areaSqm, streets,
+                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll },
+                    tama: { count: tamaCount, units: tamaUnits, rows: tamaRows },
                     existingUnits,
                     permits: { totalPermits, totalIncludedUnits, stageAgg, catAgg, rows: permitRows },
                     projector: { count: projCount, byDomain: projector },
@@ -21695,16 +21706,15 @@
                                     if (d.projector.count > 0) sumParts.push(d.projector.count + ' המלצות פרויקטור');
                                     if (ex && ex.moch.total > 0) sumParts.push(ex.moch.total + ' מוסדות ציבור');
                                     if (d.masterPlans.length > 0) sumParts.push(d.masterPlans.length + ' תכניות אב');
-                                    const summaryText = 'באזור ' + fmtArea(d.areaSqm) + ': ' + sumParts.join(' · ') + '.';
-                                    // מאזן פרוגרמתי (הערכה גסה) — מינהל התכנון 2018: 30–70 מ"ר שטחי ציבור למשק בית
-                                    const progUnits = Math.round(totalPlanned);
-                                    const supplyPublic = ex ? ((ex.moch.area || 0) + (ex.green.area || 0)) : 0;
-                                    const demandLow = progUnits * 30, demandHigh = progUnits * 70;
-                                    const balLow = supplyPublic - demandHigh, balHigh = supplyPublic - demandLow;
-                                    const showProg = progUnits > 0 && supplyPublic > 0;
-                                    const balVerdict = balHigh < 0 ? 'גירעון' : (balLow > 0 ? 'עודף' : 'גבולי');
-                                    const balColor = balHigh < 0 ? '#ef5350' : (balLow > 0 ? '#66bb6a' : '#ffb74d');
-                                    const fmtSigned = n => (n > 0 ? '+' : '') + Math.round(n).toLocaleString();
+                                    // Open the dedicated public-needs (programa) report for THIS same polygon.
+                                    const openPrograma = () => {
+                                        const pts = areaFinished;
+                                        const map = mapInstanceRef.current;
+                                        if (fullReportPolyRef.current && map) { try { map.removeLayer(fullReportPolyRef.current); } catch(e){} fullReportPolyRef.current = null; }
+                                        setFullAreaReport(null); setFullReportDrill(null); setFullAreaLoading(false);
+                                        programaAreaActiveRef.current = true;
+                                        if (pts && pts.length) setAreaFinished([...pts]);
+                                    };
                                     const zoomTo = (feat) => { setFullAreaReport(null); const map = mapInstanceRef.current; if(fullReportPolyRef.current&&map){try{map.removeLayer(fullReportPolyRef.current)}catch(e){} fullReportPolyRef.current=null;} if (!map || !feat || !feat.geometry) return; try { const b = L.geoJSON(feat).getBounds(); if (b.isValid && b.isValid()) map.fitBounds(b, { padding:[40,40], maxZoom:18 }); } catch(e){} };
                                     const zoomPt = (lng, lat) => { if (lng == null || lat == null) return; zoomTo({ type:'Feature', geometry:{ type:'Point', coordinates:[lng, lat] } }); };
                                     const floorsTxt = z => z.floorsMax == null ? '' : (z.floorsMin != null && z.floorsMin !== z.floorsMax ? z.floorsMin + '–' + z.floorsMax : z.floorsMax) + ' קומות';
@@ -21718,7 +21728,7 @@
                                     const rowStyle = {display:'flex',justifyContent:'space-between',padding:'2px 0',fontSize:12};
                                     const STAGE_COLORS = {pre_licensing:'#90a4ae', licensing:'#42a5f5', issued:'#66bb6a', done:'#bdbdbd'};
                                     // Thematic per-section colors (matches the app palette: כחול=היתרים, חום=ציבור, ירוק=שצ"פ, סגול=מסחר)
-                                    const secColors = { balance:'#26c6da', plans:'#e94560', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6' };
+                                    const secColors = { plans:'#e94560', tama:'#ff8a65', permits:'#42a5f5', projector:'#ffa726', master:'#ffd479', inst:'#bcaaa4', green:'#66bb6a', commerce:'#b07fd6' };
                                     const toggleSec = k => setFullAreaCollapsed(s => ({ ...s, [k]: !s[k] }));
                                     const toggleTbl = id => setFullReportTables(s => ({ ...s, [id]: !s[id] }));
                                     // Clickable "📋 detail" toggle row that reveals a record-level table.
@@ -21741,8 +21751,8 @@
                                     const sectionStyle = {background:'#15152a',border:'1px solid #2a2a3e',borderRadius:8,padding:'10px 12px',marginBottom:10};
                                     const h3Style = {color:'#e94560',fontSize:13,margin:'0 0 8px'};
                                     const navItems = [
-                                        showProg && {k:'balance', label:'מאזן'},
                                         d.plans.count>0 && {k:'plans', label:'תב"ע'},
+                                        (d.tama.count>0) && {k:'tama', label:'תמ"א 38'},
                                         d.permits.totalPermits>0 && {k:'permits', label:'היתרים'},
                                         d.projector.count>0 && {k:'projector', label:'פרויקטור'},
                                         (d.masterPlans.length>0 || (ex&&ex.consCity.total)) && {k:'master', label:'אב ושימור'},
@@ -21758,8 +21768,12 @@
                                                 style={{color:'#fff',fontSize:18,marginBottom:2,outline:'none',borderBottom:'1px dashed rgba(233,69,96,0.4)',display:'inline-block',cursor:'text'}}>🗺️ {d.title}</h2>
                                             <span style={{fontSize:10,color:'#9aa6b2',marginRight:8}}>✏️ לחץ על הכותרת לעריכה</span>
                                             <div style={{fontSize:11,color:'#aeb6c2',marginTop:4,marginBottom:10}}>שטח האזור: {fmtArea(d.areaSqm)}</div>
-                                            {/* תקציר אוטומטי (ניתן לסימון והעתקה) */}
-                                            <div style={{background:'#101024',border:'1px solid #2a2a3e',borderRight:'3px solid #e94560',borderRadius:6,padding:'7px 10px',marginBottom:10,fontSize:12,lineHeight:1.5,color:'#e6e9ef',userSelect:'text'}}>{summaryText}</div>
+                                            {/* רחובות באזור (ניתן לסימון והעתקה) */}
+                                            {d.streets && d.streets.length > 0 && (
+                                                <div style={{background:'#101024',border:'1px solid #2a2a3e',borderRight:'3px solid #e94560',borderRadius:6,padding:'7px 10px',marginBottom:10,fontSize:11,lineHeight:1.6,color:'#e6e9ef',userSelect:'text'}}>
+                                                    <span style={{color:'#9aa6b2'}}>רחובות באזור ({d.streets.length}): </span>{d.streets.slice(0,60).join(' · ')}{d.streets.length > 60 ? ' ועוד ' + (d.streets.length - 60) + '…' : ''}
+                                                </div>
+                                            )}
                                             {/* KPI */}
                                             <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center',background:'#0f0f1f',borderRadius:8,padding:'8px 4px',marginBottom:10}}>
                                                 {card(fmt(d.plans.count), 'תכניות תב"ע')}
@@ -21791,15 +21805,6 @@
                                                 </div>
                                             )}
 
-                                            {/* מאזן פרוגרמתי (הערכה) */}
-                                            {showProg && section('balance', '⚖️ מאזן פרוגרמתי (הערכה)', <>
-                                                    <div style={{fontSize:10,color:'#9aa6b2',marginBottom:6}}>הערכה גסה לפי מדד טביעת-רגל ציבורית (מינהל התכנון 2018): 30–70 מ"ר שטחי ציבור למשק בית. למאזן מפורט פר-תחום — דוח הפרוגרמה הייעודי.</div>
-                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>יח"ד (קיים + מתוכנן)</span><span style={{color:'#c2c9d4'}}>{fmt(progUnits)}</span></div>
-                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>היצע ציבורי קיים (מבונה + שצ"פ)</span><span style={{color:'#c2c9d4'}}>{fmt(supplyPublic)} מ"ר</span></div>
-                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>ביקוש מוערך</span><span style={{color:'#c2c9d4'}}>{fmt(demandLow)}–{fmt(demandHigh)} מ"ר</span></div>
-                                                    <div style={{...rowStyle,borderTop:'1px solid #2a2a3e',marginTop:4,paddingTop:5}}><span style={{fontWeight:'bold'}}>מאזן מוערך <span style={{color:balColor}}>({balVerdict})</span></span><span style={{fontWeight:'bold',color:balColor}}>{fmtSigned(balLow)} … {fmtSigned(balHigh)} מ"ר</span></div>
-                                            </>)}
-
                                             {/* תב"ע */}
                                             {d.plans.count > 0 && section('plans', '🏗️ תכניות מקודמות (תב"ע) — ' + d.plans.count, <>
                                                     {Object.entries(d.plans.byStatus).sort((a,b)=>b[1]-a[1]).map(([st,c]) => (
@@ -21813,6 +21818,22 @@
                                                             <span style={{color:'#7bdc8a',fontWeight:'bold',whiteSpace:'nowrap'}}>+{Math.round(p.unitsAdd)}</span>
                                                         </div>
                                                     ))}
+                                                    {d.plans.rows && d.plans.rows.length > 0 && detailRow('plansTbl', 'פירוט כל התב"עות (' + d.plans.rows.length + ')')}
+                                                    {fullReportTables['plansTbl'] && d.plans.rows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>שם תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>סטטוס</th><th style={th}>תוספת יח"ד</th><th style={th}>מינהק</th></tr></thead>
+                                                        <tbody>{d.plans.rows.map((r,i)=>(<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name}</td><td style={td}>{r.taba||'—'}</td><td style={td}>{r.status||'—'}</td><td style={{...td,color:'#7bdc8a'}}>{r.unitsAdd?Math.round(r.unitsAdd):''}</td><td style={td}>{r.minahak||'—'}</td></tr>))}</tbody></table>
+                                                    )}
+                                            </>)}
+
+                                            {/* תמ"א 38 */}
+                                            {d.tama.count > 0 && section('tama', '🏚️ תמ"א 38 — ' + d.tama.count, <>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מספר מתחמים</span><span style={{color:'#c2c9d4',fontWeight:'bold'}}>{d.tama.count}</span></div>
+                                                    <div style={rowStyle}><span style={{color:'#cfd3dc'}}>תוספת יח"ד מוערכת</span><span style={{color:'#7bdc8a',fontWeight:'bold'}}>{fmt(d.tama.units)}</span></div>
+                                                    {d.tama.rows && d.tama.rows.length > 0 && detailRow('tamaTbl', 'פירוט מתחמי תמ"א 38 (' + d.tama.rows.length + ')')}
+                                                    {fullReportTables['tamaTbl'] && d.tama.rows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>כתובת / מזהה</th><th style={th}>סטטוס</th><th style={th}>תוספת יח"ד</th></tr></thead>
+                                                        <tbody>{d.tama.rows.map((r,i)=>(<tr key={i} onClick={()=>zoomPt(r.lng,r.lat)} title={r.lat?'הצג על המפה':''} style={{cursor:r.lat?'pointer':'default'}}><td style={{...td,color:r.lat?'#9fd6ff':'#dfe3ea'}}>{r.address||'—'}</td><td style={td}>{r.status||'—'}</td><td style={{...td,color:'#7bdc8a'}}>{r.units?Math.round(r.units):''}</td></tr>))}</tbody></table>
+                                                    )}
                                             </>)}
 
                                             {/* היתרים */}
@@ -21872,6 +21893,7 @@
 
                                             {/* ───── מצב קיים ───── */}
                                             {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.vacant.count > 0 || ex.shchunaCount > 0) && section('inst', '🏛️ מבני ציבור ומוסדות קיימים', <>
+                                                    <button onClick={openPrograma} title="פתיחת דוח הפרוגרמה (צרכי ציבור) עבור אותו אזור" style={{width:'100%',background:'#1c2438',border:'1px solid #3a5a8a',color:'#9fd6ff',borderRadius:6,padding:'6px 10px',fontSize:11,cursor:'pointer',fontFamily:'inherit',marginBottom:8,textAlign:'center'}}>⚖️ פרוגרמה מפורטת — מאזן צרכי ציבור לאותו אזור →</button>
                                                     {ex.moch.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות (משב"ש)</span><span style={{color:'#aaa'}}>{ex.moch.total}{ex.moch.area > 0 ? ' · ' + fmt(ex.moch.area) + ' מ"ר' : ''}</span></div>}
                                                     {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([cat,c]) => {
                                                         const open = fullReportDrill === cat;
