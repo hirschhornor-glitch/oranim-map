@@ -760,7 +760,6 @@
                       ]
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
-                    { id: 'objections', name: 'פתוח להתנגדויות', desc: 'בקשות להיתר עם הקלות שפורסמו להתנגדויות (סעיף 149) — עם מועד אחרון להגשת התנגדות', on: false },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                 ]
             },
@@ -2068,7 +2067,8 @@
                 archived: false,        // תכניות שנגנזו/נדחו
                 shavaz_demolition: false, // מבני ציבור להריסה במסגרת התחדשות עירונית
                 consolidation: false,    // תכניות איחוד וחלוקה
-                rental: false            // פרוייקטים עם דירות להשכרה
+                rental: false,           // פרוייקטים עם דירות להשכרה
+                permit_objections: false // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -2152,6 +2152,7 @@
             const [mimushTailOpen, setMimushTailOpen] = useState({}); // { minahak: true/false }
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
+            const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
@@ -2524,6 +2525,7 @@
                         [showPermitsBySub, () => setShowPermitsBySub(false)],
                         [showPublicNeeds, () => setShowPublicNeeds(false)],
                         [objectionsReport, () => setObjectionsReport(false)],
+                        [permitObjectionsReport, () => setPermitObjectionsReport(false)],
                         [meetingsReport, () => setMeetingsReport(false)],
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
@@ -2540,7 +2542,7 @@
                 return () => document.removeEventListener('keydown', onEsc);
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap,
-                showPermitsBySub, showPublicNeeds, objectionsReport, meetingsReport, overlapReport,
+                showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, meetingsReport, overlapReport,
                 shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showReportsMenu]);
 
             // Focus input when global search opens
@@ -14356,30 +14358,62 @@
                 }
 
                 // --- Open-for-objections permits (הקלות שפורסמו, סעיף 149) ---
-                if (layers['objections'] && window.__objectionsPermits) {
+                if (planningTopics.permit_objections && window.__objectionsPermits) {
                     const objGroup = L.layerGroup().addTo(map);
-                    const recs = Object.values(window.__objectionsPermits);
-                    recs.forEach(rec => {
-                        const ll = rec.lnglat;
-                        if (!ll || ll.length !== 2) return;
-                        const latlng = L.latLng(ll[1], ll[0]);
-                        const days = objectionsDaysLeft(rec.deadline_publish);
-                        const col = objectionsUrgencyColor(days);
-                        const badge = days == null ? '⚠'
-                            : (days < 0 ? '✕' : String(days));
-                        const icon = L.divIcon({
-                            className: 'objection-marker',
-                            html: '<div style="background:' + col + ';color:#fff;border:2px solid #fff;border-radius:50%;'
-                                + 'width:26px;height:26px;line-height:22px;text-align:center;font-weight:bold;font-size:12px;'
-                                + 'box-shadow:0 0 4px rgba(0,0,0,0.6)">' + badge + '</div>',
-                            iconSize: [26, 26], iconAnchor: [13, 13],
+                    // District boundary ring — drop any permit geocoded outside our area
+                    // (e.g. streets like 'אביעד' that run into גבעת מרדכי, out of scope).
+                    const distFeat = gd.district_oranim && gd.district_oranim.features && gd.district_oranim.features[0];
+                    const distRings = distFeat ? (distFeat.geometry.type === 'MultiPolygon'
+                        ? distFeat.geometry.coordinates.map(poly => poly[0])
+                        : [distFeat.geometry.coordinates[0]]) : null;
+                    const inDistrict = (ll) => !distRings || distRings.some(r => pointInPolygon(ll, r));
+                    // Find the most specific (smallest-area) active plan polygon containing
+                    // the point — that's the תב"ע the permit is linked to. Returns a feature or null.
+                    const ringArea = (ring) => { let a = 0; for (let i=0,j=ring.length-1;i<ring.length;j=i++){ a += (ring[j][0]*ring[i][1]) - (ring[i][0]*ring[j][1]); } return Math.abs(a/2); };
+                    const findPlanFeature = (ll) => {
+                        let best = null, bestArea = Infinity;
+                        const feats = (gd.plans && gd.plans.features) || [];
+                        for (const f of feats) {
+                            const pt = normalizePlanType((f.properties || {}).plan_type || '');
+                            if (pt === 'תשתיות' || pt === 'מוסתר') continue;
+                            const g = f.geometry; if (!g) continue;
+                            const parts = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+                            for (const poly of parts) {
+                                if (pointInPolygon(ll, poly[0])) {
+                                    const ar = ringArea(poly[0]);
+                                    if (ar < bestArea) { bestArea = ar; best = f; }
+                                }
+                            }
+                        }
+                        return best;
+                    };
+                    const drawPlanOutline = (ll) => {
+                        if (geoLayersRef.current.objectionOutline) {
+                            try { map.removeLayer(geoLayersRef.current.objectionOutline); } catch(e) {}
+                            geoLayersRef.current.objectionOutline = null;
+                        }
+                        const feat = findPlanFeature(ll);
+                        if (!feat) return;
+                        const outline = L.geoJSON(feat, { pane: 'markerPane', interactive: false,
+                            style: { color: '#ff3d7f', weight: 3, opacity: 0.95, fill: false, dashArray: '6,4' } }).addTo(map);
+                        geoLayersRef.current.objectionOutline = outline;
+                    };
+                    Object.values(window.__objectionsPermits).forEach(rec => {
+                        const latlng = objectionResolveLatLng(rec);
+                        if (!latlng) return;
+                        const llp = [latlng.lng, latlng.lat];
+                        if (!inDistrict(llp)) return;
+                        const col = objectionsUrgencyColor(objectionsDaysLeft(rec.deadline_publish));
+                        const marker = L.circleMarker(latlng, {
+                            pane: 'markerPane', radius: 7, color: '#fff', weight: 2,
+                            fillColor: col, fillOpacity: 0.95, title: rec.address || rec.tik
                         });
-                        const marker = L.marker(latlng, { icon, pane: 'markerPane', title: rec.address || rec.tik });
                         marker.on('click', () => {
-                            const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                            drawPlanOutline(llp);
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                 .setLatLng(latlng)
-                                .setContent(buildObjectionPopup(rec));
-                            popup.openOn(map);
+                                .setContent(buildObjectionPopup(rec))
+                                .openOn(map);
                         });
                         marker.addTo(objGroup);
                     });
@@ -14866,19 +14900,13 @@
             }
             function buildObjectionPopup(rec) {
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                const days = objectionsDaysLeft(rec.deadline_publish);
-                const col = objectionsUrgencyColor(days);
-                const countdown = days == null ? 'מועד לא ידוע'
-                    : (days < 0 ? 'חלף לפני ' + (-days) + ' ימים'
-                    : (days === 0 ? 'היום!' : 'נותרו ' + days + ' ימים'));
+                const col = objectionsUrgencyColor(objectionsDaysLeft(rec.deadline_publish));
                 const row = (label, val) => val ? '<tr><td style="padding:3px 8px;color:#9ab;white-space:nowrap">' + esc(label) + '</td>'
                     + '<td style="padding:3px 8px;color:#dfe">' + esc(val) + '</td></tr>' : '';
-                const tabasLink = (rec.tabas || []).slice(0, 6).map(t => esc(t)).join(', ');
                 return ''
                     + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
-                    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+                    + '<div style="margin-bottom:6px">'
                     +   '<span style="background:' + col + ';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">פתוח להתנגדויות</span>'
-                    +   '<span style="color:' + col + ';font-weight:bold;font-size:13px">' + esc(countdown) + '</span>'
                     + '</div>'
                     + '<h3 style="margin:2px 0 8px;color:#cfe;font-size:15px">' + esc(rec.address || rec.tik) + '</h3>'
                     + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
@@ -14888,14 +14916,40 @@
                     +   row('מהות', rec.request_description)
                     +   '<tr><td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold;white-space:nowrap">מועד אחרון להתנגדות</td>'
                     +     '<td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold">' + esc(rec.deadline_publish || '—') + '</td></tr>'
-                    +   row('בדיקת הליך הפרסום', rec.deadline_check)
                     +   row('פורסם בתאריך', rec.status_date)
-                    +   row('תב"עות באזור', tabasLink)
                     + '</table>'
-                    + '<div style="margin-top:8px;font-size:11px;color:#8ab">'
-                    +   '<a href="https://jeronlineforms.jerusalem.muni.il/ObjectionConstructionPlan?type=2" target="_blank" style="color:#6cf">הגשת כתב התנגדות →</a>'
-                    + '</div>'
                     + '</div>';
+            }
+            // Address→building index from buildings.geojson (point footprints with
+            // street + house_num) — lets an objection marker sit on the BUILDING,
+            // not on the road centerline. Memoized once buildings (deferred) load.
+            function objectionsBuildingIndex() {
+                if (window.__buildingsAddrIndex) return window.__buildingsAddrIndex;
+                const gd = geoDataRef.current || {};
+                const feats = gd.buildings && gd.buildings.features;
+                if (!feats) return null; // not loaded yet — caller falls back to stored lnglat
+                const idx = {};
+                for (const f of feats) {
+                    const p = f.properties || {};
+                    const st = (p.street || '').trim();
+                    const hn = String(p.house_num == null ? '' : p.house_num).replace(/\D/g, '');
+                    if (!st || !hn) continue;
+                    const key = st + '|' + hn;
+                    if (!idx[key] && f.geometry && f.geometry.coordinates) idx[key] = f.geometry.coordinates;
+                }
+                window.__buildingsAddrIndex = idx;
+                return idx;
+            }
+            function objectionResolveLatLng(rec) {
+                // exact address → building point; else the stored (road) lnglat; else null
+                const idx = objectionsBuildingIndex();
+                const house = String(rec.house == null ? '' : rec.house).replace(/\D/g, '');
+                if (idx && rec.street && house) {
+                    const c = idx[rec.street.trim() + '|' + house];
+                    if (c) return L.latLng(c[1], c[0]);
+                }
+                if (rec.lnglat && rec.lnglat.length === 2) return L.latLng(rec.lnglat[1], rec.lnglat[0]);
+                return null;
             }
             function getPermitStatusColor(status) {
                 if (!status) return '#5dade2';
@@ -16462,6 +16516,7 @@
                     { id: 'mimush',       title: 'דוח מימוש',               desc: 'שלביות ביצוע', icon: '🚧' },
                     { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
                     { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
+                    { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
@@ -16577,6 +16632,7 @@
                     else if (id === 'mimush') openMimushModal();
                     else if (id === 'overlap') setOverlapReport(true);
                     else if (id === 'objections') setObjectionsReport(true);
+                    else if (id === 'permit_objections') setPermitObjectionsReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'reports_menu') setShowReportsMenu(true);
@@ -17192,6 +17248,16 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, rental: !prev.rental}))}>
                                 <input type="checkbox" checked={planningTopics.rental} onChange={() => {}} />
                                 <label>פרוייקטים עם דירות להשכרה</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='בקשות להיתר עם הקלות שפורסמו להתנגדויות (סעיף 149) — עם מועד אחרון להגשת התנגדות'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, permit_objections: !prev.permit_objections}))}>
+                                <input type="checkbox" checked={planningTopics.permit_objections} onChange={() => {}} />
+                                <label style={{flex:1}}>היתרים פתוחים להתנגדויות</label>
+                                <button className="layer-legend-btn" title="דוח היתרים פתוחים להתנגדויות"
+                                    onClick={(e) => { e.stopPropagation(); setPermitObjectionsReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             </div>)}
                         </div>
@@ -19245,6 +19311,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">הפקדות להתנגדויות</span>
                                                     <span className="report-desc">תכניות מופקדות לפי סמכות</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitObjectionsReport(true); }}>
+                                                <span className="report-icon">⚖️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">היתרים פתוחים להתנגדויות</span>
+                                                    <span className="report-desc">בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון</span>
                                                 </div>
                                             </button>
                                             <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setMeetingsReport(true); }}>
@@ -23455,6 +23528,88 @@
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
                                             printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── Permit objections report (היתרים פתוחים להתנגדויות, סעיף 149) ── */}
+                    {permitObjectionsReport && (() => {
+                        const distFeat = geoDataRef.current.district_oranim && geoDataRef.current.district_oranim.features && geoDataRef.current.district_oranim.features[0];
+                        const distRings = distFeat ? (distFeat.geometry.type === 'MultiPolygon'
+                            ? distFeat.geometry.coordinates.map(poly => poly[0])
+                            : [distFeat.geometry.coordinates[0]]) : null;
+                        const recs = Object.values(window.__objectionsPermits || {}).filter(r =>
+                            r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
+                        const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
+                        recs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
+                        const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                        return (
+                        <div className="units-overlay" onClick={() => setPermitObjectionsReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(820px,95vw)',maxHeight:'85vh',display:'flex',flexDirection:'column'}}>
+                                <button className="units-close" onClick={() => setPermitObjectionsReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#9878;&#65039; היתרים פתוחים להתנגדויות</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{recs.length} בקשות להיתר עם הקלות (סעיף 149) · ממוין לפי מועד אחרון</p>
+                                    {recs.length === 0
+                                      ? <p style={{color:'#888',fontSize:13}}>לא נמצאו היתרים פתוחים להתנגדויות. (הסריקה עשויה עדיין לרוץ.)</p>
+                                      : <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מס' תיק</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>כתובת</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מהות</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>מועד אחרון</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>נותר</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>פורסם</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {recs.map((r, i) => {
+                                                const days = objectionsDaysLeft(r.deadline_publish);
+                                                const col = objectionsUrgencyColor(days);
+                                                const left = days == null ? '—' : (days < 0 ? 'חלף' : (days === 0 ? 'היום' : days + ' ימים'));
+                                                return (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: r.lnglat?'pointer':'default'}}
+                                                    onClick={() => {
+                                                        const center = objectionResolveLatLng(r);
+                                                        if (!center || !mapInstanceRef.current) return;
+                                                        setPermitObjectionsReport(false);
+                                                        setTimeout(() => {
+                                                            mapInstanceRef.current.setView(center, 18);
+                                                            setTimeout(() => {
+                                                                L.popup({maxWidth:340,className:'plan-popup'}).setLatLng(center).setContent(buildObjectionPopup(r)).openOn(mapInstanceRef.current);
+                                                            }, 500);
+                                                        }, 100);
+                                                    }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6',whiteSpace:'nowrap',textDecoration:r.lnglat?'underline':'none'}}>{r.tik}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{r.address || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.request_description || r.request_type || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:'bold',background:col}}>{r.deadline_publish || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:col,fontWeight:'bold'}}>{left}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{r.status_date || '-'}</td>
+                                                </tr>);
+                                            })}
+                                        </tbody>
+                                    </table>}
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const w = window.open('', '_blank');
+                                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים פתוחים להתנגדויות</title>');
+                                            w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}@media print{.no-print{display:none!important}}</style></head><body>');
+                                            w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">הדפסה / PDF</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">CSV</button></div>');
+                                            w.document.write('<h2>היתרים פתוחים להתנגדויות (סעיף 149)</h2><p>' + recs.length + ' בקשות</p>');
+                                            w.document.write('<table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מהות</th><th>מועד אחרון</th><th>פורסם</th></tr></thead><tbody>');
+                                            recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td></tr>'); });
+                                            w.document.write('</tbody></table>');
+                                            const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם"'];
+                                            recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.tik).replace(/"/g,'""')+'","'+String(r.address||'-').replace(/"/g,'""')+'","'+String(r.request_description||r.request_type||'-').replace(/"/g,'""')+'","'+(r.deadline_publish||'-')+'","'+(r.status_date||'-')+'"'));
+                                            w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="היתרים_פתוחים_להתנגדויות.csv";a.click()});<\/script>');
+                                            w.document.write('</body></html>'); w.document.close(); w.focus();
                                         }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
                                             &#128424; הדפסה / שמירה
                                         </button>
