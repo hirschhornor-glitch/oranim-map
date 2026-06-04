@@ -19,6 +19,8 @@ from git_sync import pull_before_read, commit_and_push_after_write
 # Shared out-of-scope filter — same source detect_new_plans.py uses, so the whole
 # "בדיקת סטטוס מבאת" pipeline ignores the same out-of-scope plans (Gilo + blocklist).
 from scope_filter import is_blocklisted
+# Table 5 + quantity-balance re-check on status change (like the land-use check)
+from table5_status_check import scrape_plan as scrape_t5_balance, compute_changes as t5_compute_changes
 import gspread
 import requests
 from requests.adapters import HTTPAdapter
@@ -1161,7 +1163,23 @@ async def main():
                         continue
                     else:
                         break
-                
+
+                # On status change, re-check Table 5 + quantity balance while the
+                # browser is on the plan page — mirrors the land-use check.
+                if (result.get('new_status') and not result.get('error')
+                        and result['new_status'] != item['current_status']):
+                    try:
+                        _pn = item.get('plan_name', '')
+                        _taba = str(int(_pn.split('-')[1])) if '-' in _pn else ''
+                    except Exception:
+                        _taba = ''
+                    try:
+                        result['t5_balance'] = await scrape_t5_balance(
+                            page, {'agam_id': aid, 'plan_number': item.get('plan_name', ''), 'taba': _taba})
+                        log_msg("  ↳ Table 5 + נכנס re-checked")
+                    except Exception as te:
+                        log_msg(f"  ↳ Table 5 re-check failed: {te}")
+
                 progress[aid] = result
                 save_progress(progress)
                 await asyncio.sleep(2) # be nice to the server
@@ -1190,6 +1208,7 @@ async def main():
                     'new_date': new_date or '',
                 })
                 
+    t5_report = []
     if not updates:
         log_msg("No status changes detected! All plans have the same status as before.")
     else:
@@ -1218,7 +1237,29 @@ async def main():
                 'range': f'{gspread.utils.rowcol_to_a1(row, COL_LAST_MODIFIED)}',
                 'values': [[current_time]]
             })
-        
+
+        # ── Table 5 + נכנס re-check for the changed plans (mirrors land-use check) ──
+        try:
+            _all = sheet.get_all_values()
+            _h = {n: i for i, n in enumerate(_all[0])} if _all else {}
+            for u in updates:
+                tb = progress.get(u['agam_id'], {}).get('t5_balance')
+                if not tb:
+                    continue
+                ridx = u['row']
+                if ridx - 1 >= len(_all):
+                    continue
+                cell_ups, rep = t5_compute_changes(_h, _all[ridx - 1], tb, u['plan_name'])
+                for c0, val in cell_ups.items():
+                    batch_updates.append({'range': gspread.utils.rowcol_to_a1(ridx, c0 + 1),
+                                          'values': [[val]]})
+                t5_report.extend(rep)
+            if t5_report:
+                n_plans = sum(1 for l in t5_report if l.startswith('  📊'))
+                log_msg(f"  📊 Table 5/נכנס updated on {n_plans} changed plan(s)")
+        except Exception as e:
+            log_msg(f"  Table 5 GS compare failed: {e}")
+
         if batch_updates:
             sheet.spreadsheet.values_batch_update({
                 'valueInputOption': 'RAW',
@@ -1233,6 +1274,9 @@ async def main():
     if updates:
         log_msg("\n=== Checking XPLAN for geometry updates ===")
         xplan_report = check_xplan_updates(updates)
+    # Surface the Table 5 / נכנס deltas in the same report/email
+    if t5_report:
+        xplan_report = (xplan_report or []) + [""] + t5_report
 
     # ── Update has_objection_btn for all checked plans ──
     btn_batch = []
