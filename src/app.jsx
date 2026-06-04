@@ -14403,6 +14403,7 @@
                         geoLayersRef.current.objectionOutline = outline;
                     };
                     Object.values(window.__objectionsPermits).forEach(rec => {
+                        if (rec.status === 'תום תקופת פרסום') return; // objection window closed
                         const latlng = objectionResolveLatLng(rec);
                         if (!latlng) return;
                         const llp = [latlng.lng, latlng.lat];
@@ -23572,6 +23573,7 @@
                             ? distFeat.geometry.coordinates.map(poly => poly[0])
                             : [distFeat.geometry.coordinates[0]]) : null;
                         const recs = Object.values(window.__objectionsPermits || {}).filter(r =>
+                            r.status !== 'תום תקופת פרסום' &&
                             r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
                         const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
                         recs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
