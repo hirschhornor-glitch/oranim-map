@@ -573,5 +573,33 @@
       31.748425
     ],
     "scraped_at": "2026-06-05T02:20:30.543735"
+  },
+  "1990/0451.04": {
+    "tik": "1990/0451.04",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "03/05/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים",
+    "request_description": "החלפת גג רעפים עם גג שטוח חדש + הרבת דירה + המשך מדרגות ומעלית לקומה מעל",
+    "address": "מולכו 4, רחביה",
+    "street": "שלמה מולכו",
+    "house": "4",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "10/06/2026",
+    "deadline_check": "07/02/2025",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1990/0451.04&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.215154,
+      31.771855
+    ],
+    "scraped_at": "2026-06-05T02:28:16.781677"
   }
 }
