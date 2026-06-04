@@ -12,6 +12,7 @@
     "helka": null,
     "deadline_publish": "25/06/2026",
     "deadline_check": "17/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2025/0569.00&SystemCode=26400046&Page=BakashalInfo",
     "subs": [],
     "tabas": [
       "1207158",
@@ -21,10 +22,10 @@
       "965152"
     ],
     "lnglat": [
-      35.217798,
-      31.7621495
+      35.217571,
+      31.762207
     ],
-    "scraped_at": "2026-06-04T10:31:53.945608"
+    "scraped_at": "2026-06-05T01:05:43.223701"
   },
   "2011/0783.02": {
     "tik": "2011/0783.02",
@@ -57,15 +58,16 @@
     "tik": "2026/0157.00",
     "status": "תחילת פרסום הבקשה להקלה",
     "status_date": "27/05/2026",
-    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+    "request_type": null,
     "request_description": "הריסת מבנה המיועד למגורים והקמתו מחדש, בניין בן 21 יח\"ד ,לפי סעיף 13 לתמא 38",
-    "address": "עמק רפאים 76, המושבה היוונית",
+    "address": "",
     "street": "עמק רפאים",
-    "house": "76",
+    "house": null,
     "gush": null,
     "helka": null,
-    "deadline_publish": "05/07/2026",
-    "deadline_check": "26/06/2026",
+    "deadline_publish": "25/06/2026",
+    "deadline_check": "17/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2025/0569.00&SystemCode=26400046&Page=ProcessInfo",
     "subs": [],
     "tabas": [
       "1207158",
@@ -75,10 +77,10 @@
       "965152"
     ],
     "lnglat": [
-      35.215845,
-      31.760385499999998
+      35.216797,
+      31.761261
     ],
-    "scraped_at": "2026-06-04T10:33:06.555860"
+    "scraped_at": "2026-06-05T01:05:56.475454"
   },
   "1972/1414.03": {
     "tik": "1972/1414.03",
@@ -431,5 +433,33 @@
       31.763394
     ],
     "scraped_at": "2026-06-05T00:58:35.729977"
+  },
+  "2017/0247.02": {
+    "tik": "2017/0247.02",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "12/05/2026",
+    "request_type": "בניית בריכה פרטית",
+    "request_description": "הקמת בריכות שחיה פרטיות לדירות גן קיימות",
+    "address": "ל.י. פינסקר 2, טלביה/המוגרבים",
+    "street": "פינסקר",
+    "house": "2",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "21/06/2026",
+    "deadline_check": "25/12/2025",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2017/0247.02&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.217971,
+      31.768823
+    ],
+    "scraped_at": "2026-06-05T01:10:54.172449"
   }
 }
