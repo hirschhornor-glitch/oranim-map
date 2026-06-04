@@ -7766,11 +7766,17 @@
                             use: ALLOC_LBLS[key], count: agg[key].count,
                             unit: EDU_PARSER_KEYS.includes(key) ? 'כיתות' : 'מתקנים', sqm: agg[key].sqm,
                         }));
-                        // No recognized facility — keep the plan visible as a generic public-building row
-                        if (!keys.length) detailRows.push({
-                            taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                            use: 'מבני ציבור (כללי / לא מסווג)', count: 0, unit: '', sqm: uncategorizedSqm || totalSqm || 0,
-                        });
+                        // No recognized facility — keep ONLY if it carries actual מ"ר; a generic
+                        // designation with no m² (e.g. "שטחים פתוחים ומבנים ומוסדות ציבור" with a
+                        // blank hafrash_sqm) is a land-use label, not a quantified allocation, so it
+                        // is dropped rather than shown as an empty "—" row.
+                        if (!keys.length) {
+                            const genericSqm = uncategorizedSqm || totalSqm || 0;
+                            if (genericSqm > 0) detailRows.push({
+                                taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
+                                use: 'מבני ציבור (כללי / לא מסווג)', count: 0, unit: '', sqm: genericSqm,
+                            });
+                        }
                     });
                 });
                 detailRows.sort((a, b) => (a.use < b.use ? -1 : a.use > b.use ? 1 : (a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0)));
@@ -14770,8 +14776,16 @@
             }
             function getPermitsForTaba(taba) {
                 const data = window.__allPermits || {};
-                const entry = data[String(taba)];
+                const key = String(taba).trim();
+                const entry = data[key];
                 if (!entry || !entry.permits) return [];
+                // Exclude permits that belong to infrastructure (תשתיות) plans — and to
+                // hidden (מוסתר) plans — so they never surface on the permits layer, in
+                // popups, or in any report. Mirrors the plan-type gate already applied
+                // in the gap / by-sub reports, but centralised here so every consumer
+                // of getPermitsForTaba gets it for free.
+                const planProps = (window.__planByTaba || {})[key];
+                if (planProps && ['תשתיות', 'מוסתר'].includes(normalizePlanType(planProps.plan_type || ''))) return [];
                 return entry.permits.filter(_includePermit);
             }
             function getPermitsForTama38(fid) {
