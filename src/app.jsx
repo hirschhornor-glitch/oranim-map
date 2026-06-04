@@ -14951,6 +14951,25 @@
                 if (rec.lnglat && rec.lnglat.length === 2) return L.latLng(rec.lnglat[1], rec.lnglat[0]);
                 return null;
             }
+            // Resolve a permit's מינה"ק by point-in-polygon against the minhak
+            // boundary layers (same name→boundary map used for plan overrides).
+            function objectionMinhak(rec) {
+                const ll = objectionResolveLatLng(rec);
+                if (!ll) return '';
+                const gd = geoDataRef.current || {};
+                const bounds = [
+                    ['בית צפאפא', gd.minahak_beit_tzfafa],
+                    ['גוננים', gd.minahak_gonen],
+                    ['בקעה רבתי', gd.minahak_baka],
+                    ['א.ת. תלפיות', gd.minahak_talpiot],
+                    ['מינהל מוסדי מלחה', gd.minahak_malha],
+                    ['גינות העיר', gd.minahak_ganot],
+                ];
+                for (const [name, layer] of bounds) {
+                    if (layer && pointInLayer(ll, layer)) return name;
+                }
+                return '';
+            }
             function getPermitStatusColor(status) {
                 if (!status) return '#5dade2';
                 if (status.includes('הופק') || status.includes('היתר בני')) return '#50d25a';
@@ -23564,14 +23583,13 @@
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>כתובת</th>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מהות</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>מועד אחרון</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>נותר</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>פורסם</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
                                         </tr></thead>
                                         <tbody>
                                             {recs.map((r, i) => {
-                                                const days = objectionsDaysLeft(r.deadline_publish);
-                                                const col = objectionsUrgencyColor(days);
-                                                const left = days == null ? '—' : (days < 0 ? 'חלף' : (days === 0 ? 'היום' : days + ' ימים'));
+                                                const col = objectionsUrgencyColor(objectionsDaysLeft(r.deadline_publish));
+                                                const minhak = objectionMinhak(r);
                                                 return (
                                                 <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: r.lnglat?'pointer':'default'}}
                                                     onClick={() => {
@@ -23590,8 +23608,8 @@
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{r.address || '-'}</td>
                                                     <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.request_description || r.request_type || '-'}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:'bold',background:col}}>{r.deadline_publish || '-'}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:col,fontWeight:'bold'}}>{left}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{r.status_date || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{minhak || '-'}</td>
                                                 </tr>);
                                             })}
                                         </tbody>
@@ -23603,11 +23621,11 @@
                                             w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}@media print{.no-print{display:none!important}}</style></head><body>');
                                             w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">הדפסה / PDF</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">CSV</button></div>');
                                             w.document.write('<h2>היתרים פתוחים להתנגדויות (סעיף 149)</h2><p>' + recs.length + ' בקשות</p>');
-                                            w.document.write('<table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מהות</th><th>מועד אחרון</th><th>פורסם</th></tr></thead><tbody>');
-                                            recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td></tr>'); });
+                                            w.document.write('<table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מהות</th><th>מועד אחרון</th><th>פורסם</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td><td>'+esc(objectionMinhak(r)||'-')+'</td></tr>'); });
                                             w.document.write('</tbody></table>');
-                                            const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם"'];
-                                            recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.tik).replace(/"/g,'""')+'","'+String(r.address||'-').replace(/"/g,'""')+'","'+String(r.request_description||r.request_type||'-').replace(/"/g,'""')+'","'+(r.deadline_publish||'-')+'","'+(r.status_date||'-')+'"'));
+                                            const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם","מינה\\"ק"'];
+                                            recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.tik).replace(/"/g,'""')+'","'+String(r.address||'-').replace(/"/g,'""')+'","'+String(r.request_description||r.request_type||'-').replace(/"/g,'""')+'","'+(r.deadline_publish||'-')+'","'+(r.status_date||'-')+'","'+String(objectionMinhak(r)||'-').replace(/"/g,'""')+'"'));
                                             w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="היתרים_פתוחים_להתנגדויות.csv";a.click()});<\/script>');
                                             w.document.write('</body></html>'); w.document.close(); w.focus();
                                         }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
