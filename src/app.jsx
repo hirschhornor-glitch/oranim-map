@@ -760,6 +760,7 @@
                       ]
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
+                    { id: 'objections', name: 'פתוח להתנגדויות', desc: 'בקשות להיתר עם הקלות שפורסמו להתנגדויות (סעיף 149) — עם מועד אחרון להגשת התנגדות', on: false },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                 ]
             },
@@ -3961,6 +3962,7 @@
                 window.__treeValencies = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
+                window.__objectionsPermits = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -3972,6 +3974,7 @@
                     ['__treeValencies', 'data/tree_valencies.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
+                    ['__objectionsPermits', 'data/objections_permits.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4352,6 +4355,7 @@
                             else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                             else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
+                            else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
                                 const idx = {};
@@ -14351,6 +14355,37 @@
                     geoLayersRef.current.permits = L.layerGroup([permitsLayer, permitLabelsGroup]).addTo(map);
                 }
 
+                // --- Open-for-objections permits (הקלות שפורסמו, סעיף 149) ---
+                if (layers['objections'] && window.__objectionsPermits) {
+                    const objGroup = L.layerGroup().addTo(map);
+                    const recs = Object.values(window.__objectionsPermits);
+                    recs.forEach(rec => {
+                        const ll = rec.lnglat;
+                        if (!ll || ll.length !== 2) return;
+                        const latlng = L.latLng(ll[1], ll[0]);
+                        const days = objectionsDaysLeft(rec.deadline_publish);
+                        const col = objectionsUrgencyColor(days);
+                        const badge = days == null ? '⚠'
+                            : (days < 0 ? '✕' : String(days));
+                        const icon = L.divIcon({
+                            className: 'objection-marker',
+                            html: '<div style="background:' + col + ';color:#fff;border:2px solid #fff;border-radius:50%;'
+                                + 'width:26px;height:26px;line-height:22px;text-align:center;font-weight:bold;font-size:12px;'
+                                + 'box-shadow:0 0 4px rgba(0,0,0,0.6)">' + badge + '</div>',
+                            iconSize: [26, 26], iconAnchor: [13, 13],
+                        });
+                        const marker = L.marker(latlng, { icon, pane: 'markerPane', title: rec.address || rec.tik });
+                        marker.on('click', () => {
+                            const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildObjectionPopup(rec));
+                            popup.openOn(map);
+                        });
+                        marker.addTo(objGroup);
+                    });
+                    geoLayersRef.current.objections = objGroup;
+                }
+
                 // --- Tama38 ---
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
@@ -14811,6 +14846,56 @@
                 const entry = data[String(fid)];
                 if (!entry || !entry.permits) return [];
                 return entry.permits.filter(_includePermit);
+            }
+            // ─── Open-for-objections permits (הקלות שפורסמו לפי סעיף 149) ──────────
+            function objectionsDaysLeft(deadlineStr) {
+                // 'dd/mm/yyyy' → whole days from today (negative = passed); null if unparseable
+                if (!deadlineStr) return null;
+                const m = String(deadlineStr).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                if (!m) return null;
+                const d = new Date(+m[3], +m[2] - 1, +m[1]); d.setHours(0, 0, 0, 0);
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                return Math.round((d - today) / 86400000);
+            }
+            function objectionsUrgencyColor(days) {
+                if (days == null) return '#9c27b0';   // unknown deadline
+                if (days < 0)   return '#777';         // passed
+                if (days <= 7)  return '#d32f2f';      // ≤ 1 week — urgent
+                if (days <= 21) return '#f57c00';      // ≤ 3 weeks
+                return '#c2185b';                       // further out
+            }
+            function buildObjectionPopup(rec) {
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const days = objectionsDaysLeft(rec.deadline_publish);
+                const col = objectionsUrgencyColor(days);
+                const countdown = days == null ? 'מועד לא ידוע'
+                    : (days < 0 ? 'חלף לפני ' + (-days) + ' ימים'
+                    : (days === 0 ? 'היום!' : 'נותרו ' + days + ' ימים'));
+                const row = (label, val) => val ? '<tr><td style="padding:3px 8px;color:#9ab;white-space:nowrap">' + esc(label) + '</td>'
+                    + '<td style="padding:3px 8px;color:#dfe">' + esc(val) + '</td></tr>' : '';
+                const tabasLink = (rec.tabas || []).slice(0, 6).map(t => esc(t)).join(', ');
+                return ''
+                    + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
+                    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+                    +   '<span style="background:' + col + ';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">פתוח להתנגדויות</span>'
+                    +   '<span style="color:' + col + ';font-weight:bold;font-size:13px">' + esc(countdown) + '</span>'
+                    + '</div>'
+                    + '<h3 style="margin:2px 0 8px;color:#cfe;font-size:15px">' + esc(rec.address || rec.tik) + '</h3>'
+                    + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+                    +   row('מס\' תיק', rec.tik)
+                    +   row('סטטוס', rec.status)
+                    +   row('סוג בקשה', rec.request_type)
+                    +   row('מהות', rec.request_description)
+                    +   '<tr><td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold;white-space:nowrap">מועד אחרון להתנגדות</td>'
+                    +     '<td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold">' + esc(rec.deadline_publish || '—') + '</td></tr>'
+                    +   row('בדיקת הליך הפרסום', rec.deadline_check)
+                    +   row('פורסם בתאריך', rec.status_date)
+                    +   row('תב"עות באזור', tabasLink)
+                    + '</table>'
+                    + '<div style="margin-top:8px;font-size:11px;color:#8ab">'
+                    +   '<a href="https://jeronlineforms.jerusalem.muni.il/ObjectionConstructionPlan?type=2" target="_blank" style="color:#6cf">הגשת כתב התנגדות →</a>'
+                    + '</div>'
+                    + '</div>';
             }
             function getPermitStatusColor(status) {
                 if (!status) return '#5dade2';
