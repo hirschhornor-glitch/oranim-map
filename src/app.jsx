@@ -14149,6 +14149,24 @@
                     }).addTo(map);
                     geoLayersRef.current.yiud_karka_kayam = yiudKayamLayer;
                     setTimeout(() => applyHatchToLayer(yiudKayamLayer, map), 500);
+
+                    // Override: plan 1166586 is designated for public buildings — paint its
+                    // footprint as "מבנים ומוסדות ציבור" on top of the existing land-use polygons.
+                    if (gd.plans && gd.plans.features) {
+                        const ovFeats = gd.plans.features.filter(f => String((f.properties || {}).taba) === '1166586');
+                        if (ovFeats.length) {
+                            const pubColor = getLanduseColor('מבנים ומוסדות ציבור');
+                            const ovLayer = L.geoJSON({ type: 'FeatureCollection', features: ovFeats }, {
+                                pane: 'landusePane',
+                                style: { fillColor: pubColor, fillOpacity: xplanAlsoOn ? 0.35 : 0.65, color: plansAlsoOn ? pubColor : '#333', weight: plansAlsoOn ? 0 : 0.15 },
+                                interactive: !layers['plans'],
+                                onEachFeature: !layers['plans'] ? (f, layer) => {
+                                    layer.bindTooltip('מבנים ומוסדות ציבור', { sticky: true, direction: 'top', className: 'landuse-tooltip' });
+                                } : undefined
+                            }).addTo(map);
+                            geoLayersRef.current.yiud_karka_kayam_ov_1166586 = ovLayer;
+                        }
+                    }
                 }
 
                 // --- Landuse XPLAN (land use from MAVAT/XPLAN) ---
