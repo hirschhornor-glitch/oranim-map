@@ -11095,8 +11095,12 @@
                                     layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), fillColor: fillColor });
                                 }
                             });
-                            // Labels: zoom-dependent with fit-in-polygon check
-                            const shortName = f.properties.plan_summary || '';
+                            // Labels: zoom-dependent with fit-in-polygon check.
+                            // Use the concise plan NAME (plan_name_he) for the map label — plan_summary
+                            // is often a long description/sentence. Hard-cap length so no single plan
+                            // renders a paragraph on the map (full text still shows in the popup).
+                            let shortName = f.properties.plan_name_he || f.properties.plan_summary || '';
+                            if (shortName.length > 42) shortName = shortName.slice(0, 40).trim() + '…';
                             const add = parseFloat(f.properties.units_add) || 0;
                             const zoom = map.getZoom();
                             // When the future public-buildings layers are on, suppress plan labels
