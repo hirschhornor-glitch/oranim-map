@@ -461,5 +461,33 @@
       31.768823
     ],
     "scraped_at": "2026-06-05T01:10:54.172449"
+  },
+  "2019/0608.00": {
+    "tik": "2019/0608.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "25/05/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הריסת בניין קיים ובניית בנין חדש בן 30 יח\"ד בהתאם לסעיף 13 לתמ\"א 38",
+    "address": "שופן 12, null",
+    "street": "פרידריק שופן",
+    "house": "12",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "01/07/2026",
+    "deadline_check": "24/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2019/0608.00&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.216619,
+      31.768325
+    ],
+    "scraped_at": "2026-06-05T01:44:14.023263"
   }
 }
