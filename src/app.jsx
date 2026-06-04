@@ -14922,6 +14922,11 @@
                     +     '<td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold">' + esc(rec.deadline_publish || '—') + '</td></tr>'
                     +   row('פורסם בתאריך', rec.status_date)
                     + '</table>'
+                    + '<div style="margin-top:8px;font-size:12px">'
+                    +   '<a href="' + esc(rec.yk_url || 'https://ykpubdata.jerusalem.muni.il/#/?SystemCode=26400046')
+                    +   '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
+                    +   '🔗 ' + (rec.yk_url ? 'פתח את התיק באתר העירייה' : 'חיפוש התיק באתר העירייה') + ' ←</a>'
+                    + '</div>'
                     + '</div>';
             }
             // Address→building index from buildings.geojson (point footprints with
