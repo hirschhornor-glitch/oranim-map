@@ -489,5 +489,89 @@
       31.768325
     ],
     "scraped_at": "2026-06-05T01:44:14.023263"
+  },
+  "2024/0269.00": {
+    "tik": "2024/0269.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "12/05/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הריסת מבנה קיים ובניית בית ספר יסודי 16 כיתות+ ת\"ת 9 כיתות, ח.טרפו, מאגר מים, ביתן שומר ומגרש כדור סל.",
+    "address": "רבי צדוק , גוננים",
+    "street": "רבי צדוק",
+    "house": null,
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "21/06/2026",
+    "deadline_check": "11/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2024/0269.00&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.193307,
+      31.754664
+    ],
+    "scraped_at": "2026-06-05T02:03:56.449544"
+  },
+  "2016/0013.02": {
+    "tik": "2016/0013.02",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "04/05/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, בניית מרפסת",
+    "request_description": "הרחבה בקומה א\" ותוספת בניה בקומה ב\"",
+    "address": "רשב\"ג 9, גוננים",
+    "street": "רשב''ג",
+    "house": "9",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "11/06/2026",
+    "deadline_check": "03/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2016/0013.02&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.21109,
+      31.757926
+    ],
+    "scraped_at": "2026-06-05T02:13:24.073723"
+  },
+  "2026/0113.00": {
+    "tik": "2026/0113.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "30/04/2026",
+    "request_type": "בניה חדשה / בניין חדש, עבודות הריסה, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+    "request_description": "הריסת מבנה קיים המיועד למגורים והקמתו מחדש לפי סעיף 13 לתמ\"א 38 (52 יח\"ד)",
+    "address": "שד עין צורים 18, ארנונה",
+    "street": "שדרות עין צורים",
+    "house": "18",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "09/06/2026",
+    "deadline_check": "30/05/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0113.00&SystemCode=26400046&Page=BakashalInfo",
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.221470499999995,
+      31.748425
+    ],
+    "scraped_at": "2026-06-05T02:20:30.543735"
   }
 }
