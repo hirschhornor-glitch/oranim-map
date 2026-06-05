@@ -14903,6 +14903,14 @@
                 if (days <= 21) return '#f57c00';      // ≤ 3 weeks
                 return '#c2185b';                       // further out
             }
+            function objectionYkUrl(tik) {
+                // Deterministic deep-link to the permit's detail page on the muni site.
+                // (The scraped yk_url is unreliable — sometimes the previous tik or the
+                // תהליך tab — so we build the URL from the tik.)
+                return tik
+                    ? 'https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=' + tik + '&SystemCode=26400046&Page=BakashalInfo'
+                    : 'https://ykpubdata.jerusalem.muni.il/#/?SystemCode=26400046';
+            }
             function buildObjectionPopup(rec) {
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const col = objectionsUrgencyColor(objectionsDaysLeft(rec.deadline_publish));
@@ -14924,9 +14932,9 @@
                     +   row('פורסם בתאריך', rec.status_date)
                     + '</table>'
                     + '<div style="margin-top:8px;font-size:12px">'
-                    +   '<a href="' + esc(rec.yk_url || 'https://ykpubdata.jerusalem.muni.il/#/?SystemCode=26400046')
+                    +   '<a href="' + esc(objectionYkUrl(rec.tik))
                     +   '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
-                    +   '🔗 ' + (rec.yk_url ? 'פתח את התיק באתר העירייה' : 'חיפוש התיק באתר העירייה') + ' ←</a>'
+                    +   '🔗 פתח את התיק באתר העירייה ←</a>'
                     + '</div>'
                     + '</div>';
             }
