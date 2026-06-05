@@ -14951,14 +14951,16 @@
                 return idx;
             }
             function objectionResolveLatLng(rec) {
-                // exact address → building point; else the stored (road) lnglat; else null
+                // Prefer the stored lnglat — now the parcel CENTER from נתוני מקום
+                // (ITM→WGS84), the most accurate position. Fall back to a building
+                // match by address for any record not yet enriched.
+                if (rec.lnglat && rec.lnglat.length === 2) return L.latLng(rec.lnglat[1], rec.lnglat[0]);
                 const idx = objectionsBuildingIndex();
                 const house = String(rec.house == null ? '' : rec.house).replace(/\D/g, '');
                 if (idx && rec.street && house) {
                     const c = idx[rec.street.trim() + '|' + house];
                     if (c) return L.latLng(c[1], c[0]);
                 }
-                if (rec.lnglat && rec.lnglat.length === 2) return L.latLng(rec.lnglat[1], rec.lnglat[0]);
                 return null;
             }
             // Resolve a permit's מינה"ק by point-in-polygon against the minhak
