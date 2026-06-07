@@ -1,4 +1,13 @@
-const CACHE_VERSION = 'v10-swr';
+const CACHE_VERSION = 'v11-meetings-netfirst';
+
+// Small, fast-changing data files we want fresh on every reload.
+// SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
+// these need network-first so an update lands immediately.
+const FRESH_DATA_FILES = [
+  '/data/meetings.json',
+  '/data/last_update.txt',
+  '/data/last_run_summary.txt',
+];
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
 const DATA_CACHE = `oranim-data-${CACHE_VERSION}`;
@@ -71,7 +80,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 3: Stale-while-revalidate for data files
+  // Strategy 3a: Network-first for small, fast-changing data files.
+  // These are small enough that hitting the network on every load is fine,
+  // and SWR caused 2-refresh lag after data updates.
+  if (FRESH_DATA_FILES.some((path) => url.pathname.endsWith(path))) {
+    event.respondWith(networkFirst(event.request, DATA_CACHE));
+    return;
+  }
+
+  // Strategy 3b: Stale-while-revalidate for the rest of /data (big geojsons).
   // Serve from cache instantly (perf!), refresh in background for next visit.
   // GeoJSON data is large; network-first was making repeat visits as slow as
   // first visits. SWR gives instant UI + freshness on the next reload.
