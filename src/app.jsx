@@ -22235,6 +22235,8 @@
                                     const d = fullAreaReport;
                                     const ex = d.existing || null;
                                     const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.vacant.count || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
+                                    const eduByType = {};
+                                    if (ex && ex.eduList) ex.eduList.forEach(m => { const t = (m.type || 'אחר').trim() || 'אחר'; eduByType[t] = (eduByType[t] || 0) + 1; });
                                     const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
                                     // Relative metrics + auto-summary
                                     const dunam = (d.areaSqm || 0) / 1000;
@@ -22463,6 +22465,9 @@
                                                         );
                                                     })}
                                                     {ex.eduInst > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות חינוך (שנתון)</span><span style={{color:'#c2c9d4'}}>{ex.eduInst}{ex.eduStudents > 0 ? ' · ' + fmt(ex.eduStudents) + ' תלמידים' : ''}</span></div>}
+                                                    {Object.entries(eduByType).sort((a,b)=>b[1]-a[1]).map(([t,c]) => (
+                                                        <div key={'edu'+t} style={{...rowStyle,fontSize:11}}><span style={{color:'#9aa6b2'}}>· {t}</span><span style={{color:'#c2c9d4'}}>{c}</span></div>
+                                                    ))}
                                                     {ex.eduList && ex.eduList.length > 0 && detailRow('eduTbl', 'פירוט מוסדות חינוך (' + ex.eduList.length + ')')}
                                                     {fullReportTables['eduTbl'] && ex.eduList && (
                                                         <table style={tblWrap}><thead><tr><th style={th}>שם מוסד</th><th style={th}>סוג</th><th style={th}>תלמידים</th><th style={th}>כתובת</th></tr></thead>
