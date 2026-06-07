@@ -15832,7 +15832,7 @@
                     html += '<div class="popup-pair">';
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${szIn ? fmt(szIn) : '-'}</span></div>`;
                     html += `<div class="popup-pair-item"><span class="popup-pair-label">יוצא (זכויות)</span><span class="popup-pair-value">${szOut ? fmt(szOut) : '-'}</span></div>`;
-                    if (szPlot) html += `<div class="popup-pair-item"><span class="popup-pair-label">גודל מגרש</span><span class="popup-pair-value">${fmt(szPlot)}</span></div>`;
+                    if (szPlot) html += `<div class="popup-pair-item"><span class="popup-pair-label">גודל מגרש</span><span class="popup-pair-value">${(szPlot/1000).toFixed(1)} דונם</span></div>`;
                     html += '</div>';
                     if (szProgIn) html += `<div class="popup-prog-text">פרוגרמה נכנס: ${szProgIn}</div>`;
                     if (szProgOut) html += `<div class="popup-prog-text">פרוגרמה יוצא: ${szProgOut}</div>`;
