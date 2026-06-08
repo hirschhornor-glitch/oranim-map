@@ -15076,13 +15076,16 @@
             // urgency helpers (deadline stored dd/mm/yyyy → objectionsDaysLeft works).
             function treesBreakdownHtml(trees, esc) {
                 // Render the permit's species list as a compact table, grouped by
-                // action (כריתה/העתקה/…) with a per-group subtotal, species sorted
-                // by count desc. Handles both nested {action:{species:n}} and flat.
+                // action with a per-group subtotal, species sorted by count desc.
+                // Only trees being removed (כריתה/העתקה) are shown — שימור (kept)
+                // trees are noise in a cutting-permit popup. Handles nested
+                // {action:{species:n}} and flat {species:n}.
                 if (!trees || typeof trees !== 'object') return '';
                 const nested = Object.values(trees).some(v => v && typeof v === 'object');
                 const groups = nested ? trees : { '': trees };
                 let html = '';
                 Object.keys(groups).forEach(action => {
+                    if (action && !/כריתה|העתקה/.test(action)) return; // skip שימור etc.
                     const sp = groups[action];
                     if (!sp || typeof sp !== 'object') return;
                     const rows = Object.keys(sp).map(s => [s, parseInt(sp[s]) || 0]).sort((a, b) => b[1] - a[1]);

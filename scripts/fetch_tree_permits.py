@@ -121,6 +121,42 @@ def fix_reversed_digits(s):
 
 
 PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
+BUILDINGS = os.path.join(DATA_DIR, "buildings.geojson")
+
+
+def load_buildings_index():
+    # street + house number → building point. Lets us place a permit by address
+    # ("אמציה 3א" → building "אמציה 3") when the cadastral helka lookup misses.
+    if not os.path.isfile(BUILDINGS):
+        return None
+    gj = json.load(open(BUILDINGS, encoding="utf-8"))
+    idx = {}
+    for f in gj.get("features", []):
+        p = f.get("properties", {})
+        st = (p.get("street") or "").strip()
+        hn = re.sub(r"\D", "", str(p.get("house_num") or ""))
+        g = f.get("geometry") or {}
+        if not st or not hn or g.get("type") != "Point":
+            continue
+        idx.setdefault(st + "|" + hn, g["coordinates"])
+    print(f"buildings index: {len(idx)} street/number addresses")
+    return idx
+
+
+def parse_street_house(r):
+    # Return (street_name, house_digits) from Meirim's street/street_number.
+    # Meirim often jams the number into `street` with a Hebrew sub-lot letter
+    # ("אמציה 3א"); strip the letter and take the digits ("אמציה", "3").
+    street = (r.get("street") or "").strip()
+    num = r.get("street_number")
+    if num:
+        h = re.sub(r"\D", "", str(num))
+        return (street, h) if h and h != "0" else (None, None)
+    m = re.search(r"^(.*?)\s+(\d+)\s*[א-ת]?\.?\s*$", street)
+    if not m:
+        return (None, None)
+    name, h = m.group(1).strip(), m.group(2)
+    return (name, h) if h and h != "0" else (None, None)
 
 
 def load_parcel_index():
@@ -144,24 +180,31 @@ def parse_gush_helka(r):
     return gush, helkot
 
 
-def resolve_location(r, idx, meirim_centroid, has_footprint):
+def resolve_location(r, idx, buildings, meirim_centroid, has_footprint):
     # Returns (lnglat[lng,lat], loc_source) — best available position.
-    #   meirim_polygon : Meirim gave a real footprint (most precise)
-    #   parcel_helka   : matched the exact חלקה centroid from the cadastre
-    #   parcel_gush    : matched the גוש centroid (block-level, ~approximate)
-    #   meirim_point   : Meirim's bare point (may be a shared default → flagged later)
+    #   meirim_polygon   : Meirim gave a real footprint (most precise)
+    #   parcel_helka     : matched the exact חלקה centroid from the cadastre
+    #   address_building : matched street + house number to a building point
+    #   parcel_gush      : matched the גוש centroid (block-level, ~approximate)
+    #   meirim_point     : Meirim's bare point (may be a shared default → flagged later)
     if has_footprint and meirim_centroid is not None:
         return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_polygon"
-    if idx:
-        gush, helkot = parse_gush_helka(r)
-        if gush:
-            for h in helkot:
-                hit = idx["gush_helka"].get(f"{gush}/{h}")
-                if hit:
-                    return hit, "parcel_helka"
-            ghit = idx["gush"].get(gush)
-            if ghit:
-                return ghit, "parcel_gush"
+    gush, helkot = parse_gush_helka(r)
+    if idx and gush:
+        for h in helkot:
+            hit = idx["gush_helka"].get(f"{gush}/{h}")
+            if hit:
+                return hit, "parcel_helka"
+    if buildings:
+        name, house = parse_street_house(r)
+        if name and house:
+            bhit = buildings.get(name + "|" + house)
+            if bhit:
+                return [round(bhit[0], 7), round(bhit[1], 7)], "address_building"
+    if idx and gush:
+        ghit = idx["gush"].get(gush)
+        if ghit:
+            return ghit, "parcel_gush"
     if meirim_centroid is not None:
         return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_point"
     return None, None
@@ -174,6 +217,7 @@ def main():
 
     district = load_district_polygon()
     idx = load_parcel_index()
+    buildings = load_buildings_index()
     out = {}
     kept_total = skipped_deadline = skipped_outside = skipped_noloc = 0
     src_counts = {}
@@ -197,7 +241,7 @@ def main():
             except Exception:
                 pass
 
-        lnglat, loc_source = resolve_location(r, idx, meirim_centroid, has_footprint)
+        lnglat, loc_source = resolve_location(r, idx, buildings, meirim_centroid, has_footprint)
         if lnglat is None:
             skipped_noloc += 1
             continue
