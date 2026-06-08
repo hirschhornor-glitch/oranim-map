@@ -115,8 +115,8 @@
             return false;
         }
 
-        // Compute pairs of plans whose geometries overlap.
-        // Returns a Map: taba -> Set of overlapping tabas.
+        // Compute pairs of plans whose geometries overlap. Synchronous core — also runs verbatim
+        // inside a Web Worker (see buildOverlapMap). Returns a Map: taba -> Set of overlapping tabas.
         function computeOverlapMap(features) {
             // Build ring/bbox per feature (skip plans without taba or geometry)
             const items = [];
@@ -141,6 +141,40 @@
                 }
             }
             return map;
+        }
+
+        // Build the overlap map OFF the main thread in a Web Worker so the heavy O(n²) sweep never
+        // freezes the UI (which is what lets the "computing overlaps" spinner actually render). The
+        // worker source is assembled by stringifying the pure geometry helpers above — no copy, so
+        // it can't drift from the main-thread versions. Falls back to a synchronous build if Web
+        // Workers are unavailable or error out. Calls onDone(map) when finished.
+        function buildOverlapMap(features, onDone) {
+            try {
+                const src = [pointInPolygon, getAllRings, ringBBox, bboxesOverlap,
+                    sampleOverlapFraction, significantOverlap, plansOverlap, computeOverlapMap]
+                    .map(fn => fn.toString()).join('\n') + `
+                    self.onmessage = function (e) {
+                        const map = computeOverlapMap(e.data);
+                        self.postMessage([...map].map(function (kv) { return [kv[0], [...kv[1]]]; }));
+                    };`;
+                const url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+                const worker = new Worker(url);
+                worker.onmessage = (e) => {
+                    onDone(new Map((e.data || []).map(kv => [kv[0], new Set(kv[1])])));
+                    worker.terminate();
+                    URL.revokeObjectURL(url);
+                };
+                worker.onerror = () => {
+                    console.warn('[Overlap] worker failed; running on main thread');
+                    worker.terminate();
+                    URL.revokeObjectURL(url);
+                    onDone(computeOverlapMap(features));
+                };
+                worker.postMessage(features);
+            } catch (e) {
+                console.warn('[Overlap] worker unavailable; running on main thread:', e);
+                onDone(computeOverlapMap(features));
+            }
         }
 
         // Area-weighted centroid of a Polygon/MultiPolygon. Returns [lng, lat] or null.
@@ -2596,6 +2630,9 @@
             // Populated once when plans data arrives. Used by the "overlapping"
             // planning topic to filter overlaps based on currently-visible plans.
             const overlapMapRef = useRef(null);
+            // True once the (heavy, deferred) overlap map has finished building. Drives the
+            // "computing overlaps" indicator and re-renders the topic once the map is ready.
+            const [overlapReady, setOverlapReady] = useState(false);
 
             // ── URL Hash helpers ──
             function parseHash() {
@@ -4296,18 +4333,21 @@
                     // "contain" almost every other plan — feeding them in explodes the O(n²) work
                     // and bloats the map with entries that never render.
                     overlapMapRef.current = new Map();
-                    setTimeout(() => {
-                        try {
-                            const t0 = performance.now();
-                            const overlapFeatures = (gd.plans ? gd.plans.features : [])
-                                .filter(f => (f.properties.minahak || '').trim());
-                            overlapMapRef.current = computeOverlapMap(overlapFeatures);
-                            console.log(`[Overlap] Built map: ${overlapMapRef.current.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
-                        } catch (e) {
-                            console.warn('[Overlap] computation failed:', e);
-                            overlapMapRef.current = new Map();
-                        }
-                    }, 0);
+                    {
+                        const t0 = performance.now();
+                        // Lean payload for the worker: only geometry + taba are needed, so don't
+                        // clone every feature's full property bag across the worker boundary.
+                        const overlapFeatures = (gd.plans ? gd.plans.features : [])
+                            .filter(f => (f.properties.minahak || '').trim())
+                            .map(f => ({ geometry: f.geometry, properties: { taba: f.properties.taba } }));
+                        buildOverlapMap(overlapFeatures, (m) => {
+                            overlapMapRef.current = m;
+                            console.log(`[Overlap] Built map: ${m.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
+                            // Flag readiness — re-renders the topic layer (so it draws once the map
+                            // is ready) and clears the "computing overlaps" indicator.
+                            setOverlapReady(true);
+                        });
+                    }
 
                     setDataLoaded(true);
                     setLoading(false);
@@ -14780,7 +14820,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -18214,6 +18254,20 @@
                                 </>
                             )}
                         </div>
+
+                        {/* Overlap topic is on but the (heavy, deferred) overlap map is still building */}
+                        {planningTopics.overlapping && !overlapReady && (
+                            <div style={{
+                                position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+                                background: 'rgba(26,26,46,0.95)', color: '#fff', padding: '8px 16px',
+                                borderRadius: 20, zIndex: 1000, display: 'flex', alignItems: 'center', gap: 10,
+                                boxShadow: '0 2px 12px rgba(0,0,0,0.4)', fontSize: 13, fontWeight: 600,
+                                pointerEvents: 'none', direction: 'rtl'
+                            }}>
+                                <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+                                <span>מחשב חפיפות תב״ע…</span>
+                            </div>
+                        )}
 
                         {!isOnline && (
                             <div className="offline-banner">אין חיבור לאינטרנט — מציג נתונים שמורים</div>
