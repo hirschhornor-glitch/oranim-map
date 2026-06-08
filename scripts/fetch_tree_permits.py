@@ -27,7 +27,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 API = "https://api.meirim.org/api/tree/"
 PLACE = "ירושלים"
-GRACE_DAYS = 14          # keep permits whose deadline passed up to this many days ago
+GRACE_DAYS = 0           # only permits whose objection window is still open (deadline >= today)
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -109,36 +109,92 @@ def iso_date(s):
     return str(s)[:10] if s else ""
 
 
+import re
+
+PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
+
+
+def load_parcel_index():
+    # Built once by build_parcel_centroids.py. Optional — if absent, we just
+    # fall back to whatever location Meirim provides.
+    if not os.path.isfile(PARCELS):
+        print("note: parcel_centroids.json not found — skipping parcel-based geocoding")
+        return None
+    idx = json.load(open(PARCELS, encoding="utf-8"))
+    print(f"parcel index: {len(idx.get('gush_helka', {}))} parcels, {len(idx.get('gush', {}))} gushim")
+    return idx
+
+
+def parse_gush_helka(r):
+    # gush/helka fields from Meirim are messy: helka may sit in the gush field
+    # ("30285, 223" = gush 30285 / helka 223), be "0"/empty, or a comma list.
+    gtoks = re.findall(r"\d+", str(r.get("gush") or ""))
+    htoks = [t for t in re.findall(r"\d+", str(r.get("helka") or "")) if t != "0"]
+    gush = gtoks[0] if gtoks else None
+    helkot = htoks if htoks else (gtoks[1:] if len(gtoks) >= 2 else [])
+    return gush, helkot
+
+
+def resolve_location(r, idx, meirim_centroid, has_footprint):
+    # Returns (lnglat[lng,lat], loc_source) — best available position.
+    #   meirim_polygon : Meirim gave a real footprint (most precise)
+    #   parcel_helka   : matched the exact חלקה centroid from the cadastre
+    #   parcel_gush    : matched the גוש centroid (block-level, ~approximate)
+    #   meirim_point   : Meirim's bare point (may be a shared default → flagged later)
+    if has_footprint and meirim_centroid is not None:
+        return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_polygon"
+    if idx:
+        gush, helkot = parse_gush_helka(r)
+        if gush:
+            for h in helkot:
+                hit = idx["gush_helka"].get(f"{gush}/{h}")
+                if hit:
+                    return hit, "parcel_helka"
+            ghit = idx["gush"].get(gush)
+            if ghit:
+                return ghit, "parcel_gush"
+    if meirim_centroid is not None:
+        return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_point"
+    return None, None
+
+
 def main():
     today = datetime.date.today()
     cutoff = (today - datetime.timedelta(days=GRACE_DAYS)).isoformat()
     rows = fetch_all()
 
     district = load_district_polygon()
+    idx = load_parcel_index()
     out = {}
-    kept_open = kept_total = skipped_deadline = skipped_outside = skipped_nogeom = 0
+    kept_total = skipped_deadline = skipped_outside = skipped_noloc = 0
+    src_counts = {}
 
     for r in rows:
         deadline_iso = iso_date(r.get("last_date_to_objection"))
         if not deadline_iso or deadline_iso < cutoff:
             skipped_deadline += 1
             continue
+
+        # Best available Meirim geometry → centroid + footprint flag.
         geom = r.get("geom")
-        if not geom:
-            skipped_nogeom += 1
+        meirim_centroid = None
+        has_footprint = False
+        if geom:
+            try:
+                g = shape(geom)
+                if not g.centroid.is_empty:
+                    meirim_centroid = g.centroid
+                    has_footprint = g.area > 0.0
+            except Exception:
+                pass
+
+        lnglat, loc_source = resolve_location(r, idx, meirim_centroid, has_footprint)
+        if lnglat is None:
+            skipped_noloc += 1
             continue
-        try:
-            g = shape(geom)
-            c = g.centroid
-            if c.is_empty:
-                raise ValueError("empty centroid")
-        except Exception:
-            skipped_nogeom += 1
-            continue
-        if not district.contains(Point(c.x, c.y)):
+        if not district.contains(Point(lnglat[0], lnglat[1])):
             skipped_outside += 1
             continue
-        has_footprint = g.area > 0.0  # real parcel polygon vs a bare point
 
         street = (r.get("street") or "").strip()
         num = r.get("street_number")
@@ -164,25 +220,25 @@ def main():
             "issue_date": iso_to_ddmmyyyy(r.get("permit_issue_date")),
             "start_date": iso_to_ddmmyyyy(r.get("start_date")),
             "deadline": iso_to_ddmmyyyy(r.get("last_date_to_objection")),
-            "lnglat": [round(c.x, 7), round(c.y, 7)],
-            "geo_approx": False,  # set below: true when several permits share one coord
-            "geom": geom if has_footprint else None,
+            "lnglat": lnglat,
+            "loc_source": loc_source,
+            "geo_approx": False,  # refined below
+            # Keep the real footprint only when Meirim supplied one.
+            "geom": geom if (loc_source == "meirim_polygon") else None,
             "url": "https://meirim.org/tree/{}".format(r.get("id")),
         }
         kept_total += 1
-        if deadline_iso >= today.isoformat():
-            kept_open += 1
+        src_counts[loc_source] = src_counts.get(loc_source, 0) + 1
 
-    # Mark records whose coordinate is shared by another permit — that signals
-    # Meirim's geocoder fell back to a default point (real parcels never collide
-    # to 7 decimals). The map shows these as approximate, not precise.
+    # A Meirim bare point shared by 2+ permits is the geocoder's default fallback
+    # (real parcels never collide to 7 decimals) → flag those as approximate.
+    # Parcel/footprint-resolved points are precise and never flagged.
     from collections import Counter
     coord_counts = Counter(tuple(v["lnglat"]) for v in out.values())
     approx = 0
     for v in out.values():
-        if coord_counts[tuple(v["lnglat"])] > 1:
+        if v["loc_source"] == "meirim_point" and coord_counts[tuple(v["lnglat"])] > 1:
             v["geo_approx"] = True
-            v["geom"] = None
             approx += 1
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -191,9 +247,10 @@ def main():
 
     print("--- summary ---")
     print(f"today={today}  grace={GRACE_DAYS}d  cutoff>={cutoff}")
-    print(f"kept (in area, deadline open/recent): {kept_total}   of which still OPEN today: {kept_open}")
-    print(f"skipped: deadline={skipped_deadline}  outside-area={skipped_outside}  no-geom={skipped_nogeom}")
-    print(f"geo_approx (shared default coord): {approx}")
+    print(f"kept (open for objection, in area): {kept_total}")
+    print(f"location sources: {src_counts}")
+    print(f"skipped: deadline={skipped_deadline}  outside-area={skipped_outside}  no-location={skipped_noloc}")
+    print(f"geo_approx (unresolved shared default): {approx}")
     print(f"wrote {OUT}  ({os.path.getsize(OUT)} bytes)")
 
 

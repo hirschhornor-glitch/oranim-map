@@ -15093,7 +15093,8 @@
                     + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
                     + '<div style="margin-bottom:6px">'
                     +   '<span style="background:' + col + ';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">🌳 ' + esc(badge) + '</span>'
-                    +   (rec.geo_approx ? ' <span style="background:#555;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">מיקום מקורב</span>' : '')
+                    +   (rec.geo_approx ? ' <span style="background:#555;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">מיקום מקורב</span>'
+                          : rec.loc_source === 'parcel_gush' ? ' <span style="background:#6d4c41;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">מרכז גוש</span>' : '')
                     + '</div>'
                     + '<h3 style="margin:2px 0 8px;color:#cfe;font-size:15px">' + esc(rec.address || 'אישור כריתת עצים') + '</h3>'
                     + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
