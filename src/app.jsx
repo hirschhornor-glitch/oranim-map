@@ -63,33 +63,69 @@
             return !(a[2] < b[0] || b[2] < a[0] || a[3] < b[1] || b[3] < a[1]);
         }
 
-        // Sample grid inside ringA's bbox, count samples in A and in (A ∩ B).
-        // Returns (samples in A ∩ B) / (samples in A). 0 if A area is ~0.
-        function sampleOverlapFraction(ringA, ringB, n) {
-            const [minX, minY, maxX, maxY] = ringBBox(ringA);
+        // Combined bbox of a list of rings (a whole Polygon/MultiPolygon).
+        function ringsBBox(rings) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const r of rings) {
+                const b = ringBBox(r);
+                if (b[0] < minX) minX = b[0];
+                if (b[1] < minY) minY = b[1];
+                if (b[2] > maxX) maxX = b[2];
+                if (b[3] > maxY) maxY = b[3];
+            }
+            return [minX, minY, maxX, maxY];
+        }
+
+        function pointInAnyRing(pt, rings) {
+            for (const r of rings) if (pointInPolygon(pt, r)) return true;
+            return false;
+        }
+
+        // Planar shoelace area summed over a plan's rings. Units are arbitrary (deg²) — used
+        // ONLY for relative size comparison in the overlap pre-filter, so the lack of geodesic
+        // correction doesn't matter.
+        function ringsPlanarArea(rings) {
+            let total = 0;
+            for (const r of rings) {
+                let a = 0;
+                for (let k = 0, n = r.length; k < n - 1; k++) {
+                    a += r[k][0] * r[k + 1][1] - r[k + 1][0] * r[k][1];
+                }
+                total += Math.abs(a) / 2;
+            }
+            return total;
+        }
+
+        // Fraction of plan A's total area (UNION of all its rings) that lies inside plan B
+        // (union of all of B's rings). Grid-sampled across A's combined bbox. 0 if A area ~0.
+        // Working on the union — not ring-by-ring — keeps MultiPolygon plans (a plan split into
+        // several parts) correct: each part counts toward the same denominator, so a fragmented
+        // plan and its single-polygon duplicate still register as fully overlapping.
+        function unionOverlapFraction(ringsA, ringsB, n) {
+            const [minX, minY, maxX, maxY] = ringsBBox(ringsA);
             const stepX = (maxX - minX) / n, stepY = (maxY - minY) / n;
             let inA = 0, inBoth = 0;
             for (let i = 0; i < n; i++) {
                 const x = minX + (i + 0.5) * stepX;
                 for (let j = 0; j < n; j++) {
                     const y = minY + (j + 0.5) * stepY;
-                    if (pointInPolygon([x, y], ringA)) {
+                    if (pointInAnyRing([x, y], ringsA)) {
                         inA++;
-                        if (pointInPolygon([x, y], ringB)) inBoth++;
+                        if (pointInAnyRing([x, y], ringsB)) inBoth++;
                     }
                 }
             }
             return inA === 0 ? 0 : inBoth / inA;
         }
 
-        // "Significant" overlap — two plans cover substantially the SAME space, i.e. they
-        // are genuine duplicates. Requires the majority (>= threshold) of EACH polygon to be
-        // inside the other (mutual). One-directional containment (a small plan fully inside a
-        // larger one) is NOT a duplicate and is intentionally excluded.
-        function significantOverlap(ringA, ringB, threshold = 0.5, samples = 14) {
-            if (!bboxesOverlap(ringBBox(ringA), ringBBox(ringB))) return false;
-            if (sampleOverlapFraction(ringA, ringB, samples) < threshold) return false;
-            if (sampleOverlapFraction(ringB, ringA, samples) < threshold) return false;
+        // Two plans are "duplicates" when they cover substantially the SAME space, i.e. each
+        // plan has >= threshold of its area inside the other (mutual). One-directional
+        // containment (a small plan fully inside a larger one) is NOT a duplicate and is
+        // intentionally excluded. samples=20 → 400-point grid per direction for finer accuracy
+        // near the threshold than the old 14² grid.
+        function plansOverlap(ringsA, ringsB, threshold = 0.5, samples = 20) {
+            if (unionOverlapFraction(ringsA, ringsB, samples) < threshold) return false;
+            if (unionOverlapFraction(ringsB, ringsA, samples) < threshold) return false;
             return true;
         }
 
@@ -103,7 +139,7 @@
                 if (!taba) continue;
                 const rings = getAllRings(f.geometry);
                 if (!rings.length) continue;
-                items.push({ taba, rings, bboxes: rings.map(ringBBox) });
+                items.push({ taba, rings, bboxes: rings.map(ringBBox), area: ringsPlanarArea(rings) });
             }
             const map = new Map();
             for (let i = 0; i < items.length; i++) {
@@ -119,16 +155,16 @@
                         if (bboxHit) break;
                     }
                     if (!bboxHit) continue;
-                    // Deeper check: "significant" area overlap (>= 50% of either polygon),
-                    // not just any touching. Any ring-pair above threshold qualifies.
-                    let overlap = false;
-                    for (const ra of A.rings) {
-                        for (const rb of B.rings) {
-                            if (significantOverlap(ra, rb)) { overlap = true; break; }
-                        }
-                        if (overlap) break;
-                    }
-                    if (overlap) {
+                    // Cheap exact pre-filter: mutual >= 50% overlap is impossible when the two
+                    // plans' areas differ by more than ~2x (the smaller cannot fill half of the
+                    // larger), so skip the costly grid sampling for size-mismatched pairs. 0.45
+                    // (not 0.5) leaves a small margin for shoelace/sampling discreteness.
+                    const aMin = Math.min(A.area, B.area), aMax = Math.max(A.area, B.area);
+                    if (aMax > 0 && aMin / aMax < 0.45) continue;
+                    // Deeper check: mutual area overlap (>= 50% of EACH plan's area inside the
+                    // other), computed over the union of all rings so MultiPolygon plans aren't
+                    // penalised for being split into parts.
+                    if (plansOverlap(A.rings, B.rings)) {
                         if (!map.has(A.taba)) map.set(A.taba, new Set());
                         if (!map.has(B.taba)) map.set(B.taba, new Set());
                         map.get(A.taba).add(B.taba);
@@ -10627,49 +10663,13 @@
 
                 // Shared filter used by plans layer AND the "overlapping" topic —
                 // keeps both in sync so overlap-highlighting matches visible plans.
+                // Plan-visibility predicate for the "overlapping" topic. Delegates to the
+                // canonical isPlanVisible() so the two can never drift again (a past drift —
+                // the missing empty-minahak guard — was the source of the city-wide-overlap bug).
+                // The only intentional difference: the overlap topic ignores the future-shavaz
+                // status filter, so applyShavazFilter is false here.
                 function isPlanVisibleInLayer(p) {
-                    if (!planInMinahak(p)) return false;
-                    // Hide plans with no assigned minahak — their geometry tends to be
-                    // very large (city-wide/reference areas) and would "overlap" everything.
-                    // Mirrors isPlanVisible() so the overlap topic matches the plans layer.
-                    if (!(p.minahak || '').trim()) return false;
-                    const s = normalizeStatus((p.status_mavat || '').trim());
-                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                    if (s === 'הכנת הודעה 77/78') return false;
-                    if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
-                    // Exclude consolidation-and-division plans from overlap logic
-                    // (they cover the same area as building plans but are procedural).
-                    // Use startsWith on summary (short title), not includes (summary may be long body text).
-                    if (normalizePlanType(p.plan_type || '') === 'איחוד וחלוקה') return false;
-                    if ((p.plan_summary || '').trim().startsWith('איחוד וחלוקה')) return false;
-                    const shk = window.__shouldHideKayam;
-                    if (shk) {
-                        const t = String(p.taba || '').trim();
-                        if (t && shk(t)) return false;
-                    }
-                    const af = { ...filters, freeText: appliedFreeText }; // debounced text for the map
-                    const units = parseFloat(p.units_add) || 0;
-                    if (af.minUnits !== '' && units < parseFloat(af.minUnits)) return false;
-                    if (af.maxUnits !== '' && units > parseFloat(af.maxUnits)) return false;
-                    if (af.planTypes.length > 0) {
-                        const pt = normalizePlanType(p.plan_type || '');
-                        if (!af.planTypes.includes(pt)) return false;
-                    }
-                    if (af.statuses.length > 0) {
-                        const sg = getFilterStatusGroup(s);
-                        const stageVal = (p.stage || '').trim();
-                        const sgStage = getFilterStatusGroup(stageVal);
-                        if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
-                    }
-                    if (af.freeText) {
-                        const q = af.freeText.toLowerCase();
-                        const searchFields = [
-                            p.plan_summary || '', p.plan_name || '',
-                            p.architect || '', p.developer || '',
-                        ].join(' ').toLowerCase();
-                        if (!searchFields.includes(q)) return false;
-                    }
-                    return true;
+                    return isPlanVisible(p, false);
                 }
 
                 // Remove all previous geo layers + label markers
@@ -10710,9 +10710,11 @@
                     return selectedSubs.includes(n);
                 }
 
-                // Shared plan-visibility predicate — used by both the plans layer and
-                // the landuse_xplan layer so they stay in sync on show/hide rules.
-                function isPlanVisible(props) {
+                // Shared plan-visibility predicate — used by the plans layer, the landuse_xplan
+                // layer, and (via isPlanVisibleInLayer) the overlapping topic, so they stay in
+                // sync on show/hide rules. applyShavazFilter=false skips the future-shavaz status
+                // filter for callers that shouldn't be governed by it (the overlap topic).
+                function isPlanVisible(props, applyShavazFilter = true) {
                     if (!planInMinahak(props)) return false;
                     // Hide plans with no assigned minahak — their landuse polygons
                     // tend to be very large (city-wide/reference areas) and mislead.
@@ -10745,7 +10747,7 @@
                     // Future public-buildings status filter also governs the plan outlines, but only
                     // while one of those layers (and thus its control) is on — so turning them off
                     // restores normal plan display instead of leaving a hidden, unresettable filter.
-                    if ((layers['future_shavaz'] || layers['hafrashah_future']) && shavazStatusFilter.length > 0) {
+                    if (applyShavazFilter && (layers['future_shavaz'] || layers['hafrashah_future']) && shavazStatusFilter.length > 0) {
                         const sg = getFilterStatusGroup(s);
                         const stageVal = (props.stage || '').trim();
                         const sgStage = getFilterStatusGroup(stageVal);
@@ -11290,6 +11292,26 @@
                 }
 
                 // --- Topics overlay ---
+                // True when plan p should be hatched in the "overlapping" topic: it has at least
+                // one geometric duplicate partner AND both p and that partner pass the visibility
+                // filter. Single source of truth for the four render hooks below (filter, style,
+                // onEachFeature, post-render) so the rule can't drift between them.
+                function isOverlapHighlighted(p) {
+                    const oMap = overlapMapRef.current;
+                    if (!oMap) return false;
+                    const taba = String(p.taba || '').trim();
+                    if (!taba) return false;
+                    const partners = oMap.get(taba);
+                    if (!partners || !partners.size) return false;
+                    if (!isPlanVisibleInLayer(p)) return false;
+                    const byTaba = window.__planByTaba || null;
+                    for (const otherTaba of partners) {
+                        const op = byTaba ? byTaba[otherTaba] : null;
+                        if (op && isPlanVisibleInLayer(op)) return true;
+                    }
+                    return false;
+                }
+
                 if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
@@ -11322,22 +11344,7 @@
                                 if (t && shk(t)) return false;
                             }
                             const p = f.properties;
-                            if (planningTopics.overlapping && (() => {
-                                const oMap = overlapMapRef.current;
-                                if (!oMap) return false;
-                                const taba = String(p.taba || '').trim();
-                                if (!taba) return false;
-                                const partners = oMap.get(taba);
-                                if (!partners || !partners.size) return false;
-                                if (!isPlanVisibleInLayer(p)) return false;
-                                // At least one overlap partner must also be visible
-                                const byTaba = window.__planByTaba || null;
-                                for (const otherTaba of partners) {
-                                    const op = byTaba ? byTaba[otherTaba] : null;
-                                    if (op && isPlanVisibleInLayer(op)) return true;
-                                }
-                                return false;
-                            })()) return true;
+                            if (planningTopics.overlapping && isOverlapHighlighted(p)) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 // Show only plans whose effective objection-end date is today or in the future.
                                 // For ועדה מחוזית: fall back to (mavat_date + 60 days) when no stored date,
@@ -11381,22 +11388,7 @@
                                 const mt = (window.__meetings || {})[(p.plan_name || '').trim()];
                                 if (mt) return { color: '#ff8c00', weight: 3, fillOpacity: 0 };
                             }
-                            if (planningTopics.overlapping && (() => {
-                                const oMap = overlapMapRef.current;
-                                if (!oMap) return false;
-                                const taba = String(p.taba || '').trim();
-                                if (!taba) return false;
-                                const partners = oMap.get(taba);
-                                if (!partners || !partners.size) return false;
-                                if (!isPlanVisibleInLayer(p)) return false;
-                                // At least one overlap partner must also be visible
-                                const byTaba = window.__planByTaba || null;
-                                for (const otherTaba of partners) {
-                                    const op = byTaba ? byTaba[otherTaba] : null;
-                                    if (op && isPlanVisibleInLayer(op)) return true;
-                                }
-                                return false;
-                            })())
+                            if (planningTopics.overlapping && isOverlapHighlighted(p))
                                 return { color: '#3366ff', weight: 2, fillOpacity: 0 };
                             return {};
                         },
@@ -11406,22 +11398,7 @@
                             layer.on('add', () => {
                                 const el = layer.getElement();
                                 if (!el) return;
-                                if (planningTopics.overlapping && (() => {
-                                const oMap = overlapMapRef.current;
-                                if (!oMap) return false;
-                                const taba = String(p.taba || '').trim();
-                                if (!taba) return false;
-                                const partners = oMap.get(taba);
-                                if (!partners || !partners.size) return false;
-                                if (!isPlanVisibleInLayer(p)) return false;
-                                // At least one overlap partner must also be visible
-                                const byTaba = window.__planByTaba || null;
-                                for (const otherTaba of partners) {
-                                    const op = byTaba ? byTaba[otherTaba] : null;
-                                    if (op && isPlanVisibleInLayer(op)) return true;
-                                }
-                                return false;
-                            })()) {
+                                if (planningTopics.overlapping && isOverlapHighlighted(p)) {
                                     el.setAttribute('fill', 'url(#hatch-blue)');
                                     el.setAttribute('fill-opacity', '1');
                                 }
@@ -11434,22 +11411,7 @@
                         const el = layer.getElement();
                         const p = layer.feature.properties;
                         if (!el) return;
-                        if (planningTopics.overlapping && (() => {
-                                const oMap = overlapMapRef.current;
-                                if (!oMap) return false;
-                                const taba = String(p.taba || '').trim();
-                                if (!taba) return false;
-                                const partners = oMap.get(taba);
-                                if (!partners || !partners.size) return false;
-                                if (!isPlanVisibleInLayer(p)) return false;
-                                // At least one overlap partner must also be visible
-                                const byTaba = window.__planByTaba || null;
-                                for (const otherTaba of partners) {
-                                    const op = byTaba ? byTaba[otherTaba] : null;
-                                    if (op && isPlanVisibleInLayer(op)) return true;
-                                }
-                                return false;
-                            })()) {
+                        if (planningTopics.overlapping && isOverlapHighlighted(p)) {
                             el.setAttribute('fill', 'url(#hatch-blue)');
                             el.setAttribute('fill-opacity', '1');
                         }
