@@ -21,7 +21,7 @@ What it does:
 Re-run periodically (the objection window is ~14 days; new permits appear
 between runs only by re-scraping). Idempotent — overwrites the json.
 """
-import json, sys, io, time, datetime, urllib.parse, urllib.request, os
+import json, sys, io, time, datetime, urllib.parse, urllib.request, os, re
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -109,7 +109,16 @@ def iso_date(s):
     return str(s)[:10] if s else ""
 
 
-import re
+def fix_reversed_digits(s):
+    # Meirim's free-text fields (e.g. person_request_name) are extracted from a
+    # visually-ordered RTL source, so embedded house numbers come out reversed
+    # ("עין צורים 18" → "עין צורים 81"). The parsed `street` field is fine, but
+    # the requester string isn't. Reverse standalone runs of 2–3 digits (house
+    # numbers); leave 1-digit and 4+-digit runs (years/large ids) untouched.
+    if not s:
+        return s
+    return re.sub(r"(?<!\d)(\d{2,3})(?!\d)", lambda m: m.group(1)[::-1], str(s))
+
 
 PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
 
@@ -208,7 +217,7 @@ def main():
             "place": r.get("place") or "",
             "reason": r.get("reason_short") or "",
             "reason_detailed": r.get("reason_detailed") or "",
-            "requester": r.get("person_request_name") or "",
+            "requester": fix_reversed_digits(r.get("person_request_name") or ""),
             "approver": r.get("approver_name") or "",
             "approver_title": r.get("approver_title") or "",
             "regional_office": r.get("regional_office") or "",

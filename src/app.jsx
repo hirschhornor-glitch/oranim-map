@@ -15075,20 +15075,78 @@
             // regional XLS feeds + the Jerusalem muni page. Reuses the objection
             // urgency helpers (deadline stored dd/mm/yyyy → objectionsDaysLeft works).
             function treesBreakdownHtml(trees, esc) {
+                // Render the permit's species list as a compact table, grouped by
+                // action (כריתה/העתקה/…) with a per-group subtotal, species sorted
+                // by count desc. Handles both nested {action:{species:n}} and flat.
                 if (!trees || typeof trees !== 'object') return '';
+                const nested = Object.values(trees).some(v => v && typeof v === 'object');
+                const groups = nested ? trees : { '': trees };
                 let html = '';
-                Object.keys(trees).forEach(k => {
-                    const v = trees[k];
-                    if (v && typeof v === 'object') {
-                        // { action: { species: count } }
-                        const items = Object.keys(v).map(sp => esc(sp) + ' × ' + v[sp]).join('، ');
-                        html += '<div style="margin-top:3px"><b style="color:#a5d6a7">' + esc(k) + ':</b> <span style="color:#cfe">' + items + '</span></div>';
-                    } else {
-                        // flat { species: count }
-                        html += '<div style="margin-top:3px"><span style="color:#cfe">' + esc(k) + ' × ' + esc(v) + '</span></div>';
-                    }
+                Object.keys(groups).forEach(action => {
+                    const sp = groups[action];
+                    if (!sp || typeof sp !== 'object') return;
+                    const rows = Object.keys(sp).map(s => [s, parseInt(sp[s]) || 0]).sort((a, b) => b[1] - a[1]);
+                    if (!rows.length) return;
+                    const tot = rows.reduce((s, r) => s + r[1], 0);
+                    if (action) html += '<div style="margin-top:5px;color:#a5d6a7;font-weight:700">' + esc(action) + ' <span style="color:#789;font-weight:400">(' + tot + ')</span></div>';
+                    html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:2px">';
+                    rows.forEach(([s, c]) => {
+                        html += '<tr><td style="padding:1px 6px 1px 0;color:#cfe">' + esc(s) + '</td>'
+                            + '<td style="padding:1px 0;color:#fff;text-align:left;width:30px;font-variant-numeric:tabular-nums">' + c + '</td></tr>';
+                    });
+                    html += '</table>';
                 });
                 return html;
+            }
+            // Number of trees the permit requests to CUT (action כריתה), for the
+            // survey comparison. Sums species under cut actions; falls back to
+            // total_trees when the permit's action is itself כריתה.
+            function treePermitCutCount(rec) {
+                const trees = rec.trees;
+                const isCut = (k) => /כריתה/.test(k || '');
+                if (trees && typeof trees === 'object') {
+                    const nested = Object.values(trees).some(v => v && typeof v === 'object');
+                    if (nested) {
+                        let sum = 0;
+                        Object.keys(trees).forEach(action => {
+                            if (!isCut(action)) return;
+                            const sp = trees[action];
+                            if (sp && typeof sp === 'object') Object.values(sp).forEach(c => sum += (parseInt(c) || 0));
+                        });
+                        return sum;
+                    }
+                    if (isCut(rec.action)) {
+                        let sum = 0; Object.values(trees).forEach(c => sum += (parseInt(c) || 0)); return sum;
+                    }
+                }
+                return isCut(rec.action) ? (parseInt(rec.total_trees) || 0) : 0;
+            }
+            // Smallest-area active plan containing the point that has a tree survey
+            // (tree_surveys.json keyed by taba). Returns {taba, props, survey,
+            // valency} or null. Lets a permit show the plan's survey context.
+            function treePermitSurveyedPlan(ll) {
+                const gd = geoDataRef.current || {};
+                const feats = (gd.plans && gd.plans.features) || [];
+                const surveys = window.__treeSurveys || {};
+                const ringArea = (ring) => { let a = 0; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { a += (ring[j][0] * ring[i][1]) - (ring[i][0] * ring[j][1]); } return Math.abs(a / 2); };
+                let best = null, bestArea = Infinity;
+                for (const f of feats) {
+                    const p = f.properties || {};
+                    const taba = p.taba || '';
+                    const survey = surveys[taba];
+                    if (!survey || !(survey.total > 0)) continue;
+                    const ptype = normalizePlanType(p.plan_type || '');
+                    if (ptype === 'תשתיות' || ptype === 'מוסתר') continue;
+                    const g = f.geometry; if (!g) continue;
+                    const parts = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+                    for (const poly of parts) {
+                        if (pointInPolygon(ll, poly[0])) {
+                            const ar = ringArea(poly[0]);
+                            if (ar < bestArea) { bestArea = ar; best = { taba, props: p, survey, valency: (window.__treeValencies || {})[taba] }; }
+                        }
+                    }
+                }
+                return best;
             }
             function buildTreePopup(rec) {
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -15102,8 +15160,41 @@
                     : days + ' ימים להגשת ערר';
                 const realPermit = rec.permit_number && !String(rec.permit_number).startsWith('meirim-');
                 const trees = treesBreakdownHtml(rec.trees, esc);
+
+                // ── Tree-survey context: does this permit fall in a surveyed plan? ──
+                let surveyHtml = '';
+                const sp = rec.lnglat && treePermitSurveyedPlan(rec.lnglat);
+                if (sp && sp.survey) {
+                    const s = sp.survey;
+                    const cut = treePermitCutCount(rec);
+                    const surveyKrita = s.krita || 0;
+                    const over = cut > surveyKrita;
+                    const cmpColor = over ? '#e74c3c' : '#2ecc71';
+                    const cmpText = over
+                        ? '⚠️ מבוקשים לכריתה ' + cut + ' עצים — מעל ' + surveyKrita + ' שהומלצו לכריתה בסקר'
+                        : '✓ מבוקשים לכריתה ' + cut + ' עצים — בגבול ' + surveyKrita + ' שהומלצו לכריתה בסקר';
+                    let valHtml = '';
+                    if (sp.valency && sp.valency.bucket_totals) {
+                        const bt = sp.valency.bucket_totals;
+                        const high = (bt['17-20'] || 0) + (bt['14-16'] || 0);
+                        if (high > 0) {
+                            const b1 = sp.valency.by_bucket['17-20'] || {}, b2 = sp.valency.by_bucket['14-16'] || {};
+                            const highCut = (b1.krita || 0) + (b1.haataka || 0) + (b2.krita || 0) + (b2.haataka || 0);
+                            const pct = Math.round(highCut / high * 100);
+                            const pc = pct >= 50 ? '#e74c3c' : pct >= 25 ? '#e67e22' : '#2ecc71';
+                            valHtml = '<div style="margin-top:4px;font-size:11px;color:#9ab">ערכיות גבוהה (14–20): <span style="color:' + pc + ';font-weight:700">' + highCut + ' מתוך ' + high + ' (' + pct + '%)</span> לכריתה/העתקה' + (sp.valency.status === 'partial' ? ' <span style="color:#888;font-size:10px">(חלקי)</span>' : '') + '</div>';
+                        }
+                    }
+                    surveyHtml = '<div style="margin-top:8px;font-size:12px;border-top:1px solid #234;padding-top:6px">'
+                        + '<b style="color:#9ab">🌲 סקר עצים בתכנית ' + esc(sp.props.plan_name_he || sp.taba) + ':</b>'
+                        + '<div style="margin-top:3px;color:#cfe">נסקרו ' + s.total + ' עצים · המלצות: כריתה ' + surveyKrita + ', שימור ' + (s.shimur || 0) + ', העתקה ' + (s.haataka || 0) + '</div>'
+                        + '<div style="margin-top:4px;padding:4px 7px;border-radius:4px;background:rgba(0,0,0,.28);color:' + cmpColor + ';font-weight:700">' + cmpText + '</div>'
+                        + valHtml
+                        + '</div>';
+                }
+
                 return ''
-                    + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
+                    + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px;padding:2px 8px 4px">'
                     + '<div style="margin-bottom:6px">'
                     +   '<span style="background:' + col + ';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">🌳 ' + esc(badge) + '</span>'
                     +   (rec.geo_approx ? ' <span style="background:#555;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">מיקום מקורב</span>'
@@ -15123,6 +15214,7 @@
                     +     '<td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold">' + esc(rec.deadline || '—') + '</td></tr>'
                     + '</table>'
                     + (trees ? '<div style="margin-top:8px;font-size:12px;border-top:1px solid #234;padding-top:6px"><b style="color:#9ab">פירוט מינים:</b>' + trees + '</div>' : '')
+                    + surveyHtml
                     + '<div style="margin-top:8px;font-size:12px">'
                     +   '<a href="' + esc(rec.url) + '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
                     +   '🔗 פרטי האישור באתר מעירים ←</a>'
