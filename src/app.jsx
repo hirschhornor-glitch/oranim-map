@@ -381,6 +381,7 @@
             minahak_baka: 'data/minahak_baka.geojson',
             future_shavaz: 'data/future_shavaz.geojson',
             shavaz_kayam: 'data/shavaz_kayam.geojson',
+            mbz_gonenim: 'data/mbz_gonenim.geojson',
             sport_kayam: 'data/sport_kayam.geojson',
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
             landuse_xplan: 'data/landuse_xplan.geojson',
@@ -13647,6 +13648,63 @@
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
                 }
 
+                // --- מבצ (מקבצי קרקע ציבורית) overlay — split by status (col F from Yotam's table) ---
+                // Each compound is shown ALONGSIDE the matching shavaz layer toggle:
+                //   קיים/קיים-משתנה → shavaz_kayam · עתידי → future_shavaz · הפרשה → hafrashah_future.
+                // Keeps the city-GIS layers untouched; covers all 109 compounds uniformly.
+                if (gd.mbz_gonenim) {
+                    const MBZ_STYLE = {
+                        'קיים':        { fill: '#8B4513', stroke: '#5C2E0A', dash: false, label: 'שב"צ קיים' },
+                        'קיים_משתנה':  { fill: '#e65100', stroke: '#bf360c', dash: false, label: 'שב"צ קיים שעתיד להשתנות' },
+                        'עתידי':       { fill: '#D2B48C', stroke: '#8B4513', dash: true,  label: 'שב"צ עתידי' },
+                        'עתידי_הפרשה': { fill: '#c9a26b', stroke: '#8B4513', dash: true,  label: 'הפרשה מבונה עתידית' },
+                    };
+                    const mbzWant = new Set();
+                    if (layers['shavaz_kayam'])     { mbzWant.add('קיים'); mbzWant.add('קיים_משתנה'); }
+                    if (layers['future_shavaz'])    mbzWant.add('עתידי');
+                    if (layers['hafrashah_future']) mbzWant.add('עתידי_הפרשה');
+                    if (mbzWant.size) {
+                        const mbzIcon = (cat) => {
+                            const s = MBZ_STYLE[cat] || MBZ_STYLE['קיים']; const sz = 15; const d = s.dash ? ' stroke-dasharray="3,2"' : '';
+                            const html = '<svg width="' + sz + '" height="' + sz + '" xmlns="http://www.w3.org/2000/svg">' +
+                                '<rect x="2" y="2" width="' + (sz - 4) + '" height="' + (sz - 4) + '" fill="' + s.fill + '" stroke="' + s.stroke + '" stroke-width="2"' + d + ' rx="2"/>' +
+                                '<rect x="4.5" y="4.5" width="' + (sz - 9) + '" height="' + (sz - 9) + '" fill="none" stroke="#fff" stroke-width="1"/></svg>';
+                            return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
+                        };
+                        const _skip = v => (v === null || v === undefined || !String(v).trim() || String(v).trim() === 'לא רלוונטי' || String(v).trim() === 'nan');
+                        const mbzRow = (lbl, val) => _skip(val) ? '' :
+                            '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:2px 0"><span style="color:#9ab;white-space:nowrap">' + lbl + '</span><span style="color:#e8e8e8;text-align:left">' + val + '</span></div>';
+                        const mbzBlock = (lbl, val) => _skip(val) ? '' :
+                            '<div style="margin-top:7px"><div style="font-size:11px;color:#7ec9a0;font-weight:700;margin-bottom:1px">' + lbl + '</div><div style="font-size:12px;color:#dcdcdc;white-space:pre-wrap;line-height:1.4">' + String(val) + '</div></div>';
+                        const buildMbzPopup = (p) => {
+                            const s = MBZ_STYLE[p.status_cat] || {};
+                            let h = '<div class="popup-header" style="border-bottom:3px solid ' + (s.stroke || '#8B4513') + '"><div class="popup-header-title">' + (p.name || 'מקבץ ציבורי') + '</div>' +
+                                '<div style="font-size:11px;font-weight:700;color:' + (s.fill || '#8B4513') + '">🏛️ מבצ — ' + (s.label || p.status || '') + '</div></div>';
+                            h += '<div class="popup-body" style="padding:8px 10px">';
+                            h += mbzRow('שכונה', p.sub) + mbzRow('סוג הקצאה', p.allocation) + mbzRow('ייעוד', p.yeud) + mbzRow('בעלות', p.ownership) + mbzRow('כתובת', p.address) + mbzRow('שטח (דונם)', p.dunam) + mbzRow('גוש/חלקה', p.gush_helka) + mbzRow('תב"ע', p.taba);
+                            h += mbzBlock('שימושים מותרים', p.allowed_uses) + mbzBlock('בינוי קיים', p.existing_built) + mbzBlock('שטח מבונה עתידי', p.future_m2) + mbzBlock('פוטנציאל', p.potential) + mbzBlock('המלצות', p.recommendations);
+                            h += '</div>';
+                            return h;
+                        };
+                        const mbzLayer = L.geoJSON(gd.mbz_gonenim, {
+                            pane: 'shavazPane',
+                            filter: f => mbzWant.has(f.properties.status_cat),
+                            pointToLayer: (f, latlng) => L.marker(latlng, { icon: mbzIcon(f.properties.status_cat), pane: 'shavazMarkersPane' }),
+                            onEachFeature: (f, layer) => {
+                                layer.on('click', (e) => {
+                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                    L.DomEvent.stopPropagation(e);
+                                    L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
+                                        .setLatLng(layer.getLatLng())
+                                        .setContent(buildMbzPopup(f.properties))
+                                        .openOn(map);
+                                });
+                            }
+                        }).addTo(map);
+                        geoLayersRef.current.mbz_gonenim = mbzLayer;
+                    }
+                }
+
                 // --- Shared education icon builder ---
                 // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
                 // Outline = פיקוח: ממלכתי=blue, ממלכתי דתי=green, ערבי=orange, חרדי=purple
@@ -14462,8 +14520,10 @@
                     };
                     Object.values(window.__treePermits).forEach(rec => {
                         if (!rec.lnglat || rec.lnglat.length !== 2) return;
+                        const days = objectionsDaysLeft(rec.deadline);
+                        if (days != null && days < 0) return; // objection window already closed — don't show
                         const latlng = L.latLng(rec.lnglat[1], rec.lnglat[0]);
-                        const col = objectionsUrgencyColor(objectionsDaysLeft(rec.deadline));
+                        const col = objectionsUrgencyColor(days);
                         const approx = !!rec.geo_approx;
                         const html = '<div style="width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);'
                             + 'background:' + col + ';border:2px ' + (approx ? 'dashed' : 'solid') + ' #fff;'
@@ -23808,7 +23868,9 @@
 
                     {/* ── Tree-cutting permits open for objection (אישורי כריתה פתוחים לערר) ── */}
                     {treePermitsReport && (() => {
-                        const recs = Object.values(window.__treePermits || {});
+                        const recs = Object.values(window.__treePermits || {}).filter(r => {
+                            const d = objectionsDaysLeft(r.deadline); return d == null || d >= 0; // open for objection only
+                        });
                         const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
                         recs.sort((a, b) => dval(a.deadline).localeCompare(dval(b.deadline)));
                         const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
