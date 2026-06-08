@@ -2108,7 +2108,8 @@
                 shavaz_demolition: false, // מבני ציבור להריסה במסגרת התחדשות עירונית
                 consolidation: false,    // תכניות איחוד וחלוקה
                 rental: false,           // פרוייקטים עם דירות להשכרה
-                permit_objections: false // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
+                permit_objections: false, // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
+                tree_permits: false       // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -2193,6 +2194,7 @@
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
             const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
+            const [treePermitsReport, setTreePermitsReport] = useState(false);
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
@@ -2566,6 +2568,7 @@
                         [showPublicNeeds, () => setShowPublicNeeds(false)],
                         [objectionsReport, () => setObjectionsReport(false)],
                         [permitObjectionsReport, () => setPermitObjectionsReport(false)],
+                        [treePermitsReport, () => setTreePermitsReport(false)],
                         [meetingsReport, () => setMeetingsReport(false)],
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
@@ -2582,7 +2585,7 @@
                 return () => document.removeEventListener('keydown', onEsc);
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap,
-                showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, meetingsReport, overlapReport,
+                showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
                 shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showReportsMenu]);
 
             // Focus input when global search opens
@@ -4008,6 +4011,7 @@
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
                 window.__objectionsPermits = {};
+                window.__treePermits = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4020,6 +4024,7 @@
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
+                    ['__treePermits', 'data/tree_permits.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4410,6 +4415,7 @@
                             else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
+                            else if (key === '__treePermits') { window.__treePermits = data || {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
                                 const idx = {};
@@ -14441,6 +14447,43 @@
                     geoLayersRef.current.objections = objGroup;
                 }
 
+                // --- אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות) ---
+                if (planningTopics.tree_permits && window.__treePermits) {
+                    const treeGroup = L.layerGroup().addTo(map);
+                    const drawTreeOutline = (rec) => {
+                        if (geoLayersRef.current.treeOutline) {
+                            try { map.removeLayer(geoLayersRef.current.treeOutline); } catch(e) {}
+                            geoLayersRef.current.treeOutline = null;
+                        }
+                        if (!rec.geom) return; // approx-located permits have no real footprint
+                        const outline = L.geoJSON(rec.geom, { pane: 'markerPane', interactive: false,
+                            style: { color: '#2e7d32', weight: 3, opacity: 0.95, fill: true, fillColor: '#66bb6a', fillOpacity: 0.15, dashArray: '6,4' } }).addTo(map);
+                        geoLayersRef.current.treeOutline = outline;
+                    };
+                    Object.values(window.__treePermits).forEach(rec => {
+                        if (!rec.lnglat || rec.lnglat.length !== 2) return;
+                        const latlng = L.latLng(rec.lnglat[1], rec.lnglat[0]);
+                        const col = objectionsUrgencyColor(objectionsDaysLeft(rec.deadline));
+                        const approx = !!rec.geo_approx;
+                        const html = '<div style="width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);'
+                            + 'background:' + col + ';border:2px ' + (approx ? 'dashed' : 'solid') + ' #fff;'
+                            + 'box-shadow:0 1px 3px rgba(0,0,0,.5);opacity:' + (approx ? 0.82 : 1) + ';'
+                            + 'display:flex;align-items:center;justify-content:center">'
+                            + '<span style="transform:rotate(45deg);font-size:13px;line-height:1">🌳</span></div>';
+                        const icon = L.divIcon({ className: 'tree-permit-marker', html, iconSize: [24, 24], iconAnchor: [12, 22], popupAnchor: [0, -20] });
+                        const marker = L.marker(latlng, { icon, title: rec.address || ('כריתת ' + rec.total_trees + ' עצים') });
+                        marker.on('click', () => {
+                            drawTreeOutline(rec);
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildTreePopup(rec))
+                                .openOn(map);
+                        });
+                        marker.addTo(treeGroup);
+                    });
+                    geoLayersRef.current.treePermits = treeGroup;
+                }
+
                 // --- Tama38 ---
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
@@ -14951,6 +14994,64 @@
                     +   '<a href="' + esc(objectionYkUrl(rec.tik))
                     +   '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
                     +   '🔗 פתח את התיק באתר העירייה ←</a>'
+                    + '</div>'
+                    + '</div>';
+            }
+            // ── Tree-cutting permits (אישורי כריתה) — open-for-objection layer ──
+            // Source: Meirim API, which aggregates the official פקיד היערות / gov.il
+            // regional XLS feeds + the Jerusalem muni page. Reuses the objection
+            // urgency helpers (deadline stored dd/mm/yyyy → objectionsDaysLeft works).
+            function treesBreakdownHtml(trees, esc) {
+                if (!trees || typeof trees !== 'object') return '';
+                let html = '';
+                Object.keys(trees).forEach(k => {
+                    const v = trees[k];
+                    if (v && typeof v === 'object') {
+                        // { action: { species: count } }
+                        const items = Object.keys(v).map(sp => esc(sp) + ' × ' + v[sp]).join('، ');
+                        html += '<div style="margin-top:3px"><b style="color:#a5d6a7">' + esc(k) + ':</b> <span style="color:#cfe">' + items + '</span></div>';
+                    } else {
+                        // flat { species: count }
+                        html += '<div style="margin-top:3px"><span style="color:#cfe">' + esc(k) + ' × ' + esc(v) + '</span></div>';
+                    }
+                });
+                return html;
+            }
+            function buildTreePopup(rec) {
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const days = objectionsDaysLeft(rec.deadline);
+                const col = objectionsUrgencyColor(days);
+                const row = (label, val) => (val || val === 0) ? '<tr><td style="padding:3px 8px;color:#9ab;white-space:nowrap">' + esc(label) + '</td>'
+                    + '<td style="padding:3px 8px;color:#dfe">' + esc(val) + '</td></tr>' : '';
+                const badge = days == null ? 'פתוח לערר'
+                    : days < 0 ? 'תקופת הערר הסתיימה'
+                    : days === 0 ? 'היום — מועד אחרון לערר'
+                    : days + ' ימים להגשת ערר';
+                const realPermit = rec.permit_number && !String(rec.permit_number).startsWith('meirim-');
+                const trees = treesBreakdownHtml(rec.trees, esc);
+                return ''
+                    + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
+                    + '<div style="margin-bottom:6px">'
+                    +   '<span style="background:' + col + ';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">🌳 ' + esc(badge) + '</span>'
+                    +   (rec.geo_approx ? ' <span style="background:#555;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">מיקום מקורב</span>' : '')
+                    + '</div>'
+                    + '<h3 style="margin:2px 0 8px;color:#cfe;font-size:15px">' + esc(rec.address || 'אישור כריתת עצים') + '</h3>'
+                    + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+                    +   row('פעולה', rec.action)
+                    +   row('סה"כ עצים', rec.total_trees)
+                    +   row('סיבה', rec.reason || rec.reason_detailed)
+                    +   row('מבקש', rec.requester)
+                    +   row('מאשר', [rec.approver, rec.approver_title].filter(Boolean).join(' · '))
+                    +   row('מס\' רישיון', realPermit ? rec.permit_number : '')
+                    +   row('גוש/חלקה', (rec.gush || rec.helka) ? ((rec.gush || '') + (rec.helka ? (' / ' + rec.helka) : '')) : '')
+                    +   row('פורסם', rec.issue_date)
+                    +   '<tr><td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold;white-space:nowrap">מועד אחרון לערר</td>'
+                    +     '<td style="padding:5px 8px;color:#fff;background:' + col + ';font-weight:bold">' + esc(rec.deadline || '—') + '</td></tr>'
+                    + '</table>'
+                    + (trees ? '<div style="margin-top:8px;font-size:12px;border-top:1px solid #234;padding-top:6px"><b style="color:#9ab">פירוט מינים:</b>' + trees + '</div>' : '')
+                    + '<div style="margin-top:8px;font-size:12px">'
+                    +   '<a href="' + esc(rec.url) + '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
+                    +   '🔗 פרטי האישור באתר מעירים ←</a>'
                     + '</div>'
                     + '</div>';
             }
@@ -16572,6 +16673,7 @@
                     { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
                     { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
                     { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
+                    { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
@@ -16688,6 +16790,7 @@
                     else if (id === 'overlap') setOverlapReport(true);
                     else if (id === 'objections') setObjectionsReport(true);
                     else if (id === 'permit_objections') setPermitObjectionsReport(true);
+                    else if (id === 'tree_permits') setTreePermitsReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'reports_menu') setShowReportsMenu(true);
@@ -17312,6 +17415,16 @@
                                 <label style={{flex:1}}>היתרים פתוחים להתנגדויות</label>
                                 <button className="layer-legend-btn" title="דוח היתרים פתוחים להתנגדויות"
                                     onClick={(e) => { e.stopPropagation(); setPermitObjectionsReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='אישורי כריתת עצים שפורסמו לערר — עם מועד אחרון להגשת ערר (מקור: מעירים / פקיד היערות)'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, tree_permits: !prev.tree_permits}))}>
+                                <input type="checkbox" checked={planningTopics.tree_permits} onChange={() => {}} />
+                                <label style={{flex:1}}>אישורי כריתת עצים פתוחים לערר</label>
+                                <button className="layer-legend-btn" title="דוח אישורי כריתת עצים פתוחים לערר"
+                                    onClick={(e) => { e.stopPropagation(); setTreePermitsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             </div>)}
@@ -23685,6 +23798,88 @@
                                             w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="היתרים_פתוחים_להתנגדויות.csv";a.click()});<\/script>');
                                             w.document.write('</body></html>'); w.document.close(); w.focus();
                                         }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── Tree-cutting permits open for objection (אישורי כריתה פתוחים לערר) ── */}
+                    {treePermitsReport && (() => {
+                        const recs = Object.values(window.__treePermits || {});
+                        const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
+                        recs.sort((a, b) => dval(a.deadline).localeCompare(dval(b.deadline)));
+                        const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                        const totalTrees = recs.reduce((s, r) => s + (parseInt(r.total_trees) || 0), 0);
+                        return (
+                        <div className="units-overlay" onClick={() => setTreePermitsReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(860px,95vw)',maxHeight:'85vh',display:'flex',flexDirection:'column'}}>
+                                <button className="units-close" onClick={() => setTreePermitsReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#127795; אישורי כריתת עצים פתוחים לערר</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{recs.length} אישורים · {totalTrees.toLocaleString()} עצים · ממוין לפי מועד אחרון · מקור: מעירים / פקיד היערות</p>
+                                    {recs.length === 0
+                                      ? <p style={{color:'#888',fontSize:13}}>לא נמצאו אישורי כריתה פתוחים לערר באזור. (יש לרענן את הנתונים.)</p>
+                                      : <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>כתובת</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>פעולה</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>עצים</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>סיבה</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>מועד אחרון</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>נותרו</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {recs.map((r, i) => {
+                                                const days = objectionsDaysLeft(r.deadline);
+                                                const col = objectionsUrgencyColor(days);
+                                                const minhak = objectionMinhak(r);
+                                                const daysTxt = days == null ? '-' : days < 0 ? 'הסתיים' : days === 0 ? 'היום' : days + ' ימים';
+                                                return (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                    onClick={() => {
+                                                        const center = r.lnglat && L.latLng(r.lnglat[1], r.lnglat[0]);
+                                                        if (!center || !mapInstanceRef.current) return;
+                                                        setTreePermitsReport(false);
+                                                        setTimeout(() => {
+                                                            mapInstanceRef.current.setView(center, 18);
+                                                            setTimeout(() => {
+                                                                L.popup({maxWidth:340,className:'plan-popup'}).setLatLng(center).setContent(buildTreePopup(r)).openOn(mapInstanceRef.current);
+                                                            }, 500);
+                                                        }, 100);
+                                                    }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0',textDecoration:'underline'}}>{r.address || '-'}{r.geo_approx ? ' ~' : ''}</td>
+                                                    <td style={{padding:'4px',color:'#a5d6a7'}}>{r.action || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:'bold'}}>{r.total_trees || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.reason || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:'bold',background:col}}>{r.deadline || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#fff',background:col}}>{daysTxt}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{minhak || '-'}</td>
+                                                </tr>);
+                                            })}
+                                        </tbody>
+                                    </table>}
+                                    <p style={{color:'#777',fontSize:11,marginBottom:8}}>~ = מיקום מקורב (מעירים לא גאוקדד את האישור במדויק)</p>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const w = window.open('', '_blank');
+                                            w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>אישורי כריתת עצים פתוחים לערר</title>');
+                                            w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}@media print{.no-print{display:none!important}}</style></head><body>');
+                                            w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#2e7d32;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">הדפסה / PDF</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">CSV</button></div>');
+                                            w.document.write('<h2>🌳 אישורי כריתת עצים פתוחים לערר</h2><p>' + recs.length + ' אישורים · ' + totalTrees + ' עצים · מקור: מעירים / פקיד היערות</p>');
+                                            w.document.write('<table><thead><tr><th>#</th><th>כתובת</th><th>פעולה</th><th>עצים</th><th>סיבה</th><th>מבקש</th><th>מאשר</th><th>מועד אחרון</th><th>מינה"ק</th></tr></thead><tbody>');
+                                            recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.address||'-')+(r.geo_approx?' (מקורב)':'')+'</td><td>'+esc(r.action||'-')+'</td><td>'+esc(r.total_trees||'-')+'</td><td>'+esc(r.reason||'-')+'</td><td>'+esc(r.requester||'-')+'</td><td>'+esc(r.approver||'-')+'</td><td>'+esc(r.deadline||'-')+'</td><td>'+esc(objectionMinhak(r)||'-')+'</td></tr>'); });
+                                            w.document.write('</tbody></table>');
+                                            const csv = ['"#","כתובת","פעולה","עצים","סיבה","מבקש","מאשר","מועד אחרון","מינה\\"ק"'];
+                                            recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String((r.address||'-')+(r.geo_approx?' (מקורב)':'')).replace(/"/g,'""')+'","'+String(r.action||'-').replace(/"/g,'""')+'","'+(r.total_trees||'-')+'","'+String(r.reason||'-').replace(/"/g,'""')+'","'+String(r.requester||'-').replace(/"/g,'""')+'","'+String(r.approver||'-').replace(/"/g,'""')+'","'+(r.deadline||'-')+'","'+String(objectionMinhak(r)||'-').replace(/"/g,'""')+'"'));
+                                            w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="אישורי_כריתת_עצים_לערר.csv";a.click()});<\/script>');
+                                            w.document.write('</body></html>'); w.document.close(); w.focus();
+                                        }} style={{background:'#2e7d32',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
                                             &#128424; הדפסה / שמירה
                                         </button>
                                     </div>
