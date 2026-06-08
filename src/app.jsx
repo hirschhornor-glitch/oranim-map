@@ -82,13 +82,15 @@
             return inA === 0 ? 0 : inBoth / inA;
         }
 
-        // "Significant" overlap — majority of one polygon's area is inside the other.
-        // Grid-sampled area ratio in both directions; if either >= threshold, count as overlap.
+        // "Significant" overlap — two plans cover substantially the SAME space, i.e. they
+        // are genuine duplicates. Requires the majority (>= threshold) of EACH polygon to be
+        // inside the other (mutual). One-directional containment (a small plan fully inside a
+        // larger one) is NOT a duplicate and is intentionally excluded.
         function significantOverlap(ringA, ringB, threshold = 0.5, samples = 14) {
             if (!bboxesOverlap(ringBBox(ringA), ringBBox(ringB))) return false;
-            if (sampleOverlapFraction(ringA, ringB, samples) >= threshold) return true;
-            if (sampleOverlapFraction(ringB, ringA, samples) >= threshold) return true;
-            return false;
+            if (sampleOverlapFraction(ringA, ringB, samples) < threshold) return false;
+            if (sampleOverlapFraction(ringB, ringA, samples) < threshold) return false;
+            return true;
         }
 
         // Compute pairs of plans whose geometries overlap.
@@ -10627,6 +10629,10 @@
                 // keeps both in sync so overlap-highlighting matches visible plans.
                 function isPlanVisibleInLayer(p) {
                     if (!planInMinahak(p)) return false;
+                    // Hide plans with no assigned minahak — their geometry tends to be
+                    // very large (city-wide/reference areas) and would "overlap" everything.
+                    // Mirrors isPlanVisible() so the overlap topic matches the plans layer.
+                    if (!(p.minahak || '').trim()) return false;
                     const s = normalizeStatus((p.status_mavat || '').trim());
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                     if (s === 'הכנת הודעה 77/78') return false;
