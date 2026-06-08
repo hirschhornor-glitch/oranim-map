@@ -63,70 +63,56 @@
             return !(a[2] < b[0] || b[2] < a[0] || a[3] < b[1] || b[3] < a[1]);
         }
 
-        // Combined bbox of a list of rings (a whole Polygon/MultiPolygon).
-        function ringsBBox(rings) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            for (const r of rings) {
-                const b = ringBBox(r);
-                if (b[0] < minX) minX = b[0];
-                if (b[1] < minY) minY = b[1];
-                if (b[2] > maxX) maxX = b[2];
-                if (b[3] > maxY) maxY = b[3];
-            }
-            return [minX, minY, maxX, maxY];
-        }
-
-        function pointInAnyRing(pt, rings) {
-            for (const r of rings) if (pointInPolygon(pt, r)) return true;
-            return false;
-        }
-
-        // Planar shoelace area summed over a plan's rings. Units are arbitrary (deg²) — used
-        // ONLY for relative size comparison in the overlap pre-filter, so the lack of geodesic
-        // correction doesn't matter.
-        function ringsPlanarArea(rings) {
-            let total = 0;
-            for (const r of rings) {
-                let a = 0;
-                for (let k = 0, n = r.length; k < n - 1; k++) {
-                    a += r[k][0] * r[k + 1][1] - r[k + 1][0] * r[k][1];
-                }
-                total += Math.abs(a) / 2;
-            }
-            return total;
-        }
-
-        // Fraction of plan A's total area (UNION of all its rings) that lies inside plan B
-        // (union of all of B's rings). Grid-sampled across A's combined bbox. 0 if A area ~0.
-        // Working on the union — not ring-by-ring — keeps MultiPolygon plans (a plan split into
-        // several parts) correct: each part counts toward the same denominator, so a fragmented
-        // plan and its single-polygon duplicate still register as fully overlapping.
-        function unionOverlapFraction(ringsA, ringsB, n) {
-            const [minX, minY, maxX, maxY] = ringsBBox(ringsA);
+        // Sample grid inside ringA's bbox, count samples in A and in (A ∩ B).
+        // Returns (samples in A ∩ B) / (samples in A). 0 if A area is ~0.
+        function sampleOverlapFraction(ringA, ringB, n) {
+            const [minX, minY, maxX, maxY] = ringBBox(ringA);
             const stepX = (maxX - minX) / n, stepY = (maxY - minY) / n;
             let inA = 0, inBoth = 0;
             for (let i = 0; i < n; i++) {
                 const x = minX + (i + 0.5) * stepX;
                 for (let j = 0; j < n; j++) {
                     const y = minY + (j + 0.5) * stepY;
-                    if (pointInAnyRing([x, y], ringsA)) {
+                    if (pointInPolygon([x, y], ringA)) {
                         inA++;
-                        if (pointInAnyRing([x, y], ringsB)) inBoth++;
+                        if (pointInPolygon([x, y], ringB)) inBoth++;
                     }
                 }
             }
             return inA === 0 ? 0 : inBoth / inA;
         }
 
-        // Two plans are "duplicates" when they cover substantially the SAME space, i.e. each
-        // plan has >= threshold of its area inside the other (mutual). One-directional
-        // containment (a small plan fully inside a larger one) is NOT a duplicate and is
-        // intentionally excluded. samples=20 → 400-point grid per direction for finer accuracy
-        // near the threshold than the old 14² grid.
-        function plansOverlap(ringsA, ringsB, threshold = 0.5, samples = 20) {
-            if (unionOverlapFraction(ringsA, ringsB, samples) < threshold) return false;
-            if (unionOverlapFraction(ringsB, ringsA, samples) < threshold) return false;
-            return true;
+        // Two rings "overlap" (mark plans as duplicates) when EITHER ring has >= threshold of its
+        // area inside the other. This intentionally COUNTS containment (a small plan fully inside
+        // a larger one is a duplicate) but excludes plans that merely touch at an edge or overlap
+        // marginally — there both fractions stay near 0, well below the threshold.
+        function significantOverlap(ringA, ringB, threshold = 0.5, samples = 14) {
+            if (!bboxesOverlap(ringBBox(ringA), ringBBox(ringB))) return false;
+            if (sampleOverlapFraction(ringA, ringB, samples) >= threshold) return true;
+            if (sampleOverlapFraction(ringB, ringA, samples) >= threshold) return true;
+            return false;
+        }
+
+        // Do two plans (each a list of rings + per-ring bboxes) overlap enough to be duplicates?
+        function plansOverlap(A, B) {
+            // bbox pre-filter across any ring pair
+            let bboxHit = false;
+            for (const ba of A.bboxes) {
+                for (const bb of B.bboxes) {
+                    if (bboxesOverlap(ba, bb)) { bboxHit = true; break; }
+                }
+                if (bboxHit) break;
+            }
+            if (!bboxHit) return false;
+            // Deeper check: one-directional area overlap (>= 50% of EITHER ring inside the other).
+            // Any ring-pair above threshold qualifies, with early-break — so under this OR rule
+            // each part of a MultiPolygon plan still matches its duplicate.
+            for (const ra of A.rings) {
+                for (const rb of B.rings) {
+                    if (significantOverlap(ra, rb)) return true;
+                }
+            }
+            return false;
         }
 
         // Compute pairs of plans whose geometries overlap.
@@ -139,32 +125,14 @@
                 if (!taba) continue;
                 const rings = getAllRings(f.geometry);
                 if (!rings.length) continue;
-                items.push({ taba, rings, bboxes: rings.map(ringBBox), area: ringsPlanarArea(rings) });
+                items.push({ taba, rings, bboxes: rings.map(ringBBox) });
             }
             const map = new Map();
             for (let i = 0; i < items.length; i++) {
                 for (let j = i + 1; j < items.length; j++) {
                     const A = items[i], B = items[j];
                     if (A.taba === B.taba) continue;
-                    // bbox pre-filter across any ring pair
-                    let bboxHit = false;
-                    for (const ba of A.bboxes) {
-                        for (const bb of B.bboxes) {
-                            if (bboxesOverlap(ba, bb)) { bboxHit = true; break; }
-                        }
-                        if (bboxHit) break;
-                    }
-                    if (!bboxHit) continue;
-                    // Cheap exact pre-filter: mutual >= 50% overlap is impossible when the two
-                    // plans' areas differ by more than ~2x (the smaller cannot fill half of the
-                    // larger), so skip the costly grid sampling for size-mismatched pairs. 0.45
-                    // (not 0.5) leaves a small margin for shoelace/sampling discreteness.
-                    const aMin = Math.min(A.area, B.area), aMax = Math.max(A.area, B.area);
-                    if (aMax > 0 && aMin / aMax < 0.45) continue;
-                    // Deeper check: mutual area overlap (>= 50% of EACH plan's area inside the
-                    // other), computed over the union of all rings so MultiPolygon plans aren't
-                    // penalised for being split into parts.
-                    if (plansOverlap(A.rings, B.rings)) {
+                    if (plansOverlap(A, B)) {
                         if (!map.has(A.taba)) map.set(A.taba, new Set());
                         if (!map.has(B.taba)) map.set(B.taba, new Set());
                         map.get(A.taba).add(B.taba);
@@ -4323,11 +4291,17 @@
                     buildProjectorTalpiotPlanSet(gd);
 
                     // Compute overlap map once — heavy O(n²); deferred so first paint isn't blocked.
+                    // Exclude plans with no minahak (city-wide/reference areas): they are never
+                    // shown in the overlap layer anyway, and under the one-directional rule they
+                    // "contain" almost every other plan — feeding them in explodes the O(n²) work
+                    // and bloats the map with entries that never render.
                     overlapMapRef.current = new Map();
                     setTimeout(() => {
                         try {
                             const t0 = performance.now();
-                            overlapMapRef.current = computeOverlapMap(gd.plans ? gd.plans.features : []);
+                            const overlapFeatures = (gd.plans ? gd.plans.features : [])
+                                .filter(f => (f.properties.minahak || '').trim());
+                            overlapMapRef.current = computeOverlapMap(overlapFeatures);
                             console.log(`[Overlap] Built map: ${overlapMapRef.current.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
                         } catch (e) {
                             console.warn('[Overlap] computation failed:', e);
