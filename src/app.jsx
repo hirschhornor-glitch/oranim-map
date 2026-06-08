@@ -6889,6 +6889,42 @@
                         .join('&#10;');
                     return '<div title="' + tip.replace(/"/g, '&quot;') + '" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 ' + statBuckets.length + ' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: ' + blended.toFixed(1) + ' נפ\' · כיתות מעוגלות ברמת הבחירה</div>';
                 })();
+                // Units-weighted demographic profile ACTUALLY used by the calc — blended across
+                // the CBS stat-area buckets (מפקד הלמ"ס 2022). The minahak preset (assumpt) is only
+                // a fallback for units outside any stat area (base bucket). This is what the footer shows,
+                // so the caption reflects the real source/values rather than the preset defaults.
+                const usedDemography = (() => {
+                    let uw = 0, hh = 0, hrd = 0, rel = 0, agG = 0, agH = 0, baseUnits = 0;
+                    [...buckets.values()].forEach(b => {
+                        const u = b.existing + b.planned; if (!u) return;
+                        uw += u;
+                        hh  += u * (b.assumptions.householdSize || 0);
+                        hrd += u * (b.assumptions.haredi || 0);
+                        rel += u * (b.assumptions.religious || 0);
+                        agG += u * (b.assumptions.ageYearPctGeneral || 0);
+                        agH += u * (b.assumptions.ageYearPctHaredi || 0);
+                        if (b.key === BASE_KEY) baseUnits += u;
+                    });
+                    if (uw <= 0) return null;
+                    return { householdSize: hh/uw, haredi: hrd/uw, religious: rel/uw,
+                             ageYearPctGeneral: agG/uw, ageYearPctHaredi: agH/uw,
+                             areaCount: statBuckets.length, baseUnits, totalUnits: uw };
+                })();
+                // Label-free caption text; source/values reflect what the calc used.
+                const demoFooterText = (() => {
+                    const d = usedDemography;
+                    if (d && d.areaCount > 0) {
+                        const baseNote = d.baseUnits > 0 ? ' + ' + Math.round(d.baseUnits) + ' יח"ד ללא כיסוי אזורי (ברירת מחדל למינהק)' : '';
+                        return 'גודל משק בית ' + d.householdSize.toFixed(1) + ' נפ\' · ' +
+                               Math.round(d.haredi*100) + '% חרדי · ' + Math.round(d.religious*100) + '% דתי — ' +
+                               'משוקלל לפי יח"ד מ-' + d.areaCount + ' אזורים סטטיסטיים (מפקד הלמ"ס 2022)' + baseNote +
+                               ' · אחוז ילידי שנת-גיל: כללי ' + d.ageYearPctGeneral.toFixed(1) + '% / חרדי ' + d.ageYearPctHaredi.toFixed(1) + '%';
+                    }
+                    // No stat-area coverage → minahak preset fallback (neighborhood-level manual assumption)
+                    return 'גודל משק בית ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' +
+                           Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · ' +
+                           'אחוז ילידי שנת-גיל כללי ' + assumpt.ageYearPctGeneral + '% (ברירת מחדל למינהק — אין כיסוי אזורי)';
+                })();
                 const existingEdu = aggregateEduFeatures(eduFeats || []);
                 const hasExistingEdu = (eduFeats || []).length > 0;
                 const showFutureBalance = (tY !== 'existing');
@@ -7151,11 +7187,11 @@
                             '<input id="pa-religious" type="range" min="0" max="100" step="1" value="' + Math.round(assumpt.religious*100) + '" style="width:90px">' +
                             '<span style="font-size:11px;color:#2e7d32;min-width:30px;text-align:center;font-weight:bold">' + Math.round(assumpt.religious*100) + '%</span>' +
                         '</div>' +
-                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון כללי:</label>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa" title="אחוז ילידי שנת-גיל בודדת (single-year cohort) — לא קשור לשנתון מנח&quot;י">ילידי שנה (כללי):</label>' +
                             '<input id="pa-age-gen" type="number" min="1.5" max="4" step="0.1" value="' + assumpt.ageYearPctGeneral + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' +
                             '<span style="font-size:10px;color:#888">%</span>' +
                         '</div>' +
-                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון חרדי:</label>' +
+                        '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa" title="אחוז ילידי שנת-גיל בודדת (single-year cohort) — לא קשור לשנתון מנח&quot;י">ילידי שנה (חרדי):</label>' +
                             '<input id="pa-age-hrd" type="number" min="1.5" max="5" step="0.1" value="' + assumpt.ageYearPctHaredi + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' +
                             '<span style="font-size:10px;color:#888">%</span>' +
                         '</div>' +
@@ -7230,7 +7266,7 @@
                             '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>' +
                         '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' +
                     statBreakdownHtml +
-                    '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">הנחות' + (statBuckets.length > 1 ? ' (בסיס/גיבוי)' : '') + ': ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' + Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · שנתון כללי ' + assumpt.ageYearPctGeneral + '%</div>' +
+                    '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">' + demoFooterText + '</div>' +
                     '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
                         '<button id="programa-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' +
                         '<button id="programa-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' +
@@ -7354,9 +7390,7 @@
                                '<td style="padding:4px 6px;text-align:center;color:#1a5276;font-weight:bold">' + (contrib > 0 ? '+' + contrib : '—') + '</td></tr>';
                     }).join('');
                     const assumptFooter = '<div style="font-size:11px;color:#555;margin-top:14px;padding:8px;background:#f5f5f5;border-radius:4px"><b>הנחות חישוב:</b> ' +
-                        yearLabel + ' · ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' +
-                        Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · ' +
-                        'שנתון כללי ' + assumpt.ageYearPctGeneral + '% · שנתון חרדי ' + assumpt.ageYearPctHaredi + '%</div>';
+                        yearLabel + ' · ' + demoFooterText + '</div>';
 
                     const win = window.open('', '_blank');
                     win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>');

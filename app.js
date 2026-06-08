@@ -197,616 +197,8886 @@ if(sub!==hint.sub){p.sub_neighborhood=hint.sub;sub=hint.sub;}canonical=hint.mina
 // לייב יפה St — actually ארנונה/בקעה רבתי — tagged as פת/גוננים).
 // Runs after applyMinahakOverrides so name-based hints take precedence
 // when the centroid happens to fall just over a border.
-function applyMinahakOverridesByGeometry(gd){if(!gd||!gd.plans||!gd.plans.features)return 0;const minahakLayers=[{name:'בית צפאפא',layer:gd.minahak_beit_tzfafa},{name:'גוננים',layer:gd.minahak_gonen},{name:'בקעה רבתי',layer:gd.minahak_baka},{name:'א.ת. תלפיות',layer:gd.minahak_talpiot},{name:'מינהל מוסדי מלחה',layer:gd.minahak_malha},{name:'גינות העיר',layer:gd.minahak_ganot}].filter(x=>x.layer&&x.layer.features);if(!minahakLayers.length)return 0;let n=0;gd.plans.features.forEach(f=>{const p=f.properties||{};if(!f.geometry)return;const centroid=geomCentroid(f.geometry);if(!centroid)return;const containing=minahakLayers.find(({layer})=>pointInLayer(centroid,layer));if(containing&&(p.minahak||'').trim()!==containing.name){p.minahak=containing.name;n++;}});if(n>0)console.log('[MinahakGeom] overrode',n,'plans via centroid-in-polygon');return n;}const CENTER=[31.7530,35.2100];const DEFAULT_ZOOM=15;function App(){const[sidebarOpen,setSidebarOpen]=useState(true);const[layers,setLayers]=useState(()=>{const initial={};Object.values(LAYER_CONFIG).forEach(group=>{group.layers.forEach(l=>{initial[l.id]=l.on;});});return initial;});const[opacity,setOpacity]=useState(0.85);// Immediate thumb value; the committed `opacity` (which triggers a full layer
-// rebuild) is debounced so dragging the slider rebuilds once, not per tick.
-const[opacitySlider,setOpacitySlider]=useState(0.85);const opacityTimerRef=useRef(null);const handleOpacityChange=v=>{setOpacitySlider(v);if(opacityTimerRef.current)clearTimeout(opacityTimerRef.current);opacityTimerRef.current=setTimeout(()=>setOpacity(v),150);};const[basemapOpacity,setBasemapOpacity]=useState(1);const[basemap,setBasemap]=useState('cartoLight');const[loading,setLoading]=useState(true);const[loadProgress,setLoadProgress]=useState({done:0,total:0});const[dataLoaded,setDataLoaded]=useState(false);const[deferredTick,setDeferredTick]=useState(0);// bumps when a deferred geojson arrives
-const[isOnline,setIsOnline]=useState(navigator.onLine);const[loadError,setLoadError]=useState(null);// { failed: string[], critical: boolean }
-const[deferredPrompt,setDeferredPrompt]=useState(null);const[showInstallBanner,setShowInstallBanner]=useState(false);const[cursorPos,setCursorPos]=useState(null);const[searchText,setSearchText]=useState('');const[collapsedGroups,setCollapsedGroups]=useState({});const[planSearch,setPlanSearch]=useState('');const[planIndex,setPlanIndex]=useState([]);const[showSearchResults,setShowSearchResults]=useState(false);const[addressSearch,setAddressSearch]=useState('');const[addressResults,setAddressResults]=useState([]);const[addressLoading,setAddressLoading]=useState(false);// Unified global search (Ctrl/Cmd+K or /)
-const[globalSearchOpen,setGlobalSearchOpen]=useState(false);const[globalSearchQuery,setGlobalSearchQuery]=useState('');const[globalSearchActive,setGlobalSearchActive]=useState(0);const[globalAddrResults,setGlobalAddrResults]=useState([]);const[globalAddrLoading,setGlobalAddrLoading]=useState(false);const globalSearchInputRef=useRef(null);const[planningTopics,setPlanningTopics]=useState({overlapping:false,// תבעות כפולות על אותו מרחב
-objections:false,// תכניות המופקדות להתנגדויות
-meetings:false,// תכניות עם ישיבה קרובה
-infrastructure:false,plan7778:false,// תכניות בהודעה 77/78
-archived:false,// תכניות שנגנזו/נדחו
-shavaz_demolition:false,// מבני ציבור להריסה במסגרת התחדשות עירונית
-consolidation:false,// תכניות איחוד וחלוקה
-rental:false,// פרוייקטים עם דירות להשכרה
-permit_objections:false// היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
-});const[legendPopup,setLegendPopup]=useState(null);// { title, items }
-const[mapScale,setMapScale]=useState('');const[zoomLevel,setZoomLevel]=useState(15);const[measureMode,setMeasureMode]=useState(null);// null | 'distance' | 'area'
-const[measureDropdown,setMeasureDropdown]=useState(false);const[areaMode,setAreaMode]=useState(false);const[areaFinished,setAreaFinished]=useState(null);const[areaPts,setAreaPts]=useState(0);const areaRef=useRef({points:[],markers:[],polygon:null});const areaModeRef=useRef(false);const[radiusMode,setRadiusMode]=useState(false);const radiusModeRef=useRef(false);const[radiusCenter,setRadiusCenter]=useState(null);const[radiusMeters,setRadiusMeters]=useState(500);const radiusRef=useRef({circle:null,marker:null});const[landuseCompareMode,setLanduseCompareMode]=useState(null);// null | 'plan' | 'area'
-const landuseCompareModeRef=useRef(null);const[shatzafMode,setShatzafMode]=useState(false);// שצ"פ לנפש mode - UI only
-const shatzafModeRef=useRef(false);const[treeMode,setTreeMode]=useState(false);// עצים mode - UI only: false | 'plan' | 'sub'
-const treeModeRef=useRef(false);const[treeAreaActive,setTreeAreaActive]=useState(false);// true when polygon draw is for trees
-const treeAreaActiveRef=useRef(false);// Programa-direct mode: when true, area/radius selection bypasses the regular plans/permits modal
-// and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
-const programaAreaActiveRef=useRef(false);const programaRadiusActiveRef=useRef(false);// Which report the 4 programa scope collectors should render: 'programa' (default) or 'allocations'.
-const reportKindRef=useRef('programa');const[programaActive,setProgramaActive]=useState(null);// null | 'area' | 'radius' — for toolbar UI state
-// Full-area comprehensive report ("דוח אזור מקיף"): own draw-ownership flag +
-// the aggregated result object rendered by the React modal.
-const[fullAreaReport,setFullAreaReport]=useState(null);const[fullReportDrill,setFullReportDrill]=useState(null);// expanded institution category in the report
-const[fullAreaLoading,setFullAreaLoading]=useState(false);// true while lazy layers are being fetched
-const[fullAreaCollapsed,setFullAreaCollapsed]=useState({});// {sectionId: true} = collapsed
-const[fullReportTables,setFullReportTables]=useState({});// {tableId: true} = detailed record-table expanded
-const fullReportAreaActiveRef=useRef(false);const fullReportPolyRef=useRef(null);// highlighted polygon kept on the map while report is open
-// Expose function to trigger area analysis from landuse panel
-window.__triggerAreaAnalysis=points=>{landuseCompareModeRef.current=null;setLanduseCompareMode(null);setAreaFinished(points);};const[measureResult,setMeasureResult]=useState(null);// { type, value, unit }
-const measureRef=useRef({points:[],layers:[],tooltip:null,guideLine:null});// Marker-coords tool: capture coords for updating recommendations / polygons.
-const[markerCoordsMode,setMarkerCoordsMode]=useState(null);// null | 'point' | 'line' | 'polygon'
-const markerCoordsModeRef=useRef(null);const[markerCoordsPts,setMarkerCoordsPts]=useState(0);const[markerCoordsResult,setMarkerCoordsResult]=useState(null);// { type:'point'|'line'|'polygon', points:[{lat,lng}] }
-const markerCoordsRef=useRef({points:[],markers:[],polygon:null});const[showPrint,setShowPrint]=useState(false);const[printTitle,setPrintTitle]=useState('');const[printShowLegend,setPrintShowLegend]=useState(true);const[printShowTitle,setPrintShowTitle]=useState(true);const[printShowBasemap,setPrintShowBasemap]=useState(true);const[printAreaMode,setPrintAreaMode]=useState(false);const[printAreaBounds,setPrintAreaBounds]=useState(null);const printAreaRef=useRef({corner1:null,marker1:null,previewLayer:null,rectLayer:null,mouseHandler:null,clickHandler:null,keyHandler:null});const[activeDropdown,setActiveDropdown]=useState(null);// 'measure' | null
-const[showUnits,setShowUnits]=useState(false);const[unitsData,setUnitsData]=useState(null);// { minahaks, byMinahak }
-const[unitsLoading,setUnitsLoading]=useState(false);const[unitsExpanded,setUnitsExpanded]=useState(null);// null | 'type' | 'status'
-const[unitsDrilldown,setUnitsDrilldown]=useState(null);// minahak name for drill-down view
-const[showCommerceTable,setShowCommerceTable]=useState(false);const[commerceData,setCommerceData]=useState(null);const[commerceLoading,setCommerceLoading]=useState(false);const[commerceExpanded,setCommerceExpanded]=useState(null);// null | 'status'
-const[commerceDrilldown,setCommerceDrilldown]=useState(null);const[commerceCellReport,setCommerceCellReport]=useState(null);const[minahakReport,setMinahakReport]=useState(null);const[cellReport,setCellReport]=useState(null);// {minahak, statusKey, statusLabel, plans}
-const[showMimush,setShowMimush]=useState(false);const[mimushData,setMimushData]=useState(null);const[mimushDrilldown,setMimushDrilldown]=useState(null);const[mimushExpanded,setMimushExpanded]=useState(null);// null | 'stage' | 'tail'
-const[mimushTailOpen,setMimushTailOpen]=useState({});// { minahak: true/false }
-const[mimushCellReport,setMimushCellReport]=useState(null);const[objectionsReport,setObjectionsReport]=useState(false);const[permitObjectionsReport,setPermitObjectionsReport]=useState(false);const[meetingsReport,setMeetingsReport]=useState(false);const[overlapReport,setOverlapReport]=useState(false);const[shavazKayamReport,setShavazKayamReport]=useState(false);const[shavazReportFilter,setShavazReportFilter]=useState({sub:'all',minahak:'all',q:''});const[specialHousingReport,setSpecialHousingReport]=useState(false);// Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
-const[masterPlanReport,setMasterPlanReport]=useState(null);const[showReportsMenu,setShowReportsMenu]=useState(false);const[reportsMenuMP,setReportsMenuMP]=useState('מושבות');const[reportsMenuMinahak,setReportsMenuMinahak]=useState('בקעה רבתי');// Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
-// filter plans/permits to those whose centroid is inside the projector boundary, roll them
-// up under one virtual minahak ("פרוייקטור תלפיות"), and bucket sub-neighborhood by the 5 internal polygons.
-const[reportScope,setReportScope]=useState(null);useEffect(()=>{window.__reportScope=reportScope;},[reportScope]);const[showPermitsGap,setShowPermitsGap]=useState(false);const[permitsGapDrilldown,setPermitsGapDrilldown]=useState(null);const[showPermitsBySub,setShowPermitsBySub]=useState(false);const[permitsBySubDrilldown,setPermitsBySubDrilldown]=useState(null);const[permitsBySubMinahakFilter,setPermitsBySubMinahakFilter]=useState('all');// Neighborhood Program report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
-const[showPublicNeeds,setShowPublicNeeds]=useState(false);const[showAllocChooser,setShowAllocChooser]=useState(false);// scope chooser for the built-allocations report
-const[dashSub,setDashSub]=useState('גוננים א-ו');// selected sub-neighborhood for the neighborhood dashboard
-const[publicNeedsDrilldown,setPublicNeedsDrilldown]=useState(null);// { sub, serviceKey } or null
-const[balanceDrilldown,setBalanceDrilldown]=useState(null);// { sub, svcKey } or null — for existing-edu balance table
-const[plannedDrilldown,setPlannedDrilldown]=useState(null);// { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
-const[uncatDrilldown,setUncatDrilldown]=useState(null);// sub name or null — for uncategorized sqm panel
-const[publicNeedsMinahak,setPublicNeedsMinahak]=useState(null);// selected minahak name (or null = card grid)
-// Auto-clear report scope when all scope-aware modals close.
-useEffect(()=>{if(!showMimush&&!showUnits&&!showCommerceTable&&!showPermitsBySub&&!showPermitsGap&&!showPublicNeeds&&reportScope){setReportScope(null);setUnitsData(null);setCommerceData(null);setMimushData(null);window.__unitsData=null;window.__unitsFetching=false;}},[showMimush,showUnits,showCommerceTable,showPermitsBySub,showPermitsGap,showPublicNeeds,reportScope]);// Assumptions: default + per-minahak presets + per-minahak overrides.
-// Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
-// and qualitative demographic knowledge per minahak.
-const PN_DEFAULT_ASSUMPTIONS={householdSize:3.2,haredi:0,religious:0,targetYear:2040,ageYearPctGeneral:2.2,// Jerusalem avg from shnaton (ages 0-14 weighted)
-ageYearPctHaredi:3.0};const PN_MINAHAK_PRESETS={'גינות העיר':{householdSize:2.8,haredi:0.05,religious:0.20,ageYearPctGeneral:1.9,ageYearPctHaredi:3.0,targetYear:2040},'בית צפאפא':{householdSize:5.0,haredi:0,religious:0,ageYearPctGeneral:3.0,ageYearPctHaredi:3.0,targetYear:2040},'גוננים':{householdSize:3.5,haredi:0.15,religious:0.30,ageYearPctGeneral:2.2,ageYearPctHaredi:3.0,targetYear:2040},'בקעה רבתי':{householdSize:3.2,haredi:0.02,religious:0.20,ageYearPctGeneral:2.0,ageYearPctHaredi:3.0,targetYear:2040},'מינהל מוסדי מלחה':{householdSize:3.2,haredi:0,religious:0.10,ageYearPctGeneral:2.0,ageYearPctHaredi:3.0,targetYear:2040},'א.ת. תלפיות':{householdSize:3.2,haredi:0,religious:0.10,ageYearPctGeneral:2.0,ageYearPctHaredi:3.0,targetYear:2040}};const[publicNeedsAssumptionsMap,setPublicNeedsAssumptionsMap]=useState({default:{...PN_DEFAULT_ASSUMPTIONS},perMinahak:{}});const getPNAssumptions=minahak=>{if(!minahak)return publicNeedsAssumptionsMap.default;if(publicNeedsAssumptionsMap.perMinahak[minahak])return publicNeedsAssumptionsMap.perMinahak[minahak];return PN_MINAHAK_PRESETS[minahak]||publicNeedsAssumptionsMap.default;};// Per-statistical-area assumptions (CBS census 2022, data/stat_areas.geojson)
-// overlaid on a baseline. A unit at (lng,lat) gets the demographic profile of
-// the stat area its point falls in; fields the area lacks (or a point outside
-// all areas) keep the baseline value. The matched object carries
-// _statAreaId/_statAreaName for the UI breakdown; a no-match returns the
-// baseline unchanged (no _statAreaId).
-const getStatAreaAssumptions=(lng,lat,base)=>{base=base||getPNAssumptions(null);const sa=geoDataRef.current&&geoDataRef.current.stat_areas;if(!sa||!sa.features||lng==null||lat==null)return base;const pt=[lng,lat];for(const f of sa.features){if(!f.geometry||!pointInGeometry(pt,f.geometry))continue;const p=f.properties||{};const out={...base};if(typeof p.householdSize==='number')out.householdSize=p.householdSize;if(typeof p.ageYearPctGeneral==='number')out.ageYearPctGeneral=p.ageYearPctGeneral;if(typeof p.ageYearPctHaredi==='number')out.ageYearPctHaredi=p.ageYearPctHaredi;if(typeof p.haredi==='number')out.haredi=p.haredi;if(typeof p.religious==='number')out.religious=p.religious;out._statAreaId=p.stat_area_id;out._statAreaName=p.name;return out;}return base;};// "מותאם" badge ignores targetYear changes — only demographic params trigger override
-const hasPNOverride=minahak=>{if(!minahak)return false;const o=publicNeedsAssumptionsMap.perMinahak[minahak];if(!o)return false;const preset=PN_MINAHAK_PRESETS[minahak]||publicNeedsAssumptionsMap.default;const fields=['householdSize','haredi','religious','ageYearPctGeneral','ageYearPctHaredi'];return fields.some(f=>Math.abs((o[f]||0)-(preset[f]||0))>0.001);};const updatePNAssumptions=(minahak,patch)=>{setPublicNeedsAssumptionsMap(prev=>{if(!minahak){return{...prev,default:{...prev.default,...patch}};}// Baseline first-touch from preset (not default) so changing only year doesn't appear as a demographic override
-const baseline=prev.perMinahak[minahak]||PN_MINAHAK_PRESETS[minahak]||prev.default;return{...prev,perMinahak:{...prev.perMinahak,[minahak]:{...baseline,...patch}}};});};const resetPNAssumptions=minahak=>{if(!minahak)return;setPublicNeedsAssumptionsMap(prev=>{const next={...prev.perMinahak};delete next[minahak];return{...prev,perMinahak:next};});};const[permitsBySubCatFilter,setPermitsBySubCatFilter]=useState(()=>new Set(['bniya_chadasha','tosefet','harisa','chafira_milui','tama38','shinuyim','shimush_chorech','drachim','mivne_nilve','tachzukah','acher']));const[permitsGapSort,setPermitsGapSort]=useState({col:'gap',dir:'desc'});const[permitsGapRev,setPermitsGapRev]=useState(0);const[permitsGapMinhakFilter,setPermitsGapMinhakFilter]=useState('all');const[permitsGapIncludeConditional,setPermitsGapIncludeConditional]=useState(false);const[reasonDraft,setReasonDraft]=useState('');const[reasonSaving,setReasonSaving]=useState(false);const[overlapExpanded,setOverlapExpanded]=useState(()=>new Set());const[overlapNames,setOverlapNames]=useState(()=>{try{return JSON.parse(localStorage.getItem('oranim_overlap_names')||'{}');}catch{return{};}});const[overlapEditingKey,setOverlapEditingKey]=useState(null);const[showToast,setShowToast]=useState(false);const[toastMsg,setToastMsg]=useState('');// Show a transient toast with a custom message (falls back to the share-copied text).
-const notifyToast=React.useCallback(msg=>{setToastMsg(msg||'');setShowToast(true);setTimeout(()=>setShowToast(false),2600);},[]);const[dashboardOpen,setDashboardOpen]=useState(false);const[showFilter,setShowFilter]=useState(false);const[showHeatMap,setShowHeatMap]=useState(false);const[densityMode,setDensityMode]=useState('planned');// 'planned' = units_total | 'realized' = issued-permit units
-const[showCommerceHeatMap,setShowCommerceHeatMap]=useState(false);const[showAnnotations,setShowAnnotations]=useState(false);const[annotationSubtitle,setAnnotationSubtitle]=useState('');const[annotationName,setAnnotationName]=useState('');const[annotationGeneralNotes,setAnnotationGeneralNotes]=useState('');const[annotationsRefresh,setAnnotationsRefresh]=useState(0);// Annotations (notes) for plans
-if(!window.__annotations){window.__annotations=JSON.parse(localStorage.getItem('plan_annotations')||'{}');}if(!window.showNoteModal){window.showNoteModal=function(currentNote){return new Promise(function(resolve){var overlay=document.createElement('div');overlay.className='note-overlay';overlay.innerHTML='<div class="note-modal">'+'<div class="note-modal-header"><h3>\u05d4\u05e2\u05e8\u05d4 \u05dc\u05ea\u05db\u05e0\u05d9\u05ea</h3><button class="modal-close note-cancel">&times;</button></div>'+'<div class="note-modal-body"><textarea class="note-textarea" dir="rtl"></textarea></div>'+'<div class="note-modal-footer">'+'<button class="modal-action-btn primary note-confirm">\u05d0\u05d9\u05e9\u05d5\u05e8</button>'+'<button class="modal-action-btn note-cancel">\u05d1\u05d9\u05d8\u05d5\u05dc</button>'+'</div></div>';document.body.appendChild(overlay);var ta=overlay.querySelector('.note-textarea');ta.value=currentNote||'';setTimeout(function(){ta.focus();},50);function close(val){document.body.removeChild(overlay);resolve(val);}overlay.querySelector('.note-confirm').onclick=function(){close(ta.value);};overlay.querySelectorAll('.note-cancel').forEach(function(b){b.onclick=function(){close(null);};});overlay.addEventListener('click',function(e){if(e.target===overlay)close(null);});ta.addEventListener('keydown',function(e){if(e.key==='Escape')close(null);});});};}const[filters,setFilters]=useState({minUnits:'',maxUnits:'',planTypes:[],statuses:[],freeText:''});// Debounced copy of filters.freeText. The sidebar plan list filters live off
-// filters.freeText, but the expensive map rebuild keys off this debounced value
-// so typing doesn't rebuild every layer on each keystroke.
-const[appliedFreeText,setAppliedFreeText]=useState('');useEffect(()=>{const t=setTimeout(()=>setAppliedFreeText(filters.freeText),180);return()=>clearTimeout(t);},[filters.freeText]);const[eduFilters,setEduFilters]=useState({sugMosad:[],pikuach:[]});// Plan-status filter for the future public-buildings layers (שב"צ עתידי / הפרשה מבונה).
-// Holds filterStatusGroups keys; empty = show all statuses.
-const[shavazStatusFilter,setShavazStatusFilter]=useState([]);// Use-domain filter for the הפרשה מבונה layer. Holds hafrashDomainGroups keys; empty = all.
-const[hafrashDomainFilter,setHafrashDomainFilter]=useState([]);const[availablePlanTypes,setAvailablePlanTypes]=useState([]);const filterStatusGroups=[{key:'approved',label:'אישור / מאושרת'},{key:'in_approval',label:'בהליך אישור'},{key:'objections',label:'התנגדויות'},{key:'deposit',label:'הפקדה'},{key:'conditions',label:'במילוי תנאים להפקדה'},{key:'open',label:'פתיחת תיק / בדיקה'},{key:'ו-גמר בנייה',label:'גמר בנייה'},{key:'ה-בבנייה',label:'בבנייה'},{key:'ד-היתר בנייה',label:'היתר בנייה'},{key:'ג-רישוי בתהליך',label:'רישוי בתהליך'}];// Allocation-use domains for the הפרשה מבונה filter (aligns with the public-allocation
-// guide categories + a כללי/לא-מסווג catch-all). Keys match hafrashUseDomain() output.
-const hafrashDomainGroups=[{key:'education',label:'חינוך'},{key:'religion',label:'דת'},{key:'sport',label:'ספורט'},{key:'health',label:'בריאות'},{key:'welfare',label:'רווחה / חברה'},{key:'culture',label:'קהילה ותרבות'},{key:'emergency',label:'חירום'},{key:'other',label:'כללי / לא מסווג'}];// Multi-select filter convention for the shavaz/hafrash filters:
-//   []          → ALL selected (nothing filtered) — the default.
-//   [NONE_KEY]  → NONE selected (hide everything) — reached by unchecking all or the
-//                 master "הכל" toggle. NONE_KEY can't match any real status/domain, so
-//                 the existing predicates hide everything without special-casing.
-//   [a,b,...]   → exactly those selected.
-const NONE_KEY=' __none__';const toggleFilterGroup=(setter,allKeys,key,checked)=>setter(prev=>{let cur=prev.length===0?[...allKeys]:prev.filter(k=>k!==NONE_KEY);if(checked){if(!cur.includes(key))cur.push(key);}else cur=cur.filter(k=>k!==key);if(cur.length===0)return[NONE_KEY];if(cur.length===allKeys.length)return[];return cur;});const setFilterAll=(setter,on)=>setter(on?[]:[NONE_KEY]);// PWA: online/offline detection
-useEffect(()=>{const goOnline=()=>setIsOnline(true);const goOffline=()=>setIsOnline(false);window.addEventListener('online',goOnline);window.addEventListener('offline',goOffline);return()=>{window.removeEventListener('online',goOnline);window.removeEventListener('offline',goOffline);};},[]);// PWA: install prompt
-useEffect(()=>{const dismissed=localStorage.getItem('oranim-install-dismissed');const handler=e=>{e.preventDefault();setDeferredPrompt(e);if(!dismissed)setShowInstallBanner(true);};window.addEventListener('beforeinstallprompt',handler);return()=>window.removeEventListener('beforeinstallprompt',handler);},[]);const handleInstall=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();const result=await deferredPrompt.userChoice;if(result.outcome==='accepted')setShowInstallBanner(false);setDeferredPrompt(null);};const dismissInstall=()=>{setShowInstallBanner(false);localStorage.setItem('oranim-install-dismissed','1');};// Auto-enable relevant status/type categories when free text search matches plans (debounced)
-useEffect(()=>{const q=filters.freeText;if(!q||q.length<2)return;const timer=setTimeout(()=>{const gd=geoDataRef.current;if(!gd.plans)return;const ql=q.toLowerCase();const newStatuses=new Set(filters.statuses);const newTypes=new Set(filters.planTypes);let changed=false;gd.plans.features.forEach(f=>{const p=f.properties;const searchable=[p.plan_summary||'',p.plan_name||'',p.architect||'',p.developer||''].join(' ').toLowerCase();if(!searchable.includes(ql))return;const s=normalizeStatus((p.status_mavat||'').trim());const sg=getFilterStatusGroup(s);if(sg&&!newStatuses.has(sg)){newStatuses.add(sg);changed=true;}const stageVal=(p.stage||'').trim();const sgStage=getFilterStatusGroup(stageVal);if(sgStage&&!newStatuses.has(sgStage)){newStatuses.add(sgStage);changed=true;}const pt=normalizePlanType(p.plan_type||'');if(pt&&pt!=='תשתיות'&&!newTypes.has(pt)){newTypes.add(pt);changed=true;}});if(changed){setFilters(prev=>({...prev,statuses:[...newStatuses],planTypes:[...newTypes]}));}},500);return()=>clearTimeout(timer);},[filters.freeText]);// Build plan search index from loaded GeoJSON data
-useEffect(()=>{const gd=geoDataRef.current;if(!dataLoaded||!gd.plans)return;const index=[];gd.plans.features.forEach(f=>{if(!f.geometry||!f.geometry.coordinates)return;try{const p=f.properties;const bounds=L.geoJSON(f).getBounds();if(!bounds.isValid())return;const center=bounds.getCenter();index.push({n:p.plan_name||'',h:p.plan_name_he||'',s:p.plan_summary||'',t:(p.plan_name_he||'')+' '+(p.plan_summary||''),ta:String(p.taba||''),c:[center.lat,center.lng]});}catch(e){}});setPlanIndex(index);console.log('[Search] Built plan index:',index.length,'plans');},[dataLoaded]);// Global keyboard: Ctrl/Cmd+K or "/" to open unified search; Esc to close
-useEffect(()=>{function onKey(e){const t=e.target;const isEditable=t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable);if((e.key==='k'||e.key==='K')&&(e.ctrlKey||e.metaKey)){e.preventDefault();setGlobalSearchOpen(true);setGlobalSearchQuery('');setGlobalSearchActive(0);return;}if(e.key==='/'&&!isEditable&&!globalSearchOpen){e.preventDefault();setGlobalSearchOpen(true);setGlobalSearchQuery('');setGlobalSearchActive(0);return;}if(e.key==='Escape'&&globalSearchOpen){setGlobalSearchOpen(false);}}document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey);},[globalSearchOpen]);// Escape closes the top-most open report/table modal (drill-downs first,
-// then their parent modal). Global search and the draw/measure modes keep
-// their own Escape handlers above.
-useEffect(()=>{const onEsc=e=>{if(e.key!=='Escape')return;// Ordered top-of-stack → bottom: close only the first open one.
-const closers=[[commerceCellReport,()=>setCommerceCellReport(null)],[mimushCellReport,()=>setMimushCellReport(null)],[cellReport,()=>setCellReport(null)],[unitsDrilldown,()=>setUnitsDrilldown(null)],[masterPlanReport,()=>setMasterPlanReport(null)],[minahakReport,()=>setMinahakReport(null)],[showPrint,()=>setShowPrint(false)],[showUnits,()=>setShowUnits(false)],[showCommerceTable,()=>setShowCommerceTable(false)],[showMimush,()=>setShowMimush(false)],[showPermitsGap,()=>setShowPermitsGap(false)],[showPermitsBySub,()=>setShowPermitsBySub(false)],[showPublicNeeds,()=>setShowPublicNeeds(false)],[objectionsReport,()=>setObjectionsReport(false)],[permitObjectionsReport,()=>setPermitObjectionsReport(false)],[meetingsReport,()=>setMeetingsReport(false)],[overlapReport,()=>setOverlapReport(false)],[shavazKayamReport,()=>setShavazKayamReport(false)],[specialHousingReport,()=>setSpecialHousingReport(false)],[showAnnotations,()=>setShowAnnotations(false)],[showAllocChooser,()=>setShowAllocChooser(false)],[showFilter,()=>setShowFilter(false)],[showReportsMenu,()=>setShowReportsMenu(false)]];const hit=closers.find(([open])=>open);if(hit){e.preventDefault();hit[1]();}};document.addEventListener('keydown',onEsc);return()=>document.removeEventListener('keydown',onEsc);},[commerceCellReport,mimushCellReport,cellReport,unitsDrilldown,masterPlanReport,minahakReport,showPrint,showUnits,showCommerceTable,showMimush,showPermitsGap,showPermitsBySub,showPublicNeeds,objectionsReport,permitObjectionsReport,meetingsReport,overlapReport,shavazKayamReport,specialHousingReport,showAnnotations,showAllocChooser,showFilter,showReportsMenu]);// Focus input when global search opens
-useEffect(()=>{if(globalSearchOpen&&globalSearchInputRef.current){setTimeout(()=>globalSearchInputRef.current&&globalSearchInputRef.current.focus(),20);}},[globalSearchOpen]);// Debounced address lookup inside global search
-useEffect(()=>{if(!globalSearchOpen)return;const q=globalSearchQuery.trim();// only hit geocoder for Hebrew-text queries with length >= 3 and at least one non-digit letter
-const hasLetter=/[א-ת]/.test(q);if(q.length<3||!hasLetter){setGlobalAddrResults([]);return;}setGlobalAddrLoading(true);const ctrl=new AbortController();const timer=setTimeout(()=>{fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q+' ירושלים')}&limit=4&countrycodes=il&accept-language=he`,{signal:ctrl.signal}).then(r=>r.json()).then(data=>{setGlobalAddrResults((data||[]).map(d=>({name:d.display_name,lat:parseFloat(d.lat),lng:parseFloat(d.lon)})));setGlobalAddrLoading(false);}).catch(()=>setGlobalAddrLoading(false));},400);return()=>{clearTimeout(timer);ctrl.abort();};},[globalSearchQuery,globalSearchOpen]);const mapRef=useRef(null);const mapInstanceRef=useRef(null);const viewHistoryRef=useRef([]);// stack of {lat, lng, zoom}
-const isGoingBackRef=useRef(false);// flag to skip recording during back nav
-const[viewHistoryLen,setViewHistoryLen]=useState(0);const geoDataRef=useRef({});const geoLayersRef=useRef({});const baseTileRef=useRef(null);const layersRef=useRef(layers);// taba -> Set(other tabas this plan geometrically overlaps with).
-// Populated once when plans data arrives. Used by the "overlapping"
-// planning topic to filter overlaps based on currently-visible plans.
-const overlapMapRef=useRef(null);// True once the (heavy, deferred) overlap map has finished building. Drives the
-// "computing overlaps" indicator and re-renders the topic once the map is ready.
-const[overlapReady,setOverlapReady]=useState(false);// ── URL Hash helpers ──
-function parseHash(){const hash=window.location.hash.replace('#','');if(!hash)return null;const params={};hash.split('&').forEach(p=>{const[k,v]=p.split('=');if(k&&v!==undefined)params[k]=decodeURIComponent(v);});return params;}function updateHash(){const map=mapInstanceRef.current;if(!map)return;const c=map.getCenter();const z=map.getZoom();const activeLayers=Object.entries(layersRef.current).filter(([,v])=>v).map(([k])=>k).join(',');const hash=`z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}`;window.history.replaceState(null,'','#'+hash);}// Apply hash on first load
-const hashAppliedRef=useRef(false);const planJumpedRef=useRef(false);// Capture initial hash BEFORE updateHash() overwrites it
-const initialHashRef=useRef(parseHash());// Initialize map
-useEffect(()=>{if(mapInstanceRef.current)return;// Read hash for initial view
-const hashParams=parseHash();const initCenter=hashParams&&hashParams.lat&&hashParams.lng?[parseFloat(hashParams.lat),parseFloat(hashParams.lng)]:CENTER;const initZoom=hashParams&&hashParams.z?parseInt(hashParams.z):DEFAULT_ZOOM;const map=L.map('map',{center:initCenter,zoom:initZoom,zoomControl:false,maxZoom:22,minZoom:13,preferCanvas:false});window.__mapInstanceForPrint=map;// Wire up "ראי גם" cross-feature links inside projector popups.
-// When the popup opens, the popup HTML may contain anchors with
-// data-related-lat / data-related-lon — clicking flies the map to
-// that point. Delegated handler avoids per-popup wiring.
-map.on('popupopen',e=>{const root=e.popup&&e.popup.getElement();if(!root)return;const links=root.querySelectorAll('a.pp-related-link');links.forEach(a=>{a.addEventListener('click',ev=>{ev.preventDefault();const lat=parseFloat(a.getAttribute('data-related-lat'));const lon=parseFloat(a.getAttribute('data-related-lon'));if(!isFinite(lat)||!isFinite(lon))return;map.closePopup();map.flyTo([lat,lon],Math.max(map.getZoom(),18),{duration:0.6});});});// Wire up cross-section image-open buttons (Phase C)
-const csBtns=root.querySelectorAll('button.pp-cs-btn');csBtns.forEach(b=>{b.addEventListener('click',ev=>{ev.preventDefault();const url=b.getAttribute('data-cs-url');if(url)window.open(url,'_blank','noopener');});});// Wire up clickable service rows — find the sibling feature's
-// own Leaflet layer (by project_id) and fire its click event so
-// its native popup opens. Falls back to lat/lng pan if the layer
-// can't be located (e.g. on-demand layer not yet loaded).
-const svcRows=root.querySelectorAll('tr.pp-svc-row');svcRows.forEach(tr=>{tr.addEventListener('click',ev=>{ev.preventDefault();const targetId=tr.getAttribute('data-row-id');const lat=parseFloat(tr.getAttribute('data-row-lat'));const lon=parseFloat(tr.getAttribute('data-row-lon'));map.closePopup();// Search both projector layers for a matching project_id.
-let foundLyr=null;['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{if(foundLyr)return;const grp=geoLayersRef.current&&geoLayersRef.current[k];if(!grp||!grp.eachLayer)return;grp.eachLayer(sub=>{if(foundLyr)return;const fp=sub.feature&&sub.feature.properties;if(fp&&targetId&&fp.project_id===targetId)foundLyr=sub;});});if(foundLyr){try{const b=foundLyr.getBounds&&foundLyr.getBounds();if(b&&b.isValid&&b.isValid())map.fitBounds(b,{maxZoom:18,padding:[40,40]});else if(foundLyr.getLatLng)map.setView(foundLyr.getLatLng(),18);setTimeout(()=>foundLyr.fire('click'),200);}catch(err){console.warn(err);}return;}// Fallback: pan only.
-if(isFinite(lat)&&isFinite(lon)){map.flyTo([lat,lon],Math.max(map.getZoom(),18),{duration:0.6});}});tr.addEventListener('mouseenter',()=>{tr.style.outline='2px solid #1565c0';});tr.addEventListener('mouseleave',()=>{tr.style.outline='';});});// Wire up "פתח תב"ע" button — finds the matching plan layer and
-// fires its click event to open its native popup.
-const openPlanBtns=root.querySelectorAll('button[data-action="open-plan"]');openPlanBtns.forEach(b=>{b.addEventListener('click',ev=>{ev.preventDefault();const planName=b.getAttribute('data-plan-name');if(!planName)return;const plansLyr=geoLayersRef.current&&geoLayersRef.current.plans;if(!plansLyr){console.warn('plans layer not loaded');return;}let found=null;plansLyr.eachLayer(l=>{if(found)return;const pn=l.feature&&l.feature.properties&&l.feature.properties.plan_name;if(pn===planName)found=l;});if(!found){// Plan isn't in the current view — make sure the plans layer is on
-// and let the user know without a blocking native alert.
-setLayers(prev=>prev.plans?prev:{...prev,plans:true});notifyToast('תב"ע '+planName+' לא נמצאה בתצוגה הנוכחית');return;}map.closePopup();try{const bounds=found.getBounds&&found.getBounds();if(bounds)map.fitBounds(bounds,{maxZoom:18,padding:[40,40]});setTimeout(()=>found.fire('click'),200);}catch(err){console.warn(err);}});});});// Load Phase C — feature → cross-section thumbnails index.
-// Lazy: the actual JPGs are only fetched when a popup button is clicked.
-fetch('data/cross_sections_index.json?v='+APP_VERSION).then(r=>r.ok?r.json():{}).then(idx=>{window.__crossSectionsIndex=idx||{};}).catch(()=>{window.__crossSectionsIndex={};});// ---- Projector filter panel (תחום + חומש interactive chips) ----
-// Shown only when projector_gonenim or projector_gonenim_tzatal is active.
-if(!window.__projectorFilters){window.__projectorFilters={domains:new Set(['programa','public_space','transport','metaham']),chumashim:new Set([1,2,3,'unknown'])};}window.__rebuildProjectorLayers=function(){['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{const cur=geoLayersRef.current&&geoLayersRef.current[k];const data=geoDataRef.current&&geoDataRef.current[k];if(cur&&map.hasLayer(cur)&&data){map.removeLayer(cur);const fresh=buildProjectorLayer(k,data);geoLayersRef.current[k]=fresh;fresh.addTo(map);}});if(window.__updateProjectorFilterCounts)window.__updateProjectorFilterCounts();};// Initialize services filter Set lazily on first show (all services on by default)
-if(!window.__projectorFilters.services){window.__projectorFilters.services=null;// null = no filter (all)
-}if(!document.getElementById('projector-filter-panel')){const panel=document.createElement('div');panel.id='projector-filter-panel';panel.style.cssText='position:absolute;top:0;left:0;bottom:0;width:320px;background:rgba(15,15,30,0.97);backdrop-filter:blur(10px);border-right:1px solid #2a2a4a;z-index:1002;display:none;flex-direction:column;direction:rtl;font-family:Assistant,sans-serif;color:#e0e0e0;overflow:hidden';const mkChip=(group,val,label,color)=>`<button data-pf-group="${group}" data-pf-value="${val}" class="pf-chip" style="background:${color};color:#fff;border:0;border-radius:14px;padding:4px 11px;margin:3px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">${label}</button>`;panel.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #2a2a4a;background:linear-gradient(135deg,#16213e,#0f3460)">`+`<h3 style="margin:0;font-size:15px;color:#fff">📋 פילטר המלצות פרוייקטור</h3>`+`<button id="pf-close-btn" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1">×</button>`+`</div>`+`<div id="pf-count" style="font-size:11.5px;color:#8ecae6;padding:7px 16px;border-bottom:1px solid #1a1a3a;background:#12122a"></div>`+`<div style="flex:1;overflow-y:auto;padding:12px 14px;font-size:12.5px">`+`<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">תחום</div>`+mkChip('domains','programa','פרוגרמה','#8d6e63')+mkChip('domains','public_space','מרחב ציבורי','#2e7d32')+mkChip('domains','transport','תנועה','#1565c0')+mkChip('domains','metaham','מתחמים','#d81b60')+`</div>`+`<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">חומש לביצוע</div>`+mkChip('chumashim','1','חומש 1','#b71c1c')+mkChip('chumashim','2','חומש 2','#e65100')+mkChip('chumashim','3','חומש 3','#1a237e')+mkChip('chumashim','unknown','ללא חומש','#546e7a')+`</div>`+`<div style="margin-bottom:10px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="color:#9aa3b3;font-size:11px;font-weight:600">שירות</div><div><button id="pf-svc-all" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer;margin-left:4px">הכל</button><button id="pf-svc-none" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer">אף אחד</button></div></div>`+`<div id="pf-services" style="background:#16162a;border-radius:4px;padding:6px 8px"></div>`+`</div>`+`</div>`+`<div style="border-top:1px solid #2a2a4a;padding:10px 14px;background:#0c0c1d">`+`<button id="pf-summary-btn" style="background:#1976d2;color:#fff;border:0;border-radius:4px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-family:inherit;width:100%;font-weight:600">📊 סיכום + ציר זמן</button>`+`</div>`;map.getContainer().appendChild(panel);function refreshChips(){const f=window.__projectorFilters;panel.querySelectorAll('button.pf-chip').forEach(btn=>{const grp=btn.getAttribute('data-pf-group');const val=btn.getAttribute('data-pf-value');const target=grp==='chumashim'&&val!=='unknown'?parseInt(val,10):val;const active=f[grp]&&f[grp].has(target);btn.style.opacity=active?'1':'0.32';btn.style.outline=active?'':'1.5px dashed #999';});}// Map raw service_he variants → display category.
-// User-requested 2026-05-28 to group near-duplicates so the panel
-// has fewer rows. Each parent checkbox toggles all member services.
-const SERVICE_CATEGORIES={'מעבר ה"ר / שביל':['הוספת מעבר ה"ר','שדרוג מעבר ה"ר','מעבר ה"ר','הוספת שביל ה"ר','מעבר הולכי רגל'],'מעבר חציה':['מעבר חציה','הוספת מעבר חציה'],'גני ילדים / מעון':['גני ילדים','גן ילדים','מעון יום','מעון יום + גני ילדים'],'בי"ס יסודי':['יסודי','בי"ס יסודי'],'בי"ס על-יסודי':['על יסודי','בי"ס על-יסודי'],'שירותי רווחה':['שירותי רווחה','שירותי רווחה נוספים','מוסדות רווחה נוספים','משרדי שירותים חברתיים'],'שצ"פ':['שצ"פ','תוספת שצ"פ','חיבור לשצ"פ'],'כביש / רחוב':['רחוב','רחוב חדש','שדרוג רחובות'],'תח"צ / תחבורה':['תח"צ','שיפור רמת שירות','הנגשה'],'ספורט':['מגרש ספורט','אולם ספורט']};const SERVICE_TO_CATEGORY=(()=>{const m={};for(const cat in SERVICE_CATEGORIES){for(const sv of SERVICE_CATEGORIES[cat])m[sv]=cat;}return m;})();function renderServicesList(){const container=document.getElementById('pf-services');if(!container)return;const all=new Map();['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{const data=geoDataRef.current[k];if(!data||!data.features)return;data.features.forEach(ft=>{const sv=(ft.properties.service_he||'').trim()||'(ללא)';all.set(sv,(all.get(sv)||0)+1);});});if(!all.size){container.innerHTML='<div style="color:#666;font-size:11px;padding:4px">טוען...</div>';return;}if(!window.__projectorFilters.services){window.__projectorFilters.services=new Set(all.keys());}const svcSet=window.__projectorFilters.services;// Group services by category (or self if uncategorized)
-const grouped=new Map();// key = category name → { total, members: [{sv,n}] }
-for(const[sv,n]of all.entries()){const cat=SERVICE_TO_CATEGORY[sv]||sv;if(!grouped.has(cat))grouped.set(cat,{total:0,members:[]});const g=grouped.get(cat);g.total+=n;g.members.push({sv,n});}// Sort categories by total count, members alphabetically
-const cats=[...grouped.entries()].sort((a,b)=>b[1].total-a[1].total);const escAttr=s=>String(s).replace(/"/g,'&quot;').replace(/&/g,'&amp;');container.innerHTML=cats.map(([cat,g])=>{if(g.members.length===1){// Single-member category: render as flat checkbox (no expand)
-const{sv,n}=g.members[0];const checked=svcSet.has(sv)?'checked':'';return`<label style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${checked} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#778;font-size:10.5px">${n}</span></label>`;}// Multi-member category: parent checkbox + expandable list
-const memberSvs=g.members.map(m=>m.sv);const onCount=memberSvs.filter(sv=>svcSet.has(sv)).length;const parentState=onCount===memberSvs.length?'checked':onCount===0?'':'indeterminate';const parentAttr=parentState==='checked'?'checked':'';const memberList=g.members.map(({sv,n})=>{const c=svcSet.has(sv)?'checked':'';return`<label style="display:flex;align-items:center;padding:2px 0 2px 18px;cursor:pointer;color:#9aa8b3;font-size:10.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${c} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#667;font-size:10px">${n}</span></label>`;}).join('');return`<details style="margin:1px 0"><summary style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px;list-style:none"><span style="color:#788;margin-left:4px;font-size:9px">▸</span><input type="checkbox" data-pf-cat="${escAttr(cat)}" ${parentAttr} ${parentState==='indeterminate'?'data-indeterminate="1"':''} style="margin-left:6px" onclick="event.stopPropagation()"/> <span style="flex:1;font-weight:600">${cat}</span><span style="color:#778;font-size:10.5px">${g.total}</span></summary><div style="padding:2px 0 4px 4px;border-right:1px dashed #2a2a4a;margin-right:8px">${memberList}</div></details>`;}).join('');// Apply indeterminate state to category checkboxes (HTML attribute doesn't work for indeterminate)
-container.querySelectorAll('input[data-pf-cat][data-indeterminate]').forEach(cb=>{cb.indeterminate=true;});}window.__updateProjectorFilterCounts=function(){const out=document.getElementById('pf-count');if(!out)return;let shown=0,total=0;// Per-dimension counts (independent of other dims so user can
-// see how many features each chip toggles).
-const domCounts={programa:0,public_space:0,transport:0,metaham:0};const chCounts={1:0,2:0,3:0,unknown:0};const f=window.__projectorFilters;['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{const data=geoDataRef.current[k];if(!data||!data.features)return;total+=data.features.length;data.features.forEach(ft=>{const ch=ft.properties.chumash;const chKey=ch===null||ch===undefined?'unknown':ch;const p=ft.properties;const isMetaham=!!(p.is_metaham_polygon||p.is_metaham_pdf_tichnun);const dom=isMetaham?'metaham':p.domain||'other';if(dom in domCounts)domCounts[dom]++;if(chKey in chCounts)chCounts[chKey]++;if(!f.chumashim.has(chKey))return;if(!f.domains.has(dom))return;shown++;});});out.textContent=total?`(${shown}/${total} מוצגות)`:'';// Inject per-chip counts as small badges
-document.querySelectorAll('#projector-filter-panel button.pf-chip').forEach(btn=>{const grp=btn.getAttribute('data-pf-group');const val=btn.getAttribute('data-pf-value');let n=0;if(grp==='domains')n=domCounts[val]||0;else if(grp==='chumashim')n=chCounts[val]||0;const baseLabel=btn.getAttribute('data-pf-base-label')||btn.textContent.replace(/\s*\(\d+\)$/,'');btn.setAttribute('data-pf-base-label',baseLabel);btn.textContent=`${baseLabel} (${n})`;});};panel.addEventListener('click',ev=>{const sumBtn=ev.target.closest('#pf-summary-btn');if(sumBtn){ev.preventDefault();window.__openProjectorSummary();return;}const closeBtn=ev.target.closest('#pf-close-btn');if(closeBtn){panel.style.display='none';return;}const svcAll=ev.target.closest('#pf-svc-all');if(svcAll){const all=new Set();['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{const data=geoDataRef.current[k];if(data&&data.features)data.features.forEach(ft=>all.add((ft.properties.service_he||'').trim()||'(ללא)'));});window.__projectorFilters.services=all;renderServicesList();window.__rebuildProjectorLayers();return;}const svcNone=ev.target.closest('#pf-svc-none');if(svcNone){window.__projectorFilters.services=new Set();renderServicesList();window.__rebuildProjectorLayers();return;}const btn=ev.target.closest('button.pf-chip');if(!btn)return;const grp=btn.getAttribute('data-pf-group');const val=btn.getAttribute('data-pf-value');const target=grp==='chumashim'&&val!=='unknown'?parseInt(val,10):val;const set=window.__projectorFilters[grp];if(set.has(target))set.delete(target);else set.add(target);refreshChips();window.__rebuildProjectorLayers();});panel.addEventListener('change',ev=>{if(!window.__projectorFilters.services)window.__projectorFilters.services=new Set();const set=window.__projectorFilters.services;// Category-level checkbox: toggle all members
-const catCb=ev.target.closest('input[type="checkbox"][data-pf-cat]');if(catCb){const cat=catCb.getAttribute('data-pf-cat');const members=SERVICE_CATEGORIES[cat]||[];if(catCb.checked)members.forEach(sv=>set.add(sv));else members.forEach(sv=>set.delete(sv));renderServicesList();// refresh to update child states
-window.__rebuildProjectorLayers();return;}// Service-level checkbox
-const cb=ev.target.closest('input[type="checkbox"][data-pf-svc]');if(!cb)return;const sv=cb.getAttribute('data-pf-svc');if(cb.checked)set.add(sv);else set.delete(sv);renderServicesList();// refresh parent checkbox state
-window.__rebuildProjectorLayers();});// --- Summary modal: tabbed view — pivot / managing body / obstacles
-window.__openProjectorSummary=function(){const old=document.getElementById('pf-summary-modal');if(old)old.remove();const AREAS=['רסקו','גוננים א-ו','קטמונים ח-ט','פת'];const DOMS=[['programa','פרוגרמה','#8d6e63'],['public_space','מרחב ציבורי','#2e7d32'],['transport','תנועה','#1565c0']];const DOM_LABEL={programa:'פרוגרמה',public_space:'מרחב ציבורי',transport:'תנועה'};const DOM_COLOR={programa:'#8d6e63',public_space:'#2e7d32',transport:'#1565c0'};const CHS=[1,2,3,'unknown'];const CH_LABELS={1:'ח״1',2:'ח״2',3:'ח״3',unknown:'ללא'};const CH_COLORS={1:'#b71c1c',2:'#e65100',3:'#1a237e',unknown:'#546e7a'};// Gather features once (tagged by source for zoom-to)
-const allFeatures=[];['projector_gonenim','projector_gonenim_tzatal'].forEach(k=>{const data=geoDataRef.current[k];if(!data||!data.features)return;data.features.forEach((ft,idx)=>allFeatures.push({feature:ft,_src:k,_idx:idx}));});// ── Tab 1: Pivot by sub-neighborhood × domain × chumash ──
-const stats={};AREAS.forEach(a=>{stats[a]={total:0,dom:{programa:0,public_space:0,transport:0},ch:{1:0,2:0,3:0,unknown:0}};});const T={total:0,dom:{programa:0,public_space:0,transport:0},ch:{1:0,2:0,3:0,unknown:0}};allFeatures.forEach(w=>{const p=w.feature.properties;const a=p.sub_neighborhood;if(!stats[a])return;const dom=p.domain||'other';const ch=p.chumash;const chKey=ch===null||ch===undefined?'unknown':ch;stats[a].total++;T.total++;if(dom in stats[a].dom){stats[a].dom[dom]++;T.dom[dom]++;}if(chKey in stats[a].ch){stats[a].ch[chKey]++;T.ch[chKey]++;}});const cell=(n,color)=>`<td style="padding:5px 9px;text-align:center;background:${color||'transparent'};color:${color?'#fff':'#263238'};font-weight:${n?'600':'300'}">${n||'·'}</td>`;const headerRow=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>`+DOMS.map(([k,lbl,c])=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('')+CHS.map(c=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${CH_LABELS[c]}</th>`).join('')+`</tr>`;const rows=AREAS.map(a=>{const s=stats[a];return`<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${a}</td><td style="padding:5px 9px;text-align:center;font-weight:600;background:#eceff1">${s.total}</td>`+DOMS.map(([k,lbl,c])=>cell(s.dom[k],s.dom[k]?c+'22':'')).join('')+CHS.map(c=>cell(s.ch[c])).join('')+`</tr>`;}).join('');const totalRow=`<tr style="border-top:2px solid #b0bec5;background:#f5f5f5;font-weight:700"><td style="padding:6px 9px">סה״כ</td><td style="padding:6px 9px;text-align:center">${T.total}</td>`+DOMS.map(([k,lbl,c])=>`<td style="padding:6px 9px;text-align:center;color:${c}">${T.dom[k]}</td>`).join('')+CHS.map(c=>`<td style="padding:6px 9px;text-align:center">${T.ch[c]}</td>`).join('')+`</tr>`;// ── Timeline (existing, unchanged) ──
-const mimush={};const _plans=geoDataRef.current.plans;if(_plans&&_plans.features&&typeof calcMimush==='function'){_plans.features.forEach(pf=>{const pp=pf.properties||{};if(!pp.plan_name)return;try{const r=calcMimush(pp);if(r&&r.estimatedYear)mimush[pp.plan_name]=r.estimatedYear;}catch(e){}});window.__mimushPlanYearByPlan=mimush;}const _yr=(val,planName)=>{if(val==null)return null;const s=String(val).trim();const m=s.match(/(20[2-4][0-9])/);if(m)return parseInt(m[1],10);if(planName&&mimush[planName])return mimush[planName];return null;};const yearStats={};const planningRaw=[],executionRaw=[];let mimushUsed=0;allFeatures.forEach(w=>{const p=w.feature.properties;const pn=p.plan_number;const yp=_yr(p.year_planning,pn);const yexRaw=p.year_execution;const yex=_yr(yexRaw,pn);if(yex!==null&&String(yexRaw||'').includes('מימוש'))mimushUsed++;if(yp!=null){yearStats[yp]=yearStats[yp]||{plan:0,exec:0};yearStats[yp].plan++;planningRaw.push(yp);}if(yex!=null){yearStats[yex]=yearStats[yex]||{plan:0,exec:0};yearStats[yex].exec++;executionRaw.push(yex);}});const years=Object.keys(yearStats).map(Number).sort((a,b)=>a-b);let timelineHTML='';if(years.length){const minY=years[0],maxY=years[years.length-1];const maxBar=Math.max(...years.map(y=>Math.max(yearStats[y].plan,yearStats[y].exec)));const fullYears=[];for(let y=minY;y<=maxY;y++)fullYears.push(y);timelineHTML=`<div style="margin-top:18px"><h3 style="font-size:14px;color:#1e293b;margin:0 0 6px">📅 ציר זמן — תכנון מול ביצוע</h3>`+`<div style="font-size:11px;color:#666;margin-bottom:8px">תכלת = שנת תכנון · אדום-חום = שנת ביצוע (${planningRaw.length} עם שנת תכנון, ${executionRaw.length} עם שנת ביצוע${mimushUsed?', '+mimushUsed+' מהן דרך טבלת אחוזי מימוש':''})</div>`+`<div style="display:grid;grid-template-columns:50px 1fr 1fr;gap:2px;font-size:11px;align-items:end">`+fullYears.map(y=>{const s=yearStats[y]||{plan:0,exec:0};const wP=Math.round(s.plan/maxBar*100);const wE=Math.round(s.exec/maxBar*100);return`<div style="color:#37474f;font-weight:600;padding:2px 4px">${y}</div>`+`<div style="background:#eceff1;height:18px;border-radius:2px;overflow:hidden;position:relative"><div style="background:#42a5f5;height:100%;width:${wP}%"></div>${s.plan?`<span style="position:absolute;top:0;right:4px;font-size:10px;color:#0d47a1;font-weight:600">${s.plan}</span>`:''}</div>`+`<div style="background:#eceff1;height:18px;border-radius:2px;overflow:hidden;position:relative"><div style="background:#e65100;height:100%;width:${wE}%"></div>${s.exec?`<span style="position:absolute;top:0;right:4px;font-size:10px;color:#bf360c;font-weight:600">${s.exec}</span>`:''}</div>`;}).join('')+`</div>`+`</div>`;if(mimushUsed){timelineHTML+=`<div style="font-size:10.5px;color:#888;margin-top:6px;font-style:italic">* ${mimushUsed} המלצות עם "עם מימוש התכנית" קיבלו שנת יעד מטבלת אחוזי מימוש</div>`;}}else{timelineHTML=`<div style="margin-top:18px;color:#888;font-size:12px">אין מספיק נתוני שנים להצגת ציר זמן</div>`;}const tabPivotHTML=`<div style="font-size:11.5px;color:#666;margin-bottom:12px">פיזור לפי תת-שכונה × תחום × חומש (${T.total} סה״כ)</div><table style="width:100%;border-collapse:collapse"><thead>${headerRow}</thead><tbody>${rows}${totalRow}</tbody></table>${timelineHTML}`;// ── Tab 2: By managing body ──
-// Split combined bodies (e.g. "מנהל תכנון, תושי״ה") into individual entries.
-// Each feature contributes once to each listed body; budget is divided equally.
-const splitBodies=mb=>{const s=String(mb||'').trim();if(!s)return['(לא ידוע)'];const parts=s.split(/[,،]/).map(x=>x.trim()).filter(Boolean);return parts.length?parts:[s];};const bodyStats={};allFeatures.forEach(w=>{const p=w.feature.properties;const bodies=splitBodies(p.managing_body);const dom=p.domain||'other';const ch=p.chumash;const chKey=ch===null||ch===undefined?'unknown':ch;const nis=parseFloat(p.estimate_nis)||0;bodies.forEach(b=>{if(!bodyStats[b])bodyStats[b]={total:0,dom:{programa:0,public_space:0,transport:0},ch:{1:0,2:0,3:0,unknown:0},nis:0};bodyStats[b].total++;if(dom in bodyStats[b].dom)bodyStats[b].dom[dom]++;if(chKey in bodyStats[b].ch)bodyStats[b].ch[chKey]++;bodyStats[b].nis+=nis/bodies.length;});});const sortedBodies=Object.entries(bodyStats).sort((a,b)=>b[1].total-a[1].total);const fmtNis=n=>{if(!n)return'·';if(n>=1_000_000)return(n/1_000_000).toFixed(1)+'M ₪';if(n>=1_000)return Math.round(n/1_000)+'K ₪';return Math.round(n)+' ₪';};const totalNis=sortedBodies.reduce((acc,[,s])=>acc+s.nis,0);const bodyHeader=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">גורם מנהל</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>`+DOMS.map(([k,lbl,c])=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('')+CHS.map(c=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${CH_COLORS[c]}">${CH_LABELS[c]}</th>`).join('')+`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">אומדן</th>`+`</tr>`;const bodyRows=sortedBodies.map(([b,s])=>{return`<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${b}</td><td style="padding:5px 9px;text-align:center;font-weight:700;background:#eceff1">${s.total}</td>`+DOMS.map(([k,lbl,c])=>cell(s.dom[k],s.dom[k]?c+'22':'')).join('')+CHS.map(c=>cell(s.ch[c])).join('')+`<td style="padding:5px 9px;text-align:center;font-size:11px;color:#0d47a1">${fmtNis(s.nis)}</td>`+`</tr>`;}).join('');const bodyTotalRow=`<tr style="border-top:2px solid #b0bec5;background:#f5f5f5;font-weight:700"><td style="padding:6px 9px">סה״כ ייחוסים</td><td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a,[,s])=>a+s.total,0)}</td>`+DOMS.map(([k,lbl,c])=>`<td style="padding:6px 9px;text-align:center;color:${c}">${sortedBodies.reduce((a,[,s])=>a+s.dom[k],0)}</td>`).join('')+CHS.map(c=>`<td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a,[,s])=>a+s.ch[c],0)}</td>`).join('')+`<td style="padding:6px 9px;text-align:center;color:#0d47a1">${fmtNis(totalNis)}</td>`+`</tr>`;const tabBodyHTML=`<div style="font-size:11.5px;color:#666;margin-bottom:12px">פילוח אחריות לפי גורם מנהל × תחום × חומש · אומדן כספי מחולק שווה בין גורמים משותפים (${allFeatures.length} המלצות, ${sortedBodies.length} גורמים)</div><table style="width:100%;border-collapse:collapse"><thead>${bodyHeader}</thead><tbody>${bodyRows}${bodyTotalRow}</tbody></table><div style="font-size:10.5px;color:#888;margin-top:6px;font-style:italic">* המלצה עם מספר גורמים נספרת לכל גורם בנפרד — סה״כ הייחוסים גבוה ממספר ההמלצות (${allFeatures.length})</div>`;// ── Tab 3: Obstacles list ──
-const obstacleFeats=allFeatures.filter(w=>{const o=w.feature.properties.obstacles;return o&&String(o).trim();});// Sort by domain (programa, public_space, transport) then chumash
-const DOM_ORDER={programa:0,public_space:1,transport:2,other:3};obstacleFeats.sort((a,b)=>{const da=DOM_ORDER[a.feature.properties.domain]||9,db=DOM_ORDER[b.feature.properties.domain]||9;if(da!==db)return da-db;const ca=a.feature.properties.chumash,cb=b.feature.properties.chumash;const cra=ca==null?99:ca,crb=cb==null?99:cb;if(cra!==crb)return cra-crb;return(a.feature.properties.project_name||'').localeCompare(b.feature.properties.project_name||'');});// Stash for zoom-to handler
-window.__projectorSummaryObstacles=obstacleFeats;const obHeader=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">שם</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">חומש</th><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">חסם</th></tr>`;const obRows=obstacleFeats.map((w,i)=>{const p=w.feature.properties;const dom=p.domain||'other';const ch=p.chumash;const chKey=ch===null||ch===undefined?'unknown':ch;const escape=s=>String(s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'})[c]);return`<tr data-ob-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">`+`<td style="padding:6px 9px;font-weight:600">${escape(p.project_name)||'(ללא שם)'}</td>`+`<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood||''}</td>`+`<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[dom]||'#666'};font-weight:600">${DOM_LABEL[dom]||dom}</td>`+`<td style="padding:6px 9px;text-align:center;color:${CH_COLORS[chKey]||'#666'};font-weight:600">${CH_LABELS[chKey]}</td>`+`<td style="padding:6px 9px;color:#37474f;line-height:1.4">${escape(p.obstacles)}</td>`+`</tr>`;}).join('');const obByDomain={programa:0,public_space:0,transport:0};obstacleFeats.forEach(w=>{const d=w.feature.properties.domain;if(d in obByDomain)obByDomain[d]++;});const tabObstaclesHTML=`<div style="font-size:11.5px;color:#666;margin-bottom:12px">${obstacleFeats.length} המלצות עם חסמים מתוך ${allFeatures.length} סה״כ · `+DOMS.map(([k,lbl,c])=>`<span style="color:${c};font-weight:600">${lbl}: ${obByDomain[k]}</span>`).join(' · ')+` · לחיצה על שורה — מעבר לפיצ׳ר במפה</div>`+`<table style="width:100%;border-collapse:collapse"><thead>${obHeader}</thead><tbody>${obRows}</tbody></table>`;// KPI card helper (used by overlap tab)
-const kpiCard=(lbl,val,color)=>`<div style="background:${color}11;border:1px solid ${color}55;border-radius:5px;padding:8px 12px;flex:1;min-width:140px"><div style="font-size:10.5px;color:${color};font-weight:600">${lbl}</div><div style="font-size:15px;color:#1e293b;font-weight:700;margin-top:2px">${val}</div></div>`;// ── Tab 5: Plans overlap (תב"עות) ──
-// Cross-reference overlap_plan_names with plans.geojson status_mavat.
-// 64/269 features have an overlap; ~97% of those are with אישור/מאושרת
-// plans → strong indicator that the recommendation is "in the pipeline".
-const plansLookup={};const _plansData=geoDataRef.current.plans;if(_plansData&&_plansData.features){_plansData.features.forEach(pf=>{const pn=pf.properties&&pf.properties.plan_name;if(pn)plansLookup[pn]=pf.properties;});}// Approved-ish statuses get a "green" marker; deposited get yellow; others grey.
-const STATUS_TIER=s=>{if(!s)return{tier:'unknown',color:'#9e9e9e',label:'לא ידוע'};if(s==='אישור'||s==='תבע מאושרת'||s.includes('אישור'))return{tier:'approved',color:'#2e7d32',label:'מאושרת'};if(s.includes('הפקדה')||s.includes('תנאים'))return{tier:'deposited',color:'#e65100',label:'בהפקדה'};return{tier:'other',color:'#9e9e9e',label:s};};const overlapItems=[];const tierCount={approved:0,deposited:0,other:0,unknown:0};const statusCount={};allFeatures.forEach(w=>{const p=w.feature.properties;const op=p.overlap_plan_names||[];if(!op.length)return;op.forEach(pn=>{const planP=plansLookup[pn]||{};const stat=planP.status_mavat||'';const tier=STATUS_TIER(stat);tierCount[tier.tier]=(tierCount[tier.tier]||0)+1;statusCount[stat||'(לא נמצא)']=(statusCount[stat||'(לא נמצא)']||0)+1;overlapItems.push({w,plan_name:pn,status:stat,tier});});});// Sort by tier (approved first), then by feature name
-overlapItems.sort((a,b)=>{const tierOrder={approved:0,deposited:1,other:2,unknown:3};const ta=tierOrder[a.tier.tier]??9,tb=tierOrder[b.tier.tier]??9;if(ta!==tb)return ta-tb;return(a.w.feature.properties.project_name||'').localeCompare(b.w.feature.properties.project_name||'');});window.__projectorSummaryOverlap=overlapItems;const overlapKPIs=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">`+kpiCard('עם חפיפת תב״ע',`${overlapItems.length} / ${allFeatures.length}`,'#1976d2')+kpiCard('בתב״ע מאושרת',`${tierCount.approved} (${Math.round(100*tierCount.approved/Math.max(overlapItems.length,1))}%)`,'#2e7d32')+kpiCard('בהפקדה / תנאים',`${tierCount.deposited}`,'#e65100')+kpiCard('סטטוס אחר/לא ידוע',`${tierCount.other+tierCount.unknown}`,'#9e9e9e')+`</div>`;const overlapHeader=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">המלצה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">מספר תב״ע</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סטטוס</th></tr>`;const overlapRows=overlapItems.map((it,i)=>{const p=it.w.feature.properties;const escape3=s=>String(s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'})[c]);return`<tr data-overlap-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">`+`<td style="padding:6px 9px;font-weight:600">${escape3(p.project_name)||'(ללא שם)'} <span style="font-weight:400;color:#888;font-size:10.5px">· ${escape3(p.service_he)}</span></td>`+`<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood||''}</td>`+`<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[p.domain]||'#666'};font-weight:600">${DOM_LABEL[p.domain]||p.domain}</td>`+`<td style="padding:6px 9px;text-align:center;font-family:monospace;font-size:11px">${escape3(it.plan_name)}</td>`+`<td style="padding:6px 9px;text-align:center"><span style="background:${it.tier.color}22;color:${it.tier.color};font-weight:600;padding:2px 8px;border-radius:10px;font-size:10.5px">${escape3(it.status||it.tier.label)}</span></td>`+`</tr>`;}).join('');const tabOverlapHTML=overlapKPIs+`<div style="font-size:11.5px;color:#666;margin-bottom:6px">המלצות שחופפות גיאוגרפית עם תב"עות קיימות — אם התב"ע מאושרת, סיכוי המימוש גבוה. לחיצה על שורה — מעבר להמלצה במפה.</div>`+`<table style="width:100%;border-collapse:collapse"><thead>${overlapHeader}</thead><tbody>${overlapRows}</tbody></table>`;// ── Tab 6: Normalized to יח"ד ──
-// Compute features-per-1000-units for each sub-neighborhood.
-const unitsBySub={};AREAS.forEach(a=>{unitsBySub[a]=0;});if(_plansData&&_plansData.features){_plansData.features.forEach(pf=>{const pp=pf.properties||{};const sub=pp.sub_neighborhood;const u=parseFloat(pp.units_total)||0;if(sub in unitsBySub&&u>0)unitsBySub[sub]+=u;});}const featsBySub={};AREAS.forEach(a=>{featsBySub[a]={total:0,programa:0,public_space:0,transport:0};});allFeatures.forEach(w=>{const p=w.feature.properties;const a=p.sub_neighborhood;if(!(a in featsBySub))return;featsBySub[a].total++;if(p.domain in featsBySub[a])featsBySub[a][p.domain]++;});// Compute ratios
-const normData=AREAS.map(a=>{const u=unitsBySub[a]||0;const f=featsBySub[a];return{area:a,units:u,feats:f.total,programa:f.programa,public_space:f.public_space,transport:f.transport,feats_per_1k:u>0?f.total/u*1000:0};});const maxRatio=Math.max(...normData.map(d=>d.feats_per_1k),1);const normHeader=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">יח״ד</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות</th>`+DOMS.map(([k,lbl,c])=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('')+`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות/1,000 יח״ד</th></tr>`;const normRows=normData.map(d=>{const wRatio=Math.round(d.feats_per_1k/maxRatio*90);return`<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">`+`<td style="padding:6px 9px;font-weight:600">${d.area}</td>`+`<td style="padding:6px 9px;text-align:center">${d.units?d.units.toLocaleString():'·'}</td>`+`<td style="padding:6px 9px;text-align:center;font-weight:600">${d.feats}</td>`+DOMS.map(([k,lbl,c])=>`<td style="padding:6px 9px;text-align:center;color:${d[k]?c:'#bbb'};${d[k]?'font-weight:600':''}">${d[k]||'·'}</td>`).join('')+`<td style="padding:6px 9px"><div style="display:flex;align-items:center;gap:6px"><div style="width:${wRatio}%;background:#1976d2;height:14px;border-radius:2px;min-width:2px"></div><span style="font-size:11px;color:#0d47a1;font-weight:600">${d.feats_per_1k.toFixed(1)}</span></div></td>`+`</tr>`;}).join('');const totalUnitsAll=normData.reduce((a,d)=>a+d.units,0);const tabNormalizedHTML=`<div style="font-size:11.5px;color:#666;margin-bottom:14px">השוואה מנורמלת לפי מספר יחידות הדיור בכל תת-שכונה (מהתב"עות הקיימות, units_total). מאפשר לראות איזו שכונה זוכה ליחס המלצות גבוה יותר ביחס לגודלה.</div>`+`<table style="width:100%;border-collapse:collapse"><thead>${normHeader}</thead><tbody>${normRows}</tbody></table>`+`<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">סה״כ יח״ד ב-4 השכונות: ${totalUnitsAll.toLocaleString()}</div>`;// ── Tab: Programmatic Balance — by category × sub_neighborhood ──
-// Aggregates "what's planned" from all projector features. Same category
-// grouping as the filter panel (SERVICE_CATEGORIES) so the user sees a
-// unified view of planning intensity per service category per area.
-const BAL_CATS={'גני ילדים / מעון':['גני ילדים','גן ילדים','מעון יום','מעון יום + גני ילדים'],'בי"ס יסודי':['יסודי','בי"ס יסודי'],'בי"ס על-יסודי':['על יסודי','בי"ס על-יסודי'],'שירותי רווחה':['שירותי רווחה','שירותי רווחה נוספים','מוסדות רווחה נוספים','משרדי שירותים חברתיים'],'בית כנסת / דת':['בית כנסת','מקווה'],'מועדון נוער/קשיש':['מועדון נוער','מועדון לקשיש'],'שירותי קהילה/תרבות':['שירותי קהילה','שירותי תרבות','ספרייה','אולם מופעים'],'בריאות':['תחנה לבריאות המשפחה','מרפאה שכונתית'],'ספורט':['מגרש ספורט','אולם ספורט'],'שצ״פ':['שצ"פ','תוספת שצ"פ','חיבור לשצ"פ','מתחם, שצ"פ'],'מעבר ה״ר / שביל':['הוספת מעבר ה"ר','שדרוג מעבר ה"ר','מעבר ה"ר','הוספת שביל ה"ר','מעבר הולכי רגל'],'מעבר חציה':['מעבר חציה','הוספת מעבר חציה'],'כביש / רחוב':['רחוב','רחוב חדש','שדרוג רחובות'],'תח״צ / נגישות':['תח"צ','שיפור רמת שירות','הנגשה'],'גשר':['גשר'],'מתחם / תוכנית אב':['הצעה להכנת תוכנית אב מתחמית להתחדשות']};const BAL_SVC2CAT={};Object.entries(BAL_CATS).forEach(([cat,svcs])=>svcs.forEach(s=>{BAL_SVC2CAT[s]=cat;}));const balance={};Object.keys(BAL_CATS).forEach(cat=>{balance[cat]={};AREAS.forEach(a=>{balance[cat][a]={count:0,units:0,estimate:0,unitLabel:''};});});balance['אחר']={};AREAS.forEach(a=>{balance['אחר'][a]={count:0,units:0,estimate:0,unitLabel:''};});allFeatures.forEach(w=>{const p=w.feature.properties;const area=p.sub_neighborhood;if(!AREAS.includes(area))return;const svc=String(p.service_he||'').trim();const cat=BAL_SVC2CAT[svc]||'אחר';const cell=balance[cat][area];cell.count++;const u=parseFloat(p.units_required);if(!isNaN(u)&&u>0){cell.units+=u;if(!cell.unitLabel)cell.unitLabel=p.units_label||'';}cell.estimate+=parseFloat(p.estimate_nis)||0;});let balMaxCount=0;Object.values(balance).forEach(byArea=>Object.values(byArea).forEach(c=>{if(c.count>balMaxCount)balMaxCount=c.count;}));const balHeader=`<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">קטגוריה</th>`+AREAS.map(a=>`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${a}</th>`).join('')+`<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;background:#eceff1">סה״כ</th></tr>`;// Click-to-filter: cells carry data-bal-cat + data-bal-area attributes
-// so a click handler can filter the projector layer to the matching
-// category × area subset.
-const balCell=(c,cat,area)=>{if(!c.count)return`<td style="padding:5px 9px;text-align:center;color:#ccc">·</td>`;const intensity=Math.min(0.85,c.count/Math.max(balMaxCount,1)*0.8+0.1);const bg=`rgba(46,125,50,${intensity.toFixed(2)})`;const txtCol=intensity>0.45?'#fff':'#1b5e20';const unitsStr=c.units>0?`<div style="font-size:10px;opacity:0.92;margin-top:1px;font-weight:400">${c.units.toLocaleString()} ${c.unitLabel}</div>`:'';const catAttr=cat.replace(/"/g,'&quot;');const areaAttr=area.replace(/"/g,'&quot;');return`<td data-bal-cat="${catAttr}" data-bal-area="${areaAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו באזור זה" style="padding:5px 9px;text-align:center;background:${bg};color:${txtCol};font-weight:700;cursor:pointer"><div>${c.count}</div>${unitsStr}</td>`;};const balRows=Object.entries(balance).filter(([cat,byArea])=>Object.values(byArea).some(c=>c.count>0)).map(([cat,byArea])=>{const totals=AREAS.reduce((acc,a)=>{acc.count+=byArea[a].count;acc.units+=byArea[a].units;if(byArea[a].unitLabel)acc.unitLabel=byArea[a].unitLabel;return acc;},{count:0,units:0,unitLabel:''});const catAttr=cat.replace(/"/g,'&quot;');return`<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">`+`<td data-bal-cat="${catAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו (כל האזורים)" style="padding:6px 9px;font-weight:600;background:#fafafa;border-right:3px solid #2e7d32;cursor:pointer">${cat}</td>`+AREAS.map(a=>balCell(byArea[a],cat,a)).join('')+`<td data-bal-cat="${catAttr}" title="לחץ לסינון" style="padding:6px 9px;text-align:center;background:#eceff1;font-weight:700;cursor:pointer"><div>${totals.count}</div>${totals.units?`<div style="font-size:10px;color:#555;margin-top:1px;font-weight:400">${totals.units.toLocaleString()} ${totals.unitLabel}</div>`:''}</td>`+`</tr>`;}).join('');const balAreaTotals=AREAS.map(a=>Object.values(balance).reduce((s,byArea)=>s+byArea[a].count,0));const balGrand=balAreaTotals.reduce((a,b)=>a+b,0);const balTotalRow=`<tr style="border-top:2px solid #2e7d32;background:#f5f5f5;font-weight:700;font-size:12.5px">`+`<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ פרויקטים</td>`+balAreaTotals.map(t=>`<td style="padding:6px 9px;text-align:center">${t}</td>`).join('')+`<td style="padding:6px 9px;text-align:center;background:#eceff1">${balGrand}</td>`+`</tr>`;const tabBalanceHTML=`<div style="font-size:11.5px;color:#666;margin-bottom:14px">היקף התכנון לפי קטגוריית שירות × תת-שכונה. צבע התא מציין את עוצמת התכנון (ירוק כהה = הרבה פרויקטים). מספר עליון = פרויקטים, מספר תחתון = סה״כ יחידות באותה היחידה (כיתות/מ״ר/דונם/מ׳). מבוסס על ${T.total} השורות בקובץ "תכנית עבודה" אחרי סינון לארבע שכונות מינהל גוננים.</div>`+`<table style="width:100%;border-collapse:collapse"><thead>${balHeader}</thead><tbody>${balRows}${balTotalRow}</tbody></table>`+`<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">לפירוט: לחיצה על תא תוביל לסינון פיצ'רי הפרוייקטור לאותה קטגוריה × אזור (TBD).</div>`;// ── Shell with tabs + export/print buttons ──
-const tabBtn=(id,label,active)=>`<button data-tab-btn="${id}" style="background:${active?'#1976d2':'transparent'};color:${active?'#fff':'#1976d2'};border:1.5px solid #1976d2;border-radius:5px 5px 0 0;padding:6px 14px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:600;border-bottom-color:${active?'#1976d2':'transparent'}">${label}</button>`;const html=`<div id="pf-summary-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:Assistant,sans-serif;direction:rtl">`+`<div style="background:#fff;border-radius:8px;padding:18px 22px;max-width:900px;width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)">`+`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">`+`<h2 style="margin:0;font-size:17px;color:#1e293b">📊 סיכום המלצות פרוייקטור גוננים</h2>`+`<div style="display:flex;gap:6px;align-items:center">`+`<button id="pf-export-csv" style="background:#43a047;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📊 ייצוא אקסל</button>`+`<button id="pf-print" style="background:#5e35b1;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📄 הדפסה</button>`+`<button id="pf-summary-close" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:#666;padding:0 4px;line-height:1">×</button>`+`</div>`+`</div>`+`<div style="display:flex;gap:4px;border-bottom:2px solid #1976d2;margin-bottom:14px;flex-wrap:wrap">`+tabBtn('pivot','📊 סיכום',true)+tabBtn('body','🏛️ גורם מנהל',false)+tabBtn('obstacles',`🚧 חסמים (${obstacleFeats.length})`,false)+tabBtn('overlap',`🔗 תב״עות (${overlapItems.length})`,false)+tabBtn('normalized','📈 מנורמל ליח״ד',false)+tabBtn('balance','🟢 מאזן פרוגרמתי',false)+`</div>`+`<div data-tab-pane="pivot" data-tab-label="סיכום + ציר זמן" style="display:block">${tabPivotHTML}</div>`+`<div data-tab-pane="body" data-tab-label="גורם מנהל" style="display:none">${tabBodyHTML}</div>`+`<div data-tab-pane="obstacles" data-tab-label="חסמים" style="display:none">${tabObstaclesHTML}</div>`+`<div data-tab-pane="overlap" data-tab-label="חפיפת תב״עות" style="display:none">${tabOverlapHTML}</div>`+`<div data-tab-pane="normalized" data-tab-label="מנורמל ליח״ד" style="display:none">${tabNormalizedHTML}</div>`+`<div data-tab-pane="balance" data-tab-label="מאזן פרוגרמתי" style="display:none">${tabBalanceHTML}</div>`+`</div>`+`</div>`;const wrap=document.createElement('div');wrap.innerHTML=html;document.body.appendChild(wrap.firstChild);const m=document.getElementById('pf-summary-modal');m.addEventListener('click',e=>{if(e.target===m)m.remove();});document.getElementById('pf-summary-close').addEventListener('click',()=>m.remove());// Tab switching
-let activeTab='pivot';m.querySelectorAll('[data-tab-btn]').forEach(btn=>{btn.addEventListener('click',()=>{activeTab=btn.getAttribute('data-tab-btn');m.querySelectorAll('[data-tab-btn]').forEach(b=>{const on=b.getAttribute('data-tab-btn')===activeTab;b.style.background=on?'#1976d2':'transparent';b.style.color=on?'#fff':'#1976d2';b.style.borderBottomColor=on?'#1976d2':'transparent';});m.querySelectorAll('[data-tab-pane]').forEach(p=>{p.style.display=p.getAttribute('data-tab-pane')===activeTab?'block':'none';});});});// ── Balance-tab click handler: filter projector layer by category × area ──
-// BAL_CATS maps category → service_he list. When a cell is clicked, we set
-// the projector services filter to that list, the domains filter to all,
-// and the chumashim filter to all. Also rebuilds layers and closes the modal.
-m.querySelectorAll('[data-bal-cat]').forEach(td=>{td.addEventListener('click',()=>{const cat=td.getAttribute('data-bal-cat');const area=td.getAttribute('data-bal-area');// may be null (whole row)
-const svcs=BAL_CATS[cat]||[];// Always include 'אחר' catch when category is 'אחר' (collect all unlisted svcs)
-if(cat==='אחר'){const known=new Set();Object.values(BAL_CATS).forEach(arr=>arr.forEach(s=>known.add(s)));allFeatures.forEach(w=>{const sv=String(w.feature.properties.service_he||'').trim();if(sv&&!known.has(sv))svcs.push(sv);});}if(!svcs.length)return;if(!window.__projectorFilters)window.__projectorFilters={};window.__projectorFilters.services=new Set(svcs);// Reset other dimensions to all (so user sees only the cat × area filter)
-window.__projectorFilters.domains=new Set(['programa','public_space','transport']);window.__projectorFilters.chumashim=new Set([1,2,3,'unknown']);// Area filter: we filter by sub_neighborhood via a special key the
-// build-projector-layer reads (it already filters by chumash/domain/svc;
-// we extend via projectorFilters.areas).
-window.__projectorFilters.areas=area?new Set([area]):null;if(typeof window.__rebuildProjectorLayers==='function'){window.__rebuildProjectorLayers();}m.remove();// Show a transient banner so the user sees what was filtered
-const oldBanner=document.getElementById('pf-filter-banner');if(oldBanner)oldBanner.remove();const banner=document.createElement('div');banner.id='pf-filter-banner';banner.style.cssText='position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;border-radius:8px;padding:9px 16px;font-family:Assistant,sans-serif;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:1500;direction:rtl;display:flex;align-items:center;gap:12px';banner.innerHTML=`🟢 סינון פעיל: <span style="font-weight:400">${cat}${area?` · ${area}`:' · כל השכונות'}</span><button style="background:#fff;color:#2e7d32;border:0;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600">בטל סינון</button>`;map.getContainer().appendChild(banner);banner.querySelector('button').addEventListener('click',()=>{window.__projectorFilters.services=null;// null = all
-window.__projectorFilters.areas=null;if(typeof window.__rebuildProjectorLayers==='function')window.__rebuildProjectorLayers();banner.remove();});});});// Shared row-click handler: find feature's layer by project_id
-// and fire its click event (opens its popup); fallback to pan.
-const zoomToFeature=(feature,src)=>{m.remove();try{const layer=geoLayersRef.current[src];if(layer&&map.hasLayer(layer)===false)layer.addTo(map);let found=null;if(layer&&layer.eachLayer){layer.eachLayer(sub=>{if(found)return;try{const fp=sub.feature&&sub.feature.properties;if(fp&&fp.project_id&&fp.project_id===feature.properties.project_id)found=sub;}catch(e){}});}if(found){const b=found.getBounds&&found.getBounds();if(b&&b.isValid&&b.isValid())map.fitBounds(b,{maxZoom:18,padding:[40,40]});else if(found.getLatLng)map.setView(found.getLatLng(),18);setTimeout(()=>found.fire('click'),200);}else{const dp=feature.properties.display_point;if(dp&&Array.isArray(dp)&&dp.length===2){map.setView([dp[1],dp[0]],18);}else if(feature.geometry&&feature.geometry.coordinates){try{const tmp=L.geoJSON(feature);map.fitBounds(tmp.getBounds(),{maxZoom:18,padding:[40,40]});}catch(e){}}}}catch(err){console.warn(err);}};// Overlap row click
-m.querySelectorAll('tr[data-overlap-idx]').forEach(tr=>{tr.addEventListener('click',()=>{const idx=parseInt(tr.getAttribute('data-overlap-idx'),10);const it=window.__projectorSummaryOverlap[idx];if(!it||!it.w)return;zoomToFeature(it.w.feature,it.w._src);});});// Obstacles row click → zoom to feature on map
-m.querySelectorAll('tr[data-ob-idx]').forEach(tr=>{tr.addEventListener('click',()=>{const idx=parseInt(tr.getAttribute('data-ob-idx'),10);const w=window.__projectorSummaryObstacles[idx];if(!w||!w.feature)return;m.remove();try{const layer=geoLayersRef.current[w._src];if(layer&&map.hasLayer(layer)===false)layer.addTo(map);// Find matching sub-layer and pan/zoom + fire click
-let found=null;if(layer&&layer.eachLayer){layer.eachLayer(sub=>{if(found)return;try{const fp=sub.feature&&sub.feature.properties;if(fp&&fp.project_id&&fp.project_id===w.feature.properties.project_id)found=sub;}catch(e){}});}if(found){try{const b=found.getBounds&&found.getBounds();if(b&&b.isValid&&b.isValid())map.fitBounds(b,{maxZoom:18,padding:[40,40]});else if(found.getLatLng)map.setView(found.getLatLng(),18);setTimeout(()=>found.fire('click'),200);}catch(e){console.warn(e);}}else{// Fallback: use display_point if set, else geometry centroid
-const dp=w.feature.properties.display_point;if(dp&&Array.isArray(dp)&&dp.length===2){map.setView([dp[1],dp[0]],18);}else if(w.feature.geometry&&w.feature.geometry.coordinates){try{const tmp=L.geoJSON(w.feature);map.fitBounds(tmp.getBounds(),{maxZoom:18,padding:[40,40]});}catch(e){}}}}catch(err){console.warn(err);}});});// ── Export current tab to CSV ──
-const csvEscape=s=>`"${String(s==null?'':s).replace(/"/g,'""').replace(/[\r\n]+/g,' | ')}"`;const downloadCSV=(name,csv)=>{const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);};const today=new Date().toISOString().slice(0,10);document.getElementById('pf-export-csv').addEventListener('click',()=>{let csv='',filename='';if(activeTab==='pivot'){csv='תת-שכונה,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש\n';AREAS.forEach(a=>{const s=stats[a];csv+=[csvEscape(a),s.total,s.dom.programa,s.dom.public_space,s.dom.transport,s.ch[1],s.ch[2],s.ch[3],s.ch.unknown].join(',')+'\n';});csv+=[csvEscape('סה"כ'),T.total,T.dom.programa,T.dom.public_space,T.dom.transport,T.ch[1],T.ch[2],T.ch[3],T.ch.unknown].join(',')+'\n';if(years.length){csv+='\nציר זמן\nשנה,תכנון,ביצוע\n';const minY=years[0],maxY=years[years.length-1];for(let y=minY;y<=maxY;y++){const s=yearStats[y]||{plan:0,exec:0};csv+=`${y},${s.plan},${s.exec}\n`;}}filename=`projector_gonenim_summary_${today}.csv`;}else if(activeTab==='body'){csv='גורם מנהל,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש,אומדן (ש"ח)\n';sortedBodies.forEach(([b,s])=>{csv+=[csvEscape(b),s.total,s.dom.programa,s.dom.public_space,s.dom.transport,s.ch[1],s.ch[2],s.ch[3],s.ch.unknown,Math.round(s.nis)].join(',')+'\n';});filename=`projector_gonenim_by_body_${today}.csv`;}else if(activeTab==='obstacles'){csv='שם הפרויקט,תת-שכונה,תחום,חומש,שירות,גורם מנהל,חסם\n';obstacleFeats.forEach(w=>{const p=w.feature.properties;csv+=[csvEscape(p.project_name),csvEscape(p.sub_neighborhood),csvEscape(DOM_LABEL[p.domain]||p.domain),csvEscape(p.chumash),csvEscape(p.service_he),csvEscape(p.managing_body),csvEscape(p.obstacles)].join(',')+'\n';});filename=`projector_gonenim_obstacles_${today}.csv`;}else if(activeTab==='overlap'){csv='המלצה,שירות,תת-שכונה,תחום,מספר תב"ע,סטטוס\n';overlapItems.forEach(it=>{const p=it.w.feature.properties;csv+=[csvEscape(p.project_name),csvEscape(p.service_he),csvEscape(p.sub_neighborhood),csvEscape(DOM_LABEL[p.domain]||p.domain),csvEscape(it.plan_name),csvEscape(it.status||it.tier.label)].join(',')+'\n';});csv+=`\nסיכום: ${overlapItems.length} חפיפות · ${tierCount.approved} מאושרות · ${tierCount.deposited} בהפקדה · ${tierCount.other+tierCount.unknown} אחר/לא ידוע\n`;filename=`projector_gonenim_overlap_${today}.csv`;}else if(activeTab==='normalized'){csv='תת-שכונה,יח"ד,המלצות,פרוגרמה,מרחב ציבורי,תנועה,המלצות לכל 1000 יח"ד\n';normData.forEach(d=>{csv+=[csvEscape(d.area),d.units,d.feats,d.programa||0,d.public_space||0,d.transport||0,d.feats_per_1k.toFixed(2)].join(',')+'\n';});filename=`projector_gonenim_normalized_${today}.csv`;}else if(activeTab==='balance'){// Wide format: categories × areas with count/units pairs.
-const head=['קטגוריה'];AREAS.forEach(a=>{head.push(`${a} - פרויקטים`);head.push(`${a} - יחידות`);head.push(`${a} - יחידת מידה`);});head.push('סה"כ פרויקטים');head.push('סה"כ יחידות');head.push('יחידת מידה');csv=head.map(csvEscape).join(',')+'\n';Object.entries(balance).forEach(([cat,byArea])=>{if(!Object.values(byArea).some(c=>c.count>0))return;const row=[csvEscape(cat)];let tCount=0,tUnits=0,tLabel='';AREAS.forEach(a=>{const c=byArea[a];row.push(c.count||0);row.push(c.units||0);row.push(csvEscape(c.unitLabel||''));tCount+=c.count;tUnits+=c.units;if(c.unitLabel)tLabel=c.unitLabel;});row.push(tCount);row.push(tUnits);row.push(csvEscape(tLabel));csv+=row.join(',')+'\n';});const totalsRow=[csvEscape('סה"כ פרויקטים')];let grand=0;AREAS.forEach(a=>{const t=Object.values(balance).reduce((s,byArea)=>s+byArea[a].count,0);totalsRow.push(t);totalsRow.push('');totalsRow.push('');grand+=t;});totalsRow.push(grand);totalsRow.push('');totalsRow.push('');csv+=totalsRow.join(',')+'\n';filename=`projector_gonenim_balance_${today}.csv`;}downloadCSV(filename,csv);});// ── Print current tab ──
-document.getElementById('pf-print').addEventListener('click',()=>{const pane=m.querySelector(`[data-tab-pane="${activeTab}"]`);const label=pane?pane.getAttribute('data-tab-label'):'';const content=pane?pane.innerHTML:'';const w=window.open('','_blank');if(!w){alert('הדפדפן חסם את חלון ההדפסה. אשר חלונות קופצים ונסה שוב.');return;}w.document.write(`<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>${label} — פרוייקטור גוננים</title>`+`<style>body{font-family:Assistant,Arial,sans-serif;direction:rtl;padding:24px;color:#222;background:#fff}h1{font-size:20px;color:#1e293b;border-bottom:2px solid #1976d2;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin-top:10px;font-size:12px}th,td{padding:5px 8px;border:1px solid #ccc;text-align:right}th{background:#f5f5f5}tr[data-ob-idx]{cursor:default}.print-meta{font-size:11px;color:#888;margin-bottom:14px}@media print{button{display:none}}</style>`+`</head><body><h1>📊 ${label} — פרוייקטור גוננים</h1>`+`<div class="print-meta">הופק: ${new Date().toLocaleString('he-IL')}</div>`+content+`</body></html>`);w.document.close();setTimeout(()=>w.print(),400);});};window.__refreshProjectorFilterPanel=function(){const L=layersRef.current||{};const active=L['projector_gonenim']||L['projector_gonenim_tzatal'];panel.style.display=active?'flex':'none';if(active){refreshChips();renderServicesList();window.__updateProjectorFilterCounts();}};}if(window.__refreshProjectorFilterPanel)window.__refreshProjectorFilterPanel();// Inject SVG hatch patterns into map
-setTimeout(()=>{const svgEl=map.getContainer().querySelector('svg')||map.getContainer().querySelector('.leaflet-overlay-pane svg');if(!svgEl)return;let defs=svgEl.querySelector('defs');if(!defs){defs=document.createElementNS('http://www.w3.org/2000/svg','defs');svgEl.insertBefore(defs,svgEl.firstChild);}// Diagonal hatch patterns - unique per hatch color
-const hatchDefs=[{id:'hatch-blue',color:'#003fff',angle:-45},{id:'hatch-green',color:'#009900',angle:-45},{id:'hatch-pink',color:'#ff7f9f',angle:-45},{id:'hatch-brown',color:'#b4643c',angle:-45},{id:'hatch-yellow',color:'#ffff00',angle:-45},{id:'hatch-teal',color:'#00c8b4',angle:-45},{id:'hatch-grey',color:'#505050',angle:-45},{id:'hatch-orange',color:'#ff9640',angle:-45},{id:'hatch-darkred',color:'#b4002d',angle:-45},{id:'hatch-cyan',color:'#00b4dc',angle:-45},{id:'hatch-red-cross',color:'#c80000',angle:0,cross:true},{id:'hatch-teal-cross',color:'#00d2c8',angle:0,cross:true},{id:'hatch-grey-cross',color:'#646464',angle:0,cross:true}];hatchDefs.forEach(h=>{const pat=document.createElementNS('http://www.w3.org/2000/svg','pattern');pat.setAttribute('id',h.id);pat.setAttribute('patternUnits','userSpaceOnUse');pat.setAttribute('width','8');pat.setAttribute('height','8');pat.setAttribute('patternTransform','rotate('+(h.angle||-45)+')');const line1=document.createElementNS('http://www.w3.org/2000/svg','line');line1.setAttribute('x1','0');line1.setAttribute('y1','0');line1.setAttribute('x2','0');line1.setAttribute('y2','8');line1.setAttribute('stroke',h.color);line1.setAttribute('stroke-width','2.5');pat.appendChild(line1);if(h.cross){const line2=document.createElementNS('http://www.w3.org/2000/svg','line');line2.setAttribute('x1','0');line2.setAttribute('y1','0');line2.setAttribute('x2','8');line2.setAttribute('y2','0');line2.setAttribute('stroke',h.color);line2.setAttribute('stroke-width','2.5');pat.appendChild(line2);}defs.appendChild(pat);});window.__hatchPatternsReady=true;},2000);// Apply layer state from hash
-if(hashParams&&hashParams.layers){const hashLayerIds=hashParams.layers.split(',');// Collect all layer IDs that existed when hash was created
-const allKnownIds=[];Object.values(LAYER_CONFIG).forEach(group=>{group.layers.forEach(l=>allKnownIds.push(l.id));});setLayers(prev=>{const newLayers={...prev};allKnownIds.forEach(id=>{if(hashLayerIds.includes(id)){newLayers[id]=true;}else{const group=Object.values(LAYER_CONFIG).find(g=>g.layers.some(l=>l.id===id));const groupHasAny=group&&group.layers.some(l=>hashLayerIds.includes(l.id));const layerDef=group&&group.layers.find(l=>l.id===id);if(groupHasAny&&!(layerDef&&layerDef.on)){newLayers[id]=false;// explicitly excluded
-}// else: keep default (default-on layer or layer added after hash was created)
-}});return newLayers;});hashAppliedRef.current=true;}L.control.zoom({position:'topleft'}).addTo(map);L.control.scale({position:'bottomleft',imperial:false}).addTo(map);map.on('mousemove',e=>{setCursorPos({lat:e.latlng.lat.toFixed(5),lng:e.latlng.lng.toFixed(5)});});// Scale indicator
-const updateScale=()=>{const center=map.getCenter();const metersPerPixel=40075016.686*Math.cos(center.lat*Math.PI/180)/Math.pow(2,map.getZoom()+8);const dpi=96;const metersPerInch=metersPerPixel*dpi;const scale=Math.round(metersPerInch*39.3701);setMapScale('1:'+scale.toLocaleString());};map.on('zoomend moveend',updateScale);map.on('zoomend',()=>setZoomLevel(map.getZoom()));map.on('zoomend moveend',updateHash);// ── View history for back navigation ──
-const recordView=()=>{if(isGoingBackRef.current){isGoingBackRef.current=false;return;}const c=map.getCenter();const z=map.getZoom();const hist=viewHistoryRef.current;const last=hist.length>0?hist[hist.length-1]:null;if(last&&Math.abs(last.lat-c.lat)<0.0001&&Math.abs(last.lng-c.lng)<0.0001&&last.zoom===z)return;hist.push({lat:c.lat,lng:c.lng,zoom:z});if(hist.length>50)hist.shift();setViewHistoryLen(hist.length);};map.on('moveend',recordView);// Record initial view
-viewHistoryRef.current.push({lat:map.getCenter().lat,lng:map.getCenter().lng,zoom:map.getZoom()});setTimeout(updateScale,200);mapInstanceRef.current=map;window.__map=map;window.__geoDataRef=geoDataRef;// Ensure map fills container after initial render
-setTimeout(()=>map.invalidateSize(),100);// Create custom panes for z-ordering
-map.createPane('districtPane').style.zIndex=200;map.createPane('roadsPane').style.zIndex=320;map.createPane('roadsPane').style.pointerEvents='none';map.createPane('rakalPane').style.zIndex=490;map.createPane('rakalPane').style.pointerEvents='none';// Separate SVG renderer for rakal so pane z-index works
-window.__rakalRenderer=L.svg({pane:'rakalPane'});map.createPane('subNeighborhoodPane').style.zIndex=250;map.createPane('minahakPane').style.zIndex=260;// masterPlanPane MUST be above minahakPane so clicks on master plan
-// polygons aren't intercepted by the projector_talpiot overlay
-// (which sits in minahakPane with fillOpacity 0.05 — interactive but
-// has no popup attached, so clicks would silently fall on it).
-const masterPlanPane=map.createPane('masterPlanPane');masterPlanPane.style.zIndex=275;const masterPlanTbaPane=map.createPane('masterPlanTbaPane');masterPlanTbaPane.style.zIndex=350;const infraPane=map.createPane('infrastructurePane');infraPane.style.zIndex=280;infraPane.style.pointerEvents='none';const plan7778Pane=map.createPane('plan7778Pane');plan7778Pane.style.zIndex=282;plan7778Pane.style.pointerEvents='none';const archivedPane=map.createPane('archivedPane');archivedPane.style.zIndex=285;archivedPane.style.pointerEvents='none';const consolidationPane=map.createPane('consolidationPane');consolidationPane.style.zIndex=287;consolidationPane.style.pointerEvents='none';map.createPane('topicsPane').style.zIndex=290;map.createPane('plansPane').style.zIndex=300;// projectorPane sits ABOVE plansPane so projector recommendations
-// intercept clicks first and visually overlay תב"עות.
-map.createPane('projectorPane').style.zIndex=320;map.createPane('topicsPane').style.pointerEvents='none';map.createPane('permitsPane').style.zIndex=400;map.createPane('tama38Pane').style.zIndex=450;map.createPane('stationsPane').style.zIndex=500;window.__stationsRenderer=L.svg({pane:'stationsPane'});const labelsP=map.createPane('labelsPane');labelsP.style.zIndex=550;labelsP.style.pointerEvents='none';const minahakLabelsP=map.createPane('minahakLabelsPane');minahakLabelsP.style.zIndex=560;minahakLabelsP.style.pointerEvents='none';const shavazP=map.createPane('shavazPane');shavazP.style.zIndex=440;// Future-shavaz / hafrashah point markers sit ABOVE the label panes (550/560) so
-// plan-label text never covers the marker dots.
-const shavazMarkersP=map.createPane('shavazMarkersPane');shavazMarkersP.style.zIndex=565;const landuseP=map.createPane('landusePane');landuseP.style.zIndex=295;// Load all GeoJSON data + CSV for plan_type enrichment.
-// Heaviest files (11 MB+) are deferred — fetched in the background
-// after the map is interactive. Used for existing-landuse popup info
-// and for the ייעודי קרקע קיים layer (off by default).
-// All these layers are off by default (on:false) — no need to block first paint on them.
-const DEFERRED_FILES=[// roads + buildings used by many cross-layer features (address
-// lookups, road bearing for crossings) — load after first paint.
-'roads','buildings'];// ON_DEMAND_FILES — fetched only when their layer is toggled ON.
-// Visualization-only, OFF by default. Heavy and rarely-used.
-const ON_DEMAND_FILES=['yiud_karka_kayam','landuse_xplan','master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot','projector_gonenim','projector_gonenim_tzatal','givat_hamatos_arab_armenian','givat_hamatos_state','givat_hamatos_companies','givat_hamatos_jewish','givat_hamatos_christian','givat_hamatos_unknown','easements'];const _NOT_INITIAL=new Set([...DEFERRED_FILES,...ON_DEMAND_FILES]);const entries=Object.entries(GEOJSON_FILES).filter(([k])=>!_NOT_INITIAL.has(k));const deferredEntries=Object.entries(GEOJSON_FILES).filter(([k])=>DEFERRED_FILES.includes(k));// Expose ON_DEMAND_FILES for the layer-watch hook (defined below)
-window.__onDemandFiles=ON_DEMAND_FILES;window.__geojsonFilesMap=GEOJSON_FILES;const sheetUrl='https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';// Pre-init permit globals
-window.__allPermits={};window.__tama38Permits={};window.__treeSurveys={};window.__tama38TreeSurveys={};window.__treeValencies={};window.__masterPlanCompliance={};window.__meetings={};window.__objectionsPermits={};// Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
-// popup-time globals and aren't needed for initial render.
-var allEntries=entries;const STAGE2_JSONS=[['__allPermits','data/all_permits.json'],['__tama38Permits','data/tama38_permits.json'],['__treeSurveys','data/tree_surveys.json'],['__tama38TreeSurveys','data/tama38_tree_surveys.json'],['__treeValencies','data/tree_valencies.json'],['__masterPlanCompliance','data/master_plan_compliance.json'],['__meetings','data/meetings.json'],['__objectionsPermits','data/objections_permits.json']];setLoadProgress({done:0,total:allEntries.length});let doneCount=0;// === Helpers used in both Stage 1 and Stage 2 (CSV) ===
-function parseCSVRow(row){const cols=[];let cur='',inQ=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur.trim());cur='';}else{cur+=c;}}cols.push(cur.trim());return cols;}const GS_OVERRIDE_FIELDS=['units_total','units_in','units_add','shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog','shavatz_out_plot','shatzap_in','shatzap_out','commerce_in','commerce_out','employment','hotels','rental','conditional_housing','rental_duration','rental_inclusion','plan_summary','plan_name_he','architect','developer'];// Snapshot raw GeoJSON values (units_total/rental) so rental fold can be
-// re-run idempotently after CSV overrides arrive.
-function snapshotRentalSources(gd){if(!gd.plans||!gd.plans.features)return;for(const f of gd.plans.features){const p=f.properties;if(p._units_total_raw===undefined)p._units_total_raw=p.units_total;if(p._rental_raw===undefined)p._rental_raw=p.rental;}}function foldRental(gd){if(!gd.plans||!gd.plans.features)return;let foldedCount=0;for(const f of gd.plans.features){const p=f.properties;const rawTotal=parseFloat(p._units_total_raw??p.units_total)||0;const rental=parseFloat(p._rental_raw??p.rental)||0;const inn=parseFloat(p.units_in)||0;if(rawTotal>0||rental>0){const effTotal=rawTotal+rental;p.units_total=effTotal;p.units_add=Math.max(effTotal-inn,0);if(rental>0)foldedCount++;}else{const storedAdd=parseFloat(p.units_add)||0;if(rental>0||storedAdd>0){p.units_add=storedAdd+rental;if(rental>0)foldedCount++;}}}if(foldedCount>0)console.log(`[Units] Folded rental into ${foldedCount} plans`);}function rebuildPlanByTaba(gd){const planByTaba={};if(gd.plans&&gd.plans.features){gd.plans.features.forEach(f=>{const t=String(f.properties.taba||'').trim();if(t)planByTaba[t]=f.properties;});}window.__planByTaba=planByTaba;return planByTaba;}// Lot prefix accepts alphanumeric codes: "מגרש 201", "מגרש 201A", "מגרש r505"
-const HAFRASH_LOT_PREFIX_RE=/^מגרש\s+([\dא-תA-Za-z]+)\s*[-–]\s*(.*)$/;// Match the FIRST (sqm) — ignore any trailing (...) which is usually a manual total/sum.
-const HAFRASH_USE_RE=/^(.+?)\s*\((\d+)\)(?:\s*\(\d+\))*\s*$/;// Fallback A: "<use> - N כיתות [(sqm)]" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
-const HAFRASH_USE_CLASSES_TRAILING_RE=/^(.+?)\s*[-–]\s*(\d+)\s*כיתות?\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;// Fallback B: "N כיתות <use> [(sqm)]" (e.g., "9 כיתות מעון")
-const HAFRASH_USE_CLASSES_LEADING_RE=/^(\d+)\s*כיתות?\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;// Fallback C: lead count "N <items>" (e.g., "2 בתי כנסת")
-const HAFRASH_USE_LEAD_RE=/^(\d+)\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;const HAFRASH_LOT_DUP_RE=/^מגרש\s+[\dא-תA-Za-z]+\s*[-–]?\s*/;// Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
-// Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
-// Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
-function parsePrgByLot(planByTaba,fieldName){const result={};for(const taba in planByTaba){const prg=(planByTaba[taba][fieldName]||'').trim();if(!prg)continue;const parts=prg.split(/\s*;\s*/).map(s=>s.trim()).filter(Boolean);let currentLot=null;for(const part of parts){let remainder=part;const mLot=part.match(HAFRASH_LOT_PREFIX_RE);if(mLot){currentLot=mLot[1];remainder=mLot[2].trim();}if(!currentLot)continue;const subs=remainder.split(/\s*,\s*/).map(s=>s.trim()).filter(Boolean);for(const sub of subs){// Strip leading "מגרש N -" duplicate prefix that sometimes appears inside a sub-entry.
-const cleaned=sub.replace(HAFRASH_LOT_DUP_RE,'').replace(/^\*|\*$/g,'').trim();if(!cleaned)continue;let entry=null;// 1) Standard "use (sqm)" — most common in hafrash_prg
-const m=cleaned.match(HAFRASH_USE_RE);if(m){const use=m[1].trim().replace(HAFRASH_LOT_DUP_RE,'').replace(/^\*|\*$/g,'').trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/,'').trim();if(use)entry={use,sqm:parseInt(m[2])};}// 2A) Trailing-classes "<use> - N כיתות" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
-if(!entry){const mt=cleaned.match(HAFRASH_USE_CLASSES_TRAILING_RE);if(mt){// Strip leading numeric count from use (redundant with כיתות count)
-const use=mt[1].trim().replace(/^\d+\s+/,'').trim();if(use)entry={use,count:parseInt(mt[2]),unit:'כיתות'};}}// 2B) Leading-classes "N כיתות <use>" (e.g., "9 כיתות מעון")
-if(!entry){const mc=cleaned.match(HAFRASH_USE_CLASSES_LEADING_RE);if(mc){const use=mc[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/,'').trim();if(use)entry={use,count:parseInt(mc[1]),unit:'כיתות'};}}// 3) Lead count "N <items>" (e.g., "2 בתי כנסת (16250)")
-if(!entry){const ml=cleaned.match(HAFRASH_USE_LEAD_RE);if(ml){const use=ml[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/,'').trim();if(use)entry={use,count:parseInt(ml[1]),unit:'יחידות'};}}// 4) Plain use without count or sqm (e.g., "מקווה", "מועדון נוער")
-if(!entry){const use=cleaned.replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/,'').trim();if(use)entry={use,count:1,unit:''};}if(!entry)continue;if(!result[taba])result[taba]={};if(!result[taba][currentLot])result[taba][currentLot]=[];result[taba][currentLot].push(entry);}}}return result;}function rebuildHafrashLookup(planByTaba){window.__hafrashByTabaLot=parsePrgByLot(planByTaba,'hafrash_prg');window.__shavatzByTabaLot=parsePrgByLot(planByTaba,'shavatz_out_prog');}function extractAvailablePlanTypes(gd){if(!gd.plans||!gd.plans.features)return;const types=new Set();gd.plans.features.forEach(f=>{const pt=normalizePlanType(f.properties.plan_type||'');if(pt&&pt!=='תשתיות')types.add(pt);});setAvailablePlanTypes([...types].sort());}function applyCSVEnrichment(gd,csvText){if(!csvText||!gd.plans)return;const rows=csvText.split('\n');const headers=parseCSVRow(rows[0]);const ptIdx=headers.findIndex(h=>h==='plan_type');const nameIdx=headers.findIndex(h=>h==='plan_name');const objEndIdx=headers.findIndex(h=>h==='objection_end_date');const hfSqmIdx=headers.findIndex(h=>h==='hafrash_sqm');const hfPrgIdx=headers.findIndex(h=>h==='hafrash_prg');const gsOverrideIdx={};GS_OVERRIDE_FIELDS.forEach(k=>{gsOverrideIdx[k]=headers.findIndex(h=>h===k);});if(ptIdx<0||nameIdx<0)return;const csvMap={};for(let i=1;i<rows.length;i++){if(!rows[i].trim())continue;const cols=parseCSVRow(rows[i]);if(cols[nameIdx]){const entry={plan_type:cols[ptIdx]||'',objection_end_date:objEndIdx>=0?cols[objEndIdx]||'':'',hafrash_sqm:hfSqmIdx>=0?cols[hfSqmIdx]||'':'',hafrash_prg:hfPrgIdx>=0?cols[hfPrgIdx]||'':''};GS_OVERRIDE_FIELDS.forEach(k=>{const idx=gsOverrideIdx[k];if(idx>=0)entry[k]=cols[idx]||'';});csvMap[cols[nameIdx]]=entry;}}gd.plans.features.forEach(f=>{const pn=f.properties.plan_name;if(pn&&csvMap[pn]){if(csvMap[pn].plan_type)f.properties.plan_type=csvMap[pn].plan_type;if(csvMap[pn].objection_end_date)f.properties.objection_end_date=csvMap[pn].objection_end_date;if(csvMap[pn].hafrash_sqm)f.properties.hafrash_sqm=csvMap[pn].hafrash_sqm;if(csvMap[pn].hafrash_prg)f.properties.hafrash_prg=csvMap[pn].hafrash_prg;// GS is authoritative — blanks clear the GeoJSON value.
-// Update the _raw snapshots too so future foldRental calls reflect CSV truth.
-GS_OVERRIDE_FIELDS.forEach(k=>{if(csvMap[pn][k]!==undefined){f.properties[k]=csvMap[pn][k];if(k==='units_total')f.properties._units_total_raw=csvMap[pn][k];else if(k==='rental')f.properties._rental_raw=csvMap[pn][k];}});}});console.log('[CSV] Enriched plan_type for',Object.keys(csvMap).length,'plans');}function shouldHideKayam(taba){const set=window.__kayamTabaSet;if(!set||!set.has(taba))return false;const plan=window.__planByTaba?window.__planByTaba[taba]:null;if(!plan)return true;// no plan data, hide
-const hasPermit=(plan.stage||'').trim()!=='';const dateStr=plan.mavat_date||'';const year=dateStr?parseInt(dateStr.split('/').pop()):0;const isOld=year>0&&year<=2019;return!hasPermit&&isOld;}window.__shouldHideKayam=shouldHideKayam;window.__kayamTabaSet=new Set();window.__planByTaba={};window.__hafrashByTabaLot={};// Apply kayam-based filter to landuse_xplan + future_shavaz.
-// Idempotent: re-clones from a stashed _origFeatures so it can be re-run when
-// either the kayam set or the target layer arrives later.
-function applyKayamFilter(){const gd=geoDataRef.current;if(!gd)return;const set=window.__kayamTabaSet;if(!set||set.size===0)return;if(gd.landuse_xplan&&gd.landuse_xplan.features){if(!gd.landuse_xplan._origFeatures)gd.landuse_xplan._origFeatures=gd.landuse_xplan.features;const orig=gd.landuse_xplan._origFeatures;const filtered=orig.filter(f=>{const pn=f.properties.pl_number||'';if(!pn||!pn.includes('-'))return true;const taba=String(parseInt(pn.split('-')[1]));return!shouldHideKayam(taba);});gd.landuse_xplan={...gd.landuse_xplan,features:filtered,_origFeatures:orig};console.log('[Filter] landuse_xplan:',orig.length,'->',filtered.length,'features');}if(gd.future_shavaz&&gd.future_shavaz.features){if(!gd.future_shavaz._origFeatures)gd.future_shavaz._origFeatures=gd.future_shavaz.features;const orig=gd.future_shavaz._origFeatures;const filtered=orig.filter(f=>{const t=String(f.properties.TABA||'').trim();return!t||!shouldHideKayam(t);});gd.future_shavaz={...gd.future_shavaz,features:filtered,_origFeatures:orig};console.log('[Filter] future_shavaz:',orig.length,'->',filtered.length,'features');}}window.__applyKayamFilter=applyKayamFilter;// === Stage 1: GeoJSON only — render the map ASAP ===
-Promise.all(allEntries.map(([key,url])=>fetch(url+'?v='+APP_VERSION).then(r=>r.json()).then(data=>{doneCount++;setLoadProgress({done:doneCount,total:allEntries.length});return[key,data];}).catch(()=>{doneCount++;setLoadProgress({done:doneCount,total:allEntries.length});return[key,null];}))).then(geoResults=>{const gd={};geoResults.forEach(([key,data])=>{if(data)gd[key]=data;});// Surface failed layer loads instead of silently swallowing them.
-// 'plans' is the core layer — without it the map is meaningless (critical).
-const failedKeys=geoResults.filter(([,data])=>data===null).map(([key])=>key);const CRITICAL_LAYERS=['plans'];setLoadError(failedKeys.length?{failed:failedKeys,critical:failedKeys.some(k=>CRITICAL_LAYERS.includes(k))}:null);// Force-hide specific plans (instant; not CSV-dependent)
-if(gd.plans&&gd.plans.features){gd.plans.features.forEach(f=>{if(SKIP_PLAN_IDS.has(f.properties.plan_name)){f.properties.plan_type='מוסתר';}});}// Initial fold/lookup pass on raw GeoJSON values; re-run after CSV.
-snapshotRentalSources(gd);foldRental(gd);const planByTaba=rebuildPlanByTaba(gd);rebuildHafrashLookup(planByTaba);extractAvailablePlanTypes(gd);applyMinahakOverrides(gd);applyMinahakOverridesByGeometry(gd);geoDataRef.current=gd;window.__geoDataForLanduse=gd;buildProjectorTalpiotPlanSet(gd);// Compute overlap map once — heavy O(n²); deferred so first paint isn't blocked.
-// Exclude plans with no minahak (city-wide/reference areas): they are never
-// shown in the overlap layer anyway, and under the one-directional rule they
-// "contain" almost every other plan — feeding them in explodes the O(n²) work
-// and bloats the map with entries that never render.
-overlapMapRef.current=new Map();{const t0=performance.now();// Lean payload for the worker: only geometry + taba are needed, so don't
-// clone every feature's full property bag across the worker boundary.
-const overlapFeatures=(gd.plans?gd.plans.features:[]).filter(f=>(f.properties.minahak||'').trim()).map(f=>({geometry:f.geometry,properties:{taba:f.properties.taba}}));buildOverlapMap(overlapFeatures,m=>{overlapMapRef.current=m;console.log(`[Overlap] Built map: ${m.size} plans with overlaps in ${Math.round(performance.now()-t0)}ms`);// Flag readiness — re-renders the topic layer (so it draws once the map
-// is ready) and clears the "computing overlaps" indicator.
-setOverlapReady(true);});}setDataLoaded(true);setLoading(false);console.log('[GeoJSON] Stage 1 loaded:',Object.keys(gd).join(', '));// === Stage 2a: Google Sheets CSV — enrichment, post-paint ===
-fetch(sheetUrl).then(r=>r.text()).catch(()=>'').then(csvText=>{if(!csvText)return;applyCSVEnrichment(gd,csvText);// Stash parsed rows so units/commerce reports can skip their own re-fetch + re-parse.
-// Robust char-by-char parser (handles embedded newlines in quoted fields).
-try{const text=csvText;const rows=[];let row=[];let field='';let inQuotes=false;for(let i=0;i<text.length;i++){const ch=text[i];if(inQuotes){if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}else if(ch==='"'){inQuotes=false;}else{field+=ch;}}else{if(ch==='"'){inQuotes=true;}else if(ch===','){row.push(field);field='';}else if(ch==='\n'||ch==='\r'&&text[i+1]==='\n'){row.push(field);field='';if(row.length>1)rows.push(row);row=[];if(ch==='\r')i++;}else{field+=ch;}}}if(field||row.length){row.push(field);rows.push(row);}const header=rows[0]||[];window.__plansCsvRows=rows.slice(1).map(r=>{const obj={};header.forEach((h,idx)=>{obj[h]=r[idx]||'';});return obj;});console.log('[CSV] Cached',window.__plansCsvRows.length,'plan rows for reports');}catch(e){console.warn('[CSV] Row cache parse failed:',e);}applyMinahakOverrides(gd);// CSV may have re-introduced stale minahak; re-correct.
-applyMinahakOverridesByGeometry(gd);// final word: centroid-in-polygon
-foldRental(gd);// re-run with CSV-overridden values
-const pbt=rebuildPlanByTaba(gd);rebuildHafrashLookup(pbt);// depends on hafrash_prg from CSV
-extractAvailablePlanTypes(gd);// CSV may add/change plan_type values
-applyKayamFilter();// re-apply if landuse_xplan + kayamTabaSet are ready
-setDeferredTick(t=>t+1);});// === Stage 2b: permit/tree/meeting JSONs ===
-Promise.all(STAGE2_JSONS.map(([key,url])=>fetch(url+'?v='+APP_VERSION).then(r=>r.json()).then(data=>[key,data]).catch(()=>[key,null]))).then(results=>{results.forEach(([key,data])=>{if(key==='__allPermits'){window.__allPermits=data||{};}else if(key==='__tama38Permits'){window.__tama38Permits=data||{};}else if(key==='__treeSurveys'){window.__treeSurveys=data||{};}else if(key==='__tama38TreeSurveys'){window.__tama38TreeSurveys=data||{};}else if(key==='__treeValencies'){window.__treeValencies=data||{};}else if(key==='__masterPlanCompliance'){window.__masterPlanCompliance=data||{};}else if(key==='__objectionsPermits'){window.__objectionsPermits=data||{};}else if(key==='__meetings'){// Build lookup by plan_id. Keep only future meetings (date >= today).
-const idx={};const arr=Array.isArray(data)?data:[];const today=new Date();today.setHours(0,0,0,0);arr.forEach(m=>{const pid=(m.plan_id||'').trim();if(!pid)return;const dp=(m.meeting_date||'').split('/');if(dp.length!==3)return;const md=new Date(dp[2],dp[1]-1,dp[0]);if(isNaN(md.getTime())||md<today)return;const cur=idx[pid];if(!cur||md<cur._d){idx[pid]={...m,_d:md};}});window.__meetings=idx;}});console.log('[Permits] stage2 loaded — all_permits:',Object.keys(window.__allPermits).length,'tama38_permits:',Object.keys(window.__tama38Permits).length,'tree_surveys:',Object.keys(window.__treeSurveys).length,'tama38_tree_surveys:',Object.keys(window.__tama38TreeSurveys).length);});// === Stage 2c: deferred big GeoJSONs ===
-// Debounce setDeferredTick — many deferred files arrive in quick
-// succession; one re-render after they settle is much smoother
-// than 10 re-renders interleaved with loading.
-let _deferredTickTimer=null;const _scheduleDeferredTick=()=>{if(_deferredTickTimer)clearTimeout(_deferredTickTimer);_deferredTickTimer=setTimeout(()=>setDeferredTick(t=>t+1),250);};deferredEntries.forEach(([key,url])=>{fetch(url+'?v='+APP_VERSION).then(r=>r.json()).then(data=>{if(!data)return;geoDataRef.current[key]=data;window.__geoDataForLanduse=geoDataRef.current;// Build kayam taba set when its source layer arrives
-if(key==='yiud_karka_kayam'&&data.features){const set=new Set();data.features.forEach(f=>{const t=String(f.properties.TABA||'').trim();if(t)set.add(t);});window.__kayamTabaSet=set;}// Re-apply kayam filter — handles both orderings (yiud first or target first)
-applyKayamFilter();_scheduleDeferredTick();console.log(`[GeoJSON] Deferred loaded: ${key} (${data.features?data.features.length:'?'} features)`);}).catch(e=>console.warn(`[GeoJSON] Deferred ${key} failed:`,e));});});return()=>{map.remove();mapInstanceRef.current=null;};},[]);// Update basemap
-useEffect(()=>{const map=mapInstanceRef.current;if(!map)return;if(baseTileRef.current){map.removeLayer(baseTileRef.current);baseTileRef.current=null;}const bm=BASEMAPS[basemap];if(bm.url){baseTileRef.current=L.tileLayer(bm.url,{attribution:bm.attribution,maxZoom:22,opacity:basemapOpacity,crossOrigin:'anonymous'}).addTo(map);baseTileRef.current.bringToBack();}},[basemap]);// Update basemap opacity without recreating layer
-useEffect(()=>{if(baseTileRef.current){baseTileRef.current.setOpacity(basemapOpacity);}},[basemapOpacity]);// Keep refs in sync
-useEffect(()=>{layersRef.current=layers;updateHash();},[layers]);// GeoJSON layers have built-in pointer cursor on hover — no probe needed
-// ── On-demand layer loading ──
-// Watch layers state — when a layer in ON_DEMAND_FILES becomes true
-// and its geojson hasn't been fetched yet, fetch it now.
-useEffect(()=>{const onDemand=window.__onDemandFiles||[];const filesMap=window.__geojsonFilesMap||{};if(!window.__inFlightLoads)window.__inFlightLoads=new Set();let _pendingTick=null;let _anyArrived=false;// Some layers render FROM landuse_xplan (filtered by mavat_code) rather than
-// their own file — so turning them on must trigger the landuse on-demand fetch
-// too, otherwise they'd render empty until landuse is separately loaded.
-const LANDUSE_DEPENDENTS=['future_shavaz','hafrashah_future'];onDemand.forEach(key=>{const wanted=layers[key]||key==='landuse_xplan'&&LANDUSE_DEPENDENTS.some(d=>layers[d]);if(!wanted)return;if(geoDataRef.current[key])return;// already loaded
-if(window.__inFlightLoads.has(key))return;// already fetching
-const url=filesMap[key];if(!url)return;window.__inFlightLoads.add(key);console.log(`[GeoJSON] On-demand fetching: ${key}`);const t0=performance.now();fetch(url+'?v='+APP_VERSION).then(r=>r.json()).then(data=>{if(!data)return;geoDataRef.current[key]=data;window.__geoDataForLanduse=geoDataRef.current;if(key==='yiud_karka_kayam'&&data.features){const set=new Set();data.features.forEach(f=>{const t=String(f.properties.TABA||'').trim();if(t)set.add(t);});window.__kayamTabaSet=set;}if(window.__applyKayamFilter)window.__applyKayamFilter();_anyArrived=true;if(_pendingTick)clearTimeout(_pendingTick);_pendingTick=setTimeout(()=>setDeferredTick(t=>t+1),150);console.log(`[GeoJSON] On-demand loaded: ${key} (${data.features?data.features.length:'?'} features, ${Math.round(performance.now()-t0)}ms)`);}).catch(e=>console.warn(`[GeoJSON] On-demand ${key} failed:`,e)).finally(()=>window.__inFlightLoads.delete(key));});},[layers]);// ── Landuse compare: plan selection mode ──
-useEffect(()=>{landuseCompareModeRef.current=landuseCompareMode;const map=mapInstanceRef.current;if(!map||landuseCompareMode!=='plan')return;map.getContainer().classList.add('measuring');function onPlanClick(e){// Find clicked plan polygon
-const plansLayer=geoLayersRef.current.plans;if(!plansLayer)return;const latlng=e.latlng;let clickedFeature=null;plansLayer.eachLayer(layer=>{if(clickedFeature)return;try{const geo=layer.feature.geometry;let coords;if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];else return;// pip test
-const lng=latlng.lng,lat=latlng.lat;let inside=false;for(let i=0,j=coords.length-1;i<coords.length;j=i++){const[xi,yi]=coords[i],[xj,yj]=coords[j];if(yi>lat!==yj>lat&&lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;}if(inside)clickedFeature=layer.feature;}catch(ex){}});if(clickedFeature){const geo=clickedFeature.geometry;let coords;try{if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];}catch(ex){return;}if(!coords)return;const polyCoords=[...coords];if(polyCoords[0][0]!==polyCoords[polyCoords.length-1][0])polyCoords.push(polyCoords[0]);const p=clickedFeature.properties;const planId=p.plan_name||p.pl_number||p.TABA||'';const planSummary=p.plan_summary||p.plan_name_he||'';const planDisplay=planSummary?planId+' - '+planSummary:planId;const result=analyzeLanduseComparison(polyCoords,[planDisplay]);showLanduseComparePanel(result);setLanduseCompareMode(null);}}map.on('click',onPlanClick);function onKeyDown(e){if(e.key==='Escape'){setLanduseCompareMode(null);}}document.addEventListener('keydown',onKeyDown);return()=>{map.off('click',onPlanClick);document.removeEventListener('keydown',onKeyDown);map.getContainer().classList.remove('measuring');};},[landuseCompareMode]);// ── שצ"פ לנפש: one-time setup (always listening, controlled by ref) ──
-useEffect(()=>{const map=mapInstanceRef.current;if(!map)return;function onShatzafClick(e){if(shatzafModeRef.current!=='plan')return;// Find clicked plan by PIP (same as landuse compare)
-const plansLayer=geoLayersRef.current.plans;if(!plansLayer)return;const latlng=e.latlng;let clickedFeature=null;plansLayer.eachLayer(layer=>{if(clickedFeature)return;try{const geo=layer.feature.geometry;let coords;if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];else return;const lng=latlng.lng,lat=latlng.lat;let inside=false;for(let i=0,j=coords.length-1;i<coords.length;j=i++){const[xi,yi]=coords[i],[xj,yj]=coords[j];if(yi>lat!==yj>lat&&lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;}if(inside)clickedFeature=layer.feature;}catch(ex){}});if(!clickedFeature)return;processShatzafFeature(clickedFeature);}function processShatzafFeature(clickedFeature){const p=clickedFeature.properties;const planId=p.plan_name||p.pl_number||p.TABA||'';const planSummary=p.plan_summary||p.plan_name_he||'';const planDisplay=planSummary?planId+' - '+planSummary:planId;const unitsTotal=parseInt(p.units_total)||0;const planMinahak=(p.minahak||'').trim();const presetHH=PN_MINAHAK_PRESETS[planMinahak]&&PN_MINAHAK_PRESETS[planMinahak].householdSize||3.5;// Calculate open space from xplan within plan boundary
-const geo=clickedFeature.geometry;let planCoords;try{if(geo.type==='Polygon')planCoords=geo.coordinates[0];else if(geo.type==='MultiPolygon')planCoords=geo.coordinates[0][0];}catch(ex){return;}if(!planCoords)return;// Find xplan features inside this plan that are שטחים פתוחים
-const gd=window.__geoDataForLanduse||{};let openSpaceArea=0;const openSpaceNames=[];if(gd.landuse_xplan){gd.landuse_xplan.features.forEach(f=>{const name=(f.properties.mavat_name||'').trim();if(!name)return;const group=getLanduseGroup(name);if(group!=='שטחים פתוחים'&&group!=='יער/חקלאי')return;// Check if centroid is inside plan polygon
-try{let fCoords;if(f.geometry.type==='Polygon')fCoords=f.geometry.coordinates[0];else if(f.geometry.type==='MultiPolygon')fCoords=f.geometry.coordinates[0][0];else return;let cx=0,cy=0,n=0;for(const c of fCoords){cx+=c[0];cy+=c[1];n++;}cx/=n;cy/=n;// PIP test against plan boundary
-let inside=false;for(let i=0,j=planCoords.length-1;i<planCoords.length;j=i++){const[xi,yi]=planCoords[i],[xj,yj]=planCoords[j];if(yi>cy!==yj>cy&&cx<(xj-xi)*(cy-yi)/(yj-yi)+xi)inside=!inside;}if(inside){openSpaceArea+=getFeatureArea(f);if(!openSpaceNames.includes(name))openSpaceNames.push(name);}}catch(ex){}});}// Also check kayam if no xplan open space found
-if(openSpaceArea===0&&gd.yiud_karka_kayam){gd.yiud_karka_kayam.features.forEach(f=>{const name=(f.properties.Descr||'').trim();if(!name)return;const group=getLanduseGroup(name);if(group!=='שטחים פתוחים'&&group!=='יער/חקלאי')return;try{let fCoords;if(f.geometry.type==='Polygon')fCoords=f.geometry.coordinates[0];else if(f.geometry.type==='MultiPolygon')fCoords=f.geometry.coordinates[0][0];else return;let cx=0,cy=0,n=0;for(const c of fCoords){cx+=c[0];cy+=c[1];n++;}cx/=n;cy/=n;let inside=false;for(let i=0,j=planCoords.length-1;i<planCoords.length;j=i++){const[xi,yi]=planCoords[i],[xj,yj]=planCoords[j];if(yi>cy!==yj>cy&&cx<(xj-xi)*(cy-yi)/(yj-yi)+xi)inside=!inside;}if(inside){openSpaceArea+=getFeatureArea(f);if(!openSpaceNames.includes(name))openSpaceNames.push(name);}}catch(ex){}});}shatzafModeRef.current=null;setShatzafMode(false);mapInstanceRef.current?.getContainer().classList.remove('measuring');// Find which sub-neighborhood this plan is in
-let planCx=0,planCy=0,pn=0;for(const c of planCoords){planCx+=c[0];planCy+=c[1];pn++;}planCx/=pn;planCy/=pn;let subNeighName=null;if(gd.sub_neighborhoods){gd.sub_neighborhoods.features.forEach(sf=>{if(subNeighName)return;try{const sg=sf.geometry;const rings=sg.type==='Polygon'?[sg.coordinates[0]]:sg.type==='MultiPolygon'?sg.coordinates.map(c=>c[0]):[];for(const ring of rings){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if(yi>planCy!==yj>planCy&&planCx<(xj-xi)*(planCy-yi)/(yj-yi)+xi)inside=!inside;}if(inside){subNeighName=sf.properties.schn_nama;break;}}}catch(ex){}});}// Show dialog for household size
-const panel=document.createElement('div');panel.id='shatzaf-panel';panel.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';panel.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+'<h3 style="color:'+OPEN_SPACE_PALETTE.shatzaf_title+';margin:0;font-size:16px">🌳 שצ"פ לנפש — '+planDisplay+'</h3>'+'<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>'+(subNeighName?'<div style="font-size:11px;margin-bottom:6px;color:#888">שכונה: '+subNeighName+'</div>':'')+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>'+(unitsTotal>0?unitsTotal.toLocaleString():'לא זמין')+'</b></div>'+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>'+(openSpaceArea>0?Math.round(openSpaceArea).toLocaleString()+' מ"ר ('+(openSpaceArea/1000).toFixed(1)+' דונם)':'לא נמצא')+'</b></div>'+(openSpaceNames.length>0?'<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: '+openSpaceNames.join(', ')+'</div>':'')+'<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):'+(planMinahak&&PN_MINAHAK_PRESETS[planMinahak]?' <span style="font-size:10px;color:#666">(ברירת מחדל ל'+planMinahak+')</span>':'')+'</div>'+'<div style="display:flex;gap:8px;align-items:center">'+'<input id="shatzaf-household" type="number" value="'+presetHH+'" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />'+'<button id="shatzaf-calc" style="flex:1;padding:8px;background:'+OPEN_SPACE_PALETTE.shatzaf_button+';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>'+'<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';document.body.appendChild(panel);// Pre-calculate sub-neighborhood ratio for comparison
-let subRatioText='';if(subNeighName){// Find sub polygon coords
-const subF=gd.sub_neighborhoods.features.find(f=>f.properties.schn_nama===subNeighName);if(subF){let sCoords;try{if(subF.geometry.type==='Polygon')sCoords=subF.geometry.coordinates[0];else if(subF.geometry.type==='MultiPolygon')sCoords=subF.geometry.coordinates[0][0];}catch(ex){}if(sCoords){let subOpenSpace=0;// Scan xplan + kayam fallback for sub-neighborhood open space
-const scanLanduse=(features,nameField)=>{features.forEach(f=>{const nm=(f.properties[nameField]||'').trim();if(!nm)return;const grp=getLanduseGroup(nm);if(grp!=='שטחים פתוחים'&&grp!=='יער/חקלאי')return;try{let fc;if(f.geometry.type==='Polygon')fc=f.geometry.coordinates[0];else if(f.geometry.type==='MultiPolygon')fc=f.geometry.coordinates[0][0];else return;let cx2=0,cy2=0,nn=0;for(const c of fc){cx2+=c[0];cy2+=c[1];nn++;}cx2/=nn;cy2/=nn;let ins=false;for(let i=0,j=sCoords.length-1;i<sCoords.length;j=i++){const[xi,yi]=sCoords[i],[xj,yj]=sCoords[j];if(yi>cy2!==yj>cy2&&cx2<(xj-xi)*(cy2-yi)/(yj-yi)+xi)ins=!ins;}if(ins)subOpenSpace+=getFeatureArea(f);}catch(ex){}});};if(gd.landuse_xplan)scanLanduse(gd.landuse_xplan.features,'mavat_name');if(gd.yiud_karka_kayam)scanLanduse(gd.yiud_karka_kayam.features,'Descr');window.__subShatzafData={subName:subNeighName,openSpace:subOpenSpace};}}}document.getElementById('shatzaf-close').onclick=()=>panel.remove();document.getElementById('shatzaf-calc').onclick=()=>{const hh=parseFloat(document.getElementById('shatzaf-household').value)||3.5;const totalPeople=unitsTotal*hh;const sqmPerPerson=totalPeople>0?openSpaceArea/totalPeople:0;const resultDiv=document.getElementById('shatzaf-result');resultDiv.style.display='block';// Calculate sub-neighborhood ratio
-let subCompareHtml='';const sd=window.__subShatzafData;if(sd&&sd.subName){const ud=window.__unitsData;let subUnits=0;if(ud&&ud.bySub){// Collect all sub names that map to this sub polygon
-const allNames=new Set([sd.subName]);let parentM=null;Object.entries(MINAHAK_SUBS).forEach(([m,ss])=>{if(ss.includes(sd.subName))parentM=m;});if(parentM){const gd3=window.__geoDataForLanduse||{};const geojsonN=new Set();if(gd3.sub_neighborhoods){gd3.sub_neighborhoods.features.forEach(f2=>{const nm2=f2.properties.schn_nama||'';const norm2=SUB_NORMALIZE[nm2]||nm2;if((MINAHAK_SUBS[parentM]||[]).some(s2=>s2===nm2||s2===norm2||(SUB_NORMALIZE[s2]||s2)===norm2))geojsonN.add(nm2);});}if(geojsonN.size<=1){(MINAHAK_SUBS[parentM]||[]).forEach(s2=>{allNames.add(s2);allNames.add(SUB_NORMALIZE[s2]||s2);});allNames.add(parentM);}}Object.keys(ud.bySub).forEach(m=>{Object.keys(ud.bySub[m]).forEach(s=>{if(allNames.has(s)){subUnits+=(ud.bySub[m][s].units_in||0)+(ud.bySub[m][s].units_add||0);}});});}const subPeople=subUnits*hh;const subRatio=subPeople>0?sd.openSpace/subPeople:0;if(subUnits>0){subCompareHtml='<div style="font-size:11px;color:#888;margin-top:6px;text-align:center">יחס בשכונת '+sd.subName+': <b style="color:#aaa">'+subRatio.toFixed(1)+' מ"ר/נפש</b></div>';}}// Standard comparison: 30-70 m²/HH → convert to m²/person for display
-const sqmPerHH=unitsTotal>0?openSpaceArea/unitsTotal:0;const minPerPerson=30/hh,maxPerPerson=70/hh;let standardHtml='';if(unitsTotal>0&&openSpaceArea>0){const status=sqmPerHH>=70?'gold':sqmPerHH>=30?'ok':'deficit';const statusLabel=status==='gold'?'✓ מעל הטווח':status==='ok'?'✓ בטווח התקני':'⚠ מתחת למינימום';const statusColor=status==='deficit'?OPEN_SPACE_PALETTE.status_deficit:OPEN_SPACE_PALETTE.status_adequate;standardHtml='<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">'+'<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>'+minPerPerson.toFixed(1)+'-'+maxPerPerson.toFixed(1)+' מ"ר/נפש</span></div>'+'<div style="font-size:11px;margin-top:4px;color:'+statusColor+';text-align:center;font-weight:bold">'+statusLabel+'</div>'+'</div>';}resultDiv.innerHTML='<div style="border-top:1px solid #333;padding-top:12px">'+'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>'+Math.round(totalPeople).toLocaleString()+' נפשות</b></div>'+'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>('+unitsTotal.toLocaleString()+' יח"ד × '+hh+' נפשות)</span></div>'+'<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">'+'<div style="font-size:32px;font-weight:bold;color:#e0e0e0">'+sqmPerPerson.toFixed(1)+'</div>'+'<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>'+subCompareHtml+'</div>'+standardHtml+(unitsTotal===0?'<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>':'')+(openSpaceArea===0?'<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>':'')+'</div>';};// Auto-calculate
-document.getElementById('shatzaf-calc').click();}// Use DOM click on map container (plan layer swallows Leaflet click events)
-const container=map.getContainer();function onShatzafDomClick(e){if(shatzafModeRef.current!=='plan')return;e.stopPropagation();e.stopImmediatePropagation();const rect=container.getBoundingClientRect();const x=e.clientX-rect.left;const y=e.clientY-rect.top;const pt=map.containerPointToLatLng([x,y]);onShatzafClick({latlng:pt});}container.addEventListener('click',onShatzafDomClick,true);// Sub-neighborhood shatzaf - hover highlight + click
-let subHoverLayer=null;let subSelectedLayer=null;function findSubAtPoint(pt){const gd=window.__geoDataForLanduse||{};if(!gd.sub_neighborhoods)return null;let found=null;gd.sub_neighborhoods.features.forEach(f=>{if(found)return;try{const g=f.geometry;const rings=g.type==='Polygon'?[g.coordinates[0]]:g.type==='MultiPolygon'?g.coordinates.map(c=>c[0]):[];for(const ring of rings){let inside=false;const lng=pt.lng,lat=pt.lat;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if(yi>lat!==yj>lat&&lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;}if(inside){found=f;break;}}}catch(ex){}});return found;}function onShatzafSubMouseMove(e){if(shatzafModeRef.current!=='sub'){if(subHoverLayer){map.removeLayer(subHoverLayer);subHoverLayer=null;}return;}const pt=map.containerPointToLatLng([e.clientX-container.getBoundingClientRect().left,e.clientY-container.getBoundingClientRect().top]);const found=findSubAtPoint(pt);if(subHoverLayer){map.removeLayer(subHoverLayer);subHoverLayer=null;}if(found){subHoverLayer=L.geoJSON(found,{style:{color:OPEN_SPACE_PALETTE.hover_highlight,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.1,dashArray:''}}).addTo(map);// Show tooltip with name
-subHoverLayer.bindTooltip(found.properties.schn_nama,{sticky:true,direction:'top',className:'landuse-tooltip'}).openTooltip();}}container.addEventListener('mousemove',onShatzafSubMouseMove);function onShatzafSubDomClick(e){if(shatzafModeRef.current!=='sub')return;e.stopPropagation();e.stopImmediatePropagation();const pt=map.containerPointToLatLng([e.clientX-container.getBoundingClientRect().left,e.clientY-container.getBoundingClientRect().top]);const found=findSubAtPoint(pt);if(subHoverLayer){map.removeLayer(subHoverLayer);subHoverLayer=null;}if(found){shatzafModeRef.current=null;setShatzafMode(false);map.getContainer().classList.remove('measuring');// Draw selected polygon
-subSelectedLayer=L.geoJSON(found,{style:{color:OPEN_SPACE_PALETTE.shatzaf_button,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.15,dashArray:''}}).addTo(map);calculateSubNeighborhoodShatzaf(found.properties.schn_nama);}}container.addEventListener('click',onShatzafSubDomClick,true);// ── Radius mode: click sets center, draws 500m circle, opens modal ──
-function onShatzafRadiusDomClick(e){if(shatzafModeRef.current!=='radius')return;e.stopPropagation();e.stopImmediatePropagation();const rect=container.getBoundingClientRect();const pt=map.containerPointToLatLng([e.clientX-rect.left,e.clientY-rect.top]);const radiusMeters=500;// default; user can change in modal slider
-if(window.__shatzafRadiusCircle){try{map.removeLayer(window.__shatzafRadiusCircle);}catch(e){}}window.__shatzafRadiusCircle=L.circle(pt,{radius:radiusMeters,color:OPEN_SPACE_PALETTE.shatzaf_button,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.15}).addTo(map);window.__shatzafRadiusCenter=pt;window.__shatzafRadiusValue=radiusMeters;shatzafModeRef.current=null;setShatzafMode(false);map.getContainer().classList.remove('measuring');calculateShatzafForRadius(pt,radiusMeters);}container.addEventListener('click',onShatzafRadiusDomClick,true);// ── Area mode: click adds vertex, double-click finalizes ──
-let shatzafAreaPts=[];let shatzafAreaPreviewLayer=null;function redrawShatzafAreaPreview(){if(shatzafAreaPreviewLayer){try{map.removeLayer(shatzafAreaPreviewLayer);}catch(e){}shatzafAreaPreviewLayer=null;}if(shatzafAreaPts.length>=2){shatzafAreaPreviewLayer=L.polyline(shatzafAreaPts,{color:OPEN_SPACE_PALETTE.shatzaf_button,weight:2,dashArray:'4,4'}).addTo(map);}}function onShatzafAreaDomClick(e){if(shatzafModeRef.current!=='area')return;e.stopPropagation();e.stopImmediatePropagation();const rect=container.getBoundingClientRect();const pt=map.containerPointToLatLng([e.clientX-rect.left,e.clientY-rect.top]);shatzafAreaPts.push(pt);redrawShatzafAreaPreview();}function onShatzafAreaDomDblClick(e){if(shatzafModeRef.current!=='area')return;e.stopPropagation();e.stopImmediatePropagation();if(shatzafAreaPts.length<3)return;if(shatzafAreaPreviewLayer){try{map.removeLayer(shatzafAreaPreviewLayer);}catch(e){}shatzafAreaPreviewLayer=null;}if(window.__shatzafAreaPolygon){try{map.removeLayer(window.__shatzafAreaPolygon);}catch(e){}}window.__shatzafAreaPolygon=L.polygon(shatzafAreaPts,{color:OPEN_SPACE_PALETTE.shatzaf_button,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.15}).addTo(map);const finalPts=shatzafAreaPts.slice();shatzafAreaPts=[];shatzafModeRef.current=null;setShatzafMode(false);map.getContainer().classList.remove('measuring');calculateShatzafForArea(finalPts);}container.addEventListener('click',onShatzafAreaDomClick,true);container.addEventListener('dblclick',onShatzafAreaDomDblClick,true);// ── Generic shatzaf scope renderer ──
-// Used by sub/radius/area modes. Receives a scope object and renders the modal.
-// scope = {
-//   scopeKey: 'sub'|'radius'|'area',     for state isolation if needed
-//   label: string,                        title text
-//   polyCoords: [[lng,lat],...],          PIP polygon (closed)
-//   existingUnits: number,                pre-computed
-//   defaultHH: number,
-//   subMinahak: string|null,              for "default to" hint label
-//   onClose: () => void                   cleanup callback
-// }
-function renderShatzafForScope(scope){const gd=window.__geoDataForLanduse||{};const polyCoords=scope.polyCoords;if(!polyCoords||polyCoords.length<3)return;if(!window.__shatzafAssumptions)window.__shatzafAssumptions={targetYear:'existing'};const assumpt=window.__shatzafAssumptions;const targetYear=assumpt.targetYear;const isFull=targetYear==='full';function pip(cx,cy){let inside=false;for(let i=0,j=polyCoords.length-1;i<polyCoords.length;j=i++){const xi=polyCoords[i][0],yi=polyCoords[i][1];const xj=polyCoords[j][0],yj=polyCoords[j][1];if(yi>cy!==yj>cy&&cx<(xj-xi)*(cy-yi)/(yj-yi)+xi)inside=!inside;}return inside;}function centroidOf(geom){try{let coords;if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return null;let cx=0,cy=0,n=0;for(const c of coords){cx+=c[0];cy+=c[1];n++;}return n>0?[cx/n,cy/n]:null;}catch(ex){return null;}}// 1) Plans + planMimushMap (centroid PIP)
-const planMimushMap=new Map();let plannedUnitsWeighted=0;let totalUnitsAddPotential=0;let activePlanCount=0;if(targetYear!=='existing'&&gd.plans&&gd.plans.features){gd.plans.features.forEach(f=>{const c=centroidOf(f.geometry);if(!c||!pip(c[0],c[1]))return;const props=f.properties||{};const m=calcMimush(props);if(!m)return;const u=parseInt(props.units_total)||parseInt(props.units_add)||0;if(u<=0)return;totalUnitsAddPotential+=u;if(!isFull&&m.estimatedYear>targetYear)return;const pct=isFull?100:m.mimushPct;plannedUnitsWeighted+=u*pct/100;const planName=(props.plan_name||'').trim();if(planName)planMimushMap.set(planName,pct);activePlanCount++;});}plannedUnitsWeighted=Math.round(plannedUnitsWeighted);const grandTotalUnits=scope.existingUnits+plannedUnitsWeighted;// 2) Open space supply: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
-let openSpaceArea=0;let xplanWeightedArea=0;const openSpaceNames=[];if(gd.landuse_xplan){gd.landuse_xplan.features.forEach(f=>{const planRef=(f.properties.pl_number||'').trim();if(!planMimushMap.has(planRef))return;const name=(f.properties.mavat_name||'').trim();if(!name)return;const group=getLanduseGroup(name);if(group!=='שטחים פתוחים'&&group!=='יער/חקלאי')return;const c=centroidOf(f.geometry);if(!c||!pip(c[0],c[1]))return;const pct=planMimushMap.get(planRef)/100;const weighted=getFeatureArea(f)*pct;openSpaceArea+=weighted;xplanWeightedArea+=weighted;if(!openSpaceNames.includes(name))openSpaceNames.push(name);});}if(gd.yiud_karka_kayam){gd.yiud_karka_kayam.features.forEach(f=>{const name=(f.properties.Descr||'').trim();if(!name)return;const group=getLanduseGroup(name);if(group!=='שטחים פתוחים'&&group!=='יער/חקלאי')return;const c=centroidOf(f.geometry);if(!c||!pip(c[0],c[1]))return;// kayam blocked only by ACTIVE xplan (existing → no blocks; future → only active plans)
-let coveredByXplan=false;if(planMimushMap.size>0&&gd.landuse_xplan){gd.landuse_xplan.features.forEach(xf=>{if(coveredByXplan)return;const xRef=(xf.properties.pl_number||'').trim();if(!planMimushMap.has(xRef))return;try{let xCoords;if(xf.geometry.type==='Polygon')xCoords=xf.geometry.coordinates[0];else if(xf.geometry.type==='MultiPolygon')xCoords=xf.geometry.coordinates[0][0];else return;let xInside=false;for(let i=0,j=xCoords.length-1;i<xCoords.length;j=i++){const xi=xCoords[i][0],yi=xCoords[i][1];const xj=xCoords[j][0],yj=xCoords[j][1];if(yi>c[1]!==yj>c[1]&&c[0]<(xj-xi)*(c[1]-yi)/(yj-yi)+xi)xInside=!xInside;}if(xInside)coveredByXplan=true;}catch(ex){}});}if(coveredByXplan)return;openSpaceArea+=getFeatureArea(f);if(!openSpaceNames.includes(name))openSpaceNames.push(name);});}// 3) Render modal
-const existingPanel=document.getElementById('shatzaf-panel');if(existingPanel)existingPanel.remove();const horizonOpts=['existing',2030,2035,2040,'full'];const horizonLabel=y=>y==='existing'?'מצב קיים':y==='full'?'100% מימוש':String(y);const horizonButtonsHtml=horizonOpts.map(y=>{const sel=targetYear===y;const bg=sel?OPEN_SPACE_PALETTE.shatzaf_button:'transparent';const color=sel?'#fff':'#888';const border=sel?OPEN_SPACE_PALETTE.shatzaf_title:'#333';return'<button data-shatzaf-year="'+y+'" style="background:'+bg+';color:'+color+';border:1px solid '+border+';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">'+horizonLabel(y)+'</button>';}).join('');const savedHH=typeof assumpt.householdSize==='number'?assumpt.householdSize:scope.defaultHH;const subMinahak=scope.subMinahak;const panel=document.createElement('div');panel.id='shatzaf-panel';panel.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(360px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';panel.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+'<h3 style="color:'+OPEN_SPACE_PALETTE.shatzaf_title+';margin:0;font-size:16px">🌳 שצ"פ לנפש — '+scope.label+'</h3>'+'<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>'+(subMinahak?'<div style="font-size:11px;margin-bottom:6px;color:#888">מינהל: '+subMinahak+'</div>':'')+'<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px;padding:6px 8px;background:#16162a;border-radius:6px">'+'<span style="font-size:11px;color:#aaa;margin-left:4px">אופק:</span>'+horizonButtonsHtml+'</div>'+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>'+scope.existingUnits.toLocaleString()+'</b></div>'+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד מתוכננות ('+horizonLabel(targetYear)+'): <b>'+plannedUnitsWeighted.toLocaleString()+'</b>'+(targetYear!=='existing'&&totalUnitsAddPotential>0?' <span style="font-size:10px;color:#888">(מתוך '+totalUnitsAddPotential.toLocaleString()+' פוטנציאל)</span>':'')+'</div>'+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">סה"כ יח"ד: <b>'+grandTotalUnits.toLocaleString()+'</b></div>'+'<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ: <b>'+(openSpaceArea>0?Math.round(openSpaceArea).toLocaleString()+' מ"ר ('+(openSpaceArea/1000).toFixed(1)+' דונם)':'לא נמצא')+'</b></div>'+(targetYear!=='existing'&&xplanWeightedArea>0?'<div style="font-size:10px;color:#888;margin-bottom:4px">🌳 שצ"פ עתידי משוקלל: '+(xplanWeightedArea/1000).toFixed(1)+' דונם (מתוך ה-'+(openSpaceArea/1000).toFixed(1)+' דונם)</div>':'')+(targetYear!=='existing'&&activePlanCount>0?'<div style="font-size:10px;color:#888;margin-bottom:4px">🏗️ תורמות לאופק: '+activePlanCount+' תכניות</div>':'')+(openSpaceNames.length>0?'<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: '+openSpaceNames.join(', ')+'</div>':'')+'<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):'+(subMinahak&&PN_MINAHAK_PRESETS[subMinahak]?' <span style="font-size:10px;color:#666">(ברירת מחדל ל'+subMinahak+')</span>':'')+'</div>'+'<div style="display:flex;gap:8px;align-items:center">'+'<input id="shatzaf-household" type="number" value="'+savedHH+'" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />'+'<button id="shatzaf-calc" style="flex:1;padding:8px;background:'+OPEN_SPACE_PALETTE.shatzaf_button+';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>'+'<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';document.body.appendChild(panel);// Horizon buttons → re-render with new targetYear (same scope)
-panel.querySelectorAll('[data-shatzaf-year]').forEach(btn=>{btn.onclick=()=>{const raw=btn.getAttribute('data-shatzaf-year');const y=raw==='existing'||raw==='full'?raw:Number(raw);const hhInput=document.getElementById('shatzaf-household');if(hhInput){const v=parseFloat(hhInput.value);if(!isNaN(v)&&v>0)assumpt.householdSize=v;}assumpt.targetYear=y;renderShatzafForScope(scope);};});document.getElementById('shatzaf-close').onclick=()=>{panel.remove();if(scope.onClose)scope.onClose();};document.getElementById('shatzaf-calc').onclick=()=>{const hh=parseFloat(document.getElementById('shatzaf-household').value)||3.5;assumpt.householdSize=hh;const totalPeople=grandTotalUnits*hh;const sqmPerPerson=totalPeople>0?openSpaceArea/totalPeople:0;const sqmPerHH=grandTotalUnits>0?openSpaceArea/grandTotalUnits:0;const resultDiv=document.getElementById('shatzaf-result');resultDiv.style.display='block';const minPerPerson=30/hh,maxPerPerson=70/hh;let standardHtml='';if(grandTotalUnits>0&&openSpaceArea>0){const status=sqmPerHH>=70?'gold':sqmPerHH>=30?'ok':'deficit';const statusLabel=status==='gold'?'✓ מעל הטווח':status==='ok'?'✓ בטווח התקני':'⚠ מתחת למינימום';const statusColor=status==='deficit'?OPEN_SPACE_PALETTE.status_deficit:OPEN_SPACE_PALETTE.status_adequate;standardHtml='<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">'+'<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>'+minPerPerson.toFixed(1)+'-'+maxPerPerson.toFixed(1)+' מ"ר/נפש</span></div>'+'<div style="font-size:11px;margin-top:4px;color:'+statusColor+';text-align:center;font-weight:bold">'+statusLabel+'</div>'+'</div>';}resultDiv.innerHTML='<div style="border-top:1px solid #333;padding-top:12px">'+'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>'+Math.round(totalPeople).toLocaleString()+' נפשות</b></div>'+'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>('+grandTotalUnits.toLocaleString()+' יח"ד × '+hh+' נפשות)</span></div>'+'<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">'+'<div style="font-size:32px;font-weight:bold;color:#e0e0e0">'+sqmPerPerson.toFixed(1)+'</div>'+'<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>'+'<div style="font-size:10px;color:#888;margin-top:4px">אופק: '+horizonLabel(targetYear)+'</div>'+'</div>'+standardHtml+(grandTotalUnits===0?'<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד</div>':'')+(openSpaceArea===0?'<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ באזור</div>':'')+'</div>';};document.getElementById('shatzaf-calc').click();}// ── Sub-neighborhood entry: click on a sub polygon → uses sub polygon + CSV existing units ──
-function calculateSubNeighborhoodShatzaf(subName,opts){const gd=window.__geoDataForLanduse||{};const subFeature=gd.sub_neighborhoods.features.find(f=>f.properties.schn_nama===subName);if(!subFeature)return;let subCoords;try{if(subFeature.geometry.type==='Polygon')subCoords=subFeature.geometry.coordinates[0];else if(subFeature.geometry.type==='MultiPolygon')subCoords=subFeature.geometry.coordinates[0][0];}catch(ex){return;}if(!subCoords)return;if(opts&&typeof opts.targetYear!=='undefined'){if(!window.__shatzafAssumptions)window.__shatzafAssumptions={targetYear:'existing'};window.__shatzafAssumptions.targetYear=opts.targetYear;}// Find parent minahak for this sub
-let subMinahak=null;const normSubName=SUB_NORMALIZE[subName]||subName;Object.entries(MINAHAK_SUBS).forEach(([m,ss])=>{if(subMinahak)return;if(ss.includes(subName)||ss.includes(normSubName)||ss.some(s=>(SUB_NORMALIZE[s]||s)===normSubName)){subMinahak=m;}});const subPresetHH=subMinahak&&PN_MINAHAK_PRESETS[subMinahak]&&PN_MINAHAK_PRESETS[subMinahak].householdSize||3.5;(window.__unitsData?Promise.resolve(window.__unitsData):new Promise(resolve=>{window.__unitsDataCallbacks=window.__unitsDataCallbacks||[];window.__unitsDataCallbacks.push(resolve);if(!window.__unitsFetching){window.__unitsFetching=true;fetchUnitsDataInternal();}})).then(ud=>{let totalUnitsIn=0;if(ud&&ud.bySub){let parentMinahak=null;Object.entries(MINAHAK_SUBS).forEach(([m,subs])=>{if(subs.includes(subName))parentMinahak=m;});const allSubNames=new Set([subName]);if(parentMinahak){const minahakSubs=MINAHAK_SUBS[parentMinahak]||[];const gd2=window.__geoDataForLanduse||{};const geojsonNames=new Set();if(gd2.sub_neighborhoods){gd2.sub_neighborhoods.features.forEach(f=>{const nm=f.properties.schn_nama||'';const normalized=SUB_NORMALIZE[nm]||nm;if(minahakSubs.some(s=>s===nm||s===normalized||(SUB_NORMALIZE[s]||s)===normalized)){geojsonNames.add(nm);}});}if(geojsonNames.size<=1){minahakSubs.forEach(s=>{allSubNames.add(s);allSubNames.add(SUB_NORMALIZE[s]||s);});allSubNames.add(parentMinahak);}}Object.keys(ud.bySub).forEach(minahak=>{const subs=ud.bySub[minahak];Object.keys(subs).forEach(s=>{if(allSubNames.has(s)){totalUnitsIn+=subs[s].units_in||0;}});});}renderShatzafForScope({scopeKey:'sub',label:subName,polyCoords:subCoords,existingUnits:totalUnitsIn,defaultHH:subPresetHH,subMinahak,onClose:()=>{if(subSelectedLayer){map.removeLayer(subSelectedLayer);subSelectedLayer=null;}}});});}// ── Radius entry: center + radius → circle polygon + buildings existing units ──
-function calculateShatzafForRadius(centerLatLng,radiusMeters,opts){const gd=window.__geoDataForLanduse||{};if(opts&&typeof opts.targetYear!=='undefined'){if(!window.__shatzafAssumptions)window.__shatzafAssumptions={targetYear:'existing'};window.__shatzafAssumptions.targetYear=opts.targetYear;}// Approximate circle as 64-vertex polygon
-const N=64;const polyCoords=[];const latRad=centerLatLng.lat*Math.PI/180;for(let i=0;i<=N;i++){const angle=i/N*2*Math.PI;const dLat=radiusMeters*Math.cos(angle)/111320;const dLng=radiusMeters*Math.sin(angle)/(111320*Math.cos(latRad));polyCoords.push([centerLatLng.lng+dLng,centerLatLng.lat+dLat]);}const existingUnits=sumExistingUnitsInRadius(centerLatLng,radiusMeters,gd.buildings);renderShatzafForScope({scopeKey:'radius',label:'רדיוס '+Math.round(radiusMeters)+' מטר',polyCoords,existingUnits,defaultHH:3.5,subMinahak:null,onClose:()=>{if(window.__shatzafRadiusCircle){try{map.removeLayer(window.__shatzafRadiusCircle);}catch(e){}window.__shatzafRadiusCircle=null;}}});}// ── Area entry: drawn polygon (latlngs) → buildings existing units ──
-function calculateShatzafForArea(latlngs,opts){const gd=window.__geoDataForLanduse||{};if(opts&&typeof opts.targetYear!=='undefined'){if(!window.__shatzafAssumptions)window.__shatzafAssumptions={targetYear:'existing'};window.__shatzafAssumptions.targetYear=opts.targetYear;}const polyCoords=latlngs.map(ll=>[ll.lng,ll.lat]);if(polyCoords.length<3)return;const first=polyCoords[0],last=polyCoords[polyCoords.length-1];if(first[0]!==last[0]||first[1]!==last[1])polyCoords.push([first[0],first[1]]);const existingUnits=sumExistingUnitsInPolygon(polyCoords,gd.buildings);renderShatzafForScope({scopeKey:'area',label:'אזור נבחר',polyCoords,existingUnits,defaultHH:3.5,subMinahak:null,onClose:()=>{if(window.__shatzafAreaPolygon){try{map.removeLayer(window.__shatzafAreaPolygon);}catch(e){}window.__shatzafAreaPolygon=null;}}});}return()=>{container.removeEventListener('click',onShatzafDomClick,true);container.removeEventListener('click',onShatzafSubDomClick,true);container.removeEventListener('click',onShatzafRadiusDomClick,true);container.removeEventListener('click',onShatzafAreaDomClick,true);container.removeEventListener('dblclick',onShatzafAreaDomDblClick,true);container.removeEventListener('mousemove',onShatzafSubMouseMove);if(subHoverLayer){map.removeLayer(subHoverLayer);subHoverLayer=null;}if(subSelectedLayer){map.removeLayer(subSelectedLayer);subSelectedLayer=null;}if(shatzafAreaPreviewLayer){try{map.removeLayer(shatzafAreaPreviewLayer);}catch(e){}}if(window.__shatzafRadiusCircle){try{map.removeLayer(window.__shatzafRadiusCircle);}catch(e){}window.__shatzafRadiusCircle=null;}if(window.__shatzafAreaPolygon){try{map.removeLayer(window.__shatzafAreaPolygon);}catch(e){}window.__shatzafAreaPolygon=null;}};},[dataLoaded]);// Run once when data loaded
-// ── עצים: plan + sub-neighborhood click handlers (one-time setup) ──
-useEffect(()=>{const map=mapInstanceRef.current;if(!map)return;const container=map.getContainer();function findPlanAtPoint(pt){const plansLayer=geoLayersRef.current.plans;if(!plansLayer)return null;let found=null;plansLayer.eachLayer(layer=>{if(found)return;try{const geo=layer.feature.geometry;let coords;if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];else return;const lng=pt.lng,lat=pt.lat;let inside=false;for(let i=0,j=coords.length-1;i<coords.length;j=i++){const[xi,yi]=coords[i],[xj,yj]=coords[j];if(yi>lat!==yj>lat&&lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;}if(inside)found=layer.feature;}catch(ex){}});return found;}function findSubAtPoint(pt){const gd=window.__geoDataForLanduse||{};if(!gd.sub_neighborhoods)return null;let found=null;gd.sub_neighborhoods.features.forEach(f=>{if(found)return;try{const g=f.geometry;const rings=g.type==='Polygon'?[g.coordinates[0]]:g.type==='MultiPolygon'?g.coordinates.map(c=>c[0]):[];for(const ring of rings){let inside=false;const lng=pt.lng,lat=pt.lat;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if(yi>lat!==yj>lat&&lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;}if(inside){found=f;break;}}}catch(ex){}});return found;}let treeSubHoverLayer=null;let treeSubSelectedLayer=null;function showPlanTreePanel(feature){const p=feature.properties;const taba=p.taba||'';const rec=(window.__treeSurveys||{})[taba];const planId=p.plan_name||p.pl_number||taba||'';const planSummary=p.plan_summary||p.plan_name_he||'';const planDisplay=planSummary?planId+' — '+planSummary:planId;const prev=document.getElementById('tree-panel');if(prev)prev.remove();const panel=document.createElement('div');panel.id='tree-panel';panel.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);max-width:min(440px,92vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+'<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — '+planDisplay+'</h3>'+'<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';if(!rec||!rec.total){html+='<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין נתוני סקר עצים לתכנית זו</div>';}else{const removed=(rec.krita||0)+(rec.haataka||0);const pct=rec.total>0?Math.round(removed/rec.total*100):0;html+='<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">'+'<div style="font-size:36px;font-weight:bold;color:#e94560">'+pct+'%</div>'+'<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה ('+removed+' מתוך '+rec.total+')</div>'+'</div>'+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">'+'<div style="padding:8px;background:rgba(76,175,80,0.12);border-radius:6px"><div style="color:#888;font-size:10px">שימור</div><div style="font-size:18px;font-weight:bold;color:#4CAF50">'+(rec.shimur||0)+'</div></div>'+'<div style="padding:8px;background:rgba(233,69,96,0.12);border-radius:6px"><div style="color:#888;font-size:10px">כריתה</div><div style="font-size:18px;font-weight:bold;color:#e94560">'+(rec.krita||0)+'</div></div>'+'<div style="padding:8px;background:rgba(255,152,0,0.12);border-radius:6px"><div style="color:#888;font-size:10px">העתקה</div><div style="font-size:18px;font-weight:bold;color:#FF9800">'+(rec.haataka||0)+'</div></div>'+'<div style="padding:8px;background:rgba(100,181,246,0.12);border-radius:6px"><div style="color:#888;font-size:10px">לא נדרש</div><div style="font-size:18px;font-weight:bold;color:#64b5f6">'+(rec.lo_nidresh||0)+'</div></div>'+'</div>';if(rec.confidence){html+='<div style="margin-top:10px;font-size:10px;color:#888;text-align:center">רמת ודאות הנתונים: '+rec.confidence+'</div>';}}panel.innerHTML=html;document.body.appendChild(panel);document.getElementById('tree-close').onclick=()=>panel.remove();}function zoomAndOpenPlanPopup(feature){if(!feature||!feature.geometry)return;try{const center=visualCenter(feature.geometry)||L.geoJSON(feature).getBounds().getCenter();const latlng=center.lat?[center.lat,center.lng]:center;map.setView(latlng,18);setTimeout(()=>{const mapped=mapPlanProps(feature.properties);const popup=L.popup({maxWidth:popupMaxWidth(),minWidth:Math.min(300,window.innerWidth*0.85),closeButton:true}).setLatLng(latlng).setContent(buildPlanPopup(mapped,{properties:mapped})).openOn(map);bindPopupEvents(popup,[{type:'plan',properties:mapped}],0);},500);}catch(err){console.warn('zoom to plan failed',err);}}function zoomAndOpenTama38Popup(feature){if(!feature||!feature.geometry)return;try{let lng,lat;if(feature.geometry.type==='Point'){[lng,lat]=feature.geometry.coordinates;}else if(feature.geometry.type==='MultiPoint'){[lng,lat]=feature.geometry.coordinates[0];}else{const c=L.geoJSON(feature).getBounds().getCenter();lat=c.lat;lng=c.lng;}if(typeof lat!=='number'||typeof lng!=='number')return;const latlng=[lat,lng];map.setView(latlng,18);setTimeout(()=>{const popup=L.popup({maxWidth:popupMaxWidth(),className:'plan-popup'}).setLatLng(latlng).setContent(buildTama38Popup(feature.properties)).openOn(map);bindPopupEvents(popup,[{properties:feature.properties,type:'tama38'}],0);},500);}catch(err){console.warn('zoom to tama38 failed',err);}}function attachTreePlanLinks(panel){const gd=window.__geoDataRef?.current||{};panel.querySelectorAll('.tree-plan-link').forEach(link=>{link.addEventListener('click',e=>{e.preventDefault();const tik=link.dataset.tik||'';const taba=link.dataset.taba||'';let feature=null;let isTama=false;if(tik){feature=gd.tama38?.features.find(f=>(f.properties.tik||'')===tik);isTama=true;}else if(taba){feature=gd.plans?.features.find(f=>(f.properties.taba||'')===taba);}if(!feature)return;panel.remove();if(treeSubSelectedLayer){map.removeLayer(treeSubSelectedLayer);treeSubSelectedLayer=null;}const r=areaRef.current;if(r){r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);r.points=[];r.markers=[];r.polygon=null;}if(isTama)zoomAndOpenTama38Popup(feature);else zoomAndOpenPlanPopup(feature);});});}function showSubTreePanel(subName,subCoords){const gd=window.__geoDataRef?.current||{};const ts=window.__treeSurveys||{};const plansInside=[];if(gd.plans){gd.plans.features.forEach(f=>{const p=f.properties;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;const geo=f.geometry;if(!geo||!geo.coordinates)return;let coords;try{if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];else return;}catch(ex){return;}if(!coords||!coords.length)return;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(!n)return;cx/=n;cy/=n;let inside=false;for(let i=0,j=subCoords.length-1;i<subCoords.length;j=i++){const[xi,yi]=subCoords[i],[xj,yj]=subCoords[j];if(yi>cy!==yj>cy&&cx<(xj-xi)*(cy-yi)/(yj-yi)+xi)inside=!inside;}if(inside)plansInside.push({...p});});}// Deduplicate by taba
-const seen=new Set();const deduped=[];plansInside.forEach(p=>{const t=p.taba||'';if(t&&!seen.has(t)){seen.add(t);deduped.push(p);}});const stats=aggregateTreeStats(deduped);const prev=document.getElementById('tree-panel');if(prev)prev.remove();const panel=document.createElement('div');panel.id='tree-panel';panel.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';const valencyAgg=aggregateTreeValencies(stats.plans||[]);let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">'+'<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — '+subName+'</h3>'+'<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>'+'<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';if(stats.withData===0){html+='<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים בשכונה זו</div>';}else{html+='<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">'+'<div style="font-size:36px;font-weight:bold;color:#e94560">'+stats.pct+'%</div>'+'<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה ('+stats.removed.toLocaleString()+' מתוך '+stats.total.toLocaleString()+')</div>'+'<div style="font-size:10px;color:#888;margin-top:4px">'+stats.withData+' תכניות עם סקר עצים</div>'+'</div>';if(valencyAgg){html+='<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה '+'<span style="color:#666;font-size:10px">(מתוך '+valencyAgg.plans_with_data+' תכניות, '+valencyAgg.total_trees.toLocaleString()+' עצים)</span></div>'+renderValencyPivotHTML(valencyAgg,{dark:true})+'<div style="margin:10px 0"></div>';}html+='<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>'+'<table style="width:100%;font-size:11px;border-collapse:collapse">'+'<thead><tr style="border-bottom:1px solid #2a2a4a">'+'<th style="text-align:right;padding:4px;color:#fff">שם</th>'+'<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>'+'<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>'+'<th style="text-align:center;padding:4px;color:#fff">%</th>'+'</tr></thead><tbody>'+stats.plans.slice(0,15).map(row=>{const dataAttr=row.isTama?'data-tik="'+row.tik+'"':'data-taba="'+row.taba+'"';return'<tr style="border-bottom:1px solid #1a1a2e">'+'<td style="padding:4px"><a href="#" class="tree-plan-link" '+dataAttr+' style="color:#64b5f6;text-decoration:underline;cursor:pointer">'+row.name+'</a></td>'+'<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">'+row.removed+'</td>'+'<td style="text-align:center;padding:4px;color:#aaa">'+row.total+'</td>'+'<td style="text-align:center;padding:4px;color:#aaa">'+row.pct+'%</td>'+'</tr>';}).join('')+'</tbody></table>'+renderSuppressedTreeNotice(stats.suppressed);}panel.innerHTML=html;document.body.appendChild(panel);document.getElementById('tree-close').onclick=()=>{panel.remove();if(treeSubSelectedLayer){map.removeLayer(treeSubSelectedLayer);treeSubSelectedLayer=null;}};const exportBtn=document.getElementById('tree-export');if(exportBtn){exportBtn.onclick=()=>openTreesReportExport('עצים — '+subName,stats,valencyAgg);}attachTreePlanLinks(panel);}window.__treePanelAttach=attachTreePlanLinks;function onTreeDomClick(e){if(treeModeRef.current!=='plan')return;e.stopPropagation();e.stopImmediatePropagation();const rect=container.getBoundingClientRect();const pt=map.containerPointToLatLng([e.clientX-rect.left,e.clientY-rect.top]);const feature=findPlanAtPoint(pt);if(!feature)return;treeModeRef.current=null;setTreeMode(false);container.classList.remove('measuring');showPlanTreePanel(feature);}container.addEventListener('click',onTreeDomClick,true);function onTreeSubMouseMove(e){if(treeModeRef.current!=='sub'){if(treeSubHoverLayer){map.removeLayer(treeSubHoverLayer);treeSubHoverLayer=null;}return;}const rect=container.getBoundingClientRect();const pt=map.containerPointToLatLng([e.clientX-rect.left,e.clientY-rect.top]);const found=findSubAtPoint(pt);if(treeSubHoverLayer){map.removeLayer(treeSubHoverLayer);treeSubHoverLayer=null;}if(found){treeSubHoverLayer=L.geoJSON(found,{style:{color:OPEN_SPACE_PALETTE.hover_highlight,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.1,dashArray:''}}).addTo(map);treeSubHoverLayer.bindTooltip(found.properties.schn_nama,{sticky:true,direction:'top',className:'landuse-tooltip'}).openTooltip();}}container.addEventListener('mousemove',onTreeSubMouseMove);function onTreeSubDomClick(e){if(treeModeRef.current!=='sub')return;e.stopPropagation();e.stopImmediatePropagation();const rect=container.getBoundingClientRect();const pt=map.containerPointToLatLng([e.clientX-rect.left,e.clientY-rect.top]);const found=findSubAtPoint(pt);if(treeSubHoverLayer){map.removeLayer(treeSubHoverLayer);treeSubHoverLayer=null;}if(!found)return;treeModeRef.current=null;setTreeMode(false);container.classList.remove('measuring');if(treeSubSelectedLayer)map.removeLayer(treeSubSelectedLayer);treeSubSelectedLayer=L.geoJSON(found,{style:{color:OPEN_SPACE_PALETTE.shatzaf_button,weight:3,fillColor:OPEN_SPACE_PALETTE.hover_highlight,fillOpacity:0.15,dashArray:''}}).addTo(map);let subCoords;try{if(found.geometry.type==='Polygon')subCoords=found.geometry.coordinates[0];else if(found.geometry.type==='MultiPolygon')subCoords=found.geometry.coordinates[0][0];}catch(ex){return;}if(!subCoords)return;showSubTreePanel(found.properties.schn_nama,subCoords);}container.addEventListener('click',onTreeSubDomClick,true);return()=>{container.removeEventListener('click',onTreeDomClick,true);container.removeEventListener('click',onTreeSubDomClick,true);container.removeEventListener('mousemove',onTreeSubMouseMove);if(treeSubHoverLayer){map.removeLayer(treeSubHoverLayer);treeSubHoverLayer=null;}if(treeSubSelectedLayer){map.removeLayer(treeSubSelectedLayer);treeSubSelectedLayer=null;}};},[dataLoaded]);// ── Landuse compare: area mode finished → run analysis ──
-useEffect(()=>{if(!areaFinished||areaFinished.length<3||landuseCompareModeRef.current!=='area')return;const polyCoords=areaFinished.map(p=>[p.lng,p.lat]);polyCoords.push(polyCoords[0]);// Find which plans overlap
-const gd=window.__geoDataForLanduse;const planNames=[];if(gd&&gd.plans){gd.plans.features.forEach(f=>{const geo=f.geometry;if(!geo||!geo.coordinates)return;let coords;try{if(geo.type==='Polygon')coords=geo.coordinates[0];else if(geo.type==='MultiPolygon')coords=geo.coordinates[0][0];else return;}catch(e){return;}let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(n===0)return;cx/=n;cy/=n;// pip check
-let inside=false;for(let i=0,j=polyCoords.length-1;i<polyCoords.length;j=i++){const[xi,yi]=polyCoords[i],[xj,yj]=polyCoords[j];if(yi>cy!==yj>cy&&cx<(xj-xi)*(cy-yi)/(yj-yi)+xi)inside=!inside;}if(inside){const pid=f.properties.plan_name||f.properties.TABA||'';const psum=f.properties.plan_summary||f.properties.plan_name_he||'';planNames.push(psum?pid+' - '+psum:pid);}});}const result=analyzeLanduseComparison(polyCoords,planNames);showLanduseComparePanel(result);// Mark that landuse handled this areaFinished - so regular area analysis skips it
-window.__landuseHandledArea=true;landuseCompareModeRef.current=null;setLanduseCompareMode(null);},[areaFinished]);// ── Area select: drawing mode ──
-useEffect(()=>{areaModeRef.current=areaMode;const map=mapInstanceRef.current;if(!map||!areaMode)return;const r=areaRef.current;r.points=[];r.markers=[];r.polygon=null;map.getContainer().classList.add('measuring');function onClick(e){r.points.push(e.latlng);setAreaPts(r.points.length);const m=L.circleMarker(e.latlng,{radius:4,color:'#e94560',fillColor:'#e94560',fillOpacity:1}).addTo(map);r.markers.push(m);if(r.points.length>1){if(r.polygon)map.removeLayer(r.polygon);r.polygon=L.polygon(r.points,{color:'#e94560',weight:2,fillColor:'#e94560',fillOpacity:0.15,dashArray:'6,4'}).addTo(map);}}function onKeyDown(e){if(e.key==='Escape'){// Clean up and exit
-r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);r.points=[];r.markers=[];r.polygon=null;map.getContainer().classList.remove('measuring');setAreaMode(false);}}map.on('click',onClick);document.addEventListener('keydown',onKeyDown);return()=>{map.off('click',onClick);document.removeEventListener('keydown',onKeyDown);map.getContainer().classList.remove('measuring');// Clean up drawn polygon and markers when area mode ends
-r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);r.points=[];r.markers=[];r.polygon=null;setAreaPts(0);};},[areaMode]);// ── Marker-coords tool: capture lat/lng (and ITM) for plan/recommendation updates ──
-// Register EPSG:2039 (ITM) once. proj4js is loaded via CDN in index.html.
-useEffect(()=>{if(typeof window==='undefined'||!window.proj4)return;if(!window.proj4.defs('EPSG:2039')){window.proj4.defs('EPSG:2039','+proj=tmerc +lat_0=31.7343936111111 +lon_0=35.2045169444444 '+'+k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 '+'+towgs84=-24.0024,-17.1032,-17.8444,-0.33077,-1.85269,1.66969,5.4248 '+'+units=m +no_defs');}},[]);useEffect(()=>{markerCoordsModeRef.current=markerCoordsMode;const map=mapInstanceRef.current;if(!map||!markerCoordsMode)return;const r=markerCoordsRef.current;r.points=[];r.markers=[];r.polygon=null;map.getContainer().classList.add('measuring');function onClick(e){if(markerCoordsMode==='point'){// Single point: capture and finish immediately.
-const m=L.circleMarker(e.latlng,{radius:6,color:'#2196F3',fillColor:'#2196F3',fillOpacity:1,weight:2}).addTo(map);r.markers.push(m);r.points=[e.latlng];setMarkerCoordsPts(1);setMarkerCoordsResult({type:'point',points:[e.latlng]});setMarkerCoordsMode(null);}else{// Polygon / line: accumulate vertices.
-r.points.push(e.latlng);setMarkerCoordsPts(r.points.length);const m=L.circleMarker(e.latlng,{radius:4,color:'#2196F3',fillColor:'#2196F3',fillOpacity:1}).addTo(map);r.markers.push(m);if(r.points.length>1){if(r.polygon)map.removeLayer(r.polygon);if(markerCoordsMode==='line'){// Open polyline, no fill.
-r.polygon=L.polyline(r.points,{color:'#2196F3',weight:3,dashArray:'6,4'}).addTo(map);}else{r.polygon=L.polygon(r.points,{color:'#2196F3',weight:2,fillColor:'#2196F3',fillOpacity:0.12,dashArray:'6,4'}).addTo(map);}}}}function onKeyDown(e){if(e.key==='Escape'){r.markers.forEach(m=>{try{map.removeLayer(m);}catch(_){}});if(r.polygon){try{map.removeLayer(r.polygon);}catch(_){}}r.points=[];r.markers=[];r.polygon=null;setMarkerCoordsPts(0);setMarkerCoordsMode(null);}}// Auto-close any popup that opens while marker mode is active —
-// covers feature popups bound via bindPopup() that bypass the
-// explicit onClick guards on the various layer click handlers.
-function onPopupOpen(e){if(e&&e.popup){try{map.closePopup(e.popup);}catch(_){}}else{try{map.closePopup();}catch(_){}}}// Also pre-emptively close any popup already open when entering mode.
-try{map.closePopup();}catch(_){}map.on('click',onClick);map.on('popupopen',onPopupOpen);document.addEventListener('keydown',onKeyDown);return()=>{map.off('click',onClick);map.off('popupopen',onPopupOpen);document.removeEventListener('keydown',onKeyDown);map.getContainer().classList.remove('measuring');// Wipe drawn markers/polygon when mode ends.
-r.markers.forEach(m=>{try{map.removeLayer(m);}catch(_){}});if(r.polygon){try{map.removeLayer(r.polygon);}catch(_){}}r.points=[];r.markers=[];r.polygon=null;setMarkerCoordsPts(0);};},[markerCoordsMode]);// ── Print-area: rectangle drawing mode ──
-useEffect(()=>{const map=mapInstanceRef.current;if(!map||!printAreaMode)return;const r=printAreaRef.current;r.corner1=null;if(r.marker1){map.removeLayer(r.marker1);r.marker1=null;}if(r.previewLayer){map.removeLayer(r.previewLayer);r.previewLayer=null;}map.getContainer().classList.add('measuring');function onClick(e){if(!r.corner1){r.corner1=e.latlng;r.marker1=L.circleMarker(e.latlng,{radius:5,color:'#2196F3',fillColor:'#2196F3',fillOpacity:1}).addTo(map);}else{const bounds=L.latLngBounds(r.corner1,e.latlng);if(r.previewLayer){map.removeLayer(r.previewLayer);r.previewLayer=null;}if(r.marker1){map.removeLayer(r.marker1);r.marker1=null;}if(r.rectLayer){map.removeLayer(r.rectLayer);r.rectLayer=null;}r.rectLayer=L.rectangle(bounds,{color:'#2196F3',weight:2,fillColor:'#2196F3',fillOpacity:0.05}).addTo(map);r.corner1=null;setPrintAreaBounds(bounds);setPrintAreaMode(false);setShowPrint(true);}}function onMouseMove(e){if(!r.corner1)return;const bounds=L.latLngBounds(r.corner1,e.latlng);if(r.previewLayer)map.removeLayer(r.previewLayer);r.previewLayer=L.rectangle(bounds,{color:'#2196F3',weight:2,fillColor:'#2196F3',fillOpacity:0.1,dashArray:'6,4'}).addTo(map);}function onKeyDown(e){if(e.key==='Escape'){if(r.marker1){map.removeLayer(r.marker1);r.marker1=null;}if(r.previewLayer){map.removeLayer(r.previewLayer);r.previewLayer=null;}r.corner1=null;setPrintAreaMode(false);}}map.on('click',onClick);map.on('mousemove',onMouseMove);document.addEventListener('keydown',onKeyDown);return()=>{map.off('click',onClick);map.off('mousemove',onMouseMove);document.removeEventListener('keydown',onKeyDown);map.getContainer().classList.remove('measuring');if(r.marker1){map.removeLayer(r.marker1);r.marker1=null;}if(r.previewLayer){map.removeLayer(r.previewLayer);r.previewLayer=null;}r.corner1=null;};},[printAreaMode]);// ── Radius mode: click on map to set center ──────────────────────
-useEffect(()=>{radiusModeRef.current=radiusMode;const map=mapInstanceRef.current;if(!map||!radiusMode)return;map.getContainer().classList.add('measuring');function onClick(e){setRadiusCenter(e.latlng);setRadiusMode(false);}function onKey(e){if(e.key==='Escape'){setRadiusMode(false);setRadiusCenter(null);}}map.on('click',onClick);document.addEventListener('keydown',onKey);return()=>{map.off('click',onClick);document.removeEventListener('keydown',onKey);map.getContainer().classList.remove('measuring');};},[radiusMode]);// ── Radius result: draw circle + render result modal whenever
-//     center or radius change. Aggregates permits whose plan/tama38
-//     centroid sits within the circle, then renders KPI breakdown.
-useEffect(()=>{const map=mapInstanceRef.current;if(!map)return;const ref=radiusRef.current;if(ref.circle){try{map.removeLayer(ref.circle);}catch(e){}ref.circle=null;}if(ref.marker){try{map.removeLayer(ref.marker);}catch(e){}ref.marker=null;}const prev=document.getElementById('radius-select-result');if(prev)prev.remove();const prevProg=document.getElementById('programa-result');if(prevProg&&programaRadiusActiveRef.current)prevProg.remove();if(!radiusCenter)return;const isPrograma=programaRadiusActiveRef.current;ref.circle=L.circle(radiusCenter,{radius:radiusMeters,color:isPrograma?PERMITS_PALETTE.radius_program_mode:PERMITS_PALETTE.radius_circle,weight:2,fillColor:isPrograma?PERMITS_PALETTE.radius_program_mode:PERMITS_PALETTE.radius_circle,fillOpacity:0.10,dashArray:'6,4'}).addTo(map);ref.marker=L.circleMarker(radiusCenter,{radius:4,color:isPrograma?PERMITS_PALETTE.radius_program_mode:PERMITS_PALETTE.radius_circle,fillColor:isPrograma?PERMITS_PALETTE.radius_program_mode:PERMITS_PALETTE.radius_circle,fillOpacity:1}).addTo(map);const gd=geoDataRef.current;if(!gd||!gd.plans)return;// Programa-direct path: bypass permits aggregation, sum existing + planned units inside circle
-if(isPrograma){const candidatePlans=[];const seenTaba=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const taba=String(p.taba||'').trim();if(taba&&seenTaba.has(taba))return;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let coords;try{if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!coords||!coords.length)return;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(n===0)return;if(radiusCenter.distanceTo(L.latLng(cy/n,cx/n))>radiusMeters)return;if(taba)seenTaba.add(taba);candidatePlans.push({taba,plan_name:p.plan_name,plan_name_he:p.plan_name_he,plan_summary:p.plan_summary,units_add:parseFloat(p.units_add)||0,units_total:parseInt(p.units_total)||0,status_mavat:p.status_mavat,stage:p.stage,mavat_date:p.mavat_date,shavatz_out_prog:p.shavatz_out_prog||'',shavatz_out_sqm:parseFloat(p.shavatz_out_sqm)||0,hafrash_prg:p.hafrash_prg||'',hafrash_sqm:parseFloat(p.hafrash_sqm)||0,shavatz_in_sqm:parseFloat(p.shavatz_in_sqm)||0,shavatz_in_prog:p.shavatz_in_prog||'',geometry:f.geometry,minahak:p.minahak||''});});candidatePlans.sort((a,b)=>(b.units_total||b.units_add||0)-(a.units_total||a.units_add||0));const existingUnits=sumExistingUnitsInRadius(radiusCenter,radiusMeters,gd.buildings);const eduFeats=eduFeaturesInRadius(radiusCenter,radiusMeters,gd);const inGonen=pointInLayer({lat:radiusCenter.lat,lng:radiusCenter.lng},gd.minahak_gonen);renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel:'רדיוס '+radiusMeters+'מ'+(inGonen?' · גוננים':''),parentModalId:null,radiusInfo:{value:radiusMeters,onChange:m=>setRadiusMeters(m)},inGonen,scopeGeom:{type:'radius',center:radiusCenter,meters:radiusMeters}});return;}// Find plans whose centroid lies within the radius
-function polyCentroid(geom){if(!geom||!geom.coordinates)return null;let coords;try{if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return null;}catch(ex){return null;}if(!coords||!coords.length)return null;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(n===0)return null;return L.latLng(cy/n,cx/n);}const planMatches=[];const seenTaba=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const taba=String(p.taba||'').trim();if(!taba||seenTaba.has(taba))return;const planType=(p.plan_type||'').trim();if(planType==='תשתיות'||planType==='מוסתר')return;const c=polyCentroid(f.geometry);if(!c)return;if(radiusCenter.distanceTo(c)>radiusMeters)return;const permits=getPermitsForTaba(taba);if(permits.length===0)return;seenTaba.add(taba);const planUnits=parsePlanUnits(p.units_total)||parsePlanUnits(p.units_add);const scopeKey='plan:'+taba;const inclusion=getEffectivePermitInclusion(permits,scopeKey,planUnits);const includedUnits=permits.reduce((s,x,i)=>s+(inclusion[i]?Number(x.units)||0:0),0);planMatches.push({taba,props:p,permits,inclusion,includedUnits});});const tamaMatches=[];if(gd.tama38&&gd.tama38.features){gd.tama38.features.forEach(f=>{const p=f.properties||{};const fid=p.fid;if(fid==null||fid==='')return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let lat,lng;try{if(geom.type==='Point'){lng=geom.coordinates[0];lat=geom.coordinates[1];}else if(geom.type==='MultiPoint'){lng=geom.coordinates[0][0];lat=geom.coordinates[0][1];}else return;}catch(ex){return;}if(radiusCenter.distanceTo(L.latLng(lat,lng))>radiusMeters)return;const permits=getPermitsForTama38(fid);if(permits.length===0)return;const planUnits=parsePlanUnits(p.units_tose);const scopeKey='tama:'+fid;const inclusion=getEffectivePermitInclusion(permits,scopeKey,planUnits);const includedUnits=permits.reduce((s,x,i)=>s+(inclusion[i]?Number(x.units)||0:0),0);tamaMatches.push({fid,props:p,permits,inclusion,includedUnits});});}// Aggregate: total permits, total counted units, breakdown by stage and category
-const allRows=[];const stageAgg={};PERMIT_STAGES_ALL.forEach(st=>{stageAgg[st]={count:0,units:0};});const catAgg={};let totalPermits=0,totalIncludedPermits=0,totalIncludedUnits=0;function addPermit(p,included,scope){totalPermits++;if(included)totalIncludedPermits++;const stage=getPermitStage(p);const cat=classifyPermitCategory(p);const u=Number(p.units)||0;if(included){if(!stageAgg[stage])stageAgg[stage]={count:0,units:0};stageAgg[stage].count++;stageAgg[stage].units+=u;if(!catAgg[cat])catAgg[cat]={count:0,units:0};catAgg[cat].count++;catAgg[cat].units+=u;totalIncludedUnits+=u;}allRows.push({scope,file:p.file_number||'',status:p.status||'',date:p.status_date||'',units:u,included,stage,cat,desc:p.request_description||''});}planMatches.forEach(m=>m.permits.forEach((p,i)=>addPermit(p,m.inclusion[i],'תב"ע '+(m.props.plan_summary||m.props.plan_name||m.taba))));tamaMatches.forEach(m=>m.permits.forEach((p,i)=>addPermit(p,m.inclusion[i],'תמ"א 38 '+(m.props.address||m.fid))));window.__radiusExportData=allRows;const existingUnits=sumExistingUnitsInRadius(radiusCenter,radiusMeters,gd.buildings);function colorBox(c){return'<span style="display:inline-block;width:10px;height:10px;background:'+c+';border-radius:2px;margin-left:4px;vertical-align:middle"></span>';}// Each breakdown row carries a data-drill attribute; clicking it
-// swaps in a drill-down table of underlying permits (file numbers,
-// statuses, units etc).
-const stageHtml=PERMIT_STAGES_ALL.map(st=>{const a=stageAgg[st];if(!a||a.count===0&&a.units===0)return'';const col=getPermitStageColor(st);return'<div data-drill="stage:'+st+'" style="display:flex;justify-content:space-between;padding:4px 6px;margin:0 -6px;font-size:12px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">'+'<span>'+colorBox(col)+getPermitStageLabel(st)+'</span>'+'<span style="color:#aaa">'+a.count+' היתרים · <b style="color:#fff">'+a.units+'</b> יח"ד <span style="color:#666">›</span></span></div>';}).filter(Boolean).join('');const catHtml=Object.entries(catAgg).sort((a,b)=>b[1].units-a[1].units).map(([cat,a])=>{return'<div data-drill="cat:'+cat+'" style="display:flex;justify-content:space-between;padding:3px 6px;margin:0 -6px;font-size:11px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">'+'<span>'+getPermitCategoryLabel(cat)+'</span>'+'<span style="color:#aaa">'+a.count+' · <b style="color:#fff">'+a.units+'</b> יח"ד <span style="color:#666">›</span></span></div>';}).join('');const div=document.createElement('div');div.id='radius-select-result';div.style.cssText=`position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:24px;border-radius:14px;border:2px solid ${PERMITS_PALETTE.radius_circle};direction:rtl;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif`;const totalProjects=planMatches.length+tamaMatches.length;div.innerHTML='<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+`<h3 id="radius-result-title" contenteditable="true" style="color:${PERMITS_PALETTE.radius_circle};margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה">היתרים ברדיוס</h3>`+'<div style="font-size:11px;color:#888;margin-bottom:10px">מרכז: '+radiusCenter.lat.toFixed(5)+', '+radiusCenter.lng.toFixed(5)+'</div>'+'<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px;background:#1a1a2e;border-radius:6px">'+'<label style="font-size:12px;color:#aaa">רדיוס:</label>'+'<input id="radius-input" type="range" min="50" max="3000" step="50" value="'+radiusMeters+'" style="flex:1">'+'<input id="radius-input-num" type="number" min="50" max="3000" step="50" value="'+radiusMeters+'" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">'+'<span style="font-size:11px;color:#888">מטר</span>'+'</div>'+'<div style="display:flex;gap:18px;margin-bottom:14px;justify-content:space-around">'+'<div style="text-align:center"><div style="font-size:26px;font-weight:bold">'+totalProjects+'</div><div style="font-size:11px;color:#aaa">פרוייקטים</div></div>'+'<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#5dade2">'+totalIncludedPermits+'</div><div style="font-size:11px;color:#aaa">היתרים פעילים</div><div style="font-size:9px;color:#666">מתוך '+totalPermits+'</div></div>'+'<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#4CAF50">'+totalIncludedUnits.toLocaleString()+'</div><div style="font-size:11px;color:#aaa">יח"ד מצטברות</div></div>'+'<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים ברדיוס (לפי שכבת מבנים עירונית)"><div style="font-size:26px;font-weight:bold;color:#FFB347">'+existingUnits.toLocaleString()+'</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div>'+'</div>'+(stageHtml?'<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח שלב:</div>'+stageHtml+'</div>':'')+(catHtml?'<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סוג:</div>'+catHtml+'</div>':'')+(totalProjects===0?'<div style="text-align:center;color:#888;font-size:12px;padding:18px">לא נמצאו פרוייקטים עם היתרים ברדיוס זה</div>':'')+'<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">'+'<button id="radius-export-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>'+'<button id="radius-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);document.getElementById('radius-close-btn').addEventListener('click',()=>{setRadiusCenter(null);});// Stash the rendered HTML so the drill-down's "back" can restore it.
-const summaryHtml=div.innerHTML;// Delegated drill-down handler — swaps modal content with permit list
-// when the user clicks a stage or category breakdown row.
-div.addEventListener('click',ev=>{const drillEl=ev.target.closest('[data-drill]');if(!drillEl)return;const[kind,key]=drillEl.dataset.drill.split(':');const matched=allRows.filter(r=>r.included&&(kind==='stage'?r.stage===key:r.cat===key));const title=kind==='stage'?getPermitStageLabel(key):getPermitCategoryLabel(key);const sumUnits=matched.reduce((s,r)=>s+(Number(r.units)||0),0);const rowsHtml=matched.sort((a,b)=>b.units-a.units).map(r=>{const stCol=getPermitStageColor(r.stage);const url=r.file?'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum='+encodeURIComponent(r.file)+'&SystemCode=26400046':'';const fileCell=url?'<a href="'+url+'" target="_blank" rel="noopener" style="color:#5dade2;direction:ltr;text-decoration:none">'+r.file+'</a>':'<span style="color:#888;direction:ltr">'+(r.file||'-')+'</span>';const stageBadge='<span style="background:'+stCol+'22;color:'+stCol+';border:1px solid '+stCol+';padding:1px 6px;border-radius:8px;font-size:10px">'+getPermitStageLabel(r.stage)+'</span>';const catLabel=getPermitCategoryLabel(r.cat);return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:5px 6px;color:#cfcfdf;font-size:11px">'+r.scope+'</td>'+'<td style="padding:5px 6px;font-size:11px">'+fileCell+'</td>'+'<td style="padding:5px 6px;text-align:left;color:#fff;font-weight:bold;font-size:12px">'+(r.units||'')+'</td>'+(kind==='stage'?'<td style="padding:5px 6px;color:#e0e0e0;font-size:11px">'+catLabel+'</td>':'<td style="padding:5px 6px">'+stageBadge+'</td>')+'<td style="padding:5px 6px;color:#aaa;font-size:10px">'+r.date+'</td>'+'</tr>';}).join('');div.innerHTML='<button id="radius-back-btn" style="background:none;border:none;color:#9c27b0;font-size:13px;cursor:pointer;padding:0 0 8px;font-family:inherit">← חזרה</button>'+'<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'<h3 style="color:#9c27b0;margin:0 0 4px;font-size:15px">'+title+'</h3>'+'<div style="font-size:11px;color:#888;margin-bottom:10px">'+matched.length+' היתרים · '+sumUnits.toLocaleString()+' יח"ד</div>'+'<div style="overflow-x:auto;max-height:55vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e0e0e0">'+'<thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">'+'<th style="padding:6px;text-align:right">פרוייקט</th>'+'<th style="padding:6px;text-align:right">מס\' היתר</th>'+'<th style="padding:6px;text-align:left">יח"ד</th>'+(kind==='stage'?'<th style="padding:6px;text-align:right">סוג</th>':'<th style="padding:6px;text-align:right">שלב</th>')+'<th style="padding:6px;text-align:right">תאריך</th>'+'</tr></thead><tbody>'+rowsHtml+'</tbody></table></div>'+'<div style="border-top:1px solid #333;padding-top:10px;margin-top:8px;display:flex;gap:8px;justify-content:center">'+'<button id="radius-drill-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>'+'<button id="radius-drill-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה / PDF</button>'+'</div>';document.getElementById('radius-back-btn').addEventListener('click',()=>{div.innerHTML=summaryHtml;attachSummaryHandlers();});document.getElementById('radius-close-btn').addEventListener('click',()=>setRadiusCenter(null));document.getElementById('radius-drill-csv').addEventListener('click',()=>exportDrillCsv(matched,title,kind));document.getElementById('radius-drill-print').addEventListener('click',()=>printDrill(title,matched.length,sumUnits));});function exportDrillCsv(rows,title,kind){const cols=['פרוייקט','מס\' היתר','סטטוס',kind==='stage'?'סוג':'שלב','תאריך','יח"ד','תיאור'];const csv=[cols.join(',')].concat(rows.map(r=>[r.scope,r.file,r.status,kind==='stage'?getPermitCategoryLabel(r.cat):getPermitStageLabel(r.stage),r.date,r.units,r.desc].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=('היתרים_ברדיוס_'+title).replace(/[^\w\u0590-\u05FF]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}function printDrill(title,count,units){const el=document.getElementById('radius-select-result');if(!el)return;const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים ברדיוס — '+title+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0;margin:0 0 4px}button,input{display:none!important}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}a{color:#1a5276;text-decoration:none}</style>');win.document.write('</head><body>');win.document.write(el.innerHTML);win.document.write('</body></html>');win.document.close();win.print();}function attachSummaryHandlers(){document.getElementById('radius-close-btn').addEventListener('click',()=>setRadiusCenter(null));const slider2=document.getElementById('radius-input');const numInput2=document.getElementById('radius-input-num');if(slider2){slider2.addEventListener('input',e=>{numInput2.value=e.target.value;});slider2.addEventListener('change',e=>{setRadiusMeters(Number(e.target.value));});}if(numInput2){numInput2.addEventListener('change',e=>{const v=Math.max(50,Math.min(3000,Number(e.target.value)||500));slider2.value=v;setRadiusMeters(v);});}const csvBtn=document.getElementById('radius-export-csv');if(csvBtn)csvBtn.addEventListener('click',exportRadiusCsv);const printBtn=document.getElementById('radius-print');if(printBtn)printBtn.addEventListener('click',printRadius);}function exportRadiusCsv(){const rows=window.__radiusExportData||[];const titleEl=document.getElementById('radius-result-title');const title=(titleEl?titleEl.textContent:'')||'היתרים ברדיוס';const cols=['פרוייקט','מס\' היתר','סטטוס','שלב','סוג','תאריך','יח"ד','נכלל','תיאור'];const csv=[cols.join(',')].concat(rows.map(r=>[r.scope,r.file,r.status,getPermitStageLabel(r.stage),getPermitCategoryLabel(r.cat),r.date,r.units,r.included?'כן':'לא',r.desc].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/\s+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}function printRadius(){const el=document.getElementById('radius-select-result');if(!el)return;const win=window.open('','_blank');const titleEl=document.getElementById('radius-result-title');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+((titleEl?titleEl.textContent:'')||'היתרים ברדיוס')+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0}button,input{display:none!important}</style></head><body>');win.document.write(el.innerHTML);win.document.write('</body></html>');win.document.close();win.print();}const slider=document.getElementById('radius-input');const numInput=document.getElementById('radius-input-num');slider.addEventListener('input',e=>{numInput.value=e.target.value;});slider.addEventListener('change',e=>{setRadiusMeters(Number(e.target.value));});numInput.addEventListener('change',e=>{const v=Math.max(50,Math.min(3000,Number(e.target.value)||500));slider.value=v;setRadiusMeters(v);});document.getElementById('radius-export-csv').addEventListener('click',exportRadiusCsv);document.getElementById('radius-print').addEventListener('click',printRadius);},[radiusCenter,radiusMeters]);// ── Tree area: analyze plans inside polygon for tree-survey aggregation ──
-useEffect(()=>{if(!areaFinished||areaFinished.length<3||!treeAreaActiveRef.current)return;treeAreaActiveRef.current=false;setTreeAreaActive(false);window.__treeHandledArea=true;const polyCoords=areaFinished.map(p=>[p.lng,p.lat]);polyCoords.push(polyCoords[0]);function pip(pt,ring){const[x,y]=pt;let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}const gd=geoDataRef.current;const plansInside=[];const seen=new Set();if(gd&&gd.plans){gd.plans.features.forEach(f=>{const p=f.properties;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let coords;try{if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!coords||!coords.length)return;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(!n)return;cx/=n;cy/=n;if(!pip([cx,cy],polyCoords))return;const taba=p.taba||'';if(taba&&seen.has(taba))return;if(taba)seen.add(taba);plansInside.push({...p,_source:'plan'});});}// Add TAMA 38 features inside the polygon
-if(gd&&gd.tama38&&gd.tama38.features){const seenTama=new Set();gd.tama38.features.forEach(f=>{const p=f.properties;const geom=f.geometry;if(!geom||!geom.coordinates)return;let lng,lat;try{if(geom.type==='Point'){[lng,lat]=geom.coordinates;}else if(geom.type==='MultiPoint'){[lng,lat]=geom.coordinates[0];}else return;}catch(ex){return;}if(typeof lng!=='number'||typeof lat!=='number')return;if(!pip([lng,lat],polyCoords))return;const tik=p.tik||'';if(tik&&seenTama.has(tik))return;if(tik)seenTama.add(tik);plansInside.push({...p,_source:'tama38'});});}const stats=aggregateTreeStats(plansInside);const prev=document.getElementById('tree-panel');if(prev)prev.remove();const panel=document.createElement('div');panel.id='tree-panel';panel.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';const valencyAggArea=aggregateTreeValencies(stats.plans||[]);let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">'+'<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — אזור נבחר</h3>'+'<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>'+'<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';if(stats.withData===0){html+='<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים באזור זה</div>';}else{html+='<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">'+'<div style="font-size:36px;font-weight:bold;color:#e94560">'+stats.pct+'%</div>'+'<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה ('+stats.removed.toLocaleString()+' מתוך '+stats.total.toLocaleString()+')</div>'+'<div style="font-size:10px;color:#888;margin-top:4px">'+stats.withData+' תכניות עם סקר עצים</div>'+'</div>';if(valencyAggArea){html+='<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה '+'<span style="color:#666;font-size:10px">(מתוך '+valencyAggArea.plans_with_data+' תכניות, '+valencyAggArea.total_trees.toLocaleString()+' עצים)</span></div>'+renderValencyPivotHTML(valencyAggArea,{dark:true})+'<div style="margin:10px 0"></div>';}html+='<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>'+'<table style="width:100%;font-size:11px;border-collapse:collapse">'+'<thead><tr style="border-bottom:1px solid #2a2a4a">'+'<th style="text-align:right;padding:4px;color:#fff">שם</th>'+'<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>'+'<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>'+'<th style="text-align:center;padding:4px;color:#fff">%</th>'+'</tr></thead><tbody>'+stats.plans.slice(0,15).map(row=>'<tr style="border-bottom:1px solid #1a1a2e">'+'<td style="padding:4px"><a href="#" class="tree-plan-link" data-taba="'+row.taba+'" style="color:#64b5f6;text-decoration:underline;cursor:pointer">'+row.name+'</a></td>'+'<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">'+row.removed+'</td>'+'<td style="text-align:center;padding:4px;color:#aaa">'+row.total+'</td>'+'<td style="text-align:center;padding:4px;color:#aaa">'+row.pct+'%</td>'+'</tr>').join('')+'</tbody></table>'+renderSuppressedTreeNotice(stats.suppressed);}panel.innerHTML=html;document.body.appendChild(panel);const exportBtnArea=document.getElementById('tree-export');if(exportBtnArea){exportBtnArea.onclick=()=>openTreesReportExport('עצים — אזור נבחר',stats,valencyAggArea);}// Keep the drawn polygon and markers visible while the tree panel
-// is open. Only remove them when the user closes the popup.
-const r=areaRef.current;const map=mapInstanceRef.current;function clearAreaDrawing(){if(map&&r){r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);}if(r){r.points=[];r.markers=[];r.polygon=null;}}document.getElementById('tree-close').onclick=()=>{panel.remove();clearAreaDrawing();};if(window.__treePanelAttach)window.__treePanelAttach(panel);},[areaFinished]);// ── Open the rich programa modal scoped to a sub-neighborhood polygon ──
-// Looks up sub by name (with SUB_NORMALIZE alias support), builds candidatePlans + edu features,
-// and reuses renderProgramaModal. Used from the minahak-level פרוגרמה drilldown.
-function openProgramaForSubPolygon(subName){const gd=geoDataRef.current||{};if(!gd.sub_neighborhoods){console.warn('[Programa] no sub_neighborhoods layer');return;}// Find sub feature: try exact match, then via normalized alias
-const wanted=typeof SUB_NORMALIZE!=='undefined'&&SUB_NORMALIZE[subName]||subName;let subF=gd.sub_neighborhoods.features.find(f=>{const nm=f.properties.schn_nama||'';if(nm===subName||nm===wanted)return true;const norm=typeof SUB_NORMALIZE!=='undefined'&&SUB_NORMALIZE[nm]||nm;return norm===subName||norm===wanted;});if(!subF){console.warn('[Programa] sub not found:',subName);return;}let coords;if(subF.geometry.type==='Polygon')coords=subF.geometry.coordinates[0];else if(subF.geometry.type==='MultiPolygon')coords=subF.geometry.coordinates[0][0];if(!coords||coords.length<3)return;const polyCoords=coords.slice();if(polyCoords[0][0]!==polyCoords[polyCoords.length-1][0]||polyCoords[0][1]!==polyCoords[polyCoords.length-1][1])polyCoords.push(polyCoords[0]);function pip(pt,ring){const x=pt[0],y=pt[1];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}// Determine if the sub's centroid is inside Gonen minahak (for future-horizon eligibility)
-let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}cx/=n;cy/=n;let inGonen=false;if(gd.minahak_gonen&&gd.minahak_gonen.features){for(const gf of gd.minahak_gonen.features){const g=gf.geometry;if(!g||!g.coordinates)continue;if(g.type==='Polygon'&&pip([cx,cy],g.coordinates[0])){inGonen=true;break;}if(g.type==='MultiPolygon'){for(const poly of g.coordinates){if(pip([cx,cy],poly[0])){inGonen=true;break;}}if(inGonen)break;}}}// Collect plans whose centroid is inside the sub polygon
-const candidatePlans=[];if(gd.plans){const seen=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const taba=String(p.taba||'').trim();if(taba&&seen.has(taba))return;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let pcoords;try{if(geom.type==='Polygon')pcoords=geom.coordinates[0];else if(geom.type==='MultiPolygon')pcoords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!pcoords||!pcoords.length)return;let pcx=0,pcy=0,pn=0;for(const c of pcoords){if(c&&c.length>=2){pcx+=c[0];pcy+=c[1];pn++;}}if(pn===0)return;if(pip([pcx/pn,pcy/pn],polyCoords)){if(taba)seen.add(taba);candidatePlans.push({taba,plan_name:p.plan_name,plan_name_he:p.plan_name_he,plan_summary:p.plan_summary,units_add:parseFloat(p.units_add)||0,units_total:parseInt(p.units_total)||0,status_mavat:p.status_mavat,stage:p.stage,mavat_date:p.mavat_date,shavatz_out_prog:p.shavatz_out_prog||'',shavatz_out_sqm:parseFloat(p.shavatz_out_sqm)||0,hafrash_prg:p.hafrash_prg||'',hafrash_sqm:parseFloat(p.hafrash_sqm)||0,shavatz_in_sqm:parseFloat(p.shavatz_in_sqm)||0,shavatz_in_prog:p.shavatz_in_prog||'',geometry:f.geometry});}});}candidatePlans.sort((a,b)=>(b.units_total||b.units_add||0)-(a.units_total||a.units_add||0));let existingUnits=sumExistingUnitsInPolygon(polyCoords,gd.buildings);// Fallback for areas where buildings.geojson has no coverage (e.g. Arab neighborhoods)
-if(existingUnits===0&&window.__unitsData&&window.__unitsData.bySub){const wantedSub=typeof SUB_NORMALIZE!=='undefined'&&SUB_NORMALIZE[subName]||subName;for(const m of Object.keys(window.__unitsData.bySub)){const subs=window.__unitsData.bySub[m]||{};for(const s of Object.keys(subs)){const ns=typeof SUB_NORMALIZE!=='undefined'&&SUB_NORMALIZE[s]||s;if((s===subName||s===wantedSub||ns===subName||ns===wantedSub)&&(subs[s].units_in||0)>0){existingUnits=subs[s].units_in;break;}}if(existingUnits>0)break;}}const eduFeats=eduFeaturesInPolygon(polyCoords,gd);renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel:'תת-שכונה: '+subName,parentModalId:'units-modal-public-needs',inGonen,scopeGeom:{type:'polygon',rings:[polyCoords]}});}// Expose to window for use from React-rendered click handlers in the minahak modal
-window.__openProgramaForSubPolygon=name=>{reportKindRef.current='programa';openProgramaForSubPolygon(name);};window.__openAllocationsForSubPolygon=name=>{reportKindRef.current='allocations';openProgramaForSubPolygon(name);};// Minahak Hebrew name → geojson layer key (matches dataFiles)
-const MINAHAK_HEB_TO_LAYER={'בית צפאפא':'minahak_beit_tzfafa','גוננים':'minahak_gonen','בקעה רבתי':'minahak_baka','גינות העיר':'minahak_ganot','מינהל מוסדי מלחה':'minahak_malha','א.ת. תלפיות':'minahak_talpiot'};// Same as openProgramaForSubPolygon but scoped to an entire minahak (multi-polygon-safe).
-function openProgramaForMinahakPolygon(minahakName){const gd=geoDataRef.current||{};const layerKey=MINAHAK_HEB_TO_LAYER[minahakName];if(!layerKey||!gd[layerKey]||!gd[layerKey].features){console.warn('[Programa] no minahak layer for',minahakName);return;}const layer=gd[layerKey];const allRings=[];for(const f of layer.features){const g=f.geometry;if(!g||!g.coordinates)continue;if(g.type==='Polygon')allRings.push(g.coordinates[0]);else if(g.type==='MultiPolygon'){for(const poly of g.coordinates)allRings.push(poly[0]);}}if(!allRings.length)return;function pip(pt,ring){const x=pt[0],y=pt[1];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}function pipAny(pt){for(const r of allRings){if(pip(pt,r))return true;}return false;}const inGonen=minahakName==='גוננים';const candidatePlans=[];if(gd.plans){const seen=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const taba=String(p.taba||'').trim();if(taba&&seen.has(taba))return;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let pcoords;try{if(geom.type==='Polygon')pcoords=geom.coordinates[0];else if(geom.type==='MultiPolygon')pcoords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!pcoords||!pcoords.length)return;let pcx=0,pcy=0,pn=0;for(const c of pcoords){if(c&&c.length>=2){pcx+=c[0];pcy+=c[1];pn++;}}if(pn===0)return;if(pipAny([pcx/pn,pcy/pn])){if(taba)seen.add(taba);candidatePlans.push({taba,plan_name:p.plan_name,plan_name_he:p.plan_name_he,plan_summary:p.plan_summary,units_add:parseFloat(p.units_add)||0,units_total:parseInt(p.units_total)||0,status_mavat:p.status_mavat,stage:p.stage,mavat_date:p.mavat_date,shavatz_out_prog:p.shavatz_out_prog||'',shavatz_out_sqm:parseFloat(p.shavatz_out_sqm)||0,hafrash_prg:p.hafrash_prg||'',hafrash_sqm:parseFloat(p.hafrash_sqm)||0,shavatz_in_sqm:parseFloat(p.shavatz_in_sqm)||0,shavatz_in_prog:p.shavatz_in_prog||'',geometry:f.geometry});}});}candidatePlans.sort((a,b)=>(b.units_total||b.units_add||0)-(a.units_total||a.units_add||0));let existingUnits=0;for(const r of allRings)existingUnits+=sumExistingUnitsInPolygon(r,gd.buildings);// Fallback for minahaks where buildings.geojson has no coverage
-if(existingUnits===0&&window.__unitsData&&window.__unitsData.byMinahak&&window.__unitsData.byMinahak[minahakName]){existingUnits=window.__unitsData.byMinahak[minahakName].units_in||0;}let eduFeats=[];const seenEduIds=new Set();for(const r of allRings){const e=eduFeaturesInPolygon(r,gd);if(Array.isArray(e)){for(const f of e){const id=f&&f.properties&&(f.properties.semel_chinuch||f.properties.id||JSON.stringify(f.geometry&&f.geometry.coordinates));if(id&&seenEduIds.has(id))continue;if(id)seenEduIds.add(id);eduFeats.push(f);}}}renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel:'מינהל: '+minahakName,parentModalId:'units-modal-public-needs',inGonen,scopeGeom:{type:'polygon',rings:allRings}});}window.__openProgramaForMinahakPolygon=name=>{reportKindRef.current='programa';openProgramaForMinahakPolygon(name);};window.__openAllocationsForMinahakPolygon=name=>{reportKindRef.current='allocations';openProgramaForMinahakPolygon(name);};// ── Programa report — DOM modal triggered from area-select / radius-select ──
-// Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
-// arbitrary scope (polygon or circle) using default assumptions. Sources:
-//   existing units → buildings layer (NUM_APTS_C sum)
-//   planned units → sum of plans.units_add for plans whose centroid is in scope
-function renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel,parentModalId,radiusInfo,inGonen,scopeGeom}){// Route to the built-allocations report when that scope kind was requested.
-if(reportKindRef.current==='allocations'){reportKindRef.current='programa';return renderAllocationsModal({candidatePlans:candidatePlans||[],scopeLabel});}candidatePlans=candidatePlans||[];if(!window.__programaUserAssumptions){window.__programaUserAssumptions={...PN_DEFAULT_ASSUMPTIONS,targetYear:'existing'};}const assumpt=window.__programaUserAssumptions;const tY=assumpt.targetYear;// Apply target-year mimush filter to candidate plans.
-// tY === 'existing' → only existing units, no plans contribute
-// tY === 'full'     → all plans included at 100% mimush, no year cutoff
-// tY === 2030/35/40 → plans with estimatedYear ≤ tY contribute their units_total × mimushPct
-let plannedUnits=0;const plansInScope=[];const isFull=tY==='full';candidatePlans.forEach(p=>{if(tY==='existing'){plansInScope.push({...p,contributingUnits:0});return;}const m=calcMimush(p);if(!m){plansInScope.push({...p,contributingUnits:0});return;}if(!isFull&&m.estimatedYear>tY){plansInScope.push({...p,contributingUnits:0,mimushPct:m.mimushPct,estimatedYear:m.estimatedYear});return;}const u=parseInt(p.units_total)||parseInt(p.units_add)||0;const effectivePct=isFull?100:m.mimushPct;const w=u*effectivePct/100;plannedUnits+=w;plansInScope.push({...p,contributingUnits:Math.round(w),_rawUnits:w,mimushPct:effectivePct,estimatedYear:m.estimatedYear,isFullMimush:isFull});});plannedUnits=Math.round(plannedUnits);const totalUnits=existingUnits+plannedUnits;// ── Per-statistical-area bucketing (CBS census 2022) ──
-// Partition existing + planned units into stat-area buckets so each area's
-// population uses its own household-size / age / religiosity profile.
-// Units that don't resolve to a stat area (no coverage, fallback sources)
-// stay in the base bucket using the user assumptions. Bucket sums are kept
-// identical to the scalar totals, so a single-area selection reproduces the
-// old result exactly. Classes are ceiled per bucket then summed.
-const gdBkt=geoDataRef.current;const buckets=new Map();// key: stat_area_id | '__base__'
-const BASE_KEY='__base__';const getBucket=(key,name,assumptions)=>{let b=buckets.get(key);if(!b){b={key,name,assumptions,existing:0,planned:0};buckets.set(key,b);}return b;};const baseBucket=()=>getBucket(BASE_KEY,null,assumpt);const bucketForPoint=(lng,lat)=>{const a=getStatAreaAssumptions(lng,lat,assumpt);if(a._statAreaId==null)return baseBucket();return getBucket(a._statAreaId,a._statAreaName,a);};const pipRing=(pt,ring)=>{const x=pt[0],y=pt[1];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;};const inScope=c=>{if(!scopeGeom)return false;if(scopeGeom.type==='radius')return scopeGeom.center.distanceTo(L.latLng(c[1],c[0]))<=scopeGeom.meters;if(scopeGeom.type==='polygon'){for(const r of scopeGeom.rings||[]){if(pipRing(c,r))return true;}}return false;};baseBucket();// guarantee ≥1 bucket so sums work when everything is empty
-// Existing units → bucket from municipal buildings inside the scope geometry.
-let bucketedExisting=0;if(scopeGeom&&gdBkt&&gdBkt.buildings&&gdBkt.buildings.features){for(const f of gdBkt.buildings.features){const c=f.geometry&&f.geometry.coordinates;if(!c)continue;const u=f.properties&&f.properties.units||0;if(!u||!inScope(c))continue;bucketForPoint(c[0],c[1]).existing+=u;bucketedExisting+=u;}}// Existing units not resolved from buildings (no coverage / __unitsData fallback)
-// stay in the base bucket so Σ buckets === existingUnits exactly.
-if(existingUnits>bucketedExisting)baseBucket().existing+=existingUnits-bucketedExisting;// Planned units → bucket each contributing plan by its centroid (raw weighted units).
-plansInScope.forEach(p=>{const w=p._rawUnits||0;if(!w)return;const ctr=geomCentroid(p.geometry);if(ctr)bucketForPoint(ctr[0],ctr[1]).planned+=w;else baseBucket().planned+=w;});const needs=sumPublicNeeds(buckets,b=>b.existing+b.planned);// Current-state needs (existing units only) — used for "כיום" delta when targetYear != 'existing'
-const currentNeeds=sumPublicNeeds(buckets,b=>b.existing);const nonEdu=sumNonEduServices(buckets,b=>b.existing+b.planned);// Stat areas actually carrying units, for the UI breakdown line.
-const statBuckets=[...buckets.values()].filter(b=>b.key!==BASE_KEY&&b.existing+b.planned>0);// Breakdown line shown when the selection spans ≥2 statistical areas:
-// units-weighted blended household size + per-area tooltip.
-const statBreakdownHtml=(()=>{if(statBuckets.length<2)return'';let uw=0,hw=0;statBuckets.forEach(b=>{const u=b.existing+b.planned;uw+=u;hw+=u*(b.assumptions.householdSize||0);});const blended=uw>0?hw/uw:0;const tip=statBuckets.slice().sort((a,b)=>b.existing+b.planned-(a.existing+a.planned)).map(b=>(b.name||'אז"ס '+b.key)+': '+Math.round(b.existing+b.planned)+' יח"ד · '+(b.assumptions.householdSize||0).toFixed(1)+' נפ\'').join('&#10;');return'<div title="'+tip.replace(/"/g,'&quot;')+'" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 '+statBuckets.length+' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: '+blended.toFixed(1)+' נפ\' · כיתות מעוגלות ברמת הבחירה</div>';})();const existingEdu=aggregateEduFeatures(eduFeats||[]);const hasExistingEdu=(eduFeats||[]).length>0;const showFutureBalance=tY!=='existing';// ALL plans in scope — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions.
-// Stored separately from the per-horizon filter so cross-horizon drilldowns can reference any plan.
-// Track S (שב"צ יוצא) and AR (הפרשה מבונה) separately for the per-cell breakdown.
-const allParsedPlans=plansInScope.filter(p=>p.mimushPct!=null&&p.estimatedYear!=null).map(p=>{const facS=parseFacilitiesFromText(p.shavatz_out_prog||'');const facAR=parseFacilitiesFromText(p.hafrash_prg||'');const addedCountsS={};const addedCountsAR={};const addedCounts={};PARSER_KEYS.forEach(k=>{addedCountsS[k]=facS.counts[k];addedCountsAR[k]=facAR.counts[k];addedCounts[k]=addedCountsS[k]+addedCountsAR[k];});const eduInside=eduFeaturesInPlanGeometry(p.geometry,eduFeats||[]);const eduAgg=aggregateEduFeatures(eduInside);const demolishCounts={};PARSER_KEYS.forEach(k=>demolishCounts[k]=0);demolishCounts.gan=eduAgg.ganim_count+eduAgg.gan_special_count;demolishCounts.yesodi=eduAgg.yesodi_classes;demolishCounts.al_yesodi=eduAgg.alyesodi_classes;// realMimushPct = the actual rate (not the isFull override). Used in cross-horizon drilldown.
-return{...p,realMimushPct:p.isFullMimush?null:p.mimushPct,// null if was overridden by isFull — recompute via calcMimush at drilldown
-rawClassCounts:addedCounts,rawClassCountsS:addedCountsS,rawClassCountsAR:addedCountsAR,rawDemolishCounts:demolishCounts,rawDemolishEduInside:eduInside,rawUncatSqm:facS.uncategorizedSqm+facAR.uncategorizedSqm,weightedShavatzInSqm:Math.round((p.shavatz_in_sqm||0)*(p.mimushPct||0)/100)};});// Resolve realMimushPct for plans where it's null (came from isFull view): re-call calcMimush
-allParsedPlans.forEach(p=>{if(p.realMimushPct==null){const m=calcMimush(p);if(m)p.realMimushPct=m.mimushPct;}});// Current-horizon contributors (used for the live aggregation)
-const contributingPlans=allParsedPlans.filter(p=>isFull||p.estimatedYear<=tY);// Aggregate: apply mimushPct at the sum level, then round to integer
-const plannedClasses={};PARSER_KEYS.forEach(k=>plannedClasses[k]=0);const plannedClassesS={};PARSER_KEYS.forEach(k=>plannedClassesS[k]=0);const plannedClassesAR={};PARSER_KEYS.forEach(k=>plannedClassesAR[k]=0);const demolishedClasses={};PARSER_KEYS.forEach(k=>demolishedClasses[k]=0);let plannedUncatSqm=0;contributingPlans.forEach(p=>{const pct=(p.mimushPct||0)/100;PARSER_KEYS.forEach(k=>{plannedClasses[k]+=p.rawClassCounts[k]*pct;plannedClassesS[k]+=p.rawClassCountsS[k]*pct;plannedClassesAR[k]+=p.rawClassCountsAR[k]*pct;demolishedClasses[k]+=p.rawDemolishCounts[k]*pct;});plannedUncatSqm+=p.rawUncatSqm*pct;});PARSER_KEYS.forEach(k=>{plannedClasses[k]=Math.round(plannedClasses[k]);plannedClassesS[k]=Math.round(plannedClassesS[k]);plannedClassesAR[k]=Math.round(plannedClassesAR[k]);demolishedClasses[k]=Math.round(demolishedClasses[k]);});plannedUncatSqm=Math.round(plannedUncatSqm);const totalShavatzInSqm=contributingPlans.reduce((s,p)=>s+p.weightedShavatzInSqm,0);const plansWithShavatzText=contributingPlans.filter(p=>(p.shavatz_out_prog||'').trim()||(p.hafrash_prg||'').trim()||(p.shavatz_in_sqm||0)>0);// Closure for re-rendering after assumption tweaks
-const reRender=()=>renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel,parentModalId,radiusInfo,inGonen,scopeGeom});// Build education table — rows = service, cols = stream
-const eduRows=PUBLIC_NEEDS_SERVICES.map(svc=>{const sd=needs.byService[svc.key];return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:6px;font-weight:bold;color:#e0e0ff">'+svc.label+'</td>'+'<td style="padding:6px;text-align:center;color:#bbb">'+svc.ageFrom+'–'+svc.ageTo+'</td>'+'<td style="padding:6px;text-align:center">'+sd.mam.classes+'</td>'+'<td style="padding:6px;text-align:center">'+sd.haredi_b.classes+'</td>'+'<td style="padding:6px;text-align:center">'+sd.haredi_g.classes+'</td>'+'<td style="padding:6px;text-align:center;font-weight:bold;color:#4CAF50">'+sd.totalClasses+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+sd.totalDunam.toFixed(1)+'</td>'+'</tr>';}).join('');// Existing-vs-required (only if any edu features matched)
-const SVCS=[{key:'maon',label:'מעון'},{key:'gan',label:'גני ילדים'},{key:'yesodi',label:'יסודי'},{key:'al_yesodi',label:'על-יסודי'}];const existingByKey={gan:existingEdu.ganim_count+existingEdu.gan_special_count,yesodi:existingEdu.yesodi_classes,al_yesodi:existingEdu.alyesodi_classes,maon:existingEdu.maon_classes||0};function deltaColor(delta,req){if(delta===null)return'#888';if(req===0)return delta>0?'#4CAF50':'#888';const ratio=delta/req;return ratio>=0?'#4CAF50':ratio>=-0.2?'#f59e0b':ratio>=-0.5?'#ef6c00':'#e53935';}// Existing-balance rows (only used when targetYear === 'existing')
-const balanceRows=SVCS.map(svc=>{const ex=existingByKey[svc.key];const reqNow=currentNeeds.byService[svc.key].totalClasses;const dNow=ex===null?null:ex-reqNow;return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:6px;font-weight:bold;color:#e0e0ff">'+svc.label+'</td>'+'<td style="padding:6px;text-align:center;color:#e0e0e0;font-weight:bold">'+(ex===null?'—':ex)+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+reqNow+'</td>'+'<td style="padding:6px;text-align:center;font-weight:bold;color:'+deltaColor(dNow,reqNow)+'">'+(dNow===null?'—':(dNow>=0?'+':'')+dNow)+'</td>'+'</tr>';}).join('');// Unified balance services: edu (with קיים from שנתון) + community/welfare/religion (no קיים data)
-const BALANCE_SERVICES=[{key:'maon',label:'מעון',kind:'edu',unit:'כיתות'},{key:'gan',label:'גני ילדים',kind:'edu',unit:'כיתות'},{key:'yesodi',label:'יסודי',kind:'edu',unit:'כיתות'},{key:'al_yesodi',label:'על-יסודי',kind:'edu',unit:'כיתות'},{key:'tipat_chalav',label:'טיפת חלב',kind:'service',unit:'תחנות'},{key:'clinic',label:'מרפאה שכונתית',kind:'service',unit:'מרפאות'},{key:'matnas',label:'מתנ"ס/מרכז קהילתי',kind:'service',unit:'מרכזים'},{key:'welfare_dept',label:'לשכת רווחה',kind:'service',unit:'לשכות'},{key:'noar_club',label:'מועדון נוער',kind:'service',unit:'מועדונים'},{key:'elderly_club',label:'מועדון קשיש',kind:'service',unit:'מועדונים'},{key:'elderly_day',label:'מרכז יום לקשיש',kind:'service',unit:'מרכזים'},{key:'synagogue',label:'בית כנסת',kind:'service',unit:'בתי כנסת'},{key:'mikve',label:'מקווה טהרה',kind:'service',unit:'מקוואות'},{key:'sport_hall',label:'אולם ספורט',kind:'service',unit:'אולמות'},{key:'library',label:'ספרייה שכונתית',kind:'service',unit:'ספריות'}];// Build map of required-counts by key from non-edu services (computeNeighborhoodProgramServices returns array)
-const nonEduReqByKey={};nonEdu.forEach(s=>{nonEduReqByKey[s.key]=s.count;});function getServiceCounts(svc){const exGross=svc.kind==='edu'?existingByKey[svc.key]:null;// existing — only edu has data from שנתון
-const demolished=demolishedClasses[svc.key]||0;// For edu (have קיים): existing_net = שנתון - להריסה. For non-edu: existing is unknown (-) but if Q has text we infer the demolish makes existing < 0 (deficit before plans).
-let exNet;if(exGross!==null){exNet=exGross-demolished;}else if(demolished>0){// No שנתון data for this category, but Q says it had some that's being demolished
-exNet=-demolished;// shows the loss
-}else{exNet=null;}const planned=plannedClasses[svc.key]||0;const proposed=(exNet===null?0:exNet)+planned;const required=svc.kind==='edu'?needs.byService[svc.key].totalClasses:nonEduReqByKey[svc.key]||0;const delta=proposed-required;return{exGross,demolished,exNet,planned,proposed,required,delta};}// Future-balance rows: per-service "מוצע" vs "נדרש". The "= מוצע" cell is clickable
-// (data-svc-drill) — opens a per-service cross-horizon drilldown.
-const proposedWip=!inGonen;const wipCell='<span style="color:#d4a574;font-size:10px;font-style:italic" title="חישוב פירוט המוסדות המוצעים פר-תב\'ע מאומת כרגע רק בגוננים — בעבודה לשאר המינהלים">🚧 בעבודה</span>';// Helper: planned-cell content. Format: "+N" with "S/AR" breakdown below (e.g. "+12" then "3 / 8").
-const _plannedCellHtml=(planned,plannedS,plannedAR)=>{if(planned<=0)return'—';if(plannedS>0||plannedAR>0)return'+'+planned+'<div style="font-size:9px;color:#a59ad6">'+plannedS+' / '+plannedAR+'</div>';return'+'+planned;};const futureBalanceRows=BALANCE_SERVICES.map(svc=>{const c=getServiceCounts(svc);const planS=plannedClassesS[svc.key]||0;const planAR=plannedClassesAR[svc.key]||0;const exDisplay=c.exNet===null?'—':c.exGross!==null&&c.demolished>0?c.exGross+' <span style="color:#e57373;font-size:10px">−'+c.demolished+'</span>':c.exNet<0?'<span style="color:#e57373">'+c.exNet+'</span>':c.exNet;const proposedClickable=!proposedWip&&(c.proposed>0||c.planned>0||c.demolished>0);const plannedClickable=!proposedWip&&c.planned>0;return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:6px;font-weight:bold;color:#e0e0ff">'+svc.label+'</td>'+'<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">'+exDisplay+'</td>'+'<td'+(plannedClickable?' data-svc-drill="'+svc.key+'" style="padding:6px;text-align:center;color:#7b6cf0;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות"':' style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)"')+'>'+_plannedCellHtml(c.planned,planS,planAR)+'</td>'+'<td'+(proposedClickable?' data-svc-drill="'+svc.key+'" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"':' style="padding:6px;text-align:center;font-weight:bold;color:#fff"')+'>'+(proposedWip?wipCell:c.proposed+(proposedClickable?' ›':''))+'</td>'+'<td'+(svc.kind==='edu'&&c.required>0?' data-req-drill="'+svc.key+'" style="padding:6px;text-align:center;color:#aaa;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט חישוב כיתות נדרשות (גילאים, אוכלוסייה, גודל כיתה)"':' style="padding:6px;text-align:center;color:#aaa"')+'>'+c.required+'</td>'+'<td style="padding:6px;text-align:center;font-weight:bold;color:'+(proposedWip?'#666':deltaColor(c.delta,c.required))+'">'+(proposedWip?'—':c.required===0&&c.proposed===0?'—':(c.delta>=0?'+':'')+c.delta)+'</td>'+'</tr>';}).join('');// Top "uncategorized public area" row — appears above per-service rows, clickable for drilldown
-const uncatTopRow='<tr style="background:#0f0f24;border-bottom:1px solid #555">'+'<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>'+'<td colspan="4" data-svc-drill="__uncat__" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות לשטח גנרי (כולל אופקים אחרים)">'+plannedUncatSqm.toLocaleString()+' מ"ר ›</td>'+'</tr>';const totalProposedClasses=BALANCE_SERVICES.reduce((s,svc)=>s+getServiceCounts(svc).proposed,0);const totalRequiredClasses=BALANCE_SERVICES.reduce((s,svc)=>s+getServiceCounts(svc).required,0);const totalGapClasses=totalProposedClasses-totalRequiredClasses;const totalExistingNet=BALANCE_SERVICES.reduce((s,svc)=>{const c=getServiceCounts(svc);return s+(c.exNet||0);},0);const totalDemolished=BALANCE_SERVICES.reduce((s,svc)=>s+(demolishedClasses[svc.key]||0),0);// Non-edu services
-const nonEduRows=nonEdu.map(svc=>{const basisLabels={residents:'תושבים',elderly:'בני 65+',frail_elderly:'תשושים',religious_hh:'משק"ב דתי/חרדי'};return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:6px;font-weight:bold;color:#e0e0ff">'+svc.label+'</td>'+'<td style="padding:6px;text-align:center;color:#bbb;font-size:11px">'+(basisLabels[svc.basis]||svc.basis)+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+svc.basisValue.toLocaleString()+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa;font-size:11px">1 / '+svc.per.toLocaleString()+'</td>'+'<td style="padding:6px;text-align:center;font-weight:bold;color:'+(svc.count>0?'#4CAF50':'#666')+'">'+(svc.count||'—')+'</td>'+'</tr>';}).join('');const prev=document.getElementById('programa-result');if(prev)prev.remove();const div=document.createElement('div');div.id='programa-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(26,26,46,0.98);color:#e0e0e0;padding:20px;border-radius:14px;border:2px solid #7b6cf0;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #333">'+'<div style="display:flex;align-items:center;gap:10px">'+(parentModalId?'<button id="programa-back" style="background:none;border:none;color:#7b6cf0;font-size:13px;cursor:pointer;padding:0;font-family:inherit">← חזרה</button>':'')+'<h3 id="programa-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:16px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text">🏘️ פרוגרמה — '+scopeLabel+'</h3>'+'</div>'+'<button id="programa-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+(radiusInfo?'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#1a1a2e;border-radius:6px">'+'<label style="font-size:12px;color:#aaa">רדיוס:</label>'+'<input id="programa-radius-input" type="range" min="50" max="3000" step="50" value="'+radiusInfo.value+'" style="flex:1">'+'<input id="programa-radius-num" type="number" min="50" max="3000" step="50" value="'+radiusInfo.value+'" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">'+'<span style="font-size:11px;color:#888">מטר</span>'+'</div>':'')+// Assumptions controls bar (year + sliders) — same fields as sub-neighborhood פרוגרמה
-'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>'+['existing',2030,2035,2040,'full'].map(y=>{const lbl=y==='existing'?'מצב קיים':y==='full'?'100% מימוש':y;const sel=tY===y;const accent=y==='full'?'#7b6cf0':'#5a7a9a';const accentBg=y==='full'?'#3a2a6a':'#3a5a80';return'<button data-pa-year="'+y+'" style="background:'+(sel?accentBg:'transparent')+';color:'+(sel?'#fff':'#888')+';border:1px solid '+(sel?accent:'#333')+';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">'+lbl+'</button>';}).join('')+'</div>'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>'+'<input id="pa-hh" type="range" min="2.5" max="6.0" step="0.1" value="'+assumpt.householdSize+'" style="width:90px">'+'<span style="font-size:11px;color:#e0e0ff;min-width:24px;text-align:center;font-weight:bold">'+assumpt.householdSize.toFixed(1)+'</span>'+'</div>'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% חרדי:</label>'+'<input id="pa-haredi" type="range" min="0" max="100" step="1" value="'+Math.round(assumpt.haredi*100)+'" style="width:90px">'+'<span style="font-size:11px;color:#7b1fa2;min-width:30px;text-align:center;font-weight:bold">'+Math.round(assumpt.haredi*100)+'%</span>'+'</div>'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% דתי:</label>'+'<input id="pa-religious" type="range" min="0" max="100" step="1" value="'+Math.round(assumpt.religious*100)+'" style="width:90px">'+'<span style="font-size:11px;color:#2e7d32;min-width:30px;text-align:center;font-weight:bold">'+Math.round(assumpt.religious*100)+'%</span>'+'</div>'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון כללי:</label>'+'<input id="pa-age-gen" type="number" min="1.5" max="4" step="0.1" value="'+assumpt.ageYearPctGeneral+'" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">'+'<span style="font-size:10px;color:#888">%</span>'+'</div>'+'<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">שנתון חרדי:</label>'+'<input id="pa-age-hrd" type="number" min="1.5" max="5" step="0.1" value="'+assumpt.ageYearPctHaredi+'" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">'+'<span style="font-size:10px;color:#888">%</span>'+'</div>'+'<button id="pa-reset" title="איפוס להגדרות ברירת מחדל" style="background:transparent;color:#888;border:1px solid #444;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">↺ איפוס</button>'+'</div>'+'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">'+'<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #5dade2"><div style="font-size:10px;color:#888">יח"ד קיימות</div><div style="font-size:20px;color:#5dade2;font-weight:bold">'+existingUnits.toLocaleString()+'</div></div>'+'<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #4CAF50"><div style="font-size:10px;color:#888">תוספת מתוכננת</div><div style="font-size:20px;color:#4CAF50;font-weight:bold">+'+plannedUnits.toLocaleString()+'</div></div>'+'<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #fff"><div style="font-size:10px;color:#888">סה"כ יח"ד</div><div style="font-size:20px;color:#fff;font-weight:bold">'+totalUnits.toLocaleString()+'</div></div>'+'<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #f59e0b"><div style="font-size:10px;color:#888">אוכלוסייה מוערכת</div><div style="font-size:20px;color:#f59e0b;font-weight:bold">'+needs.population.toLocaleString()+'</div></div>'+'</div>'+(plansInScope.length?'<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור ('+plansInScope.length+(tY!=='existing'?' · '+plansInScope.filter(p=>p.contributingUnits>0).length+' תורמות'+(tY==='full'?' (100% מימוש)':' לאופק '+tY):'')+'):</b> '+plansInScope.slice(0,30).map(p=>{const contrib=p.contributingUnits>0;return'<a href="#" data-zoom-taba="'+(p.taba||'')+'" style="color:'+(contrib?'#fff':'#bdb6e8')+';direction:ltr;display:inline-block;text-decoration:underline;'+(contrib?'font-weight:bold':'')+'" title="לחץ לזום לתב\'ע">'+(p.taba||'?')+'</a>';}).join(' · ')+(plansInScope.length>30?' <span style="color:#666">…+'+(plansInScope.length-30)+'</span>':'')+'</div>':'')+// (Standalone chinuch-required table removed — same info available by clicking on a "נדרש" cell in the balance table below.) +
-''+(// === BALANCE TABLE === branches by horizon
-showFutureBalance?// Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
-'<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">('+(tY==='full'?'100% מימוש · כל התב"עות נכללות ללא סינון שנה':'אופק '+tY+' · משוקלל %מימוש')+' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR פחות הריסות מ-Q)</span></h4>'+'<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">'+'<thead><tr style="background:#1a1a2e;color:#aaa">'+'<th style="padding:6px;text-align:right">שירות</th>'+'<th style="padding:6px;text-align:center">קיים</th>'+'<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות משוקלל %מימוש">+ מתוכנן<div style="font-size:9px;color:#a59ad6;font-weight:normal">שב"צ / הפרשה מבונה</div></th>'+'<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>'+'<th style="padding:6px;text-align:center">נדרש'+(tY==='full'?'':' '+tY)+'</th>'+'<th style="padding:6px;text-align:center">פער</th>'+'</tr></thead><tbody>'+uncatTopRow+futureBalanceRows+'<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">'+'<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>'+'<td style="padding:8px;text-align:center;color:#bdb6e8">'+totalExistingNet+(totalDemolished>0?' <span style="color:#e57373;font-size:10px;font-weight:normal">(-'+totalDemolished+' להריסה)</span>':'')+'</td>'+'<td style="padding:8px;text-align:center;color:#7b6cf0">'+(()=>{const tp=BALANCE_SERVICES.reduce((s,svc)=>s+(plannedClasses[svc.key]||0),0);const tpS=BALANCE_SERVICES.reduce((s,svc)=>s+(plannedClassesS[svc.key]||0),0);const tpAR=BALANCE_SERVICES.reduce((s,svc)=>s+(plannedClassesAR[svc.key]||0),0);return _plannedCellHtml(tp,tpS,tpAR);})()+'</td>'+'<td'+(proposedWip?' style="padding:8px;text-align:center;color:#d4a574"':' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"')+'>'+(proposedWip?wipCell:totalProposedClasses+' ›')+'</td>'+'<td style="padding:8px;text-align:center;color:#aaa">'+totalRequiredClasses+'</td>'+'<td style="padding:8px;text-align:center;color:'+(proposedWip?'#666':deltaColor(totalGapClasses,totalRequiredClasses))+'">'+(proposedWip?'—':(totalGapClasses>=0?'+':'')+totalGapClasses)+'</td>'+'</tr>'+'<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>'+totalDemolished+' כיתות</b>. לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.</td></tr>'+'</tbody></table>':hasExistingEdu?// Existing: classes-based balance using שנתון מנח"י
-'<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 קיים מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(שנתון מנח"י באזור · '+(eduFeats||[]).length+' כתובות חינוך · בכיתות)</span></h4>'+'<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">'+'<thead><tr style="background:#1a1a2e;color:#aaa">'+'<th style="padding:6px;text-align:right">שירות</th>'+'<th style="padding:6px;text-align:center">קיים</th>'+'<th style="padding:6px;text-align:center">נדרש</th>'+'<th style="padding:6px;text-align:center">פער</th>'+'</tr></thead><tbody>'+balanceRows+'<tr style="background:#1a1a2e;color:#aaa;font-size:10px"><td colspan="4" style="padding:6px">תלמידים בכתובות שנפלו באזור: <b style="color:#f59e0b">'+existingEdu.students.toLocaleString()+'</b></td></tr>'+'</tbody></table>':'')+// (Per-plan classes drilldown is available via the "מוצע" cell click — no inline duplicate table needed.)
-'<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">'+'<thead><tr style="background:#1a1a2e;color:#aaa">'+'<th style="padding:6px;text-align:right">שירות</th>'+'<th style="padding:6px;text-align:center">בסיס חישוב</th>'+'<th style="padding:6px;text-align:center">כמות בסיס</th>'+'<th style="padding:6px;text-align:center">מנה</th>'+'<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>'+'</tr></thead><tbody>'+nonEduRows+'</tbody></table>'+statBreakdownHtml+'<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">הנחות'+(statBuckets.length>1?' (בסיס/גיבוי)':'')+': '+assumpt.householdSize.toFixed(1)+' נפש/יח"ד · '+Math.round(assumpt.haredi*100)+'% חרדי · '+Math.round(assumpt.religious*100)+'% דתי · שנתון כללי '+assumpt.ageYearPctGeneral+'%</div>'+'<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">'+'<button id="programa-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>'+'<button id="programa-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);document.getElementById('programa-close').addEventListener('click',()=>div.remove());if(parentModalId){document.getElementById('programa-back').addEventListener('click',()=>div.remove());}// Wire taba zoom links in the "תכניות באזור" header strip
-div.querySelectorAll('a[data-zoom-taba]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const taba=a.dataset.zoomTaba;const map=mapInstanceRef.current;if(!map||!gd.plans)return;const feat=gd.plans.features.find(f=>String(f.properties.taba||'').trim()===String(taba).trim());if(!feat)return;try{const layer=L.geoJSON(feat);const bounds=layer.getBounds();map.fitBounds(bounds,{padding:[60,60],maxZoom:18});setTimeout(()=>{const mapped=mapPlanProps(feat.properties);const popup=L.popup({maxWidth:popupMaxWidth(),closeButton:true}).setLatLng(bounds.getCenter()).setContent(buildPlanPopup(mapped,{properties:mapped})).openOn(map);bindPopupEvents(popup,[{type:'plan',properties:mapped}],0);},400);}catch(err){console.warn('zoom to plan failed',err);}div.remove();});});document.getElementById('programa-csv').addEventListener('click',()=>{const title=document.getElementById('programa-title')?.textContent||'פרוגרמה';const lines=[];lines.push(['מדד','ערך'].join(','));lines.push(['יח"ד קיימות',existingUnits].join(','));lines.push(['תוספת מתוכננת',plannedUnits].join(','));lines.push(['סה"כ יח"ד',totalUnits].join(','));lines.push(['אוכלוסייה',needs.population].join(','));lines.push('');lines.push(['חינוך','גילאים','ממלכתי','חרדי-ב','חרדי-ג','סה"כ כיתות','דונם'].join(','));PUBLIC_NEEDS_SERVICES.forEach(svc=>{const sd=needs.byService[svc.key];lines.push([svc.label,svc.ageFrom+'-'+svc.ageTo,sd.mam.classes,sd.haredi_b.classes,sd.haredi_g.classes,sd.totalClasses,sd.totalDunam.toFixed(1)].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));});lines.push(['','','','','','סה"כ',needs.totalClasses,needs.totalDunam.toFixed(1)].join(','));if(showFutureBalance){lines.push('');lines.push(['מאזן עתידי (אופק '+tY+')','קיים שנתון','להריסה Q','קיים נטו','+ מתוכנן S+AR','= מוצע','נדרש','פער'].join(','));BALANCE_SERVICES.forEach(svc=>{const c=getServiceCounts(svc);lines.push([svc.label,c.exGross===null?'':c.exGross,c.demolished,c.exNet===null?'':c.exNet,c.planned,c.proposed,c.required,c.delta].join(','));});lines.push(['סה"כ',BALANCE_SERVICES.reduce((s,svc)=>s+(existingByKey[svc.key]||0),0),totalDemolished,totalExistingNet,BALANCE_SERVICES.reduce((s,svc)=>s+(plannedClasses[svc.key]||0),0),totalProposedClasses,totalRequiredClasses,totalGapClasses].join(','));lines.push(['שטחי ציבור שטרם נקבע ייעוד (מ"ר משוקלל)','','','','','','',plannedUncatSqm].join(','));lines.push(['Q שב"צ קיים להריסה (מ"ר משוקלל, אינפורמטיבי)','','','','','','',totalShavatzInSqm].join(','));lines.push('');const PARSER_LBLS={maon:'מעון',gan:'גן',yesodi:'יסודי',al_yesodi:'על-יסודי',tipat_chalav:'טיפת חלב',clinic:'מרפאה',matnas:'מתנ"ס',welfare_dept:'רווחה',noar_club:'מועדון נוער',elderly_club:'מועדון קשיש',elderly_day:'מרכז יום קשיש',synagogue:'בית כנסת',mikve:'מקווה',sport_hall:'אולם ספורט',library:'ספרייה'};lines.push(['תב"ע','% מימוש','אופק','שב"צ נכנס Q (טקסט)','שב"צ יוצא S (טקסט)','הפרשה AR (טקסט)',...PARSER_KEYS.map(k=>'+'+PARSER_LBLS[k]),...PARSER_KEYS.map(k=>'−'+PARSER_LBLS[k]),'טרם נקבע (מ"ר גולמי)','להריסה Q (מ"ר משוקלל)'].join(','));contributingPlans.forEach(p=>{const r=p.rawClassCounts;const d=p.rawDemolishCounts;lines.push([p.taba,p.mimushPct,p.estimatedYear,p.shavatz_in_prog||'',p.shavatz_out_prog||'',p.hafrash_prg||'',...PARSER_KEYS.map(k=>r[k]||0),...PARSER_KEYS.map(k=>d[k]||0),p.rawUncatSqm||0,p.weightedShavatzInSqm||0].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));});}else if(hasExistingEdu){lines.push('');lines.push(['קיים מול נדרש','קיים','נדרש','פער'].join(','));SVCS.forEach(svc=>{const ex=existingByKey[svc.key];const reqNow=currentNeeds.byService[svc.key].totalClasses;const dNow=ex===null?'':ex-reqNow;lines.push([svc.label,ex===null?'':ex,reqNow,dNow].join(','));});}lines.push('');lines.push(['שירות','בסיס','כמות','מנה','נדרש'].join(','));nonEdu.forEach(svc=>{lines.push([svc.label,svc.basis,svc.basisValue,svc.per,svc.count].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));});const blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});document.getElementById('programa-print').addEventListener('click',async()=>{const title=document.getElementById('programa-title')?.textContent||'פרוגרמה';// Try to capture the map (selection circle/polygon should be visible) — best-effort
-let mapImg='';try{const mapEl=mapInstanceRef.current&&mapInstanceRef.current.getContainer();if(mapEl&&window.html2canvas){// Briefly hide the modal so it doesn't cover the map in the screenshot
-const prevDisplay=div.style.display;div.style.display='none';await new Promise(r=>setTimeout(r,100));const canvas=await window.html2canvas(mapEl,{useCORS:true,allowTaint:true,logging:false});div.style.display=prevDisplay;mapImg=canvas.toDataURL('image/jpeg',0.85);}}catch(e){console.warn('[Programa] map capture failed',e);}const yearLabel=tY==='existing'?'מצב קיים':tY==='full'?'100% מימוש (כל התב"עות)':'אופק '+tY;const plansList=plansInScope.map(p=>{const taba=p.taba||'';const summary=p.plan_summary||p.plan_name_he||p.plan_name||'';const status=p.status_mavat||'';const u=parseInt(p.units_total)||parseInt(p.units_add)||0;const contrib=p.contributingUnits||0;const m=p.mimushPct!=null?p.mimushPct+'%':'—';const ey=p.estimatedYear||'—';return'<tr><td style="padding:4px 6px;direction:ltr;text-align:left;font-weight:bold">'+taba+'</td>'+'<td style="padding:4px 6px">'+summary+'</td>'+'<td style="padding:4px 6px;font-size:10px;color:#666">'+status+'</td>'+'<td style="padding:4px 6px;text-align:center">'+u+'</td>'+'<td style="padding:4px 6px;text-align:center;color:#666">'+m+'</td>'+'<td style="padding:4px 6px;text-align:center;color:#666">'+ey+'</td>'+'<td style="padding:4px 6px;text-align:center;color:#1a5276;font-weight:bold">'+(contrib>0?'+'+contrib:'—')+'</td></tr>';}).join('');const assumptFooter='<div style="font-size:11px;color:#555;margin-top:14px;padding:8px;background:#f5f5f5;border-radius:4px"><b>הנחות חישוב:</b> '+yearLabel+' · '+assumpt.householdSize.toFixed(1)+' נפש/יח"ד · '+Math.round(assumpt.haredi*100)+'% חרדי · '+Math.round(assumpt.religious*100)+'% דתי · '+'שנתון כללי '+assumpt.ageYearPctGeneral+'% · שנתון חרדי '+assumpt.ageYearPctHaredi+'%</div>';const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+title+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#7b6cf0;margin:0 0 8px}h4{color:#1a5276;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button,input[type=range],input[type=number]{display:none!important}.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.kpi-strip>div{background:#f4f4ff;border-right:3px solid #7b6cf0;padding:8px;border-radius:4px}</style></head><body>');win.document.write('<h3>'+title+'</h3>');if(mapImg)win.document.write('<img class="map-snapshot" src="'+mapImg+'"/>');if(plansList){win.document.write('<h4>תכניות באזור הנבחר ('+plansInScope.length+' תכניות, אופק: '+yearLabel+')</h4>');win.document.write('<table><thead><tr><th style="text-align:left">תב"ע</th><th>שם תכנית</th><th>סטטוס</th><th>סה"כ יח"ד</th><th>מימוש</th><th>אופק</th><th style="text-align:left">תרומה לאופק</th></tr></thead><tbody>'+plansList+'</tbody></table>');}// Append the modal contents (KPIs + tables) — already styled
-win.document.write(div.innerHTML);win.document.write(assumptFooter);win.document.write('</body></html>');win.document.close();win.print();});// Wire radius slider (only present if radiusInfo passed)
-if(radiusInfo){const sl=document.getElementById('programa-radius-input');const num=document.getElementById('programa-radius-num');let pendingTimer=null;const apply=v=>{const clamped=Math.max(50,Math.min(3000,Number(v)||500));if(sl)sl.value=clamped;if(num)num.value=clamped;if(pendingTimer)clearTimeout(pendingTimer);pendingTimer=setTimeout(()=>radiusInfo.onChange(clamped),60);};if(sl){sl.addEventListener('input',e=>{if(num)num.value=e.target.value;});sl.addEventListener('change',e=>apply(e.target.value));}if(num){num.addEventListener('change',e=>apply(e.target.value));}}// ── Drilldown on the balance table ──
-// Cells with `data-svc-drill="<svcKey>"` open a per-service drilldown showing each contributing
-// plan's gross count and the weighted contribution at each horizon (existing/2030/35/40/full).
-// The total cell (id="programa-proposed-cell") opens the wide all-categories drilldown.
-// The "__uncat__" key drills into the generic m² uncategorized public area row.
-const SVC_LABELS_FULL={maon:'מעון',gan:'גני ילדים',yesodi:'יסודי',al_yesodi:'על-יסודי',tipat_chalav:'טיפת חלב',clinic:'מרפאה שכונתית',matnas:'מתנ"ס/מרכז קהילתי',welfare_dept:'לשכת רווחה',noar_club:'מועדון נוער',elderly_club:'מועדון קשיש',elderly_day:'מרכז יום לקשיש',synagogue:'בית כנסת',mikve:'מקווה טהרה',sport_hall:'אולם ספורט',library:'ספרייה שכונתית'};const HORIZONS=[2030,2035,2040,'full'];function eduNamesFor(p){const names=[];if(p.rawDemolishEduInside&&p.rawDemolishEduInside.length){p.rawDemolishEduInside.forEach(ef=>{(ef.properties.institutions||[]).forEach(inst=>{names.push((inst.name||'?')+' ('+(inst.type||'?')+')');});});}return names;}// Compute a plan's weighted contribution to a category at a given horizon (rounded to integer).
-// For uncategorized: uses rawUncatSqm. For class category: uses rawClassCounts[svcKey].
-function planContribAtHorizon(p,svcKey,horizon){const isUncat=svcKey==='__uncat__';const raw=isUncat?p.rawUncatSqm||0:p.rawClassCounts[svcKey]||0;if(raw===0)return 0;const isF=horizon==='full';if(!isF&&p.estimatedYear>horizon)return 0;const pct=isF?1:(p.realMimushPct||0)/100;return Math.round(raw*pct);}function planDemolishAtHorizon(p,svcKey,horizon){if(svcKey==='__uncat__')return 0;const raw=p.rawDemolishCounts[svcKey]||0;if(raw===0)return 0;const isF=horizon==='full';if(!isF&&p.estimatedYear>horizon)return 0;const pct=isF?1:(p.realMimushPct||0)/100;return Math.round(raw*pct);}function openServiceDrilldown(svcKey){const oldDrill=document.getElementById('programa-drilldown');if(oldDrill)oldDrill.remove();const isUncat=svcKey==='__uncat__';const svcLabel=isUncat?'שטח ציבורי גנרי (טרם נקבע ייעוד)':SVC_LABELS_FULL[svcKey]||svcKey;const unit=isUncat?'מ"ר':'כיתות';// Filter ALL plans in scope (not just current-horizon contributors) that have any non-zero raw count for this category
-const items=allParsedPlans.filter(p=>{if(isUncat)return(p.rawUncatSqm||0)>0;return(p.rawClassCounts[svcKey]||0)>0||(p.rawDemolishCounts[svcKey]||0)>0;}).map(p=>{const rawAdd=isUncat?p.rawUncatSqm||0:p.rawClassCounts[svcKey]||0;const rawDem=isUncat?0:p.rawDemolishCounts[svcKey]||0;const perH={};HORIZONS.forEach(h=>{perH[h]={add:planContribAtHorizon(p,svcKey,h),dem:planDemolishAtHorizon(p,svcKey,h)};});return{p,rawAdd,rawDem,perH};});// Sort by raw contribution desc
-items.sort((a,b)=>b.rawAdd+b.rawDem-(a.rawAdd+a.rawDem));// Per-horizon totals (weighted, rounded to integer)
-const horTotals={};HORIZONS.forEach(h=>{const sumA=items.reduce((s,it)=>s+it.perH[h].add,0);const sumD=items.reduce((s,it)=>s+it.perH[h].dem,0);horTotals[h]={add:Math.round(sumA),dem:Math.round(sumD)};});const isCurrent=h=>h===tY||h==='full'&&tY==='full';const horHeaderCol=h=>{const lbl=h==='full'?'100% מימוש':'אופק '+h;const cur=isCurrent(h);return'<th colspan="2" style="padding:5px;text-align:center;color:'+(cur?'#fff':'#bdb6e8')+';background:'+(cur?'rgba(123,108,240,0.20)':'transparent')+';border:'+(cur?'1px solid #7b6cf0':'none')+'">'+lbl+(cur?' ✓':'')+'</th>';};const horSubHeader=h=>{const cur=isCurrent(h);const bg=cur?'background:rgba(123,108,240,0.10);':'';return'<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px;'+bg+'">+ תוספת</th>'+'<th style="padding:4px;text-align:center;color:#e57373;font-size:10px;'+bg+(isUncat?'display:none':'')+'">− להריסה</th>';};const cellPair=(val,color,h)=>{const cur=isCurrent(h);const bg=cur?'background:rgba(123,108,240,0.07);':'';return'<td style="padding:4px;text-align:center;color:'+(val>0?color:'#444')+';font-weight:'+(val>0?'bold':'normal')+';'+bg+'">'+(val>0?(color==='#e57373'?'−':'+')+val.toLocaleString():'—')+'</td>';};const rows=items.map(it=>{const p=it.p;const eduNames=eduNamesFor(p);const descParts=[];if(!isUncat&&eduNames.length)descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> '+eduNames.join('; '));if((p.shavatz_out_prog||'').trim())descParts.push('<b style="color:#7b6cf0">שב"צ:</b> '+p.shavatz_out_prog);if((p.hafrash_prg||'').trim())descParts.push('<b style="color:#7b6cf0">הפרשה מבונה:</b> '+p.hafrash_prg);return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top"><a href="#" data-zoom-taba="'+p.taba+'" style="color:#bdb6e8;text-decoration:underline" title="לחץ לזום לתב\'ע">'+p.taba+'</a></td>'+'<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">'+(p.plan_summary||p.plan_name_he||p.plan_name||'')+'<div style="color:#666;margin-top:2px">'+(p.realMimushPct||0)+'% · אופק '+(p.estimatedYear||'—')+'</div></td>'+'<td style="padding:5px 6px;color:#aaa;font-size:9px;vertical-align:top;max-width:280px">'+(descParts.join('<br>')||'<span style="color:#555">—</span>')+'</td>'+'<td style="padding:5px 6px;text-align:center;color:#7b6cf0;font-weight:bold">'+(it.rawAdd>0?'+'+it.rawAdd.toLocaleString():'—')+'</td>'+(isUncat?'':'<td style="padding:5px 6px;text-align:center;color:#e57373;font-weight:bold">'+(it.rawDem>0?'−'+it.rawDem:'—')+'</td>')+HORIZONS.map(h=>cellPair(it.perH[h].add,'#7b6cf0',h)+(isUncat?'':cellPair(it.perH[h].dem,'#e57373',h))).join('')+'</tr>';}).join('');const totalRow='<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #7b6cf0">'+'<td colspan="3" style="padding:6px;color:#fff">סה"כ משוקלל</td>'+'<td style="padding:6px;text-align:center;color:#7b6cf0">+'+items.reduce((s,it)=>s+it.rawAdd,0).toLocaleString()+'</td>'+(isUncat?'':'<td style="padding:6px;text-align:center;color:#e57373">−'+items.reduce((s,it)=>s+it.rawDem,0)+'</td>')+HORIZONS.map(h=>cellPair(horTotals[h].add,'#7b6cf0',h)+(isUncat?'':cellPair(horTotals[h].dem,'#e57373',h))).join('')+'</tr>';const drill=document.createElement('div');drill.id='programa-drilldown';drill.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1300px,98vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';drill.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333;gap:10px">'+'<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text;flex:1">📋 פירוט מוצע — '+svcLabel+' <span style="color:#888;font-size:11px;font-weight:normal">('+items.length+' תכניות · יחידה: '+unit+' · אופק נוכחי מסומן ✓)</span></h3>'+'<button id="drill-csv" title="ייצוא ל-CSV" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 CSV</button>'+'<button id="drill-print" title="הדפסה" style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">🖨️ הדפסה</button>'+'<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+'<div style="overflow-x:auto"><table id="drill-table" style="width:100%;border-collapse:collapse;font-size:11px"><thead>'+'<tr style="background:#1a1a2e;color:#aaa">'+'<th rowspan="2" style="padding:5px;text-align:right">תב"ע</th>'+'<th rowspan="2" style="padding:5px;text-align:right">תכנית</th>'+'<th rowspan="2" style="padding:5px;text-align:right">תיאור (שב"צ / הפרשה מבונה)</th>'+'<th colspan="'+(isUncat?1:2)+'" style="padding:5px;text-align:center;color:#bdb6e8">גולמי</th>'+HORIZONS.map(horHeaderCol).join('')+'</tr>'+'<tr style="background:#1a1a2e;color:#aaa">'+'<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px">+ תוספת</th>'+(isUncat?'':'<th style="padding:4px;text-align:center;color:#e57373;font-size:10px">− להריסה</th>')+HORIZONS.map(horSubHeader).join('')+'</tr></thead><tbody>'+rows+totalRow+'</tbody></table></div>'+'<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.</div>';document.body.appendChild(drill);document.getElementById('drill-close').addEventListener('click',()=>drill.remove());// Wire CSV export
-document.getElementById('drill-csv').addEventListener('click',()=>{const title=document.getElementById('drill-title')?.textContent||'פירוט מוצע — '+svcLabel;const lines=[];const horLabels=HORIZONS.map(h=>h==='full'?'100% מימוש':'אופק '+h);const hdrCols=['תב"ע','שם תכנית','%מימוש','שנה','תיאור (שב"צ)','תיאור (הפרשה מבונה)','גולמי + תוספת'];if(!isUncat)hdrCols.push('גולמי − להריסה');horLabels.forEach(hl=>{hdrCols.push(hl+' + תוספת');if(!isUncat)hdrCols.push(hl+' − להריסה');});lines.push(hdrCols.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));items.forEach(it=>{const p=it.p;const row=[p.taba,p.plan_summary||'',p.realMimushPct||0,p.estimatedYear||'',p.shavatz_out_prog||'',p.hafrash_prg||'',it.rawAdd];if(!isUncat)row.push(it.rawDem);HORIZONS.forEach(h=>{row.push(it.perH[h].add);if(!isUncat)row.push(it.perH[h].dem);});lines.push(row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));});const totRow=['סה"כ משוקלל','','','','','',items.reduce((s,it)=>s+it.rawAdd,0)];if(!isUncat)totRow.push(items.reduce((s,it)=>s+it.rawDem,0));HORIZONS.forEach(h=>{totRow.push(horTotals[h].add);if(!isUncat)totRow.push(horTotals[h].dem);});lines.push(totRow.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));const blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_').slice(0,80)+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});// Wire print
-document.getElementById('drill-print').addEventListener('click',()=>{const title=document.getElementById('drill-title')?.textContent||'פירוט מוצע — '+svcLabel;const tableHtml=document.getElementById('drill-table').outerHTML;const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+title+'</title>'+'<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#0d47a1;font-size:14px}table{width:100%;border-collapse:collapse;font-size:10px;margin-top:10px}th,td{border:1px solid #ccc;padding:3px;text-align:center}th{background:#eef}a{color:#0d47a1;text-decoration:none}</style>'+'</head><body><h2>'+title+'</h2>'+tableHtml+'</body></html>');win.document.close();win.print();});// Wire taba zoom links — find plan in gd.plans and zoom + open popup
-drill.querySelectorAll('a[data-zoom-taba]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const taba=a.dataset.zoomTaba;const map=mapInstanceRef.current;if(!map||!gd.plans)return;const feat=gd.plans.features.find(f=>String(f.properties.taba||'').trim()===String(taba).trim());if(!feat){console.warn('plan not found:',taba);return;}try{const layer=L.geoJSON(feat);const bounds=layer.getBounds();map.fitBounds(bounds,{padding:[60,60],maxZoom:18});setTimeout(()=>{const mapped=mapPlanProps(feat.properties);const popup=L.popup({maxWidth:popupMaxWidth(),closeButton:true}).setLatLng(bounds.getCenter()).setContent(buildPlanPopup(mapped,{properties:mapped})).openOn(map);bindPopupEvents(popup,[{type:'plan',properties:mapped}],0);},400);}catch(err){console.warn('zoom to plan failed',err);}drill.remove();div.remove();// close the parent programa modal too so the map is visible
-});});}// Wire all drill cells (per-service + uncategorized)
-div.querySelectorAll('[data-svc-drill]').forEach(cell=>{cell.addEventListener('click',()=>openServiceDrilldown(cell.dataset.svcDrill));});// "Required" cell drilldown — shows the public-needs computation per service (children, class size, dunam)
-function openRequiredDrilldown(svcKey){const oldDrill=document.getElementById('programa-drilldown');if(oldDrill)oldDrill.remove();const svcDef=typeof PUBLIC_NEEDS_SERVICES!=='undefined'?PUBLIC_NEEDS_SERVICES.find(s=>s.key===svcKey):null;const svcLabel=svcDef?svcDef.label:svcKey;const sd=needs.byService[svcKey];if(!sd)return;const ageRange=svcDef?svcDef.ageFrom+'–'+svcDef.ageTo:'';const fmt=v=>v==null?'—':v;const streamRow=(label,x)=>'<tr style="border-bottom:1px solid #222">'+'<td style="padding:6px;color:#e0e0ff">'+label+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+fmt(x.children)+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+fmt(x.classSize)+'</td>'+'<td style="padding:6px;text-align:center;color:#4CAF50;font-weight:bold">'+fmt(x.classes)+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+(x.dunamPerClass!=null?x.dunamPerClass.toFixed(2):'—')+'</td>'+'<td style="padding:6px;text-align:center;color:#aaa">'+(x.dunam!=null?x.dunam.toFixed(2):'—')+'</td>'+'</tr>';const drill=document.createElement('div');drill.id='programa-drilldown';drill.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #4CAF50;direction:rtl;width:min(720px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';drill.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">'+'<h3 style="margin:0;color:#e0e0ff;font-size:14px">🎓 פירוט חישוב כיתות נדרשות — '+svcLabel+' <span style="color:#888;font-size:11px;font-weight:normal">(גילאים '+ageRange+' · '+needs.population.toLocaleString()+' תושבים · '+Math.round(assumpt.haredi*100)+'% חרדי, '+Math.round(assumpt.religious*100)+'% דתי)</span></h3>'+'<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#1a1a2e;color:#aaa">'+'<th style="padding:6px;text-align:right">זרם</th>'+'<th style="padding:6px;text-align:center">ילדים בגיל הרלוונטי</th>'+'<th style="padding:6px;text-align:center">גודל כיתה</th>'+'<th style="padding:6px;text-align:center;color:#4CAF50">כיתות</th>'+'<th style="padding:6px;text-align:center">דונם/כיתה</th>'+'<th style="padding:6px;text-align:center">סה"כ דונם</th>'+'</tr></thead><tbody>'+streamRow('ממלכתי',sd.mam)+streamRow('חרדי-ב (בנים)',sd.haredi_b)+streamRow('חרדי-ג (בנות)',sd.haredi_g)+'<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">'+'<td style="padding:8px" colspan="3">סה"כ</td>'+'<td style="padding:8px;text-align:center;color:#4CAF50">'+sd.totalClasses+'</td>'+'<td></td>'+'<td style="padding:8px;text-align:center;color:#aaa">'+sd.totalDunam.toFixed(2)+'</td>'+'</tr>'+'</tbody></table>'+'<div style="margin-top:10px;font-size:10px;color:#888">חישוב: <i>אוכלוסייה × אחוז זרם × אחוז שנתון × גודל גיל × אחוז השתתפות / גודל כיתה</i> (עיגול כלפי מעלה).</div>';document.body.appendChild(drill);document.getElementById('drill-close').addEventListener('click',()=>drill.remove());}div.querySelectorAll('[data-req-drill]').forEach(cell=>{cell.addEventListener('click',()=>openRequiredDrilldown(cell.dataset.reqDrill));});// Wire drilldown on the TOTAL "מוצע" cell — all-categories breakdown per plan (existing wide view)
-const proposedCell=document.getElementById('programa-proposed-cell');if(proposedCell){proposedCell.addEventListener('click',()=>{const oldDrill=document.getElementById('programa-drilldown');if(oldDrill){oldDrill.remove();return;}const SVC_LABELS={maon:'מעון',gan:'גן',yesodi:'יסודי',al_yesodi:'על-יסודי',tipat_chalav:'טיפת חלב',clinic:'מרפאה',matnas:'מתנ"ס',welfare_dept:'רווחה',noar_club:'מועדון נוער',elderly_club:'מועדון קשיש',elderly_day:'מרכז יום קשיש',synagogue:'בית כנסת',mikve:'מקווה',sport_hall:'אולם ספורט',library:'ספרייה'};const items=[];contributingPlans.forEach(p=>{const added=p.rawClassCounts;const dem=p.rawDemolishCounts;const totalAdded=PARSER_KEYS.reduce((s,k)=>s+(added[k]||0),0);const totalDem=PARSER_KEYS.reduce((s,k)=>s+(dem[k]||0),0);if(totalAdded===0&&totalDem===0&&(p.rawUncatSqm||0)===0&&(p.weightedShavatzInSqm||0)===0)return;items.push({...p,classTotalRaw:totalAdded,demolishTotalRaw:totalDem});});items.sort((a,b)=>b.classTotalRaw+b.demolishTotalRaw-(a.classTotalRaw+a.demolishTotalRaw));const SVC_KEYS=PARSER_KEYS.filter(k=>items.some(p=>(p.rawClassCounts[k]||0)>0||(p.rawDemolishCounts[k]||0)>0));const showUncatCol=items.some(p=>(p.rawUncatSqm||0)>0);const drill=document.createElement('div');drill.id='programa-drilldown';drill.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1100px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';const headerCols=SVC_KEYS.map(k=>'<th style="padding:5px;text-align:center;color:#bdb6e8">'+SVC_LABELS[k]+'</th>').join('')+(showUncatCol?'<th style="padding:5px;text-align:center;color:#f59e0b">טרם נקבע (מ"ר)</th>':'');const rows=items.map(p=>{const added=p.rawClassCounts;const dem=p.rawDemolishCounts;const cells=SVC_KEYS.map(k=>{const a=added[k]||0;const d=dem[k]||0;if(a===0&&d===0)return'<td style="padding:5px;text-align:center;color:#444">—</td>';const parts=[];if(a>0)parts.push('<span style="color:#7b6cf0">+'+a+'</span>');if(d>0)parts.push('<span style="color:#e57373">−'+d+'</span>');return'<td style="padding:5px;text-align:center">'+parts.join(' / ')+'</td>';}).join('')+(showUncatCol?'<td style="padding:5px;text-align:center;color:'+((p.rawUncatSqm||0)>0?'#f59e0b':'#444')+'">'+((p.rawUncatSqm||0)>0?p.rawUncatSqm.toLocaleString():'—')+'</td>':'');const eduNames=eduNamesFor(p);const descParts=[];if(eduNames.length)descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> '+eduNames.join('; '));if((p.shavatz_out_prog||'').trim())descParts.push('<b style="color:#7b6cf0">S:</b> '+p.shavatz_out_prog);if((p.hafrash_prg||'').trim())descParts.push('<b style="color:#7b6cf0">AR:</b> '+p.hafrash_prg);return'<tr style="border-bottom:1px solid #222">'+'<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">'+p.taba+'</td>'+'<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">'+(p.plan_summary||p.plan_name_he||p.plan_name||'')+'<div style="color:#666;margin-top:2px">'+(p.mimushPct||0)+'% · אופק '+(p.estimatedYear||'—')+'</div></td>'+'<td style="padding:5px 6px;color:#aaa;font-size:10px;vertical-align:top;max-width:340px">'+(descParts.join('<br>')||'<span style="color:#555">—</span>')+'</td>'+cells+'</tr>';}).join('');drill.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">'+'<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע — כל הקטגוריות ('+(tY==='full'?'100% מימוש':'אופק '+tY)+') <span style="color:#888;font-size:11px;font-weight:normal">('+items.length+' תכניות תורמות)</span></h3>'+'<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">'+'<th style="padding:5px;text-align:right">תב"ע</th>'+'<th style="padding:5px;text-align:right">תכנית</th>'+'<th style="padding:5px;text-align:right">תיאור (S+AR)</th>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+'<div style="font-size:10px;color:#888;margin-top:10px">לפירוט פר-קטגוריה כולל השוואה בין אופקים — לחץ על תא "= מוצע" של שורה ספציפית בטבלת המאזן הראשית.</div>';document.body.appendChild(drill);document.getElementById('drill-close').addEventListener('click',()=>drill.remove());});}// Wire assumption controls
-div.querySelectorAll('[data-pa-year]').forEach(b=>{b.addEventListener('click',()=>{const y=b.dataset.paYear;assumpt.targetYear=y==='existing'||y==='full'?y:Number(y);reRender();});});const hh=document.getElementById('pa-hh');if(hh)hh.addEventListener('change',e=>{assumpt.householdSize=parseFloat(e.target.value)||3.2;reRender();});const hr=document.getElementById('pa-haredi');if(hr)hr.addEventListener('change',e=>{assumpt.haredi=(parseInt(e.target.value)||0)/100;reRender();});const re=document.getElementById('pa-religious');if(re)re.addEventListener('change',e=>{assumpt.religious=(parseInt(e.target.value)||0)/100;reRender();});const ag=document.getElementById('pa-age-gen');if(ag)ag.addEventListener('change',e=>{assumpt.ageYearPctGeneral=parseFloat(e.target.value)||2.2;reRender();});const ah=document.getElementById('pa-age-hrd');if(ah)ah.addEventListener('change',e=>{assumpt.ageYearPctHaredi=parseFloat(e.target.value)||3.0;reRender();});const rst=document.getElementById('pa-reset');if(rst)rst.addEventListener('click',()=>{window.__programaUserAssumptions={...PN_DEFAULT_ASSUMPTIONS,targetYear:'existing'};reRender();});}// ── הפרשות מבונות ומבני ציבור עתידיים — report for any scope (radius/area/sub/minahak) ──
-// Shares the 4 programa scope collectors via reportKindRef. Re-derives allocation data
-// per plan from authoritative plan properties (shavatz_out_*, hafrash_*) keyed by taba,
-// so it is uniform regardless of which collector built candidatePlans.
-const ALLOC_LBLS={maon:'מעון יום',gan:'גן ילדים',yesodi:'בי"ס יסודי',al_yesodi:'בי"ס על-יסודי',tipat_chalav:'טיפת חלב',clinic:'מרפאה',matnas:'מתנ"ס/מרכז קהילתי',welfare_dept:'לשכת רווחה',noar_club:'מועדון נוער',elderly_club:'מועדון קשיש',elderly_day:'מרכז יום לקשיש',synagogue:'בית כנסת',mikve:'מקווה',sport_hall:'אולם ספורט',library:'ספרייה'};function renderAllocationsModal({candidatePlans,scopeLabel}){const gd=geoDataRef.current||{};const propsByTaba={};if(gd.plans)gd.plans.features.forEach(f=>{const t=String((f.properties||{}).taba||'').trim();if(t&&!propsByTaba[t])propsByTaba[t]=f.properties;});// Build per-plan allocation rows
-const rows=[];const seen=new Set();(candidatePlans||[]).forEach(cp=>{const taba=String(cp.taba||'').trim();if(taba&&seen.has(taba))return;if(taba)seen.add(taba);const p=taba&&propsByTaba[taba]||{};const outSqm=parseFloat(p.shavatz_out_sqm!=null?p.shavatz_out_sqm:cp.shavatz_out_sqm)||0;const outPrg=p.shavatz_out_prog||cp.shavatz_out_prog||'';const hafSqm=parseFloat(p.hafrash_sqm!=null?p.hafrash_sqm:cp.hafrash_sqm)||0;const hafPrg=p.hafrash_prg||cp.hafrash_prg||'';if(outSqm<=0&&hafSqm<=0&&!outPrg&&!hafPrg)return;rows.push({taba,name:p.plan_name_he||cp.plan_name_he||cp.plan_name||taba||'—',status:p.status_mavat||cp.status_mavat||'',sub:p.sub_neighborhood||'',outSqm,outPrg,hafSqm,hafPrg});});rows.sort((a,b)=>b.outSqm+b.hafSqm-(a.outSqm+a.hafSqm));// Aggregate by facility use (from the program free text)
-const useCounts={};PARSER_KEYS.forEach(k=>useCounts[k]=0);let totalOut=0,totalHaf=0;rows.forEach(r=>{totalOut+=r.outSqm;totalHaf+=r.hafSqm;const parsed=parseFacilitiesFromText([r.outPrg,r.hafPrg].filter(Boolean).join('; '));PARSER_KEYS.forEach(k=>{useCounts[k]+=parsed.counts[k]||0;});});const useRows=PARSER_KEYS.filter(k=>useCounts[k]>0).map(k=>'<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">'+ALLOC_LBLS[k]+'</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">'+useCounts[k]+'</td></tr>').join('');const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');// Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
-// so a plan repeats across its uses and the detail can be filtered by use like the
-// summary table. Counts of the same use within a source are aggregated.
-const detailRows=[];rows.forEach(r=>{[['שב"צ עתידי',r.outPrg,r.outSqm],['הפרשה מבונה',r.hafPrg,r.hafSqm]].forEach(([source,prg,totalSqm])=>{if(!prg&&!(totalSqm>0))return;const{items,uncategorizedSqm}=parseFacilitiesDetailed(prg||'');const agg={};items.forEach(it=>{if(!agg[it.key])agg[it.key]={count:0,sqm:0};agg[it.key].count+=it.count;agg[it.key].sqm+=it.sqm;});const keys=Object.keys(agg);keys.forEach(key=>detailRows.push({taba:r.taba,name:r.name,status:r.status,sub:r.sub,source,use:ALLOC_LBLS[key],count:agg[key].count,unit:EDU_PARSER_KEYS.includes(key)?'כיתות':'מתקנים',sqm:agg[key].sqm}));// No recognized facility — keep ONLY if it carries actual מ"ר; a generic
-// designation with no m² (e.g. "שטחים פתוחים ומבנים ומוסדות ציבור" with a
-// blank hafrash_sqm) is a land-use label, not a quantified allocation, so it
-// is dropped rather than shown as an empty "—" row.
-if(!keys.length){const genericSqm=uncategorizedSqm||totalSqm||0;if(genericSqm>0)detailRows.push({taba:r.taba,name:r.name,status:r.status,sub:r.sub,source,use:'מבני ציבור (כללי / לא מסווג)',count:0,unit:'',sqm:genericSqm});}});});detailRows.sort((a,b)=>a.use<b.use?-1:a.use>b.use?1:a.taba<b.taba?-1:a.taba>b.taba?1:0);const planRows=detailRows.map(r=>'<tr style="border-bottom:1px solid #222">'+'<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">'+esc(r.taba)+'</td>'+'<td style="padding:5px 6px;color:#e8d9c8">'+esc(r.name)+'</td>'+'<td style="padding:5px 6px;font-size:11px;color:#999">'+esc(r.status)+'</td>'+'<td style="padding:5px 6px;font-size:11px;color:#999">'+esc(r.sub)+'</td>'+'<td style="padding:5px 6px;font-size:11px;color:#aaa">'+esc(r.source)+'</td>'+'<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">'+(r.count?r.count+' '+r.unit:'—')+'</td>'+'<td style="padding:5px 6px;text-align:center;color:#bbb">'+(r.sqm>0?Math.round(r.sqm).toLocaleString():'—')+'</td>'+'<td style="padding:5px 6px;color:#e8d9c8">'+esc(r.use)+'</td>'+'</tr>').join('');const kpi=(label,val,color)=>'<div style="background:#1f1a16;border-right:3px solid '+color+';padding:8px 12px;border-radius:6px;min-width:120px">'+'<div style="font-size:11px;color:#aaa">'+label+'</div>'+'<div style="font-size:20px;font-weight:bold;color:'+color+'">'+val+'</div></div>';const prevA=document.getElementById('alloc-result');if(prevA)prevA.remove();const div=document.createElement('div');div.id='alloc-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(28,22,18,0.98);color:#e8d9c8;padding:20px;border-radius:14px;border:2px solid #8d6e63;direction:rtl;width:min(920px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #3a2e26">'+'<h3 id="alloc-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e8d9c8;font-size:16px;outline:none;border-bottom:1px dashed #5c4636;padding-bottom:2px;cursor:text">🏛️ הפרשות מבונות ומבני ציבור עתידיים — '+esc(scopeLabel)+'</h3>'+'<button id="alloc-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+kpi('תכניות תורמות',rows.length,'#d4a373')+kpi('שב"צ עתידי (מ"ר)',Math.round(totalOut).toLocaleString(),'#c9a227')+kpi('הפרשה מבונה (מ"ר)',Math.round(totalHaf).toLocaleString(),'#b5651d')+kpi('סה"כ שטח ציבור (מ"ר)',Math.round(totalOut+totalHaf).toLocaleString(),'#e8d9c8')+'</div>'+(useRows?'<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>'+useRows+'</tbody></table>':'<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>')+'<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש ('+detailRows.length+')</h4>'+(planRows?'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>'+planRows+'</tbody></table>':'<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>')+'<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">'+'<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>'+'<button id="alloc-print" style="background:#3a2e26;border:1px solid #5c4636;color:#e8d9c8;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);document.getElementById('alloc-close').addEventListener('click',()=>div.remove());document.getElementById('alloc-csv').addEventListener('click',()=>{const title=document.getElementById('alloc-title')?.textContent||'הפרשות_מבונות';const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const lines=[];lines.push(['מדד','ערך'].join(','));lines.push(['תכניות תורמות',rows.length].join(','));lines.push([q('שב"צ עתידי (מ"ר)'),Math.round(totalOut)].join(','));lines.push([q('הפרשה מבונה (מ"ר)'),Math.round(totalHaf)].join(','));lines.push([q('סה"כ שטח ציבור (מ"ר)'),Math.round(totalOut+totalHaf)].join(','));lines.push('');lines.push([q('שימוש'),q('מספר מתקנים')].join(','));PARSER_KEYS.filter(k=>useCounts[k]>0).forEach(k=>lines.push([q(ALLOC_LBLS[k]),useCounts[k]].join(',')));lines.push('');lines.push([q('תב"ע'),q('שם התכנית'),q('סטטוס'),q('תת-שכונה'),q('מקור'),q('כמות'),q('יחידה'),q('מ"ר'),q('שימוש')].join(','));detailRows.forEach(r=>lines.push([q(r.taba),q(r.name),q(r.status),q(r.sub),q(r.source),r.count||'',q(r.unit),r.sqm?Math.round(r.sqm):'',q(r.use)].join(',')));const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});document.getElementById('alloc-print').addEventListener('click',async()=>{const title=document.getElementById('alloc-title')?.textContent||'הפרשות מבונות';let mapImg='';try{const mapEl=mapInstanceRef.current&&mapInstanceRef.current.getContainer();if(mapEl&&window.html2canvas){const prevDisplay=div.style.display;div.style.display='none';await new Promise(r=>setTimeout(r,100));const canvas=await window.html2canvas(mapEl,{useCORS:true,allowTaint:true,logging:false});div.style.display=prevDisplay;mapImg=canvas.toDataURL('image/jpeg',0.85);}}catch(e){console.warn('[Allocations] map capture failed',e);}const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+esc(title)+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}</style></head><body>');win.document.write('<h3>'+esc(title)+'</h3>');if(mapImg)win.document.write('<img class="map-snapshot" src="'+mapImg+'"/>');win.document.write(div.innerHTML);win.document.close();win.print();});}// ── דשבורד שכונתי — one-page printable profile for a sub-neighborhood ──
-// Aggregates planned/realized units, future public allocations, commerce, permits and
-// tree-removal exposure for all plans whose sub_neighborhood includes `subName`.
-function renderSubDashboard(subName){if(!subName)return;const gd=geoDataRef.current||{};const inSub=p=>String(p.sub_neighborhood||'').split(',').map(s=>s.trim()).includes(subName);const seen=new Set();let plansCount=0,unitsPlanned=0,unitsAdd=0,issuedUnits=0,futureSqm=0,hafSqm=0,trees=0,commerceOut=0,employment=0,activePermits=0;const byStatus={};const planList=[];(gd.plans&&gd.plans.features?gd.plans.features:[]).forEach(f=>{const p=f.properties||{};if(!inSub(p))return;const taba=String(p.taba||'').trim();if(taba&&seen.has(taba))return;if(taba)seen.add(taba);const st=normalizeStatus((p.status_mavat||'').trim());if(st==='נגנזה'||st==='נדחתה'||st==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;plansCount++;const ut=parseInt(p.units_total)||0,ua=parseFloat(p.units_add)||0;unitsPlanned+=ut;unitsAdd+=ua;futureSqm+=parseFloat(p.shavatz_out_sqm)||0;hafSqm+=parseFloat(p.hafrash_sqm)||0;commerceOut+=parseFloat(p.commerce_out)||0;employment+=parseFloat(p.employment)||0;byStatus[st]=(byStatus[st]||0)+1;const rec=(window.__allPermits||{})[taba];if(rec&&rec.permits)rec.permits.forEach(pm=>{if(pm.filtered)return;const s=String(pm.status||'');if(s.indexOf('הופק')!==-1||s.indexOf('הוצא היתר')!==-1){issuedUnits+=parseFloat(pm.units)||0;activePermits++;}});const tr=(window.__treeSurveys||{})[taba];if(tr)trees+=(tr.krita||0)+(tr.haataka||0);planList.push({taba,name:p.plan_name_he||p.plan_name||taba,status:p.status_mavat||'',units:ut||ua});});planList.sort((a,b)=>b.units-a.units);const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');const num=n=>Math.round(n).toLocaleString();const STATUS_ORDER=['בהליכי אישור','מאושרת','בביצוע','הסתיים'];const statusRows=Object.keys(byStatus).sort((a,b)=>(STATUS_ORDER.indexOf(a)+1||99)-(STATUS_ORDER.indexOf(b)+1||99)).map(s=>'<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#cfe">'+esc(s)+'</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#8fd">'+byStatus[s]+'</td></tr>').join('');const topRows=planList.slice(0,12).map(r=>'<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px;direction:ltr;text-align:left;color:#8fd;font-weight:bold">'+esc(r.taba)+'</td>'+'<td style="padding:5px 6px;color:#cfe">'+esc(r.name)+'</td>'+'<td style="padding:5px 6px;font-size:11px;color:#999">'+esc(r.status)+'</td>'+'<td style="padding:5px 6px;text-align:center;color:#bbb">'+(r.units||'—')+'</td></tr>').join('');const kpi=(label,val,sub2,color)=>'<div style="background:#10202a;border-right:3px solid '+color+';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">'+'<div style="font-size:11px;color:#9ab">'+label+'</div>'+'<div style="font-size:21px;font-weight:bold;color:'+color+'">'+val+'</div>'+(sub2?'<div style="font-size:10px;color:#789">'+sub2+'</div>':'')+'</div>';const prevD=document.getElementById('subdash-result');if(prevD)prevD.remove();const div=document.createElement('div');div.id='subdash-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(880px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">'+'<h3 id="subdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">📋 דשבורד שכונתי — '+esc(subName)+'</h3>'+'<button id="subdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+(plansCount===0?'<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">לא נמצאו תכניות פעילות בתת-שכונה זו.</div>':'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+kpi('תכניות פעילות',plansCount,'','#4db8c4')+kpi('יח"ד מתוכננות',num(unitsPlanned),'תוספת: '+num(unitsAdd),'#5fd3a0')+kpi('יח"ד בהיתר',num(issuedUnits),unitsPlanned>0?Math.round(issuedUnits/unitsPlanned*100)+'% מימוש':'','#8fd14f')+kpi('היתרים פעילים',activePermits,'','#c4a24d')+'</div>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+kpi('שב"צ + הפרשה (מ"ר)',num(futureSqm+hafSqm),'עתידי '+num(futureSqm)+' · מבונה '+num(hafSqm),'#b08fd1')+kpi('מסחר עתידי (מ"ר)',num(commerceOut),'','#d18f8f')+kpi('תעסוקה (מ"ר)',num(employment),'','#d1b88f')+kpi('עצים לכריתה/העתקה',num(trees),'','#8fb0d1')+'</div>'+'<div style="display:flex;gap:18px;flex-wrap:wrap">'+'<div style="flex:1;min-width:220px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות לפי סטטוס</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>'+(statusRows||'<tr><td style="color:#789;padding:6px">—</td></tr>')+'</tbody></table></div>'+'<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד)</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:left;color:#4db8c4">תב"ע</th><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">סטטוס</th><th style="padding:5px;color:#4db8c4">יח"ד</th></tr></thead><tbody>'+topRows+'</tbody></table></div>'+'</div>')+'<div style="display:flex;gap:8px;margin-top:16px">'+'<button id="subdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>'+'<button id="subdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);document.getElementById('subdash-close').addEventListener('click',()=>div.remove());document.getElementById('subdash-csv').addEventListener('click',()=>{const title=document.getElementById('subdash-title')?.textContent||'דשבורד';const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const lines=[];lines.push(['מדד','ערך'].join(','));lines.push([q('תכניות פעילות'),plansCount].join(','));lines.push([q('יח"ד מתוכננות'),Math.round(unitsPlanned)].join(','));lines.push([q('תוספת יח"ד'),Math.round(unitsAdd)].join(','));lines.push([q('יח"ד בהיתר'),Math.round(issuedUnits)].join(','));lines.push([q('היתרים פעילים'),activePermits].join(','));lines.push([q('שב"צ עתידי (מ"ר)'),Math.round(futureSqm)].join(','));lines.push([q('הפרשה מבונה (מ"ר)'),Math.round(hafSqm)].join(','));lines.push([q('מסחר עתידי (מ"ר)'),Math.round(commerceOut)].join(','));lines.push([q('תעסוקה (מ"ר)'),Math.round(employment)].join(','));lines.push([q('עצים לכריתה/העתקה'),Math.round(trees)].join(','));lines.push('');lines.push([q('תב"ע'),q('שם'),q('סטטוס'),q('יח"ד')].join(','));planList.forEach(r=>lines.push([q(r.taba),q(r.name),q(r.status),r.units].join(',')));const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});document.getElementById('subdash-print').addEventListener('click',()=>{const title=document.getElementById('subdash-title')?.textContent||'דשבורד שכונתי';const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+esc(title)+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}button{display:none!important}</style></head><body>');win.document.write('<h3>'+esc(title)+'</h3>');win.document.write(div.innerHTML);win.document.close();win.print();});}// ── דשבורד מינהל קהילתי — same one-page style as renderSubDashboard, with
-// clickable links into each sub-neighborhood's dashboard. Replaces the old
-// minahakReport React modal. ──
-function renderMinhakDashboard(minhakName){if(!minhakName)return;const gd=geoDataRef.current||{};const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');const num=n=>Math.round(n).toLocaleString();const rejected=new Set(['נגנזה/נדחתה','נגנזה','נדחתה']);const approvedStatuses=new Set(['אישור','מאושרת','תבע מאושרת','תחילת תוקף']);const seen=new Set();let plansCount=0,unitsAdd=0,unitsPlanned=0,issuedUnits=0,activePermits=0,futureSqm=0,hafSqm=0,commerceOut=0,employment=0,trees=0;const byStatus={};const planFeats=[];const subStats={};(gd.plans&&gd.plans.features?gd.plans.features:[]).forEach(f=>{const p=f.properties||{};if((p.minahak||'')!==minhakName)return;const planId=p.plan_name||'';if(planId&&seen.has(planId))return;if(planId)seen.add(planId);const st=(p.status_mavat||'').trim();if(rejected.has(st))return;if(approvedStatuses.has(st)){const d=p.mavat_date||'';if(d){const y=parseInt(d.split('/').pop())||0;if(y<2020)return;}}plansCount++;const ua=parseFloat(p.units_add)||0,ut=parseInt(p.units_total)||0;unitsAdd+=ua;unitsPlanned+=ut;futureSqm+=parseFloat(p.shavatz_out_sqm)||0;hafSqm+=parseFloat(p.hafrash_sqm)||0;commerceOut+=parseFloat(p.commerce_out)||0;employment+=parseFloat(p.employment)||0;const stN=normalizeStatus(st)||'לא ידוע';byStatus[stN]=(byStatus[stN]||0)+1;const taba=String(p.taba||'').trim();const rec=(window.__allPermits||{})[taba];if(rec&&rec.permits)rec.permits.forEach(pm=>{if(pm.filtered)return;const s=String(pm.status||'');if(s.indexOf('הופק')!==-1||s.indexOf('הוצא היתר')!==-1){issuedUnits+=parseFloat(pm.units)||0;activePermits++;}});const tr=(window.__treeSurveys||{})[taba];if(tr)trees+=(tr.krita||0)+(tr.haataka||0);planFeats.push({feat:f,taba,name:p.plan_summary||p.plan_name_he||p.plan_name||taba,status:st,units:ua});String(p.sub_neighborhood||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(sn=>{const n=SUB_NORMALIZE[sn]||sn;if(!subStats[n])subStats[n]={units:0,plans:0};subStats[n].units+=ua;subStats[n].plans++;});});planFeats.sort((a,b)=>b.units-a.units);// TAMA-38 projects in this minhak (by sub-neighborhood membership)
-const subsList=MINAHAK_SUBS[minhakName]||[];const tamaFeatures=(gd.tama38&&gd.tama38.features?gd.tama38.features:[]).filter(f=>{const n=(f.properties.neighborho||'').trim();const nn=SUB_NORMALIZE[n]||n;return subsList.includes(n)||subsList.includes(nn);});const tamaCount=tamaFeatures.length;const tamaUnitsAdd=tamaFeatures.reduce((s,f)=>s+(parseFloat(f.properties.units_tose)||0),0);// The minhak's own sub-neighborhoods only: the declared list, plus any sub
-// that carries plans AND canonically belongs to this minhak (drops cross-minhak
-// subs that leak in via plans tagged to this minhak but located elsewhere).
-const subNames=Array.from(new Set([...subsList.map(s=>SUB_NORMALIZE[s]||s),...Object.keys(subStats).filter(sn=>SUB_TO_MINAHAK[sn]===minhakName)])).sort((a,b)=>(subStats[b]?subStats[b].units:0)-(subStats[a]?subStats[a].units:0));// Existing state: population from census stat-areas (same source/number as the
-// population dashboard), housing units from the municipal buildings layer, both
-// within the minhak polygon.
-const mhPop=(computePopulationByGeography(gd).minhaks.find(m=>m.name===minhakName)||{}).metrics;const existingPop=mhPop?mhPop.pop:0;const minhakLayer=gd[MINAHAK_HEB_TO_LAYER[minhakName]];let existingUnits=0;if(minhakLayer&&gd.buildings&&gd.buildings.features){for(const bf of gd.buildings.features){const c=bf.geometry&&bf.geometry.coordinates;if(c&&pointInLayer(c,minhakLayer))existingUnits+=bf.properties&&bf.properties.units||0;}}const kpi=(label,val,sub2,color)=>'<div style="background:#10202a;border-right:3px solid '+color+';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">'+'<div style="font-size:11px;color:#9ab">'+label+'</div>'+'<div style="font-size:21px;font-weight:bold;color:'+color+'">'+val+'</div>'+(sub2?'<div style="font-size:10px;color:#789">'+sub2+'</div>':'')+'</div>';// Status breakdown (grouped) — same grouping as the old minahak report.
-const STATUS_GROUPS={'אישור':'אישור / מאושרת','מאושרת':'אישור / מאושרת','תבע מאושרת':'אישור / מאושרת','תבע - טרום אישור':'אישור / מאושרת','תחילת תוקף':'אישור / מאושרת','בהליך אישור':'בהליך אישור','דיון בהתנגדויות ותיקונים':'התנגדויות','הכרעה בהתנגדויות / אישור':'התנגדויות','הפקדה להתנגדויות/השגות':'הפקדה','במילוי תנאים להפקדה':'במילוי תנאים להפקדה','נפתח תיק למתכנן':'פתיחת תיק / בבדיקה','נפתח תיק תב"ע':'פתיחת תיק / בבדיקה','בבדיקה תכנונית':'פתיחת תיק / בבדיקה','תכנית עומדת בתנאי סף':'פתיחת תיק / בבדיקה','נקלטה מקובץ מבאת':'פתיחת תיק / בבדיקה','בבדיקת תנאי סף':'פתיחת תיק / בבדיקה'};const GROUP_COLORS={'אישור / מאושרת':'#50d25a','בהליך אישור':'#50d25a','התנגדויות':'#fafa3c','הפקדה':'#f56e05','במילוי תנאים להפקדה':'#f56e05','פתיחת תיק / בבדיקה':'#eb0000'};const GROUP_ORDER=['אישור / מאושרת','בהליך אישור','התנגדויות','הפקדה','במילוי תנאים להפקדה','פתיחת תיק / בבדיקה'];const grouped={};Object.keys(byStatus).forEach(s=>{const g=STATUS_GROUPS[s]||s;grouped[g]=(grouped[g]||0)+byStatus[s];});const maxCount=Math.max(...Object.values(grouped),1);const statusBars=[...GROUP_ORDER.filter(g=>grouped[g]),...Object.keys(grouped).filter(s=>!GROUP_ORDER.includes(s))].map(s=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+'<span style="font-size:10px;color:#9ab;min-width:140px;text-align:right">'+esc(s)+'</span>'+'<div style="flex:1;height:14px;background:#13212b;border-radius:3px"><div style="width:'+grouped[s]/maxCount*100+'%;height:100%;background:'+(GROUP_COLORS[s]||'#4db8c4')+';border-radius:3px"></div></div>'+'<span style="font-size:10px;color:#cfe;min-width:20px">'+grouped[s]+'</span></div>').join('');const subCards=subNames.map(sn=>{const s=subStats[sn]||{units:0,plans:0};return'<button class="minhak-sub-link" data-sub="'+esc(sn)+'" title="פתח דשבורד שכונתי" style="background:#10202a;border:1px solid #2e7d8f;border-radius:8px;padding:8px 12px;cursor:pointer;text-align:right;min-width:150px;flex:1;font-family:inherit" onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">'+'<div style="font-size:13px;font-weight:bold;color:#cfe">'+esc(sn)+' <span style="color:#4db8c4;font-size:11px">↗</span></div>'+'<div style="font-size:11px;color:#789;margin-top:2px">'+num(s.units)+' יח"ד תוספת · '+s.plans+' תכניות</div></button>';}).join('');const topRows=planFeats.slice(0,12).map((r,i)=>'<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px"><a href="#" class="minhak-plan-zoom" data-idx="'+i+'" style="color:#64b5f6;text-decoration:underline;cursor:pointer">'+esc(r.name)+'</a></td>'+'<td style="padding:5px 6px;text-align:center;color:#5fd3a0">'+num(r.units)+'</td>'+'<td style="padding:5px 6px;font-size:11px;color:#999">'+esc(r.status)+'</td></tr>').join('');const prevD=document.getElementById('minhakdash-result');if(prevD)prevD.remove();const div=document.createElement('div');div.id='minhakdash-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">'+'<h3 id="minhakdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">🏛️ דשבורד מינהל — '+esc(minhakName)+'</h3>'+'<button id="minhakdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+kpi('אוכלוסייה קיימת',num(existingPop),'מפקד הלמ"ס 2022','#54c8e8')+kpi('יח"ד קיים',num(existingUnits),'שכבת מבנים עירונית','#54c8e8')+'</div>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+kpi('תכניות פעילות',plansCount,'','#4db8c4')+kpi('יח"ד תוספת',num(unitsAdd),'','#5fd3a0')+kpi('תכניות תמ"א 38',tamaCount,'','#e0a64d')+kpi('יח"ד תמ"א תוספת',num(tamaUnitsAdd),'','#c47bd1')+'</div>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+kpi('יח"ד בהיתר',num(issuedUnits),activePermits+' היתרים פעילים','#8fd14f')+kpi('שב"צ + הפרשה (מ"ר)',num(futureSqm+hafSqm),'עתידי '+num(futureSqm)+' · מבונה '+num(hafSqm),'#b08fd1')+kpi('מסחר עתידי (מ"ר)',num(commerceOut),'','#d18f8f')+kpi('עצים לכריתה/העתקה',num(trees),'','#8fb0d1')+'</div>'+'<h4 style="color:#4db8c4;margin:6px 0 8px;font-size:13px">תת-שכונות (לחץ לפתיחת דשבורד שכונתי)</h4>'+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+(subCards||'<span style="color:#789;font-size:12px">—</span>')+'</div>'+'<div style="display:flex;gap:18px;flex-wrap:wrap">'+'<div style="flex:1;min-width:260px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">פילוח לפי סטטוס</h4>'+(statusBars||'<div style="color:#789;font-size:12px">—</div>')+'</div>'+'<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד תוספת)</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">תוספת יח"ד</th><th style="padding:5px;color:#4db8c4">סטטוס</th></tr></thead><tbody>'+topRows+'</tbody></table></div>'+'</div>'+'<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+'<button id="minhakdash-demo" style="background:#1d5a6b;border:1px solid #54c8e8;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📈 נתונים דמוגרפיים</button>'+'<button id="minhakdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>'+'<button id="minhakdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);document.getElementById('minhakdash-close').addEventListener('click',()=>div.remove());document.getElementById('minhakdash-demo').addEventListener('click',()=>{div.remove();openPopulationDashboard(minhakName);});div.querySelectorAll('.minhak-sub-link').forEach(b=>b.addEventListener('click',()=>{div.remove();renderSubDashboard(b.getAttribute('data-sub'));}));div.querySelectorAll('.minhak-plan-zoom').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();const f=(planFeats[+el.getAttribute('data-idx')]||{}).feat;if(!f)return;div.remove();const map=mapInstanceRef.current;if(!map||!f.geometry)return;try{const center=visualCenter(f.geometry)||L.geoJSON(f).getBounds().getCenter();const latlng=center.lat?[center.lat,center.lng]:center;map.setView(latlng,18);setTimeout(()=>{const mapped=mapPlanProps(f.properties);const popup=L.popup({maxWidth:popupMaxWidth(),minWidth:Math.min(300,window.innerWidth*0.85),closeButton:true}).setLatLng(latlng).setContent(buildPlanPopup(mapped,{properties:mapped})).openOn(map);bindPopupEvents(popup,[{type:'plan',properties:mapped}],0);},500);}catch(err){console.warn('zoom to plan failed',err);}}));document.getElementById('minhakdash-csv').addEventListener('click',()=>{const title=document.getElementById('minhakdash-title')?.textContent||'דשבורד מינהל';const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const lines=[];lines.push(['מדד','ערך'].join(','));[['אוכלוסייה קיימת',Math.round(existingPop)],['יח"ד קיים',Math.round(existingUnits)],['תכניות פעילות',plansCount],['יח"ד תוספת',Math.round(unitsAdd)],['תכניות תמ"א 38',tamaCount],['יח"ד תמ"א תוספת',Math.round(tamaUnitsAdd)],['יח"ד בהיתר',Math.round(issuedUnits)],['היתרים פעילים',activePermits],['שב"צ עתידי (מ"ר)',Math.round(futureSqm)],['הפרשה מבונה (מ"ר)',Math.round(hafSqm)],['מסחר עתידי (מ"ר)',Math.round(commerceOut)],['עצים לכריתה/העתקה',Math.round(trees)]].forEach(r=>lines.push([q(r[0]),r[1]].join(',')));lines.push('');lines.push([q('תת-שכונה'),q('יח"ד תוספת'),q('תכניות')].join(','));subNames.forEach(sn=>{const s=subStats[sn]||{units:0,plans:0};lines.push([q(sn),Math.round(s.units),s.plans].join(','));});lines.push('');lines.push([q('תכנית'),q('תוספת יח"ד'),q('סטטוס')].join(','));planFeats.forEach(r=>lines.push([q(r.name),Math.round(r.units),q(r.status)].join(',')));const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});document.getElementById('minhakdash-print').addEventListener('click',()=>{const title=document.getElementById('minhakdash-title')?.textContent||'דשבורד מינהל';const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+esc(title)+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}a{color:#1565c0}button{display:none!important}</style></head><body>');win.document.write('<h3>'+esc(title)+'</h3>');win.document.write(div.innerHTML);win.document.close();win.print();});}// Aggregate CBS census-2022 stat-area metrics for a list of area-property objects.
-// Counts are summed; percentages/averages are weighted (population for people-metrics,
-// households for housing-metrics); areas missing a value are skipped from that metric.
-function aggregatePopulationAreas(areas){const sum=k=>areas.reduce((s,a)=>s+(typeof a[k]==='number'?a[k]:0),0);const wavg=(vk,wk)=>{let sv=0,sw=0;for(const a of areas){const v=a[vk],w=a[wk];if(typeof v==='number'&&typeof w==='number'&&w>0){sv+=v*w;sw+=w;}}return sw>0?sv/sw:null;};const LIFE=['חרדי','דתי/דתי מאוד','מסורתי','חילוני','מעורב','אחר'];const lifeRaw={};let lifeSum=0;LIFE.forEach(c=>{let sv=0,sw=0;for(const a of areas){const bd=a.datiyut_breakdown,w=a.pop_approx;if(bd&&typeof bd[c]==='number'&&typeof w==='number'&&w>0){sv+=bd[c]*w;sw+=w;}}lifeRaw[c]=sw>0?sv/sw:0;lifeSum+=lifeRaw[c];});const lifestyle={};LIFE.forEach(c=>lifestyle[c]=lifeSum>0?lifeRaw[c]/lifeSum*100:0);return{pop:sum('pop_approx'),hh:sum('hh_total'),householdSize:wavg('householdSize','pop_approx'),age_median:wavg('age_median','pop_approx'),age0_19:wavg('age0_19_pcnt','pop_approx'),age20_64:wavg('age20_64_pcnt','pop_approx'),age65:wavg('age65_pcnt','pop_approx'),children_per_woman:wavg('children_per_woman','pop_approx'),pop_density:wavg('pop_density','pop_approx'),own:wavg('own_pcnt','hh_total'),rent:wavg('rent_pcnt','hh_total'),vehicle0:wavg('vehicle0_pcnt','hh_total'),vehicle2up:wavg('vehicle2up_pcnt','hh_total'),parking:wavg('parking_pcnt','hh_total'),lifestyle,hasLifestyle:lifeSum>0,areaCount:areas.length};}// Build the minhak → sub-neighborhood hierarchy of existing-population census metrics
-// by assigning each stat-area centroid to its sub-neighborhood (and minhak).
-function computePopulationByGeography(gd){const stat=gd&&gd.stat_areas&&gd.stat_areas.features;if(!stat)return{minhaks:[],unassigned:0,unassignedPop:0};const subFeats=gd.sub_neighborhoods&&gd.sub_neighborhoods.features||[];const normSub=s=>SUB_NORMALIZE[s]||s;const findSub=c=>{for(const sf of subFeats){if(sf.geometry&&pointInGeometry(c,sf.geometry))return normSub(sf.properties.schn_nama);}return null;};const findMinhak=c=>{for(const heb of Object.keys(MINAHAK_HEB_TO_LAYER)){const layer=gd[MINAHAK_HEB_TO_LAYER[heb]];if(layer&&pointInLayer(c,layer))return heb;}return null;};// Sub-neighborhood centroids, for snapping areas that fall in a minhak polygon
-// but in a gap between sub polygons to the nearest sub OF THAT MINHAK.
-const subCentroids={};for(const sf of subFeats){const nm=normSub(sf.properties.schn_nama);if(nm&&!subCentroids[nm]){const cc=geomCentroid(sf.geometry);if(cc)subCentroids[nm]=cc;}}const nearestSubInMinhak=(c,minhak)=>{let best=null,bestD=Infinity;(MINAHAK_SUBS[minhak]||[]).forEach(s=>{const cc=subCentroids[SUB_NORMALIZE[s]||s];if(!cc)return;const dx=cc[0]-c[0],dy=cc[1]-c[1],d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=SUB_NORMALIZE[s]||s;}});return best;};const tree={};let unassigned=0,unassignedPop=0;for(const f of stat){const p=f.properties||{};if(typeof p.pop_approx!=='number'||p.pop_approx<=0)continue;// skip non-residential/empty
-const c=geomCentroid(f.geometry);if(!c){unassigned++;unassignedPop+=p.pop_approx;continue;}const sub=findSub(c);const minhak=sub&&SUB_TO_MINAHAK[sub]||findMinhak(c);if(!minhak){unassigned++;unassignedPop+=p.pop_approx;continue;}const subName=sub||nearestSubInMinhak(c,minhak)||'לא ידוע';tree[minhak]=tree[minhak]||{};(tree[minhak][subName]=tree[minhak][subName]||[]).push(p);}const minhaks=Object.keys(tree).map(mn=>{const subsObj=tree[mn],allAreas=[];const subs=Object.keys(subsObj).map(sn=>{allAreas.push(...subsObj[sn]);const areas=subsObj[sn].map(a=>({id:a.stat_area_id,pop:a.pop_approx,unite:a.unite_id||null})).sort((x,y)=>(y.pop||0)-(x.pop||0));return{name:sn,metrics:aggregatePopulationAreas(subsObj[sn]),areas};}).sort((a,b)=>b.metrics.pop-a.metrics.pop);return{name:mn,metrics:aggregatePopulationAreas(allAreas),subs};}).sort((a,b)=>b.metrics.pop-a.metrics.pop);return{minhaks,unassigned,unassignedPop};}// "אוכלוסייה קיימת לפי מינהק/תת-שכונה" dashboard (CBS census 2022).
-function openPopulationDashboard(initialMinhak){const data=computePopulationByGeography(geoDataRef.current||{});const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');const n0=v=>v==null||isNaN(v)?'—':Math.round(v).toLocaleString();const p1=v=>v==null||isNaN(v)?'—':v.toFixed(1)+'%';const f1=v=>v==null||isNaN(v)?'—':v.toFixed(1);const kpi=(label,val,sub2,color)=>'<div style="background:#10202a;border-right:3px solid '+color+';padding:8px 12px;border-radius:6px;min-width:110px;flex:1">'+'<div style="font-size:11px;color:#9ab">'+label+'</div>'+'<div style="font-size:21px;font-weight:bold;color:'+color+'">'+val+'</div>'+(sub2?'<div style="font-size:10px;color:#789">'+sub2+'</div>':'')+'</div>';const lf=(m,c)=>m.hasLifestyle?p1(m.lifestyle[c]):'—';// Inline horizontal stacked composition bar (segment widths = their % of the row).
-const segBar=segs=>{if(!segs.some(s=>typeof s.w==='number'))return'—';return'<div style="display:inline-flex;width:110px;height:11px;border-radius:3px;overflow:hidden;background:#0c1a22;vertical-align:middle">'+segs.map(s=>'<div style="width:'+Math.max(0,s.w||0)+'%;background:'+s.color+'" title="'+s.title+' '+(s.w||0).toFixed(1)+'%"></div>').join('')+'</div>';};const barTenure=m=>m.own==null&&m.rent==null?'—':segBar([{w:m.own,color:'#5fd3a0',title:'בעלות'},{w:m.rent,color:'#e0a64d',title:'שכירות'}]);const barVehicles=m=>m.vehicle0==null&&m.vehicle2up==null?'—':segBar([{w:m.vehicle0,color:'#54c8e8',title:'ללא רכב'},{w:Math.max(0,100-(m.vehicle0||0)-(m.vehicle2up||0)),color:'#3a4a55',title:'רכב אחד'},{w:m.vehicle2up,color:'#b08fd1',title:'2+ רכב'}]);// Column specs reused for tables, CSV and print.
-const BLOCKS=[{title:'אוכלוסייה וגיל',cols:[['אוכלוסייה',m=>n0(m.pop)],['משקי בית',m=>n0(m.hh)],['גודל מ"ב',m=>f1(m.householdSize)],['גיל חציוני',m=>f1(m.age_median)],['% 0-19',m=>p1(m.age0_19)],['% 20-64',m=>p1(m.age20_64)],['% 65+',m=>p1(m.age65)],['ילדים/אישה',m=>f1(m.children_per_woman)]]},{title:'אורח חיים / דתיות',cols:[['% חרדי',m=>lf(m,'חרדי')],['% דתי',m=>lf(m,'דתי/דתי מאוד')],['% מסורתי',m=>lf(m,'מסורתי')],['% חילוני',m=>lf(m,'חילוני')],['% מעורב',m=>lf(m,'מעורב')],['% אחר',m=>lf(m,'אחר')]]},{title:'דיור: בעלות / שכירות',bar:barTenure,barLabel:'בעלות ↔ שכירות',cols:[['% בעלות',m=>p1(m.own)],['% שכירות',m=>p1(m.rent)]]},{title:'כלי רכב וחניה',bar:barVehicles,barLabel:'0 / 1 / 2+ רכב',cols:[['% ללא רכב',m=>p1(m.vehicle0)],['% רכב 1',m=>m.vehicle0!=null&&m.vehicle2up!=null?p1(Math.max(0,100-m.vehicle0-m.vehicle2up)):'—'],['% 2+ רכב',m=>p1(m.vehicle2up)],['% עם חניה',m=>p1(m.parking),'border-right:2px solid #2e4a55']]}];const buildTable=(spec,subs,total)=>{const th='<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>'+spec.cols.map(c=>'<th style="padding:5px 7px;color:#4db8c4;font-size:11px;'+(c[2]||'')+'">'+c[0]+'</th>').join('')+(spec.bar?'<th style="padding:5px 7px;color:#4db8c4;font-size:11px">'+spec.barLabel+'</th>':'');const mkRow=(label,m,isTotal)=>{const st=isTotal?'font-weight:bold;background:#13212b;color:#8fd':'color:#cfe';return'<tr style="border-bottom:1px solid #222;'+st+'"><td style="padding:5px 7px;text-align:right">'+esc(label)+'</td>'+spec.cols.map(c=>'<td style="padding:5px 7px;text-align:center;'+(c[2]||'')+'">'+c[1](m)+'</td>').join('')+(spec.bar?'<td style="padding:5px 7px;text-align:center">'+spec.bar(m)+'</td>':'')+'</tr>';};const body=subs.map(s=>mkRow(s.name,s.metrics,false)).join('')+mkRow('סה"כ מינהק',total,true);return'<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">'+spec.title+'</h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">'+th+'</tr></thead><tbody>'+body+'</tbody></table>';};const prevD=document.getElementById('popdash-result');if(prevD)prevD.remove();const div=document.createElement('div');div.id='popdash-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';document.body.appendChild(div);let current=null;// null = minhak grid; else minhak name
-const coverageNote=data.unassigned>0?'<div style="font-size:10px;color:#789;margin-top:10px">'+data.unassigned+' אזורים סטטיסטיים נוספים שבמיפוי נמצאים מחוץ למינהלים הקהילתיים ואינם נכללים בדוח.</div>':'';function paint(minhakName){current=minhakName;const head='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">'+'<div style="display:flex;align-items:center;gap:10px">'+(minhakName?'<button id="popdash-back" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px">← חזרה</button>':'')+'<h3 id="popdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">👥 אוכלוסייה קיימת — '+esc(minhakName||'לפי מינהק')+'</h3>'+'</div>'+'<button id="popdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'</div>';const footer='<div style="display:flex;gap:8px;margin-top:16px">'+'<button id="popdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>'+'<button id="popdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>'+'</div>';let bodyHtml;if(!minhakName){if(!data.minhaks.length){bodyHtml='<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">אין נתוני אוכלוסייה (ודא ששכבת stat_areas נטענה).</div>';}else{const cards=data.minhaks.map(mh=>'<button class="popdash-card" data-minhak="'+esc(mh.name)+'" style="background:#10202a;border:1px solid #2e7d8f;border-radius:10px;padding:12px 14px;cursor:pointer;text-align:right;min-width:160px;flex:1;font-family:inherit" '+'onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">'+'<div style="font-size:14px;font-weight:bold;color:#cfe;margin-bottom:4px">'+esc(mh.name)+'</div>'+'<div style="font-size:22px;font-weight:bold;color:#4db8c4">'+n0(mh.metrics.pop)+'</div><div style="font-size:11px;color:#9ab">תושבים</div>'+'<div style="font-size:11px;color:#789;margin-top:4px">'+n0(mh.metrics.hh)+' משקי בית · '+f1(mh.metrics.householdSize)+' נפ\'/מ"ב</div>'+'</button>').join('');bodyHtml='<div style="font-size:12px;color:#9ab;margin-bottom:10px">בחר מינהל קהילתי לצפייה בפילוח תת-שכונות (מקור: מפקד הלמ"ס 2022).</div>'+'<div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div>'+coverageNote;}}else{const mh=data.minhaks.find(m=>m.name===minhakName);const t=mh.metrics;const kpis='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">'+kpi('אוכלוסייה',n0(t.pop),t.areaCount+' אזורים סטטיסטיים','#4db8c4')+kpi('משקי בית',n0(t.hh),'','#5fd3a0')+kpi('גודל משק בית',f1(t.householdSize),'נפ\'/מ"ב','#8fd14f')+kpi('גיל חציוני',f1(t.age_median),'','#c4a24d')+'</div>';// Verification: which CBS statistical areas feed each sub-neighborhood.
-const areasRows=mh.subs.map(s=>'<tr style="border-bottom:1px solid #222;color:#cfe"><td style="padding:5px 7px;text-align:right;white-space:nowrap">'+esc(s.name)+'</td>'+'<td style="padding:5px 7px;text-align:center;color:#9ab">'+s.areas.length+'</td>'+'<td style="padding:5px 7px;text-align:right;color:#9ab;font-size:11px">'+s.areas.map(a=>(a.unite?esc(a.unite):a.id)+' <span style="color:#667">('+n0(a.pop)+')</span>').join(' · ')+'</td></tr>').join('');const areasTable='<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">אזורים סטטיסטיים לפי תת-שכונה <span style="color:#789;font-weight:normal;font-size:11px">(מס׳ אזור · אוכלוסייה)</span></h4>'+'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">'+'<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>'+'<th style="padding:5px 7px;color:#4db8c4;font-size:11px"># אזורים</th>'+'<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">אזורים סטטיסטיים (מפקד 2022)</th>'+'</tr></thead><tbody>'+areasRows+'</tbody></table>';bodyHtml=kpis+BLOCKS.map(spec=>buildTable(spec,mh.subs,t)).join('')+areasTable;}div.innerHTML=head+bodyHtml+footer;document.getElementById('popdash-close').addEventListener('click',()=>div.remove());const backBtn=document.getElementById('popdash-back');if(backBtn)backBtn.addEventListener('click',()=>paint(null));div.querySelectorAll('.popdash-card').forEach(b=>b.addEventListener('click',()=>paint(b.getAttribute('data-minhak'))));document.getElementById('popdash-csv').addEventListener('click',exportCsv);document.getElementById('popdash-print').addEventListener('click',printView);}function exportCsv(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const lines=[];const dumpMinhak=mh=>{BLOCKS.forEach(spec=>{lines.push(q(mh.name+' — '+spec.title));lines.push(['תת-שכונה'].concat(spec.cols.map(c=>c[0])).map(q).join(','));mh.subs.forEach(s=>lines.push([q(s.name)].concat(spec.cols.map(c=>q(c[1](s.metrics).replace(/,/g,'')))).join(',')));lines.push([q('סה"כ מינהק')].concat(spec.cols.map(c=>q(c[1](mh.metrics).replace(/,/g,'')))).join(','));lines.push('');});};if(current){const mh=data.minhaks.find(m=>m.name===current);if(mh)dumpMinhak(mh);}else data.minhaks.forEach(dumpMinhak);const title=document.getElementById('popdash-title')?.textContent||'אוכלוסייה';const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/[^\w֐-׿]+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}function printView(){const title=document.getElementById('popdash-title')?.textContent||'אוכלוסייה קיימת';const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+esc(title)+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#e0eef0;color:#1a5a66}td:first-child,th:first-child{text-align:right}button{display:none!important}</style></head><body>');win.document.write('<h3>'+esc(title)+'</h3>');win.document.write(div.innerHTML);win.document.close();win.print();}paint(initialMinhak&&data.minhaks.some(m=>m.name===initialMinhak)?initialMinhak:null);}// ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
-useEffect(()=>{if(!areaFinished||areaFinished.length<3||!programaAreaActiveRef.current)return;programaAreaActiveRef.current=false;setProgramaActive(null);window.__programaHandledArea=true;const polyCoords=areaFinished.map(p=>[p.lng,p.lat]);polyCoords.push(polyCoords[0]);function pip(pt,ring){const x=pt[0],y=pt[1];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}const gd=geoDataRef.current||{};const candidatePlans=[];if(gd.plans){const seenTaba=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const taba=String(p.taba||'').trim();if(taba&&seenTaba.has(taba))return;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let coords;try{if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!coords||!coords.length)return;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(n===0)return;if(pip([cx/n,cy/n],polyCoords)){if(taba)seenTaba.add(taba);candidatePlans.push({taba,plan_name:p.plan_name,plan_name_he:p.plan_name_he,plan_summary:p.plan_summary,units_add:parseFloat(p.units_add)||0,units_total:parseInt(p.units_total)||0,status_mavat:p.status_mavat,stage:p.stage,mavat_date:p.mavat_date});}});}candidatePlans.sort((a,b)=>(b.units_total||b.units_add||0)-(a.units_total||a.units_add||0));const existingUnits=sumExistingUnitsInPolygon(polyCoords,gd.buildings);const eduFeats=eduFeaturesInPolygon(polyCoords,gd);// Use polygon centroid to detect minahak
-let centX=0,centY=0;const n=polyCoords.length-1;for(let i=0;i<n;i++){centX+=polyCoords[i][0];centY+=polyCoords[i][1];}centX/=n;centY/=n;const inGonen=pointInLayer([centX,centY],gd.minahak_gonen);renderProgramaModal({existingUnits,candidatePlans,eduFeats,scopeLabel:'אזור נבחר'+(inGonen?' · גוננים':''),parentModalId:null,inGonen,scopeGeom:{type:'polygon',rings:[polyCoords]}});// Clean up drawing layers
-const r=areaRef.current;const map=mapInstanceRef.current;if(map&&r){r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);}if(r){r.points=[];r.markers=[];r.polygon=null;}},[areaFinished]);// ── Full-area comprehensive report: aggregate ALL knowledge inside the drawn polygon ──
-useEffect(()=>{if(!areaFinished||areaFinished.length<3||!fullReportAreaActiveRef.current)return;fullReportAreaActiveRef.current=false;window.__fullReportHandledArea=true;// signal the default handler to skip this draw
-setFullAreaLoading(true);// show spinner while lazy layers are fetched
-setFullAreaReport(null);setFullAreaCollapsed({});setFullReportTables({});const gdRoot=geoDataRef.current;if(!gdRoot||!gdRoot.plans){setFullAreaLoading(false);return;}// ray-casting point-in-polygon ([x,y] in a closed ring of [lng,lat])
-function pip(pt,ring){const x=pt[0],y=pt[1];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}// centroid of a feature's geometry → [lng,lat] (Point / Line / Polygon / Multi*)
-function geomCentroid(geom){if(!geom||!geom.coordinates)return null;try{const t=geom.type;if(t==='Point')return geom.coordinates.slice(0,2);if(t==='MultiPoint'||t==='LineString')return geom.coordinates[0].slice(0,2);if(t==='MultiLineString')return geom.coordinates[0][0].slice(0,2);let ring;if(t==='Polygon')ring=geom.coordinates[0];else if(t==='MultiPolygon')ring=geom.coordinates[0][0];else return null;let cx=0,cy=0,n=0;for(const c of ring){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}return n?[cx/n,cy/n]:null;}catch(e){return null;}}const polyCoords=areaFinished.map(p=>[p.lng,p.lat]);polyCoords.push(polyCoords[0]);const areaSqm=polygonArea(areaFinished);const APPROVED=['אישור','תבע מאושרת','מאושרת','תחילת תוקף'];const groupStatus=s=>APPROVED.includes(s)?'תכניות מאושרות':s;// Clear the drawing layers immediately, but keep a highlighted polygon on the map
-// so the user retains spatial context of what was selected while the report is open.
-{const r0=areaRef.current,map0=mapInstanceRef.current;if(map0&&r0){r0.markers.forEach(m=>{try{map0.removeLayer(m);}catch(e){}});if(r0.polygon){try{map0.removeLayer(r0.polygon);}catch(e){}}}if(r0){r0.points=[];r0.markers=[];r0.polygon=null;}if(map0){map0.getContainer().classList.remove('measuring');if(fullReportPolyRef.current){try{map0.removeLayer(fullReportPolyRef.current);}catch(e){}}try{fullReportPolyRef.current=L.polygon(areaFinished,{color:'#e94560',weight:2,fillColor:'#e94560',fillOpacity:0.08,dashArray:'6,4',interactive:false}).addTo(map0);}catch(e){}}}// Master plans + the גוננים projector are lazy-loaded and may not be in geoDataRef yet.
-// Fetch the layers we need on demand (cached on window) so the report is complete
-// regardless of which layers the user has currently toggled on.
-(async()=>{const cache=window.__fullReportCache=window.__fullReportCache||{};const gd=Object.assign({},gdRoot);const need=['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot','projector_gonenim','projector_gonenim_tzatal','projector_talpiot','projector_talpiot_subs',// existing-state layers (מצב קיים)
-'mosadot_moch','education_shanaton','mosadot_shchuna','migrash_panui','shavaz_kayam','sport_kayam','mivnei_lashimur','yiud_karka_kayam','roads'];await Promise.all(need.map(async key=>{if(gd[key]&&gd[key].features)return;if(cache[key]){gd[key]=cache[key];return;}const path=GEOJSON_FILES[key];if(!path)return;try{const resp=await fetch(path);if(resp.ok){const j=await resp.json();cache[key]=j;gd[key]=j;}}catch(e){}}));// Tree points (separate JSON, not in GEOJSON_FILES)
-let treeData=cache.__trees;if(!treeData){try{const tr=await fetch('data/tree_points_xplan.json');if(tr.ok){treeData=await tr.json();cache.__trees=treeData;}}catch(e){}}// ── 1. תב"ע (plans) — centroid inside polygon, dedup MultiPolygon, drop rejected/infra ──
-const plansInside=[];const seenPlan=new Set();gd.plans.features.forEach(f=>{const p=f.properties||{};const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const c=geomCentroid(f.geometry);if(!c||!pip(c,polyCoords))return;const pn=p.plan_name||'';if(pn&&seenPlan.has(pn))return;if(pn)seenPlan.add(pn);plansInside.push({props:p,feat:f});});const planUnitsAdd=plansInside.reduce((s,x)=>s+(parseFloat(x.props.units_add)||0),0);const planByStatus={};plansInside.forEach(x=>{const st=groupStatus(normalizeStatus(x.props.status_mavat||''));planByStatus[st]=(planByStatus[st]||0)+1;});const planRowsAll=[...plansInside].sort((a,b)=>(parseFloat(b.props.units_add)||0)-(parseFloat(a.props.units_add)||0)).map(x=>({name:x.props.plan_summary||x.props.plan_name_he||x.props.plan_name||'',taba:x.props.plan_name||'',unitsAdd:parseFloat(x.props.units_add)||0,status:normalizeStatus(x.props.status_mavat||''),minahak:x.props.minahak||'',feat:x.feat}));const topPlans=planRowsAll.slice(0,8);// ── 2. תמ"א 38 ──
-let tamaCount=0,tamaUnits=0;const tamaRows=[];if(gd.tama38&&gd.tama38.features){gd.tama38.features.forEach(f=>{const c=geomCentroid(f.geometry);if(!c||!pip(c,polyCoords))return;const p=f.properties||{};const u=parseFloat(p.units_tose)||0;tamaCount++;tamaUnits+=u;tamaRows.push({address:p.address||p.tik||p.kvuzat_id||'',status:p.status||'',units:u,lng:c[0],lat:c[1]});});tamaRows.sort((a,b)=>b.units-a.units);}// ── 3. יח"ד קיימות (existing units from municipal buildings layer) ──
-const existingUnits=sumExistingUnitsInPolygon(polyCoords,gd.buildings);// ── 4. היתרים — aggregated through the תב"עות inside the polygon (permits have no own geometry) ──
-const stageAgg={};PERMIT_STAGES_ALL.forEach(st=>{stageAgg[st]={count:0,units:0};});const catAgg={};let totalPermits=0,totalIncludedUnits=0;const permitRows=[];function addPermit(p,included,scope){totalPermits++;const stage=getPermitStage(p),cat=classifyPermitCategory(p),u=Number(p.units)||0;if(included){if(!stageAgg[stage])stageAgg[stage]={count:0,units:0};stageAgg[stage].count++;stageAgg[stage].units+=u;if(!catAgg[cat])catAgg[cat]={count:0,units:0};catAgg[cat].count++;catAgg[cat].units+=u;totalIncludedUnits+=u;}permitRows.push({scope,file:p.file_number||'',status:p.status||'',units:u,included,stage,cat});}const seenTaba=new Set();plansInside.forEach(x=>{const taba=String(x.props.taba||'').trim();if(!taba||seenTaba.has(taba))return;seenTaba.add(taba);const permits=getPermitsForTaba(taba);if(!permits.length)return;const planUnits=parsePlanUnits(x.props.units_total)||parsePlanUnits(x.props.units_add);const inclusion=getEffectivePermitInclusion(permits,'plan:'+taba,planUnits);permits.forEach((p,i)=>addPermit(p,inclusion[i],'תב"ע '+(x.props.plan_summary||x.props.plan_name||taba)));});// ── 5. פרויקטור (recommendations) — by domain, with project names ──
-const PROJ_DOMAIN_LABEL={programa:'פרוגרמה / מבני ציבור',public_space:'מרחב ציבורי',transport:'תנועה ותחבורה',metaham:'מתחם תכנון',other:'אחר'};const projByDomain={};let projCount=0;['projector_gonenim','projector_gonenim_tzatal','projector_talpiot','projector_talpiot_subs'].forEach(key=>{const fc=gd[key];if(!fc||!fc.features)return;fc.features.forEach(f=>{const c=geomCentroid(f.geometry);if(!c||!pip(c,polyCoords))return;const p=f.properties||{};const isMeta=!!(p.is_metaham_polygon||p.is_metaham_pdf_tichnun);const dom=isMeta?'metaham':p.domain||'other';if(!projByDomain[dom])projByDomain[dom]={count:0,names:new Set()};projByDomain[dom].count++;const nm=(p.project_name||p.service_he||'').trim();if(nm)projByDomain[dom].names.add(nm);projCount++;});});const projector=Object.entries(projByDomain).map(([dom,v])=>({domain:dom,label:PROJ_DOMAIN_LABEL[dom]||dom,count:v.count,names:[...v.names].slice(0,30)}));// ── 6. תכניות אב — sub-zone rule aggregation (floors / FAR / conservation grades) ──
-const MP_KEYS={master_plan_moshavot:'מושבות',master_plan_rasko:'רסקו',master_plan_baka:'בקעה',master_plan_arnona:'ארנונה',master_plan_gonenim:'גוננים',master_plan_talpiot:'תלפיות'};const ZONE_FTS=new Set(['subzone','landuse','texture']);const CONS_FTS=new Set(['conservation','conservation_point','building_height']);const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null;};const firstNum=(p,keys)=>{for(const k of keys){const n=num(p[k]);if(n!=null)return n;}return null;};const FLOOR_KEYS=['max_floors','floors_max','zone_max_floors','zone_floors_max','floors_max_int','floors_per_master_plan'];const FAR_KEYS=['far_pct','zone_far_pct','far_pct_max','zone_far_pct_max'];const masterPlans=[];Object.keys(MP_KEYS).forEach(key=>{const fc=gd[key];if(!fc||!fc.features)return;const zones={};const cons={'א':0,'ב':0,'ג':0,strict:0,total:0};fc.features.forEach(f=>{const p=f.properties||{};const ft=p.feature_type;const isZone=ZONE_FTS.has(ft),isCons=CONS_FTS.has(ft);if(!isZone&&!isCons)return;const c=geomCentroid(f.geometry);if(!c||!pip(c,polyCoords))return;if(isCons){// Only features that actually carry a preservation grade count as שימור
-// (skips plain building_height/floor features with no grade).
-const g=(p.conservation_grade||p.conservation_type||p.zone_conservation_level||p.conservation_level||'').toString().trim();if(!g)return;const last=g.slice(-1);if(!!p.is_strict||/מחמיר|שימור מלא/.test(g))cons.strict++;if(/שימור מלא|דרגה א|רמה א/.test(g)||last==='א'||g.includes("א'"))cons['א']++;else if(/שימור עם תוספות|דרגה ב/.test(g)||last==='ב'||g.includes("ב'"))cons['ב']++;else if(/דרגה ג/.test(g)||last==='ג'||g.includes("ג'"))cons['ג']++;cons.total++;return;}const name=(p.zone_subzone_name||p.zone_name||p.zone_character||p.zone_subzone_code||p.zone_code||p.zone_category||p.category||p.zone_sog||p.sog||p.zone_merkam||p.merkam||p.zone_aizor||p.character||p.land_use||'ללא שם').toString().trim()||'ללא שם';if(!zones[name])zones[name]={name,count:0,floorsMin:null,floorsMax:null,farMin:null,farMax:null};const z=zones[name];z.count++;const fl=firstNum(p,FLOOR_KEYS);if(fl!=null){z.floorsMin=z.floorsMin==null?fl:Math.min(z.floorsMin,fl);z.floorsMax=z.floorsMax==null?fl:Math.max(z.floorsMax,fl);}const fr=firstNum(p,FAR_KEYS);if(fr!=null){z.farMin=z.farMin==null?fr:Math.min(z.farMin,fr);z.farMax=z.farMax==null?fr:Math.max(z.farMax,fr);}});const zoneList=Object.values(zones).sort((a,b)=>b.count-a.count);if(zoneList.length||cons.total)masterPlans.push({name:MP_KEYS[key],zones:zoneList,cons});});// ── 7. מצב קיים (existing state): public institutions, population, green space, trees, etc. ──
-// spherical ring area (m²) for a [lng,lat] ring, and full geometry area.
-function ringAreaSqm(ring){const R=6378137,toRad=Math.PI/180;let a=0;const n=ring.length;for(let i=0;i<n;i++){const j=(i+1)%n;a+=(ring[j][0]*toRad-ring[i][0]*toRad)*(2+Math.sin(ring[i][1]*toRad)+Math.sin(ring[j][1]*toRad));}return Math.abs(a*R*R/2);}function geomAreaSqm(g){if(!g||!g.coordinates)return 0;try{if(g.type==='Polygon')return ringAreaSqm(g.coordinates[0]);if(g.type==='MultiPolygon')return g.coordinates.reduce((s,poly)=>s+ringAreaSqm(poly[0]),0);}catch(e){}return 0;}const inPoly=f=>{const c=geomCentroid(f.geometry);return c&&pip(c,polyCoords);};const feats=key=>gd[key]&&gd[key].features||[];// 7a. מבני ציבור ומוסדות קיימים
-const moch={total:0,area:0,byCat:{},list:[]};feats('mosadot_moch').forEach(f=>{if(!inPoly(f))return;const p=f.properties||{};moch.total++;moch.area+=parseFloat(p.gross_area)||0;const cat=((p.category||p.type||'אחר')+'').trim()||'אחר';moch.byCat[cat]=(moch.byCat[cat]||0)+1;const nm=((p.name||'')+'').trim();if(nm){const cc=geomCentroid(f.geometry);moch.list.push({name:nm,cat,address:((p.address||'')+'').trim(),lng:cc&&cc[0],lat:cc&&cc[1]});}});let eduInst=0,eduStudents=0;const eduList=[];feats('education_shanaton').forEach(f=>{if(!inPoly(f))return;const p=f.properties||{};eduInst+=parseInt(p.institutions_count)||0;eduStudents+=parseInt(p.total_students)||0;const cc=geomCentroid(f.geometry);const insts=Array.isArray(p.institutions)?p.institutions:[];if(insts.length){insts.forEach(it=>eduList.push({name:((it.name||'')+'').trim(),type:((it.type||'')+'').trim(),pikuach:((it.pikuach||'')+'').trim(),students:parseInt(it.students)||0,address:((p.address||'')+'').trim(),lng:cc&&cc[0],lat:cc&&cc[1]}));}else{eduList.push({name:((p.address||'מוסד חינוך')+'').trim(),type:((p.primary_type||'')+'').trim(),pikuach:'',students:parseInt(p.total_students)||0,address:((p.address||'')+'').trim(),lng:cc&&cc[0],lat:cc&&cc[1]});}});eduList.sort((a,b)=>b.students-a.students);let shchunaCount=0;feats('mosadot_shchuna').forEach(f=>{if(inPoly(f))shchunaCount++;});const vacant={count:0,area:0};feats('migrash_panui').forEach(f=>{if(!inPoly(f))return;vacant.count++;vacant.area+=parseFloat((f.properties||{}).gross_area)||0;});// 7b. אוכלוסייה (מפקד 2022) — sum stat areas whose centroid falls inside
-const demo={pop:0,hh:0,areas:0};feats('stat_areas').forEach(f=>{if(!inPoly(f))return;const p=f.properties||{};demo.pop+=parseFloat(p.pop_approx)||0;demo.hh+=parseFloat(p.hh_total)||0;demo.areas++;});// 7c. שטחים ירוקים, ספורט ועצים
-const green={count:0,area:0};feats('shavaz_kayam').forEach(f=>{if(!inPoly(f))return;green.count++;green.area+=parseFloat((f.properties||{}).POLY_AREA)||geomAreaSqm(f.geometry);});let sportCount=0;feats('sport_kayam').forEach(f=>{if(inPoly(f))sportCount++;});const trees={shimur:0,krita:0,haataka:0};if(treeData&&treeData.plans){Object.values(treeData.plans).forEach(pl=>{(pl.points||[]).forEach(pt=>{if(pip([pt.x,pt.y],polyCoords)){const st=pt.status;if(trees[st]!=null)trees[st]++;}});});}// 7d. מסחר/תעסוקה (מתוך התב"עות), שימור עירוני, זיקות הנאה, יעודי קרקע קיים
-let commerceIn=0,employment=0;const commerceRows=[];plansInside.forEach(x=>{const ci=parseFloat(x.props.commerce_in)||0,em=parseFloat(x.props.employment)||0;commerceIn+=ci;employment+=em;if(ci||em)commerceRows.push({name:x.props.plan_summary||x.props.plan_name_he||x.props.plan_name||'',taba:x.props.plan_name||'',commerce:ci,employment:em,feat:x.feat});});commerceRows.sort((a,b)=>b.commerce+b.employment-(a.commerce+a.employment));const consCity={total:0,byGrade:{},byType:{},list:[]};feats('mivnei_lashimur').forEach(f=>{if(!inPoly(f))return;const p=f.properties||{};consCity.total++;const g=((p.mp_grade||'ללא דרגה')+'').trim()||'ללא דרגה';consCity.byGrade[g]=(consCity.byGrade[g]||0)+1;const sug=((p.sugMivne||'')+'').trim();if(sug)consCity.byType[sug]=(consCity.byType[sug]||0)+1;const nm=((p.shem||'')+'').trim();const street=[p.mp_street,p.mp_house_num].filter(Boolean).join(' ');if(nm||street){const cc=geomCentroid(f.geometry);consCity.list.push({name:nm||street,street:nm?street:'',grade:g,lng:cc&&cc[0],lat:cc&&cc[1]});}});const yiud={total:0,byYeud:{}};feats('yiud_karka_kayam').forEach(f=>{if(!inPoly(f))return;const p=f.properties||{};const y=((p.Descr||p.YEUD||'אחר')+'').trim()||'אחר';yiud.total++;yiud.byYeud[y]=(yiud.byYeud[y]||0)+geomAreaSqm(f.geometry);});// Street names within the area (from the roads layer)
-const streetSet=new Set();feats('roads').forEach(f=>{const c=geomCentroid(f.geometry);if(!c||!pip(c,polyCoords))return;const s=(((f.properties||{}).street||'')+'').trim();if(s)streetSet.add(s);});const streets=[...streetSet].sort((a,b)=>a.localeCompare(b,'he'));const existing={moch,eduInst,eduStudents,eduList,shchunaCount,vacant,demo,green,sportCount,trees,commerceIn,employment,commerceRows,consCity,yiud};setFullAreaReport({title:'סיכום אזור נבחר',areaSqm,streets,plans:{count:plansInside.length,unitsAdd:planUnitsAdd,byStatus:planByStatus,top:topPlans,rows:planRowsAll},tama:{count:tamaCount,units:tamaUnits,rows:tamaRows},existingUnits,permits:{totalPermits,totalIncludedUnits,stageAgg,catAgg,rows:permitRows},projector:{count:projCount,byDomain:projector},masterPlans,existing});setFullAreaLoading(false);})().catch(()=>setFullAreaLoading(false));},[areaFinished]);// ── Area select: analyze results when drawing is finished ──
-useEffect(()=>{if(!areaFinished||areaFinished.length<3)return;// Skip regular area analysis if landuse compare handled this
-if(landuseCompareModeRef.current==='area')return;if(window.__landuseHandledArea){window.__landuseHandledArea=false;return;}if(window.__treeHandledArea){window.__treeHandledArea=false;return;}if(window.__programaHandledArea){window.__programaHandledArea=false;return;}if(window.__fullReportHandledArea){window.__fullReportHandledArea=false;return;}const gd=geoDataRef.current;if(!gd||!gd.plans)return;// point-in-polygon test
-function pip(pt,ring){const[x,y]=pt;let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if(yi>y!==yj>y&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}const polyCoords=areaFinished.map(p=>[p.lng,p.lat]);polyCoords.push(polyCoords[0]);// Approved statuses to merge
-const APPROVED_STATUSES=['אישור','תבע מאושרת','מאושרת','תחילת תוקף'];function groupStatus(s){return APPROVED_STATUSES.includes(s)?'תכניות מאושרות':s;}// --- Plans (תב"ע) ---
-const plansInside=[];gd.plans.features.forEach(f=>{const p=f.properties;const s=normalizeStatus((p.status_mavat||'').trim());if(s==='נגנזה'||s==='נדחתה'||s==='נגנזה/נדחתה')return;if(['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type||'')))return;const geom=f.geometry;if(!geom||!geom.coordinates)return;let coords;try{if(geom.type==='Polygon')coords=geom.coordinates[0];else if(geom.type==='MultiPolygon')coords=geom.coordinates[0][0];else return;}catch(ex){return;}if(!coords||!coords.length)return;let cx=0,cy=0,n=0;for(const c of coords){if(c&&c.length>=2){cx+=c[0];cy+=c[1];n++;}}if(n===0)return;cx/=n;cy/=n;if(pip([cx,cy],polyCoords))plansInside.push({...p,_source:'plan'});});// --- TAMA 38 ---
-const tamaInside=[];if(gd.tama38&&gd.tama38.features){gd.tama38.features.forEach(f=>{const p=f.properties;const geom=f.geometry;if(!geom||!geom.coordinates)return;let lng,lat;try{if(geom.type==='Point'){lng=geom.coordinates[0];lat=geom.coordinates[1];}else if(geom.type==='MultiPoint'){lng=geom.coordinates[0][0];lat=geom.coordinates[0][1];}else return;}catch(ex){return;}if(pip([lng,lat],polyCoords))tamaInside.push(p);});}const totalPlanUnits=plansInside.reduce((s,p)=>s+(parseFloat(p.units_add)||0),0);const totalTamaUnits=tamaInside.reduce((s,p)=>s+(parseFloat(p.units_tose)||0),0);const totalUnits=totalPlanUnits+totalTamaUnits;const existingUnits=sumExistingUnitsInPolygon(polyCoords,gd.buildings);// Status breakdown (plans only, with merged approved)
-const byStatus={};plansInside.forEach(p=>{const st=groupStatus(normalizeStatus(p.status_mavat||''));byStatus[st]=(byStatus[st]||0)+1;});// Top plans by units_add
-const topPlans=[...plansInside].sort((a,b)=>(parseFloat(b.units_add)||0)-(parseFloat(a.units_add)||0)).slice(0,5);// Build all data rows for export
-const allRows=plansInside.map(p=>({type:'תב"ע',name:p.plan_summary||p.plan_name||'',status:normalizeStatus(p.status_mavat||''),units_add:parseFloat(p.units_add)||0,minahak:p.minahak||''})).concat(tamaInside.map(p=>({type:'תמ"א 38',name:p.address||p.tik||'',status:p.status||'',units_add:parseFloat(p.units_tose)||0,minahak:''})));// Show result as DOM element
-const prev=document.getElementById('area-select-result');if(prev)prev.remove();const statusHtml=Object.entries(byStatus).sort((a,b)=>b[1]-a[1]).map(([st,cnt])=>'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+st+'</span><span style="font-weight:bold">'+cnt+'</span></div>').join('');const topHtml=topPlans.map(p=>'<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px"><span>'+(p.plan_summary||p.plan_name||'')+'</span><span style="color:#4CAF50;font-weight:bold">+'+Math.round(parseFloat(p.units_add)||0)+'</span></div>').join('');const div=document.createElement('div');div.id='area-select-result';div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:min(320px,90vw);max-width:min(480px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';div.innerHTML='<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>'+'<h3 id="area-result-title" contenteditable="true" style="color:#e94560;margin:0 0 12px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">סיכום אזור נבחר</h3>'+'<div style="display:flex;gap:24px;margin-bottom:14px">'+'<div style="text-align:center"><div style="font-size:28px;font-weight:bold">'+plansInside.length+'</div><div style="font-size:11px;color:#aaa">תכניות תב"ע</div></div>'+(tamaInside.length>0?'<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#FF9800">'+tamaInside.length+'</div><div style="font-size:11px;color:#aaa">תמ"א 38</div></div>':'')+'<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">'+Math.round(totalUnits).toLocaleString()+'</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div>'+'<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים בשטח (לפי שכבת מבנים עירונית)"><div style="font-size:28px;font-weight:bold;color:#5dade2">'+existingUnits.toLocaleString()+'</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div></div>'+(statusHtml?'<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>'+statusHtml+'</div>':'')+(topHtml?'<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>'+topHtml+'</div>':'')+'<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">'+'<button id="area-export-excel" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא Excel</button>'+'<button id="area-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>'+'</div>';document.body.appendChild(div);// Store export data on the element for button handlers
-window.__areaExportData=allRows;// Excel export handler
-document.getElementById('area-export-excel').addEventListener('click',()=>{const rows=window.__areaExportData||[];const title=document.getElementById('area-result-title')?.textContent||'סיכום אזור';const cols=['סוג','שם','סטטוס','יח"ד תוספת','מינהק'];const header=cols.join(',');const csvRows=rows.map(r=>[r.type,r.name,r.status,r.units_add,r.minahak].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));const bom='\uFEFF';const blob=new Blob([bom+header+'\n'+csvRows.join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=title.replace(/\s+/g,'_')+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});// Print handler
-document.getElementById('area-print').addEventListener('click',()=>{const el=document.getElementById('area-select-result');if(!el)return;const win=window.open('','_blank');win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+(document.getElementById('area-result-title')?.textContent||'סיכום אזור')+'</title>');win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#e94560}button{display:none!important}</style></head><body>');win.document.write(el.innerHTML);win.document.write('</body></html>');win.document.close();win.print();});// Clean up drawing layers
-const r=areaRef.current;const map=mapInstanceRef.current;if(map){r.markers.forEach(m=>map.removeLayer(m));if(r.polygon)map.removeLayer(r.polygon);}r.points=[];r.markers=[];r.polygon=null;},[areaFinished]);// ── Measurement tool logic ──
-const clearMeasurement=useCallback(()=>{const map=mapInstanceRef.current;if(!map)return;const m=measureRef.current;m.layers.forEach(l=>map.removeLayer(l));if(m.tooltip)map.removeLayer(m.tooltip);if(m.guideLine)map.removeLayer(m.guideLine);if(m.mainCircle){map.removeLayer(m.mainCircle);m.mainCircle=null;}m.points=[];m.layers=[];m.tooltip=null;m.guideLine=null;setMeasureResult(null);},[]);const stopMeasure=useCallback(()=>{clearMeasurement();setMeasureMode(null);const map=mapInstanceRef.current;if(map)map.getContainer().classList.remove('measuring');},[clearMeasurement]);// Cancel every interactive mode so a fresh one can start without leftover state.
-// `except` skips the mode-flag write for that mode (the one being activated).
-// Sub-flags (programaAreaActive, treeAreaActive, etc.) and drawn polygons/centers
-// are ALWAYS reset — the caller is expected to re-set its own sub-flag right after.
-// Values: 'measure' | 'area' | 'radius' | 'landuse-compare' | 'shatzaf' | 'tree' | 'programa-area' | 'programa-radius' | null
-const cancelAllModes=useCallback((except=null)=>{const map=mapInstanceRef.current;const isAreaExcept=except==='area'||except==='programa-area';const isRadiusExcept=except==='radius'||except==='programa-radius';// 1. Measure
-if(except!=='measure'){clearMeasurement();setMeasureMode(null);}// 2. Area drawing: always wipe polygon + sub-flags + result panels.
-//    Skip setting areaMode=false only if the caller is itself activating an area mode.
-const r=areaRef.current;if(map&&r){r.markers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});if(r.polygon){try{map.removeLayer(r.polygon);}catch(e){}}r.points=[];r.markers=[];r.polygon=null;}if(!isAreaExcept)setAreaMode(false);setAreaPts(0);setAreaFinished(null);programaAreaActiveRef.current=false;treeAreaActiveRef.current=false;setTreeAreaActive(false);fullReportAreaActiveRef.current=false;setFullAreaReport(null);setFullReportDrill(null);setFullAreaLoading(false);if(fullReportPolyRef.current&&map){try{map.removeLayer(fullReportPolyRef.current);}catch(e){}fullReportPolyRef.current=null;}const prev1=document.getElementById('area-select-result');if(prev1)prev1.remove();const prev2=document.getElementById('programa-result');if(prev2)prev2.remove();const prev3=document.getElementById('tree-panel');if(prev3)prev3.remove();// 3. Radius: always wipe center + sub-flags + result panel.
-if(!isRadiusExcept)setRadiusMode(false);setRadiusCenter(null);programaRadiusActiveRef.current=false;const prev4=document.getElementById('radius-select-result');if(prev4)prev4.remove();// 4. Landuse compare
-if(except!=='landuse-compare'){setLanduseCompareMode(null);landuseCompareModeRef.current=null;}// 5. Shatzaf
-if(except!=='shatzaf'){setShatzafMode(false);shatzafModeRef.current=false;}// 6. Tree
-if(except!=='tree'){setTreeMode(false);treeModeRef.current=false;}// 7. Programa-active UI flag
-if(except!=='programa-area'&&except!=='programa-radius'){setProgramaActive(null);}// 7.5 Marker-coords: wipe drawn helpers + close any open result modal.
-if(except!=='marker-coords'){const mc=markerCoordsRef.current;if(map&&mc){mc.markers.forEach(m=>{try{map.removeLayer(m);}catch(_){}});if(mc.polygon){try{map.removeLayer(mc.polygon);}catch(_){}}mc.points=[];mc.markers=[];mc.polygon=null;}setMarkerCoordsMode(null);setMarkerCoordsPts(0);setMarkerCoordsResult(null);}// 8. Always strip cursor — entry handlers re-add it via useEffect or directly.
-if(map)map.getContainer().classList.remove('measuring');},[clearMeasurement]);// Format distance in m/km
-function fmtDist(m){if(m>=1000)return(m/1000).toFixed(2)+' ק"מ';return Math.round(m)+' מ\'';}// Format area in dunam / sqm
-function fmtArea(sqm){const dunam=sqm/1000;if(dunam>=1)return dunam.toFixed(2)+' דונם'+' ('+Math.round(sqm).toLocaleString()+' מ"ר)';return Math.round(sqm).toLocaleString()+' מ"ר';}// Compute total polyline distance
-function polylineDist(pts){let d=0;for(let i=1;i<pts.length;i++)d+=pts[i-1].distanceTo(pts[i]);return d;}// Compute polygon area using Shoelace on projected coords
-function polygonArea(pts){if(pts.length<3)return 0;// Use L.GeometryUtil if available, otherwise Gauss's formula on EPSG:4326
-// Spherical excess method for better accuracy
-const toRad=Math.PI/180;const R=6378137;let area=0;const n=pts.length;for(let i=0;i<n;i++){const j=(i+1)%n;const k=(i+2)%n;area+=(pts[j].lng*toRad-pts[i].lng*toRad)*(2+Math.sin(pts[i].lat*toRad)+Math.sin(pts[j].lat*toRad));}area=Math.abs(area*R*R/2);return area;}useEffect(()=>{const map=mapInstanceRef.current;if(!map)return;const container=map.getContainer();if(!measureMode){container.classList.remove('measuring');return;}container.classList.add('measuring');const m=measureRef.current;// Clear any previous measurement
-m.layers.forEach(l=>map.removeLayer(l));if(m.tooltip)map.removeLayer(m.tooltip);if(m.guideLine)map.removeLayer(m.guideLine);m.points=[];m.layers=[];m.tooltip=null;m.guideLine=null;setMeasureResult(null);const lineStyle={color:'#e94560',weight:2,dashArray:'6 4'};const fillStyle={color:'#e94560',fillColor:'rgba(233,69,96,0.15)',weight:2,dashArray:'6 4'};const vertexStyle={radius:5,color:'#e94560',fillColor:'#fff',fillOpacity:1,weight:2};function updateTooltip(latlng,text){if(m.tooltip){m.tooltip.setLatLng(latlng).setContent(text);}else{m.tooltip=L.tooltip({permanent:true,direction:'top',offset:[0,-10],className:'measure-tooltip'}).setLatLng(latlng).setContent(text).addTo(map);}}function onMapClick(e){// Ignore clicks on controls/popups
-const tgt=e.originalEvent&&e.originalEvent.target;if(tgt&&(tgt.closest('.leaflet-control')||tgt.closest('.leaflet-popup')||tgt.closest('.map-toolbar')||tgt.closest('.measure-result')))return;const pt=e.latlng;m.points.push(pt);// Add vertex marker
-const marker=L.circleMarker(pt,vertexStyle).addTo(map);m.layers.push(marker);if(measureMode==='distance'){if(m.points.length>1){const line=L.polyline(m.points,lineStyle).addTo(map);// Remove old line if exists
-if(m.mainLine)map.removeLayer(m.mainLine);m.mainLine=line;m.layers.push(line);}const dist=polylineDist(m.points);if(dist>0){updateTooltip(pt,fmtDist(dist));setMeasureResult({type:'distance',value:fmtDist(dist)});}}else if(measureMode==='radius'){// Radius mode: first click = center, second click = edge
-if(m.points.length===1){updateTooltip(pt,'לחצו על נקודת הקצה');}else if(m.points.length===2){const center=m.points[0];const edge=m.points[1];const radius=center.distanceTo(edge);if(m.mainCircle)map.removeLayer(m.mainCircle);const circle=L.circle(center,{radius,color:'#e94560',fillColor:'rgba(233,69,96,0.15)',weight:3,dashArray:null}).addTo(map);m.mainCircle=circle;m.layers.push(circle);// Also draw radius line
-const radLine=L.polyline([center,edge],{color:'#e94560',weight:2,dashArray:'6 4'}).addTo(map);m.layers.push(radLine);const radiusText=fmtDist(radius);updateTooltip(edge,'רדיוס: '+radiusText);setMeasureResult({type:'radius',value:radiusText});// Done — stop listening
-if(m.guideLine){map.removeLayer(m.guideLine);m.guideLine=null;}map.off('click',onMapClick);map.off('mousemove',onMouseMove);map.off('dblclick',onDblClick);container.classList.remove('measuring');}}else{// Area mode
-if(m.mainPoly)map.removeLayer(m.mainPoly);if(m.points.length>=2){const poly=L.polygon(m.points,fillStyle).addTo(map);m.mainPoly=poly;m.layers.push(poly);}if(m.points.length>=3){const area=polygonArea(m.points);updateTooltip(pt,fmtArea(area));setMeasureResult({type:'area',value:fmtArea(area)});}else{updateTooltip(pt,'לחצו נקודות נוספות');}}}function onMouseMove(e){if(m.points.length===0)return;const lastPt=m.points[m.points.length-1];// Draw guide line from last point to cursor
-if(m.guideLine)map.removeLayer(m.guideLine);m.guideLine=L.polyline([lastPt,e.latlng],{color:'#8888aa',weight:1,dashArray:'4 4'}).addTo(map);// Show running measurement in tooltip
-if(measureMode==='distance'){const totalDist=polylineDist(m.points)+lastPt.distanceTo(e.latlng);updateTooltip(e.latlng,fmtDist(totalDist));}else if(measureMode==='radius'){// Show growing circle from center to cursor
-const center=m.points[0];const radius=center.distanceTo(e.latlng);if(m.mainCircle)map.removeLayer(m.mainCircle);m.mainCircle=L.circle(center,{radius,color:'#e94560',fillColor:'rgba(233,69,96,0.1)',weight:1.5,dashArray:'6 4'}).addTo(map);updateTooltip(e.latlng,'רדיוס: '+fmtDist(radius));}else if(m.points.length>=2){const tempPts=[...m.points,e.latlng];const area=polygonArea(tempPts);updateTooltip(e.latlng,fmtArea(area));}}function onDblClick(e){L.DomEvent.stopPropagation(e);L.DomEvent.preventDefault(e);// Finish measurement
-if(m.guideLine){map.removeLayer(m.guideLine);m.guideLine=null;}if(measureMode==='distance'&&m.points.length>=2){// Finalize line — solid
-if(m.mainLine)map.removeLayer(m.mainLine);const finalLine=L.polyline(m.points,{color:'#e94560',weight:3}).addTo(map);m.layers.push(finalLine);const dist=polylineDist(m.points);setMeasureResult({type:'distance',value:fmtDist(dist)});updateTooltip(m.points[m.points.length-1],fmtDist(dist));}else if(measureMode==='area'&&m.points.length>=3){if(m.mainPoly)map.removeLayer(m.mainPoly);const finalPoly=L.polygon(m.points,{color:'#e94560',fillColor:'rgba(233,69,96,0.2)',weight:3}).addTo(map);m.layers.push(finalPoly);const area=polygonArea(m.points);setMeasureResult({type:'area',value:fmtArea(area)});updateTooltip(m.points[m.points.length-1],fmtArea(area));}// Stop listening but keep result visible
-map.off('click',onMapClick);map.off('mousemove',onMouseMove);map.off('dblclick',onDblClick);container.classList.remove('measuring');}function onKeyDown(e){if(e.key==='Escape'){stopMeasure();document.removeEventListener('keydown',onKeyDown);}}// Disable double-click zoom while measuring
-map.doubleClickZoom.disable();map.on('click',onMapClick);map.on('mousemove',onMouseMove);map.on('dblclick',onDblClick);document.addEventListener('keydown',onKeyDown);return()=>{map.off('click',onMapClick);map.off('mousemove',onMouseMove);map.off('dblclick',onDblClick);document.removeEventListener('keydown',onKeyDown);map.doubleClickZoom.enable();container.classList.remove('measuring');if(m.guideLine){map.removeLayer(m.guideLine);m.guideLine=null;}};},[measureMode,stopMeasure]);// ── Print function ──
-const[printScale,setPrintScale]=useState('fit');// 'fit' | 'current' | '1:2500' | ...
-const[printPageSize,setPrintPageSize]=useState('A4');// 'A4' | 'A3'
-const[printOrientation,setPrintOrientation]=useState('landscape');// 'landscape' | 'portrait'
-const PRINT_SCALES=[{value:'fit',label:'מותאם לדף'},{value:'current',label:'קנ"מ נוכחי'},{value:'1:2500',label:'1:2,500',denom:2500},{value:'1:5000',label:'1:5,000',denom:5000},{value:'1:10000',label:'1:10,000',denom:10000},{value:'1:15000',label:'1:15,000',denom:15000},{value:'1:25000',label:'1:25,000',denom:25000}];const closePrintModal=useCallback(()=>{const map=mapInstanceRef.current;if(printAreaRef.current.rectLayer&&map){map.removeLayer(printAreaRef.current.rectLayer);printAreaRef.current.rectLayer=null;}setPrintAreaBounds(null);setShowPrint(false);},[]);const handlePrint=useCallback(async()=>{const map=mapInstanceRef.current;if(!map)return;const originalBounds=printAreaBounds?map.getBounds():null;if(printAreaBounds&&printAreaRef.current.rectLayer){map.removeLayer(printAreaRef.current.rectLayer);printAreaRef.current.rectLayer=null;}if(printAreaBounds){map.fitBounds(printAreaBounds,{animate:false,padding:[0,0]});await new Promise(r=>setTimeout(r,300));}const title=printShowTitle?printTitle||'מפת אורנים - תכנון עירוני':'';// Build legend HTML with print-safe colors
-let legendHtml='';if(printShowLegend){legendHtml='<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl;print-color-adjust:exact;-webkit-print-color-adjust:exact">';legendHtml+='<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';// Plans legend section (only when plans layer is on)
-if(layers['plans']){legendHtml+='<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">תב"עות - סטטוס</div>';legendHtml+='<div style="display:flex;flex-wrap:wrap;gap:8px">';PLANS_LEGEND.forEach(item=>{legendHtml+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px">`+`<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>`+`${item.label}</div>`;});legendHtml+='</div>';}// Education legend section (compact, when layers are on)
-if(layers['mosadot_shchuna']||layers['sara_march_2026']){legendHtml+='<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';legendHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';legendHtml+='<span style="font-weight:bold;color:#555">חינוך:</span>';legendHtml+='<span>●יסודי</span> <span>■על-יסודי</span> <span>▲גני</span> <span>◆מעון</span>';legendHtml+='<span style="margin-right:6px">|</span>';legendHtml+=`<span style="color:${PUBLIC_PALETTE.edu_mamlachti}">■</span>ממלכתי <span style="color:${PUBLIC_PALETTE.edu_mamlachti_dati}">■</span>דתי <span style="color:${PUBLIC_PALETTE.edu_aravi}">■</span>ערבי <span style="color:${PUBLIC_PALETTE.edu_haredi}">■</span>חרדי`;legendHtml+='<span style="margin-right:6px">|</span>';legendHtml+=`<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_existing};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>קיים `;legendHtml+=`<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_authorized};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>הרשאה `;legendHtml+=`<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_no_auth};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>אין הרשאה`;legendHtml+='</div></div>';}// Shavaz legend section (compact, when layers are on)
-if(layers['shavaz_kayam']||layers['future_shavaz']||layers['sport_kayam']){legendHtml+='<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';legendHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';legendHtml+='<span style="font-weight:bold;color:#555">שב"צ:</span>';SHAVAZ_LEGEND.forEach(item=>{legendHtml+=`<span style="width:10px;height:10px;background:${item.color};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>${item.label} `;});legendHtml+='</div></div>';}legendHtml+='</div>';}// Determine map bounds based on selected scale
-const mapContainer=map.getContainer();const mapRect=mapContainer.getBoundingClientRect();const center=map.getCenter();let printScaleLabel;const selectedScale=PRINT_SCALES.find(s=>s.value===printScale);if(printScale!=='current'&&printScale!=='fit'&&selectedScale&&selectedScale.denom){// Calculate bounds for exact scale
-// At this scale, 1 cm on paper = denom cm in reality
-// Print area ~ A4 landscape = ~27cm x 17cm
-const PAPER_SIZES={A4:{w:27,h:17},A3:{w:38,h:25},A2:{w:55,h:37},A1:{w:79,h:53},A0:{w:112,h:77}};const baseDims=PAPER_SIZES[printPageSize]||PAPER_SIZES.A4;const paperDims=printOrientation==='landscape'?baseDims:{w:baseDims.h,h:baseDims.w};const paperWidthCm=paperDims.w;const paperHeightCm=paperDims.h;const metersWide=selectedScale.denom*paperWidthCm/100;const metersHigh=selectedScale.denom*paperHeightCm/100;// Convert meters to degrees (approximate at Jerusalem latitude ~31.75)
-const lat=center.lat;const mPerDegLat=111320;const mPerDegLng=111320*Math.cos(lat*Math.PI/180);const dLat=metersHigh/2/mPerDegLat;const dLng=metersWide/2/mPerDegLng;printScaleLabel=selectedScale.label;}else{// Calculate current scale
-const centerPx=map.latLngToContainerPoint(center);const rightPx=L.point(centerPx.x+100,centerPx.y);const rightLL=map.containerPointToLatLng(rightPx);const distM=center.distanceTo(rightLL);const dpi=96;const distCm=100/dpi*2.54;const scaleDenom=Math.round(distM*100/distCm);printScaleLabel='1:'+scaleDenom.toLocaleString('he-IL');}// ── window.print() approach: inject print styles and print the page directly ──
-const printOverlay=document.createElement('div');printOverlay.id='print-overlay';printOverlay.innerHTML=`
-                    ${title?`<div class="print-header-title">${title}</div>`:''}
+function applyMinahakOverridesByGeometry(gd) {
+  if (!gd || !gd.plans || !gd.plans.features) return 0;
+  const minahakLayers = [{
+    name: 'בית צפאפא',
+    layer: gd.minahak_beit_tzfafa
+  }, {
+    name: 'גוננים',
+    layer: gd.minahak_gonen
+  }, {
+    name: 'בקעה רבתי',
+    layer: gd.minahak_baka
+  }, {
+    name: 'א.ת. תלפיות',
+    layer: gd.minahak_talpiot
+  }, {
+    name: 'מינהל מוסדי מלחה',
+    layer: gd.minahak_malha
+  }, {
+    name: 'גינות העיר',
+    layer: gd.minahak_ganot
+  }].filter(x => x.layer && x.layer.features);
+  if (!minahakLayers.length) return 0;
+  let n = 0;
+  gd.plans.features.forEach(f => {
+    const p = f.properties || {};
+    if (!f.geometry) return;
+    const centroid = geomCentroid(f.geometry);
+    if (!centroid) return;
+    const containing = minahakLayers.find(({
+      layer
+    }) => pointInLayer(centroid, layer));
+    if (containing && (p.minahak || '').trim() !== containing.name) {
+      p.minahak = containing.name;
+      n++;
+    }
+  });
+  if (n > 0) console.log('[MinahakGeom] overrode', n, 'plans via centroid-in-polygon');
+  return n;
+}
+const CENTER = [31.7530, 35.2100];
+const DEFAULT_ZOOM = 15;
+function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [layers, setLayers] = useState(() => {
+    const initial = {};
+    Object.values(LAYER_CONFIG).forEach(group => {
+      group.layers.forEach(l => {
+        initial[l.id] = l.on;
+      });
+    });
+    return initial;
+  });
+  const [opacity, setOpacity] = useState(0.85);
+  // Immediate thumb value; the committed `opacity` (which triggers a full layer
+  // rebuild) is debounced so dragging the slider rebuilds once, not per tick.
+  const [opacitySlider, setOpacitySlider] = useState(0.85);
+  const opacityTimerRef = useRef(null);
+  const handleOpacityChange = v => {
+    setOpacitySlider(v);
+    if (opacityTimerRef.current) clearTimeout(opacityTimerRef.current);
+    opacityTimerRef.current = setTimeout(() => setOpacity(v), 150);
+  };
+  const [basemapOpacity, setBasemapOpacity] = useState(1);
+  const [basemap, setBasemap] = useState('cartoLight');
+  const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState({
+    done: 0,
+    total: 0
+  });
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [deferredTick, setDeferredTick] = useState(0); // bumps when a deferred geojson arrives
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [loadError, setLoadError] = useState(null); // { failed: string[], critical: boolean }
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [cursorPos, setCursorPos] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [planSearch, setPlanSearch] = useState('');
+  const [planIndex, setPlanIndex] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [addressSearch, setAddressSearch] = useState('');
+  const [addressResults, setAddressResults] = useState([]);
+  const [addressLoading, setAddressLoading] = useState(false);
+  // Unified global search (Ctrl/Cmd+K or /)
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+  const [globalSearchActive, setGlobalSearchActive] = useState(0);
+  const [globalAddrResults, setGlobalAddrResults] = useState([]);
+  const [globalAddrLoading, setGlobalAddrLoading] = useState(false);
+  const globalSearchInputRef = useRef(null);
+  const [planningTopics, setPlanningTopics] = useState({
+    overlapping: false,
+    // תבעות כפולות על אותו מרחב
+    objections: false,
+    // תכניות המופקדות להתנגדויות
+    meetings: false,
+    // תכניות עם ישיבה קרובה
+    infrastructure: false,
+    plan7778: false,
+    // תכניות בהודעה 77/78
+    archived: false,
+    // תכניות שנגנזו/נדחו
+    shavaz_demolition: false,
+    // מבני ציבור להריסה במסגרת התחדשות עירונית
+    consolidation: false,
+    // תכניות איחוד וחלוקה
+    rental: false,
+    // פרוייקטים עם דירות להשכרה
+    permit_objections: false // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
+  });
+  const [legendPopup, setLegendPopup] = useState(null); // { title, items }
+  const [mapScale, setMapScale] = useState('');
+  const [zoomLevel, setZoomLevel] = useState(15);
+  const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
+  const [measureDropdown, setMeasureDropdown] = useState(false);
+  const [areaMode, setAreaMode] = useState(false);
+  const [areaFinished, setAreaFinished] = useState(null);
+  const [areaPts, setAreaPts] = useState(0);
+  const areaRef = useRef({
+    points: [],
+    markers: [],
+    polygon: null
+  });
+  const areaModeRef = useRef(false);
+  const [radiusMode, setRadiusMode] = useState(false);
+  const radiusModeRef = useRef(false);
+  const [radiusCenter, setRadiusCenter] = useState(null);
+  const [radiusMeters, setRadiusMeters] = useState(500);
+  const radiusRef = useRef({
+    circle: null,
+    marker: null
+  });
+  const [landuseCompareMode, setLanduseCompareMode] = useState(null); // null | 'plan' | 'area'
+  const landuseCompareModeRef = useRef(null);
+  const [shatzafMode, setShatzafMode] = useState(false); // שצ"פ לנפש mode - UI only
+  const shatzafModeRef = useRef(false);
+  const [treeMode, setTreeMode] = useState(false); // עצים mode - UI only: false | 'plan' | 'sub'
+  const treeModeRef = useRef(false);
+  const [treeAreaActive, setTreeAreaActive] = useState(false); // true when polygon draw is for trees
+  const treeAreaActiveRef = useRef(false);
+  // Programa-direct mode: when true, area/radius selection bypasses the regular plans/permits modal
+  // and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
+  const programaAreaActiveRef = useRef(false);
+  const programaRadiusActiveRef = useRef(false);
+  // Which report the 4 programa scope collectors should render: 'programa' (default) or 'allocations'.
+  const reportKindRef = useRef('programa');
+  const [programaActive, setProgramaActive] = useState(null); // null | 'area' | 'radius' — for toolbar UI state
+  // Full-area comprehensive report ("דוח אזור מקיף"): own draw-ownership flag +
+  // the aggregated result object rendered by the React modal.
+  const [fullAreaReport, setFullAreaReport] = useState(null);
+  const [fullReportDrill, setFullReportDrill] = useState(null); // expanded institution category in the report
+  const [fullAreaLoading, setFullAreaLoading] = useState(false); // true while lazy layers are being fetched
+  const [fullAreaCollapsed, setFullAreaCollapsed] = useState({}); // {sectionId: true} = collapsed
+  const [fullReportTables, setFullReportTables] = useState({}); // {tableId: true} = detailed record-table expanded
+  const fullReportAreaActiveRef = useRef(false);
+  const fullReportPolyRef = useRef(null); // highlighted polygon kept on the map while report is open
+  // Expose function to trigger area analysis from landuse panel
+  window.__triggerAreaAnalysis = points => {
+    landuseCompareModeRef.current = null;
+    setLanduseCompareMode(null);
+    setAreaFinished(points);
+  };
+  const [measureResult, setMeasureResult] = useState(null); // { type, value, unit }
+  const measureRef = useRef({
+    points: [],
+    layers: [],
+    tooltip: null,
+    guideLine: null
+  });
+  // Marker-coords tool: capture coords for updating recommendations / polygons.
+  const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'line' | 'polygon'
+  const markerCoordsModeRef = useRef(null);
+  const [markerCoordsPts, setMarkerCoordsPts] = useState(0);
+  const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'line'|'polygon', points:[{lat,lng}] }
+  const markerCoordsRef = useRef({
+    points: [],
+    markers: [],
+    polygon: null
+  });
+  const [showPrint, setShowPrint] = useState(false);
+  const [printTitle, setPrintTitle] = useState('');
+  const [printShowLegend, setPrintShowLegend] = useState(true);
+  const [printShowTitle, setPrintShowTitle] = useState(true);
+  const [printShowBasemap, setPrintShowBasemap] = useState(true);
+  const [printAreaMode, setPrintAreaMode] = useState(false);
+  const [printAreaBounds, setPrintAreaBounds] = useState(null);
+  const printAreaRef = useRef({
+    corner1: null,
+    marker1: null,
+    previewLayer: null,
+    rectLayer: null,
+    mouseHandler: null,
+    clickHandler: null,
+    keyHandler: null
+  });
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'measure' | null
+  const [showUnits, setShowUnits] = useState(false);
+  const [unitsData, setUnitsData] = useState(null); // { minahaks, byMinahak }
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsExpanded, setUnitsExpanded] = useState(null); // null | 'type' | 'status'
+  const [unitsDrilldown, setUnitsDrilldown] = useState(null); // minahak name for drill-down view
+  const [showCommerceTable, setShowCommerceTable] = useState(false);
+  const [commerceData, setCommerceData] = useState(null);
+  const [commerceLoading, setCommerceLoading] = useState(false);
+  const [commerceExpanded, setCommerceExpanded] = useState(null); // null | 'status'
+  const [commerceDrilldown, setCommerceDrilldown] = useState(null);
+  const [commerceCellReport, setCommerceCellReport] = useState(null);
+  const [minahakReport, setMinahakReport] = useState(null);
+  const [cellReport, setCellReport] = useState(null); // {minahak, statusKey, statusLabel, plans}
+  const [showMimush, setShowMimush] = useState(false);
+  const [mimushData, setMimushData] = useState(null);
+  const [mimushDrilldown, setMimushDrilldown] = useState(null);
+  const [mimushExpanded, setMimushExpanded] = useState(null); // null | 'stage' | 'tail'
+  const [mimushTailOpen, setMimushTailOpen] = useState({}); // { minahak: true/false }
+  const [mimushCellReport, setMimushCellReport] = useState(null);
+  const [objectionsReport, setObjectionsReport] = useState(false);
+  const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
+  const [meetingsReport, setMeetingsReport] = useState(false);
+  const [overlapReport, setOverlapReport] = useState(false);
+  const [shavazKayamReport, setShavazKayamReport] = useState(false);
+  const [shavazReportFilter, setShavazReportFilter] = useState({
+    sub: 'all',
+    minahak: 'all',
+    q: ''
+  });
+  const [specialHousingReport, setSpecialHousingReport] = useState(false);
+  // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
+  const [masterPlanReport, setMasterPlanReport] = useState(null);
+  const [showReportsMenu, setShowReportsMenu] = useState(false);
+  const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
+  const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
+  // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
+  // filter plans/permits to those whose centroid is inside the projector boundary, roll them
+  // up under one virtual minahak ("פרוייקטור תלפיות"), and bucket sub-neighborhood by the 5 internal polygons.
+  const [reportScope, setReportScope] = useState(null);
+  useEffect(() => {
+    window.__reportScope = reportScope;
+  }, [reportScope]);
+  const [showPermitsGap, setShowPermitsGap] = useState(false);
+  const [permitsGapDrilldown, setPermitsGapDrilldown] = useState(null);
+  const [showPermitsBySub, setShowPermitsBySub] = useState(false);
+  const [permitsBySubDrilldown, setPermitsBySubDrilldown] = useState(null);
+  const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
+  // Neighborhood Program report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
+  const [showPublicNeeds, setShowPublicNeeds] = useState(false);
+  const [showAllocChooser, setShowAllocChooser] = useState(false); // scope chooser for the built-allocations report
+  const [dashSub, setDashSub] = useState('גוננים א-ו'); // selected sub-neighborhood for the neighborhood dashboard
+  const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
+  const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
+  const [plannedDrilldown, setPlannedDrilldown] = useState(null); // { sub, svcKey } or null — for contributing plans on '+מתוכנן' cell
+  const [uncatDrilldown, setUncatDrilldown] = useState(null); // sub name or null — for uncategorized sqm panel
+  const [publicNeedsMinahak, setPublicNeedsMinahak] = useState(null); // selected minahak name (or null = card grid)
+  // Auto-clear report scope when all scope-aware modals close.
+  useEffect(() => {
+    if (!showMimush && !showUnits && !showCommerceTable && !showPermitsBySub && !showPermitsGap && !showPublicNeeds && reportScope) {
+      setReportScope(null);
+      setUnitsData(null);
+      setCommerceData(null);
+      setMimushData(null);
+      window.__unitsData = null;
+      window.__unitsFetching = false;
+    }
+  }, [showMimush, showUnits, showCommerceTable, showPermitsBySub, showPermitsGap, showPublicNeeds, reportScope]);
+  // Assumptions: default + per-minahak presets + per-minahak overrides.
+  // Presets are based on Jerusalem Institute Statistical Yearbook 2025 (אוכלוסייה לפי גיל, לוח ג/15)
+  // and qualitative demographic knowledge per minahak.
+  const PN_DEFAULT_ASSUMPTIONS = {
+    householdSize: 3.2,
+    haredi: 0,
+    religious: 0,
+    targetYear: 2040,
+    ageYearPctGeneral: 2.2,
+    // Jerusalem avg from shnaton (ages 0-14 weighted)
+    ageYearPctHaredi: 3.0
+  };
+  const PN_MINAHAK_PRESETS = {
+    'גינות העיר': {
+      householdSize: 2.8,
+      haredi: 0.05,
+      religious: 0.20,
+      ageYearPctGeneral: 1.9,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    },
+    'בית צפאפא': {
+      householdSize: 5.0,
+      haredi: 0,
+      religious: 0,
+      ageYearPctGeneral: 3.0,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    },
+    'גוננים': {
+      householdSize: 3.5,
+      haredi: 0.15,
+      religious: 0.30,
+      ageYearPctGeneral: 2.2,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    },
+    'בקעה רבתי': {
+      householdSize: 3.2,
+      haredi: 0.02,
+      religious: 0.20,
+      ageYearPctGeneral: 2.0,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    },
+    'מינהל מוסדי מלחה': {
+      householdSize: 3.2,
+      haredi: 0,
+      religious: 0.10,
+      ageYearPctGeneral: 2.0,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    },
+    'א.ת. תלפיות': {
+      householdSize: 3.2,
+      haredi: 0,
+      religious: 0.10,
+      ageYearPctGeneral: 2.0,
+      ageYearPctHaredi: 3.0,
+      targetYear: 2040
+    }
+  };
+  const [publicNeedsAssumptionsMap, setPublicNeedsAssumptionsMap] = useState({
+    default: {
+      ...PN_DEFAULT_ASSUMPTIONS
+    },
+    perMinahak: {}
+  });
+  const getPNAssumptions = minahak => {
+    if (!minahak) return publicNeedsAssumptionsMap.default;
+    if (publicNeedsAssumptionsMap.perMinahak[minahak]) return publicNeedsAssumptionsMap.perMinahak[minahak];
+    return PN_MINAHAK_PRESETS[minahak] || publicNeedsAssumptionsMap.default;
+  };
+  // Per-statistical-area assumptions (CBS census 2022, data/stat_areas.geojson)
+  // overlaid on a baseline. A unit at (lng,lat) gets the demographic profile of
+  // the stat area its point falls in; fields the area lacks (or a point outside
+  // all areas) keep the baseline value. The matched object carries
+  // _statAreaId/_statAreaName for the UI breakdown; a no-match returns the
+  // baseline unchanged (no _statAreaId).
+  const getStatAreaAssumptions = (lng, lat, base) => {
+    base = base || getPNAssumptions(null);
+    const sa = geoDataRef.current && geoDataRef.current.stat_areas;
+    if (!sa || !sa.features || lng == null || lat == null) return base;
+    const pt = [lng, lat];
+    for (const f of sa.features) {
+      if (!f.geometry || !pointInGeometry(pt, f.geometry)) continue;
+      const p = f.properties || {};
+      const out = {
+        ...base
+      };
+      if (typeof p.householdSize === 'number') out.householdSize = p.householdSize;
+      if (typeof p.ageYearPctGeneral === 'number') out.ageYearPctGeneral = p.ageYearPctGeneral;
+      if (typeof p.ageYearPctHaredi === 'number') out.ageYearPctHaredi = p.ageYearPctHaredi;
+      if (typeof p.haredi === 'number') out.haredi = p.haredi;
+      if (typeof p.religious === 'number') out.religious = p.religious;
+      out._statAreaId = p.stat_area_id;
+      out._statAreaName = p.name;
+      return out;
+    }
+    return base;
+  };
+  // "מותאם" badge ignores targetYear changes — only demographic params trigger override
+  const hasPNOverride = minahak => {
+    if (!minahak) return false;
+    const o = publicNeedsAssumptionsMap.perMinahak[minahak];
+    if (!o) return false;
+    const preset = PN_MINAHAK_PRESETS[minahak] || publicNeedsAssumptionsMap.default;
+    const fields = ['householdSize', 'haredi', 'religious', 'ageYearPctGeneral', 'ageYearPctHaredi'];
+    return fields.some(f => Math.abs((o[f] || 0) - (preset[f] || 0)) > 0.001);
+  };
+  const updatePNAssumptions = (minahak, patch) => {
+    setPublicNeedsAssumptionsMap(prev => {
+      if (!minahak) {
+        return {
+          ...prev,
+          default: {
+            ...prev.default,
+            ...patch
+          }
+        };
+      }
+      // Baseline first-touch from preset (not default) so changing only year doesn't appear as a demographic override
+      const baseline = prev.perMinahak[minahak] || PN_MINAHAK_PRESETS[minahak] || prev.default;
+      return {
+        ...prev,
+        perMinahak: {
+          ...prev.perMinahak,
+          [minahak]: {
+            ...baseline,
+            ...patch
+          }
+        }
+      };
+    });
+  };
+  const resetPNAssumptions = minahak => {
+    if (!minahak) return;
+    setPublicNeedsAssumptionsMap(prev => {
+      const next = {
+        ...prev.perMinahak
+      };
+      delete next[minahak];
+      return {
+        ...prev,
+        perMinahak: next
+      };
+    });
+  };
+  const [permitsBySubCatFilter, setPermitsBySubCatFilter] = useState(() => new Set(['bniya_chadasha', 'tosefet', 'harisa', 'chafira_milui', 'tama38', 'shinuyim', 'shimush_chorech', 'drachim', 'mivne_nilve', 'tachzukah', 'acher']));
+  const [permitsGapSort, setPermitsGapSort] = useState({
+    col: 'gap',
+    dir: 'desc'
+  });
+  const [permitsGapRev, setPermitsGapRev] = useState(0);
+  const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
+  const [permitsGapIncludeConditional, setPermitsGapIncludeConditional] = useState(false);
+  const [reasonDraft, setReasonDraft] = useState('');
+  const [reasonSaving, setReasonSaving] = useState(false);
+  const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
+  const [overlapNames, setOverlapNames] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('oranim_overlap_names') || '{}');
+    } catch {
+      return {};
+    }
+  });
+  const [overlapEditingKey, setOverlapEditingKey] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  // Show a transient toast with a custom message (falls back to the share-copied text).
+  const notifyToast = React.useCallback(msg => {
+    setToastMsg(msg || '');
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2600);
+  }, []);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [showHeatMap, setShowHeatMap] = useState(false);
+  const [densityMode, setDensityMode] = useState('planned'); // 'planned' = units_total | 'realized' = issued-permit units
+  const [showCommerceHeatMap, setShowCommerceHeatMap] = useState(false);
+  const [showAnnotations, setShowAnnotations] = useState(false);
+  const [annotationSubtitle, setAnnotationSubtitle] = useState('');
+  const [annotationName, setAnnotationName] = useState('');
+  const [annotationGeneralNotes, setAnnotationGeneralNotes] = useState('');
+  const [annotationsRefresh, setAnnotationsRefresh] = useState(0);
+
+  // Annotations (notes) for plans
+  if (!window.__annotations) {
+    window.__annotations = JSON.parse(localStorage.getItem('plan_annotations') || '{}');
+  }
+  if (!window.showNoteModal) {
+    window.showNoteModal = function (currentNote) {
+      return new Promise(function (resolve) {
+        var overlay = document.createElement('div');
+        overlay.className = 'note-overlay';
+        overlay.innerHTML = '<div class="note-modal">' + '<div class="note-modal-header"><h3>\u05d4\u05e2\u05e8\u05d4 \u05dc\u05ea\u05db\u05e0\u05d9\u05ea</h3><button class="modal-close note-cancel">&times;</button></div>' + '<div class="note-modal-body"><textarea class="note-textarea" dir="rtl"></textarea></div>' + '<div class="note-modal-footer">' + '<button class="modal-action-btn primary note-confirm">\u05d0\u05d9\u05e9\u05d5\u05e8</button>' + '<button class="modal-action-btn note-cancel">\u05d1\u05d9\u05d8\u05d5\u05dc</button>' + '</div></div>';
+        document.body.appendChild(overlay);
+        var ta = overlay.querySelector('.note-textarea');
+        ta.value = currentNote || '';
+        setTimeout(function () {
+          ta.focus();
+        }, 50);
+        function close(val) {
+          document.body.removeChild(overlay);
+          resolve(val);
+        }
+        overlay.querySelector('.note-confirm').onclick = function () {
+          close(ta.value);
+        };
+        overlay.querySelectorAll('.note-cancel').forEach(function (b) {
+          b.onclick = function () {
+            close(null);
+          };
+        });
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) close(null);
+        });
+        ta.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') close(null);
+        });
+      });
+    };
+  }
+  const [filters, setFilters] = useState({
+    minUnits: '',
+    maxUnits: '',
+    planTypes: [],
+    statuses: [],
+    freeText: ''
+  });
+  // Debounced copy of filters.freeText. The sidebar plan list filters live off
+  // filters.freeText, but the expensive map rebuild keys off this debounced value
+  // so typing doesn't rebuild every layer on each keystroke.
+  const [appliedFreeText, setAppliedFreeText] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setAppliedFreeText(filters.freeText), 180);
+    return () => clearTimeout(t);
+  }, [filters.freeText]);
+  const [eduFilters, setEduFilters] = useState({
+    sugMosad: [],
+    pikuach: []
+  });
+  // Plan-status filter for the future public-buildings layers (שב"צ עתידי / הפרשה מבונה).
+  // Holds filterStatusGroups keys; empty = show all statuses.
+  const [shavazStatusFilter, setShavazStatusFilter] = useState([]);
+  // Use-domain filter for the הפרשה מבונה layer. Holds hafrashDomainGroups keys; empty = all.
+  const [hafrashDomainFilter, setHafrashDomainFilter] = useState([]);
+  const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
+  const filterStatusGroups = [{
+    key: 'approved',
+    label: 'אישור / מאושרת'
+  }, {
+    key: 'in_approval',
+    label: 'בהליך אישור'
+  }, {
+    key: 'objections',
+    label: 'התנגדויות'
+  }, {
+    key: 'deposit',
+    label: 'הפקדה'
+  }, {
+    key: 'conditions',
+    label: 'במילוי תנאים להפקדה'
+  }, {
+    key: 'open',
+    label: 'פתיחת תיק / בדיקה'
+  }, {
+    key: 'ו-גמר בנייה',
+    label: 'גמר בנייה'
+  }, {
+    key: 'ה-בבנייה',
+    label: 'בבנייה'
+  }, {
+    key: 'ד-היתר בנייה',
+    label: 'היתר בנייה'
+  }, {
+    key: 'ג-רישוי בתהליך',
+    label: 'רישוי בתהליך'
+  }];
+  // Allocation-use domains for the הפרשה מבונה filter (aligns with the public-allocation
+  // guide categories + a כללי/לא-מסווג catch-all). Keys match hafrashUseDomain() output.
+  const hafrashDomainGroups = [{
+    key: 'education',
+    label: 'חינוך'
+  }, {
+    key: 'religion',
+    label: 'דת'
+  }, {
+    key: 'sport',
+    label: 'ספורט'
+  }, {
+    key: 'health',
+    label: 'בריאות'
+  }, {
+    key: 'welfare',
+    label: 'רווחה / חברה'
+  }, {
+    key: 'culture',
+    label: 'קהילה ותרבות'
+  }, {
+    key: 'emergency',
+    label: 'חירום'
+  }, {
+    key: 'other',
+    label: 'כללי / לא מסווג'
+  }];
+  // Multi-select filter convention for the shavaz/hafrash filters:
+  //   []          → ALL selected (nothing filtered) — the default.
+  //   [NONE_KEY]  → NONE selected (hide everything) — reached by unchecking all or the
+  //                 master "הכל" toggle. NONE_KEY can't match any real status/domain, so
+  //                 the existing predicates hide everything without special-casing.
+  //   [a,b,...]   → exactly those selected.
+  const NONE_KEY = ' __none__';
+  const toggleFilterGroup = (setter, allKeys, key, checked) => setter(prev => {
+    let cur = prev.length === 0 ? [...allKeys] : prev.filter(k => k !== NONE_KEY);
+    if (checked) {
+      if (!cur.includes(key)) cur.push(key);
+    } else cur = cur.filter(k => k !== key);
+    if (cur.length === 0) return [NONE_KEY];
+    if (cur.length === allKeys.length) return [];
+    return cur;
+  });
+  const setFilterAll = (setter, on) => setter(on ? [] : [NONE_KEY]);
+
+  // PWA: online/offline detection
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  // PWA: install prompt
+  useEffect(() => {
+    const dismissed = localStorage.getItem('oranim-install-dismissed');
+    const handler = e => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (!dismissed) setShowInstallBanner(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if (result.outcome === 'accepted') setShowInstallBanner(false);
+    setDeferredPrompt(null);
+  };
+  const dismissInstall = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem('oranim-install-dismissed', '1');
+  };
+
+  // Auto-enable relevant status/type categories when free text search matches plans (debounced)
+  useEffect(() => {
+    const q = filters.freeText;
+    if (!q || q.length < 2) return;
+    const timer = setTimeout(() => {
+      const gd = geoDataRef.current;
+      if (!gd.plans) return;
+      const ql = q.toLowerCase();
+      const newStatuses = new Set(filters.statuses);
+      const newTypes = new Set(filters.planTypes);
+      let changed = false;
+      gd.plans.features.forEach(f => {
+        const p = f.properties;
+        const searchable = [p.plan_summary || '', p.plan_name || '', p.architect || '', p.developer || ''].join(' ').toLowerCase();
+        if (!searchable.includes(ql)) return;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        const sg = getFilterStatusGroup(s);
+        if (sg && !newStatuses.has(sg)) {
+          newStatuses.add(sg);
+          changed = true;
+        }
+        const stageVal = (p.stage || '').trim();
+        const sgStage = getFilterStatusGroup(stageVal);
+        if (sgStage && !newStatuses.has(sgStage)) {
+          newStatuses.add(sgStage);
+          changed = true;
+        }
+        const pt = normalizePlanType(p.plan_type || '');
+        if (pt && pt !== 'תשתיות' && !newTypes.has(pt)) {
+          newTypes.add(pt);
+          changed = true;
+        }
+      });
+      if (changed) {
+        setFilters(prev => ({
+          ...prev,
+          statuses: [...newStatuses],
+          planTypes: [...newTypes]
+        }));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters.freeText]);
+
+  // Build plan search index from loaded GeoJSON data
+  useEffect(() => {
+    const gd = geoDataRef.current;
+    if (!dataLoaded || !gd.plans) return;
+    const index = [];
+    gd.plans.features.forEach(f => {
+      if (!f.geometry || !f.geometry.coordinates) return;
+      try {
+        const p = f.properties;
+        const bounds = L.geoJSON(f).getBounds();
+        if (!bounds.isValid()) return;
+        const center = bounds.getCenter();
+        index.push({
+          n: p.plan_name || '',
+          h: p.plan_name_he || '',
+          s: p.plan_summary || '',
+          t: (p.plan_name_he || '') + ' ' + (p.plan_summary || ''),
+          ta: String(p.taba || ''),
+          c: [center.lat, center.lng]
+        });
+      } catch (e) {}
+    });
+    setPlanIndex(index);
+    console.log('[Search] Built plan index:', index.length, 'plans');
+  }, [dataLoaded]);
+
+  // Global keyboard: Ctrl/Cmd+K or "/" to open unified search; Esc to close
+  useEffect(() => {
+    function onKey(e) {
+      const t = e.target;
+      const isEditable = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+      if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setGlobalSearchOpen(true);
+        setGlobalSearchQuery('');
+        setGlobalSearchActive(0);
+        return;
+      }
+      if (e.key === '/' && !isEditable && !globalSearchOpen) {
+        e.preventDefault();
+        setGlobalSearchOpen(true);
+        setGlobalSearchQuery('');
+        setGlobalSearchActive(0);
+        return;
+      }
+      if (e.key === 'Escape' && globalSearchOpen) {
+        setGlobalSearchOpen(false);
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [globalSearchOpen]);
+
+  // Escape closes the top-most open report/table modal (drill-downs first,
+  // then their parent modal). Global search and the draw/measure modes keep
+  // their own Escape handlers above.
+  useEffect(() => {
+    const onEsc = e => {
+      if (e.key !== 'Escape') return;
+      // Ordered top-of-stack → bottom: close only the first open one.
+      const closers = [[commerceCellReport, () => setCommerceCellReport(null)], [mimushCellReport, () => setMimushCellReport(null)], [cellReport, () => setCellReport(null)], [unitsDrilldown, () => setUnitsDrilldown(null)], [masterPlanReport, () => setMasterPlanReport(null)], [minahakReport, () => setMinahakReport(null)], [showPrint, () => setShowPrint(false)], [showUnits, () => setShowUnits(false)], [showCommerceTable, () => setShowCommerceTable(false)], [showMimush, () => setShowMimush(false)], [showPermitsGap, () => setShowPermitsGap(false)], [showPermitsBySub, () => setShowPermitsBySub(false)], [showPublicNeeds, () => setShowPublicNeeds(false)], [objectionsReport, () => setObjectionsReport(false)], [permitObjectionsReport, () => setPermitObjectionsReport(false)], [meetingsReport, () => setMeetingsReport(false)], [overlapReport, () => setOverlapReport(false)], [shavazKayamReport, () => setShavazKayamReport(false)], [specialHousingReport, () => setSpecialHousingReport(false)], [showAnnotations, () => setShowAnnotations(false)], [showAllocChooser, () => setShowAllocChooser(false)], [showFilter, () => setShowFilter(false)], [showReportsMenu, () => setShowReportsMenu(false)]];
+      const hit = closers.find(([open]) => open);
+      if (hit) {
+        e.preventDefault();
+        hit[1]();
+      }
+    };
+    document.addEventListener('keydown', onEsc);
+    return () => document.removeEventListener('keydown', onEsc);
+  }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport, minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap, showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, meetingsReport, overlapReport, shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showReportsMenu]);
+
+  // Focus input when global search opens
+  useEffect(() => {
+    if (globalSearchOpen && globalSearchInputRef.current) {
+      setTimeout(() => globalSearchInputRef.current && globalSearchInputRef.current.focus(), 20);
+    }
+  }, [globalSearchOpen]);
+
+  // Debounced address lookup inside global search
+  useEffect(() => {
+    if (!globalSearchOpen) return;
+    const q = globalSearchQuery.trim();
+    // only hit geocoder for Hebrew-text queries with length >= 3 and at least one non-digit letter
+    const hasLetter = /[א-ת]/.test(q);
+    if (q.length < 3 || !hasLetter) {
+      setGlobalAddrResults([]);
+      return;
+    }
+    setGlobalAddrLoading(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ' ירושלים')}&limit=4&countrycodes=il&accept-language=he`, {
+        signal: ctrl.signal
+      }).then(r => r.json()).then(data => {
+        setGlobalAddrResults((data || []).map(d => ({
+          name: d.display_name,
+          lat: parseFloat(d.lat),
+          lng: parseFloat(d.lon)
+        })));
+        setGlobalAddrLoading(false);
+      }).catch(() => setGlobalAddrLoading(false));
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [globalSearchQuery, globalSearchOpen]);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const viewHistoryRef = useRef([]); // stack of {lat, lng, zoom}
+  const isGoingBackRef = useRef(false); // flag to skip recording during back nav
+  const [viewHistoryLen, setViewHistoryLen] = useState(0);
+  const geoDataRef = useRef({});
+  const geoLayersRef = useRef({});
+  const baseTileRef = useRef(null);
+  const layersRef = useRef(layers);
+  // taba -> Set(other tabas this plan geometrically overlaps with).
+  // Populated once when plans data arrives. Used by the "overlapping"
+  // planning topic to filter overlaps based on currently-visible plans.
+  const overlapMapRef = useRef(null);
+  // True once the (heavy, deferred) overlap map has finished building. Drives the
+  // "computing overlaps" indicator and re-renders the topic once the map is ready.
+  const [overlapReady, setOverlapReady] = useState(false);
+
+  // ── URL Hash helpers ──
+  function parseHash() {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return null;
+    const params = {};
+    hash.split('&').forEach(p => {
+      const [k, v] = p.split('=');
+      if (k && v !== undefined) params[k] = decodeURIComponent(v);
+    });
+    return params;
+  }
+  function updateHash() {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const c = map.getCenter();
+    const z = map.getZoom();
+    const activeLayers = Object.entries(layersRef.current).filter(([, v]) => v).map(([k]) => k).join(',');
+    const hash = `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}`;
+    window.history.replaceState(null, '', '#' + hash);
+  }
+
+  // Apply hash on first load
+  const hashAppliedRef = useRef(false);
+  const planJumpedRef = useRef(false);
+  // Capture initial hash BEFORE updateHash() overwrites it
+  const initialHashRef = useRef(parseHash());
+
+  // Initialize map
+  useEffect(() => {
+    if (mapInstanceRef.current) return;
+
+    // Read hash for initial view
+    const hashParams = parseHash();
+    const initCenter = hashParams && hashParams.lat && hashParams.lng ? [parseFloat(hashParams.lat), parseFloat(hashParams.lng)] : CENTER;
+    const initZoom = hashParams && hashParams.z ? parseInt(hashParams.z) : DEFAULT_ZOOM;
+    const map = L.map('map', {
+      center: initCenter,
+      zoom: initZoom,
+      zoomControl: false,
+      maxZoom: 22,
+      minZoom: 13,
+      preferCanvas: false
+    });
+    window.__mapInstanceForPrint = map;
+
+    // Wire up "ראי גם" cross-feature links inside projector popups.
+    // When the popup opens, the popup HTML may contain anchors with
+    // data-related-lat / data-related-lon — clicking flies the map to
+    // that point. Delegated handler avoids per-popup wiring.
+    map.on('popupopen', e => {
+      const root = e.popup && e.popup.getElement();
+      if (!root) return;
+      const links = root.querySelectorAll('a.pp-related-link');
+      links.forEach(a => {
+        a.addEventListener('click', ev => {
+          ev.preventDefault();
+          const lat = parseFloat(a.getAttribute('data-related-lat'));
+          const lon = parseFloat(a.getAttribute('data-related-lon'));
+          if (!isFinite(lat) || !isFinite(lon)) return;
+          map.closePopup();
+          map.flyTo([lat, lon], Math.max(map.getZoom(), 18), {
+            duration: 0.6
+          });
+        });
+      });
+      // Wire up cross-section image-open buttons (Phase C)
+      const csBtns = root.querySelectorAll('button.pp-cs-btn');
+      csBtns.forEach(b => {
+        b.addEventListener('click', ev => {
+          ev.preventDefault();
+          const url = b.getAttribute('data-cs-url');
+          if (url) window.open(url, '_blank', 'noopener');
+        });
+      });
+      // Wire up clickable service rows — find the sibling feature's
+      // own Leaflet layer (by project_id) and fire its click event so
+      // its native popup opens. Falls back to lat/lng pan if the layer
+      // can't be located (e.g. on-demand layer not yet loaded).
+      const svcRows = root.querySelectorAll('tr.pp-svc-row');
+      svcRows.forEach(tr => {
+        tr.addEventListener('click', ev => {
+          ev.preventDefault();
+          const targetId = tr.getAttribute('data-row-id');
+          const lat = parseFloat(tr.getAttribute('data-row-lat'));
+          const lon = parseFloat(tr.getAttribute('data-row-lon'));
+          map.closePopup();
+          // Search both projector layers for a matching project_id.
+          let foundLyr = null;
+          ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+            if (foundLyr) return;
+            const grp = geoLayersRef.current && geoLayersRef.current[k];
+            if (!grp || !grp.eachLayer) return;
+            grp.eachLayer(sub => {
+              if (foundLyr) return;
+              const fp = sub.feature && sub.feature.properties;
+              if (fp && targetId && fp.project_id === targetId) foundLyr = sub;
+            });
+          });
+          if (foundLyr) {
+            try {
+              const b = foundLyr.getBounds && foundLyr.getBounds();
+              if (b && b.isValid && b.isValid()) map.fitBounds(b, {
+                maxZoom: 18,
+                padding: [40, 40]
+              });else if (foundLyr.getLatLng) map.setView(foundLyr.getLatLng(), 18);
+              setTimeout(() => foundLyr.fire('click'), 200);
+            } catch (err) {
+              console.warn(err);
+            }
+            return;
+          }
+          // Fallback: pan only.
+          if (isFinite(lat) && isFinite(lon)) {
+            map.flyTo([lat, lon], Math.max(map.getZoom(), 18), {
+              duration: 0.6
+            });
+          }
+        });
+        tr.addEventListener('mouseenter', () => {
+          tr.style.outline = '2px solid #1565c0';
+        });
+        tr.addEventListener('mouseleave', () => {
+          tr.style.outline = '';
+        });
+      });
+
+      // Wire up "פתח תב"ע" button — finds the matching plan layer and
+      // fires its click event to open its native popup.
+      const openPlanBtns = root.querySelectorAll('button[data-action="open-plan"]');
+      openPlanBtns.forEach(b => {
+        b.addEventListener('click', ev => {
+          ev.preventDefault();
+          const planName = b.getAttribute('data-plan-name');
+          if (!planName) return;
+          const plansLyr = geoLayersRef.current && geoLayersRef.current.plans;
+          if (!plansLyr) {
+            console.warn('plans layer not loaded');
+            return;
+          }
+          let found = null;
+          plansLyr.eachLayer(l => {
+            if (found) return;
+            const pn = l.feature && l.feature.properties && l.feature.properties.plan_name;
+            if (pn === planName) found = l;
+          });
+          if (!found) {
+            // Plan isn't in the current view — make sure the plans layer is on
+            // and let the user know without a blocking native alert.
+            setLayers(prev => prev.plans ? prev : {
+              ...prev,
+              plans: true
+            });
+            notifyToast('תב"ע ' + planName + ' לא נמצאה בתצוגה הנוכחית');
+            return;
+          }
+          map.closePopup();
+          try {
+            const bounds = found.getBounds && found.getBounds();
+            if (bounds) map.fitBounds(bounds, {
+              maxZoom: 18,
+              padding: [40, 40]
+            });
+            setTimeout(() => found.fire('click'), 200);
+          } catch (err) {
+            console.warn(err);
+          }
+        });
+      });
+    });
+
+    // Load Phase C — feature → cross-section thumbnails index.
+    // Lazy: the actual JPGs are only fetched when a popup button is clicked.
+    fetch('data/cross_sections_index.json?v=' + APP_VERSION).then(r => r.ok ? r.json() : {}).then(idx => {
+      window.__crossSectionsIndex = idx || {};
+    }).catch(() => {
+      window.__crossSectionsIndex = {};
+    });
+
+    // ---- Projector filter panel (תחום + חומש interactive chips) ----
+    // Shown only when projector_gonenim or projector_gonenim_tzatal is active.
+    if (!window.__projectorFilters) {
+      window.__projectorFilters = {
+        domains: new Set(['programa', 'public_space', 'transport', 'metaham']),
+        chumashim: new Set([1, 2, 3, 'unknown'])
+      };
+    }
+    window.__rebuildProjectorLayers = function () {
+      ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+        const cur = geoLayersRef.current && geoLayersRef.current[k];
+        const data = geoDataRef.current && geoDataRef.current[k];
+        if (cur && map.hasLayer(cur) && data) {
+          map.removeLayer(cur);
+          const fresh = buildProjectorLayer(k, data);
+          geoLayersRef.current[k] = fresh;
+          fresh.addTo(map);
+        }
+      });
+      if (window.__updateProjectorFilterCounts) window.__updateProjectorFilterCounts();
+    };
+    // Initialize services filter Set lazily on first show (all services on by default)
+    if (!window.__projectorFilters.services) {
+      window.__projectorFilters.services = null; // null = no filter (all)
+    }
+    if (!document.getElementById('projector-filter-panel')) {
+      const panel = document.createElement('div');
+      panel.id = 'projector-filter-panel';
+      panel.style.cssText = 'position:absolute;top:0;left:0;bottom:0;width:320px;background:rgba(15,15,30,0.97);backdrop-filter:blur(10px);border-right:1px solid #2a2a4a;z-index:1002;display:none;flex-direction:column;direction:rtl;font-family:Assistant,sans-serif;color:#e0e0e0;overflow:hidden';
+      const mkChip = (group, val, label, color) => `<button data-pf-group="${group}" data-pf-value="${val}" class="pf-chip" style="background:${color};color:#fff;border:0;border-radius:14px;padding:4px 11px;margin:3px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">${label}</button>`;
+      panel.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #2a2a4a;background:linear-gradient(135deg,#16213e,#0f3460)">` + `<h3 style="margin:0;font-size:15px;color:#fff">📋 פילטר המלצות פרוייקטור</h3>` + `<button id="pf-close-btn" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1">×</button>` + `</div>` + `<div id="pf-count" style="font-size:11.5px;color:#8ecae6;padding:7px 16px;border-bottom:1px solid #1a1a3a;background:#12122a"></div>` + `<div style="flex:1;overflow-y:auto;padding:12px 14px;font-size:12.5px">` + `<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">תחום</div>` + mkChip('domains', 'programa', 'פרוגרמה', '#8d6e63') + mkChip('domains', 'public_space', 'מרחב ציבורי', '#2e7d32') + mkChip('domains', 'transport', 'תנועה', '#1565c0') + mkChip('domains', 'metaham', 'מתחמים', '#d81b60') + `</div>` + `<div style="margin-bottom:10px"><div style="color:#9aa3b3;font-size:11px;margin-bottom:5px;font-weight:600">חומש לביצוע</div>` + mkChip('chumashim', '1', 'חומש 1', '#b71c1c') + mkChip('chumashim', '2', 'חומש 2', '#e65100') + mkChip('chumashim', '3', 'חומש 3', '#1a237e') + mkChip('chumashim', 'unknown', 'ללא חומש', '#546e7a') + `</div>` + `<div style="margin-bottom:10px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="color:#9aa3b3;font-size:11px;font-weight:600">שירות</div><div><button id="pf-svc-all" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer;margin-left:4px">הכל</button><button id="pf-svc-none" style="background:none;border:1px solid #2a2a4a;color:#8ecae6;font-size:10px;padding:2px 7px;border-radius:3px;cursor:pointer">אף אחד</button></div></div>` + `<div id="pf-services" style="background:#16162a;border-radius:4px;padding:6px 8px"></div>` + `</div>` + `</div>` + `<div style="border-top:1px solid #2a2a4a;padding:10px 14px;background:#0c0c1d">` + `<button id="pf-summary-btn" style="background:#1976d2;color:#fff;border:0;border-radius:4px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-family:inherit;width:100%;font-weight:600">📊 סיכום + ציר זמן</button>` + `</div>`;
+      map.getContainer().appendChild(panel);
+      function refreshChips() {
+        const f = window.__projectorFilters;
+        panel.querySelectorAll('button.pf-chip').forEach(btn => {
+          const grp = btn.getAttribute('data-pf-group');
+          const val = btn.getAttribute('data-pf-value');
+          const target = grp === 'chumashim' && val !== 'unknown' ? parseInt(val, 10) : val;
+          const active = f[grp] && f[grp].has(target);
+          btn.style.opacity = active ? '1' : '0.32';
+          btn.style.outline = active ? '' : '1.5px dashed #999';
+        });
+      }
+      // Map raw service_he variants → display category.
+      // User-requested 2026-05-28 to group near-duplicates so the panel
+      // has fewer rows. Each parent checkbox toggles all member services.
+      const SERVICE_CATEGORIES = {
+        'מעבר ה"ר / שביל': ['הוספת מעבר ה"ר', 'שדרוג מעבר ה"ר', 'מעבר ה"ר', 'הוספת שביל ה"ר', 'מעבר הולכי רגל'],
+        'מעבר חציה': ['מעבר חציה', 'הוספת מעבר חציה'],
+        'גני ילדים / מעון': ['גני ילדים', 'גן ילדים', 'מעון יום', 'מעון יום + גני ילדים'],
+        'בי"ס יסודי': ['יסודי', 'בי"ס יסודי'],
+        'בי"ס על-יסודי': ['על יסודי', 'בי"ס על-יסודי'],
+        'שירותי רווחה': ['שירותי רווחה', 'שירותי רווחה נוספים', 'מוסדות רווחה נוספים', 'משרדי שירותים חברתיים'],
+        'שצ"פ': ['שצ"פ', 'תוספת שצ"פ', 'חיבור לשצ"פ'],
+        'כביש / רחוב': ['רחוב', 'רחוב חדש', 'שדרוג רחובות'],
+        'תח"צ / תחבורה': ['תח"צ', 'שיפור רמת שירות', 'הנגשה'],
+        'ספורט': ['מגרש ספורט', 'אולם ספורט']
+      };
+      const SERVICE_TO_CATEGORY = (() => {
+        const m = {};
+        for (const cat in SERVICE_CATEGORIES) {
+          for (const sv of SERVICE_CATEGORIES[cat]) m[sv] = cat;
+        }
+        return m;
+      })();
+      function renderServicesList() {
+        const container = document.getElementById('pf-services');
+        if (!container) return;
+        const all = new Map();
+        ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+          const data = geoDataRef.current[k];
+          if (!data || !data.features) return;
+          data.features.forEach(ft => {
+            const sv = (ft.properties.service_he || '').trim() || '(ללא)';
+            all.set(sv, (all.get(sv) || 0) + 1);
+          });
+        });
+        if (!all.size) {
+          container.innerHTML = '<div style="color:#666;font-size:11px;padding:4px">טוען...</div>';
+          return;
+        }
+        if (!window.__projectorFilters.services) {
+          window.__projectorFilters.services = new Set(all.keys());
+        }
+        const svcSet = window.__projectorFilters.services;
+        // Group services by category (or self if uncategorized)
+        const grouped = new Map(); // key = category name → { total, members: [{sv,n}] }
+        for (const [sv, n] of all.entries()) {
+          const cat = SERVICE_TO_CATEGORY[sv] || sv;
+          if (!grouped.has(cat)) grouped.set(cat, {
+            total: 0,
+            members: []
+          });
+          const g = grouped.get(cat);
+          g.total += n;
+          g.members.push({
+            sv,
+            n
+          });
+        }
+        // Sort categories by total count, members alphabetically
+        const cats = [...grouped.entries()].sort((a, b) => b[1].total - a[1].total);
+        const escAttr = s => String(s).replace(/"/g, '&quot;').replace(/&/g, '&amp;');
+        container.innerHTML = cats.map(([cat, g]) => {
+          if (g.members.length === 1) {
+            // Single-member category: render as flat checkbox (no expand)
+            const {
+              sv,
+              n
+            } = g.members[0];
+            const checked = svcSet.has(sv) ? 'checked' : '';
+            return `<label style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${checked} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#778;font-size:10.5px">${n}</span></label>`;
+          }
+          // Multi-member category: parent checkbox + expandable list
+          const memberSvs = g.members.map(m => m.sv);
+          const onCount = memberSvs.filter(sv => svcSet.has(sv)).length;
+          const parentState = onCount === memberSvs.length ? 'checked' : onCount === 0 ? '' : 'indeterminate';
+          const parentAttr = parentState === 'checked' ? 'checked' : '';
+          const memberList = g.members.map(({
+            sv,
+            n
+          }) => {
+            const c = svcSet.has(sv) ? 'checked' : '';
+            return `<label style="display:flex;align-items:center;padding:2px 0 2px 18px;cursor:pointer;color:#9aa8b3;font-size:10.5px"><input type="checkbox" data-pf-svc="${escAttr(sv)}" ${c} style="margin-left:6px"/> <span style="flex:1">${sv}</span><span style="color:#667;font-size:10px">${n}</span></label>`;
+          }).join('');
+          return `<details style="margin:1px 0"><summary style="display:flex;align-items:center;padding:3px 0;cursor:pointer;color:#cfd8dc;font-size:11.5px;list-style:none"><span style="color:#788;margin-left:4px;font-size:9px">▸</span><input type="checkbox" data-pf-cat="${escAttr(cat)}" ${parentAttr} ${parentState === 'indeterminate' ? 'data-indeterminate="1"' : ''} style="margin-left:6px" onclick="event.stopPropagation()"/> <span style="flex:1;font-weight:600">${cat}</span><span style="color:#778;font-size:10.5px">${g.total}</span></summary><div style="padding:2px 0 4px 4px;border-right:1px dashed #2a2a4a;margin-right:8px">${memberList}</div></details>`;
+        }).join('');
+        // Apply indeterminate state to category checkboxes (HTML attribute doesn't work for indeterminate)
+        container.querySelectorAll('input[data-pf-cat][data-indeterminate]').forEach(cb => {
+          cb.indeterminate = true;
+        });
+      }
+      window.__updateProjectorFilterCounts = function () {
+        const out = document.getElementById('pf-count');
+        if (!out) return;
+        let shown = 0,
+          total = 0;
+        // Per-dimension counts (independent of other dims so user can
+        // see how many features each chip toggles).
+        const domCounts = {
+          programa: 0,
+          public_space: 0,
+          transport: 0,
+          metaham: 0
+        };
+        const chCounts = {
+          1: 0,
+          2: 0,
+          3: 0,
+          unknown: 0
+        };
+        const f = window.__projectorFilters;
+        ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+          const data = geoDataRef.current[k];
+          if (!data || !data.features) return;
+          total += data.features.length;
+          data.features.forEach(ft => {
+            const ch = ft.properties.chumash;
+            const chKey = ch === null || ch === undefined ? 'unknown' : ch;
+            const p = ft.properties;
+            const isMetaham = !!(p.is_metaham_polygon || p.is_metaham_pdf_tichnun);
+            const dom = isMetaham ? 'metaham' : p.domain || 'other';
+            if (dom in domCounts) domCounts[dom]++;
+            if (chKey in chCounts) chCounts[chKey]++;
+            if (!f.chumashim.has(chKey)) return;
+            if (!f.domains.has(dom)) return;
+            shown++;
+          });
+        });
+        out.textContent = total ? `(${shown}/${total} מוצגות)` : '';
+        // Inject per-chip counts as small badges
+        document.querySelectorAll('#projector-filter-panel button.pf-chip').forEach(btn => {
+          const grp = btn.getAttribute('data-pf-group');
+          const val = btn.getAttribute('data-pf-value');
+          let n = 0;
+          if (grp === 'domains') n = domCounts[val] || 0;else if (grp === 'chumashim') n = chCounts[val] || 0;
+          const baseLabel = btn.getAttribute('data-pf-base-label') || btn.textContent.replace(/\s*\(\d+\)$/, '');
+          btn.setAttribute('data-pf-base-label', baseLabel);
+          btn.textContent = `${baseLabel} (${n})`;
+        });
+      };
+      panel.addEventListener('click', ev => {
+        const sumBtn = ev.target.closest('#pf-summary-btn');
+        if (sumBtn) {
+          ev.preventDefault();
+          window.__openProjectorSummary();
+          return;
+        }
+        const closeBtn = ev.target.closest('#pf-close-btn');
+        if (closeBtn) {
+          panel.style.display = 'none';
+          return;
+        }
+        const svcAll = ev.target.closest('#pf-svc-all');
+        if (svcAll) {
+          const all = new Set();
+          ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+            const data = geoDataRef.current[k];
+            if (data && data.features) data.features.forEach(ft => all.add((ft.properties.service_he || '').trim() || '(ללא)'));
+          });
+          window.__projectorFilters.services = all;
+          renderServicesList();
+          window.__rebuildProjectorLayers();
+          return;
+        }
+        const svcNone = ev.target.closest('#pf-svc-none');
+        if (svcNone) {
+          window.__projectorFilters.services = new Set();
+          renderServicesList();
+          window.__rebuildProjectorLayers();
+          return;
+        }
+        const btn = ev.target.closest('button.pf-chip');
+        if (!btn) return;
+        const grp = btn.getAttribute('data-pf-group');
+        const val = btn.getAttribute('data-pf-value');
+        const target = grp === 'chumashim' && val !== 'unknown' ? parseInt(val, 10) : val;
+        const set = window.__projectorFilters[grp];
+        if (set.has(target)) set.delete(target);else set.add(target);
+        refreshChips();
+        window.__rebuildProjectorLayers();
+      });
+      panel.addEventListener('change', ev => {
+        if (!window.__projectorFilters.services) window.__projectorFilters.services = new Set();
+        const set = window.__projectorFilters.services;
+        // Category-level checkbox: toggle all members
+        const catCb = ev.target.closest('input[type="checkbox"][data-pf-cat]');
+        if (catCb) {
+          const cat = catCb.getAttribute('data-pf-cat');
+          const members = SERVICE_CATEGORIES[cat] || [];
+          if (catCb.checked) members.forEach(sv => set.add(sv));else members.forEach(sv => set.delete(sv));
+          renderServicesList(); // refresh to update child states
+          window.__rebuildProjectorLayers();
+          return;
+        }
+        // Service-level checkbox
+        const cb = ev.target.closest('input[type="checkbox"][data-pf-svc]');
+        if (!cb) return;
+        const sv = cb.getAttribute('data-pf-svc');
+        if (cb.checked) set.add(sv);else set.delete(sv);
+        renderServicesList(); // refresh parent checkbox state
+        window.__rebuildProjectorLayers();
+      });
+
+      // --- Summary modal: tabbed view — pivot / managing body / obstacles
+      window.__openProjectorSummary = function () {
+        const old = document.getElementById('pf-summary-modal');
+        if (old) old.remove();
+        const AREAS = ['רסקו', 'גוננים א-ו', 'קטמונים ח-ט', 'פת'];
+        const DOMS = [['programa', 'פרוגרמה', '#8d6e63'], ['public_space', 'מרחב ציבורי', '#2e7d32'], ['transport', 'תנועה', '#1565c0']];
+        const DOM_LABEL = {
+          programa: 'פרוגרמה',
+          public_space: 'מרחב ציבורי',
+          transport: 'תנועה'
+        };
+        const DOM_COLOR = {
+          programa: '#8d6e63',
+          public_space: '#2e7d32',
+          transport: '#1565c0'
+        };
+        const CHS = [1, 2, 3, 'unknown'];
+        const CH_LABELS = {
+          1: 'ח״1',
+          2: 'ח״2',
+          3: 'ח״3',
+          unknown: 'ללא'
+        };
+        const CH_COLORS = {
+          1: '#b71c1c',
+          2: '#e65100',
+          3: '#1a237e',
+          unknown: '#546e7a'
+        };
+
+        // Gather features once (tagged by source for zoom-to)
+        const allFeatures = [];
+        ['projector_gonenim', 'projector_gonenim_tzatal'].forEach(k => {
+          const data = geoDataRef.current[k];
+          if (!data || !data.features) return;
+          data.features.forEach((ft, idx) => allFeatures.push({
+            feature: ft,
+            _src: k,
+            _idx: idx
+          }));
+        });
+
+        // ── Tab 1: Pivot by sub-neighborhood × domain × chumash ──
+        const stats = {};
+        AREAS.forEach(a => {
+          stats[a] = {
+            total: 0,
+            dom: {
+              programa: 0,
+              public_space: 0,
+              transport: 0
+            },
+            ch: {
+              1: 0,
+              2: 0,
+              3: 0,
+              unknown: 0
+            }
+          };
+        });
+        const T = {
+          total: 0,
+          dom: {
+            programa: 0,
+            public_space: 0,
+            transport: 0
+          },
+          ch: {
+            1: 0,
+            2: 0,
+            3: 0,
+            unknown: 0
+          }
+        };
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const a = p.sub_neighborhood;
+          if (!stats[a]) return;
+          const dom = p.domain || 'other';
+          const ch = p.chumash;
+          const chKey = ch === null || ch === undefined ? 'unknown' : ch;
+          stats[a].total++;
+          T.total++;
+          if (dom in stats[a].dom) {
+            stats[a].dom[dom]++;
+            T.dom[dom]++;
+          }
+          if (chKey in stats[a].ch) {
+            stats[a].ch[chKey]++;
+            T.ch[chKey]++;
+          }
+        });
+        const cell = (n, color) => `<td style="padding:5px 9px;text-align:center;background:${color || 'transparent'};color:${color ? '#fff' : '#263238'};font-weight:${n ? '600' : '300'}">${n || '·'}</td>`;
+        const headerRow = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>` + DOMS.map(([k, lbl, c]) => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('') + CHS.map(c => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${CH_LABELS[c]}</th>`).join('') + `</tr>`;
+        const rows = AREAS.map(a => {
+          const s = stats[a];
+          return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${a}</td><td style="padding:5px 9px;text-align:center;font-weight:600;background:#eceff1">${s.total}</td>` + DOMS.map(([k, lbl, c]) => cell(s.dom[k], s.dom[k] ? c + '22' : '')).join('') + CHS.map(c => cell(s.ch[c])).join('') + `</tr>`;
+        }).join('');
+        const totalRow = `<tr style="border-top:2px solid #b0bec5;background:#f5f5f5;font-weight:700"><td style="padding:6px 9px">סה״כ</td><td style="padding:6px 9px;text-align:center">${T.total}</td>` + DOMS.map(([k, lbl, c]) => `<td style="padding:6px 9px;text-align:center;color:${c}">${T.dom[k]}</td>`).join('') + CHS.map(c => `<td style="padding:6px 9px;text-align:center">${T.ch[c]}</td>`).join('') + `</tr>`;
+
+        // ── Timeline (existing, unchanged) ──
+        const mimush = {};
+        const _plans = geoDataRef.current.plans;
+        if (_plans && _plans.features && typeof calcMimush === 'function') {
+          _plans.features.forEach(pf => {
+            const pp = pf.properties || {};
+            if (!pp.plan_name) return;
+            try {
+              const r = calcMimush(pp);
+              if (r && r.estimatedYear) mimush[pp.plan_name] = r.estimatedYear;
+            } catch (e) {}
+          });
+          window.__mimushPlanYearByPlan = mimush;
+        }
+        const _yr = (val, planName) => {
+          if (val == null) return null;
+          const s = String(val).trim();
+          const m = s.match(/(20[2-4][0-9])/);
+          if (m) return parseInt(m[1], 10);
+          if (planName && mimush[planName]) return mimush[planName];
+          return null;
+        };
+        const yearStats = {};
+        const planningRaw = [],
+          executionRaw = [];
+        let mimushUsed = 0;
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const pn = p.plan_number;
+          const yp = _yr(p.year_planning, pn);
+          const yexRaw = p.year_execution;
+          const yex = _yr(yexRaw, pn);
+          if (yex !== null && String(yexRaw || '').includes('מימוש')) mimushUsed++;
+          if (yp != null) {
+            yearStats[yp] = yearStats[yp] || {
+              plan: 0,
+              exec: 0
+            };
+            yearStats[yp].plan++;
+            planningRaw.push(yp);
+          }
+          if (yex != null) {
+            yearStats[yex] = yearStats[yex] || {
+              plan: 0,
+              exec: 0
+            };
+            yearStats[yex].exec++;
+            executionRaw.push(yex);
+          }
+        });
+        const years = Object.keys(yearStats).map(Number).sort((a, b) => a - b);
+        let timelineHTML = '';
+        if (years.length) {
+          const minY = years[0],
+            maxY = years[years.length - 1];
+          const maxBar = Math.max(...years.map(y => Math.max(yearStats[y].plan, yearStats[y].exec)));
+          const fullYears = [];
+          for (let y = minY; y <= maxY; y++) fullYears.push(y);
+          timelineHTML = `<div style="margin-top:18px"><h3 style="font-size:14px;color:#1e293b;margin:0 0 6px">📅 ציר זמן — תכנון מול ביצוע</h3>` + `<div style="font-size:11px;color:#666;margin-bottom:8px">תכלת = שנת תכנון · אדום-חום = שנת ביצוע (${planningRaw.length} עם שנת תכנון, ${executionRaw.length} עם שנת ביצוע${mimushUsed ? ', ' + mimushUsed + ' מהן דרך טבלת אחוזי מימוש' : ''})</div>` + `<div style="display:grid;grid-template-columns:50px 1fr 1fr;gap:2px;font-size:11px;align-items:end">` + fullYears.map(y => {
+            const s = yearStats[y] || {
+              plan: 0,
+              exec: 0
+            };
+            const wP = Math.round(s.plan / maxBar * 100);
+            const wE = Math.round(s.exec / maxBar * 100);
+            return `<div style="color:#37474f;font-weight:600;padding:2px 4px">${y}</div>` + `<div style="background:#eceff1;height:18px;border-radius:2px;overflow:hidden;position:relative"><div style="background:#42a5f5;height:100%;width:${wP}%"></div>${s.plan ? `<span style="position:absolute;top:0;right:4px;font-size:10px;color:#0d47a1;font-weight:600">${s.plan}</span>` : ''}</div>` + `<div style="background:#eceff1;height:18px;border-radius:2px;overflow:hidden;position:relative"><div style="background:#e65100;height:100%;width:${wE}%"></div>${s.exec ? `<span style="position:absolute;top:0;right:4px;font-size:10px;color:#bf360c;font-weight:600">${s.exec}</span>` : ''}</div>`;
+          }).join('') + `</div>` + `</div>`;
+          if (mimushUsed) {
+            timelineHTML += `<div style="font-size:10.5px;color:#888;margin-top:6px;font-style:italic">* ${mimushUsed} המלצות עם "עם מימוש התכנית" קיבלו שנת יעד מטבלת אחוזי מימוש</div>`;
+          }
+        } else {
+          timelineHTML = `<div style="margin-top:18px;color:#888;font-size:12px">אין מספיק נתוני שנים להצגת ציר זמן</div>`;
+        }
+        const tabPivotHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">פיזור לפי תת-שכונה × תחום × חומש (${T.total} סה״כ)</div><table style="width:100%;border-collapse:collapse"><thead>${headerRow}</thead><tbody>${rows}${totalRow}</tbody></table>${timelineHTML}`;
+
+        // ── Tab 2: By managing body ──
+        // Split combined bodies (e.g. "מנהל תכנון, תושי״ה") into individual entries.
+        // Each feature contributes once to each listed body; budget is divided equally.
+        const splitBodies = mb => {
+          const s = String(mb || '').trim();
+          if (!s) return ['(לא ידוע)'];
+          const parts = s.split(/[,،]/).map(x => x.trim()).filter(Boolean);
+          return parts.length ? parts : [s];
+        };
+        const bodyStats = {};
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const bodies = splitBodies(p.managing_body);
+          const dom = p.domain || 'other';
+          const ch = p.chumash;
+          const chKey = ch === null || ch === undefined ? 'unknown' : ch;
+          const nis = parseFloat(p.estimate_nis) || 0;
+          bodies.forEach(b => {
+            if (!bodyStats[b]) bodyStats[b] = {
+              total: 0,
+              dom: {
+                programa: 0,
+                public_space: 0,
+                transport: 0
+              },
+              ch: {
+                1: 0,
+                2: 0,
+                3: 0,
+                unknown: 0
+              },
+              nis: 0
+            };
+            bodyStats[b].total++;
+            if (dom in bodyStats[b].dom) bodyStats[b].dom[dom]++;
+            if (chKey in bodyStats[b].ch) bodyStats[b].ch[chKey]++;
+            bodyStats[b].nis += nis / bodies.length;
+          });
+        });
+        const sortedBodies = Object.entries(bodyStats).sort((a, b) => b[1].total - a[1].total);
+        const fmtNis = n => {
+          if (!n) return '·';
+          if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M ₪';
+          if (n >= 1_000) return Math.round(n / 1_000) + 'K ₪';
+          return Math.round(n) + ' ₪';
+        };
+        const totalNis = sortedBodies.reduce((acc, [, s]) => acc + s.nis, 0);
+        const bodyHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">גורם מנהל</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סה״כ</th>` + DOMS.map(([k, lbl, c]) => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('') + CHS.map(c => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${CH_COLORS[c]}">${CH_LABELS[c]}</th>`).join('') + `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">אומדן</th>` + `</tr>`;
+        const bodyRows = sortedBodies.map(([b, s]) => {
+          return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px"><td style="padding:5px 9px;font-weight:600">${b}</td><td style="padding:5px 9px;text-align:center;font-weight:700;background:#eceff1">${s.total}</td>` + DOMS.map(([k, lbl, c]) => cell(s.dom[k], s.dom[k] ? c + '22' : '')).join('') + CHS.map(c => cell(s.ch[c])).join('') + `<td style="padding:5px 9px;text-align:center;font-size:11px;color:#0d47a1">${fmtNis(s.nis)}</td>` + `</tr>`;
+        }).join('');
+        const bodyTotalRow = `<tr style="border-top:2px solid #b0bec5;background:#f5f5f5;font-weight:700"><td style="padding:6px 9px">סה״כ ייחוסים</td><td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a, [, s]) => a + s.total, 0)}</td>` + DOMS.map(([k, lbl, c]) => `<td style="padding:6px 9px;text-align:center;color:${c}">${sortedBodies.reduce((a, [, s]) => a + s.dom[k], 0)}</td>`).join('') + CHS.map(c => `<td style="padding:6px 9px;text-align:center">${sortedBodies.reduce((a, [, s]) => a + s.ch[c], 0)}</td>`).join('') + `<td style="padding:6px 9px;text-align:center;color:#0d47a1">${fmtNis(totalNis)}</td>` + `</tr>`;
+        const tabBodyHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">פילוח אחריות לפי גורם מנהל × תחום × חומש · אומדן כספי מחולק שווה בין גורמים משותפים (${allFeatures.length} המלצות, ${sortedBodies.length} גורמים)</div><table style="width:100%;border-collapse:collapse"><thead>${bodyHeader}</thead><tbody>${bodyRows}${bodyTotalRow}</tbody></table><div style="font-size:10.5px;color:#888;margin-top:6px;font-style:italic">* המלצה עם מספר גורמים נספרת לכל גורם בנפרד — סה״כ הייחוסים גבוה ממספר ההמלצות (${allFeatures.length})</div>`;
+
+        // ── Tab 3: Obstacles list ──
+        const obstacleFeats = allFeatures.filter(w => {
+          const o = w.feature.properties.obstacles;
+          return o && String(o).trim();
+        });
+        // Sort by domain (programa, public_space, transport) then chumash
+        const DOM_ORDER = {
+          programa: 0,
+          public_space: 1,
+          transport: 2,
+          other: 3
+        };
+        obstacleFeats.sort((a, b) => {
+          const da = DOM_ORDER[a.feature.properties.domain] || 9,
+            db = DOM_ORDER[b.feature.properties.domain] || 9;
+          if (da !== db) return da - db;
+          const ca = a.feature.properties.chumash,
+            cb = b.feature.properties.chumash;
+          const cra = ca == null ? 99 : ca,
+            crb = cb == null ? 99 : cb;
+          if (cra !== crb) return cra - crb;
+          return (a.feature.properties.project_name || '').localeCompare(b.feature.properties.project_name || '');
+        });
+        // Stash for zoom-to handler
+        window.__projectorSummaryObstacles = obstacleFeats;
+        const obHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">שם</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">חומש</th><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">חסם</th></tr>`;
+        const obRows = obstacleFeats.map((w, i) => {
+          const p = w.feature.properties;
+          const dom = p.domain || 'other';
+          const ch = p.chumash;
+          const chKey = ch === null || ch === undefined ? 'unknown' : ch;
+          const escape = s => String(s || '').replace(/[<>&]/g, c => ({
+            '<': '&lt;',
+            '>': '&gt;',
+            '&': '&amp;'
+          })[c]);
+          return `<tr data-ob-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">` + `<td style="padding:6px 9px;font-weight:600">${escape(p.project_name) || '(ללא שם)'}</td>` + `<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood || ''}</td>` + `<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[dom] || '#666'};font-weight:600">${DOM_LABEL[dom] || dom}</td>` + `<td style="padding:6px 9px;text-align:center;color:${CH_COLORS[chKey] || '#666'};font-weight:600">${CH_LABELS[chKey]}</td>` + `<td style="padding:6px 9px;color:#37474f;line-height:1.4">${escape(p.obstacles)}</td>` + `</tr>`;
+        }).join('');
+        const obByDomain = {
+          programa: 0,
+          public_space: 0,
+          transport: 0
+        };
+        obstacleFeats.forEach(w => {
+          const d = w.feature.properties.domain;
+          if (d in obByDomain) obByDomain[d]++;
+        });
+        const tabObstaclesHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:12px">${obstacleFeats.length} המלצות עם חסמים מתוך ${allFeatures.length} סה״כ · ` + DOMS.map(([k, lbl, c]) => `<span style="color:${c};font-weight:600">${lbl}: ${obByDomain[k]}</span>`).join(' · ') + ` · לחיצה על שורה — מעבר לפיצ׳ר במפה</div>` + `<table style="width:100%;border-collapse:collapse"><thead>${obHeader}</thead><tbody>${obRows}</tbody></table>`;
+
+        // KPI card helper (used by overlap tab)
+        const kpiCard = (lbl, val, color) => `<div style="background:${color}11;border:1px solid ${color}55;border-radius:5px;padding:8px 12px;flex:1;min-width:140px"><div style="font-size:10.5px;color:${color};font-weight:600">${lbl}</div><div style="font-size:15px;color:#1e293b;font-weight:700;margin-top:2px">${val}</div></div>`;
+
+        // ── Tab 5: Plans overlap (תב"עות) ──
+        // Cross-reference overlap_plan_names with plans.geojson status_mavat.
+        // 64/269 features have an overlap; ~97% of those are with אישור/מאושרת
+        // plans → strong indicator that the recommendation is "in the pipeline".
+        const plansLookup = {};
+        const _plansData = geoDataRef.current.plans;
+        if (_plansData && _plansData.features) {
+          _plansData.features.forEach(pf => {
+            const pn = pf.properties && pf.properties.plan_name;
+            if (pn) plansLookup[pn] = pf.properties;
+          });
+        }
+        // Approved-ish statuses get a "green" marker; deposited get yellow; others grey.
+        const STATUS_TIER = s => {
+          if (!s) return {
+            tier: 'unknown',
+            color: '#9e9e9e',
+            label: 'לא ידוע'
+          };
+          if (s === 'אישור' || s === 'תבע מאושרת' || s.includes('אישור')) return {
+            tier: 'approved',
+            color: '#2e7d32',
+            label: 'מאושרת'
+          };
+          if (s.includes('הפקדה') || s.includes('תנאים')) return {
+            tier: 'deposited',
+            color: '#e65100',
+            label: 'בהפקדה'
+          };
+          return {
+            tier: 'other',
+            color: '#9e9e9e',
+            label: s
+          };
+        };
+        const overlapItems = [];
+        const tierCount = {
+          approved: 0,
+          deposited: 0,
+          other: 0,
+          unknown: 0
+        };
+        const statusCount = {};
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const op = p.overlap_plan_names || [];
+          if (!op.length) return;
+          op.forEach(pn => {
+            const planP = plansLookup[pn] || {};
+            const stat = planP.status_mavat || '';
+            const tier = STATUS_TIER(stat);
+            tierCount[tier.tier] = (tierCount[tier.tier] || 0) + 1;
+            statusCount[stat || '(לא נמצא)'] = (statusCount[stat || '(לא נמצא)'] || 0) + 1;
+            overlapItems.push({
+              w,
+              plan_name: pn,
+              status: stat,
+              tier
+            });
+          });
+        });
+        // Sort by tier (approved first), then by feature name
+        overlapItems.sort((a, b) => {
+          const tierOrder = {
+            approved: 0,
+            deposited: 1,
+            other: 2,
+            unknown: 3
+          };
+          const ta = tierOrder[a.tier.tier] ?? 9,
+            tb = tierOrder[b.tier.tier] ?? 9;
+          if (ta !== tb) return ta - tb;
+          return (a.w.feature.properties.project_name || '').localeCompare(b.w.feature.properties.project_name || '');
+        });
+        window.__projectorSummaryOverlap = overlapItems;
+        const overlapKPIs = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">` + kpiCard('עם חפיפת תב״ע', `${overlapItems.length} / ${allFeatures.length}`, '#1976d2') + kpiCard('בתב״ע מאושרת', `${tierCount.approved} (${Math.round(100 * tierCount.approved / Math.max(overlapItems.length, 1))}%)`, '#2e7d32') + kpiCard('בהפקדה / תנאים', `${tierCount.deposited}`, '#e65100') + kpiCard('סטטוס אחר/לא ידוע', `${tierCount.other + tierCount.unknown}`, '#9e9e9e') + `</div>`;
+        const overlapHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">המלצה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">תחום</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">מספר תב״ע</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">סטטוס</th></tr>`;
+        const overlapRows = overlapItems.map((it, i) => {
+          const p = it.w.feature.properties;
+          const escape3 = s => String(s || '').replace(/[<>&]/g, c => ({
+            '<': '&lt;',
+            '>': '&gt;',
+            '&': '&amp;'
+          })[c]);
+          return `<tr data-overlap-idx="${i}" style="border-bottom:1px solid #e0e0e0;font-size:12px;cursor:pointer" onmouseover="this.style.background='#f5f9ff'" onmouseout="this.style.background='transparent'">` + `<td style="padding:6px 9px;font-weight:600">${escape3(p.project_name) || '(ללא שם)'} <span style="font-weight:400;color:#888;font-size:10.5px">· ${escape3(p.service_he)}</span></td>` + `<td style="padding:6px 9px;text-align:center">${p.sub_neighborhood || ''}</td>` + `<td style="padding:6px 9px;text-align:center;color:${DOM_COLOR[p.domain] || '#666'};font-weight:600">${DOM_LABEL[p.domain] || p.domain}</td>` + `<td style="padding:6px 9px;text-align:center;font-family:monospace;font-size:11px">${escape3(it.plan_name)}</td>` + `<td style="padding:6px 9px;text-align:center"><span style="background:${it.tier.color}22;color:${it.tier.color};font-weight:600;padding:2px 8px;border-radius:10px;font-size:10.5px">${escape3(it.status || it.tier.label)}</span></td>` + `</tr>`;
+        }).join('');
+        const tabOverlapHTML = overlapKPIs + `<div style="font-size:11.5px;color:#666;margin-bottom:6px">המלצות שחופפות גיאוגרפית עם תב"עות קיימות — אם התב"ע מאושרת, סיכוי המימוש גבוה. לחיצה על שורה — מעבר להמלצה במפה.</div>` + `<table style="width:100%;border-collapse:collapse"><thead>${overlapHeader}</thead><tbody>${overlapRows}</tbody></table>`;
+
+        // ── Tab 6: Normalized to יח"ד ──
+        // Compute features-per-1000-units for each sub-neighborhood.
+        const unitsBySub = {};
+        AREAS.forEach(a => {
+          unitsBySub[a] = 0;
+        });
+        if (_plansData && _plansData.features) {
+          _plansData.features.forEach(pf => {
+            const pp = pf.properties || {};
+            const sub = pp.sub_neighborhood;
+            const u = parseFloat(pp.units_total) || 0;
+            if (sub in unitsBySub && u > 0) unitsBySub[sub] += u;
+          });
+        }
+        const featsBySub = {};
+        AREAS.forEach(a => {
+          featsBySub[a] = {
+            total: 0,
+            programa: 0,
+            public_space: 0,
+            transport: 0
+          };
+        });
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const a = p.sub_neighborhood;
+          if (!(a in featsBySub)) return;
+          featsBySub[a].total++;
+          if (p.domain in featsBySub[a]) featsBySub[a][p.domain]++;
+        });
+        // Compute ratios
+        const normData = AREAS.map(a => {
+          const u = unitsBySub[a] || 0;
+          const f = featsBySub[a];
+          return {
+            area: a,
+            units: u,
+            feats: f.total,
+            programa: f.programa,
+            public_space: f.public_space,
+            transport: f.transport,
+            feats_per_1k: u > 0 ? f.total / u * 1000 : 0
+          };
+        });
+        const maxRatio = Math.max(...normData.map(d => d.feats_per_1k), 1);
+        const normHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">תת-שכונה</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">יח״ד</th><th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות</th>` + DOMS.map(([k, lbl, c]) => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;color:${c}">${lbl}</th>`).join('') + `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">המלצות/1,000 יח״ד</th></tr>`;
+        const normRows = normData.map(d => {
+          const wRatio = Math.round(d.feats_per_1k / maxRatio * 90);
+          return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">` + `<td style="padding:6px 9px;font-weight:600">${d.area}</td>` + `<td style="padding:6px 9px;text-align:center">${d.units ? d.units.toLocaleString() : '·'}</td>` + `<td style="padding:6px 9px;text-align:center;font-weight:600">${d.feats}</td>` + DOMS.map(([k, lbl, c]) => `<td style="padding:6px 9px;text-align:center;color:${d[k] ? c : '#bbb'};${d[k] ? 'font-weight:600' : ''}">${d[k] || '·'}</td>`).join('') + `<td style="padding:6px 9px"><div style="display:flex;align-items:center;gap:6px"><div style="width:${wRatio}%;background:#1976d2;height:14px;border-radius:2px;min-width:2px"></div><span style="font-size:11px;color:#0d47a1;font-weight:600">${d.feats_per_1k.toFixed(1)}</span></div></td>` + `</tr>`;
+        }).join('');
+        const totalUnitsAll = normData.reduce((a, d) => a + d.units, 0);
+        const tabNormalizedHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:14px">השוואה מנורמלת לפי מספר יחידות הדיור בכל תת-שכונה (מהתב"עות הקיימות, units_total). מאפשר לראות איזו שכונה זוכה ליחס המלצות גבוה יותר ביחס לגודלה.</div>` + `<table style="width:100%;border-collapse:collapse"><thead>${normHeader}</thead><tbody>${normRows}</tbody></table>` + `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">סה״כ יח״ד ב-4 השכונות: ${totalUnitsAll.toLocaleString()}</div>`;
+
+        // ── Tab: Programmatic Balance — by category × sub_neighborhood ──
+        // Aggregates "what's planned" from all projector features. Same category
+        // grouping as the filter panel (SERVICE_CATEGORIES) so the user sees a
+        // unified view of planning intensity per service category per area.
+        const BAL_CATS = {
+          'גני ילדים / מעון': ['גני ילדים', 'גן ילדים', 'מעון יום', 'מעון יום + גני ילדים'],
+          'בי"ס יסודי': ['יסודי', 'בי"ס יסודי'],
+          'בי"ס על-יסודי': ['על יסודי', 'בי"ס על-יסודי'],
+          'שירותי רווחה': ['שירותי רווחה', 'שירותי רווחה נוספים', 'מוסדות רווחה נוספים', 'משרדי שירותים חברתיים'],
+          'בית כנסת / דת': ['בית כנסת', 'מקווה'],
+          'מועדון נוער/קשיש': ['מועדון נוער', 'מועדון לקשיש'],
+          'שירותי קהילה/תרבות': ['שירותי קהילה', 'שירותי תרבות', 'ספרייה', 'אולם מופעים'],
+          'בריאות': ['תחנה לבריאות המשפחה', 'מרפאה שכונתית'],
+          'ספורט': ['מגרש ספורט', 'אולם ספורט'],
+          'שצ״פ': ['שצ"פ', 'תוספת שצ"פ', 'חיבור לשצ"פ', 'מתחם, שצ"פ'],
+          'מעבר ה״ר / שביל': ['הוספת מעבר ה"ר', 'שדרוג מעבר ה"ר', 'מעבר ה"ר', 'הוספת שביל ה"ר', 'מעבר הולכי רגל'],
+          'מעבר חציה': ['מעבר חציה', 'הוספת מעבר חציה'],
+          'כביש / רחוב': ['רחוב', 'רחוב חדש', 'שדרוג רחובות'],
+          'תח״צ / נגישות': ['תח"צ', 'שיפור רמת שירות', 'הנגשה'],
+          'גשר': ['גשר'],
+          'מתחם / תוכנית אב': ['הצעה להכנת תוכנית אב מתחמית להתחדשות']
+        };
+        const BAL_SVC2CAT = {};
+        Object.entries(BAL_CATS).forEach(([cat, svcs]) => svcs.forEach(s => {
+          BAL_SVC2CAT[s] = cat;
+        }));
+        const balance = {};
+        Object.keys(BAL_CATS).forEach(cat => {
+          balance[cat] = {};
+          AREAS.forEach(a => {
+            balance[cat][a] = {
+              count: 0,
+              units: 0,
+              estimate: 0,
+              unitLabel: ''
+            };
+          });
+        });
+        balance['אחר'] = {};
+        AREAS.forEach(a => {
+          balance['אחר'][a] = {
+            count: 0,
+            units: 0,
+            estimate: 0,
+            unitLabel: ''
+          };
+        });
+        allFeatures.forEach(w => {
+          const p = w.feature.properties;
+          const area = p.sub_neighborhood;
+          if (!AREAS.includes(area)) return;
+          const svc = String(p.service_he || '').trim();
+          const cat = BAL_SVC2CAT[svc] || 'אחר';
+          const cell = balance[cat][area];
+          cell.count++;
+          const u = parseFloat(p.units_required);
+          if (!isNaN(u) && u > 0) {
+            cell.units += u;
+            if (!cell.unitLabel) cell.unitLabel = p.units_label || '';
+          }
+          cell.estimate += parseFloat(p.estimate_nis) || 0;
+        });
+        let balMaxCount = 0;
+        Object.values(balance).forEach(byArea => Object.values(byArea).forEach(c => {
+          if (c.count > balMaxCount) balMaxCount = c.count;
+        }));
+        const balHeader = `<tr style="background:#f5f5f5;font-size:11.5px;color:#37474f"><th style="padding:6px 9px;text-align:right;border-bottom:2px solid #b0bec5">קטגוריה</th>` + AREAS.map(a => `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5">${a}</th>`).join('') + `<th style="padding:6px 9px;text-align:center;border-bottom:2px solid #b0bec5;background:#eceff1">סה״כ</th></tr>`;
+        // Click-to-filter: cells carry data-bal-cat + data-bal-area attributes
+        // so a click handler can filter the projector layer to the matching
+        // category × area subset.
+        const balCell = (c, cat, area) => {
+          if (!c.count) return `<td style="padding:5px 9px;text-align:center;color:#ccc">·</td>`;
+          const intensity = Math.min(0.85, c.count / Math.max(balMaxCount, 1) * 0.8 + 0.1);
+          const bg = `rgba(46,125,50,${intensity.toFixed(2)})`;
+          const txtCol = intensity > 0.45 ? '#fff' : '#1b5e20';
+          const unitsStr = c.units > 0 ? `<div style="font-size:10px;opacity:0.92;margin-top:1px;font-weight:400">${c.units.toLocaleString()} ${c.unitLabel}</div>` : '';
+          const catAttr = cat.replace(/"/g, '&quot;');
+          const areaAttr = area.replace(/"/g, '&quot;');
+          return `<td data-bal-cat="${catAttr}" data-bal-area="${areaAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו באזור זה" style="padding:5px 9px;text-align:center;background:${bg};color:${txtCol};font-weight:700;cursor:pointer"><div>${c.count}</div>${unitsStr}</td>`;
+        };
+        const balRows = Object.entries(balance).filter(([cat, byArea]) => Object.values(byArea).some(c => c.count > 0)).map(([cat, byArea]) => {
+          const totals = AREAS.reduce((acc, a) => {
+            acc.count += byArea[a].count;
+            acc.units += byArea[a].units;
+            if (byArea[a].unitLabel) acc.unitLabel = byArea[a].unitLabel;
+            return acc;
+          }, {
+            count: 0,
+            units: 0,
+            unitLabel: ''
+          });
+          const catAttr = cat.replace(/"/g, '&quot;');
+          return `<tr style="border-bottom:1px solid #e0e0e0;font-size:12.5px">` + `<td data-bal-cat="${catAttr}" title="לחץ לסינון הפרויקטור לקטגוריה זו (כל האזורים)" style="padding:6px 9px;font-weight:600;background:#fafafa;border-right:3px solid #2e7d32;cursor:pointer">${cat}</td>` + AREAS.map(a => balCell(byArea[a], cat, a)).join('') + `<td data-bal-cat="${catAttr}" title="לחץ לסינון" style="padding:6px 9px;text-align:center;background:#eceff1;font-weight:700;cursor:pointer"><div>${totals.count}</div>${totals.units ? `<div style="font-size:10px;color:#555;margin-top:1px;font-weight:400">${totals.units.toLocaleString()} ${totals.unitLabel}</div>` : ''}</td>` + `</tr>`;
+        }).join('');
+        const balAreaTotals = AREAS.map(a => Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0));
+        const balGrand = balAreaTotals.reduce((a, b) => a + b, 0);
+        const balTotalRow = `<tr style="border-top:2px solid #2e7d32;background:#f5f5f5;font-weight:700;font-size:12.5px">` + `<td style="padding:6px 9px;border-right:3px solid #2e7d32">סה״כ פרויקטים</td>` + balAreaTotals.map(t => `<td style="padding:6px 9px;text-align:center">${t}</td>`).join('') + `<td style="padding:6px 9px;text-align:center;background:#eceff1">${balGrand}</td>` + `</tr>`;
+        const tabBalanceHTML = `<div style="font-size:11.5px;color:#666;margin-bottom:14px">היקף התכנון לפי קטגוריית שירות × תת-שכונה. צבע התא מציין את עוצמת התכנון (ירוק כהה = הרבה פרויקטים). מספר עליון = פרויקטים, מספר תחתון = סה״כ יחידות באותה היחידה (כיתות/מ״ר/דונם/מ׳). מבוסס על ${T.total} השורות בקובץ "תכנית עבודה" אחרי סינון לארבע שכונות מינהל גוננים.</div>` + `<table style="width:100%;border-collapse:collapse"><thead>${balHeader}</thead><tbody>${balRows}${balTotalRow}</tbody></table>` + `<div style="font-size:10.5px;color:#888;margin-top:10px;font-style:italic">לפירוט: לחיצה על תא תוביל לסינון פיצ'רי הפרוייקטור לאותה קטגוריה × אזור (TBD).</div>`;
+
+        // ── Shell with tabs + export/print buttons ──
+        const tabBtn = (id, label, active) => `<button data-tab-btn="${id}" style="background:${active ? '#1976d2' : 'transparent'};color:${active ? '#fff' : '#1976d2'};border:1.5px solid #1976d2;border-radius:5px 5px 0 0;padding:6px 14px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:600;border-bottom-color:${active ? '#1976d2' : 'transparent'}">${label}</button>`;
+        const html = `<div id="pf-summary-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:Assistant,sans-serif;direction:rtl">` + `<div style="background:#fff;border-radius:8px;padding:18px 22px;max-width:900px;width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)">` + `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">` + `<h2 style="margin:0;font-size:17px;color:#1e293b">📊 סיכום המלצות פרוייקטור גוננים</h2>` + `<div style="display:flex;gap:6px;align-items:center">` + `<button id="pf-export-csv" style="background:#43a047;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📊 ייצוא אקסל</button>` + `<button id="pf-print" style="background:#5e35b1;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600">📄 הדפסה</button>` + `<button id="pf-summary-close" style="background:transparent;border:0;font-size:22px;cursor:pointer;color:#666;padding:0 4px;line-height:1">×</button>` + `</div>` + `</div>` + `<div style="display:flex;gap:4px;border-bottom:2px solid #1976d2;margin-bottom:14px;flex-wrap:wrap">` + tabBtn('pivot', '📊 סיכום', true) + tabBtn('body', '🏛️ גורם מנהל', false) + tabBtn('obstacles', `🚧 חסמים (${obstacleFeats.length})`, false) + tabBtn('overlap', `🔗 תב״עות (${overlapItems.length})`, false) + tabBtn('normalized', '📈 מנורמל ליח״ד', false) + tabBtn('balance', '🟢 מאזן פרוגרמתי', false) + `</div>` + `<div data-tab-pane="pivot" data-tab-label="סיכום + ציר זמן" style="display:block">${tabPivotHTML}</div>` + `<div data-tab-pane="body" data-tab-label="גורם מנהל" style="display:none">${tabBodyHTML}</div>` + `<div data-tab-pane="obstacles" data-tab-label="חסמים" style="display:none">${tabObstaclesHTML}</div>` + `<div data-tab-pane="overlap" data-tab-label="חפיפת תב״עות" style="display:none">${tabOverlapHTML}</div>` + `<div data-tab-pane="normalized" data-tab-label="מנורמל ליח״ד" style="display:none">${tabNormalizedHTML}</div>` + `<div data-tab-pane="balance" data-tab-label="מאזן פרוגרמתי" style="display:none">${tabBalanceHTML}</div>` + `</div>` + `</div>`;
+        const wrap = document.createElement('div');
+        wrap.innerHTML = html;
+        document.body.appendChild(wrap.firstChild);
+        const m = document.getElementById('pf-summary-modal');
+        m.addEventListener('click', e => {
+          if (e.target === m) m.remove();
+        });
+        document.getElementById('pf-summary-close').addEventListener('click', () => m.remove());
+
+        // Tab switching
+        let activeTab = 'pivot';
+        m.querySelectorAll('[data-tab-btn]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            activeTab = btn.getAttribute('data-tab-btn');
+            m.querySelectorAll('[data-tab-btn]').forEach(b => {
+              const on = b.getAttribute('data-tab-btn') === activeTab;
+              b.style.background = on ? '#1976d2' : 'transparent';
+              b.style.color = on ? '#fff' : '#1976d2';
+              b.style.borderBottomColor = on ? '#1976d2' : 'transparent';
+            });
+            m.querySelectorAll('[data-tab-pane]').forEach(p => {
+              p.style.display = p.getAttribute('data-tab-pane') === activeTab ? 'block' : 'none';
+            });
+          });
+        });
+
+        // ── Balance-tab click handler: filter projector layer by category × area ──
+        // BAL_CATS maps category → service_he list. When a cell is clicked, we set
+        // the projector services filter to that list, the domains filter to all,
+        // and the chumashim filter to all. Also rebuilds layers and closes the modal.
+        m.querySelectorAll('[data-bal-cat]').forEach(td => {
+          td.addEventListener('click', () => {
+            const cat = td.getAttribute('data-bal-cat');
+            const area = td.getAttribute('data-bal-area'); // may be null (whole row)
+            const svcs = BAL_CATS[cat] || [];
+            // Always include 'אחר' catch when category is 'אחר' (collect all unlisted svcs)
+            if (cat === 'אחר') {
+              const known = new Set();
+              Object.values(BAL_CATS).forEach(arr => arr.forEach(s => known.add(s)));
+              allFeatures.forEach(w => {
+                const sv = String(w.feature.properties.service_he || '').trim();
+                if (sv && !known.has(sv)) svcs.push(sv);
+              });
+            }
+            if (!svcs.length) return;
+            if (!window.__projectorFilters) window.__projectorFilters = {};
+            window.__projectorFilters.services = new Set(svcs);
+            // Reset other dimensions to all (so user sees only the cat × area filter)
+            window.__projectorFilters.domains = new Set(['programa', 'public_space', 'transport']);
+            window.__projectorFilters.chumashim = new Set([1, 2, 3, 'unknown']);
+            // Area filter: we filter by sub_neighborhood via a special key the
+            // build-projector-layer reads (it already filters by chumash/domain/svc;
+            // we extend via projectorFilters.areas).
+            window.__projectorFilters.areas = area ? new Set([area]) : null;
+            if (typeof window.__rebuildProjectorLayers === 'function') {
+              window.__rebuildProjectorLayers();
+            }
+            m.remove();
+            // Show a transient banner so the user sees what was filtered
+            const oldBanner = document.getElementById('pf-filter-banner');
+            if (oldBanner) oldBanner.remove();
+            const banner = document.createElement('div');
+            banner.id = 'pf-filter-banner';
+            banner.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;border-radius:8px;padding:9px 16px;font-family:Assistant,sans-serif;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:1500;direction:rtl;display:flex;align-items:center;gap:12px';
+            banner.innerHTML = `🟢 סינון פעיל: <span style="font-weight:400">${cat}${area ? ` · ${area}` : ' · כל השכונות'}</span><button style="background:#fff;color:#2e7d32;border:0;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600">בטל סינון</button>`;
+            map.getContainer().appendChild(banner);
+            banner.querySelector('button').addEventListener('click', () => {
+              window.__projectorFilters.services = null; // null = all
+              window.__projectorFilters.areas = null;
+              if (typeof window.__rebuildProjectorLayers === 'function') window.__rebuildProjectorLayers();
+              banner.remove();
+            });
+          });
+        });
+
+        // Shared row-click handler: find feature's layer by project_id
+        // and fire its click event (opens its popup); fallback to pan.
+        const zoomToFeature = (feature, src) => {
+          m.remove();
+          try {
+            const layer = geoLayersRef.current[src];
+            if (layer && map.hasLayer(layer) === false) layer.addTo(map);
+            let found = null;
+            if (layer && layer.eachLayer) {
+              layer.eachLayer(sub => {
+                if (found) return;
+                try {
+                  const fp = sub.feature && sub.feature.properties;
+                  if (fp && fp.project_id && fp.project_id === feature.properties.project_id) found = sub;
+                } catch (e) {}
+              });
+            }
+            if (found) {
+              const b = found.getBounds && found.getBounds();
+              if (b && b.isValid && b.isValid()) map.fitBounds(b, {
+                maxZoom: 18,
+                padding: [40, 40]
+              });else if (found.getLatLng) map.setView(found.getLatLng(), 18);
+              setTimeout(() => found.fire('click'), 200);
+            } else {
+              const dp = feature.properties.display_point;
+              if (dp && Array.isArray(dp) && dp.length === 2) {
+                map.setView([dp[1], dp[0]], 18);
+              } else if (feature.geometry && feature.geometry.coordinates) {
+                try {
+                  const tmp = L.geoJSON(feature);
+                  map.fitBounds(tmp.getBounds(), {
+                    maxZoom: 18,
+                    padding: [40, 40]
+                  });
+                } catch (e) {}
+              }
+            }
+          } catch (err) {
+            console.warn(err);
+          }
+        };
+        // Overlap row click
+        m.querySelectorAll('tr[data-overlap-idx]').forEach(tr => {
+          tr.addEventListener('click', () => {
+            const idx = parseInt(tr.getAttribute('data-overlap-idx'), 10);
+            const it = window.__projectorSummaryOverlap[idx];
+            if (!it || !it.w) return;
+            zoomToFeature(it.w.feature, it.w._src);
+          });
+        });
+        // Obstacles row click → zoom to feature on map
+        m.querySelectorAll('tr[data-ob-idx]').forEach(tr => {
+          tr.addEventListener('click', () => {
+            const idx = parseInt(tr.getAttribute('data-ob-idx'), 10);
+            const w = window.__projectorSummaryObstacles[idx];
+            if (!w || !w.feature) return;
+            m.remove();
+            try {
+              const layer = geoLayersRef.current[w._src];
+              if (layer && map.hasLayer(layer) === false) layer.addTo(map);
+              // Find matching sub-layer and pan/zoom + fire click
+              let found = null;
+              if (layer && layer.eachLayer) {
+                layer.eachLayer(sub => {
+                  if (found) return;
+                  try {
+                    const fp = sub.feature && sub.feature.properties;
+                    if (fp && fp.project_id && fp.project_id === w.feature.properties.project_id) found = sub;
+                  } catch (e) {}
+                });
+              }
+              if (found) {
+                try {
+                  const b = found.getBounds && found.getBounds();
+                  if (b && b.isValid && b.isValid()) map.fitBounds(b, {
+                    maxZoom: 18,
+                    padding: [40, 40]
+                  });else if (found.getLatLng) map.setView(found.getLatLng(), 18);
+                  setTimeout(() => found.fire('click'), 200);
+                } catch (e) {
+                  console.warn(e);
+                }
+              } else {
+                // Fallback: use display_point if set, else geometry centroid
+                const dp = w.feature.properties.display_point;
+                if (dp && Array.isArray(dp) && dp.length === 2) {
+                  map.setView([dp[1], dp[0]], 18);
+                } else if (w.feature.geometry && w.feature.geometry.coordinates) {
+                  try {
+                    const tmp = L.geoJSON(w.feature);
+                    map.fitBounds(tmp.getBounds(), {
+                      maxZoom: 18,
+                      padding: [40, 40]
+                    });
+                  } catch (e) {}
+                }
+              }
+            } catch (err) {
+              console.warn(err);
+            }
+          });
+        });
+
+        // ── Export current tab to CSV ──
+        const csvEscape = s => `"${String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ')}"`;
+        const downloadCSV = (name, csv) => {
+          const blob = new Blob(['﻿' + csv], {
+            type: 'text/csv;charset=utf-8;'
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('pf-export-csv').addEventListener('click', () => {
+          let csv = '',
+            filename = '';
+          if (activeTab === 'pivot') {
+            csv = 'תת-שכונה,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש\n';
+            AREAS.forEach(a => {
+              const s = stats[a];
+              csv += [csvEscape(a), s.total, s.dom.programa, s.dom.public_space, s.dom.transport, s.ch[1], s.ch[2], s.ch[3], s.ch.unknown].join(',') + '\n';
+            });
+            csv += [csvEscape('סה"כ'), T.total, T.dom.programa, T.dom.public_space, T.dom.transport, T.ch[1], T.ch[2], T.ch[3], T.ch.unknown].join(',') + '\n';
+            if (years.length) {
+              csv += '\nציר זמן\nשנה,תכנון,ביצוע\n';
+              const minY = years[0],
+                maxY = years[years.length - 1];
+              for (let y = minY; y <= maxY; y++) {
+                const s = yearStats[y] || {
+                  plan: 0,
+                  exec: 0
+                };
+                csv += `${y},${s.plan},${s.exec}\n`;
+              }
+            }
+            filename = `projector_gonenim_summary_${today}.csv`;
+          } else if (activeTab === 'body') {
+            csv = 'גורם מנהל,סה"כ,פרוגרמה,מרחב ציבורי,תנועה,ח1,ח2,ח3,ללא חומש,אומדן (ש"ח)\n';
+            sortedBodies.forEach(([b, s]) => {
+              csv += [csvEscape(b), s.total, s.dom.programa, s.dom.public_space, s.dom.transport, s.ch[1], s.ch[2], s.ch[3], s.ch.unknown, Math.round(s.nis)].join(',') + '\n';
+            });
+            filename = `projector_gonenim_by_body_${today}.csv`;
+          } else if (activeTab === 'obstacles') {
+            csv = 'שם הפרויקט,תת-שכונה,תחום,חומש,שירות,גורם מנהל,חסם\n';
+            obstacleFeats.forEach(w => {
+              const p = w.feature.properties;
+              csv += [csvEscape(p.project_name), csvEscape(p.sub_neighborhood), csvEscape(DOM_LABEL[p.domain] || p.domain), csvEscape(p.chumash), csvEscape(p.service_he), csvEscape(p.managing_body), csvEscape(p.obstacles)].join(',') + '\n';
+            });
+            filename = `projector_gonenim_obstacles_${today}.csv`;
+          } else if (activeTab === 'overlap') {
+            csv = 'המלצה,שירות,תת-שכונה,תחום,מספר תב"ע,סטטוס\n';
+            overlapItems.forEach(it => {
+              const p = it.w.feature.properties;
+              csv += [csvEscape(p.project_name), csvEscape(p.service_he), csvEscape(p.sub_neighborhood), csvEscape(DOM_LABEL[p.domain] || p.domain), csvEscape(it.plan_name), csvEscape(it.status || it.tier.label)].join(',') + '\n';
+            });
+            csv += `\nסיכום: ${overlapItems.length} חפיפות · ${tierCount.approved} מאושרות · ${tierCount.deposited} בהפקדה · ${tierCount.other + tierCount.unknown} אחר/לא ידוע\n`;
+            filename = `projector_gonenim_overlap_${today}.csv`;
+          } else if (activeTab === 'normalized') {
+            csv = 'תת-שכונה,יח"ד,המלצות,פרוגרמה,מרחב ציבורי,תנועה,המלצות לכל 1000 יח"ד\n';
+            normData.forEach(d => {
+              csv += [csvEscape(d.area), d.units, d.feats, d.programa || 0, d.public_space || 0, d.transport || 0, d.feats_per_1k.toFixed(2)].join(',') + '\n';
+            });
+            filename = `projector_gonenim_normalized_${today}.csv`;
+          } else if (activeTab === 'balance') {
+            // Wide format: categories × areas with count/units pairs.
+            const head = ['קטגוריה'];
+            AREAS.forEach(a => {
+              head.push(`${a} - פרויקטים`);
+              head.push(`${a} - יחידות`);
+              head.push(`${a} - יחידת מידה`);
+            });
+            head.push('סה"כ פרויקטים');
+            head.push('סה"כ יחידות');
+            head.push('יחידת מידה');
+            csv = head.map(csvEscape).join(',') + '\n';
+            Object.entries(balance).forEach(([cat, byArea]) => {
+              if (!Object.values(byArea).some(c => c.count > 0)) return;
+              const row = [csvEscape(cat)];
+              let tCount = 0,
+                tUnits = 0,
+                tLabel = '';
+              AREAS.forEach(a => {
+                const c = byArea[a];
+                row.push(c.count || 0);
+                row.push(c.units || 0);
+                row.push(csvEscape(c.unitLabel || ''));
+                tCount += c.count;
+                tUnits += c.units;
+                if (c.unitLabel) tLabel = c.unitLabel;
+              });
+              row.push(tCount);
+              row.push(tUnits);
+              row.push(csvEscape(tLabel));
+              csv += row.join(',') + '\n';
+            });
+            const totalsRow = [csvEscape('סה"כ פרויקטים')];
+            let grand = 0;
+            AREAS.forEach(a => {
+              const t = Object.values(balance).reduce((s, byArea) => s + byArea[a].count, 0);
+              totalsRow.push(t);
+              totalsRow.push('');
+              totalsRow.push('');
+              grand += t;
+            });
+            totalsRow.push(grand);
+            totalsRow.push('');
+            totalsRow.push('');
+            csv += totalsRow.join(',') + '\n';
+            filename = `projector_gonenim_balance_${today}.csv`;
+          }
+          downloadCSV(filename, csv);
+        });
+
+        // ── Print current tab ──
+        document.getElementById('pf-print').addEventListener('click', () => {
+          const pane = m.querySelector(`[data-tab-pane="${activeTab}"]`);
+          const label = pane ? pane.getAttribute('data-tab-label') : '';
+          const content = pane ? pane.innerHTML : '';
+          const w = window.open('', '_blank');
+          if (!w) {
+            alert('הדפדפן חסם את חלון ההדפסה. אשר חלונות קופצים ונסה שוב.');
+            return;
+          }
+          w.document.write(`<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>${label} — פרוייקטור גוננים</title>` + `<style>body{font-family:Assistant,Arial,sans-serif;direction:rtl;padding:24px;color:#222;background:#fff}h1{font-size:20px;color:#1e293b;border-bottom:2px solid #1976d2;padding-bottom:8px}table{border-collapse:collapse;width:100%;margin-top:10px;font-size:12px}th,td{padding:5px 8px;border:1px solid #ccc;text-align:right}th{background:#f5f5f5}tr[data-ob-idx]{cursor:default}.print-meta{font-size:11px;color:#888;margin-bottom:14px}@media print{button{display:none}}</style>` + `</head><body><h1>📊 ${label} — פרוייקטור גוננים</h1>` + `<div class="print-meta">הופק: ${new Date().toLocaleString('he-IL')}</div>` + content + `</body></html>`);
+          w.document.close();
+          setTimeout(() => w.print(), 400);
+        });
+      };
+      window.__refreshProjectorFilterPanel = function () {
+        const L = layersRef.current || {};
+        const active = L['projector_gonenim'] || L['projector_gonenim_tzatal'];
+        panel.style.display = active ? 'flex' : 'none';
+        if (active) {
+          refreshChips();
+          renderServicesList();
+          window.__updateProjectorFilterCounts();
+        }
+      };
+    }
+    if (window.__refreshProjectorFilterPanel) window.__refreshProjectorFilterPanel();
+
+    // Inject SVG hatch patterns into map
+    setTimeout(() => {
+      const svgEl = map.getContainer().querySelector('svg') || map.getContainer().querySelector('.leaflet-overlay-pane svg');
+      if (!svgEl) return;
+      let defs = svgEl.querySelector('defs');
+      if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svgEl.insertBefore(defs, svgEl.firstChild);
+      }
+      // Diagonal hatch patterns - unique per hatch color
+      const hatchDefs = [{
+        id: 'hatch-blue',
+        color: '#003fff',
+        angle: -45
+      }, {
+        id: 'hatch-green',
+        color: '#009900',
+        angle: -45
+      }, {
+        id: 'hatch-pink',
+        color: '#ff7f9f',
+        angle: -45
+      }, {
+        id: 'hatch-brown',
+        color: '#b4643c',
+        angle: -45
+      }, {
+        id: 'hatch-yellow',
+        color: '#ffff00',
+        angle: -45
+      }, {
+        id: 'hatch-teal',
+        color: '#00c8b4',
+        angle: -45
+      }, {
+        id: 'hatch-grey',
+        color: '#505050',
+        angle: -45
+      }, {
+        id: 'hatch-orange',
+        color: '#ff9640',
+        angle: -45
+      }, {
+        id: 'hatch-darkred',
+        color: '#b4002d',
+        angle: -45
+      }, {
+        id: 'hatch-cyan',
+        color: '#00b4dc',
+        angle: -45
+      }, {
+        id: 'hatch-red-cross',
+        color: '#c80000',
+        angle: 0,
+        cross: true
+      }, {
+        id: 'hatch-teal-cross',
+        color: '#00d2c8',
+        angle: 0,
+        cross: true
+      }, {
+        id: 'hatch-grey-cross',
+        color: '#646464',
+        angle: 0,
+        cross: true
+      }];
+      hatchDefs.forEach(h => {
+        const pat = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+        pat.setAttribute('id', h.id);
+        pat.setAttribute('patternUnits', 'userSpaceOnUse');
+        pat.setAttribute('width', '8');
+        pat.setAttribute('height', '8');
+        pat.setAttribute('patternTransform', 'rotate(' + (h.angle || -45) + ')');
+        const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line1.setAttribute('x1', '0');
+        line1.setAttribute('y1', '0');
+        line1.setAttribute('x2', '0');
+        line1.setAttribute('y2', '8');
+        line1.setAttribute('stroke', h.color);
+        line1.setAttribute('stroke-width', '2.5');
+        pat.appendChild(line1);
+        if (h.cross) {
+          const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line2.setAttribute('x1', '0');
+          line2.setAttribute('y1', '0');
+          line2.setAttribute('x2', '8');
+          line2.setAttribute('y2', '0');
+          line2.setAttribute('stroke', h.color);
+          line2.setAttribute('stroke-width', '2.5');
+          pat.appendChild(line2);
+        }
+        defs.appendChild(pat);
+      });
+      window.__hatchPatternsReady = true;
+    }, 2000);
+
+    // Apply layer state from hash
+    if (hashParams && hashParams.layers) {
+      const hashLayerIds = hashParams.layers.split(',');
+      // Collect all layer IDs that existed when hash was created
+      const allKnownIds = [];
+      Object.values(LAYER_CONFIG).forEach(group => {
+        group.layers.forEach(l => allKnownIds.push(l.id));
+      });
+      setLayers(prev => {
+        const newLayers = {
+          ...prev
+        };
+        allKnownIds.forEach(id => {
+          if (hashLayerIds.includes(id)) {
+            newLayers[id] = true;
+          } else {
+            const group = Object.values(LAYER_CONFIG).find(g => g.layers.some(l => l.id === id));
+            const groupHasAny = group && group.layers.some(l => hashLayerIds.includes(l.id));
+            const layerDef = group && group.layers.find(l => l.id === id);
+            if (groupHasAny && !(layerDef && layerDef.on)) {
+              newLayers[id] = false; // explicitly excluded
+            }
+            // else: keep default (default-on layer or layer added after hash was created)
+          }
+        });
+        return newLayers;
+      });
+      hashAppliedRef.current = true;
+    }
+    L.control.zoom({
+      position: 'topleft'
+    }).addTo(map);
+    L.control.scale({
+      position: 'bottomleft',
+      imperial: false
+    }).addTo(map);
+    map.on('mousemove', e => {
+      setCursorPos({
+        lat: e.latlng.lat.toFixed(5),
+        lng: e.latlng.lng.toFixed(5)
+      });
+    });
+
+    // Scale indicator
+    const updateScale = () => {
+      const center = map.getCenter();
+      const metersPerPixel = 40075016.686 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+      const dpi = 96;
+      const metersPerInch = metersPerPixel * dpi;
+      const scale = Math.round(metersPerInch * 39.3701);
+      setMapScale('1:' + scale.toLocaleString());
+    };
+    map.on('zoomend moveend', updateScale);
+    map.on('zoomend', () => setZoomLevel(map.getZoom()));
+    map.on('zoomend moveend', updateHash);
+    // ── View history for back navigation ──
+    const recordView = () => {
+      if (isGoingBackRef.current) {
+        isGoingBackRef.current = false;
+        return;
+      }
+      const c = map.getCenter();
+      const z = map.getZoom();
+      const hist = viewHistoryRef.current;
+      const last = hist.length > 0 ? hist[hist.length - 1] : null;
+      if (last && Math.abs(last.lat - c.lat) < 0.0001 && Math.abs(last.lng - c.lng) < 0.0001 && last.zoom === z) return;
+      hist.push({
+        lat: c.lat,
+        lng: c.lng,
+        zoom: z
+      });
+      if (hist.length > 50) hist.shift();
+      setViewHistoryLen(hist.length);
+    };
+    map.on('moveend', recordView);
+    // Record initial view
+    viewHistoryRef.current.push({
+      lat: map.getCenter().lat,
+      lng: map.getCenter().lng,
+      zoom: map.getZoom()
+    });
+    setTimeout(updateScale, 200);
+    mapInstanceRef.current = map;
+    window.__map = map;
+    window.__geoDataRef = geoDataRef;
+
+    // Ensure map fills container after initial render
+    setTimeout(() => map.invalidateSize(), 100);
+
+    // Create custom panes for z-ordering
+    map.createPane('districtPane').style.zIndex = 200;
+    map.createPane('roadsPane').style.zIndex = 320;
+    map.createPane('roadsPane').style.pointerEvents = 'none';
+    map.createPane('rakalPane').style.zIndex = 490;
+    map.createPane('rakalPane').style.pointerEvents = 'none';
+    // Separate SVG renderer for rakal so pane z-index works
+    window.__rakalRenderer = L.svg({
+      pane: 'rakalPane'
+    });
+    map.createPane('subNeighborhoodPane').style.zIndex = 250;
+    map.createPane('minahakPane').style.zIndex = 260;
+    // masterPlanPane MUST be above minahakPane so clicks on master plan
+    // polygons aren't intercepted by the projector_talpiot overlay
+    // (which sits in minahakPane with fillOpacity 0.05 — interactive but
+    // has no popup attached, so clicks would silently fall on it).
+    const masterPlanPane = map.createPane('masterPlanPane');
+    masterPlanPane.style.zIndex = 275;
+    const masterPlanTbaPane = map.createPane('masterPlanTbaPane');
+    masterPlanTbaPane.style.zIndex = 350;
+    const infraPane = map.createPane('infrastructurePane');
+    infraPane.style.zIndex = 280;
+    infraPane.style.pointerEvents = 'none';
+    const plan7778Pane = map.createPane('plan7778Pane');
+    plan7778Pane.style.zIndex = 282;
+    plan7778Pane.style.pointerEvents = 'none';
+    const archivedPane = map.createPane('archivedPane');
+    archivedPane.style.zIndex = 285;
+    archivedPane.style.pointerEvents = 'none';
+    const consolidationPane = map.createPane('consolidationPane');
+    consolidationPane.style.zIndex = 287;
+    consolidationPane.style.pointerEvents = 'none';
+    map.createPane('topicsPane').style.zIndex = 290;
+    map.createPane('plansPane').style.zIndex = 300;
+    // projectorPane sits ABOVE plansPane so projector recommendations
+    // intercept clicks first and visually overlay תב"עות.
+    map.createPane('projectorPane').style.zIndex = 320;
+    map.createPane('topicsPane').style.pointerEvents = 'none';
+    map.createPane('permitsPane').style.zIndex = 400;
+    map.createPane('tama38Pane').style.zIndex = 450;
+    map.createPane('stationsPane').style.zIndex = 500;
+    window.__stationsRenderer = L.svg({
+      pane: 'stationsPane'
+    });
+    const labelsP = map.createPane('labelsPane');
+    labelsP.style.zIndex = 550;
+    labelsP.style.pointerEvents = 'none';
+    const minahakLabelsP = map.createPane('minahakLabelsPane');
+    minahakLabelsP.style.zIndex = 560;
+    minahakLabelsP.style.pointerEvents = 'none';
+    const shavazP = map.createPane('shavazPane');
+    shavazP.style.zIndex = 440;
+    // Future-shavaz / hafrashah point markers sit ABOVE the label panes (550/560) so
+    // plan-label text never covers the marker dots.
+    const shavazMarkersP = map.createPane('shavazMarkersPane');
+    shavazMarkersP.style.zIndex = 565;
+    const landuseP = map.createPane('landusePane');
+    landuseP.style.zIndex = 295;
+
+    // Load all GeoJSON data + CSV for plan_type enrichment.
+    // Heaviest files (11 MB+) are deferred — fetched in the background
+    // after the map is interactive. Used for existing-landuse popup info
+    // and for the ייעודי קרקע קיים layer (off by default).
+    // All these layers are off by default (on:false) — no need to block first paint on them.
+    const DEFERRED_FILES = [
+    // roads + buildings used by many cross-layer features (address
+    // lookups, road bearing for crossings) — load after first paint.
+    'roads', 'buildings'];
+    // ON_DEMAND_FILES — fetched only when their layer is toggled ON.
+    // Visualization-only, OFF by default. Heavy and rarely-used.
+    const ON_DEMAND_FILES = ['yiud_karka_kayam', 'landuse_xplan', 'master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'givat_hamatos_arab_armenian', 'givat_hamatos_state', 'givat_hamatos_companies', 'givat_hamatos_jewish', 'givat_hamatos_christian', 'givat_hamatos_unknown', 'easements'];
+    const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
+    const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
+    const deferredEntries = Object.entries(GEOJSON_FILES).filter(([k]) => DEFERRED_FILES.includes(k));
+    // Expose ON_DEMAND_FILES for the layer-watch hook (defined below)
+    window.__onDemandFiles = ON_DEMAND_FILES;
+    window.__geojsonFilesMap = GEOJSON_FILES;
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJU2Odzsa_d789A5545sSFnUGsrXuW2VTj3xCNEtV1sOM13VNVeepGhzraHoQgLWBaGTCitS-4j7Sy/pub?output=csv';
+    // Pre-init permit globals
+    window.__allPermits = {};
+    window.__tama38Permits = {};
+    window.__treeSurveys = {};
+    window.__tama38TreeSurveys = {};
+    window.__treeValencies = {};
+    window.__masterPlanCompliance = {};
+    window.__meetings = {};
+    window.__objectionsPermits = {};
+    // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
+    // popup-time globals and aren't needed for initial render.
+    var allEntries = entries;
+    const STAGE2_JSONS = [['__allPermits', 'data/all_permits.json'], ['__tama38Permits', 'data/tama38_permits.json'], ['__treeSurveys', 'data/tree_surveys.json'], ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'], ['__treeValencies', 'data/tree_valencies.json'], ['__masterPlanCompliance', 'data/master_plan_compliance.json'], ['__meetings', 'data/meetings.json'], ['__objectionsPermits', 'data/objections_permits.json']];
+    setLoadProgress({
+      done: 0,
+      total: allEntries.length
+    });
+    let doneCount = 0;
+
+    // === Helpers used in both Stage 1 and Stage 2 (CSV) ===
+    function parseCSVRow(row) {
+      const cols = [];
+      let cur = '',
+        inQ = false;
+      for (let i = 0; i < row.length; i++) {
+        const c = row[i];
+        if (c === '"') {
+          inQ = !inQ;
+        } else if (c === ',' && !inQ) {
+          cols.push(cur.trim());
+          cur = '';
+        } else {
+          cur += c;
+        }
+      }
+      cols.push(cur.trim());
+      return cols;
+    }
+    const GS_OVERRIDE_FIELDS = ['units_total', 'units_in', 'units_add', 'shavatz_in_sqm', 'shavatz_in_prog', 'shavatz_out_sqm', 'shavatz_out_prog', 'shavatz_out_plot', 'shatzap_in', 'shatzap_out', 'commerce_in', 'commerce_out', 'employment', 'hotels', 'rental', 'conditional_housing', 'rental_duration', 'rental_inclusion', 'plan_summary', 'plan_name_he', 'architect', 'developer'];
+    // Snapshot raw GeoJSON values (units_total/rental) so rental fold can be
+    // re-run idempotently after CSV overrides arrive.
+    function snapshotRentalSources(gd) {
+      if (!gd.plans || !gd.plans.features) return;
+      for (const f of gd.plans.features) {
+        const p = f.properties;
+        if (p._units_total_raw === undefined) p._units_total_raw = p.units_total;
+        if (p._rental_raw === undefined) p._rental_raw = p.rental;
+      }
+    }
+    function foldRental(gd) {
+      if (!gd.plans || !gd.plans.features) return;
+      let foldedCount = 0;
+      for (const f of gd.plans.features) {
+        const p = f.properties;
+        const rawTotal = parseFloat(p._units_total_raw ?? p.units_total) || 0;
+        const rental = parseFloat(p._rental_raw ?? p.rental) || 0;
+        const inn = parseFloat(p.units_in) || 0;
+        if (rawTotal > 0 || rental > 0) {
+          const effTotal = rawTotal + rental;
+          p.units_total = effTotal;
+          p.units_add = Math.max(effTotal - inn, 0);
+          if (rental > 0) foldedCount++;
+        } else {
+          const storedAdd = parseFloat(p.units_add) || 0;
+          if (rental > 0 || storedAdd > 0) {
+            p.units_add = storedAdd + rental;
+            if (rental > 0) foldedCount++;
+          }
+        }
+      }
+      if (foldedCount > 0) console.log(`[Units] Folded rental into ${foldedCount} plans`);
+    }
+    function rebuildPlanByTaba(gd) {
+      const planByTaba = {};
+      if (gd.plans && gd.plans.features) {
+        gd.plans.features.forEach(f => {
+          const t = String(f.properties.taba || '').trim();
+          if (t) planByTaba[t] = f.properties;
+        });
+      }
+      window.__planByTaba = planByTaba;
+      return planByTaba;
+    }
+    // Lot prefix accepts alphanumeric codes: "מגרש 201", "מגרש 201A", "מגרש r505"
+    const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+([\dא-תA-Za-z]+)\s*[-–]\s*(.*)$/;
+    // Match the FIRST (sqm) — ignore any trailing (...) which is usually a manual total/sum.
+    const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)(?:\s*\(\d+\))*\s*$/;
+    // Fallback A: "<use> - N כיתות [(sqm)]" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
+    const HAFRASH_USE_CLASSES_TRAILING_RE = /^(.+?)\s*[-–]\s*(\d+)\s*כיתות?\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+    // Fallback B: "N כיתות <use> [(sqm)]" (e.g., "9 כיתות מעון")
+    const HAFRASH_USE_CLASSES_LEADING_RE = /^(\d+)\s*כיתות?\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+    // Fallback C: lead count "N <items>" (e.g., "2 בתי כנסת")
+    const HAFRASH_USE_LEAD_RE = /^(\d+)\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
+    const HAFRASH_LOT_DUP_RE = /^מגרש\s+[\dא-תA-Za-z]+\s*[-–]?\s*/;
+    // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
+    // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
+    // Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
+    function parsePrgByLot(planByTaba, fieldName) {
+      const result = {};
+      for (const taba in planByTaba) {
+        const prg = (planByTaba[taba][fieldName] || '').trim();
+        if (!prg) continue;
+        const parts = prg.split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
+        let currentLot = null;
+        for (const part of parts) {
+          let remainder = part;
+          const mLot = part.match(HAFRASH_LOT_PREFIX_RE);
+          if (mLot) {
+            currentLot = mLot[1];
+            remainder = mLot[2].trim();
+          }
+          if (!currentLot) continue;
+          const subs = remainder.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+          for (const sub of subs) {
+            // Strip leading "מגרש N -" duplicate prefix that sometimes appears inside a sub-entry.
+            const cleaned = sub.replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim();
+            if (!cleaned) continue;
+            let entry = null;
+            // 1) Standard "use (sqm)" — most common in hafrash_prg
+            const m = cleaned.match(HAFRASH_USE_RE);
+            if (m) {
+              const use = m[1].trim().replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+              if (use) entry = {
+                use,
+                sqm: parseInt(m[2])
+              };
+            }
+            // 2A) Trailing-classes "<use> - N כיתות" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
+            if (!entry) {
+              const mt = cleaned.match(HAFRASH_USE_CLASSES_TRAILING_RE);
+              if (mt) {
+                // Strip leading numeric count from use (redundant with כיתות count)
+                const use = mt[1].trim().replace(/^\d+\s+/, '').trim();
+                if (use) entry = {
+                  use,
+                  count: parseInt(mt[2]),
+                  unit: 'כיתות'
+                };
+              }
+            }
+            // 2B) Leading-classes "N כיתות <use>" (e.g., "9 כיתות מעון")
+            if (!entry) {
+              const mc = cleaned.match(HAFRASH_USE_CLASSES_LEADING_RE);
+              if (mc) {
+                const use = mc[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                if (use) entry = {
+                  use,
+                  count: parseInt(mc[1]),
+                  unit: 'כיתות'
+                };
+              }
+            }
+            // 3) Lead count "N <items>" (e.g., "2 בתי כנסת (16250)")
+            if (!entry) {
+              const ml = cleaned.match(HAFRASH_USE_LEAD_RE);
+              if (ml) {
+                const use = ml[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+                if (use) entry = {
+                  use,
+                  count: parseInt(ml[1]),
+                  unit: 'יחידות'
+                };
+              }
+            }
+            // 4) Plain use without count or sqm (e.g., "מקווה", "מועדון נוער")
+            if (!entry) {
+              const use = cleaned.replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
+              if (use) entry = {
+                use,
+                count: 1,
+                unit: ''
+              };
+            }
+            if (!entry) continue;
+            if (!result[taba]) result[taba] = {};
+            if (!result[taba][currentLot]) result[taba][currentLot] = [];
+            result[taba][currentLot].push(entry);
+          }
+        }
+      }
+      return result;
+    }
+    function rebuildHafrashLookup(planByTaba) {
+      window.__hafrashByTabaLot = parsePrgByLot(planByTaba, 'hafrash_prg');
+      window.__shavatzByTabaLot = parsePrgByLot(planByTaba, 'shavatz_out_prog');
+    }
+    function extractAvailablePlanTypes(gd) {
+      if (!gd.plans || !gd.plans.features) return;
+      const types = new Set();
+      gd.plans.features.forEach(f => {
+        const pt = normalizePlanType(f.properties.plan_type || '');
+        if (pt && pt !== 'תשתיות') types.add(pt);
+      });
+      setAvailablePlanTypes([...types].sort());
+    }
+    function applyCSVEnrichment(gd, csvText) {
+      if (!csvText || !gd.plans) return;
+      const rows = csvText.split('\n');
+      const headers = parseCSVRow(rows[0]);
+      const ptIdx = headers.findIndex(h => h === 'plan_type');
+      const nameIdx = headers.findIndex(h => h === 'plan_name');
+      const objEndIdx = headers.findIndex(h => h === 'objection_end_date');
+      const hfSqmIdx = headers.findIndex(h => h === 'hafrash_sqm');
+      const hfPrgIdx = headers.findIndex(h => h === 'hafrash_prg');
+      const gsOverrideIdx = {};
+      GS_OVERRIDE_FIELDS.forEach(k => {
+        gsOverrideIdx[k] = headers.findIndex(h => h === k);
+      });
+      if (ptIdx < 0 || nameIdx < 0) return;
+      const csvMap = {};
+      for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].trim()) continue;
+        const cols = parseCSVRow(rows[i]);
+        if (cols[nameIdx]) {
+          const entry = {
+            plan_type: cols[ptIdx] || '',
+            objection_end_date: objEndIdx >= 0 ? cols[objEndIdx] || '' : '',
+            hafrash_sqm: hfSqmIdx >= 0 ? cols[hfSqmIdx] || '' : '',
+            hafrash_prg: hfPrgIdx >= 0 ? cols[hfPrgIdx] || '' : ''
+          };
+          GS_OVERRIDE_FIELDS.forEach(k => {
+            const idx = gsOverrideIdx[k];
+            if (idx >= 0) entry[k] = cols[idx] || '';
+          });
+          csvMap[cols[nameIdx]] = entry;
+        }
+      }
+      gd.plans.features.forEach(f => {
+        const pn = f.properties.plan_name;
+        if (pn && csvMap[pn]) {
+          if (csvMap[pn].plan_type) f.properties.plan_type = csvMap[pn].plan_type;
+          if (csvMap[pn].objection_end_date) f.properties.objection_end_date = csvMap[pn].objection_end_date;
+          if (csvMap[pn].hafrash_sqm) f.properties.hafrash_sqm = csvMap[pn].hafrash_sqm;
+          if (csvMap[pn].hafrash_prg) f.properties.hafrash_prg = csvMap[pn].hafrash_prg;
+          // GS is authoritative — blanks clear the GeoJSON value.
+          // Update the _raw snapshots too so future foldRental calls reflect CSV truth.
+          GS_OVERRIDE_FIELDS.forEach(k => {
+            if (csvMap[pn][k] !== undefined) {
+              f.properties[k] = csvMap[pn][k];
+              if (k === 'units_total') f.properties._units_total_raw = csvMap[pn][k];else if (k === 'rental') f.properties._rental_raw = csvMap[pn][k];
+            }
+          });
+        }
+      });
+      console.log('[CSV] Enriched plan_type for', Object.keys(csvMap).length, 'plans');
+    }
+    function shouldHideKayam(taba) {
+      const set = window.__kayamTabaSet;
+      if (!set || !set.has(taba)) return false;
+      const plan = window.__planByTaba ? window.__planByTaba[taba] : null;
+      if (!plan) return true; // no plan data, hide
+      const hasPermit = (plan.stage || '').trim() !== '';
+      const dateStr = plan.mavat_date || '';
+      const year = dateStr ? parseInt(dateStr.split('/').pop()) : 0;
+      const isOld = year > 0 && year <= 2019;
+      return !hasPermit && isOld;
+    }
+    window.__shouldHideKayam = shouldHideKayam;
+    window.__kayamTabaSet = new Set();
+    window.__planByTaba = {};
+    window.__hafrashByTabaLot = {};
+    // Apply kayam-based filter to landuse_xplan + future_shavaz.
+    // Idempotent: re-clones from a stashed _origFeatures so it can be re-run when
+    // either the kayam set or the target layer arrives later.
+    function applyKayamFilter() {
+      const gd = geoDataRef.current;
+      if (!gd) return;
+      const set = window.__kayamTabaSet;
+      if (!set || set.size === 0) return;
+      if (gd.landuse_xplan && gd.landuse_xplan.features) {
+        if (!gd.landuse_xplan._origFeatures) gd.landuse_xplan._origFeatures = gd.landuse_xplan.features;
+        const orig = gd.landuse_xplan._origFeatures;
+        const filtered = orig.filter(f => {
+          const pn = f.properties.pl_number || '';
+          if (!pn || !pn.includes('-')) return true;
+          const taba = String(parseInt(pn.split('-')[1]));
+          return !shouldHideKayam(taba);
+        });
+        gd.landuse_xplan = {
+          ...gd.landuse_xplan,
+          features: filtered,
+          _origFeatures: orig
+        };
+        console.log('[Filter] landuse_xplan:', orig.length, '->', filtered.length, 'features');
+      }
+      if (gd.future_shavaz && gd.future_shavaz.features) {
+        if (!gd.future_shavaz._origFeatures) gd.future_shavaz._origFeatures = gd.future_shavaz.features;
+        const orig = gd.future_shavaz._origFeatures;
+        const filtered = orig.filter(f => {
+          const t = String(f.properties.TABA || '').trim();
+          return !t || !shouldHideKayam(t);
+        });
+        gd.future_shavaz = {
+          ...gd.future_shavaz,
+          features: filtered,
+          _origFeatures: orig
+        };
+        console.log('[Filter] future_shavaz:', orig.length, '->', filtered.length, 'features');
+      }
+    }
+    window.__applyKayamFilter = applyKayamFilter;
+
+    // === Stage 1: GeoJSON only — render the map ASAP ===
+    Promise.all(allEntries.map(([key, url]) => fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
+      doneCount++;
+      setLoadProgress({
+        done: doneCount,
+        total: allEntries.length
+      });
+      return [key, data];
+    }).catch(() => {
+      doneCount++;
+      setLoadProgress({
+        done: doneCount,
+        total: allEntries.length
+      });
+      return [key, null];
+    }))).then(geoResults => {
+      const gd = {};
+      geoResults.forEach(([key, data]) => {
+        if (data) gd[key] = data;
+      });
+
+      // Surface failed layer loads instead of silently swallowing them.
+      // 'plans' is the core layer — without it the map is meaningless (critical).
+      const failedKeys = geoResults.filter(([, data]) => data === null).map(([key]) => key);
+      const CRITICAL_LAYERS = ['plans'];
+      setLoadError(failedKeys.length ? {
+        failed: failedKeys,
+        critical: failedKeys.some(k => CRITICAL_LAYERS.includes(k))
+      } : null);
+
+      // Force-hide specific plans (instant; not CSV-dependent)
+      if (gd.plans && gd.plans.features) {
+        gd.plans.features.forEach(f => {
+          if (SKIP_PLAN_IDS.has(f.properties.plan_name)) {
+            f.properties.plan_type = 'מוסתר';
+          }
+        });
+      }
+
+      // Initial fold/lookup pass on raw GeoJSON values; re-run after CSV.
+      snapshotRentalSources(gd);
+      foldRental(gd);
+      const planByTaba = rebuildPlanByTaba(gd);
+      rebuildHafrashLookup(planByTaba);
+      extractAvailablePlanTypes(gd);
+      applyMinahakOverrides(gd);
+      applyMinahakOverridesByGeometry(gd);
+      geoDataRef.current = gd;
+      window.__geoDataForLanduse = gd;
+      buildProjectorTalpiotPlanSet(gd);
+
+      // Compute overlap map once — heavy O(n²); deferred so first paint isn't blocked.
+      // Exclude plans with no minahak (city-wide/reference areas): they are never
+      // shown in the overlap layer anyway, and under the one-directional rule they
+      // "contain" almost every other plan — feeding them in explodes the O(n²) work
+      // and bloats the map with entries that never render.
+      overlapMapRef.current = new Map();
+      {
+        const t0 = performance.now();
+        // Lean payload for the worker: only geometry + taba are needed, so don't
+        // clone every feature's full property bag across the worker boundary.
+        const overlapFeatures = (gd.plans ? gd.plans.features : []).filter(f => (f.properties.minahak || '').trim()).map(f => ({
+          geometry: f.geometry,
+          properties: {
+            taba: f.properties.taba
+          }
+        }));
+        buildOverlapMap(overlapFeatures, m => {
+          overlapMapRef.current = m;
+          console.log(`[Overlap] Built map: ${m.size} plans with overlaps in ${Math.round(performance.now() - t0)}ms`);
+          // Flag readiness — re-renders the topic layer (so it draws once the map
+          // is ready) and clears the "computing overlaps" indicator.
+          setOverlapReady(true);
+        });
+      }
+      setDataLoaded(true);
+      setLoading(false);
+      console.log('[GeoJSON] Stage 1 loaded:', Object.keys(gd).join(', '));
+
+      // === Stage 2a: Google Sheets CSV — enrichment, post-paint ===
+      fetch(sheetUrl).then(r => r.text()).catch(() => '').then(csvText => {
+        if (!csvText) return;
+        applyCSVEnrichment(gd, csvText);
+        // Stash parsed rows so units/commerce reports can skip their own re-fetch + re-parse.
+        // Robust char-by-char parser (handles embedded newlines in quoted fields).
+        try {
+          const text = csvText;
+          const rows = [];
+          let row = [];
+          let field = '';
+          let inQuotes = false;
+          for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (inQuotes) {
+              if (ch === '"' && text[i + 1] === '"') {
+                field += '"';
+                i++;
+              } else if (ch === '"') {
+                inQuotes = false;
+              } else {
+                field += ch;
+              }
+            } else {
+              if (ch === '"') {
+                inQuotes = true;
+              } else if (ch === ',') {
+                row.push(field);
+                field = '';
+              } else if (ch === '\n' || ch === '\r' && text[i + 1] === '\n') {
+                row.push(field);
+                field = '';
+                if (row.length > 1) rows.push(row);
+                row = [];
+                if (ch === '\r') i++;
+              } else {
+                field += ch;
+              }
+            }
+          }
+          if (field || row.length) {
+            row.push(field);
+            rows.push(row);
+          }
+          const header = rows[0] || [];
+          window.__plansCsvRows = rows.slice(1).map(r => {
+            const obj = {};
+            header.forEach((h, idx) => {
+              obj[h] = r[idx] || '';
+            });
+            return obj;
+          });
+          console.log('[CSV] Cached', window.__plansCsvRows.length, 'plan rows for reports');
+        } catch (e) {
+          console.warn('[CSV] Row cache parse failed:', e);
+        }
+        applyMinahakOverrides(gd); // CSV may have re-introduced stale minahak; re-correct.
+        applyMinahakOverridesByGeometry(gd); // final word: centroid-in-polygon
+        foldRental(gd); // re-run with CSV-overridden values
+        const pbt = rebuildPlanByTaba(gd);
+        rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
+        extractAvailablePlanTypes(gd); // CSV may add/change plan_type values
+        applyKayamFilter(); // re-apply if landuse_xplan + kayamTabaSet are ready
+        setDeferredTick(t => t + 1);
+      });
+
+      // === Stage 2b: permit/tree/meeting JSONs ===
+      Promise.all(STAGE2_JSONS.map(([key, url]) => fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => [key, data]).catch(() => [key, null]))).then(results => {
+        results.forEach(([key, data]) => {
+          if (key === '__allPermits') {
+            window.__allPermits = data || {};
+          } else if (key === '__tama38Permits') {
+            window.__tama38Permits = data || {};
+          } else if (key === '__treeSurveys') {
+            window.__treeSurveys = data || {};
+          } else if (key === '__tama38TreeSurveys') {
+            window.__tama38TreeSurveys = data || {};
+          } else if (key === '__treeValencies') {
+            window.__treeValencies = data || {};
+          } else if (key === '__masterPlanCompliance') {
+            window.__masterPlanCompliance = data || {};
+          } else if (key === '__objectionsPermits') {
+            window.__objectionsPermits = data || {};
+          } else if (key === '__meetings') {
+            // Build lookup by plan_id. Keep only future meetings (date >= today).
+            const idx = {};
+            const arr = Array.isArray(data) ? data : [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            arr.forEach(m => {
+              const pid = (m.plan_id || '').trim();
+              if (!pid) return;
+              const dp = (m.meeting_date || '').split('/');
+              if (dp.length !== 3) return;
+              const md = new Date(dp[2], dp[1] - 1, dp[0]);
+              if (isNaN(md.getTime()) || md < today) return;
+              const cur = idx[pid];
+              if (!cur || md < cur._d) {
+                idx[pid] = {
+                  ...m,
+                  _d: md
+                };
+              }
+            });
+            window.__meetings = idx;
+          }
+        });
+        console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
+      });
+
+      // === Stage 2c: deferred big GeoJSONs ===
+      // Debounce setDeferredTick — many deferred files arrive in quick
+      // succession; one re-render after they settle is much smoother
+      // than 10 re-renders interleaved with loading.
+      let _deferredTickTimer = null;
+      const _scheduleDeferredTick = () => {
+        if (_deferredTickTimer) clearTimeout(_deferredTickTimer);
+        _deferredTickTimer = setTimeout(() => setDeferredTick(t => t + 1), 250);
+      };
+      deferredEntries.forEach(([key, url]) => {
+        fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
+          if (!data) return;
+          geoDataRef.current[key] = data;
+          window.__geoDataForLanduse = geoDataRef.current;
+          // Build kayam taba set when its source layer arrives
+          if (key === 'yiud_karka_kayam' && data.features) {
+            const set = new Set();
+            data.features.forEach(f => {
+              const t = String(f.properties.TABA || '').trim();
+              if (t) set.add(t);
+            });
+            window.__kayamTabaSet = set;
+          }
+          // Re-apply kayam filter — handles both orderings (yiud first or target first)
+          applyKayamFilter();
+          _scheduleDeferredTick();
+          console.log(`[GeoJSON] Deferred loaded: ${key} (${data.features ? data.features.length : '?'} features)`);
+        }).catch(e => console.warn(`[GeoJSON] Deferred ${key} failed:`, e));
+      });
+    });
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  // Update basemap
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (baseTileRef.current) {
+      map.removeLayer(baseTileRef.current);
+      baseTileRef.current = null;
+    }
+    const bm = BASEMAPS[basemap];
+    if (bm.url) {
+      baseTileRef.current = L.tileLayer(bm.url, {
+        attribution: bm.attribution,
+        maxZoom: 22,
+        opacity: basemapOpacity,
+        crossOrigin: 'anonymous'
+      }).addTo(map);
+      baseTileRef.current.bringToBack();
+    }
+  }, [basemap]);
+
+  // Update basemap opacity without recreating layer
+  useEffect(() => {
+    if (baseTileRef.current) {
+      baseTileRef.current.setOpacity(basemapOpacity);
+    }
+  }, [basemapOpacity]);
+
+  // Keep refs in sync
+  useEffect(() => {
+    layersRef.current = layers;
+    updateHash();
+  }, [layers]);
+  // GeoJSON layers have built-in pointer cursor on hover — no probe needed
+
+  // ── On-demand layer loading ──
+  // Watch layers state — when a layer in ON_DEMAND_FILES becomes true
+  // and its geojson hasn't been fetched yet, fetch it now.
+  useEffect(() => {
+    const onDemand = window.__onDemandFiles || [];
+    const filesMap = window.__geojsonFilesMap || {};
+    if (!window.__inFlightLoads) window.__inFlightLoads = new Set();
+    let _pendingTick = null;
+    let _anyArrived = false;
+    // Some layers render FROM landuse_xplan (filtered by mavat_code) rather than
+    // their own file — so turning them on must trigger the landuse on-demand fetch
+    // too, otherwise they'd render empty until landuse is separately loaded.
+    const LANDUSE_DEPENDENTS = ['future_shavaz', 'hafrashah_future'];
+    onDemand.forEach(key => {
+      const wanted = layers[key] || key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d]);
+      if (!wanted) return;
+      if (geoDataRef.current[key]) return; // already loaded
+      if (window.__inFlightLoads.has(key)) return; // already fetching
+      const url = filesMap[key];
+      if (!url) return;
+      window.__inFlightLoads.add(key);
+      console.log(`[GeoJSON] On-demand fetching: ${key}`);
+      const t0 = performance.now();
+      fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
+        if (!data) return;
+        geoDataRef.current[key] = data;
+        window.__geoDataForLanduse = geoDataRef.current;
+        if (key === 'yiud_karka_kayam' && data.features) {
+          const set = new Set();
+          data.features.forEach(f => {
+            const t = String(f.properties.TABA || '').trim();
+            if (t) set.add(t);
+          });
+          window.__kayamTabaSet = set;
+        }
+        if (window.__applyKayamFilter) window.__applyKayamFilter();
+        _anyArrived = true;
+        if (_pendingTick) clearTimeout(_pendingTick);
+        _pendingTick = setTimeout(() => setDeferredTick(t => t + 1), 150);
+        console.log(`[GeoJSON] On-demand loaded: ${key} (${data.features ? data.features.length : '?'} features, ${Math.round(performance.now() - t0)}ms)`);
+      }).catch(e => console.warn(`[GeoJSON] On-demand ${key} failed:`, e)).finally(() => window.__inFlightLoads.delete(key));
+    });
+  }, [layers]);
+
+  // ── Landuse compare: plan selection mode ──
+  useEffect(() => {
+    landuseCompareModeRef.current = landuseCompareMode;
+    const map = mapInstanceRef.current;
+    if (!map || landuseCompareMode !== 'plan') return;
+    map.getContainer().classList.add('measuring');
+    function onPlanClick(e) {
+      // Find clicked plan polygon
+      const plansLayer = geoLayersRef.current.plans;
+      if (!plansLayer) return;
+      const latlng = e.latlng;
+      let clickedFeature = null;
+      plansLayer.eachLayer(layer => {
+        if (clickedFeature) return;
+        try {
+          const geo = layer.feature.geometry;
+          let coords;
+          if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];else return;
+          // pip test
+          const lng = latlng.lng,
+            lat = latlng.lat;
+          let inside = false;
+          for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+            const [xi, yi] = coords[i],
+              [xj, yj] = coords[j];
+            if (yi > lat !== yj > lat && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+          }
+          if (inside) clickedFeature = layer.feature;
+        } catch (ex) {}
+      });
+      if (clickedFeature) {
+        const geo = clickedFeature.geometry;
+        let coords;
+        try {
+          if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];
+        } catch (ex) {
+          return;
+        }
+        if (!coords) return;
+        const polyCoords = [...coords];
+        if (polyCoords[0][0] !== polyCoords[polyCoords.length - 1][0]) polyCoords.push(polyCoords[0]);
+        const p = clickedFeature.properties;
+        const planId = p.plan_name || p.pl_number || p.TABA || '';
+        const planSummary = p.plan_summary || p.plan_name_he || '';
+        const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
+        const result = analyzeLanduseComparison(polyCoords, [planDisplay]);
+        showLanduseComparePanel(result);
+        setLanduseCompareMode(null);
+      }
+    }
+    map.on('click', onPlanClick);
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        setLanduseCompareMode(null);
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      map.off('click', onPlanClick);
+      document.removeEventListener('keydown', onKeyDown);
+      map.getContainer().classList.remove('measuring');
+    };
+  }, [landuseCompareMode]);
+
+  // ── שצ"פ לנפש: one-time setup (always listening, controlled by ref) ──
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    function onShatzafClick(e) {
+      if (shatzafModeRef.current !== 'plan') return;
+      // Find clicked plan by PIP (same as landuse compare)
+      const plansLayer = geoLayersRef.current.plans;
+      if (!plansLayer) return;
+      const latlng = e.latlng;
+      let clickedFeature = null;
+      plansLayer.eachLayer(layer => {
+        if (clickedFeature) return;
+        try {
+          const geo = layer.feature.geometry;
+          let coords;
+          if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];else return;
+          const lng = latlng.lng,
+            lat = latlng.lat;
+          let inside = false;
+          for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+            const [xi, yi] = coords[i],
+              [xj, yj] = coords[j];
+            if (yi > lat !== yj > lat && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+          }
+          if (inside) clickedFeature = layer.feature;
+        } catch (ex) {}
+      });
+      if (!clickedFeature) return;
+      processShatzafFeature(clickedFeature);
+    }
+    function processShatzafFeature(clickedFeature) {
+      const p = clickedFeature.properties;
+      const planId = p.plan_name || p.pl_number || p.TABA || '';
+      const planSummary = p.plan_summary || p.plan_name_he || '';
+      const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
+      const unitsTotal = parseInt(p.units_total) || 0;
+      const planMinahak = (p.minahak || '').trim();
+      const presetHH = PN_MINAHAK_PRESETS[planMinahak] && PN_MINAHAK_PRESETS[planMinahak].householdSize || 3.5;
+
+      // Calculate open space from xplan within plan boundary
+      const geo = clickedFeature.geometry;
+      let planCoords;
+      try {
+        if (geo.type === 'Polygon') planCoords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') planCoords = geo.coordinates[0][0];
+      } catch (ex) {
+        return;
+      }
+      if (!planCoords) return;
+
+      // Find xplan features inside this plan that are שטחים פתוחים
+      const gd = window.__geoDataForLanduse || {};
+      let openSpaceArea = 0;
+      const openSpaceNames = [];
+      if (gd.landuse_xplan) {
+        gd.landuse_xplan.features.forEach(f => {
+          const name = (f.properties.mavat_name || '').trim();
+          if (!name) return;
+          const group = getLanduseGroup(name);
+          if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+          // Check if centroid is inside plan polygon
+          try {
+            let fCoords;
+            if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];else return;
+            let cx = 0,
+              cy = 0,
+              n = 0;
+            for (const c of fCoords) {
+              cx += c[0];
+              cy += c[1];
+              n++;
+            }
+            cx /= n;
+            cy /= n;
+            // PIP test against plan boundary
+            let inside = false;
+            for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+              const [xi, yi] = planCoords[i],
+                [xj, yj] = planCoords[j];
+              if (yi > cy !== yj > cy && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+            }
+            if (inside) {
+              openSpaceArea += getFeatureArea(f);
+              if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+            }
+          } catch (ex) {}
+        });
+      }
+
+      // Also check kayam if no xplan open space found
+      if (openSpaceArea === 0 && gd.yiud_karka_kayam) {
+        gd.yiud_karka_kayam.features.forEach(f => {
+          const name = (f.properties.Descr || '').trim();
+          if (!name) return;
+          const group = getLanduseGroup(name);
+          if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+          try {
+            let fCoords;
+            if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];else return;
+            let cx = 0,
+              cy = 0,
+              n = 0;
+            for (const c of fCoords) {
+              cx += c[0];
+              cy += c[1];
+              n++;
+            }
+            cx /= n;
+            cy /= n;
+            let inside = false;
+            for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+              const [xi, yi] = planCoords[i],
+                [xj, yj] = planCoords[j];
+              if (yi > cy !== yj > cy && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+            }
+            if (inside) {
+              openSpaceArea += getFeatureArea(f);
+              if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+            }
+          } catch (ex) {}
+        });
+      }
+      shatzafModeRef.current = null;
+      setShatzafMode(false);
+      mapInstanceRef.current?.getContainer().classList.remove('measuring');
+
+      // Find which sub-neighborhood this plan is in
+      let planCx = 0,
+        planCy = 0,
+        pn = 0;
+      for (const c of planCoords) {
+        planCx += c[0];
+        planCy += c[1];
+        pn++;
+      }
+      planCx /= pn;
+      planCy /= pn;
+      let subNeighName = null;
+      if (gd.sub_neighborhoods) {
+        gd.sub_neighborhoods.features.forEach(sf => {
+          if (subNeighName) return;
+          try {
+            const sg = sf.geometry;
+            const rings = sg.type === 'Polygon' ? [sg.coordinates[0]] : sg.type === 'MultiPolygon' ? sg.coordinates.map(c => c[0]) : [];
+            for (const ring of rings) {
+              let inside = false;
+              for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const [xi, yi] = ring[i],
+                  [xj, yj] = ring[j];
+                if (yi > planCy !== yj > planCy && planCx < (xj - xi) * (planCy - yi) / (yj - yi) + xi) inside = !inside;
+              }
+              if (inside) {
+                subNeighName = sf.properties.schn_nama;
+                break;
+              }
+            }
+          } catch (ex) {}
+        });
+      }
+
+      // Show dialog for household size
+      const panel = document.createElement('div');
+      panel.id = 'shatzaf-panel';
+      panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+      panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' + '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + planDisplay + '</h3>' + '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' + (subNeighName ? '<div style="font-size:11px;margin-bottom:6px;color:#888">שכונה: ' + subNeighName + '</div>' : '') + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea / 1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' + (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') + '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (planMinahak && PN_MINAHAK_PRESETS[planMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + planMinahak + ')</span>' : '') + '</div>' + '<div style="display:flex;gap:8px;align-items:center">' + '<input id="shatzaf-household" type="number" value="' + presetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' + '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' + '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
+      document.body.appendChild(panel);
+
+      // Pre-calculate sub-neighborhood ratio for comparison
+      let subRatioText = '';
+      if (subNeighName) {
+        // Find sub polygon coords
+        const subF = gd.sub_neighborhoods.features.find(f => f.properties.schn_nama === subNeighName);
+        if (subF) {
+          let sCoords;
+          try {
+            if (subF.geometry.type === 'Polygon') sCoords = subF.geometry.coordinates[0];else if (subF.geometry.type === 'MultiPolygon') sCoords = subF.geometry.coordinates[0][0];
+          } catch (ex) {}
+          if (sCoords) {
+            let subOpenSpace = 0;
+            // Scan xplan + kayam fallback for sub-neighborhood open space
+            const scanLanduse = (features, nameField) => {
+              features.forEach(f => {
+                const nm = (f.properties[nameField] || '').trim();
+                if (!nm) return;
+                const grp = getLanduseGroup(nm);
+                if (grp !== 'שטחים פתוחים' && grp !== 'יער/חקלאי') return;
+                try {
+                  let fc;
+                  if (f.geometry.type === 'Polygon') fc = f.geometry.coordinates[0];else if (f.geometry.type === 'MultiPolygon') fc = f.geometry.coordinates[0][0];else return;
+                  let cx2 = 0,
+                    cy2 = 0,
+                    nn = 0;
+                  for (const c of fc) {
+                    cx2 += c[0];
+                    cy2 += c[1];
+                    nn++;
+                  }
+                  cx2 /= nn;
+                  cy2 /= nn;
+                  let ins = false;
+                  for (let i = 0, j = sCoords.length - 1; i < sCoords.length; j = i++) {
+                    const [xi, yi] = sCoords[i],
+                      [xj, yj] = sCoords[j];
+                    if (yi > cy2 !== yj > cy2 && cx2 < (xj - xi) * (cy2 - yi) / (yj - yi) + xi) ins = !ins;
+                  }
+                  if (ins) subOpenSpace += getFeatureArea(f);
+                } catch (ex) {}
+              });
+            };
+            if (gd.landuse_xplan) scanLanduse(gd.landuse_xplan.features, 'mavat_name');
+            if (gd.yiud_karka_kayam) scanLanduse(gd.yiud_karka_kayam.features, 'Descr');
+            window.__subShatzafData = {
+              subName: subNeighName,
+              openSpace: subOpenSpace
+            };
+          }
+        }
+      }
+      document.getElementById('shatzaf-close').onclick = () => panel.remove();
+      document.getElementById('shatzaf-calc').onclick = () => {
+        const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
+        const totalPeople = unitsTotal * hh;
+        const sqmPerPerson = totalPeople > 0 ? openSpaceArea / totalPeople : 0;
+        const resultDiv = document.getElementById('shatzaf-result');
+        resultDiv.style.display = 'block';
+
+        // Calculate sub-neighborhood ratio
+        let subCompareHtml = '';
+        const sd = window.__subShatzafData;
+        if (sd && sd.subName) {
+          const ud = window.__unitsData;
+          let subUnits = 0;
+          if (ud && ud.bySub) {
+            // Collect all sub names that map to this sub polygon
+            const allNames = new Set([sd.subName]);
+            let parentM = null;
+            Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
+              if (ss.includes(sd.subName)) parentM = m;
+            });
+            if (parentM) {
+              const gd3 = window.__geoDataForLanduse || {};
+              const geojsonN = new Set();
+              if (gd3.sub_neighborhoods) {
+                gd3.sub_neighborhoods.features.forEach(f2 => {
+                  const nm2 = f2.properties.schn_nama || '';
+                  const norm2 = SUB_NORMALIZE[nm2] || nm2;
+                  if ((MINAHAK_SUBS[parentM] || []).some(s2 => s2 === nm2 || s2 === norm2 || (SUB_NORMALIZE[s2] || s2) === norm2)) geojsonN.add(nm2);
+                });
+              }
+              if (geojsonN.size <= 1) {
+                (MINAHAK_SUBS[parentM] || []).forEach(s2 => {
+                  allNames.add(s2);
+                  allNames.add(SUB_NORMALIZE[s2] || s2);
+                });
+                allNames.add(parentM);
+              }
+            }
+            Object.keys(ud.bySub).forEach(m => {
+              Object.keys(ud.bySub[m]).forEach(s => {
+                if (allNames.has(s)) {
+                  subUnits += (ud.bySub[m][s].units_in || 0) + (ud.bySub[m][s].units_add || 0);
+                }
+              });
+            });
+          }
+          const subPeople = subUnits * hh;
+          const subRatio = subPeople > 0 ? sd.openSpace / subPeople : 0;
+          if (subUnits > 0) {
+            subCompareHtml = '<div style="font-size:11px;color:#888;margin-top:6px;text-align:center">יחס בשכונת ' + sd.subName + ': <b style="color:#aaa">' + subRatio.toFixed(1) + ' מ"ר/נפש</b></div>';
+          }
+        }
+
+        // Standard comparison: 30-70 m²/HH → convert to m²/person for display
+        const sqmPerHH = unitsTotal > 0 ? openSpaceArea / unitsTotal : 0;
+        const minPerPerson = 30 / hh,
+          maxPerPerson = 70 / hh;
+        let standardHtml = '';
+        if (unitsTotal > 0 && openSpaceArea > 0) {
+          const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
+          const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
+          const statusColor = status === 'deficit' ? OPEN_SPACE_PALETTE.status_deficit : OPEN_SPACE_PALETTE.status_adequate;
+          standardHtml = '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' + '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' + '</div>';
+        }
+        resultDiv.innerHTML = '<div style="border-top:1px solid #333;padding-top:12px">' + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>(' + unitsTotal.toLocaleString() + ' יח"ד × ' + hh + ' נפשות)</span></div>' + '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' + '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' + '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' + subCompareHtml + '</div>' + standardHtml + (unitsTotal === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד לתכנית זו</div>' : '') + (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ בתכנית זו</div>' : '') + '</div>';
+      };
+      // Auto-calculate
+      document.getElementById('shatzaf-calc').click();
+    }
+
+    // Use DOM click on map container (plan layer swallows Leaflet click events)
+    const container = map.getContainer();
+    function onShatzafDomClick(e) {
+      if (shatzafModeRef.current !== 'plan') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const pt = map.containerPointToLatLng([x, y]);
+      onShatzafClick({
+        latlng: pt
+      });
+    }
+    container.addEventListener('click', onShatzafDomClick, true);
+
+    // Sub-neighborhood shatzaf - hover highlight + click
+    let subHoverLayer = null;
+    let subSelectedLayer = null;
+    function findSubAtPoint(pt) {
+      const gd = window.__geoDataForLanduse || {};
+      if (!gd.sub_neighborhoods) return null;
+      let found = null;
+      gd.sub_neighborhoods.features.forEach(f => {
+        if (found) return;
+        try {
+          const g = f.geometry;
+          const rings = g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map(c => c[0]) : [];
+          for (const ring of rings) {
+            let inside = false;
+            const lng = pt.lng,
+              lat = pt.lat;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+              const [xi, yi] = ring[i],
+                [xj, yj] = ring[j];
+              if (yi > lat !== yj > lat && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+            }
+            if (inside) {
+              found = f;
+              break;
+            }
+          }
+        } catch (ex) {}
+      });
+      return found;
+    }
+    function onShatzafSubMouseMove(e) {
+      if (shatzafModeRef.current !== 'sub') {
+        if (subHoverLayer) {
+          map.removeLayer(subHoverLayer);
+          subHoverLayer = null;
+        }
+        return;
+      }
+      const pt = map.containerPointToLatLng([e.clientX - container.getBoundingClientRect().left, e.clientY - container.getBoundingClientRect().top]);
+      const found = findSubAtPoint(pt);
+      if (subHoverLayer) {
+        map.removeLayer(subHoverLayer);
+        subHoverLayer = null;
+      }
+      if (found) {
+        subHoverLayer = L.geoJSON(found, {
+          style: {
+            color: OPEN_SPACE_PALETTE.hover_highlight,
+            weight: 3,
+            fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+            fillOpacity: 0.1,
+            dashArray: ''
+          }
+        }).addTo(map);
+        // Show tooltip with name
+        subHoverLayer.bindTooltip(found.properties.schn_nama, {
+          sticky: true,
+          direction: 'top',
+          className: 'landuse-tooltip'
+        }).openTooltip();
+      }
+    }
+    container.addEventListener('mousemove', onShatzafSubMouseMove);
+    function onShatzafSubDomClick(e) {
+      if (shatzafModeRef.current !== 'sub') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const pt = map.containerPointToLatLng([e.clientX - container.getBoundingClientRect().left, e.clientY - container.getBoundingClientRect().top]);
+      const found = findSubAtPoint(pt);
+      if (subHoverLayer) {
+        map.removeLayer(subHoverLayer);
+        subHoverLayer = null;
+      }
+      if (found) {
+        shatzafModeRef.current = null;
+        setShatzafMode(false);
+        map.getContainer().classList.remove('measuring');
+        // Draw selected polygon
+        subSelectedLayer = L.geoJSON(found, {
+          style: {
+            color: OPEN_SPACE_PALETTE.shatzaf_button,
+            weight: 3,
+            fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+            fillOpacity: 0.15,
+            dashArray: ''
+          }
+        }).addTo(map);
+        calculateSubNeighborhoodShatzaf(found.properties.schn_nama);
+      }
+    }
+    container.addEventListener('click', onShatzafSubDomClick, true);
+
+    // ── Radius mode: click sets center, draws 500m circle, opens modal ──
+    function onShatzafRadiusDomClick(e) {
+      if (shatzafModeRef.current !== 'radius') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const rect = container.getBoundingClientRect();
+      const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+      const radiusMeters = 500; // default; user can change in modal slider
+      if (window.__shatzafRadiusCircle) {
+        try {
+          map.removeLayer(window.__shatzafRadiusCircle);
+        } catch (e) {}
+      }
+      window.__shatzafRadiusCircle = L.circle(pt, {
+        radius: radiusMeters,
+        color: OPEN_SPACE_PALETTE.shatzaf_button,
+        weight: 3,
+        fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+        fillOpacity: 0.15
+      }).addTo(map);
+      window.__shatzafRadiusCenter = pt;
+      window.__shatzafRadiusValue = radiusMeters;
+      shatzafModeRef.current = null;
+      setShatzafMode(false);
+      map.getContainer().classList.remove('measuring');
+      calculateShatzafForRadius(pt, radiusMeters);
+    }
+    container.addEventListener('click', onShatzafRadiusDomClick, true);
+
+    // ── Area mode: click adds vertex, double-click finalizes ──
+    let shatzafAreaPts = [];
+    let shatzafAreaPreviewLayer = null;
+    function redrawShatzafAreaPreview() {
+      if (shatzafAreaPreviewLayer) {
+        try {
+          map.removeLayer(shatzafAreaPreviewLayer);
+        } catch (e) {}
+        shatzafAreaPreviewLayer = null;
+      }
+      if (shatzafAreaPts.length >= 2) {
+        shatzafAreaPreviewLayer = L.polyline(shatzafAreaPts, {
+          color: OPEN_SPACE_PALETTE.shatzaf_button,
+          weight: 2,
+          dashArray: '4,4'
+        }).addTo(map);
+      }
+    }
+    function onShatzafAreaDomClick(e) {
+      if (shatzafModeRef.current !== 'area') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const rect = container.getBoundingClientRect();
+      const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+      shatzafAreaPts.push(pt);
+      redrawShatzafAreaPreview();
+    }
+    function onShatzafAreaDomDblClick(e) {
+      if (shatzafModeRef.current !== 'area') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      if (shatzafAreaPts.length < 3) return;
+      if (shatzafAreaPreviewLayer) {
+        try {
+          map.removeLayer(shatzafAreaPreviewLayer);
+        } catch (e) {}
+        shatzafAreaPreviewLayer = null;
+      }
+      if (window.__shatzafAreaPolygon) {
+        try {
+          map.removeLayer(window.__shatzafAreaPolygon);
+        } catch (e) {}
+      }
+      window.__shatzafAreaPolygon = L.polygon(shatzafAreaPts, {
+        color: OPEN_SPACE_PALETTE.shatzaf_button,
+        weight: 3,
+        fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+        fillOpacity: 0.15
+      }).addTo(map);
+      const finalPts = shatzafAreaPts.slice();
+      shatzafAreaPts = [];
+      shatzafModeRef.current = null;
+      setShatzafMode(false);
+      map.getContainer().classList.remove('measuring');
+      calculateShatzafForArea(finalPts);
+    }
+    container.addEventListener('click', onShatzafAreaDomClick, true);
+    container.addEventListener('dblclick', onShatzafAreaDomDblClick, true);
+
+    // ── Generic shatzaf scope renderer ──
+    // Used by sub/radius/area modes. Receives a scope object and renders the modal.
+    // scope = {
+    //   scopeKey: 'sub'|'radius'|'area',     for state isolation if needed
+    //   label: string,                        title text
+    //   polyCoords: [[lng,lat],...],          PIP polygon (closed)
+    //   existingUnits: number,                pre-computed
+    //   defaultHH: number,
+    //   subMinahak: string|null,              for "default to" hint label
+    //   onClose: () => void                   cleanup callback
+    // }
+    function renderShatzafForScope(scope) {
+      const gd = window.__geoDataForLanduse || {};
+      const polyCoords = scope.polyCoords;
+      if (!polyCoords || polyCoords.length < 3) return;
+      if (!window.__shatzafAssumptions) window.__shatzafAssumptions = {
+        targetYear: 'existing'
+      };
+      const assumpt = window.__shatzafAssumptions;
+      const targetYear = assumpt.targetYear;
+      const isFull = targetYear === 'full';
+      function pip(cx, cy) {
+        let inside = false;
+        for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+          const xi = polyCoords[i][0],
+            yi = polyCoords[i][1];
+          const xj = polyCoords[j][0],
+            yj = polyCoords[j][1];
+          if (yi > cy !== yj > cy && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+        }
+        return inside;
+      }
+      function centroidOf(geom) {
+        try {
+          let coords;
+          if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return null;
+          let cx = 0,
+            cy = 0,
+            n = 0;
+          for (const c of coords) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+          return n > 0 ? [cx / n, cy / n] : null;
+        } catch (ex) {
+          return null;
+        }
+      }
+
+      // 1) Plans + planMimushMap (centroid PIP)
+      const planMimushMap = new Map();
+      let plannedUnitsWeighted = 0;
+      let totalUnitsAddPotential = 0;
+      let activePlanCount = 0;
+      if (targetYear !== 'existing' && gd.plans && gd.plans.features) {
+        gd.plans.features.forEach(f => {
+          const c = centroidOf(f.geometry);
+          if (!c || !pip(c[0], c[1])) return;
+          const props = f.properties || {};
+          const m = calcMimush(props);
+          if (!m) return;
+          const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
+          if (u <= 0) return;
+          totalUnitsAddPotential += u;
+          if (!isFull && m.estimatedYear > targetYear) return;
+          const pct = isFull ? 100 : m.mimushPct;
+          plannedUnitsWeighted += u * pct / 100;
+          const planName = (props.plan_name || '').trim();
+          if (planName) planMimushMap.set(planName, pct);
+          activePlanCount++;
+        });
+      }
+      plannedUnitsWeighted = Math.round(plannedUnitsWeighted);
+      const grandTotalUnits = scope.existingUnits + plannedUnitsWeighted;
+
+      // 2) Open space supply: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
+      let openSpaceArea = 0;
+      let xplanWeightedArea = 0;
+      const openSpaceNames = [];
+      if (gd.landuse_xplan) {
+        gd.landuse_xplan.features.forEach(f => {
+          const planRef = (f.properties.pl_number || '').trim();
+          if (!planMimushMap.has(planRef)) return;
+          const name = (f.properties.mavat_name || '').trim();
+          if (!name) return;
+          const group = getLanduseGroup(name);
+          if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+          const c = centroidOf(f.geometry);
+          if (!c || !pip(c[0], c[1])) return;
+          const pct = planMimushMap.get(planRef) / 100;
+          const weighted = getFeatureArea(f) * pct;
+          openSpaceArea += weighted;
+          xplanWeightedArea += weighted;
+          if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+        });
+      }
+      if (gd.yiud_karka_kayam) {
+        gd.yiud_karka_kayam.features.forEach(f => {
+          const name = (f.properties.Descr || '').trim();
+          if (!name) return;
+          const group = getLanduseGroup(name);
+          if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+          const c = centroidOf(f.geometry);
+          if (!c || !pip(c[0], c[1])) return;
+          // kayam blocked only by ACTIVE xplan (existing → no blocks; future → only active plans)
+          let coveredByXplan = false;
+          if (planMimushMap.size > 0 && gd.landuse_xplan) {
+            gd.landuse_xplan.features.forEach(xf => {
+              if (coveredByXplan) return;
+              const xRef = (xf.properties.pl_number || '').trim();
+              if (!planMimushMap.has(xRef)) return;
+              try {
+                let xCoords;
+                if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];else return;
+                let xInside = false;
+                for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
+                  const xi = xCoords[i][0],
+                    yi = xCoords[i][1];
+                  const xj = xCoords[j][0],
+                    yj = xCoords[j][1];
+                  if (yi > c[1] !== yj > c[1] && c[0] < (xj - xi) * (c[1] - yi) / (yj - yi) + xi) xInside = !xInside;
+                }
+                if (xInside) coveredByXplan = true;
+              } catch (ex) {}
+            });
+          }
+          if (coveredByXplan) return;
+          openSpaceArea += getFeatureArea(f);
+          if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+        });
+      }
+
+      // 3) Render modal
+      const existingPanel = document.getElementById('shatzaf-panel');
+      if (existingPanel) existingPanel.remove();
+      const horizonOpts = ['existing', 2030, 2035, 2040, 'full'];
+      const horizonLabel = y => y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : String(y);
+      const horizonButtonsHtml = horizonOpts.map(y => {
+        const sel = targetYear === y;
+        const bg = sel ? OPEN_SPACE_PALETTE.shatzaf_button : 'transparent';
+        const color = sel ? '#fff' : '#888';
+        const border = sel ? OPEN_SPACE_PALETTE.shatzaf_title : '#333';
+        return '<button data-shatzaf-year="' + y + '" style="background:' + bg + ';color:' + color + ';border:1px solid ' + border + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + horizonLabel(y) + '</button>';
+      }).join('');
+      const savedHH = typeof assumpt.householdSize === 'number' ? assumpt.householdSize : scope.defaultHH;
+      const subMinahak = scope.subMinahak;
+      const panel = document.createElement('div');
+      panel.id = 'shatzaf-panel';
+      panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(360px,90vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+      panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' + '<h3 style="color:' + OPEN_SPACE_PALETTE.shatzaf_title + ';margin:0;font-size:16px">🌳 שצ"פ לנפש — ' + scope.label + '</h3>' + '<button id="shatzaf-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' + (subMinahak ? '<div style="font-size:11px;margin-bottom:6px;color:#888">מינהל: ' + subMinahak + '</div>' : '') + '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px;padding:6px 8px;background:#16162a;border-radius:6px">' + '<span style="font-size:11px;color:#aaa;margin-left:4px">אופק:</span>' + horizonButtonsHtml + '</div>' + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + scope.existingUnits.toLocaleString() + '</b></div>' + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד מתוכננות (' + horizonLabel(targetYear) + '): <b>' + plannedUnitsWeighted.toLocaleString() + '</b>' + (targetYear !== 'existing' && totalUnitsAddPotential > 0 ? ' <span style="font-size:10px;color:#888">(מתוך ' + totalUnitsAddPotential.toLocaleString() + ' פוטנציאל)</span>' : '') + '</div>' + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">סה"כ יח"ד: <b>' + grandTotalUnits.toLocaleString() + '</b></div>' + '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea / 1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' + (targetYear !== 'existing' && xplanWeightedArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🌳 שצ"פ עתידי משוקלל: ' + (xplanWeightedArea / 1000).toFixed(1) + ' דונם (מתוך ה-' + (openSpaceArea / 1000).toFixed(1) + ' דונם)</div>' : '') + (targetYear !== 'existing' && activePlanCount > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏗️ תורמות לאופק: ' + activePlanCount + ' תכניות</div>' : '') + (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') + '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '') + '</div>' + '<div style="display:flex;gap:8px;align-items:center">' + '<input id="shatzaf-household" type="number" value="' + savedHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' + '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' + '<div id="shatzaf-result" style="margin-top:14px;display:none"></div>';
+      document.body.appendChild(panel);
+
+      // Horizon buttons → re-render with new targetYear (same scope)
+      panel.querySelectorAll('[data-shatzaf-year]').forEach(btn => {
+        btn.onclick = () => {
+          const raw = btn.getAttribute('data-shatzaf-year');
+          const y = raw === 'existing' || raw === 'full' ? raw : Number(raw);
+          const hhInput = document.getElementById('shatzaf-household');
+          if (hhInput) {
+            const v = parseFloat(hhInput.value);
+            if (!isNaN(v) && v > 0) assumpt.householdSize = v;
+          }
+          assumpt.targetYear = y;
+          renderShatzafForScope(scope);
+        };
+      });
+      document.getElementById('shatzaf-close').onclick = () => {
+        panel.remove();
+        if (scope.onClose) scope.onClose();
+      };
+      document.getElementById('shatzaf-calc').onclick = () => {
+        const hh = parseFloat(document.getElementById('shatzaf-household').value) || 3.5;
+        assumpt.householdSize = hh;
+        const totalPeople = grandTotalUnits * hh;
+        const sqmPerPerson = totalPeople > 0 ? openSpaceArea / totalPeople : 0;
+        const sqmPerHH = grandTotalUnits > 0 ? openSpaceArea / grandTotalUnits : 0;
+        const resultDiv = document.getElementById('shatzaf-result');
+        resultDiv.style.display = 'block';
+        const minPerPerson = 30 / hh,
+          maxPerPerson = 70 / hh;
+        let standardHtml = '';
+        if (grandTotalUnits > 0 && openSpaceArea > 0) {
+          const status = sqmPerHH >= 70 ? 'gold' : sqmPerHH >= 30 ? 'ok' : 'deficit';
+          const statusLabel = status === 'gold' ? '✓ מעל הטווח' : status === 'ok' ? '✓ בטווח התקני' : '⚠ מתחת למינימום';
+          const statusColor = status === 'deficit' ? OPEN_SPACE_PALETTE.status_deficit : OPEN_SPACE_PALETTE.status_adequate;
+          standardHtml = '<div style="border-top:1px solid #333;margin-top:10px;padding-top:8px">' + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888"><span>תקן מדריך 2018 (טיפוס C):</span><span>' + minPerPerson.toFixed(1) + '-' + maxPerPerson.toFixed(1) + ' מ"ר/נפש</span></div>' + '<div style="font-size:11px;margin-top:4px;color:' + statusColor + ';text-align:center;font-weight:bold">' + statusLabel + '</div>' + '</div>';
+        }
+        resultDiv.innerHTML = '<div style="border-top:1px solid #333;padding-top:12px">' + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>(' + grandTotalUnits.toLocaleString() + ' יח"ד × ' + hh + ' נפשות)</span></div>' + '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' + '<div style="font-size:32px;font-weight:bold;color:#e0e0e0">' + sqmPerPerson.toFixed(1) + '</div>' + '<div style="font-size:12px;color:#aaa">מ"ר שצ"פ לנפש</div>' + '<div style="font-size:10px;color:#888;margin-top:4px">אופק: ' + horizonLabel(targetYear) + '</div>' + '</div>' + standardHtml + (grandTotalUnits === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ אין נתוני יח"ד</div>' : '') + (openSpaceArea === 0 ? '<div style="color:#e94560;font-size:11px;margin-top:8px;text-align:center">⚠ לא נמצא שצ"פ באזור</div>' : '') + '</div>';
+      };
+      document.getElementById('shatzaf-calc').click();
+    }
+
+    // ── Sub-neighborhood entry: click on a sub polygon → uses sub polygon + CSV existing units ──
+    function calculateSubNeighborhoodShatzaf(subName, opts) {
+      const gd = window.__geoDataForLanduse || {};
+      const subFeature = gd.sub_neighborhoods.features.find(f => f.properties.schn_nama === subName);
+      if (!subFeature) return;
+      let subCoords;
+      try {
+        if (subFeature.geometry.type === 'Polygon') subCoords = subFeature.geometry.coordinates[0];else if (subFeature.geometry.type === 'MultiPolygon') subCoords = subFeature.geometry.coordinates[0][0];
+      } catch (ex) {
+        return;
+      }
+      if (!subCoords) return;
+      if (opts && typeof opts.targetYear !== 'undefined') {
+        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = {
+          targetYear: 'existing'
+        };
+        window.__shatzafAssumptions.targetYear = opts.targetYear;
+      }
+
+      // Find parent minahak for this sub
+      let subMinahak = null;
+      const normSubName = SUB_NORMALIZE[subName] || subName;
+      Object.entries(MINAHAK_SUBS).forEach(([m, ss]) => {
+        if (subMinahak) return;
+        if (ss.includes(subName) || ss.includes(normSubName) || ss.some(s => (SUB_NORMALIZE[s] || s) === normSubName)) {
+          subMinahak = m;
+        }
+      });
+      const subPresetHH = subMinahak && PN_MINAHAK_PRESETS[subMinahak] && PN_MINAHAK_PRESETS[subMinahak].householdSize || 3.5;
+      (window.__unitsData ? Promise.resolve(window.__unitsData) : new Promise(resolve => {
+        window.__unitsDataCallbacks = window.__unitsDataCallbacks || [];
+        window.__unitsDataCallbacks.push(resolve);
+        if (!window.__unitsFetching) {
+          window.__unitsFetching = true;
+          fetchUnitsDataInternal();
+        }
+      })).then(ud => {
+        let totalUnitsIn = 0;
+        if (ud && ud.bySub) {
+          let parentMinahak = null;
+          Object.entries(MINAHAK_SUBS).forEach(([m, subs]) => {
+            if (subs.includes(subName)) parentMinahak = m;
+          });
+          const allSubNames = new Set([subName]);
+          if (parentMinahak) {
+            const minahakSubs = MINAHAK_SUBS[parentMinahak] || [];
+            const gd2 = window.__geoDataForLanduse || {};
+            const geojsonNames = new Set();
+            if (gd2.sub_neighborhoods) {
+              gd2.sub_neighborhoods.features.forEach(f => {
+                const nm = f.properties.schn_nama || '';
+                const normalized = SUB_NORMALIZE[nm] || nm;
+                if (minahakSubs.some(s => s === nm || s === normalized || (SUB_NORMALIZE[s] || s) === normalized)) {
+                  geojsonNames.add(nm);
+                }
+              });
+            }
+            if (geojsonNames.size <= 1) {
+              minahakSubs.forEach(s => {
+                allSubNames.add(s);
+                allSubNames.add(SUB_NORMALIZE[s] || s);
+              });
+              allSubNames.add(parentMinahak);
+            }
+          }
+          Object.keys(ud.bySub).forEach(minahak => {
+            const subs = ud.bySub[minahak];
+            Object.keys(subs).forEach(s => {
+              if (allSubNames.has(s)) {
+                totalUnitsIn += subs[s].units_in || 0;
+              }
+            });
+          });
+        }
+        renderShatzafForScope({
+          scopeKey: 'sub',
+          label: subName,
+          polyCoords: subCoords,
+          existingUnits: totalUnitsIn,
+          defaultHH: subPresetHH,
+          subMinahak,
+          onClose: () => {
+            if (subSelectedLayer) {
+              map.removeLayer(subSelectedLayer);
+              subSelectedLayer = null;
+            }
+          }
+        });
+      });
+    }
+
+    // ── Radius entry: center + radius → circle polygon + buildings existing units ──
+    function calculateShatzafForRadius(centerLatLng, radiusMeters, opts) {
+      const gd = window.__geoDataForLanduse || {};
+      if (opts && typeof opts.targetYear !== 'undefined') {
+        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = {
+          targetYear: 'existing'
+        };
+        window.__shatzafAssumptions.targetYear = opts.targetYear;
+      }
+      // Approximate circle as 64-vertex polygon
+      const N = 64;
+      const polyCoords = [];
+      const latRad = centerLatLng.lat * Math.PI / 180;
+      for (let i = 0; i <= N; i++) {
+        const angle = i / N * 2 * Math.PI;
+        const dLat = radiusMeters * Math.cos(angle) / 111320;
+        const dLng = radiusMeters * Math.sin(angle) / (111320 * Math.cos(latRad));
+        polyCoords.push([centerLatLng.lng + dLng, centerLatLng.lat + dLat]);
+      }
+      const existingUnits = sumExistingUnitsInRadius(centerLatLng, radiusMeters, gd.buildings);
+      renderShatzafForScope({
+        scopeKey: 'radius',
+        label: 'רדיוס ' + Math.round(radiusMeters) + ' מטר',
+        polyCoords,
+        existingUnits,
+        defaultHH: 3.5,
+        subMinahak: null,
+        onClose: () => {
+          if (window.__shatzafRadiusCircle) {
+            try {
+              map.removeLayer(window.__shatzafRadiusCircle);
+            } catch (e) {}
+            window.__shatzafRadiusCircle = null;
+          }
+        }
+      });
+    }
+
+    // ── Area entry: drawn polygon (latlngs) → buildings existing units ──
+    function calculateShatzafForArea(latlngs, opts) {
+      const gd = window.__geoDataForLanduse || {};
+      if (opts && typeof opts.targetYear !== 'undefined') {
+        if (!window.__shatzafAssumptions) window.__shatzafAssumptions = {
+          targetYear: 'existing'
+        };
+        window.__shatzafAssumptions.targetYear = opts.targetYear;
+      }
+      const polyCoords = latlngs.map(ll => [ll.lng, ll.lat]);
+      if (polyCoords.length < 3) return;
+      const first = polyCoords[0],
+        last = polyCoords[polyCoords.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) polyCoords.push([first[0], first[1]]);
+      const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+      renderShatzafForScope({
+        scopeKey: 'area',
+        label: 'אזור נבחר',
+        polyCoords,
+        existingUnits,
+        defaultHH: 3.5,
+        subMinahak: null,
+        onClose: () => {
+          if (window.__shatzafAreaPolygon) {
+            try {
+              map.removeLayer(window.__shatzafAreaPolygon);
+            } catch (e) {}
+            window.__shatzafAreaPolygon = null;
+          }
+        }
+      });
+    }
+    return () => {
+      container.removeEventListener('click', onShatzafDomClick, true);
+      container.removeEventListener('click', onShatzafSubDomClick, true);
+      container.removeEventListener('click', onShatzafRadiusDomClick, true);
+      container.removeEventListener('click', onShatzafAreaDomClick, true);
+      container.removeEventListener('dblclick', onShatzafAreaDomDblClick, true);
+      container.removeEventListener('mousemove', onShatzafSubMouseMove);
+      if (subHoverLayer) {
+        map.removeLayer(subHoverLayer);
+        subHoverLayer = null;
+      }
+      if (subSelectedLayer) {
+        map.removeLayer(subSelectedLayer);
+        subSelectedLayer = null;
+      }
+      if (shatzafAreaPreviewLayer) {
+        try {
+          map.removeLayer(shatzafAreaPreviewLayer);
+        } catch (e) {}
+      }
+      if (window.__shatzafRadiusCircle) {
+        try {
+          map.removeLayer(window.__shatzafRadiusCircle);
+        } catch (e) {}
+        window.__shatzafRadiusCircle = null;
+      }
+      if (window.__shatzafAreaPolygon) {
+        try {
+          map.removeLayer(window.__shatzafAreaPolygon);
+        } catch (e) {}
+        window.__shatzafAreaPolygon = null;
+      }
+    };
+  }, [dataLoaded]); // Run once when data loaded
+
+  // ── עצים: plan + sub-neighborhood click handlers (one-time setup) ──
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const container = map.getContainer();
+    function findPlanAtPoint(pt) {
+      const plansLayer = geoLayersRef.current.plans;
+      if (!plansLayer) return null;
+      let found = null;
+      plansLayer.eachLayer(layer => {
+        if (found) return;
+        try {
+          const geo = layer.feature.geometry;
+          let coords;
+          if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];else return;
+          const lng = pt.lng,
+            lat = pt.lat;
+          let inside = false;
+          for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+            const [xi, yi] = coords[i],
+              [xj, yj] = coords[j];
+            if (yi > lat !== yj > lat && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+          }
+          if (inside) found = layer.feature;
+        } catch (ex) {}
+      });
+      return found;
+    }
+    function findSubAtPoint(pt) {
+      const gd = window.__geoDataForLanduse || {};
+      if (!gd.sub_neighborhoods) return null;
+      let found = null;
+      gd.sub_neighborhoods.features.forEach(f => {
+        if (found) return;
+        try {
+          const g = f.geometry;
+          const rings = g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map(c => c[0]) : [];
+          for (const ring of rings) {
+            let inside = false;
+            const lng = pt.lng,
+              lat = pt.lat;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+              const [xi, yi] = ring[i],
+                [xj, yj] = ring[j];
+              if (yi > lat !== yj > lat && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+            }
+            if (inside) {
+              found = f;
+              break;
+            }
+          }
+        } catch (ex) {}
+      });
+      return found;
+    }
+    let treeSubHoverLayer = null;
+    let treeSubSelectedLayer = null;
+    function showPlanTreePanel(feature) {
+      const p = feature.properties;
+      const taba = p.taba || '';
+      const rec = (window.__treeSurveys || {})[taba];
+      const planId = p.plan_name || p.pl_number || taba || '';
+      const planSummary = p.plan_summary || p.plan_name_he || '';
+      const planDisplay = planSummary ? planId + ' — ' + planSummary : planId;
+      const prev = document.getElementById('tree-panel');
+      if (prev) prev.remove();
+      const panel = document.createElement('div');
+      panel.id = 'tree-panel';
+      panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(340px,90vw);max-width:min(440px,92vw);color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' + '<h3 style="color:#4CAF50;margin:0;font-size:16px">🌳 עצים — ' + planDisplay + '</h3>' + '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+      if (!rec || !rec.total) {
+        html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין נתוני סקר עצים לתכנית זו</div>';
+      } else {
+        const removed = (rec.krita || 0) + (rec.haataka || 0);
+        const pct = rec.total > 0 ? Math.round(removed / rec.total * 100) : 0;
+        html += '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' + '<div style="font-size:36px;font-weight:bold;color:#e94560">' + pct + '%</div>' + '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + removed + ' מתוך ' + rec.total + ')</div>' + '</div>' + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' + '<div style="padding:8px;background:rgba(76,175,80,0.12);border-radius:6px"><div style="color:#888;font-size:10px">שימור</div><div style="font-size:18px;font-weight:bold;color:#4CAF50">' + (rec.shimur || 0) + '</div></div>' + '<div style="padding:8px;background:rgba(233,69,96,0.12);border-radius:6px"><div style="color:#888;font-size:10px">כריתה</div><div style="font-size:18px;font-weight:bold;color:#e94560">' + (rec.krita || 0) + '</div></div>' + '<div style="padding:8px;background:rgba(255,152,0,0.12);border-radius:6px"><div style="color:#888;font-size:10px">העתקה</div><div style="font-size:18px;font-weight:bold;color:#FF9800">' + (rec.haataka || 0) + '</div></div>' + '<div style="padding:8px;background:rgba(100,181,246,0.12);border-radius:6px"><div style="color:#888;font-size:10px">לא נדרש</div><div style="font-size:18px;font-weight:bold;color:#64b5f6">' + (rec.lo_nidresh || 0) + '</div></div>' + '</div>';
+        if (rec.confidence) {
+          html += '<div style="margin-top:10px;font-size:10px;color:#888;text-align:center">רמת ודאות הנתונים: ' + rec.confidence + '</div>';
+        }
+      }
+      panel.innerHTML = html;
+      document.body.appendChild(panel);
+      document.getElementById('tree-close').onclick = () => panel.remove();
+    }
+    function zoomAndOpenPlanPopup(feature) {
+      if (!feature || !feature.geometry) return;
+      try {
+        const center = visualCenter(feature.geometry) || L.geoJSON(feature).getBounds().getCenter();
+        const latlng = center.lat ? [center.lat, center.lng] : center;
+        map.setView(latlng, 18);
+        setTimeout(() => {
+          const mapped = mapPlanProps(feature.properties);
+          const popup = L.popup({
+            maxWidth: popupMaxWidth(),
+            minWidth: Math.min(300, window.innerWidth * 0.85),
+            closeButton: true
+          }).setLatLng(latlng).setContent(buildPlanPopup(mapped, {
+            properties: mapped
+          })).openOn(map);
+          bindPopupEvents(popup, [{
+            type: 'plan',
+            properties: mapped
+          }], 0);
+        }, 500);
+      } catch (err) {
+        console.warn('zoom to plan failed', err);
+      }
+    }
+    function zoomAndOpenTama38Popup(feature) {
+      if (!feature || !feature.geometry) return;
+      try {
+        let lng, lat;
+        if (feature.geometry.type === 'Point') {
+          [lng, lat] = feature.geometry.coordinates;
+        } else if (feature.geometry.type === 'MultiPoint') {
+          [lng, lat] = feature.geometry.coordinates[0];
+        } else {
+          const c = L.geoJSON(feature).getBounds().getCenter();
+          lat = c.lat;
+          lng = c.lng;
+        }
+        if (typeof lat !== 'number' || typeof lng !== 'number') return;
+        const latlng = [lat, lng];
+        map.setView(latlng, 18);
+        setTimeout(() => {
+          const popup = L.popup({
+            maxWidth: popupMaxWidth(),
+            className: 'plan-popup'
+          }).setLatLng(latlng).setContent(buildTama38Popup(feature.properties)).openOn(map);
+          bindPopupEvents(popup, [{
+            properties: feature.properties,
+            type: 'tama38'
+          }], 0);
+        }, 500);
+      } catch (err) {
+        console.warn('zoom to tama38 failed', err);
+      }
+    }
+    function attachTreePlanLinks(panel) {
+      const gd = window.__geoDataRef?.current || {};
+      panel.querySelectorAll('.tree-plan-link').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const tik = link.dataset.tik || '';
+          const taba = link.dataset.taba || '';
+          let feature = null;
+          let isTama = false;
+          if (tik) {
+            feature = gd.tama38?.features.find(f => (f.properties.tik || '') === tik);
+            isTama = true;
+          } else if (taba) {
+            feature = gd.plans?.features.find(f => (f.properties.taba || '') === taba);
+          }
+          if (!feature) return;
+          panel.remove();
+          if (treeSubSelectedLayer) {
+            map.removeLayer(treeSubSelectedLayer);
+            treeSubSelectedLayer = null;
+          }
+          const r = areaRef.current;
+          if (r) {
+            r.markers.forEach(m => map.removeLayer(m));
+            if (r.polygon) map.removeLayer(r.polygon);
+            r.points = [];
+            r.markers = [];
+            r.polygon = null;
+          }
+          if (isTama) zoomAndOpenTama38Popup(feature);else zoomAndOpenPlanPopup(feature);
+        });
+      });
+    }
+    function showSubTreePanel(subName, subCoords) {
+      const gd = window.__geoDataRef?.current || {};
+      const ts = window.__treeSurveys || {};
+      const plansInside = [];
+      if (gd.plans) {
+        gd.plans.features.forEach(f => {
+          const p = f.properties;
+          const s = normalizeStatus((p.status_mavat || '').trim());
+          if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+          const geo = f.geometry;
+          if (!geo || !geo.coordinates) return;
+          let coords;
+          try {
+            if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];else return;
+          } catch (ex) {
+            return;
+          }
+          if (!coords || !coords.length) return;
+          let cx = 0,
+            cy = 0,
+            n = 0;
+          for (const c of coords) {
+            if (c && c.length >= 2) {
+              cx += c[0];
+              cy += c[1];
+              n++;
+            }
+          }
+          if (!n) return;
+          cx /= n;
+          cy /= n;
+          let inside = false;
+          for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
+            const [xi, yi] = subCoords[i],
+              [xj, yj] = subCoords[j];
+            if (yi > cy !== yj > cy && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+          }
+          if (inside) plansInside.push({
+            ...p
+          });
+        });
+      }
+      // Deduplicate by taba
+      const seen = new Set();
+      const deduped = [];
+      plansInside.forEach(p => {
+        const t = p.taba || '';
+        if (t && !seen.has(t)) {
+          seen.add(t);
+          deduped.push(p);
+        }
+      });
+      const stats = aggregateTreeStats(deduped);
+      const prev = document.getElementById('tree-panel');
+      if (prev) prev.remove();
+      const panel = document.createElement('div');
+      panel.id = 'tree-panel';
+      panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+      const valencyAgg = aggregateTreeValencies(stats.plans || []);
+      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' + '<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — ' + subName + '</h3>' + '<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>' + '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+      if (stats.withData === 0) {
+        html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים בשכונה זו</div>';
+      } else {
+        html += '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' + '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' + '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' + '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' + '</div>';
+        if (valencyAgg) {
+          html += '<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה ' + '<span style="color:#666;font-size:10px">(מתוך ' + valencyAgg.plans_with_data + ' תכניות, ' + valencyAgg.total_trees.toLocaleString() + ' עצים)</span></div>' + renderValencyPivotHTML(valencyAgg, {
+            dark: true
+          }) + '<div style="margin:10px 0"></div>';
+        }
+        html += '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' + '<table style="width:100%;font-size:11px;border-collapse:collapse">' + '<thead><tr style="border-bottom:1px solid #2a2a4a">' + '<th style="text-align:right;padding:4px;color:#fff">שם</th>' + '<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>' + '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' + '<th style="text-align:center;padding:4px;color:#fff">%</th>' + '</tr></thead><tbody>' + stats.plans.slice(0, 15).map(row => {
+          const dataAttr = row.isTama ? 'data-tik="' + row.tik + '"' : 'data-taba="' + row.taba + '"';
+          return '<tr style="border-bottom:1px solid #1a1a2e">' + '<td style="padding:4px"><a href="#" class="tree-plan-link" ' + dataAttr + ' style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' + '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' + '</tr>';
+        }).join('') + '</tbody></table>' + renderSuppressedTreeNotice(stats.suppressed);
+      }
+      panel.innerHTML = html;
+      document.body.appendChild(panel);
+      document.getElementById('tree-close').onclick = () => {
+        panel.remove();
+        if (treeSubSelectedLayer) {
+          map.removeLayer(treeSubSelectedLayer);
+          treeSubSelectedLayer = null;
+        }
+      };
+      const exportBtn = document.getElementById('tree-export');
+      if (exportBtn) {
+        exportBtn.onclick = () => openTreesReportExport('עצים — ' + subName, stats, valencyAgg);
+      }
+      attachTreePlanLinks(panel);
+    }
+    window.__treePanelAttach = attachTreePlanLinks;
+    function onTreeDomClick(e) {
+      if (treeModeRef.current !== 'plan') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const rect = container.getBoundingClientRect();
+      const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+      const feature = findPlanAtPoint(pt);
+      if (!feature) return;
+      treeModeRef.current = null;
+      setTreeMode(false);
+      container.classList.remove('measuring');
+      showPlanTreePanel(feature);
+    }
+    container.addEventListener('click', onTreeDomClick, true);
+    function onTreeSubMouseMove(e) {
+      if (treeModeRef.current !== 'sub') {
+        if (treeSubHoverLayer) {
+          map.removeLayer(treeSubHoverLayer);
+          treeSubHoverLayer = null;
+        }
+        return;
+      }
+      const rect = container.getBoundingClientRect();
+      const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+      const found = findSubAtPoint(pt);
+      if (treeSubHoverLayer) {
+        map.removeLayer(treeSubHoverLayer);
+        treeSubHoverLayer = null;
+      }
+      if (found) {
+        treeSubHoverLayer = L.geoJSON(found, {
+          style: {
+            color: OPEN_SPACE_PALETTE.hover_highlight,
+            weight: 3,
+            fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+            fillOpacity: 0.1,
+            dashArray: ''
+          }
+        }).addTo(map);
+        treeSubHoverLayer.bindTooltip(found.properties.schn_nama, {
+          sticky: true,
+          direction: 'top',
+          className: 'landuse-tooltip'
+        }).openTooltip();
+      }
+    }
+    container.addEventListener('mousemove', onTreeSubMouseMove);
+    function onTreeSubDomClick(e) {
+      if (treeModeRef.current !== 'sub') return;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const rect = container.getBoundingClientRect();
+      const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+      const found = findSubAtPoint(pt);
+      if (treeSubHoverLayer) {
+        map.removeLayer(treeSubHoverLayer);
+        treeSubHoverLayer = null;
+      }
+      if (!found) return;
+      treeModeRef.current = null;
+      setTreeMode(false);
+      container.classList.remove('measuring');
+      if (treeSubSelectedLayer) map.removeLayer(treeSubSelectedLayer);
+      treeSubSelectedLayer = L.geoJSON(found, {
+        style: {
+          color: OPEN_SPACE_PALETTE.shatzaf_button,
+          weight: 3,
+          fillColor: OPEN_SPACE_PALETTE.hover_highlight,
+          fillOpacity: 0.15,
+          dashArray: ''
+        }
+      }).addTo(map);
+      let subCoords;
+      try {
+        if (found.geometry.type === 'Polygon') subCoords = found.geometry.coordinates[0];else if (found.geometry.type === 'MultiPolygon') subCoords = found.geometry.coordinates[0][0];
+      } catch (ex) {
+        return;
+      }
+      if (!subCoords) return;
+      showSubTreePanel(found.properties.schn_nama, subCoords);
+    }
+    container.addEventListener('click', onTreeSubDomClick, true);
+    return () => {
+      container.removeEventListener('click', onTreeDomClick, true);
+      container.removeEventListener('click', onTreeSubDomClick, true);
+      container.removeEventListener('mousemove', onTreeSubMouseMove);
+      if (treeSubHoverLayer) {
+        map.removeLayer(treeSubHoverLayer);
+        treeSubHoverLayer = null;
+      }
+      if (treeSubSelectedLayer) {
+        map.removeLayer(treeSubSelectedLayer);
+        treeSubSelectedLayer = null;
+      }
+    };
+  }, [dataLoaded]);
+
+  // ── Landuse compare: area mode finished → run analysis ──
+  useEffect(() => {
+    if (!areaFinished || areaFinished.length < 3 || landuseCompareModeRef.current !== 'area') return;
+    const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+    polyCoords.push(polyCoords[0]);
+
+    // Find which plans overlap
+    const gd = window.__geoDataForLanduse;
+    const planNames = [];
+    if (gd && gd.plans) {
+      gd.plans.features.forEach(f => {
+        const geo = f.geometry;
+        if (!geo || !geo.coordinates) return;
+        let coords;
+        try {
+          if (geo.type === 'Polygon') coords = geo.coordinates[0];else if (geo.type === 'MultiPolygon') coords = geo.coordinates[0][0];else return;
+        } catch (e) {
+          return;
+        }
+        let cx = 0,
+          cy = 0,
+          n = 0;
+        for (const c of coords) {
+          if (c && c.length >= 2) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+        }
+        if (n === 0) return;
+        cx /= n;
+        cy /= n;
+        // pip check
+        let inside = false;
+        for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+          const [xi, yi] = polyCoords[i],
+            [xj, yj] = polyCoords[j];
+          if (yi > cy !== yj > cy && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+        }
+        if (inside) {
+          const pid = f.properties.plan_name || f.properties.TABA || '';
+          const psum = f.properties.plan_summary || f.properties.plan_name_he || '';
+          planNames.push(psum ? pid + ' - ' + psum : pid);
+        }
+      });
+    }
+    const result = analyzeLanduseComparison(polyCoords, planNames);
+    showLanduseComparePanel(result);
+    // Mark that landuse handled this areaFinished - so regular area analysis skips it
+    window.__landuseHandledArea = true;
+    landuseCompareModeRef.current = null;
+    setLanduseCompareMode(null);
+  }, [areaFinished]);
+
+  // ── Area select: drawing mode ──
+  useEffect(() => {
+    areaModeRef.current = areaMode;
+    const map = mapInstanceRef.current;
+    if (!map || !areaMode) return;
+    const r = areaRef.current;
+    r.points = [];
+    r.markers = [];
+    r.polygon = null;
+    map.getContainer().classList.add('measuring');
+    function onClick(e) {
+      r.points.push(e.latlng);
+      setAreaPts(r.points.length);
+      const m = L.circleMarker(e.latlng, {
+        radius: 4,
+        color: '#e94560',
+        fillColor: '#e94560',
+        fillOpacity: 1
+      }).addTo(map);
+      r.markers.push(m);
+      if (r.points.length > 1) {
+        if (r.polygon) map.removeLayer(r.polygon);
+        r.polygon = L.polygon(r.points, {
+          color: '#e94560',
+          weight: 2,
+          fillColor: '#e94560',
+          fillOpacity: 0.15,
+          dashArray: '6,4'
+        }).addTo(map);
+      }
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        // Clean up and exit
+        r.markers.forEach(m => map.removeLayer(m));
+        if (r.polygon) map.removeLayer(r.polygon);
+        r.points = [];
+        r.markers = [];
+        r.polygon = null;
+        map.getContainer().classList.remove('measuring');
+        setAreaMode(false);
+      }
+    }
+    map.on('click', onClick);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      map.off('click', onClick);
+      document.removeEventListener('keydown', onKeyDown);
+      map.getContainer().classList.remove('measuring');
+      // Clean up drawn polygon and markers when area mode ends
+      r.markers.forEach(m => map.removeLayer(m));
+      if (r.polygon) map.removeLayer(r.polygon);
+      r.points = [];
+      r.markers = [];
+      r.polygon = null;
+      setAreaPts(0);
+    };
+  }, [areaMode]);
+
+  // ── Marker-coords tool: capture lat/lng (and ITM) for plan/recommendation updates ──
+  // Register EPSG:2039 (ITM) once. proj4js is loaded via CDN in index.html.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.proj4) return;
+    if (!window.proj4.defs('EPSG:2039')) {
+      window.proj4.defs('EPSG:2039', '+proj=tmerc +lat_0=31.7343936111111 +lon_0=35.2045169444444 ' + '+k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 ' + '+towgs84=-24.0024,-17.1032,-17.8444,-0.33077,-1.85269,1.66969,5.4248 ' + '+units=m +no_defs');
+    }
+  }, []);
+  useEffect(() => {
+    markerCoordsModeRef.current = markerCoordsMode;
+    const map = mapInstanceRef.current;
+    if (!map || !markerCoordsMode) return;
+    const r = markerCoordsRef.current;
+    r.points = [];
+    r.markers = [];
+    r.polygon = null;
+    map.getContainer().classList.add('measuring');
+    function onClick(e) {
+      if (markerCoordsMode === 'point') {
+        // Single point: capture and finish immediately.
+        const m = L.circleMarker(e.latlng, {
+          radius: 6,
+          color: '#2196F3',
+          fillColor: '#2196F3',
+          fillOpacity: 1,
+          weight: 2
+        }).addTo(map);
+        r.markers.push(m);
+        r.points = [e.latlng];
+        setMarkerCoordsPts(1);
+        setMarkerCoordsResult({
+          type: 'point',
+          points: [e.latlng]
+        });
+        setMarkerCoordsMode(null);
+      } else {
+        // Polygon / line: accumulate vertices.
+        r.points.push(e.latlng);
+        setMarkerCoordsPts(r.points.length);
+        const m = L.circleMarker(e.latlng, {
+          radius: 4,
+          color: '#2196F3',
+          fillColor: '#2196F3',
+          fillOpacity: 1
+        }).addTo(map);
+        r.markers.push(m);
+        if (r.points.length > 1) {
+          if (r.polygon) map.removeLayer(r.polygon);
+          if (markerCoordsMode === 'line') {
+            // Open polyline, no fill.
+            r.polygon = L.polyline(r.points, {
+              color: '#2196F3',
+              weight: 3,
+              dashArray: '6,4'
+            }).addTo(map);
+          } else {
+            r.polygon = L.polygon(r.points, {
+              color: '#2196F3',
+              weight: 2,
+              fillColor: '#2196F3',
+              fillOpacity: 0.12,
+              dashArray: '6,4'
+            }).addTo(map);
+          }
+        }
+      }
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        r.markers.forEach(m => {
+          try {
+            map.removeLayer(m);
+          } catch (_) {}
+        });
+        if (r.polygon) {
+          try {
+            map.removeLayer(r.polygon);
+          } catch (_) {}
+        }
+        r.points = [];
+        r.markers = [];
+        r.polygon = null;
+        setMarkerCoordsPts(0);
+        setMarkerCoordsMode(null);
+      }
+    }
+
+    // Auto-close any popup that opens while marker mode is active —
+    // covers feature popups bound via bindPopup() that bypass the
+    // explicit onClick guards on the various layer click handlers.
+    function onPopupOpen(e) {
+      if (e && e.popup) {
+        try {
+          map.closePopup(e.popup);
+        } catch (_) {}
+      } else {
+        try {
+          map.closePopup();
+        } catch (_) {}
+      }
+    }
+    // Also pre-emptively close any popup already open when entering mode.
+    try {
+      map.closePopup();
+    } catch (_) {}
+    map.on('click', onClick);
+    map.on('popupopen', onPopupOpen);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      map.off('click', onClick);
+      map.off('popupopen', onPopupOpen);
+      document.removeEventListener('keydown', onKeyDown);
+      map.getContainer().classList.remove('measuring');
+      // Wipe drawn markers/polygon when mode ends.
+      r.markers.forEach(m => {
+        try {
+          map.removeLayer(m);
+        } catch (_) {}
+      });
+      if (r.polygon) {
+        try {
+          map.removeLayer(r.polygon);
+        } catch (_) {}
+      }
+      r.points = [];
+      r.markers = [];
+      r.polygon = null;
+      setMarkerCoordsPts(0);
+    };
+  }, [markerCoordsMode]);
+
+  // ── Print-area: rectangle drawing mode ──
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !printAreaMode) return;
+    const r = printAreaRef.current;
+    r.corner1 = null;
+    if (r.marker1) {
+      map.removeLayer(r.marker1);
+      r.marker1 = null;
+    }
+    if (r.previewLayer) {
+      map.removeLayer(r.previewLayer);
+      r.previewLayer = null;
+    }
+    map.getContainer().classList.add('measuring');
+    function onClick(e) {
+      if (!r.corner1) {
+        r.corner1 = e.latlng;
+        r.marker1 = L.circleMarker(e.latlng, {
+          radius: 5,
+          color: '#2196F3',
+          fillColor: '#2196F3',
+          fillOpacity: 1
+        }).addTo(map);
+      } else {
+        const bounds = L.latLngBounds(r.corner1, e.latlng);
+        if (r.previewLayer) {
+          map.removeLayer(r.previewLayer);
+          r.previewLayer = null;
+        }
+        if (r.marker1) {
+          map.removeLayer(r.marker1);
+          r.marker1 = null;
+        }
+        if (r.rectLayer) {
+          map.removeLayer(r.rectLayer);
+          r.rectLayer = null;
+        }
+        r.rectLayer = L.rectangle(bounds, {
+          color: '#2196F3',
+          weight: 2,
+          fillColor: '#2196F3',
+          fillOpacity: 0.05
+        }).addTo(map);
+        r.corner1 = null;
+        setPrintAreaBounds(bounds);
+        setPrintAreaMode(false);
+        setShowPrint(true);
+      }
+    }
+    function onMouseMove(e) {
+      if (!r.corner1) return;
+      const bounds = L.latLngBounds(r.corner1, e.latlng);
+      if (r.previewLayer) map.removeLayer(r.previewLayer);
+      r.previewLayer = L.rectangle(bounds, {
+        color: '#2196F3',
+        weight: 2,
+        fillColor: '#2196F3',
+        fillOpacity: 0.1,
+        dashArray: '6,4'
+      }).addTo(map);
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        if (r.marker1) {
+          map.removeLayer(r.marker1);
+          r.marker1 = null;
+        }
+        if (r.previewLayer) {
+          map.removeLayer(r.previewLayer);
+          r.previewLayer = null;
+        }
+        r.corner1 = null;
+        setPrintAreaMode(false);
+      }
+    }
+    map.on('click', onClick);
+    map.on('mousemove', onMouseMove);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      map.off('click', onClick);
+      map.off('mousemove', onMouseMove);
+      document.removeEventListener('keydown', onKeyDown);
+      map.getContainer().classList.remove('measuring');
+      if (r.marker1) {
+        map.removeLayer(r.marker1);
+        r.marker1 = null;
+      }
+      if (r.previewLayer) {
+        map.removeLayer(r.previewLayer);
+        r.previewLayer = null;
+      }
+      r.corner1 = null;
+    };
+  }, [printAreaMode]);
+
+  // ── Radius mode: click on map to set center ──────────────────────
+  useEffect(() => {
+    radiusModeRef.current = radiusMode;
+    const map = mapInstanceRef.current;
+    if (!map || !radiusMode) return;
+    map.getContainer().classList.add('measuring');
+    function onClick(e) {
+      setRadiusCenter(e.latlng);
+      setRadiusMode(false);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        setRadiusMode(false);
+        setRadiusCenter(null);
+      }
+    }
+    map.on('click', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      map.off('click', onClick);
+      document.removeEventListener('keydown', onKey);
+      map.getContainer().classList.remove('measuring');
+    };
+  }, [radiusMode]);
+
+  // ── Radius result: draw circle + render result modal whenever
+  //     center or radius change. Aggregates permits whose plan/tama38
+  //     centroid sits within the circle, then renders KPI breakdown.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const ref = radiusRef.current;
+    if (ref.circle) {
+      try {
+        map.removeLayer(ref.circle);
+      } catch (e) {}
+      ref.circle = null;
+    }
+    if (ref.marker) {
+      try {
+        map.removeLayer(ref.marker);
+      } catch (e) {}
+      ref.marker = null;
+    }
+    const prev = document.getElementById('radius-select-result');
+    if (prev) prev.remove();
+    const prevProg = document.getElementById('programa-result');
+    if (prevProg && programaRadiusActiveRef.current) prevProg.remove();
+    if (!radiusCenter) return;
+    const isPrograma = programaRadiusActiveRef.current;
+    ref.circle = L.circle(radiusCenter, {
+      radius: radiusMeters,
+      color: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle,
+      weight: 2,
+      fillColor: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle,
+      fillOpacity: 0.10,
+      dashArray: '6,4'
+    }).addTo(map);
+    ref.marker = L.circleMarker(radiusCenter, {
+      radius: 4,
+      color: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle,
+      fillColor: isPrograma ? PERMITS_PALETTE.radius_program_mode : PERMITS_PALETTE.radius_circle,
+      fillOpacity: 1
+    }).addTo(map);
+    const gd = geoDataRef.current;
+    if (!gd || !gd.plans) return;
+
+    // Programa-direct path: bypass permits aggregation, sum existing + planned units inside circle
+    if (isPrograma) {
+      const candidatePlans = [];
+      const seenTaba = new Set();
+      gd.plans.features.forEach(f => {
+        const p = f.properties || {};
+        const taba = String(p.taba || '').trim();
+        if (taba && seenTaba.has(taba)) return;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let coords;
+        try {
+          if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return;
+        } catch (ex) {
+          return;
+        }
+        if (!coords || !coords.length) return;
+        let cx = 0,
+          cy = 0,
+          n = 0;
+        for (const c of coords) {
+          if (c && c.length >= 2) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+        }
+        if (n === 0) return;
+        if (radiusCenter.distanceTo(L.latLng(cy / n, cx / n)) > radiusMeters) return;
+        if (taba) seenTaba.add(taba);
+        candidatePlans.push({
+          taba,
+          plan_name: p.plan_name,
+          plan_name_he: p.plan_name_he,
+          plan_summary: p.plan_summary,
+          units_add: parseFloat(p.units_add) || 0,
+          units_total: parseInt(p.units_total) || 0,
+          status_mavat: p.status_mavat,
+          stage: p.stage,
+          mavat_date: p.mavat_date,
+          shavatz_out_prog: p.shavatz_out_prog || '',
+          shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+          hafrash_prg: p.hafrash_prg || '',
+          hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+          shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+          shavatz_in_prog: p.shavatz_in_prog || '',
+          geometry: f.geometry,
+          minahak: p.minahak || ''
+        });
+      });
+      candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+      const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
+      const eduFeats = eduFeaturesInRadius(radiusCenter, radiusMeters, gd);
+      const inGonen = pointInLayer({
+        lat: radiusCenter.lat,
+        lng: radiusCenter.lng
+      }, gd.minahak_gonen);
+      renderProgramaModal({
+        existingUnits,
+        candidatePlans,
+        eduFeats,
+        scopeLabel: 'רדיוס ' + radiusMeters + 'מ' + (inGonen ? ' · גוננים' : ''),
+        parentModalId: null,
+        radiusInfo: {
+          value: radiusMeters,
+          onChange: m => setRadiusMeters(m)
+        },
+        inGonen,
+        scopeGeom: {
+          type: 'radius',
+          center: radiusCenter,
+          meters: radiusMeters
+        }
+      });
+      return;
+    }
+
+    // Find plans whose centroid lies within the radius
+    function polyCentroid(geom) {
+      if (!geom || !geom.coordinates) return null;
+      let coords;
+      try {
+        if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return null;
+      } catch (ex) {
+        return null;
+      }
+      if (!coords || !coords.length) return null;
+      let cx = 0,
+        cy = 0,
+        n = 0;
+      for (const c of coords) {
+        if (c && c.length >= 2) {
+          cx += c[0];
+          cy += c[1];
+          n++;
+        }
+      }
+      if (n === 0) return null;
+      return L.latLng(cy / n, cx / n);
+    }
+    const planMatches = [];
+    const seenTaba = new Set();
+    gd.plans.features.forEach(f => {
+      const p = f.properties || {};
+      const taba = String(p.taba || '').trim();
+      if (!taba || seenTaba.has(taba)) return;
+      const planType = (p.plan_type || '').trim();
+      if (planType === 'תשתיות' || planType === 'מוסתר') return;
+      const c = polyCentroid(f.geometry);
+      if (!c) return;
+      if (radiusCenter.distanceTo(c) > radiusMeters) return;
+      const permits = getPermitsForTaba(taba);
+      if (permits.length === 0) return;
+      seenTaba.add(taba);
+      const planUnits = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add);
+      const scopeKey = 'plan:' + taba;
+      const inclusion = getEffectivePermitInclusion(permits, scopeKey, planUnits);
+      const includedUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? Number(x.units) || 0 : 0), 0);
+      planMatches.push({
+        taba,
+        props: p,
+        permits,
+        inclusion,
+        includedUnits
+      });
+    });
+    const tamaMatches = [];
+    if (gd.tama38 && gd.tama38.features) {
+      gd.tama38.features.forEach(f => {
+        const p = f.properties || {};
+        const fid = p.fid;
+        if (fid == null || fid === '') return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let lat, lng;
+        try {
+          if (geom.type === 'Point') {
+            lng = geom.coordinates[0];
+            lat = geom.coordinates[1];
+          } else if (geom.type === 'MultiPoint') {
+            lng = geom.coordinates[0][0];
+            lat = geom.coordinates[0][1];
+          } else return;
+        } catch (ex) {
+          return;
+        }
+        if (radiusCenter.distanceTo(L.latLng(lat, lng)) > radiusMeters) return;
+        const permits = getPermitsForTama38(fid);
+        if (permits.length === 0) return;
+        const planUnits = parsePlanUnits(p.units_tose);
+        const scopeKey = 'tama:' + fid;
+        const inclusion = getEffectivePermitInclusion(permits, scopeKey, planUnits);
+        const includedUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? Number(x.units) || 0 : 0), 0);
+        tamaMatches.push({
+          fid,
+          props: p,
+          permits,
+          inclusion,
+          includedUnits
+        });
+      });
+    }
+
+    // Aggregate: total permits, total counted units, breakdown by stage and category
+    const allRows = [];
+    const stageAgg = {};
+    PERMIT_STAGES_ALL.forEach(st => {
+      stageAgg[st] = {
+        count: 0,
+        units: 0
+      };
+    });
+    const catAgg = {};
+    let totalPermits = 0,
+      totalIncludedPermits = 0,
+      totalIncludedUnits = 0;
+    function addPermit(p, included, scope) {
+      totalPermits++;
+      if (included) totalIncludedPermits++;
+      const stage = getPermitStage(p);
+      const cat = classifyPermitCategory(p);
+      const u = Number(p.units) || 0;
+      if (included) {
+        if (!stageAgg[stage]) stageAgg[stage] = {
+          count: 0,
+          units: 0
+        };
+        stageAgg[stage].count++;
+        stageAgg[stage].units += u;
+        if (!catAgg[cat]) catAgg[cat] = {
+          count: 0,
+          units: 0
+        };
+        catAgg[cat].count++;
+        catAgg[cat].units += u;
+        totalIncludedUnits += u;
+      }
+      allRows.push({
+        scope,
+        file: p.file_number || '',
+        status: p.status || '',
+        date: p.status_date || '',
+        units: u,
+        included,
+        stage,
+        cat,
+        desc: p.request_description || ''
+      });
+    }
+    planMatches.forEach(m => m.permits.forEach((p, i) => addPermit(p, m.inclusion[i], 'תב"ע ' + (m.props.plan_summary || m.props.plan_name || m.taba))));
+    tamaMatches.forEach(m => m.permits.forEach((p, i) => addPermit(p, m.inclusion[i], 'תמ"א 38 ' + (m.props.address || m.fid))));
+    window.__radiusExportData = allRows;
+    const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
+    function colorBox(c) {
+      return '<span style="display:inline-block;width:10px;height:10px;background:' + c + ';border-radius:2px;margin-left:4px;vertical-align:middle"></span>';
+    }
+    // Each breakdown row carries a data-drill attribute; clicking it
+    // swaps in a drill-down table of underlying permits (file numbers,
+    // statuses, units etc).
+    const stageHtml = PERMIT_STAGES_ALL.map(st => {
+      const a = stageAgg[st];
+      if (!a || a.count === 0 && a.units === 0) return '';
+      const col = getPermitStageColor(st);
+      return '<div data-drill="stage:' + st + '" style="display:flex;justify-content:space-between;padding:4px 6px;margin:0 -6px;font-size:12px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">' + '<span>' + colorBox(col) + getPermitStageLabel(st) + '</span>' + '<span style="color:#aaa">' + a.count + ' היתרים · <b style="color:#fff">' + a.units + '</b> יח"ד <span style="color:#666">›</span></span></div>';
+    }).filter(Boolean).join('');
+    const catHtml = Object.entries(catAgg).sort((a, b) => b[1].units - a[1].units).map(([cat, a]) => {
+      return '<div data-drill="cat:' + cat + '" style="display:flex;justify-content:space-between;padding:3px 6px;margin:0 -6px;font-size:11px;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'transparent\'" title="הצג רשימת היתרים">' + '<span>' + getPermitCategoryLabel(cat) + '</span>' + '<span style="color:#aaa">' + a.count + ' · <b style="color:#fff">' + a.units + '</b> יח"ד <span style="color:#666">›</span></span></div>';
+    }).join('');
+    const div = document.createElement('div');
+    div.id = 'radius-select-result';
+    div.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:24px;border-radius:14px;border:2px solid ${PERMITS_PALETTE.radius_circle};direction:rtl;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif`;
+    const totalProjects = planMatches.length + tamaMatches.length;
+    div.innerHTML = '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + `<h3 id="radius-result-title" contenteditable="true" style="color:${PERMITS_PALETTE.radius_circle};margin:0 0 6px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה">היתרים ברדיוס</h3>` + '<div style="font-size:11px;color:#888;margin-bottom:10px">מרכז: ' + radiusCenter.lat.toFixed(5) + ', ' + radiusCenter.lng.toFixed(5) + '</div>' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px;background:#1a1a2e;border-radius:6px">' + '<label style="font-size:12px;color:#aaa">רדיוס:</label>' + '<input id="radius-input" type="range" min="50" max="3000" step="50" value="' + radiusMeters + '" style="flex:1">' + '<input id="radius-input-num" type="number" min="50" max="3000" step="50" value="' + radiusMeters + '" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">' + '<span style="font-size:11px;color:#888">מטר</span>' + '</div>' + '<div style="display:flex;gap:18px;margin-bottom:14px;justify-content:space-around">' + '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + totalProjects + '</div><div style="font-size:11px;color:#aaa">פרוייקטים</div></div>' + '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#5dade2">' + totalIncludedPermits + '</div><div style="font-size:11px;color:#aaa">היתרים פעילים</div><div style="font-size:9px;color:#666">מתוך ' + totalPermits + '</div></div>' + '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#4CAF50">' + totalIncludedUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד מצטברות</div></div>' + '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים ברדיוס (לפי שכבת מבנים עירונית)"><div style="font-size:26px;font-weight:bold;color:#FFB347">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div>' + '</div>' + (stageHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח שלב:</div>' + stageHtml + '</div>' : '') + (catHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סוג:</div>' + catHtml + '</div>' : '') + (totalProjects === 0 ? '<div style="text-align:center;color:#888;font-size:12px;padding:18px">לא נמצאו פרוייקטים עם היתרים ברדיוס זה</div>' : '') + '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' + '<button id="radius-export-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' + '<button id="radius-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+    document.getElementById('radius-close-btn').addEventListener('click', () => {
+      setRadiusCenter(null);
+    });
+    // Stash the rendered HTML so the drill-down's "back" can restore it.
+    const summaryHtml = div.innerHTML;
+    // Delegated drill-down handler — swaps modal content with permit list
+    // when the user clicks a stage or category breakdown row.
+    div.addEventListener('click', ev => {
+      const drillEl = ev.target.closest('[data-drill]');
+      if (!drillEl) return;
+      const [kind, key] = drillEl.dataset.drill.split(':');
+      const matched = allRows.filter(r => r.included && (kind === 'stage' ? r.stage === key : r.cat === key));
+      const title = kind === 'stage' ? getPermitStageLabel(key) : getPermitCategoryLabel(key);
+      const sumUnits = matched.reduce((s, r) => s + (Number(r.units) || 0), 0);
+      const rowsHtml = matched.sort((a, b) => b.units - a.units).map(r => {
+        const stCol = getPermitStageColor(r.stage);
+        const url = r.file ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(r.file) + '&SystemCode=26400046' : '';
+        const fileCell = url ? '<a href="' + url + '" target="_blank" rel="noopener" style="color:#5dade2;direction:ltr;text-decoration:none">' + r.file + '</a>' : '<span style="color:#888;direction:ltr">' + (r.file || '-') + '</span>';
+        const stageBadge = '<span style="background:' + stCol + '22;color:' + stCol + ';border:1px solid ' + stCol + ';padding:1px 6px;border-radius:8px;font-size:10px">' + getPermitStageLabel(r.stage) + '</span>';
+        const catLabel = getPermitCategoryLabel(r.cat);
+        return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:5px 6px;color:#cfcfdf;font-size:11px">' + r.scope + '</td>' + '<td style="padding:5px 6px;font-size:11px">' + fileCell + '</td>' + '<td style="padding:5px 6px;text-align:left;color:#fff;font-weight:bold;font-size:12px">' + (r.units || '') + '</td>' + (kind === 'stage' ? '<td style="padding:5px 6px;color:#e0e0e0;font-size:11px">' + catLabel + '</td>' : '<td style="padding:5px 6px">' + stageBadge + '</td>') + '<td style="padding:5px 6px;color:#aaa;font-size:10px">' + r.date + '</td>' + '</tr>';
+      }).join('');
+      div.innerHTML = '<button id="radius-back-btn" style="background:none;border:none;color:#9c27b0;font-size:13px;cursor:pointer;padding:0 0 8px;font-family:inherit">← חזרה</button>' + '<button id="radius-close-btn" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '<h3 style="color:#9c27b0;margin:0 0 4px;font-size:15px">' + title + '</h3>' + '<div style="font-size:11px;color:#888;margin-bottom:10px">' + matched.length + ' היתרים · ' + sumUnits.toLocaleString() + ' יח"ד</div>' + '<div style="overflow-x:auto;max-height:55vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e0e0e0">' + '<thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' + '<th style="padding:6px;text-align:right">פרוייקט</th>' + '<th style="padding:6px;text-align:right">מס\' היתר</th>' + '<th style="padding:6px;text-align:left">יח"ד</th>' + (kind === 'stage' ? '<th style="padding:6px;text-align:right">סוג</th>' : '<th style="padding:6px;text-align:right">שלב</th>') + '<th style="padding:6px;text-align:right">תאריך</th>' + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' + '<div style="border-top:1px solid #333;padding-top:10px;margin-top:8px;display:flex;gap:8px;justify-content:center">' + '<button id="radius-drill-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' + '<button id="radius-drill-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה / PDF</button>' + '</div>';
+      document.getElementById('radius-back-btn').addEventListener('click', () => {
+        div.innerHTML = summaryHtml;
+        attachSummaryHandlers();
+      });
+      document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
+      document.getElementById('radius-drill-csv').addEventListener('click', () => exportDrillCsv(matched, title, kind));
+      document.getElementById('radius-drill-print').addEventListener('click', () => printDrill(title, matched.length, sumUnits));
+    });
+    function exportDrillCsv(rows, title, kind) {
+      const cols = ['פרוייקט', 'מס\' היתר', 'סטטוס', kind === 'stage' ? 'סוג' : 'שלב', 'תאריך', 'יח"ד', 'תיאור'];
+      const csv = [cols.join(',')].concat(rows.map(r => [r.scope, r.file, r.status, kind === 'stage' ? getPermitCategoryLabel(r.cat) : getPermitStageLabel(r.stage), r.date, r.units, r.desc].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = ('היתרים_ברדיוס_' + title).replace(/[^\w\u0590-\u05FF]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function printDrill(title, count, units) {
+      const el = document.getElementById('radius-select-result');
+      if (!el) return;
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים ברדיוס — ' + title + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0;margin:0 0 4px}button,input{display:none!important}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}a{color:#1a5276;text-decoration:none}</style>');
+      win.document.write('</head><body>');
+      win.document.write(el.innerHTML);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+    function attachSummaryHandlers() {
+      document.getElementById('radius-close-btn').addEventListener('click', () => setRadiusCenter(null));
+      const slider2 = document.getElementById('radius-input');
+      const numInput2 = document.getElementById('radius-input-num');
+      if (slider2) {
+        slider2.addEventListener('input', e => {
+          numInput2.value = e.target.value;
+        });
+        slider2.addEventListener('change', e => {
+          setRadiusMeters(Number(e.target.value));
+        });
+      }
+      if (numInput2) {
+        numInput2.addEventListener('change', e => {
+          const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
+          slider2.value = v;
+          setRadiusMeters(v);
+        });
+      }
+      const csvBtn = document.getElementById('radius-export-csv');
+      if (csvBtn) csvBtn.addEventListener('click', exportRadiusCsv);
+      const printBtn = document.getElementById('radius-print');
+      if (printBtn) printBtn.addEventListener('click', printRadius);
+    }
+    function exportRadiusCsv() {
+      const rows = window.__radiusExportData || [];
+      const titleEl = document.getElementById('radius-result-title');
+      const title = (titleEl ? titleEl.textContent : '') || 'היתרים ברדיוס';
+      const cols = ['פרוייקט', 'מס\' היתר', 'סטטוס', 'שלב', 'סוג', 'תאריך', 'יח"ד', 'נכלל', 'תיאור'];
+      const csv = [cols.join(',')].concat(rows.map(r => [r.scope, r.file, r.status, getPermitStageLabel(r.stage), getPermitCategoryLabel(r.cat), r.date, r.units, r.included ? 'כן' : 'לא', r.desc].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/\s+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function printRadius() {
+      const el = document.getElementById('radius-select-result');
+      if (!el) return;
+      const win = window.open('', '_blank');
+      const titleEl = document.getElementById('radius-result-title');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + ((titleEl ? titleEl.textContent : '') || 'היתרים ברדיוס') + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#9c27b0}button,input{display:none!important}</style></head><body>');
+      win.document.write(el.innerHTML);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+    const slider = document.getElementById('radius-input');
+    const numInput = document.getElementById('radius-input-num');
+    slider.addEventListener('input', e => {
+      numInput.value = e.target.value;
+    });
+    slider.addEventListener('change', e => {
+      setRadiusMeters(Number(e.target.value));
+    });
+    numInput.addEventListener('change', e => {
+      const v = Math.max(50, Math.min(3000, Number(e.target.value) || 500));
+      slider.value = v;
+      setRadiusMeters(v);
+    });
+    document.getElementById('radius-export-csv').addEventListener('click', exportRadiusCsv);
+    document.getElementById('radius-print').addEventListener('click', printRadius);
+  }, [radiusCenter, radiusMeters]);
+
+  // ── Tree area: analyze plans inside polygon for tree-survey aggregation ──
+  useEffect(() => {
+    if (!areaFinished || areaFinished.length < 3 || !treeAreaActiveRef.current) return;
+    treeAreaActiveRef.current = false;
+    setTreeAreaActive(false);
+    window.__treeHandledArea = true;
+    const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+    polyCoords.push(polyCoords[0]);
+    function pip(pt, ring) {
+      const [x, y] = pt;
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i],
+          [xj, yj] = ring[j];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    const gd = geoDataRef.current;
+    const plansInside = [];
+    const seen = new Set();
+    if (gd && gd.plans) {
+      gd.plans.features.forEach(f => {
+        const p = f.properties;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let coords;
+        try {
+          if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return;
+        } catch (ex) {
+          return;
+        }
+        if (!coords || !coords.length) return;
+        let cx = 0,
+          cy = 0,
+          n = 0;
+        for (const c of coords) {
+          if (c && c.length >= 2) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+        }
+        if (!n) return;
+        cx /= n;
+        cy /= n;
+        if (!pip([cx, cy], polyCoords)) return;
+        const taba = p.taba || '';
+        if (taba && seen.has(taba)) return;
+        if (taba) seen.add(taba);
+        plansInside.push({
+          ...p,
+          _source: 'plan'
+        });
+      });
+    }
+    // Add TAMA 38 features inside the polygon
+    if (gd && gd.tama38 && gd.tama38.features) {
+      const seenTama = new Set();
+      gd.tama38.features.forEach(f => {
+        const p = f.properties;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let lng, lat;
+        try {
+          if (geom.type === 'Point') {
+            [lng, lat] = geom.coordinates;
+          } else if (geom.type === 'MultiPoint') {
+            [lng, lat] = geom.coordinates[0];
+          } else return;
+        } catch (ex) {
+          return;
+        }
+        if (typeof lng !== 'number' || typeof lat !== 'number') return;
+        if (!pip([lng, lat], polyCoords)) return;
+        const tik = p.tik || '';
+        if (tik && seenTama.has(tik)) return;
+        if (tik) seenTama.add(tik);
+        plansInside.push({
+          ...p,
+          _source: 'tama38'
+        });
+      });
+    }
+    const stats = aggregateTreeStats(plansInside);
+    const prev = document.getElementById('tree-panel');
+    if (prev) prev.remove();
+    const panel = document.createElement('div');
+    panel.id = 'tree-panel';
+    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #444;border-radius:12px;padding:20px;z-index:10000;min-width:min(380px,90vw);max-width:min(520px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+    const valencyAggArea = aggregateTreeValencies(stats.plans || []);
+    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' + '<h3 style="color:#4CAF50;margin:0;font-size:16px;flex:1">🌳 עצים — אזור נבחר</h3>' + '<button id="tree-export" title="הדפסה / ייצוא לאקסל" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>' + '<button id="tree-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+    if (stats.withData === 0) {
+      html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם נתוני סקר עצים באזור זה</div>';
+    } else {
+      html += '<div style="text-align:center;padding:14px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' + '<div style="font-size:36px;font-weight:bold;color:#e94560">' + stats.pct + '%</div>' + '<div style="font-size:12px;color:#aaa">עצים לעקירה/העתקה (' + stats.removed.toLocaleString() + ' מתוך ' + stats.total.toLocaleString() + ')</div>' + '<div style="font-size:10px;color:#888;margin-top:4px">' + stats.withData + ' תכניות עם סקר עצים</div>' + '</div>';
+      if (valencyAggArea) {
+        html += '<div style="font-size:12px;color:#888;margin-bottom:4px">פילוח ערכיות × המלצה ' + '<span style="color:#666;font-size:10px">(מתוך ' + valencyAggArea.plans_with_data + ' תכניות, ' + valencyAggArea.total_trees.toLocaleString() + ' עצים)</span></div>' + renderValencyPivotHTML(valencyAggArea, {
+          dark: true
+        }) + '<div style="margin:10px 0"></div>';
+      }
+      html += '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' + '<table style="width:100%;font-size:11px;border-collapse:collapse">' + '<thead><tr style="border-bottom:1px solid #2a2a4a">' + '<th style="text-align:right;padding:4px;color:#fff">שם</th>' + '<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>' + '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' + '<th style="text-align:center;padding:4px;color:#fff">%</th>' + '</tr></thead><tbody>' + stats.plans.slice(0, 15).map(row => '<tr style="border-bottom:1px solid #1a1a2e">' + '<td style="padding:4px"><a href="#" class="tree-plan-link" data-taba="' + row.taba + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' + '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' + '</tr>').join('') + '</tbody></table>' + renderSuppressedTreeNotice(stats.suppressed);
+    }
+    panel.innerHTML = html;
+    document.body.appendChild(panel);
+    const exportBtnArea = document.getElementById('tree-export');
+    if (exportBtnArea) {
+      exportBtnArea.onclick = () => openTreesReportExport('עצים — אזור נבחר', stats, valencyAggArea);
+    }
+
+    // Keep the drawn polygon and markers visible while the tree panel
+    // is open. Only remove them when the user closes the popup.
+    const r = areaRef.current;
+    const map = mapInstanceRef.current;
+    function clearAreaDrawing() {
+      if (map && r) {
+        r.markers.forEach(m => map.removeLayer(m));
+        if (r.polygon) map.removeLayer(r.polygon);
+      }
+      if (r) {
+        r.points = [];
+        r.markers = [];
+        r.polygon = null;
+      }
+    }
+    document.getElementById('tree-close').onclick = () => {
+      panel.remove();
+      clearAreaDrawing();
+    };
+    if (window.__treePanelAttach) window.__treePanelAttach(panel);
+  }, [areaFinished]);
+
+  // ── Open the rich programa modal scoped to a sub-neighborhood polygon ──
+  // Looks up sub by name (with SUB_NORMALIZE alias support), builds candidatePlans + edu features,
+  // and reuses renderProgramaModal. Used from the minahak-level פרוגרמה drilldown.
+  function openProgramaForSubPolygon(subName) {
+    const gd = geoDataRef.current || {};
+    if (!gd.sub_neighborhoods) {
+      console.warn('[Programa] no sub_neighborhoods layer');
+      return;
+    }
+    // Find sub feature: try exact match, then via normalized alias
+    const wanted = typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[subName] || subName;
+    let subF = gd.sub_neighborhoods.features.find(f => {
+      const nm = f.properties.schn_nama || '';
+      if (nm === subName || nm === wanted) return true;
+      const norm = typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[nm] || nm;
+      return norm === subName || norm === wanted;
+    });
+    if (!subF) {
+      console.warn('[Programa] sub not found:', subName);
+      return;
+    }
+    let coords;
+    if (subF.geometry.type === 'Polygon') coords = subF.geometry.coordinates[0];else if (subF.geometry.type === 'MultiPolygon') coords = subF.geometry.coordinates[0][0];
+    if (!coords || coords.length < 3) return;
+    const polyCoords = coords.slice();
+    if (polyCoords[0][0] !== polyCoords[polyCoords.length - 1][0] || polyCoords[0][1] !== polyCoords[polyCoords.length - 1][1]) polyCoords.push(polyCoords[0]);
+    function pip(pt, ring) {
+      const x = pt[0],
+        y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0],
+          yi = ring[i][1],
+          xj = ring[j][0],
+          yj = ring[j][1];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    // Determine if the sub's centroid is inside Gonen minahak (for future-horizon eligibility)
+    let cx = 0,
+      cy = 0,
+      n = 0;
+    for (const c of coords) {
+      if (c && c.length >= 2) {
+        cx += c[0];
+        cy += c[1];
+        n++;
+      }
+    }
+    cx /= n;
+    cy /= n;
+    let inGonen = false;
+    if (gd.minahak_gonen && gd.minahak_gonen.features) {
+      for (const gf of gd.minahak_gonen.features) {
+        const g = gf.geometry;
+        if (!g || !g.coordinates) continue;
+        if (g.type === 'Polygon' && pip([cx, cy], g.coordinates[0])) {
+          inGonen = true;
+          break;
+        }
+        if (g.type === 'MultiPolygon') {
+          for (const poly of g.coordinates) {
+            if (pip([cx, cy], poly[0])) {
+              inGonen = true;
+              break;
+            }
+          }
+          if (inGonen) break;
+        }
+      }
+    }
+    // Collect plans whose centroid is inside the sub polygon
+    const candidatePlans = [];
+    if (gd.plans) {
+      const seen = new Set();
+      gd.plans.features.forEach(f => {
+        const p = f.properties || {};
+        const taba = String(p.taba || '').trim();
+        if (taba && seen.has(taba)) return;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let pcoords;
+        try {
+          if (geom.type === 'Polygon') pcoords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') pcoords = geom.coordinates[0][0];else return;
+        } catch (ex) {
+          return;
+        }
+        if (!pcoords || !pcoords.length) return;
+        let pcx = 0,
+          pcy = 0,
+          pn = 0;
+        for (const c of pcoords) {
+          if (c && c.length >= 2) {
+            pcx += c[0];
+            pcy += c[1];
+            pn++;
+          }
+        }
+        if (pn === 0) return;
+        if (pip([pcx / pn, pcy / pn], polyCoords)) {
+          if (taba) seen.add(taba);
+          candidatePlans.push({
+            taba,
+            plan_name: p.plan_name,
+            plan_name_he: p.plan_name_he,
+            plan_summary: p.plan_summary,
+            units_add: parseFloat(p.units_add) || 0,
+            units_total: parseInt(p.units_total) || 0,
+            status_mavat: p.status_mavat,
+            stage: p.stage,
+            mavat_date: p.mavat_date,
+            shavatz_out_prog: p.shavatz_out_prog || '',
+            shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+            hafrash_prg: p.hafrash_prg || '',
+            hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+            shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+            shavatz_in_prog: p.shavatz_in_prog || '',
+            geometry: f.geometry
+          });
+        }
+      });
+    }
+    candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+    let existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+    // Fallback for areas where buildings.geojson has no coverage (e.g. Arab neighborhoods)
+    if (existingUnits === 0 && window.__unitsData && window.__unitsData.bySub) {
+      const wantedSub = typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[subName] || subName;
+      for (const m of Object.keys(window.__unitsData.bySub)) {
+        const subs = window.__unitsData.bySub[m] || {};
+        for (const s of Object.keys(subs)) {
+          const ns = typeof SUB_NORMALIZE !== 'undefined' && SUB_NORMALIZE[s] || s;
+          if ((s === subName || s === wantedSub || ns === subName || ns === wantedSub) && (subs[s].units_in || 0) > 0) {
+            existingUnits = subs[s].units_in;
+            break;
+          }
+        }
+        if (existingUnits > 0) break;
+      }
+    }
+    const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
+    renderProgramaModal({
+      existingUnits,
+      candidatePlans,
+      eduFeats,
+      scopeLabel: 'תת-שכונה: ' + subName,
+      parentModalId: 'units-modal-public-needs',
+      inGonen,
+      scopeGeom: {
+        type: 'polygon',
+        rings: [polyCoords]
+      }
+    });
+  }
+  // Expose to window for use from React-rendered click handlers in the minahak modal
+  window.__openProgramaForSubPolygon = name => {
+    reportKindRef.current = 'programa';
+    openProgramaForSubPolygon(name);
+  };
+  window.__openAllocationsForSubPolygon = name => {
+    reportKindRef.current = 'allocations';
+    openProgramaForSubPolygon(name);
+  };
+
+  // Minahak Hebrew name → geojson layer key (matches dataFiles)
+  const MINAHAK_HEB_TO_LAYER = {
+    'בית צפאפא': 'minahak_beit_tzfafa',
+    'גוננים': 'minahak_gonen',
+    'בקעה רבתי': 'minahak_baka',
+    'גינות העיר': 'minahak_ganot',
+    'מינהל מוסדי מלחה': 'minahak_malha',
+    'א.ת. תלפיות': 'minahak_talpiot'
+  };
+
+  // Same as openProgramaForSubPolygon but scoped to an entire minahak (multi-polygon-safe).
+  function openProgramaForMinahakPolygon(minahakName) {
+    const gd = geoDataRef.current || {};
+    const layerKey = MINAHAK_HEB_TO_LAYER[minahakName];
+    if (!layerKey || !gd[layerKey] || !gd[layerKey].features) {
+      console.warn('[Programa] no minahak layer for', minahakName);
+      return;
+    }
+    const layer = gd[layerKey];
+    const allRings = [];
+    for (const f of layer.features) {
+      const g = f.geometry;
+      if (!g || !g.coordinates) continue;
+      if (g.type === 'Polygon') allRings.push(g.coordinates[0]);else if (g.type === 'MultiPolygon') {
+        for (const poly of g.coordinates) allRings.push(poly[0]);
+      }
+    }
+    if (!allRings.length) return;
+    function pip(pt, ring) {
+      const x = pt[0],
+        y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0],
+          yi = ring[i][1],
+          xj = ring[j][0],
+          yj = ring[j][1];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function pipAny(pt) {
+      for (const r of allRings) {
+        if (pip(pt, r)) return true;
+      }
+      return false;
+    }
+    const inGonen = minahakName === 'גוננים';
+    const candidatePlans = [];
+    if (gd.plans) {
+      const seen = new Set();
+      gd.plans.features.forEach(f => {
+        const p = f.properties || {};
+        const taba = String(p.taba || '').trim();
+        if (taba && seen.has(taba)) return;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let pcoords;
+        try {
+          if (geom.type === 'Polygon') pcoords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') pcoords = geom.coordinates[0][0];else return;
+        } catch (ex) {
+          return;
+        }
+        if (!pcoords || !pcoords.length) return;
+        let pcx = 0,
+          pcy = 0,
+          pn = 0;
+        for (const c of pcoords) {
+          if (c && c.length >= 2) {
+            pcx += c[0];
+            pcy += c[1];
+            pn++;
+          }
+        }
+        if (pn === 0) return;
+        if (pipAny([pcx / pn, pcy / pn])) {
+          if (taba) seen.add(taba);
+          candidatePlans.push({
+            taba,
+            plan_name: p.plan_name,
+            plan_name_he: p.plan_name_he,
+            plan_summary: p.plan_summary,
+            units_add: parseFloat(p.units_add) || 0,
+            units_total: parseInt(p.units_total) || 0,
+            status_mavat: p.status_mavat,
+            stage: p.stage,
+            mavat_date: p.mavat_date,
+            shavatz_out_prog: p.shavatz_out_prog || '',
+            shavatz_out_sqm: parseFloat(p.shavatz_out_sqm) || 0,
+            hafrash_prg: p.hafrash_prg || '',
+            hafrash_sqm: parseFloat(p.hafrash_sqm) || 0,
+            shavatz_in_sqm: parseFloat(p.shavatz_in_sqm) || 0,
+            shavatz_in_prog: p.shavatz_in_prog || '',
+            geometry: f.geometry
+          });
+        }
+      });
+    }
+    candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+    let existingUnits = 0;
+    for (const r of allRings) existingUnits += sumExistingUnitsInPolygon(r, gd.buildings);
+    // Fallback for minahaks where buildings.geojson has no coverage
+    if (existingUnits === 0 && window.__unitsData && window.__unitsData.byMinahak && window.__unitsData.byMinahak[minahakName]) {
+      existingUnits = window.__unitsData.byMinahak[minahakName].units_in || 0;
+    }
+    let eduFeats = [];
+    const seenEduIds = new Set();
+    for (const r of allRings) {
+      const e = eduFeaturesInPolygon(r, gd);
+      if (Array.isArray(e)) {
+        for (const f of e) {
+          const id = f && f.properties && (f.properties.semel_chinuch || f.properties.id || JSON.stringify(f.geometry && f.geometry.coordinates));
+          if (id && seenEduIds.has(id)) continue;
+          if (id) seenEduIds.add(id);
+          eduFeats.push(f);
+        }
+      }
+    }
+    renderProgramaModal({
+      existingUnits,
+      candidatePlans,
+      eduFeats,
+      scopeLabel: 'מינהל: ' + minahakName,
+      parentModalId: 'units-modal-public-needs',
+      inGonen,
+      scopeGeom: {
+        type: 'polygon',
+        rings: allRings
+      }
+    });
+  }
+  window.__openProgramaForMinahakPolygon = name => {
+    reportKindRef.current = 'programa';
+    openProgramaForMinahakPolygon(name);
+  };
+  window.__openAllocationsForMinahakPolygon = name => {
+    reportKindRef.current = 'allocations';
+    openProgramaForMinahakPolygon(name);
+  };
+
+  // ── Programa report — DOM modal triggered from area-select / radius-select ──
+  // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
+  // arbitrary scope (polygon or circle) using default assumptions. Sources:
+  //   existing units → buildings layer (NUM_APTS_C sum)
+  //   planned units → sum of plans.units_add for plans whose centroid is in scope
+  function renderProgramaModal({
+    existingUnits,
+    candidatePlans,
+    eduFeats,
+    scopeLabel,
+    parentModalId,
+    radiusInfo,
+    inGonen,
+    scopeGeom
+  }) {
+    // Route to the built-allocations report when that scope kind was requested.
+    if (reportKindRef.current === 'allocations') {
+      reportKindRef.current = 'programa';
+      return renderAllocationsModal({
+        candidatePlans: candidatePlans || [],
+        scopeLabel
+      });
+    }
+    candidatePlans = candidatePlans || [];
+    if (!window.__programaUserAssumptions) {
+      window.__programaUserAssumptions = {
+        ...PN_DEFAULT_ASSUMPTIONS,
+        targetYear: 'existing'
+      };
+    }
+    const assumpt = window.__programaUserAssumptions;
+    const tY = assumpt.targetYear;
+
+    // Apply target-year mimush filter to candidate plans.
+    // tY === 'existing' → only existing units, no plans contribute
+    // tY === 'full'     → all plans included at 100% mimush, no year cutoff
+    // tY === 2030/35/40 → plans with estimatedYear ≤ tY contribute their units_total × mimushPct
+    let plannedUnits = 0;
+    const plansInScope = [];
+    const isFull = tY === 'full';
+    candidatePlans.forEach(p => {
+      if (tY === 'existing') {
+        plansInScope.push({
+          ...p,
+          contributingUnits: 0
+        });
+        return;
+      }
+      const m = calcMimush(p);
+      if (!m) {
+        plansInScope.push({
+          ...p,
+          contributingUnits: 0
+        });
+        return;
+      }
+      if (!isFull && m.estimatedYear > tY) {
+        plansInScope.push({
+          ...p,
+          contributingUnits: 0,
+          mimushPct: m.mimushPct,
+          estimatedYear: m.estimatedYear
+        });
+        return;
+      }
+      const u = parseInt(p.units_total) || parseInt(p.units_add) || 0;
+      const effectivePct = isFull ? 100 : m.mimushPct;
+      const w = u * effectivePct / 100;
+      plannedUnits += w;
+      plansInScope.push({
+        ...p,
+        contributingUnits: Math.round(w),
+        _rawUnits: w,
+        mimushPct: effectivePct,
+        estimatedYear: m.estimatedYear,
+        isFullMimush: isFull
+      });
+    });
+    plannedUnits = Math.round(plannedUnits);
+    const totalUnits = existingUnits + plannedUnits;
+
+    // ── Per-statistical-area bucketing (CBS census 2022) ──
+    // Partition existing + planned units into stat-area buckets so each area's
+    // population uses its own household-size / age / religiosity profile.
+    // Units that don't resolve to a stat area (no coverage, fallback sources)
+    // stay in the base bucket using the user assumptions. Bucket sums are kept
+    // identical to the scalar totals, so a single-area selection reproduces the
+    // old result exactly. Classes are ceiled per bucket then summed.
+    const gdBkt = geoDataRef.current;
+    const buckets = new Map(); // key: stat_area_id | '__base__'
+    const BASE_KEY = '__base__';
+    const getBucket = (key, name, assumptions) => {
+      let b = buckets.get(key);
+      if (!b) {
+        b = {
+          key,
+          name,
+          assumptions,
+          existing: 0,
+          planned: 0
+        };
+        buckets.set(key, b);
+      }
+      return b;
+    };
+    const baseBucket = () => getBucket(BASE_KEY, null, assumpt);
+    const bucketForPoint = (lng, lat) => {
+      const a = getStatAreaAssumptions(lng, lat, assumpt);
+      if (a._statAreaId == null) return baseBucket();
+      return getBucket(a._statAreaId, a._statAreaName, a);
+    };
+    const pipRing = (pt, ring) => {
+      const x = pt[0],
+        y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0],
+          yi = ring[i][1],
+          xj = ring[j][0],
+          yj = ring[j][1];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    };
+    const inScope = c => {
+      if (!scopeGeom) return false;
+      if (scopeGeom.type === 'radius') return scopeGeom.center.distanceTo(L.latLng(c[1], c[0])) <= scopeGeom.meters;
+      if (scopeGeom.type === 'polygon') {
+        for (const r of scopeGeom.rings || []) {
+          if (pipRing(c, r)) return true;
+        }
+      }
+      return false;
+    };
+    baseBucket(); // guarantee ≥1 bucket so sums work when everything is empty
+    // Existing units → bucket from municipal buildings inside the scope geometry.
+    let bucketedExisting = 0;
+    if (scopeGeom && gdBkt && gdBkt.buildings && gdBkt.buildings.features) {
+      for (const f of gdBkt.buildings.features) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c) continue;
+        const u = f.properties && f.properties.units || 0;
+        if (!u || !inScope(c)) continue;
+        bucketForPoint(c[0], c[1]).existing += u;
+        bucketedExisting += u;
+      }
+    }
+    // Existing units not resolved from buildings (no coverage / __unitsData fallback)
+    // stay in the base bucket so Σ buckets === existingUnits exactly.
+    if (existingUnits > bucketedExisting) baseBucket().existing += existingUnits - bucketedExisting;
+    // Planned units → bucket each contributing plan by its centroid (raw weighted units).
+    plansInScope.forEach(p => {
+      const w = p._rawUnits || 0;
+      if (!w) return;
+      const ctr = geomCentroid(p.geometry);
+      if (ctr) bucketForPoint(ctr[0], ctr[1]).planned += w;else baseBucket().planned += w;
+    });
+    const needs = sumPublicNeeds(buckets, b => b.existing + b.planned);
+    // Current-state needs (existing units only) — used for "כיום" delta when targetYear != 'existing'
+    const currentNeeds = sumPublicNeeds(buckets, b => b.existing);
+    const nonEdu = sumNonEduServices(buckets, b => b.existing + b.planned);
+    // Stat areas actually carrying units, for the UI breakdown line.
+    const statBuckets = [...buckets.values()].filter(b => b.key !== BASE_KEY && b.existing + b.planned > 0);
+    // Breakdown line shown when the selection spans ≥2 statistical areas:
+    // units-weighted blended household size + per-area tooltip.
+    const statBreakdownHtml = (() => {
+      if (statBuckets.length < 2) return '';
+      let uw = 0,
+        hw = 0;
+      statBuckets.forEach(b => {
+        const u = b.existing + b.planned;
+        uw += u;
+        hw += u * (b.assumptions.householdSize || 0);
+      });
+      const blended = uw > 0 ? hw / uw : 0;
+      const tip = statBuckets.slice().sort((a, b) => b.existing + b.planned - (a.existing + a.planned)).map(b => (b.name || 'אז"ס ' + b.key) + ': ' + Math.round(b.existing + b.planned) + ' יח"ד · ' + (b.assumptions.householdSize || 0).toFixed(1) + ' נפ\'').join('&#10;');
+      return '<div title="' + tip.replace(/"/g, '&quot;') + '" style="font-size:10px;color:#7ec9a0;font-style:italic;margin-bottom:6px;cursor:help">📊 ' + statBuckets.length + ' אזורים סטטיסטיים (למ"ס 2022) · גודל משק בית משוקלל: ' + blended.toFixed(1) + ' נפ\' · כיתות מעוגלות ברמת הבחירה</div>';
+    })();
+    // Units-weighted demographic profile ACTUALLY used by the calc — blended across
+    // the CBS stat-area buckets (מפקד הלמ"ס 2022). The minahak preset (assumpt) is only
+    // a fallback for units outside any stat area (base bucket). This is what the footer shows,
+    // so the caption reflects the real source/values rather than the preset defaults.
+    const usedDemography = (() => {
+      let uw = 0,
+        hh = 0,
+        hrd = 0,
+        rel = 0,
+        agG = 0,
+        agH = 0,
+        baseUnits = 0;
+      [...buckets.values()].forEach(b => {
+        const u = b.existing + b.planned;
+        if (!u) return;
+        uw += u;
+        hh += u * (b.assumptions.householdSize || 0);
+        hrd += u * (b.assumptions.haredi || 0);
+        rel += u * (b.assumptions.religious || 0);
+        agG += u * (b.assumptions.ageYearPctGeneral || 0);
+        agH += u * (b.assumptions.ageYearPctHaredi || 0);
+        if (b.key === BASE_KEY) baseUnits += u;
+      });
+      if (uw <= 0) return null;
+      return {
+        householdSize: hh / uw,
+        haredi: hrd / uw,
+        religious: rel / uw,
+        ageYearPctGeneral: agG / uw,
+        ageYearPctHaredi: agH / uw,
+        areaCount: statBuckets.length,
+        baseUnits,
+        totalUnits: uw
+      };
+    })();
+    // Label-free caption text; source/values reflect what the calc used.
+    const demoFooterText = (() => {
+      const d = usedDemography;
+      if (d && d.areaCount > 0) {
+        const baseNote = d.baseUnits > 0 ? ' + ' + Math.round(d.baseUnits) + ' יח"ד ללא כיסוי אזורי (ברירת מחדל למינהק)' : '';
+        return 'גודל משק בית ' + d.householdSize.toFixed(1) + ' נפ\' · ' + Math.round(d.haredi * 100) + '% חרדי · ' + Math.round(d.religious * 100) + '% דתי — ' + 'משוקלל לפי יח"ד מ-' + d.areaCount + ' אזורים סטטיסטיים (מפקד הלמ"ס 2022)' + baseNote + ' · אחוז ילידי שנת-גיל: כללי ' + d.ageYearPctGeneral.toFixed(1) + '% / חרדי ' + d.ageYearPctHaredi.toFixed(1) + '%';
+      }
+      // No stat-area coverage → minahak preset fallback (neighborhood-level manual assumption)
+      return 'גודל משק בית ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' + Math.round(assumpt.haredi * 100) + '% חרדי · ' + Math.round(assumpt.religious * 100) + '% דתי · ' + 'אחוז ילידי שנת-גיל כללי ' + assumpt.ageYearPctGeneral + '% (ברירת מחדל למינהק — אין כיסוי אזורי)';
+    })();
+    const existingEdu = aggregateEduFeatures(eduFeats || []);
+    const hasExistingEdu = (eduFeats || []).length > 0;
+    const showFutureBalance = tY !== 'existing';
+
+    // ALL plans in scope — parse S+AR for additions, intersect plan geometry × edu_shanaton for demolitions.
+    // Stored separately from the per-horizon filter so cross-horizon drilldowns can reference any plan.
+    // Track S (שב"צ יוצא) and AR (הפרשה מבונה) separately for the per-cell breakdown.
+    const allParsedPlans = plansInScope.filter(p => p.mimushPct != null && p.estimatedYear != null).map(p => {
+      const facS = parseFacilitiesFromText(p.shavatz_out_prog || '');
+      const facAR = parseFacilitiesFromText(p.hafrash_prg || '');
+      const addedCountsS = {};
+      const addedCountsAR = {};
+      const addedCounts = {};
+      PARSER_KEYS.forEach(k => {
+        addedCountsS[k] = facS.counts[k];
+        addedCountsAR[k] = facAR.counts[k];
+        addedCounts[k] = addedCountsS[k] + addedCountsAR[k];
+      });
+      const eduInside = eduFeaturesInPlanGeometry(p.geometry, eduFeats || []);
+      const eduAgg = aggregateEduFeatures(eduInside);
+      const demolishCounts = {};
+      PARSER_KEYS.forEach(k => demolishCounts[k] = 0);
+      demolishCounts.gan = eduAgg.ganim_count + eduAgg.gan_special_count;
+      demolishCounts.yesodi = eduAgg.yesodi_classes;
+      demolishCounts.al_yesodi = eduAgg.alyesodi_classes;
+      // realMimushPct = the actual rate (not the isFull override). Used in cross-horizon drilldown.
+      return {
+        ...p,
+        realMimushPct: p.isFullMimush ? null : p.mimushPct,
+        // null if was overridden by isFull — recompute via calcMimush at drilldown
+        rawClassCounts: addedCounts,
+        rawClassCountsS: addedCountsS,
+        rawClassCountsAR: addedCountsAR,
+        rawDemolishCounts: demolishCounts,
+        rawDemolishEduInside: eduInside,
+        rawUncatSqm: facS.uncategorizedSqm + facAR.uncategorizedSqm,
+        weightedShavatzInSqm: Math.round((p.shavatz_in_sqm || 0) * (p.mimushPct || 0) / 100)
+      };
+    });
+    // Resolve realMimushPct for plans where it's null (came from isFull view): re-call calcMimush
+    allParsedPlans.forEach(p => {
+      if (p.realMimushPct == null) {
+        const m = calcMimush(p);
+        if (m) p.realMimushPct = m.mimushPct;
+      }
+    });
+    // Current-horizon contributors (used for the live aggregation)
+    const contributingPlans = allParsedPlans.filter(p => isFull || p.estimatedYear <= tY);
+    // Aggregate: apply mimushPct at the sum level, then round to integer
+    const plannedClasses = {};
+    PARSER_KEYS.forEach(k => plannedClasses[k] = 0);
+    const plannedClassesS = {};
+    PARSER_KEYS.forEach(k => plannedClassesS[k] = 0);
+    const plannedClassesAR = {};
+    PARSER_KEYS.forEach(k => plannedClassesAR[k] = 0);
+    const demolishedClasses = {};
+    PARSER_KEYS.forEach(k => demolishedClasses[k] = 0);
+    let plannedUncatSqm = 0;
+    contributingPlans.forEach(p => {
+      const pct = (p.mimushPct || 0) / 100;
+      PARSER_KEYS.forEach(k => {
+        plannedClasses[k] += p.rawClassCounts[k] * pct;
+        plannedClassesS[k] += p.rawClassCountsS[k] * pct;
+        plannedClassesAR[k] += p.rawClassCountsAR[k] * pct;
+        demolishedClasses[k] += p.rawDemolishCounts[k] * pct;
+      });
+      plannedUncatSqm += p.rawUncatSqm * pct;
+    });
+    PARSER_KEYS.forEach(k => {
+      plannedClasses[k] = Math.round(plannedClasses[k]);
+      plannedClassesS[k] = Math.round(plannedClassesS[k]);
+      plannedClassesAR[k] = Math.round(plannedClassesAR[k]);
+      demolishedClasses[k] = Math.round(demolishedClasses[k]);
+    });
+    plannedUncatSqm = Math.round(plannedUncatSqm);
+    const totalShavatzInSqm = contributingPlans.reduce((s, p) => s + p.weightedShavatzInSqm, 0);
+    const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
+
+    // Closure for re-rendering after assumption tweaks
+    const reRender = () => renderProgramaModal({
+      existingUnits,
+      candidatePlans,
+      eduFeats,
+      scopeLabel,
+      parentModalId,
+      radiusInfo,
+      inGonen,
+      scopeGeom
+    });
+
+    // Build education table — rows = service, cols = stream
+    const eduRows = PUBLIC_NEEDS_SERVICES.map(svc => {
+      const sd = needs.byService[svc.key];
+      return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' + '<td style="padding:6px;text-align:center;color:#bbb">' + svc.ageFrom + '–' + svc.ageTo + '</td>' + '<td style="padding:6px;text-align:center">' + sd.mam.classes + '</td>' + '<td style="padding:6px;text-align:center">' + sd.haredi_b.classes + '</td>' + '<td style="padding:6px;text-align:center">' + sd.haredi_g.classes + '</td>' + '<td style="padding:6px;text-align:center;font-weight:bold;color:#4CAF50">' + sd.totalClasses + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + sd.totalDunam.toFixed(1) + '</td>' + '</tr>';
+    }).join('');
+
+    // Existing-vs-required (only if any edu features matched)
+    const SVCS = [{
+      key: 'maon',
+      label: 'מעון'
+    }, {
+      key: 'gan',
+      label: 'גני ילדים'
+    }, {
+      key: 'yesodi',
+      label: 'יסודי'
+    }, {
+      key: 'al_yesodi',
+      label: 'על-יסודי'
+    }];
+    const existingByKey = {
+      gan: existingEdu.ganim_count + existingEdu.gan_special_count,
+      yesodi: existingEdu.yesodi_classes,
+      al_yesodi: existingEdu.alyesodi_classes,
+      maon: existingEdu.maon_classes || 0
+    };
+    function deltaColor(delta, req) {
+      if (delta === null) return '#888';
+      if (req === 0) return delta > 0 ? '#4CAF50' : '#888';
+      const ratio = delta / req;
+      return ratio >= 0 ? '#4CAF50' : ratio >= -0.2 ? '#f59e0b' : ratio >= -0.5 ? '#ef6c00' : '#e53935';
+    }
+    // Existing-balance rows (only used when targetYear === 'existing')
+    const balanceRows = SVCS.map(svc => {
+      const ex = existingByKey[svc.key];
+      const reqNow = currentNeeds.byService[svc.key].totalClasses;
+      const dNow = ex === null ? null : ex - reqNow;
+      return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' + '<td style="padding:6px;text-align:center;color:#e0e0e0;font-weight:bold">' + (ex === null ? '—' : ex) + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + reqNow + '</td>' + '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(dNow, reqNow) + '">' + (dNow === null ? '—' : (dNow >= 0 ? '+' : '') + dNow) + '</td>' + '</tr>';
+    }).join('');
+
+    // Unified balance services: edu (with קיים from שנתון) + community/welfare/religion (no קיים data)
+    const BALANCE_SERVICES = [{
+      key: 'maon',
+      label: 'מעון',
+      kind: 'edu',
+      unit: 'כיתות'
+    }, {
+      key: 'gan',
+      label: 'גני ילדים',
+      kind: 'edu',
+      unit: 'כיתות'
+    }, {
+      key: 'yesodi',
+      label: 'יסודי',
+      kind: 'edu',
+      unit: 'כיתות'
+    }, {
+      key: 'al_yesodi',
+      label: 'על-יסודי',
+      kind: 'edu',
+      unit: 'כיתות'
+    }, {
+      key: 'tipat_chalav',
+      label: 'טיפת חלב',
+      kind: 'service',
+      unit: 'תחנות'
+    }, {
+      key: 'clinic',
+      label: 'מרפאה שכונתית',
+      kind: 'service',
+      unit: 'מרפאות'
+    }, {
+      key: 'matnas',
+      label: 'מתנ"ס/מרכז קהילתי',
+      kind: 'service',
+      unit: 'מרכזים'
+    }, {
+      key: 'welfare_dept',
+      label: 'לשכת רווחה',
+      kind: 'service',
+      unit: 'לשכות'
+    }, {
+      key: 'noar_club',
+      label: 'מועדון נוער',
+      kind: 'service',
+      unit: 'מועדונים'
+    }, {
+      key: 'elderly_club',
+      label: 'מועדון קשיש',
+      kind: 'service',
+      unit: 'מועדונים'
+    }, {
+      key: 'elderly_day',
+      label: 'מרכז יום לקשיש',
+      kind: 'service',
+      unit: 'מרכזים'
+    }, {
+      key: 'synagogue',
+      label: 'בית כנסת',
+      kind: 'service',
+      unit: 'בתי כנסת'
+    }, {
+      key: 'mikve',
+      label: 'מקווה טהרה',
+      kind: 'service',
+      unit: 'מקוואות'
+    }, {
+      key: 'sport_hall',
+      label: 'אולם ספורט',
+      kind: 'service',
+      unit: 'אולמות'
+    }, {
+      key: 'library',
+      label: 'ספרייה שכונתית',
+      kind: 'service',
+      unit: 'ספריות'
+    }];
+    // Build map of required-counts by key from non-edu services (computeNeighborhoodProgramServices returns array)
+    const nonEduReqByKey = {};
+    nonEdu.forEach(s => {
+      nonEduReqByKey[s.key] = s.count;
+    });
+    function getServiceCounts(svc) {
+      const exGross = svc.kind === 'edu' ? existingByKey[svc.key] : null; // existing — only edu has data from שנתון
+      const demolished = demolishedClasses[svc.key] || 0;
+      // For edu (have קיים): existing_net = שנתון - להריסה. For non-edu: existing is unknown (-) but if Q has text we infer the demolish makes existing < 0 (deficit before plans).
+      let exNet;
+      if (exGross !== null) {
+        exNet = exGross - demolished;
+      } else if (demolished > 0) {
+        // No שנתון data for this category, but Q says it had some that's being demolished
+        exNet = -demolished; // shows the loss
+      } else {
+        exNet = null;
+      }
+      const planned = plannedClasses[svc.key] || 0;
+      const proposed = (exNet === null ? 0 : exNet) + planned;
+      const required = svc.kind === 'edu' ? needs.byService[svc.key].totalClasses : nonEduReqByKey[svc.key] || 0;
+      const delta = proposed - required;
+      return {
+        exGross,
+        demolished,
+        exNet,
+        planned,
+        proposed,
+        required,
+        delta
+      };
+    }
+
+    // Future-balance rows: per-service "מוצע" vs "נדרש". The "= מוצע" cell is clickable
+    // (data-svc-drill) — opens a per-service cross-horizon drilldown.
+    const proposedWip = !inGonen;
+    const wipCell = '<span style="color:#d4a574;font-size:10px;font-style:italic" title="חישוב פירוט המוסדות המוצעים פר-תב\'ע מאומת כרגע רק בגוננים — בעבודה לשאר המינהלים">🚧 בעבודה</span>';
+    // Helper: planned-cell content. Format: "+N" with "S/AR" breakdown below (e.g. "+12" then "3 / 8").
+    const _plannedCellHtml = (planned, plannedS, plannedAR) => {
+      if (planned <= 0) return '—';
+      if (plannedS > 0 || plannedAR > 0) return '+' + planned + '<div style="font-size:9px;color:#a59ad6">' + plannedS + ' / ' + plannedAR + '</div>';
+      return '+' + planned;
+    };
+    const futureBalanceRows = BALANCE_SERVICES.map(svc => {
+      const c = getServiceCounts(svc);
+      const planS = plannedClassesS[svc.key] || 0;
+      const planAR = plannedClassesAR[svc.key] || 0;
+      const exDisplay = c.exNet === null ? '—' : c.exGross !== null && c.demolished > 0 ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>' : c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet;
+      const proposedClickable = !proposedWip && (c.proposed > 0 || c.planned > 0 || c.demolished > 0);
+      const plannedClickable = !proposedWip && c.planned > 0;
+      return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' + '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' + '<td' + (plannedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#7b6cf0;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות"' : ' style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)"') + '>' + _plannedCellHtml(c.planned, planS, planAR) + '</td>' + '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + (proposedWip ? wipCell : c.proposed + (proposedClickable ? ' ›' : '')) + '</td>' + '<td' + (svc.kind === 'edu' && c.required > 0 ? ' data-req-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#aaa;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט חישוב כיתות נדרשות (גילאים, אוכלוסייה, גודל כיתה)"' : ' style="padding:6px;text-align:center;color:#aaa"') + '>' + c.required + '</td>' + '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (proposedWip ? '#666' : deltaColor(c.delta, c.required)) + '">' + (proposedWip ? '—' : c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta) + '</td>' + '</tr>';
+    }).join('');
+    // Top "uncategorized public area" row — appears above per-service rows, clickable for drilldown
+    const uncatTopRow = '<tr style="background:#0f0f24;border-bottom:1px solid #555">' + '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' + '<td colspan="4" data-svc-drill="__uncat__" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות לשטח גנרי (כולל אופקים אחרים)">' + plannedUncatSqm.toLocaleString() + ' מ"ר ›</td>' + '</tr>';
+    const totalProposedClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).proposed, 0);
+    const totalRequiredClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).required, 0);
+    const totalGapClasses = totalProposedClasses - totalRequiredClasses;
+    const totalExistingNet = BALANCE_SERVICES.reduce((s, svc) => {
+      const c = getServiceCounts(svc);
+      return s + (c.exNet || 0);
+    }, 0);
+    const totalDemolished = BALANCE_SERVICES.reduce((s, svc) => s + (demolishedClasses[svc.key] || 0), 0);
+
+    // Non-edu services
+    const nonEduRows = nonEdu.map(svc => {
+      const basisLabels = {
+        residents: 'תושבים',
+        elderly: 'בני 65+',
+        frail_elderly: 'תשושים',
+        religious_hh: 'משק"ב דתי/חרדי'
+      };
+      return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' + '<td style="padding:6px;text-align:center;color:#bbb;font-size:11px">' + (basisLabels[svc.basis] || svc.basis) + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + svc.basisValue.toLocaleString() + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa;font-size:11px">1 / ' + svc.per.toLocaleString() + '</td>' + '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (svc.count > 0 ? '#4CAF50' : '#666') + '">' + (svc.count || '—') + '</td>' + '</tr>';
+    }).join('');
+    const prev = document.getElementById('programa-result');
+    if (prev) prev.remove();
+    const div = document.createElement('div');
+    div.id = 'programa-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(26,26,46,0.98);color:#e0e0e0;padding:20px;border-radius:14px;border:2px solid #7b6cf0;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+    div.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #333">' + '<div style="display:flex;align-items:center;gap:10px">' + (parentModalId ? '<button id="programa-back" style="background:none;border:none;color:#7b6cf0;font-size:13px;cursor:pointer;padding:0;font-family:inherit">← חזרה</button>' : '') + '<h3 id="programa-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:16px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text">🏘️ פרוגרמה — ' + scopeLabel + '</h3>' + '</div>' + '<button id="programa-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + (radiusInfo ? '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#1a1a2e;border-radius:6px">' + '<label style="font-size:12px;color:#aaa">רדיוס:</label>' + '<input id="programa-radius-input" type="range" min="50" max="3000" step="50" value="' + radiusInfo.value + '" style="flex:1">' + '<input id="programa-radius-num" type="number" min="50" max="3000" step="50" value="' + radiusInfo.value + '" style="width:80px;padding:4px;background:#2a2a4a;border:1px solid #444;color:#fff;border-radius:4px;font-size:12px;text-align:left">' + '<span style="font-size:11px;color:#888">מטר</span>' + '</div>' : '') +
+    // Assumptions controls bar (year + sliders) — same fields as sub-neighborhood פרוגרמה
+    '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#16162a;padding:10px 12px;border-radius:6px;margin-bottom:12px">' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">אופק:</label>' + ['existing', 2030, 2035, 2040, 'full'].map(y => {
+      const lbl = y === 'existing' ? 'מצב קיים' : y === 'full' ? '100% מימוש' : y;
+      const sel = tY === y;
+      const accent = y === 'full' ? '#7b6cf0' : '#5a7a9a';
+      const accentBg = y === 'full' ? '#3a2a6a' : '#3a5a80';
+      return '<button data-pa-year="' + y + '" style="background:' + (sel ? accentBg : 'transparent') + ';color:' + (sel ? '#fff' : '#888') + ';border:1px solid ' + (sel ? accent : '#333') + ';padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">' + lbl + '</button>';
+    }).join('') + '</div>' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">משק בית:</label>' + '<input id="pa-hh" type="range" min="2.5" max="6.0" step="0.1" value="' + assumpt.householdSize + '" style="width:90px">' + '<span style="font-size:11px;color:#e0e0ff;min-width:24px;text-align:center;font-weight:bold">' + assumpt.householdSize.toFixed(1) + '</span>' + '</div>' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% חרדי:</label>' + '<input id="pa-haredi" type="range" min="0" max="100" step="1" value="' + Math.round(assumpt.haredi * 100) + '" style="width:90px">' + '<span style="font-size:11px;color:#7b1fa2;min-width:30px;text-align:center;font-weight:bold">' + Math.round(assumpt.haredi * 100) + '%</span>' + '</div>' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa">% דתי:</label>' + '<input id="pa-religious" type="range" min="0" max="100" step="1" value="' + Math.round(assumpt.religious * 100) + '" style="width:90px">' + '<span style="font-size:11px;color:#2e7d32;min-width:30px;text-align:center;font-weight:bold">' + Math.round(assumpt.religious * 100) + '%</span>' + '</div>' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa" title="אחוז ילידי שנת-גיל בודדת (single-year cohort) — לא קשור לשנתון מנח&quot;י">ילידי שנה (כללי):</label>' + '<input id="pa-age-gen" type="number" min="1.5" max="4" step="0.1" value="' + assumpt.ageYearPctGeneral + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' + '<span style="font-size:10px;color:#888">%</span>' + '</div>' + '<div style="display:flex;align-items:center;gap:6px"><label style="font-size:11px;color:#aaa" title="אחוז ילידי שנת-גיל בודדת (single-year cohort) — לא קשור לשנתון מנח&quot;י">ילידי שנה (חרדי):</label>' + '<input id="pa-age-hrd" type="number" min="1.5" max="5" step="0.1" value="' + assumpt.ageYearPctHaredi + '" style="width:46px;background:#2a2a4a;color:#fff;border:1px solid #444;padding:3px;border-radius:3px;font-size:11px">' + '<span style="font-size:10px;color:#888">%</span>' + '</div>' + '<button id="pa-reset" title="איפוס להגדרות ברירת מחדל" style="background:transparent;color:#888;border:1px solid #444;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">↺ איפוס</button>' + '</div>' + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">' + '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #5dade2"><div style="font-size:10px;color:#888">יח"ד קיימות</div><div style="font-size:20px;color:#5dade2;font-weight:bold">' + existingUnits.toLocaleString() + '</div></div>' + '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #4CAF50"><div style="font-size:10px;color:#888">תוספת מתוכננת</div><div style="font-size:20px;color:#4CAF50;font-weight:bold">+' + plannedUnits.toLocaleString() + '</div></div>' + '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #fff"><div style="font-size:10px;color:#888">סה"כ יח"ד</div><div style="font-size:20px;color:#fff;font-weight:bold">' + totalUnits.toLocaleString() + '</div></div>' + '<div style="background:#1a1a2e;padding:10px;border-radius:6px;border-right:3px solid #f59e0b"><div style="font-size:10px;color:#888">אוכלוסייה מוערכת</div><div style="font-size:20px;color:#f59e0b;font-weight:bold">' + needs.population.toLocaleString() + '</div></div>' + '</div>' + (plansInScope.length ? '<div style="font-size:10px;color:#888;margin-bottom:10px;padding:6px 8px;background:rgba(123,108,240,0.08);border-radius:4px;border-right:2px solid #7b6cf0"><b>תכניות באזור (' + plansInScope.length + (tY !== 'existing' ? ' · ' + plansInScope.filter(p => p.contributingUnits > 0).length + ' תורמות' + (tY === 'full' ? ' (100% מימוש)' : ' לאופק ' + tY) : '') + '):</b> ' + plansInScope.slice(0, 30).map(p => {
+      const contrib = p.contributingUnits > 0;
+      return '<a href="#" data-zoom-taba="' + (p.taba || '') + '" style="color:' + (contrib ? '#fff' : '#bdb6e8') + ';direction:ltr;display:inline-block;text-decoration:underline;' + (contrib ? 'font-weight:bold' : '') + '" title="לחץ לזום לתב\'ע">' + (p.taba || '?') + '</a>';
+    }).join(' · ') + (plansInScope.length > 30 ? ' <span style="color:#666">…+' + (plansInScope.length - 30) + '</span>' : '') + '</div>' : '') +
+    // (Standalone chinuch-required table removed — same info available by clicking on a "נדרש" cell in the balance table below.) +
+    '' + (
+    // === BALANCE TABLE === branches by horizon
+    showFutureBalance ?
+    // Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
+    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(' + (tY === 'full' ? '100% מימוש · כל התב"עות נכללות ללא סינון שנה' : 'אופק ' + tY + ' · משוקלל %מימוש') + ' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR פחות הריסות מ-Q)</span></h4>' + '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' + '<thead><tr style="background:#1a1a2e;color:#aaa">' + '<th style="padding:6px;text-align:right">שירות</th>' + '<th style="padding:6px;text-align:center">קיים</th>' + '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות משוקלל %מימוש">+ מתוכנן<div style="font-size:9px;color:#a59ad6;font-weight:normal">שב"צ / הפרשה מבונה</div></th>' + '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' + '<th style="padding:6px;text-align:center">נדרש' + (tY === 'full' ? '' : ' ' + tY) + '</th>' + '<th style="padding:6px;text-align:center">פער</th>' + '</tr></thead><tbody>' + uncatTopRow + futureBalanceRows + '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' + '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' + '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' + '<td style="padding:8px;text-align:center;color:#7b6cf0">' + (() => {
+      const tp = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0);
+      const tpS = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesS[svc.key] || 0), 0);
+      const tpAR = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesAR[svc.key] || 0), 0);
+      return _plannedCellHtml(tp, tpS, tpAR);
+    })() + '</td>' + '<td' + (proposedWip ? ' style="padding:8px;text-align:center;color:#d4a574"' : ' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"') + '>' + (proposedWip ? wipCell : totalProposedClasses + ' ›') + '</td>' + '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' + '<td style="padding:8px;text-align:center;color:' + (proposedWip ? '#666' : deltaColor(totalGapClasses, totalRequiredClasses)) + '">' + (proposedWip ? '—' : (totalGapClasses >= 0 ? '+' : '') + totalGapClasses) + '</td>' + '</tr>' + '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>. לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.</td></tr>' + '</tbody></table>' : hasExistingEdu ?
+    // Existing: classes-based balance using שנתון מנח"י
+    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 קיים מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(שנתון מנח"י באזור · ' + (eduFeats || []).length + ' כתובות חינוך · בכיתות)</span></h4>' + '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' + '<thead><tr style="background:#1a1a2e;color:#aaa">' + '<th style="padding:6px;text-align:right">שירות</th>' + '<th style="padding:6px;text-align:center">קיים</th>' + '<th style="padding:6px;text-align:center">נדרש</th>' + '<th style="padding:6px;text-align:center">פער</th>' + '</tr></thead><tbody>' + balanceRows + '<tr style="background:#1a1a2e;color:#aaa;font-size:10px"><td colspan="4" style="padding:6px">תלמידים בכתובות שנפלו באזור: <b style="color:#f59e0b">' + existingEdu.students.toLocaleString() + '</b></td></tr>' + '</tbody></table>' : '') +
+    // (Per-plan classes drilldown is available via the "מוצע" cell click — no inline duplicate table needed.)
+    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' + '<thead><tr style="background:#1a1a2e;color:#aaa">' + '<th style="padding:6px;text-align:right">שירות</th>' + '<th style="padding:6px;text-align:center">בסיס חישוב</th>' + '<th style="padding:6px;text-align:center">כמות בסיס</th>' + '<th style="padding:6px;text-align:center">מנה</th>' + '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>' + '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' + statBreakdownHtml + '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">' + demoFooterText + '</div>' + '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' + '<button id="programa-csv" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא CSV</button>' + '<button id="programa-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+    document.getElementById('programa-close').addEventListener('click', () => div.remove());
+    if (parentModalId) {
+      document.getElementById('programa-back').addEventListener('click', () => div.remove());
+    }
+    // Wire taba zoom links in the "תכניות באזור" header strip
+    div.querySelectorAll('a[data-zoom-taba]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const taba = a.dataset.zoomTaba;
+        const map = mapInstanceRef.current;
+        if (!map || !gd.plans) return;
+        const feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === String(taba).trim());
+        if (!feat) return;
+        try {
+          const layer = L.geoJSON(feat);
+          const bounds = layer.getBounds();
+          map.fitBounds(bounds, {
+            padding: [60, 60],
+            maxZoom: 18
+          });
+          setTimeout(() => {
+            const mapped = mapPlanProps(feat.properties);
+            const popup = L.popup({
+              maxWidth: popupMaxWidth(),
+              closeButton: true
+            }).setLatLng(bounds.getCenter()).setContent(buildPlanPopup(mapped, {
+              properties: mapped
+            })).openOn(map);
+            bindPopupEvents(popup, [{
+              type: 'plan',
+              properties: mapped
+            }], 0);
+          }, 400);
+        } catch (err) {
+          console.warn('zoom to plan failed', err);
+        }
+        div.remove();
+      });
+    });
+    document.getElementById('programa-csv').addEventListener('click', () => {
+      const title = document.getElementById('programa-title')?.textContent || 'פרוגרמה';
+      const lines = [];
+      lines.push(['מדד', 'ערך'].join(','));
+      lines.push(['יח"ד קיימות', existingUnits].join(','));
+      lines.push(['תוספת מתוכננת', plannedUnits].join(','));
+      lines.push(['סה"כ יח"ד', totalUnits].join(','));
+      lines.push(['אוכלוסייה', needs.population].join(','));
+      lines.push('');
+      lines.push(['חינוך', 'גילאים', 'ממלכתי', 'חרדי-ב', 'חרדי-ג', 'סה"כ כיתות', 'דונם'].join(','));
+      PUBLIC_NEEDS_SERVICES.forEach(svc => {
+        const sd = needs.byService[svc.key];
+        lines.push([svc.label, svc.ageFrom + '-' + svc.ageTo, sd.mam.classes, sd.haredi_b.classes, sd.haredi_g.classes, sd.totalClasses, sd.totalDunam.toFixed(1)].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+      });
+      lines.push(['', '', '', '', '', 'סה"כ', needs.totalClasses, needs.totalDunam.toFixed(1)].join(','));
+      if (showFutureBalance) {
+        lines.push('');
+        lines.push(['מאזן עתידי (אופק ' + tY + ')', 'קיים שנתון', 'להריסה Q', 'קיים נטו', '+ מתוכנן S+AR', '= מוצע', 'נדרש', 'פער'].join(','));
+        BALANCE_SERVICES.forEach(svc => {
+          const c = getServiceCounts(svc);
+          lines.push([svc.label, c.exGross === null ? '' : c.exGross, c.demolished, c.exNet === null ? '' : c.exNet, c.planned, c.proposed, c.required, c.delta].join(','));
+        });
+        lines.push(['סה"כ', BALANCE_SERVICES.reduce((s, svc) => s + (existingByKey[svc.key] || 0), 0), totalDemolished, totalExistingNet, BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0), totalProposedClasses, totalRequiredClasses, totalGapClasses].join(','));
+        lines.push(['שטחי ציבור שטרם נקבע ייעוד (מ"ר משוקלל)', '', '', '', '', '', '', plannedUncatSqm].join(','));
+        lines.push(['Q שב"צ קיים להריסה (מ"ר משוקלל, אינפורמטיבי)', '', '', '', '', '', '', totalShavatzInSqm].join(','));
+        lines.push('');
+        const PARSER_LBLS = {
+          maon: 'מעון',
+          gan: 'גן',
+          yesodi: 'יסודי',
+          al_yesodi: 'על-יסודי',
+          tipat_chalav: 'טיפת חלב',
+          clinic: 'מרפאה',
+          matnas: 'מתנ"ס',
+          welfare_dept: 'רווחה',
+          noar_club: 'מועדון נוער',
+          elderly_club: 'מועדון קשיש',
+          elderly_day: 'מרכז יום קשיש',
+          synagogue: 'בית כנסת',
+          mikve: 'מקווה',
+          sport_hall: 'אולם ספורט',
+          library: 'ספרייה'
+        };
+        lines.push(['תב"ע', '% מימוש', 'אופק', 'שב"צ נכנס Q (טקסט)', 'שב"צ יוצא S (טקסט)', 'הפרשה AR (טקסט)', ...PARSER_KEYS.map(k => '+' + PARSER_LBLS[k]), ...PARSER_KEYS.map(k => '−' + PARSER_LBLS[k]), 'טרם נקבע (מ"ר גולמי)', 'להריסה Q (מ"ר משוקלל)'].join(','));
+        contributingPlans.forEach(p => {
+          const r = p.rawClassCounts;
+          const d = p.rawDemolishCounts;
+          lines.push([p.taba, p.mimushPct, p.estimatedYear, p.shavatz_in_prog || '', p.shavatz_out_prog || '', p.hafrash_prg || '', ...PARSER_KEYS.map(k => r[k] || 0), ...PARSER_KEYS.map(k => d[k] || 0), p.rawUncatSqm || 0, p.weightedShavatzInSqm || 0].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+        });
+      } else if (hasExistingEdu) {
+        lines.push('');
+        lines.push(['קיים מול נדרש', 'קיים', 'נדרש', 'פער'].join(','));
+        SVCS.forEach(svc => {
+          const ex = existingByKey[svc.key];
+          const reqNow = currentNeeds.byService[svc.key].totalClasses;
+          const dNow = ex === null ? '' : ex - reqNow;
+          lines.push([svc.label, ex === null ? '' : ex, reqNow, dNow].join(','));
+        });
+      }
+      lines.push('');
+      lines.push(['שירות', 'בסיס', 'כמות', 'מנה', 'נדרש'].join(','));
+      nonEdu.forEach(svc => {
+        lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('programa-print').addEventListener('click', async () => {
+      const title = document.getElementById('programa-title')?.textContent || 'פרוגרמה';
+      // Try to capture the map (selection circle/polygon should be visible) — best-effort
+      let mapImg = '';
+      try {
+        const mapEl = mapInstanceRef.current && mapInstanceRef.current.getContainer();
+        if (mapEl && window.html2canvas) {
+          // Briefly hide the modal so it doesn't cover the map in the screenshot
+          const prevDisplay = div.style.display;
+          div.style.display = 'none';
+          await new Promise(r => setTimeout(r, 100));
+          const canvas = await window.html2canvas(mapEl, {
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+          });
+          div.style.display = prevDisplay;
+          mapImg = canvas.toDataURL('image/jpeg', 0.85);
+        }
+      } catch (e) {
+        console.warn('[Programa] map capture failed', e);
+      }
+      const yearLabel = tY === 'existing' ? 'מצב קיים' : tY === 'full' ? '100% מימוש (כל התב"עות)' : 'אופק ' + tY;
+      const plansList = plansInScope.map(p => {
+        const taba = p.taba || '';
+        const summary = p.plan_summary || p.plan_name_he || p.plan_name || '';
+        const status = p.status_mavat || '';
+        const u = parseInt(p.units_total) || parseInt(p.units_add) || 0;
+        const contrib = p.contributingUnits || 0;
+        const m = p.mimushPct != null ? p.mimushPct + '%' : '—';
+        const ey = p.estimatedYear || '—';
+        return '<tr><td style="padding:4px 6px;direction:ltr;text-align:left;font-weight:bold">' + taba + '</td>' + '<td style="padding:4px 6px">' + summary + '</td>' + '<td style="padding:4px 6px;font-size:10px;color:#666">' + status + '</td>' + '<td style="padding:4px 6px;text-align:center">' + u + '</td>' + '<td style="padding:4px 6px;text-align:center;color:#666">' + m + '</td>' + '<td style="padding:4px 6px;text-align:center;color:#666">' + ey + '</td>' + '<td style="padding:4px 6px;text-align:center;color:#1a5276;font-weight:bold">' + (contrib > 0 ? '+' + contrib : '—') + '</td></tr>';
+      }).join('');
+      const assumptFooter = '<div style="font-size:11px;color:#555;margin-top:14px;padding:8px;background:#f5f5f5;border-radius:4px"><b>הנחות חישוב:</b> ' + yearLabel + ' · ' + demoFooterText + '</div>';
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#7b6cf0;margin:0 0 8px}h4{color:#1a5276;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee;color:#333}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button,input[type=range],input[type=number]{display:none!important}.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.kpi-strip>div{background:#f4f4ff;border-right:3px solid #7b6cf0;padding:8px;border-radius:4px}</style></head><body>');
+      win.document.write('<h3>' + title + '</h3>');
+      if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
+      if (plansList) {
+        win.document.write('<h4>תכניות באזור הנבחר (' + plansInScope.length + ' תכניות, אופק: ' + yearLabel + ')</h4>');
+        win.document.write('<table><thead><tr><th style="text-align:left">תב"ע</th><th>שם תכנית</th><th>סטטוס</th><th>סה"כ יח"ד</th><th>מימוש</th><th>אופק</th><th style="text-align:left">תרומה לאופק</th></tr></thead><tbody>' + plansList + '</tbody></table>');
+      }
+      // Append the modal contents (KPIs + tables) — already styled
+      win.document.write(div.innerHTML);
+      win.document.write(assumptFooter);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    });
+
+    // Wire radius slider (only present if radiusInfo passed)
+    if (radiusInfo) {
+      const sl = document.getElementById('programa-radius-input');
+      const num = document.getElementById('programa-radius-num');
+      let pendingTimer = null;
+      const apply = v => {
+        const clamped = Math.max(50, Math.min(3000, Number(v) || 500));
+        if (sl) sl.value = clamped;
+        if (num) num.value = clamped;
+        if (pendingTimer) clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(() => radiusInfo.onChange(clamped), 60);
+      };
+      if (sl) {
+        sl.addEventListener('input', e => {
+          if (num) num.value = e.target.value;
+        });
+        sl.addEventListener('change', e => apply(e.target.value));
+      }
+      if (num) {
+        num.addEventListener('change', e => apply(e.target.value));
+      }
+    }
+
+    // ── Drilldown on the balance table ──
+    // Cells with `data-svc-drill="<svcKey>"` open a per-service drilldown showing each contributing
+    // plan's gross count and the weighted contribution at each horizon (existing/2030/35/40/full).
+    // The total cell (id="programa-proposed-cell") opens the wide all-categories drilldown.
+    // The "__uncat__" key drills into the generic m² uncategorized public area row.
+    const SVC_LABELS_FULL = {
+      maon: 'מעון',
+      gan: 'גני ילדים',
+      yesodi: 'יסודי',
+      al_yesodi: 'על-יסודי',
+      tipat_chalav: 'טיפת חלב',
+      clinic: 'מרפאה שכונתית',
+      matnas: 'מתנ"ס/מרכז קהילתי',
+      welfare_dept: 'לשכת רווחה',
+      noar_club: 'מועדון נוער',
+      elderly_club: 'מועדון קשיש',
+      elderly_day: 'מרכז יום לקשיש',
+      synagogue: 'בית כנסת',
+      mikve: 'מקווה טהרה',
+      sport_hall: 'אולם ספורט',
+      library: 'ספרייה שכונתית'
+    };
+    const HORIZONS = [2030, 2035, 2040, 'full'];
+    function eduNamesFor(p) {
+      const names = [];
+      if (p.rawDemolishEduInside && p.rawDemolishEduInside.length) {
+        p.rawDemolishEduInside.forEach(ef => {
+          (ef.properties.institutions || []).forEach(inst => {
+            names.push((inst.name || '?') + ' (' + (inst.type || '?') + ')');
+          });
+        });
+      }
+      return names;
+    }
+
+    // Compute a plan's weighted contribution to a category at a given horizon (rounded to integer).
+    // For uncategorized: uses rawUncatSqm. For class category: uses rawClassCounts[svcKey].
+    function planContribAtHorizon(p, svcKey, horizon) {
+      const isUncat = svcKey === '__uncat__';
+      const raw = isUncat ? p.rawUncatSqm || 0 : p.rawClassCounts[svcKey] || 0;
+      if (raw === 0) return 0;
+      const isF = horizon === 'full';
+      if (!isF && p.estimatedYear > horizon) return 0;
+      const pct = isF ? 1 : (p.realMimushPct || 0) / 100;
+      return Math.round(raw * pct);
+    }
+    function planDemolishAtHorizon(p, svcKey, horizon) {
+      if (svcKey === '__uncat__') return 0;
+      const raw = p.rawDemolishCounts[svcKey] || 0;
+      if (raw === 0) return 0;
+      const isF = horizon === 'full';
+      if (!isF && p.estimatedYear > horizon) return 0;
+      const pct = isF ? 1 : (p.realMimushPct || 0) / 100;
+      return Math.round(raw * pct);
+    }
+    function openServiceDrilldown(svcKey) {
+      const oldDrill = document.getElementById('programa-drilldown');
+      if (oldDrill) oldDrill.remove();
+      const isUncat = svcKey === '__uncat__';
+      const svcLabel = isUncat ? 'שטח ציבורי גנרי (טרם נקבע ייעוד)' : SVC_LABELS_FULL[svcKey] || svcKey;
+      const unit = isUncat ? 'מ"ר' : 'כיתות';
+      // Filter ALL plans in scope (not just current-horizon contributors) that have any non-zero raw count for this category
+      const items = allParsedPlans.filter(p => {
+        if (isUncat) return (p.rawUncatSqm || 0) > 0;
+        return (p.rawClassCounts[svcKey] || 0) > 0 || (p.rawDemolishCounts[svcKey] || 0) > 0;
+      }).map(p => {
+        const rawAdd = isUncat ? p.rawUncatSqm || 0 : p.rawClassCounts[svcKey] || 0;
+        const rawDem = isUncat ? 0 : p.rawDemolishCounts[svcKey] || 0;
+        const perH = {};
+        HORIZONS.forEach(h => {
+          perH[h] = {
+            add: planContribAtHorizon(p, svcKey, h),
+            dem: planDemolishAtHorizon(p, svcKey, h)
+          };
+        });
+        return {
+          p,
+          rawAdd,
+          rawDem,
+          perH
+        };
+      });
+      // Sort by raw contribution desc
+      items.sort((a, b) => b.rawAdd + b.rawDem - (a.rawAdd + a.rawDem));
+      // Per-horizon totals (weighted, rounded to integer)
+      const horTotals = {};
+      HORIZONS.forEach(h => {
+        const sumA = items.reduce((s, it) => s + it.perH[h].add, 0);
+        const sumD = items.reduce((s, it) => s + it.perH[h].dem, 0);
+        horTotals[h] = {
+          add: Math.round(sumA),
+          dem: Math.round(sumD)
+        };
+      });
+      const isCurrent = h => h === tY || h === 'full' && tY === 'full';
+      const horHeaderCol = h => {
+        const lbl = h === 'full' ? '100% מימוש' : 'אופק ' + h;
+        const cur = isCurrent(h);
+        return '<th colspan="2" style="padding:5px;text-align:center;color:' + (cur ? '#fff' : '#bdb6e8') + ';background:' + (cur ? 'rgba(123,108,240,0.20)' : 'transparent') + ';border:' + (cur ? '1px solid #7b6cf0' : 'none') + '">' + lbl + (cur ? ' ✓' : '') + '</th>';
+      };
+      const horSubHeader = h => {
+        const cur = isCurrent(h);
+        const bg = cur ? 'background:rgba(123,108,240,0.10);' : '';
+        return '<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px;' + bg + '">+ תוספת</th>' + '<th style="padding:4px;text-align:center;color:#e57373;font-size:10px;' + bg + (isUncat ? 'display:none' : '') + '">− להריסה</th>';
+      };
+      const cellPair = (val, color, h) => {
+        const cur = isCurrent(h);
+        const bg = cur ? 'background:rgba(123,108,240,0.07);' : '';
+        return '<td style="padding:4px;text-align:center;color:' + (val > 0 ? color : '#444') + ';font-weight:' + (val > 0 ? 'bold' : 'normal') + ';' + bg + '">' + (val > 0 ? (color === '#e57373' ? '−' : '+') + val.toLocaleString() : '—') + '</td>';
+      };
+      const rows = items.map(it => {
+        const p = it.p;
+        const eduNames = eduNamesFor(p);
+        const descParts = [];
+        if (!isUncat && eduNames.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + eduNames.join('; '));
+        if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">שב"צ:</b> ' + p.shavatz_out_prog);
+        if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">הפרשה מבונה:</b> ' + p.hafrash_prg);
+        return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top"><a href="#" data-zoom-taba="' + p.taba + '" style="color:#bdb6e8;text-decoration:underline" title="לחץ לזום לתב\'ע">' + p.taba + '</a></td>' + '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.realMimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' + '<td style="padding:5px 6px;color:#aaa;font-size:9px;vertical-align:top;max-width:280px">' + (descParts.join('<br>') || '<span style="color:#555">—</span>') + '</td>' + '<td style="padding:5px 6px;text-align:center;color:#7b6cf0;font-weight:bold">' + (it.rawAdd > 0 ? '+' + it.rawAdd.toLocaleString() : '—') + '</td>' + (isUncat ? '' : '<td style="padding:5px 6px;text-align:center;color:#e57373;font-weight:bold">' + (it.rawDem > 0 ? '−' + it.rawDem : '—') + '</td>') + HORIZONS.map(h => cellPair(it.perH[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(it.perH[h].dem, '#e57373', h))).join('') + '</tr>';
+      }).join('');
+      const totalRow = '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #7b6cf0">' + '<td colspan="3" style="padding:6px;color:#fff">סה"כ משוקלל</td>' + '<td style="padding:6px;text-align:center;color:#7b6cf0">+' + items.reduce((s, it) => s + it.rawAdd, 0).toLocaleString() + '</td>' + (isUncat ? '' : '<td style="padding:6px;text-align:center;color:#e57373">−' + items.reduce((s, it) => s + it.rawDem, 0) + '</td>') + HORIZONS.map(h => cellPair(horTotals[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(horTotals[h].dem, '#e57373', h))).join('') + '</tr>';
+      const drill = document.createElement('div');
+      drill.id = 'programa-drilldown';
+      drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1300px,98vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+      drill.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333;gap:10px">' + '<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text;flex:1">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' + '<button id="drill-csv" title="ייצוא ל-CSV" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 CSV</button>' + '<button id="drill-print" title="הדפסה" style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">🖨️ הדפסה</button>' + '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + '<div style="overflow-x:auto"><table id="drill-table" style="width:100%;border-collapse:collapse;font-size:11px"><thead>' + '<tr style="background:#1a1a2e;color:#aaa">' + '<th rowspan="2" style="padding:5px;text-align:right">תב"ע</th>' + '<th rowspan="2" style="padding:5px;text-align:right">תכנית</th>' + '<th rowspan="2" style="padding:5px;text-align:right">תיאור (שב"צ / הפרשה מבונה)</th>' + '<th colspan="' + (isUncat ? 1 : 2) + '" style="padding:5px;text-align:center;color:#bdb6e8">גולמי</th>' + HORIZONS.map(horHeaderCol).join('') + '</tr>' + '<tr style="background:#1a1a2e;color:#aaa">' + '<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px">+ תוספת</th>' + (isUncat ? '' : '<th style="padding:4px;text-align:center;color:#e57373;font-size:10px">− להריסה</th>') + HORIZONS.map(horSubHeader).join('') + '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>' + '<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.</div>';
+      document.body.appendChild(drill);
+      document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+
+      // Wire CSV export
+      document.getElementById('drill-csv').addEventListener('click', () => {
+        const title = document.getElementById('drill-title')?.textContent || 'פירוט מוצע — ' + svcLabel;
+        const lines = [];
+        const horLabels = HORIZONS.map(h => h === 'full' ? '100% מימוש' : 'אופק ' + h);
+        const hdrCols = ['תב"ע', 'שם תכנית', '%מימוש', 'שנה', 'תיאור (שב"צ)', 'תיאור (הפרשה מבונה)', 'גולמי + תוספת'];
+        if (!isUncat) hdrCols.push('גולמי − להריסה');
+        horLabels.forEach(hl => {
+          hdrCols.push(hl + ' + תוספת');
+          if (!isUncat) hdrCols.push(hl + ' − להריסה');
+        });
+        lines.push(hdrCols.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+        items.forEach(it => {
+          const p = it.p;
+          const row = [p.taba, p.plan_summary || '', p.realMimushPct || 0, p.estimatedYear || '', p.shavatz_out_prog || '', p.hafrash_prg || '', it.rawAdd];
+          if (!isUncat) row.push(it.rawDem);
+          HORIZONS.forEach(h => {
+            row.push(it.perH[h].add);
+            if (!isUncat) row.push(it.perH[h].dem);
+          });
+          lines.push(row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+        });
+        const totRow = ['סה"כ משוקלל', '', '', '', '', '', items.reduce((s, it) => s + it.rawAdd, 0)];
+        if (!isUncat) totRow.push(items.reduce((s, it) => s + it.rawDem, 0));
+        HORIZONS.forEach(h => {
+          totRow.push(horTotals[h].add);
+          if (!isUncat) totRow.push(horTotals[h].dem);
+        });
+        lines.push(totRow.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+        const blob = new Blob(['\uFEFF' + lines.join('\n')], {
+          type: 'text/csv;charset=utf-8'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = title.replace(/[^\w֐-׿]+/g, '_').slice(0, 80) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+      // Wire print
+      document.getElementById('drill-print').addEventListener('click', () => {
+        const title = document.getElementById('drill-title')?.textContent || 'פירוט מוצע — ' + svcLabel;
+        const tableHtml = document.getElementById('drill-table').outerHTML;
+        const win = window.open('', '_blank');
+        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#0d47a1;font-size:14px}table{width:100%;border-collapse:collapse;font-size:10px;margin-top:10px}th,td{border:1px solid #ccc;padding:3px;text-align:center}th{background:#eef}a{color:#0d47a1;text-decoration:none}</style>' + '</head><body><h2>' + title + '</h2>' + tableHtml + '</body></html>');
+        win.document.close();
+        win.print();
+      });
+      // Wire taba zoom links — find plan in gd.plans and zoom + open popup
+      drill.querySelectorAll('a[data-zoom-taba]').forEach(a => {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          const taba = a.dataset.zoomTaba;
+          const map = mapInstanceRef.current;
+          if (!map || !gd.plans) return;
+          const feat = gd.plans.features.find(f => String(f.properties.taba || '').trim() === String(taba).trim());
+          if (!feat) {
+            console.warn('plan not found:', taba);
+            return;
+          }
+          try {
+            const layer = L.geoJSON(feat);
+            const bounds = layer.getBounds();
+            map.fitBounds(bounds, {
+              padding: [60, 60],
+              maxZoom: 18
+            });
+            setTimeout(() => {
+              const mapped = mapPlanProps(feat.properties);
+              const popup = L.popup({
+                maxWidth: popupMaxWidth(),
+                closeButton: true
+              }).setLatLng(bounds.getCenter()).setContent(buildPlanPopup(mapped, {
+                properties: mapped
+              })).openOn(map);
+              bindPopupEvents(popup, [{
+                type: 'plan',
+                properties: mapped
+              }], 0);
+            }, 400);
+          } catch (err) {
+            console.warn('zoom to plan failed', err);
+          }
+          drill.remove();
+          div.remove(); // close the parent programa modal too so the map is visible
+        });
+      });
+    }
+    // Wire all drill cells (per-service + uncategorized)
+    div.querySelectorAll('[data-svc-drill]').forEach(cell => {
+      cell.addEventListener('click', () => openServiceDrilldown(cell.dataset.svcDrill));
+    });
+
+    // "Required" cell drilldown — shows the public-needs computation per service (children, class size, dunam)
+    function openRequiredDrilldown(svcKey) {
+      const oldDrill = document.getElementById('programa-drilldown');
+      if (oldDrill) oldDrill.remove();
+      const svcDef = typeof PUBLIC_NEEDS_SERVICES !== 'undefined' ? PUBLIC_NEEDS_SERVICES.find(s => s.key === svcKey) : null;
+      const svcLabel = svcDef ? svcDef.label : svcKey;
+      const sd = needs.byService[svcKey];
+      if (!sd) return;
+      const ageRange = svcDef ? svcDef.ageFrom + '–' + svcDef.ageTo : '';
+      const fmt = v => v == null ? '—' : v;
+      const streamRow = (label, x) => '<tr style="border-bottom:1px solid #222">' + '<td style="padding:6px;color:#e0e0ff">' + label + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + fmt(x.children) + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + fmt(x.classSize) + '</td>' + '<td style="padding:6px;text-align:center;color:#4CAF50;font-weight:bold">' + fmt(x.classes) + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + (x.dunamPerClass != null ? x.dunamPerClass.toFixed(2) : '—') + '</td>' + '<td style="padding:6px;text-align:center;color:#aaa">' + (x.dunam != null ? x.dunam.toFixed(2) : '—') + '</td>' + '</tr>';
+      const drill = document.createElement('div');
+      drill.id = 'programa-drilldown';
+      drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #4CAF50;direction:rtl;width:min(720px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+      drill.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' + '<h3 style="margin:0;color:#e0e0ff;font-size:14px">🎓 פירוט חישוב כיתות נדרשות — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(גילאים ' + ageRange + ' · ' + needs.population.toLocaleString() + ' תושבים · ' + Math.round(assumpt.haredi * 100) + '% חרדי, ' + Math.round(assumpt.religious * 100) + '% דתי)</span></h3>' + '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#1a1a2e;color:#aaa">' + '<th style="padding:6px;text-align:right">זרם</th>' + '<th style="padding:6px;text-align:center">ילדים בגיל הרלוונטי</th>' + '<th style="padding:6px;text-align:center">גודל כיתה</th>' + '<th style="padding:6px;text-align:center;color:#4CAF50">כיתות</th>' + '<th style="padding:6px;text-align:center">דונם/כיתה</th>' + '<th style="padding:6px;text-align:center">סה"כ דונם</th>' + '</tr></thead><tbody>' + streamRow('ממלכתי', sd.mam) + streamRow('חרדי-ב (בנים)', sd.haredi_b) + streamRow('חרדי-ג (בנות)', sd.haredi_g) + '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' + '<td style="padding:8px" colspan="3">סה"כ</td>' + '<td style="padding:8px;text-align:center;color:#4CAF50">' + sd.totalClasses + '</td>' + '<td></td>' + '<td style="padding:8px;text-align:center;color:#aaa">' + sd.totalDunam.toFixed(2) + '</td>' + '</tr>' + '</tbody></table>' + '<div style="margin-top:10px;font-size:10px;color:#888">חישוב: <i>אוכלוסייה × אחוז זרם × אחוז שנתון × גודל גיל × אחוז השתתפות / גודל כיתה</i> (עיגול כלפי מעלה).</div>';
+      document.body.appendChild(drill);
+      document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+    }
+    div.querySelectorAll('[data-req-drill]').forEach(cell => {
+      cell.addEventListener('click', () => openRequiredDrilldown(cell.dataset.reqDrill));
+    });
+
+    // Wire drilldown on the TOTAL "מוצע" cell — all-categories breakdown per plan (existing wide view)
+    const proposedCell = document.getElementById('programa-proposed-cell');
+    if (proposedCell) {
+      proposedCell.addEventListener('click', () => {
+        const oldDrill = document.getElementById('programa-drilldown');
+        if (oldDrill) {
+          oldDrill.remove();
+          return;
+        }
+        const SVC_LABELS = {
+          maon: 'מעון',
+          gan: 'גן',
+          yesodi: 'יסודי',
+          al_yesodi: 'על-יסודי',
+          tipat_chalav: 'טיפת חלב',
+          clinic: 'מרפאה',
+          matnas: 'מתנ"ס',
+          welfare_dept: 'רווחה',
+          noar_club: 'מועדון נוער',
+          elderly_club: 'מועדון קשיש',
+          elderly_day: 'מרכז יום קשיש',
+          synagogue: 'בית כנסת',
+          mikve: 'מקווה',
+          sport_hall: 'אולם ספורט',
+          library: 'ספרייה'
+        };
+        const items = [];
+        contributingPlans.forEach(p => {
+          const added = p.rawClassCounts;
+          const dem = p.rawDemolishCounts;
+          const totalAdded = PARSER_KEYS.reduce((s, k) => s + (added[k] || 0), 0);
+          const totalDem = PARSER_KEYS.reduce((s, k) => s + (dem[k] || 0), 0);
+          if (totalAdded === 0 && totalDem === 0 && (p.rawUncatSqm || 0) === 0 && (p.weightedShavatzInSqm || 0) === 0) return;
+          items.push({
+            ...p,
+            classTotalRaw: totalAdded,
+            demolishTotalRaw: totalDem
+          });
+        });
+        items.sort((a, b) => b.classTotalRaw + b.demolishTotalRaw - (a.classTotalRaw + a.demolishTotalRaw));
+        const SVC_KEYS = PARSER_KEYS.filter(k => items.some(p => (p.rawClassCounts[k] || 0) > 0 || (p.rawDemolishCounts[k] || 0) > 0));
+        const showUncatCol = items.some(p => (p.rawUncatSqm || 0) > 0);
+        const drill = document.createElement('div');
+        drill.id = 'programa-drilldown';
+        drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1100px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+        const headerCols = SVC_KEYS.map(k => '<th style="padding:5px;text-align:center;color:#bdb6e8">' + SVC_LABELS[k] + '</th>').join('') + (showUncatCol ? '<th style="padding:5px;text-align:center;color:#f59e0b">טרם נקבע (מ"ר)</th>' : '');
+        const rows = items.map(p => {
+          const added = p.rawClassCounts;
+          const dem = p.rawDemolishCounts;
+          const cells = SVC_KEYS.map(k => {
+            const a = added[k] || 0;
+            const d = dem[k] || 0;
+            if (a === 0 && d === 0) return '<td style="padding:5px;text-align:center;color:#444">—</td>';
+            const parts = [];
+            if (a > 0) parts.push('<span style="color:#7b6cf0">+' + a + '</span>');
+            if (d > 0) parts.push('<span style="color:#e57373">−' + d + '</span>');
+            return '<td style="padding:5px;text-align:center">' + parts.join(' / ') + '</td>';
+          }).join('') + (showUncatCol ? '<td style="padding:5px;text-align:center;color:' + ((p.rawUncatSqm || 0) > 0 ? '#f59e0b' : '#444') + '">' + ((p.rawUncatSqm || 0) > 0 ? p.rawUncatSqm.toLocaleString() : '—') + '</td>' : '');
+          const eduNames = eduNamesFor(p);
+          const descParts = [];
+          if (eduNames.length) descParts.push('<b style="color:#e57373">להריסה (חיתוך שנתון):</b> ' + eduNames.join('; '));
+          if ((p.shavatz_out_prog || '').trim()) descParts.push('<b style="color:#7b6cf0">S:</b> ' + p.shavatz_out_prog);
+          if ((p.hafrash_prg || '').trim()) descParts.push('<b style="color:#7b6cf0">AR:</b> ' + p.hafrash_prg);
+          return '<tr style="border-bottom:1px solid #222">' + '<td style="padding:5px 6px;direction:ltr;text-align:left;color:#bdb6e8;font-weight:bold;vertical-align:top">' + p.taba + '</td>' + '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">' + (p.plan_summary || p.plan_name_he || p.plan_name || '') + '<div style="color:#666;margin-top:2px">' + (p.mimushPct || 0) + '% · אופק ' + (p.estimatedYear || '—') + '</div></td>' + '<td style="padding:5px 6px;color:#aaa;font-size:10px;vertical-align:top;max-width:340px">' + (descParts.join('<br>') || '<span style="color:#555">—</span>') + '</td>' + cells + '</tr>';
+        }).join('');
+        drill.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333">' + '<h3 style="margin:0;color:#e0e0ff;font-size:14px">📋 פירוט מוצע — כל הקטגוריות (' + (tY === 'full' ? '100% מימוש' : 'אופק ' + tY) + ') <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות)</span></h3>' + '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#1a1a2e;color:#aaa;position:sticky;top:0">' + '<th style="padding:5px;text-align:right">תב"ע</th>' + '<th style="padding:5px;text-align:right">תכנית</th>' + '<th style="padding:5px;text-align:right">תיאור (S+AR)</th>' + headerCols + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + '<div style="font-size:10px;color:#888;margin-top:10px">לפירוט פר-קטגוריה כולל השוואה בין אופקים — לחץ על תא "= מוצע" של שורה ספציפית בטבלת המאזן הראשית.</div>';
+        document.body.appendChild(drill);
+        document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+      });
+    }
+
+    // Wire assumption controls
+    div.querySelectorAll('[data-pa-year]').forEach(b => {
+      b.addEventListener('click', () => {
+        const y = b.dataset.paYear;
+        assumpt.targetYear = y === 'existing' || y === 'full' ? y : Number(y);
+        reRender();
+      });
+    });
+    const hh = document.getElementById('pa-hh');
+    if (hh) hh.addEventListener('change', e => {
+      assumpt.householdSize = parseFloat(e.target.value) || 3.2;
+      reRender();
+    });
+    const hr = document.getElementById('pa-haredi');
+    if (hr) hr.addEventListener('change', e => {
+      assumpt.haredi = (parseInt(e.target.value) || 0) / 100;
+      reRender();
+    });
+    const re = document.getElementById('pa-religious');
+    if (re) re.addEventListener('change', e => {
+      assumpt.religious = (parseInt(e.target.value) || 0) / 100;
+      reRender();
+    });
+    const ag = document.getElementById('pa-age-gen');
+    if (ag) ag.addEventListener('change', e => {
+      assumpt.ageYearPctGeneral = parseFloat(e.target.value) || 2.2;
+      reRender();
+    });
+    const ah = document.getElementById('pa-age-hrd');
+    if (ah) ah.addEventListener('change', e => {
+      assumpt.ageYearPctHaredi = parseFloat(e.target.value) || 3.0;
+      reRender();
+    });
+    const rst = document.getElementById('pa-reset');
+    if (rst) rst.addEventListener('click', () => {
+      window.__programaUserAssumptions = {
+        ...PN_DEFAULT_ASSUMPTIONS,
+        targetYear: 'existing'
+      };
+      reRender();
+    });
+  }
+
+  // ── הפרשות מבונות ומבני ציבור עתידיים — report for any scope (radius/area/sub/minahak) ──
+  // Shares the 4 programa scope collectors via reportKindRef. Re-derives allocation data
+  // per plan from authoritative plan properties (shavatz_out_*, hafrash_*) keyed by taba,
+  // so it is uniform regardless of which collector built candidatePlans.
+  const ALLOC_LBLS = {
+    maon: 'מעון יום',
+    gan: 'גן ילדים',
+    yesodi: 'בי"ס יסודי',
+    al_yesodi: 'בי"ס על-יסודי',
+    tipat_chalav: 'טיפת חלב',
+    clinic: 'מרפאה',
+    matnas: 'מתנ"ס/מרכז קהילתי',
+    welfare_dept: 'לשכת רווחה',
+    noar_club: 'מועדון נוער',
+    elderly_club: 'מועדון קשיש',
+    elderly_day: 'מרכז יום לקשיש',
+    synagogue: 'בית כנסת',
+    mikve: 'מקווה',
+    sport_hall: 'אולם ספורט',
+    library: 'ספרייה'
+  };
+  function renderAllocationsModal({
+    candidatePlans,
+    scopeLabel
+  }) {
+    const gd = geoDataRef.current || {};
+    const propsByTaba = {};
+    if (gd.plans) gd.plans.features.forEach(f => {
+      const t = String((f.properties || {}).taba || '').trim();
+      if (t && !propsByTaba[t]) propsByTaba[t] = f.properties;
+    });
+    // Build per-plan allocation rows
+    const rows = [];
+    const seen = new Set();
+    (candidatePlans || []).forEach(cp => {
+      const taba = String(cp.taba || '').trim();
+      if (taba && seen.has(taba)) return;
+      if (taba) seen.add(taba);
+      const p = taba && propsByTaba[taba] || {};
+      const outSqm = parseFloat(p.shavatz_out_sqm != null ? p.shavatz_out_sqm : cp.shavatz_out_sqm) || 0;
+      const outPrg = p.shavatz_out_prog || cp.shavatz_out_prog || '';
+      const hafSqm = parseFloat(p.hafrash_sqm != null ? p.hafrash_sqm : cp.hafrash_sqm) || 0;
+      const hafPrg = p.hafrash_prg || cp.hafrash_prg || '';
+      if (outSqm <= 0 && hafSqm <= 0 && !outPrg && !hafPrg) return;
+      rows.push({
+        taba,
+        name: p.plan_name_he || cp.plan_name_he || cp.plan_name || taba || '—',
+        status: p.status_mavat || cp.status_mavat || '',
+        sub: p.sub_neighborhood || '',
+        outSqm,
+        outPrg,
+        hafSqm,
+        hafPrg
+      });
+    });
+    rows.sort((a, b) => b.outSqm + b.hafSqm - (a.outSqm + a.hafSqm));
+
+    // Aggregate by facility use (from the program free text)
+    const useCounts = {};
+    PARSER_KEYS.forEach(k => useCounts[k] = 0);
+    let totalOut = 0,
+      totalHaf = 0;
+    rows.forEach(r => {
+      totalOut += r.outSqm;
+      totalHaf += r.hafSqm;
+      const parsed = parseFacilitiesFromText([r.outPrg, r.hafPrg].filter(Boolean).join('; '));
+      PARSER_KEYS.forEach(k => {
+        useCounts[k] += parsed.counts[k] || 0;
+      });
+    });
+    const useRows = PARSER_KEYS.filter(k => useCounts[k] > 0).map(k => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#e8d9c8">' + ALLOC_LBLS[k] + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#d4a373">' + useCounts[k] + '</td></tr>').join('');
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Explode each plan into one row per facility use × source (שב"צ עתידי / הפרשה מבונה),
+    // so a plan repeats across its uses and the detail can be filtered by use like the
+    // summary table. Counts of the same use within a source are aggregated.
+    const detailRows = [];
+    rows.forEach(r => {
+      [['שב"צ עתידי', r.outPrg, r.outSqm], ['הפרשה מבונה', r.hafPrg, r.hafSqm]].forEach(([source, prg, totalSqm]) => {
+        if (!prg && !(totalSqm > 0)) return;
+        const {
+          items,
+          uncategorizedSqm
+        } = parseFacilitiesDetailed(prg || '');
+        const agg = {};
+        items.forEach(it => {
+          if (!agg[it.key]) agg[it.key] = {
+            count: 0,
+            sqm: 0
+          };
+          agg[it.key].count += it.count;
+          agg[it.key].sqm += it.sqm;
+        });
+        const keys = Object.keys(agg);
+        keys.forEach(key => detailRows.push({
+          taba: r.taba,
+          name: r.name,
+          status: r.status,
+          sub: r.sub,
+          source,
+          use: ALLOC_LBLS[key],
+          count: agg[key].count,
+          unit: EDU_PARSER_KEYS.includes(key) ? 'כיתות' : 'מתקנים',
+          sqm: agg[key].sqm
+        }));
+        // No recognized facility — keep ONLY if it carries actual מ"ר; a generic
+        // designation with no m² (e.g. "שטחים פתוחים ומבנים ומוסדות ציבור" with a
+        // blank hafrash_sqm) is a land-use label, not a quantified allocation, so it
+        // is dropped rather than shown as an empty "—" row.
+        if (!keys.length) {
+          const genericSqm = uncategorizedSqm || totalSqm || 0;
+          if (genericSqm > 0) detailRows.push({
+            taba: r.taba,
+            name: r.name,
+            status: r.status,
+            sub: r.sub,
+            source,
+            use: 'מבני ציבור (כללי / לא מסווג)',
+            count: 0,
+            unit: '',
+            sqm: genericSqm
+          });
+        }
+      });
+    });
+    detailRows.sort((a, b) => a.use < b.use ? -1 : a.use > b.use ? 1 : a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0);
+    const planRows = detailRows.map(r => '<tr style="border-bottom:1px solid #222">' + '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' + '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' + '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' + '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' + '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' + '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' + '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.sqm > 0 ? Math.round(r.sqm).toLocaleString() : '—') + '</td>' + '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.use) + '</td>' + '</tr>').join('');
+    const kpi = (label, val, color) => '<div style="background:#1f1a16;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px">' + '<div style="font-size:11px;color:#aaa">' + label + '</div>' + '<div style="font-size:20px;font-weight:bold;color:' + color + '">' + val + '</div></div>';
+    const prevA = document.getElementById('alloc-result');
+    if (prevA) prevA.remove();
+    const div = document.createElement('div');
+    div.id = 'alloc-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(28,22,18,0.98);color:#e8d9c8;padding:20px;border-radius:14px;border:2px solid #8d6e63;direction:rtl;width:min(920px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+    div.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #3a2e26">' + '<h3 id="alloc-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e8d9c8;font-size:16px;outline:none;border-bottom:1px dashed #5c4636;padding-bottom:2px;cursor:text">🏛️ הפרשות מבונות ומבני ציבור עתידיים — ' + esc(scopeLabel) + '</h3>' + '<button id="alloc-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' + kpi('תכניות תורמות', rows.length, '#d4a373') + kpi('שב"צ עתידי (מ"ר)', Math.round(totalOut).toLocaleString(), '#c9a227') + kpi('הפרשה מבונה (מ"ר)', Math.round(totalHaf).toLocaleString(), '#b5651d') + kpi('סה"כ שטח ציבור (מ"ר)', Math.round(totalOut + totalHaf).toLocaleString(), '#e8d9c8') + '</div>' + (useRows ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px"><thead><tr style="background:#241c16"><th style="padding:6px 8px;text-align:right;color:#d4a373">שימוש</th><th style="padding:6px 8px;color:#d4a373">מספר מתקנים</th></tr></thead><tbody>' + useRows + '</tbody></table>' : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') + '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + detailRows.length + ')</h4>' + (planRows ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>' : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') + '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' + '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' + '<button id="alloc-print" style="background:#3a2e26;border:1px solid #5c4636;color:#e8d9c8;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+    document.getElementById('alloc-close').addEventListener('click', () => div.remove());
+    document.getElementById('alloc-csv').addEventListener('click', () => {
+      const title = document.getElementById('alloc-title')?.textContent || 'הפרשות_מבונות';
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const lines = [];
+      lines.push(['מדד', 'ערך'].join(','));
+      lines.push(['תכניות תורמות', rows.length].join(','));
+      lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(totalOut)].join(','));
+      lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(totalHaf)].join(','));
+      lines.push([q('סה"כ שטח ציבור (מ"ר)'), Math.round(totalOut + totalHaf)].join(','));
+      lines.push('');
+      lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
+      PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
+      lines.push('');
+      lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
+      detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
+      const blob = new Blob(['﻿' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('alloc-print').addEventListener('click', async () => {
+      const title = document.getElementById('alloc-title')?.textContent || 'הפרשות מבונות';
+      let mapImg = '';
+      try {
+        const mapEl = mapInstanceRef.current && mapInstanceRef.current.getContainer();
+        if (mapEl && window.html2canvas) {
+          const prevDisplay = div.style.display;
+          div.style.display = 'none';
+          await new Promise(r => setTimeout(r, 100));
+          const canvas = await window.html2canvas(mapEl, {
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+          });
+          div.style.display = prevDisplay;
+          mapImg = canvas.toDataURL('image/jpeg', 0.85);
+        }
+      } catch (e) {
+        console.warn('[Allocations] map capture failed', e);
+      }
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}</style></head><body>');
+      win.document.write('<h3>' + esc(title) + '</h3>');
+      if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
+      win.document.write(div.innerHTML);
+      win.document.close();
+      win.print();
+    });
+  }
+
+  // ── דשבורד שכונתי — one-page printable profile for a sub-neighborhood ──
+  // Aggregates planned/realized units, future public allocations, commerce, permits and
+  // tree-removal exposure for all plans whose sub_neighborhood includes `subName`.
+  function renderSubDashboard(subName) {
+    if (!subName) return;
+    const gd = geoDataRef.current || {};
+    const inSub = p => String(p.sub_neighborhood || '').split(',').map(s => s.trim()).includes(subName);
+    const seen = new Set();
+    let plansCount = 0,
+      unitsPlanned = 0,
+      unitsAdd = 0,
+      issuedUnits = 0,
+      futureSqm = 0,
+      hafSqm = 0,
+      trees = 0,
+      commerceOut = 0,
+      employment = 0,
+      activePermits = 0;
+    const byStatus = {};
+    const planList = [];
+    (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+      const p = f.properties || {};
+      if (!inSub(p)) return;
+      const taba = String(p.taba || '').trim();
+      if (taba && seen.has(taba)) return;
+      if (taba) seen.add(taba);
+      const st = normalizeStatus((p.status_mavat || '').trim());
+      if (st === 'נגנזה' || st === 'נדחתה' || st === 'נגנזה/נדחתה') return;
+      if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+      plansCount++;
+      const ut = parseInt(p.units_total) || 0,
+        ua = parseFloat(p.units_add) || 0;
+      unitsPlanned += ut;
+      unitsAdd += ua;
+      futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
+      hafSqm += parseFloat(p.hafrash_sqm) || 0;
+      commerceOut += parseFloat(p.commerce_out) || 0;
+      employment += parseFloat(p.employment) || 0;
+      byStatus[st] = (byStatus[st] || 0) + 1;
+      const rec = (window.__allPermits || {})[taba];
+      if (rec && rec.permits) rec.permits.forEach(pm => {
+        if (pm.filtered) return;
+        const s = String(pm.status || '');
+        if (s.indexOf('הופק') !== -1 || s.indexOf('הוצא היתר') !== -1) {
+          issuedUnits += parseFloat(pm.units) || 0;
+          activePermits++;
+        }
+      });
+      const tr = (window.__treeSurveys || {})[taba];
+      if (tr) trees += (tr.krita || 0) + (tr.haataka || 0);
+      planList.push({
+        taba,
+        name: p.plan_name_he || p.plan_name || taba,
+        status: p.status_mavat || '',
+        units: ut || ua
+      });
+    });
+    planList.sort((a, b) => b.units - a.units);
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const num = n => Math.round(n).toLocaleString();
+    const STATUS_ORDER = ['בהליכי אישור', 'מאושרת', 'בביצוע', 'הסתיים'];
+    const statusRows = Object.keys(byStatus).sort((a, b) => (STATUS_ORDER.indexOf(a) + 1 || 99) - (STATUS_ORDER.indexOf(b) + 1 || 99)).map(s => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 8px;color:#cfe">' + esc(s) + '</td><td style="padding:5px 8px;text-align:center;font-weight:bold;color:#8fd">' + byStatus[s] + '</td></tr>').join('');
+    const topRows = planList.slice(0, 12).map(r => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px;direction:ltr;text-align:left;color:#8fd;font-weight:bold">' + esc(r.taba) + '</td>' + '<td style="padding:5px 6px;color:#cfe">' + esc(r.name) + '</td>' + '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' + '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.units || '—') + '</td></tr>').join('');
+    const kpi = (label, val, sub2, color) => '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' + '<div style="font-size:11px;color:#9ab">' + label + '</div>' + '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' + (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+    const prevD = document.getElementById('subdash-result');
+    if (prevD) prevD.remove();
+    const div = document.createElement('div');
+    div.id = 'subdash-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(880px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+    div.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' + '<h3 id="subdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">📋 דשבורד שכונתי — ' + esc(subName) + '</h3>' + '<button id="subdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + (plansCount === 0 ? '<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">לא נמצאו תכניות פעילות בתת-שכונה זו.</div>' : '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' + kpi('תכניות פעילות', plansCount, '', '#4db8c4') + kpi('יח"ד מתוכננות', num(unitsPlanned), 'תוספת: ' + num(unitsAdd), '#5fd3a0') + kpi('יח"ד בהיתר', num(issuedUnits), unitsPlanned > 0 ? Math.round(issuedUnits / unitsPlanned * 100) + '% מימוש' : '', '#8fd14f') + kpi('היתרים פעילים', activePermits, '', '#c4a24d') + '</div>' + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' + kpi('שב"צ + הפרשה (מ"ר)', num(futureSqm + hafSqm), 'עתידי ' + num(futureSqm) + ' · מבונה ' + num(hafSqm), '#b08fd1') + kpi('מסחר עתידי (מ"ר)', num(commerceOut), '', '#d18f8f') + kpi('תעסוקה (מ"ר)', num(employment), '', '#d1b88f') + kpi('עצים לכריתה/העתקה', num(trees), '', '#8fb0d1') + '</div>' + '<div style="display:flex;gap:18px;flex-wrap:wrap">' + '<div style="flex:1;min-width:220px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות לפי סטטוס</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + (statusRows || '<tr><td style="color:#789;padding:6px">—</td></tr>') + '</tbody></table></div>' + '<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד)</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:left;color:#4db8c4">תב"ע</th><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">סטטוס</th><th style="padding:5px;color:#4db8c4">יח"ד</th></tr></thead><tbody>' + topRows + '</tbody></table></div>' + '</div>') + '<div style="display:flex;gap:8px;margin-top:16px">' + '<button id="subdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' + '<button id="subdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+    document.getElementById('subdash-close').addEventListener('click', () => div.remove());
+    document.getElementById('subdash-csv').addEventListener('click', () => {
+      const title = document.getElementById('subdash-title')?.textContent || 'דשבורד';
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const lines = [];
+      lines.push(['מדד', 'ערך'].join(','));
+      lines.push([q('תכניות פעילות'), plansCount].join(','));
+      lines.push([q('יח"ד מתוכננות'), Math.round(unitsPlanned)].join(','));
+      lines.push([q('תוספת יח"ד'), Math.round(unitsAdd)].join(','));
+      lines.push([q('יח"ד בהיתר'), Math.round(issuedUnits)].join(','));
+      lines.push([q('היתרים פעילים'), activePermits].join(','));
+      lines.push([q('שב"צ עתידי (מ"ר)'), Math.round(futureSqm)].join(','));
+      lines.push([q('הפרשה מבונה (מ"ר)'), Math.round(hafSqm)].join(','));
+      lines.push([q('מסחר עתידי (מ"ר)'), Math.round(commerceOut)].join(','));
+      lines.push([q('תעסוקה (מ"ר)'), Math.round(employment)].join(','));
+      lines.push([q('עצים לכריתה/העתקה'), Math.round(trees)].join(','));
+      lines.push('');
+      lines.push([q('תב"ע'), q('שם'), q('סטטוס'), q('יח"ד')].join(','));
+      planList.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), r.units].join(',')));
+      const blob = new Blob(['﻿' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('subdash-print').addEventListener('click', () => {
+      const title = document.getElementById('subdash-title')?.textContent || 'דשבורד שכונתי';
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}button{display:none!important}</style></head><body>');
+      win.document.write('<h3>' + esc(title) + '</h3>');
+      win.document.write(div.innerHTML);
+      win.document.close();
+      win.print();
+    });
+  }
+
+  // ── דשבורד מינהל קהילתי — same one-page style as renderSubDashboard, with
+  // clickable links into each sub-neighborhood's dashboard. Replaces the old
+  // minahakReport React modal. ──
+  function renderMinhakDashboard(minhakName) {
+    if (!minhakName) return;
+    const gd = geoDataRef.current || {};
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const num = n => Math.round(n).toLocaleString();
+    const rejected = new Set(['נגנזה/נדחתה', 'נגנזה', 'נדחתה']);
+    const approvedStatuses = new Set(['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף']);
+    const seen = new Set();
+    let plansCount = 0,
+      unitsAdd = 0,
+      unitsPlanned = 0,
+      issuedUnits = 0,
+      activePermits = 0,
+      futureSqm = 0,
+      hafSqm = 0,
+      commerceOut = 0,
+      employment = 0,
+      trees = 0;
+    const byStatus = {};
+    const planFeats = [];
+    const subStats = {};
+    (gd.plans && gd.plans.features ? gd.plans.features : []).forEach(f => {
+      const p = f.properties || {};
+      if ((p.minahak || '') !== minhakName) return;
+      const planId = p.plan_name || '';
+      if (planId && seen.has(planId)) return;
+      if (planId) seen.add(planId);
+      const st = (p.status_mavat || '').trim();
+      if (rejected.has(st)) return;
+      if (approvedStatuses.has(st)) {
+        const d = p.mavat_date || '';
+        if (d) {
+          const y = parseInt(d.split('/').pop()) || 0;
+          if (y < 2020) return;
+        }
+      }
+      plansCount++;
+      const ua = parseFloat(p.units_add) || 0,
+        ut = parseInt(p.units_total) || 0;
+      unitsAdd += ua;
+      unitsPlanned += ut;
+      futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
+      hafSqm += parseFloat(p.hafrash_sqm) || 0;
+      commerceOut += parseFloat(p.commerce_out) || 0;
+      employment += parseFloat(p.employment) || 0;
+      const stN = normalizeStatus(st) || 'לא ידוע';
+      byStatus[stN] = (byStatus[stN] || 0) + 1;
+      const taba = String(p.taba || '').trim();
+      const rec = (window.__allPermits || {})[taba];
+      if (rec && rec.permits) rec.permits.forEach(pm => {
+        if (pm.filtered) return;
+        const s = String(pm.status || '');
+        if (s.indexOf('הופק') !== -1 || s.indexOf('הוצא היתר') !== -1) {
+          issuedUnits += parseFloat(pm.units) || 0;
+          activePermits++;
+        }
+      });
+      const tr = (window.__treeSurveys || {})[taba];
+      if (tr) trees += (tr.krita || 0) + (tr.haataka || 0);
+      planFeats.push({
+        feat: f,
+        taba,
+        name: p.plan_summary || p.plan_name_he || p.plan_name || taba,
+        status: st,
+        units: ua
+      });
+      String(p.sub_neighborhood || '').split(',').map(s => s.trim()).filter(Boolean).forEach(sn => {
+        const n = SUB_NORMALIZE[sn] || sn;
+        if (!subStats[n]) subStats[n] = {
+          units: 0,
+          plans: 0
+        };
+        subStats[n].units += ua;
+        subStats[n].plans++;
+      });
+    });
+    planFeats.sort((a, b) => b.units - a.units);
+    // TAMA-38 projects in this minhak (by sub-neighborhood membership)
+    const subsList = MINAHAK_SUBS[minhakName] || [];
+    const tamaFeatures = (gd.tama38 && gd.tama38.features ? gd.tama38.features : []).filter(f => {
+      const n = (f.properties.neighborho || '').trim();
+      const nn = SUB_NORMALIZE[n] || n;
+      return subsList.includes(n) || subsList.includes(nn);
+    });
+    const tamaCount = tamaFeatures.length;
+    const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
+    // The minhak's own sub-neighborhoods only: the declared list, plus any sub
+    // that carries plans AND canonically belongs to this minhak (drops cross-minhak
+    // subs that leak in via plans tagged to this minhak but located elsewhere).
+    const subNames = Array.from(new Set([...subsList.map(s => SUB_NORMALIZE[s] || s), ...Object.keys(subStats).filter(sn => SUB_TO_MINAHAK[sn] === minhakName)])).sort((a, b) => (subStats[b] ? subStats[b].units : 0) - (subStats[a] ? subStats[a].units : 0));
+
+    // Existing state: population from census stat-areas (same source/number as the
+    // population dashboard), housing units from the municipal buildings layer, both
+    // within the minhak polygon.
+    const mhPop = (computePopulationByGeography(gd).minhaks.find(m => m.name === minhakName) || {}).metrics;
+    const existingPop = mhPop ? mhPop.pop : 0;
+    const minhakLayer = gd[MINAHAK_HEB_TO_LAYER[minhakName]];
+    let existingUnits = 0;
+    if (minhakLayer && gd.buildings && gd.buildings.features) {
+      for (const bf of gd.buildings.features) {
+        const c = bf.geometry && bf.geometry.coordinates;
+        if (c && pointInLayer(c, minhakLayer)) existingUnits += bf.properties && bf.properties.units || 0;
+      }
+    }
+    const kpi = (label, val, sub2, color) => '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' + '<div style="font-size:11px;color:#9ab">' + label + '</div>' + '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' + (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+
+    // Status breakdown (grouped) — same grouping as the old minahak report.
+    const STATUS_GROUPS = {
+      'אישור': 'אישור / מאושרת',
+      'מאושרת': 'אישור / מאושרת',
+      'תבע מאושרת': 'אישור / מאושרת',
+      'תבע - טרום אישור': 'אישור / מאושרת',
+      'תחילת תוקף': 'אישור / מאושרת',
+      'בהליך אישור': 'בהליך אישור',
+      'דיון בהתנגדויות ותיקונים': 'התנגדויות',
+      'הכרעה בהתנגדויות / אישור': 'התנגדויות',
+      'הפקדה להתנגדויות/השגות': 'הפקדה',
+      'במילוי תנאים להפקדה': 'במילוי תנאים להפקדה',
+      'נפתח תיק למתכנן': 'פתיחת תיק / בבדיקה',
+      'נפתח תיק תב"ע': 'פתיחת תיק / בבדיקה',
+      'בבדיקה תכנונית': 'פתיחת תיק / בבדיקה',
+      'תכנית עומדת בתנאי סף': 'פתיחת תיק / בבדיקה',
+      'נקלטה מקובץ מבאת': 'פתיחת תיק / בבדיקה',
+      'בבדיקת תנאי סף': 'פתיחת תיק / בבדיקה'
+    };
+    const GROUP_COLORS = {
+      'אישור / מאושרת': '#50d25a',
+      'בהליך אישור': '#50d25a',
+      'התנגדויות': '#fafa3c',
+      'הפקדה': '#f56e05',
+      'במילוי תנאים להפקדה': '#f56e05',
+      'פתיחת תיק / בבדיקה': '#eb0000'
+    };
+    const GROUP_ORDER = ['אישור / מאושרת', 'בהליך אישור', 'התנגדויות', 'הפקדה', 'במילוי תנאים להפקדה', 'פתיחת תיק / בבדיקה'];
+    const grouped = {};
+    Object.keys(byStatus).forEach(s => {
+      const g = STATUS_GROUPS[s] || s;
+      grouped[g] = (grouped[g] || 0) + byStatus[s];
+    });
+    const maxCount = Math.max(...Object.values(grouped), 1);
+    const statusBars = [...GROUP_ORDER.filter(g => grouped[g]), ...Object.keys(grouped).filter(s => !GROUP_ORDER.includes(s))].map(s => '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' + '<span style="font-size:10px;color:#9ab;min-width:140px;text-align:right">' + esc(s) + '</span>' + '<div style="flex:1;height:14px;background:#13212b;border-radius:3px"><div style="width:' + grouped[s] / maxCount * 100 + '%;height:100%;background:' + (GROUP_COLORS[s] || '#4db8c4') + ';border-radius:3px"></div></div>' + '<span style="font-size:10px;color:#cfe;min-width:20px">' + grouped[s] + '</span></div>').join('');
+    const subCards = subNames.map(sn => {
+      const s = subStats[sn] || {
+        units: 0,
+        plans: 0
+      };
+      return '<button class="minhak-sub-link" data-sub="' + esc(sn) + '" title="פתח דשבורד שכונתי" style="background:#10202a;border:1px solid #2e7d8f;border-radius:8px;padding:8px 12px;cursor:pointer;text-align:right;min-width:150px;flex:1;font-family:inherit" onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">' + '<div style="font-size:13px;font-weight:bold;color:#cfe">' + esc(sn) + ' <span style="color:#4db8c4;font-size:11px">↗</span></div>' + '<div style="font-size:11px;color:#789;margin-top:2px">' + num(s.units) + ' יח"ד תוספת · ' + s.plans + ' תכניות</div></button>';
+    }).join('');
+    const topRows = planFeats.slice(0, 12).map((r, i) => '<tr style="border-bottom:1px solid #222"><td style="padding:5px 6px"><a href="#" class="minhak-plan-zoom" data-idx="' + i + '" style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + esc(r.name) + '</a></td>' + '<td style="padding:5px 6px;text-align:center;color:#5fd3a0">' + num(r.units) + '</td>' + '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td></tr>').join('');
+    const prevD = document.getElementById('minhakdash-result');
+    if (prevD) prevD.remove();
+    const div = document.createElement('div');
+    div.id = 'minhakdash-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+    div.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' + '<h3 id="minhakdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">🏛️ דשבורד מינהל — ' + esc(minhakName) + '</h3>' + '<button id="minhakdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>' + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' + kpi('אוכלוסייה קיימת', num(existingPop), 'מפקד הלמ"ס 2022', '#54c8e8') + kpi('יח"ד קיים', num(existingUnits), 'שכבת מבנים עירונית', '#54c8e8') + '</div>' + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' + kpi('תכניות פעילות', plansCount, '', '#4db8c4') + kpi('יח"ד תוספת', num(unitsAdd), '', '#5fd3a0') + kpi('תכניות תמ"א 38', tamaCount, '', '#e0a64d') + kpi('יח"ד תמ"א תוספת', num(tamaUnitsAdd), '', '#c47bd1') + '</div>' + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' + kpi('יח"ד בהיתר', num(issuedUnits), activePermits + ' היתרים פעילים', '#8fd14f') + kpi('שב"צ + הפרשה (מ"ר)', num(futureSqm + hafSqm), 'עתידי ' + num(futureSqm) + ' · מבונה ' + num(hafSqm), '#b08fd1') + kpi('מסחר עתידי (מ"ר)', num(commerceOut), '', '#d18f8f') + kpi('עצים לכריתה/העתקה', num(trees), '', '#8fb0d1') + '</div>' + '<h4 style="color:#4db8c4;margin:6px 0 8px;font-size:13px">תת-שכונות (לחץ לפתיחת דשבורד שכונתי)</h4>' + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' + (subCards || '<span style="color:#789;font-size:12px">—</span>') + '</div>' + '<div style="display:flex;gap:18px;flex-wrap:wrap">' + '<div style="flex:1;min-width:260px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">פילוח לפי סטטוס</h4>' + (statusBars || '<div style="color:#789;font-size:12px">—</div>') + '</div>' + '<div style="flex:2;min-width:300px"><h4 style="color:#4db8c4;margin:6px 0 6px;font-size:13px">תכניות מובילות (יח"ד תוספת)</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b"><th style="padding:5px;text-align:right;color:#4db8c4">שם</th><th style="padding:5px;color:#4db8c4">תוספת יח"ד</th><th style="padding:5px;color:#4db8c4">סטטוס</th></tr></thead><tbody>' + topRows + '</tbody></table></div>' + '</div>' + '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">' + '<button id="minhakdash-demo" style="background:#1d5a6b;border:1px solid #54c8e8;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📈 נתונים דמוגרפיים</button>' + '<button id="minhakdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' + '<button id="minhakdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+    document.getElementById('minhakdash-close').addEventListener('click', () => div.remove());
+    document.getElementById('minhakdash-demo').addEventListener('click', () => {
+      div.remove();
+      openPopulationDashboard(minhakName);
+    });
+    div.querySelectorAll('.minhak-sub-link').forEach(b => b.addEventListener('click', () => {
+      div.remove();
+      renderSubDashboard(b.getAttribute('data-sub'));
+    }));
+    div.querySelectorAll('.minhak-plan-zoom').forEach(el => el.addEventListener('click', e => {
+      e.preventDefault();
+      const f = (planFeats[+el.getAttribute('data-idx')] || {}).feat;
+      if (!f) return;
+      div.remove();
+      const map = mapInstanceRef.current;
+      if (!map || !f.geometry) return;
+      try {
+        const center = visualCenter(f.geometry) || L.geoJSON(f).getBounds().getCenter();
+        const latlng = center.lat ? [center.lat, center.lng] : center;
+        map.setView(latlng, 18);
+        setTimeout(() => {
+          const mapped = mapPlanProps(f.properties);
+          const popup = L.popup({
+            maxWidth: popupMaxWidth(),
+            minWidth: Math.min(300, window.innerWidth * 0.85),
+            closeButton: true
+          }).setLatLng(latlng).setContent(buildPlanPopup(mapped, {
+            properties: mapped
+          })).openOn(map);
+          bindPopupEvents(popup, [{
+            type: 'plan',
+            properties: mapped
+          }], 0);
+        }, 500);
+      } catch (err) {
+        console.warn('zoom to plan failed', err);
+      }
+    }));
+    document.getElementById('minhakdash-csv').addEventListener('click', () => {
+      const title = document.getElementById('minhakdash-title')?.textContent || 'דשבורד מינהל';
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const lines = [];
+      lines.push(['מדד', 'ערך'].join(','));
+      [['אוכלוסייה קיימת', Math.round(existingPop)], ['יח"ד קיים', Math.round(existingUnits)], ['תכניות פעילות', plansCount], ['יח"ד תוספת', Math.round(unitsAdd)], ['תכניות תמ"א 38', tamaCount], ['יח"ד תמ"א תוספת', Math.round(tamaUnitsAdd)], ['יח"ד בהיתר', Math.round(issuedUnits)], ['היתרים פעילים', activePermits], ['שב"צ עתידי (מ"ר)', Math.round(futureSqm)], ['הפרשה מבונה (מ"ר)', Math.round(hafSqm)], ['מסחר עתידי (מ"ר)', Math.round(commerceOut)], ['עצים לכריתה/העתקה', Math.round(trees)]].forEach(r => lines.push([q(r[0]), r[1]].join(',')));
+      lines.push('');
+      lines.push([q('תת-שכונה'), q('יח"ד תוספת'), q('תכניות')].join(','));
+      subNames.forEach(sn => {
+        const s = subStats[sn] || {
+          units: 0,
+          plans: 0
+        };
+        lines.push([q(sn), Math.round(s.units), s.plans].join(','));
+      });
+      lines.push('');
+      lines.push([q('תכנית'), q('תוספת יח"ד'), q('סטטוס')].join(','));
+      planFeats.forEach(r => lines.push([q(r.name), Math.round(r.units), q(r.status)].join(',')));
+      const blob = new Blob(['﻿' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('minhakdash-print').addEventListener('click', () => {
+      const title = document.getElementById('minhakdash-title')?.textContent || 'דשבורד מינהל';
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e0eef0;color:#1a5a66}a{color:#1565c0}button{display:none!important}</style></head><body>');
+      win.document.write('<h3>' + esc(title) + '</h3>');
+      win.document.write(div.innerHTML);
+      win.document.close();
+      win.print();
+    });
+  }
+
+  // Aggregate CBS census-2022 stat-area metrics for a list of area-property objects.
+  // Counts are summed; percentages/averages are weighted (population for people-metrics,
+  // households for housing-metrics); areas missing a value are skipped from that metric.
+  function aggregatePopulationAreas(areas) {
+    const sum = k => areas.reduce((s, a) => s + (typeof a[k] === 'number' ? a[k] : 0), 0);
+    const wavg = (vk, wk) => {
+      let sv = 0,
+        sw = 0;
+      for (const a of areas) {
+        const v = a[vk],
+          w = a[wk];
+        if (typeof v === 'number' && typeof w === 'number' && w > 0) {
+          sv += v * w;
+          sw += w;
+        }
+      }
+      return sw > 0 ? sv / sw : null;
+    };
+    const LIFE = ['חרדי', 'דתי/דתי מאוד', 'מסורתי', 'חילוני', 'מעורב', 'אחר'];
+    const lifeRaw = {};
+    let lifeSum = 0;
+    LIFE.forEach(c => {
+      let sv = 0,
+        sw = 0;
+      for (const a of areas) {
+        const bd = a.datiyut_breakdown,
+          w = a.pop_approx;
+        if (bd && typeof bd[c] === 'number' && typeof w === 'number' && w > 0) {
+          sv += bd[c] * w;
+          sw += w;
+        }
+      }
+      lifeRaw[c] = sw > 0 ? sv / sw : 0;
+      lifeSum += lifeRaw[c];
+    });
+    const lifestyle = {};
+    LIFE.forEach(c => lifestyle[c] = lifeSum > 0 ? lifeRaw[c] / lifeSum * 100 : 0);
+    return {
+      pop: sum('pop_approx'),
+      hh: sum('hh_total'),
+      householdSize: wavg('householdSize', 'pop_approx'),
+      age_median: wavg('age_median', 'pop_approx'),
+      age0_19: wavg('age0_19_pcnt', 'pop_approx'),
+      age20_64: wavg('age20_64_pcnt', 'pop_approx'),
+      age65: wavg('age65_pcnt', 'pop_approx'),
+      children_per_woman: wavg('children_per_woman', 'pop_approx'),
+      pop_density: wavg('pop_density', 'pop_approx'),
+      own: wavg('own_pcnt', 'hh_total'),
+      rent: wavg('rent_pcnt', 'hh_total'),
+      vehicle0: wavg('vehicle0_pcnt', 'hh_total'),
+      vehicle2up: wavg('vehicle2up_pcnt', 'hh_total'),
+      parking: wavg('parking_pcnt', 'hh_total'),
+      lifestyle,
+      hasLifestyle: lifeSum > 0,
+      areaCount: areas.length
+    };
+  }
+
+  // Build the minhak → sub-neighborhood hierarchy of existing-population census metrics
+  // by assigning each stat-area centroid to its sub-neighborhood (and minhak).
+  function computePopulationByGeography(gd) {
+    const stat = gd && gd.stat_areas && gd.stat_areas.features;
+    if (!stat) return {
+      minhaks: [],
+      unassigned: 0,
+      unassignedPop: 0
+    };
+    const subFeats = gd.sub_neighborhoods && gd.sub_neighborhoods.features || [];
+    const normSub = s => SUB_NORMALIZE[s] || s;
+    const findSub = c => {
+      for (const sf of subFeats) {
+        if (sf.geometry && pointInGeometry(c, sf.geometry)) return normSub(sf.properties.schn_nama);
+      }
+      return null;
+    };
+    const findMinhak = c => {
+      for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
+        const layer = gd[MINAHAK_HEB_TO_LAYER[heb]];
+        if (layer && pointInLayer(c, layer)) return heb;
+      }
+      return null;
+    };
+    // Sub-neighborhood centroids, for snapping areas that fall in a minhak polygon
+    // but in a gap between sub polygons to the nearest sub OF THAT MINHAK.
+    const subCentroids = {};
+    for (const sf of subFeats) {
+      const nm = normSub(sf.properties.schn_nama);
+      if (nm && !subCentroids[nm]) {
+        const cc = geomCentroid(sf.geometry);
+        if (cc) subCentroids[nm] = cc;
+      }
+    }
+    const nearestSubInMinhak = (c, minhak) => {
+      let best = null,
+        bestD = Infinity;
+      (MINAHAK_SUBS[minhak] || []).forEach(s => {
+        const cc = subCentroids[SUB_NORMALIZE[s] || s];
+        if (!cc) return;
+        const dx = cc[0] - c[0],
+          dy = cc[1] - c[1],
+          d = dx * dx + dy * dy;
+        if (d < bestD) {
+          bestD = d;
+          best = SUB_NORMALIZE[s] || s;
+        }
+      });
+      return best;
+    };
+    const tree = {};
+    let unassigned = 0,
+      unassignedPop = 0;
+    for (const f of stat) {
+      const p = f.properties || {};
+      if (typeof p.pop_approx !== 'number' || p.pop_approx <= 0) continue; // skip non-residential/empty
+      const c = geomCentroid(f.geometry);
+      if (!c) {
+        unassigned++;
+        unassignedPop += p.pop_approx;
+        continue;
+      }
+      const sub = findSub(c);
+      const minhak = sub && SUB_TO_MINAHAK[sub] || findMinhak(c);
+      if (!minhak) {
+        unassigned++;
+        unassignedPop += p.pop_approx;
+        continue;
+      }
+      const subName = sub || nearestSubInMinhak(c, minhak) || 'לא ידוע';
+      tree[minhak] = tree[minhak] || {};
+      (tree[minhak][subName] = tree[minhak][subName] || []).push(p);
+    }
+    const minhaks = Object.keys(tree).map(mn => {
+      const subsObj = tree[mn],
+        allAreas = [];
+      const subs = Object.keys(subsObj).map(sn => {
+        allAreas.push(...subsObj[sn]);
+        const areas = subsObj[sn].map(a => ({
+          id: a.stat_area_id,
+          pop: a.pop_approx,
+          unite: a.unite_id || null
+        })).sort((x, y) => (y.pop || 0) - (x.pop || 0));
+        return {
+          name: sn,
+          metrics: aggregatePopulationAreas(subsObj[sn]),
+          areas
+        };
+      }).sort((a, b) => b.metrics.pop - a.metrics.pop);
+      return {
+        name: mn,
+        metrics: aggregatePopulationAreas(allAreas),
+        subs
+      };
+    }).sort((a, b) => b.metrics.pop - a.metrics.pop);
+    return {
+      minhaks,
+      unassigned,
+      unassignedPop
+    };
+  }
+
+  // "אוכלוסייה קיימת לפי מינהק/תת-שכונה" dashboard (CBS census 2022).
+  function openPopulationDashboard(initialMinhak) {
+    const data = computePopulationByGeography(geoDataRef.current || {});
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const n0 = v => v == null || isNaN(v) ? '—' : Math.round(v).toLocaleString();
+    const p1 = v => v == null || isNaN(v) ? '—' : v.toFixed(1) + '%';
+    const f1 = v => v == null || isNaN(v) ? '—' : v.toFixed(1);
+    const kpi = (label, val, sub2, color) => '<div style="background:#10202a;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:110px;flex:1">' + '<div style="font-size:11px;color:#9ab">' + label + '</div>' + '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' + (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
+    const lf = (m, c) => m.hasLifestyle ? p1(m.lifestyle[c]) : '—';
+    // Inline horizontal stacked composition bar (segment widths = their % of the row).
+    const segBar = segs => {
+      if (!segs.some(s => typeof s.w === 'number')) return '—';
+      return '<div style="display:inline-flex;width:110px;height:11px;border-radius:3px;overflow:hidden;background:#0c1a22;vertical-align:middle">' + segs.map(s => '<div style="width:' + Math.max(0, s.w || 0) + '%;background:' + s.color + '" title="' + s.title + ' ' + (s.w || 0).toFixed(1) + '%"></div>').join('') + '</div>';
+    };
+    const barTenure = m => m.own == null && m.rent == null ? '—' : segBar([{
+      w: m.own,
+      color: '#5fd3a0',
+      title: 'בעלות'
+    }, {
+      w: m.rent,
+      color: '#e0a64d',
+      title: 'שכירות'
+    }]);
+    const barVehicles = m => m.vehicle0 == null && m.vehicle2up == null ? '—' : segBar([{
+      w: m.vehicle0,
+      color: '#54c8e8',
+      title: 'ללא רכב'
+    }, {
+      w: Math.max(0, 100 - (m.vehicle0 || 0) - (m.vehicle2up || 0)),
+      color: '#3a4a55',
+      title: 'רכב אחד'
+    }, {
+      w: m.vehicle2up,
+      color: '#b08fd1',
+      title: '2+ רכב'
+    }]);
+    // Column specs reused for tables, CSV and print.
+    const BLOCKS = [{
+      title: 'אוכלוסייה וגיל',
+      cols: [['אוכלוסייה', m => n0(m.pop)], ['משקי בית', m => n0(m.hh)], ['גודל מ"ב', m => f1(m.householdSize)], ['גיל חציוני', m => f1(m.age_median)], ['% 0-19', m => p1(m.age0_19)], ['% 20-64', m => p1(m.age20_64)], ['% 65+', m => p1(m.age65)], ['ילדים/אישה', m => f1(m.children_per_woman)]]
+    }, {
+      title: 'אורח חיים / דתיות',
+      cols: [['% חרדי', m => lf(m, 'חרדי')], ['% דתי', m => lf(m, 'דתי/דתי מאוד')], ['% מסורתי', m => lf(m, 'מסורתי')], ['% חילוני', m => lf(m, 'חילוני')], ['% מעורב', m => lf(m, 'מעורב')], ['% אחר', m => lf(m, 'אחר')]]
+    }, {
+      title: 'דיור: בעלות / שכירות',
+      bar: barTenure,
+      barLabel: 'בעלות ↔ שכירות',
+      cols: [['% בעלות', m => p1(m.own)], ['% שכירות', m => p1(m.rent)]]
+    }, {
+      title: 'כלי רכב וחניה',
+      bar: barVehicles,
+      barLabel: '0 / 1 / 2+ רכב',
+      cols: [['% ללא רכב', m => p1(m.vehicle0)], ['% רכב 1', m => m.vehicle0 != null && m.vehicle2up != null ? p1(Math.max(0, 100 - m.vehicle0 - m.vehicle2up)) : '—'], ['% 2+ רכב', m => p1(m.vehicle2up)], ['% עם חניה', m => p1(m.parking), 'border-right:2px solid #2e4a55']]
+    }];
+    const buildTable = (spec, subs, total) => {
+      const th = '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' + spec.cols.map(c => '<th style="padding:5px 7px;color:#4db8c4;font-size:11px;' + (c[2] || '') + '">' + c[0] + '</th>').join('') + (spec.bar ? '<th style="padding:5px 7px;color:#4db8c4;font-size:11px">' + spec.barLabel + '</th>' : '');
+      const mkRow = (label, m, isTotal) => {
+        const st = isTotal ? 'font-weight:bold;background:#13212b;color:#8fd' : 'color:#cfe';
+        return '<tr style="border-bottom:1px solid #222;' + st + '"><td style="padding:5px 7px;text-align:right">' + esc(label) + '</td>' + spec.cols.map(c => '<td style="padding:5px 7px;text-align:center;' + (c[2] || '') + '">' + c[1](m) + '</td>').join('') + (spec.bar ? '<td style="padding:5px 7px;text-align:center">' + spec.bar(m) + '</td>' : '') + '</tr>';
+      };
+      const body = subs.map(s => mkRow(s.name, s.metrics, false)).join('') + mkRow('סה"כ מינהק', total, true);
+      return '<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">' + spec.title + '</h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+    };
+    const prevD = document.getElementById('popdash-result');
+    if (prevD) prevD.remove();
+    const div = document.createElement('div');
+    div.id = 'popdash-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #2e7d8f;direction:rtl;width:min(900px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+    document.body.appendChild(div);
+    let current = null; // null = minhak grid; else minhak name
+
+    const coverageNote = data.unassigned > 0 ? '<div style="font-size:10px;color:#789;margin-top:10px">' + data.unassigned + ' אזורים סטטיסטיים נוספים שבמיפוי נמצאים מחוץ למינהלים הקהילתיים ואינם נכללים בדוח.</div>' : '';
+    function paint(minhakName) {
+      current = minhakName;
+      const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #234">' + '<div style="display:flex;align-items:center;gap:10px">' + (minhakName ? '<button id="popdash-back" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px">← חזרה</button>' : '') + '<h3 id="popdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#cfe;font-size:16px;outline:none;border-bottom:1px dashed #356;padding-bottom:2px;cursor:text">👥 אוכלוסייה קיימת — ' + esc(minhakName || 'לפי מינהק') + '</h3>' + '</div>' + '<button id="popdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '</div>';
+      const footer = '<div style="display:flex;gap:8px;margin-top:16px">' + '<button id="popdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' + '<button id="popdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' + '</div>';
+      let bodyHtml;
+      if (!minhakName) {
+        if (!data.minhaks.length) {
+          bodyHtml = '<div style="color:#9ab;font-size:14px;padding:16px;text-align:center">אין נתוני אוכלוסייה (ודא ששכבת stat_areas נטענה).</div>';
+        } else {
+          const cards = data.minhaks.map(mh => '<button class="popdash-card" data-minhak="' + esc(mh.name) + '" style="background:#10202a;border:1px solid #2e7d8f;border-radius:10px;padding:12px 14px;cursor:pointer;text-align:right;min-width:160px;flex:1;font-family:inherit" ' + 'onmouseover="this.style.background=\'#16313d\'" onmouseout="this.style.background=\'#10202a\'">' + '<div style="font-size:14px;font-weight:bold;color:#cfe;margin-bottom:4px">' + esc(mh.name) + '</div>' + '<div style="font-size:22px;font-weight:bold;color:#4db8c4">' + n0(mh.metrics.pop) + '</div><div style="font-size:11px;color:#9ab">תושבים</div>' + '<div style="font-size:11px;color:#789;margin-top:4px">' + n0(mh.metrics.hh) + ' משקי בית · ' + f1(mh.metrics.householdSize) + ' נפ\'/מ"ב</div>' + '</button>').join('');
+          bodyHtml = '<div style="font-size:12px;color:#9ab;margin-bottom:10px">בחר מינהל קהילתי לצפייה בפילוח תת-שכונות (מקור: מפקד הלמ"ס 2022).</div>' + '<div style="display:flex;gap:10px;flex-wrap:wrap">' + cards + '</div>' + coverageNote;
+        }
+      } else {
+        const mh = data.minhaks.find(m => m.name === minhakName);
+        const t = mh.metrics;
+        const kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + kpi('אוכלוסייה', n0(t.pop), t.areaCount + ' אזורים סטטיסטיים', '#4db8c4') + kpi('משקי בית', n0(t.hh), '', '#5fd3a0') + kpi('גודל משק בית', f1(t.householdSize), 'נפ\'/מ"ב', '#8fd14f') + kpi('גיל חציוני', f1(t.age_median), '', '#c4a24d') + '</div>';
+        // Verification: which CBS statistical areas feed each sub-neighborhood.
+        const areasRows = mh.subs.map(s => '<tr style="border-bottom:1px solid #222;color:#cfe"><td style="padding:5px 7px;text-align:right;white-space:nowrap">' + esc(s.name) + '</td>' + '<td style="padding:5px 7px;text-align:center;color:#9ab">' + s.areas.length + '</td>' + '<td style="padding:5px 7px;text-align:right;color:#9ab;font-size:11px">' + s.areas.map(a => (a.unite ? esc(a.unite) : a.id) + ' <span style="color:#667">(' + n0(a.pop) + ')</span>').join(' · ') + '</td></tr>').join('');
+        const areasTable = '<h4 style="color:#4db8c4;margin:14px 0 6px;font-size:13px">אזורים סטטיסטיים לפי תת-שכונה <span style="color:#789;font-weight:normal;font-size:11px">(מס׳ אזור · אוכלוסייה)</span></h4>' + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#13212b">' + '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">תת-שכונה</th>' + '<th style="padding:5px 7px;color:#4db8c4;font-size:11px"># אזורים</th>' + '<th style="padding:5px 7px;text-align:right;color:#4db8c4;font-size:11px">אזורים סטטיסטיים (מפקד 2022)</th>' + '</tr></thead><tbody>' + areasRows + '</tbody></table>';
+        bodyHtml = kpis + BLOCKS.map(spec => buildTable(spec, mh.subs, t)).join('') + areasTable;
+      }
+      div.innerHTML = head + bodyHtml + footer;
+      document.getElementById('popdash-close').addEventListener('click', () => div.remove());
+      const backBtn = document.getElementById('popdash-back');
+      if (backBtn) backBtn.addEventListener('click', () => paint(null));
+      div.querySelectorAll('.popdash-card').forEach(b => b.addEventListener('click', () => paint(b.getAttribute('data-minhak'))));
+      document.getElementById('popdash-csv').addEventListener('click', exportCsv);
+      document.getElementById('popdash-print').addEventListener('click', printView);
+    }
+    function exportCsv() {
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const lines = [];
+      const dumpMinhak = mh => {
+        BLOCKS.forEach(spec => {
+          lines.push(q(mh.name + ' — ' + spec.title));
+          lines.push(['תת-שכונה'].concat(spec.cols.map(c => c[0])).map(q).join(','));
+          mh.subs.forEach(s => lines.push([q(s.name)].concat(spec.cols.map(c => q(c[1](s.metrics).replace(/,/g, '')))).join(',')));
+          lines.push([q('סה"כ מינהק')].concat(spec.cols.map(c => q(c[1](mh.metrics).replace(/,/g, '')))).join(','));
+          lines.push('');
+        });
+      };
+      if (current) {
+        const mh = data.minhaks.find(m => m.name === current);
+        if (mh) dumpMinhak(mh);
+      } else data.minhaks.forEach(dumpMinhak);
+      const title = document.getElementById('popdash-title')?.textContent || 'אוכלוסייה';
+      const blob = new Blob(['﻿' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function printView() {
+      const title = document.getElementById('popdash-title')?.textContent || 'אוכלוסייה קיימת';
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#2e7d8f;margin:0 0 8px}h4{color:#1a5a66;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:center}th{background:#e0eef0;color:#1a5a66}td:first-child,th:first-child{text-align:right}button{display:none!important}</style></head><body>');
+      win.document.write('<h3>' + esc(title) + '</h3>');
+      win.document.write(div.innerHTML);
+      win.document.close();
+      win.print();
+    }
+    paint(initialMinhak && data.minhaks.some(m => m.name === initialMinhak) ? initialMinhak : null);
+  }
+
+  // ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
+  useEffect(() => {
+    if (!areaFinished || areaFinished.length < 3 || !programaAreaActiveRef.current) return;
+    programaAreaActiveRef.current = false;
+    setProgramaActive(null);
+    window.__programaHandledArea = true;
+    const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+    polyCoords.push(polyCoords[0]);
+    function pip(pt, ring) {
+      const x = pt[0],
+        y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0],
+          yi = ring[i][1],
+          xj = ring[j][0],
+          yj = ring[j][1];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    const gd = geoDataRef.current || {};
+    const candidatePlans = [];
+    if (gd.plans) {
+      const seenTaba = new Set();
+      gd.plans.features.forEach(f => {
+        const p = f.properties || {};
+        const taba = String(p.taba || '').trim();
+        if (taba && seenTaba.has(taba)) return;
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let coords;
+        try {
+          if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return;
+        } catch (ex) {
+          return;
+        }
+        if (!coords || !coords.length) return;
+        let cx = 0,
+          cy = 0,
+          n = 0;
+        for (const c of coords) {
+          if (c && c.length >= 2) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+        }
+        if (n === 0) return;
+        if (pip([cx / n, cy / n], polyCoords)) {
+          if (taba) seenTaba.add(taba);
+          candidatePlans.push({
+            taba,
+            plan_name: p.plan_name,
+            plan_name_he: p.plan_name_he,
+            plan_summary: p.plan_summary,
+            units_add: parseFloat(p.units_add) || 0,
+            units_total: parseInt(p.units_total) || 0,
+            status_mavat: p.status_mavat,
+            stage: p.stage,
+            mavat_date: p.mavat_date
+          });
+        }
+      });
+    }
+    candidatePlans.sort((a, b) => (b.units_total || b.units_add || 0) - (a.units_total || a.units_add || 0));
+    const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+    const eduFeats = eduFeaturesInPolygon(polyCoords, gd);
+    // Use polygon centroid to detect minahak
+    let centX = 0,
+      centY = 0;
+    const n = polyCoords.length - 1;
+    for (let i = 0; i < n; i++) {
+      centX += polyCoords[i][0];
+      centY += polyCoords[i][1];
+    }
+    centX /= n;
+    centY /= n;
+    const inGonen = pointInLayer([centX, centY], gd.minahak_gonen);
+    renderProgramaModal({
+      existingUnits,
+      candidatePlans,
+      eduFeats,
+      scopeLabel: 'אזור נבחר' + (inGonen ? ' · גוננים' : ''),
+      parentModalId: null,
+      inGonen,
+      scopeGeom: {
+        type: 'polygon',
+        rings: [polyCoords]
+      }
+    });
+
+    // Clean up drawing layers
+    const r = areaRef.current;
+    const map = mapInstanceRef.current;
+    if (map && r) {
+      r.markers.forEach(m => map.removeLayer(m));
+      if (r.polygon) map.removeLayer(r.polygon);
+    }
+    if (r) {
+      r.points = [];
+      r.markers = [];
+      r.polygon = null;
+    }
+  }, [areaFinished]);
+
+  // ── Full-area comprehensive report: aggregate ALL knowledge inside the drawn polygon ──
+  useEffect(() => {
+    if (!areaFinished || areaFinished.length < 3 || !fullReportAreaActiveRef.current) return;
+    fullReportAreaActiveRef.current = false;
+    window.__fullReportHandledArea = true; // signal the default handler to skip this draw
+    setFullAreaLoading(true); // show spinner while lazy layers are fetched
+    setFullAreaReport(null);
+    setFullAreaCollapsed({});
+    setFullReportTables({});
+    const gdRoot = geoDataRef.current;
+    if (!gdRoot || !gdRoot.plans) {
+      setFullAreaLoading(false);
+      return;
+    }
+
+    // ray-casting point-in-polygon ([x,y] in a closed ring of [lng,lat])
+    function pip(pt, ring) {
+      const x = pt[0],
+        y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0],
+          yi = ring[i][1],
+          xj = ring[j][0],
+          yj = ring[j][1];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    // centroid of a feature's geometry → [lng,lat] (Point / Line / Polygon / Multi*)
+    function geomCentroid(geom) {
+      if (!geom || !geom.coordinates) return null;
+      try {
+        const t = geom.type;
+        if (t === 'Point') return geom.coordinates.slice(0, 2);
+        if (t === 'MultiPoint' || t === 'LineString') return geom.coordinates[0].slice(0, 2);
+        if (t === 'MultiLineString') return geom.coordinates[0][0].slice(0, 2);
+        let ring;
+        if (t === 'Polygon') ring = geom.coordinates[0];else if (t === 'MultiPolygon') ring = geom.coordinates[0][0];else return null;
+        let cx = 0,
+          cy = 0,
+          n = 0;
+        for (const c of ring) {
+          if (c && c.length >= 2) {
+            cx += c[0];
+            cy += c[1];
+            n++;
+          }
+        }
+        return n ? [cx / n, cy / n] : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+    polyCoords.push(polyCoords[0]);
+    const areaSqm = polygonArea(areaFinished);
+    const APPROVED = ['אישור', 'תבע מאושרת', 'מאושרת', 'תחילת תוקף'];
+    const groupStatus = s => APPROVED.includes(s) ? 'תכניות מאושרות' : s;
+
+    // Clear the drawing layers immediately, but keep a highlighted polygon on the map
+    // so the user retains spatial context of what was selected while the report is open.
+    {
+      const r0 = areaRef.current,
+        map0 = mapInstanceRef.current;
+      if (map0 && r0) {
+        r0.markers.forEach(m => {
+          try {
+            map0.removeLayer(m);
+          } catch (e) {}
+        });
+        if (r0.polygon) {
+          try {
+            map0.removeLayer(r0.polygon);
+          } catch (e) {}
+        }
+      }
+      if (r0) {
+        r0.points = [];
+        r0.markers = [];
+        r0.polygon = null;
+      }
+      if (map0) {
+        map0.getContainer().classList.remove('measuring');
+        if (fullReportPolyRef.current) {
+          try {
+            map0.removeLayer(fullReportPolyRef.current);
+          } catch (e) {}
+        }
+        try {
+          fullReportPolyRef.current = L.polygon(areaFinished, {
+            color: '#e94560',
+            weight: 2,
+            fillColor: '#e94560',
+            fillOpacity: 0.08,
+            dashArray: '6,4',
+            interactive: false
+          }).addTo(map0);
+        } catch (e) {}
+      }
+    }
+
+    // Master plans + the גוננים projector are lazy-loaded and may not be in geoDataRef yet.
+    // Fetch the layers we need on demand (cached on window) so the report is complete
+    // regardless of which layers the user has currently toggled on.
+    (async () => {
+      const cache = window.__fullReportCache = window.__fullReportCache || {};
+      const gd = Object.assign({}, gdRoot);
+      const need = ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs',
+      // existing-state layers (מצב קיים)
+      'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'migrash_panui', 'shavaz_kayam', 'sport_kayam', 'mivnei_lashimur', 'yiud_karka_kayam', 'roads'];
+      await Promise.all(need.map(async key => {
+        if (gd[key] && gd[key].features) return;
+        if (cache[key]) {
+          gd[key] = cache[key];
+          return;
+        }
+        const path = GEOJSON_FILES[key];
+        if (!path) return;
+        try {
+          const resp = await fetch(path);
+          if (resp.ok) {
+            const j = await resp.json();
+            cache[key] = j;
+            gd[key] = j;
+          }
+        } catch (e) {}
+      }));
+      // Tree points (separate JSON, not in GEOJSON_FILES)
+      let treeData = cache.__trees;
+      if (!treeData) {
+        try {
+          const tr = await fetch('data/tree_points_xplan.json');
+          if (tr.ok) {
+            treeData = await tr.json();
+            cache.__trees = treeData;
+          }
+        } catch (e) {}
+      }
+
+      // ── 1. תב"ע (plans) — centroid inside polygon, dedup MultiPolygon, drop rejected/infra ──
+      const plansInside = [];
+      const seenPlan = new Set();
+      gd.plans.features.forEach(f => {
+        const p = f.properties || {};
+        const s = normalizeStatus((p.status_mavat || '').trim());
+        if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+        if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+        const c = geomCentroid(f.geometry);
+        if (!c || !pip(c, polyCoords)) return;
+        const pn = p.plan_name || '';
+        if (pn && seenPlan.has(pn)) return;
+        if (pn) seenPlan.add(pn);
+        plansInside.push({
+          props: p,
+          feat: f
+        });
+      });
+      const planUnitsAdd = plansInside.reduce((s, x) => s + (parseFloat(x.props.units_add) || 0), 0);
+      const planByStatus = {};
+      plansInside.forEach(x => {
+        const st = groupStatus(normalizeStatus(x.props.status_mavat || ''));
+        planByStatus[st] = (planByStatus[st] || 0) + 1;
+      });
+      const planRowsAll = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0)).map(x => ({
+        name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '',
+        taba: x.props.plan_name || '',
+        unitsAdd: parseFloat(x.props.units_add) || 0,
+        status: normalizeStatus(x.props.status_mavat || ''),
+        minahak: x.props.minahak || '',
+        feat: x.feat
+      }));
+      const topPlans = planRowsAll.slice(0, 8);
+
+      // ── 2. תמ"א 38 ──
+      let tamaCount = 0,
+        tamaUnits = 0;
+      const tamaRows = [];
+      if (gd.tama38 && gd.tama38.features) {
+        gd.tama38.features.forEach(f => {
+          const c = geomCentroid(f.geometry);
+          if (!c || !pip(c, polyCoords)) return;
+          const p = f.properties || {};
+          const u = parseFloat(p.units_tose) || 0;
+          tamaCount++;
+          tamaUnits += u;
+          tamaRows.push({
+            address: p.address || p.tik || p.kvuzat_id || '',
+            status: p.status || '',
+            units: u,
+            lng: c[0],
+            lat: c[1]
+          });
+        });
+        tamaRows.sort((a, b) => b.units - a.units);
+      }
+
+      // ── 3. יח"ד קיימות (existing units from municipal buildings layer) ──
+      const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+
+      // ── 4. היתרים — aggregated through the תב"עות inside the polygon (permits have no own geometry) ──
+      const stageAgg = {};
+      PERMIT_STAGES_ALL.forEach(st => {
+        stageAgg[st] = {
+          count: 0,
+          units: 0
+        };
+      });
+      const catAgg = {};
+      let totalPermits = 0,
+        totalIncludedUnits = 0;
+      const permitRows = [];
+      function addPermit(p, included, scope) {
+        totalPermits++;
+        const stage = getPermitStage(p),
+          cat = classifyPermitCategory(p),
+          u = Number(p.units) || 0;
+        if (included) {
+          if (!stageAgg[stage]) stageAgg[stage] = {
+            count: 0,
+            units: 0
+          };
+          stageAgg[stage].count++;
+          stageAgg[stage].units += u;
+          if (!catAgg[cat]) catAgg[cat] = {
+            count: 0,
+            units: 0
+          };
+          catAgg[cat].count++;
+          catAgg[cat].units += u;
+          totalIncludedUnits += u;
+        }
+        permitRows.push({
+          scope,
+          file: p.file_number || '',
+          status: p.status || '',
+          units: u,
+          included,
+          stage,
+          cat
+        });
+      }
+      const seenTaba = new Set();
+      plansInside.forEach(x => {
+        const taba = String(x.props.taba || '').trim();
+        if (!taba || seenTaba.has(taba)) return;
+        seenTaba.add(taba);
+        const permits = getPermitsForTaba(taba);
+        if (!permits.length) return;
+        const planUnits = parsePlanUnits(x.props.units_total) || parsePlanUnits(x.props.units_add);
+        const inclusion = getEffectivePermitInclusion(permits, 'plan:' + taba, planUnits);
+        permits.forEach((p, i) => addPermit(p, inclusion[i], 'תב"ע ' + (x.props.plan_summary || x.props.plan_name || taba)));
+      });
+
+      // ── 5. פרויקטור (recommendations) — by domain, with project names ──
+      const PROJ_DOMAIN_LABEL = {
+        programa: 'פרוגרמה / מבני ציבור',
+        public_space: 'מרחב ציבורי',
+        transport: 'תנועה ותחבורה',
+        metaham: 'מתחם תכנון',
+        other: 'אחר'
+      };
+      const projByDomain = {};
+      let projCount = 0;
+      ['projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs'].forEach(key => {
+        const fc = gd[key];
+        if (!fc || !fc.features) return;
+        fc.features.forEach(f => {
+          const c = geomCentroid(f.geometry);
+          if (!c || !pip(c, polyCoords)) return;
+          const p = f.properties || {};
+          const isMeta = !!(p.is_metaham_polygon || p.is_metaham_pdf_tichnun);
+          const dom = isMeta ? 'metaham' : p.domain || 'other';
+          if (!projByDomain[dom]) projByDomain[dom] = {
+            count: 0,
+            names: new Set()
+          };
+          projByDomain[dom].count++;
+          const nm = (p.project_name || p.service_he || '').trim();
+          if (nm) projByDomain[dom].names.add(nm);
+          projCount++;
+        });
+      });
+      const projector = Object.entries(projByDomain).map(([dom, v]) => ({
+        domain: dom,
+        label: PROJ_DOMAIN_LABEL[dom] || dom,
+        count: v.count,
+        names: [...v.names].slice(0, 30)
+      }));
+
+      // ── 6. תכניות אב — sub-zone rule aggregation (floors / FAR / conservation grades) ──
+      const MP_KEYS = {
+        master_plan_moshavot: 'מושבות',
+        master_plan_rasko: 'רסקו',
+        master_plan_baka: 'בקעה',
+        master_plan_arnona: 'ארנונה',
+        master_plan_gonenim: 'גוננים',
+        master_plan_talpiot: 'תלפיות'
+      };
+      const ZONE_FTS = new Set(['subzone', 'landuse', 'texture']);
+      const CONS_FTS = new Set(['conservation', 'conservation_point', 'building_height']);
+      const num = v => {
+        const n = parseFloat(v);
+        return isFinite(n) ? n : null;
+      };
+      const firstNum = (p, keys) => {
+        for (const k of keys) {
+          const n = num(p[k]);
+          if (n != null) return n;
+        }
+        return null;
+      };
+      const FLOOR_KEYS = ['max_floors', 'floors_max', 'zone_max_floors', 'zone_floors_max', 'floors_max_int', 'floors_per_master_plan'];
+      const FAR_KEYS = ['far_pct', 'zone_far_pct', 'far_pct_max', 'zone_far_pct_max'];
+      const masterPlans = [];
+      Object.keys(MP_KEYS).forEach(key => {
+        const fc = gd[key];
+        if (!fc || !fc.features) return;
+        const zones = {};
+        const cons = {
+          'א': 0,
+          'ב': 0,
+          'ג': 0,
+          strict: 0,
+          total: 0
+        };
+        fc.features.forEach(f => {
+          const p = f.properties || {};
+          const ft = p.feature_type;
+          const isZone = ZONE_FTS.has(ft),
+            isCons = CONS_FTS.has(ft);
+          if (!isZone && !isCons) return;
+          const c = geomCentroid(f.geometry);
+          if (!c || !pip(c, polyCoords)) return;
+          if (isCons) {
+            // Only features that actually carry a preservation grade count as שימור
+            // (skips plain building_height/floor features with no grade).
+            const g = (p.conservation_grade || p.conservation_type || p.zone_conservation_level || p.conservation_level || '').toString().trim();
+            if (!g) return;
+            const last = g.slice(-1);
+            if (!!p.is_strict || /מחמיר|שימור מלא/.test(g)) cons.strict++;
+            if (/שימור מלא|דרגה א|רמה א/.test(g) || last === 'א' || g.includes("א'")) cons['א']++;else if (/שימור עם תוספות|דרגה ב/.test(g) || last === 'ב' || g.includes("ב'")) cons['ב']++;else if (/דרגה ג/.test(g) || last === 'ג' || g.includes("ג'")) cons['ג']++;
+            cons.total++;
+            return;
+          }
+          const name = (p.zone_subzone_name || p.zone_name || p.zone_character || p.zone_subzone_code || p.zone_code || p.zone_category || p.category || p.zone_sog || p.sog || p.zone_merkam || p.merkam || p.zone_aizor || p.character || p.land_use || 'ללא שם').toString().trim() || 'ללא שם';
+          if (!zones[name]) zones[name] = {
+            name,
+            count: 0,
+            floorsMin: null,
+            floorsMax: null,
+            farMin: null,
+            farMax: null
+          };
+          const z = zones[name];
+          z.count++;
+          const fl = firstNum(p, FLOOR_KEYS);
+          if (fl != null) {
+            z.floorsMin = z.floorsMin == null ? fl : Math.min(z.floorsMin, fl);
+            z.floorsMax = z.floorsMax == null ? fl : Math.max(z.floorsMax, fl);
+          }
+          const fr = firstNum(p, FAR_KEYS);
+          if (fr != null) {
+            z.farMin = z.farMin == null ? fr : Math.min(z.farMin, fr);
+            z.farMax = z.farMax == null ? fr : Math.max(z.farMax, fr);
+          }
+        });
+        const zoneList = Object.values(zones).sort((a, b) => b.count - a.count);
+        if (zoneList.length || cons.total) masterPlans.push({
+          name: MP_KEYS[key],
+          zones: zoneList,
+          cons
+        });
+      });
+
+      // ── 7. מצב קיים (existing state): public institutions, population, green space, trees, etc. ──
+      // spherical ring area (m²) for a [lng,lat] ring, and full geometry area.
+      function ringAreaSqm(ring) {
+        const R = 6378137,
+          toRad = Math.PI / 180;
+        let a = 0;
+        const n = ring.length;
+        for (let i = 0; i < n; i++) {
+          const j = (i + 1) % n;
+          a += (ring[j][0] * toRad - ring[i][0] * toRad) * (2 + Math.sin(ring[i][1] * toRad) + Math.sin(ring[j][1] * toRad));
+        }
+        return Math.abs(a * R * R / 2);
+      }
+      function geomAreaSqm(g) {
+        if (!g || !g.coordinates) return 0;
+        try {
+          if (g.type === 'Polygon') return ringAreaSqm(g.coordinates[0]);
+          if (g.type === 'MultiPolygon') return g.coordinates.reduce((s, poly) => s + ringAreaSqm(poly[0]), 0);
+        } catch (e) {}
+        return 0;
+      }
+      const inPoly = f => {
+        const c = geomCentroid(f.geometry);
+        return c && pip(c, polyCoords);
+      };
+      const feats = key => gd[key] && gd[key].features || [];
+
+      // 7a. מבני ציבור ומוסדות קיימים
+      const moch = {
+        total: 0,
+        area: 0,
+        byCat: {},
+        list: []
+      };
+      feats('mosadot_moch').forEach(f => {
+        if (!inPoly(f)) return;
+        const p = f.properties || {};
+        moch.total++;
+        moch.area += parseFloat(p.gross_area) || 0;
+        const cat = ((p.category || p.type || 'אחר') + '').trim() || 'אחר';
+        moch.byCat[cat] = (moch.byCat[cat] || 0) + 1;
+        const nm = ((p.name || '') + '').trim();
+        if (nm) {
+          const cc = geomCentroid(f.geometry);
+          moch.list.push({
+            name: nm,
+            cat,
+            address: ((p.address || '') + '').trim(),
+            lng: cc && cc[0],
+            lat: cc && cc[1]
+          });
+        }
+      });
+      let eduInst = 0,
+        eduStudents = 0;
+      const eduList = [];
+      feats('education_shanaton').forEach(f => {
+        if (!inPoly(f)) return;
+        const p = f.properties || {};
+        eduInst += parseInt(p.institutions_count) || 0;
+        eduStudents += parseInt(p.total_students) || 0;
+        const cc = geomCentroid(f.geometry);
+        const insts = Array.isArray(p.institutions) ? p.institutions : [];
+        if (insts.length) {
+          insts.forEach(it => eduList.push({
+            name: ((it.name || '') + '').trim(),
+            type: ((it.type || '') + '').trim(),
+            pikuach: ((it.pikuach || '') + '').trim(),
+            students: parseInt(it.students) || 0,
+            address: ((p.address || '') + '').trim(),
+            lng: cc && cc[0],
+            lat: cc && cc[1]
+          }));
+        } else {
+          eduList.push({
+            name: ((p.address || 'מוסד חינוך') + '').trim(),
+            type: ((p.primary_type || '') + '').trim(),
+            pikuach: '',
+            students: parseInt(p.total_students) || 0,
+            address: ((p.address || '') + '').trim(),
+            lng: cc && cc[0],
+            lat: cc && cc[1]
+          });
+        }
+      });
+      eduList.sort((a, b) => b.students - a.students);
+      let shchunaCount = 0;
+      feats('mosadot_shchuna').forEach(f => {
+        if (inPoly(f)) shchunaCount++;
+      });
+      const vacant = {
+        count: 0,
+        area: 0
+      };
+      feats('migrash_panui').forEach(f => {
+        if (!inPoly(f)) return;
+        vacant.count++;
+        vacant.area += parseFloat((f.properties || {}).gross_area) || 0;
+      });
+
+      // 7b. אוכלוסייה (מפקד 2022) — sum stat areas whose centroid falls inside
+      const demo = {
+        pop: 0,
+        hh: 0,
+        areas: 0
+      };
+      feats('stat_areas').forEach(f => {
+        if (!inPoly(f)) return;
+        const p = f.properties || {};
+        demo.pop += parseFloat(p.pop_approx) || 0;
+        demo.hh += parseFloat(p.hh_total) || 0;
+        demo.areas++;
+      });
+
+      // 7c. שטחים ירוקים, ספורט ועצים
+      const green = {
+        count: 0,
+        area: 0
+      };
+      feats('shavaz_kayam').forEach(f => {
+        if (!inPoly(f)) return;
+        green.count++;
+        green.area += parseFloat((f.properties || {}).POLY_AREA) || geomAreaSqm(f.geometry);
+      });
+      let sportCount = 0;
+      feats('sport_kayam').forEach(f => {
+        if (inPoly(f)) sportCount++;
+      });
+      const trees = {
+        shimur: 0,
+        krita: 0,
+        haataka: 0
+      };
+      if (treeData && treeData.plans) {
+        Object.values(treeData.plans).forEach(pl => {
+          (pl.points || []).forEach(pt => {
+            if (pip([pt.x, pt.y], polyCoords)) {
+              const st = pt.status;
+              if (trees[st] != null) trees[st]++;
+            }
+          });
+        });
+      }
+
+      // 7d. מסחר/תעסוקה (מתוך התב"עות), שימור עירוני, זיקות הנאה, יעודי קרקע קיים
+      let commerceIn = 0,
+        employment = 0;
+      const commerceRows = [];
+      plansInside.forEach(x => {
+        const ci = parseFloat(x.props.commerce_in) || 0,
+          em = parseFloat(x.props.employment) || 0;
+        commerceIn += ci;
+        employment += em;
+        if (ci || em) commerceRows.push({
+          name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '',
+          taba: x.props.plan_name || '',
+          commerce: ci,
+          employment: em,
+          feat: x.feat
+        });
+      });
+      commerceRows.sort((a, b) => b.commerce + b.employment - (a.commerce + a.employment));
+      const consCity = {
+        total: 0,
+        byGrade: {},
+        byType: {},
+        list: []
+      };
+      feats('mivnei_lashimur').forEach(f => {
+        if (!inPoly(f)) return;
+        const p = f.properties || {};
+        consCity.total++;
+        const g = ((p.mp_grade || 'ללא דרגה') + '').trim() || 'ללא דרגה';
+        consCity.byGrade[g] = (consCity.byGrade[g] || 0) + 1;
+        const sug = ((p.sugMivne || '') + '').trim();
+        if (sug) consCity.byType[sug] = (consCity.byType[sug] || 0) + 1;
+        const nm = ((p.shem || '') + '').trim();
+        const street = [p.mp_street, p.mp_house_num].filter(Boolean).join(' ');
+        if (nm || street) {
+          const cc = geomCentroid(f.geometry);
+          consCity.list.push({
+            name: nm || street,
+            street: nm ? street : '',
+            grade: g,
+            lng: cc && cc[0],
+            lat: cc && cc[1]
+          });
+        }
+      });
+      const yiud = {
+        total: 0,
+        byYeud: {}
+      };
+      feats('yiud_karka_kayam').forEach(f => {
+        if (!inPoly(f)) return;
+        const p = f.properties || {};
+        const y = ((p.Descr || p.YEUD || 'אחר') + '').trim() || 'אחר';
+        yiud.total++;
+        yiud.byYeud[y] = (yiud.byYeud[y] || 0) + geomAreaSqm(f.geometry);
+      });
+
+      // Street names within the area (from the roads layer)
+      const streetSet = new Set();
+      feats('roads').forEach(f => {
+        const c = geomCentroid(f.geometry);
+        if (!c || !pip(c, polyCoords)) return;
+        const s = (((f.properties || {}).street || '') + '').trim();
+        if (s) streetSet.add(s);
+      });
+      const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
+      const existing = {
+        moch,
+        eduInst,
+        eduStudents,
+        eduList,
+        shchunaCount,
+        vacant,
+        demo,
+        green,
+        sportCount,
+        trees,
+        commerceIn,
+        employment,
+        commerceRows,
+        consCity,
+        yiud
+      };
+      setFullAreaReport({
+        title: 'סיכום אזור נבחר',
+        areaSqm,
+        streets,
+        plans: {
+          count: plansInside.length,
+          unitsAdd: planUnitsAdd,
+          byStatus: planByStatus,
+          top: topPlans,
+          rows: planRowsAll
+        },
+        tama: {
+          count: tamaCount,
+          units: tamaUnits,
+          rows: tamaRows
+        },
+        existingUnits,
+        permits: {
+          totalPermits,
+          totalIncludedUnits,
+          stageAgg,
+          catAgg,
+          rows: permitRows
+        },
+        projector: {
+          count: projCount,
+          byDomain: projector
+        },
+        masterPlans,
+        existing
+      });
+      setFullAreaLoading(false);
+    })().catch(() => setFullAreaLoading(false));
+  }, [areaFinished]);
+
+  // ── Area select: analyze results when drawing is finished ──
+  useEffect(() => {
+    if (!areaFinished || areaFinished.length < 3) return;
+    // Skip regular area analysis if landuse compare handled this
+    if (landuseCompareModeRef.current === 'area') return;
+    if (window.__landuseHandledArea) {
+      window.__landuseHandledArea = false;
+      return;
+    }
+    if (window.__treeHandledArea) {
+      window.__treeHandledArea = false;
+      return;
+    }
+    if (window.__programaHandledArea) {
+      window.__programaHandledArea = false;
+      return;
+    }
+    if (window.__fullReportHandledArea) {
+      window.__fullReportHandledArea = false;
+      return;
+    }
+    const gd = geoDataRef.current;
+    if (!gd || !gd.plans) return;
+
+    // point-in-polygon test
+    function pip(pt, ring) {
+      const [x, y] = pt;
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i],
+          [xj, yj] = ring[j];
+        if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+    polyCoords.push(polyCoords[0]);
+
+    // Approved statuses to merge
+    const APPROVED_STATUSES = ['אישור', 'תבע מאושרת', 'מאושרת', 'תחילת תוקף'];
+    function groupStatus(s) {
+      return APPROVED_STATUSES.includes(s) ? 'תכניות מאושרות' : s;
+    }
+
+    // --- Plans (תב"ע) ---
+    const plansInside = [];
+    gd.plans.features.forEach(f => {
+      const p = f.properties;
+      const s = normalizeStatus((p.status_mavat || '').trim());
+      if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+      if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+      const geom = f.geometry;
+      if (!geom || !geom.coordinates) return;
+      let coords;
+      try {
+        if (geom.type === 'Polygon') coords = geom.coordinates[0];else if (geom.type === 'MultiPolygon') coords = geom.coordinates[0][0];else return;
+      } catch (ex) {
+        return;
+      }
+      if (!coords || !coords.length) return;
+      let cx = 0,
+        cy = 0,
+        n = 0;
+      for (const c of coords) {
+        if (c && c.length >= 2) {
+          cx += c[0];
+          cy += c[1];
+          n++;
+        }
+      }
+      if (n === 0) return;
+      cx /= n;
+      cy /= n;
+      if (pip([cx, cy], polyCoords)) plansInside.push({
+        ...p,
+        _source: 'plan'
+      });
+    });
+
+    // --- TAMA 38 ---
+    const tamaInside = [];
+    if (gd.tama38 && gd.tama38.features) {
+      gd.tama38.features.forEach(f => {
+        const p = f.properties;
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        let lng, lat;
+        try {
+          if (geom.type === 'Point') {
+            lng = geom.coordinates[0];
+            lat = geom.coordinates[1];
+          } else if (geom.type === 'MultiPoint') {
+            lng = geom.coordinates[0][0];
+            lat = geom.coordinates[0][1];
+          } else return;
+        } catch (ex) {
+          return;
+        }
+        if (pip([lng, lat], polyCoords)) tamaInside.push(p);
+      });
+    }
+    const totalPlanUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
+    const totalTamaUnits = tamaInside.reduce((s, p) => s + (parseFloat(p.units_tose) || 0), 0);
+    const totalUnits = totalPlanUnits + totalTamaUnits;
+    const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
+
+    // Status breakdown (plans only, with merged approved)
+    const byStatus = {};
+    plansInside.forEach(p => {
+      const st = groupStatus(normalizeStatus(p.status_mavat || ''));
+      byStatus[st] = (byStatus[st] || 0) + 1;
+    });
+
+    // Top plans by units_add
+    const topPlans = [...plansInside].sort((a, b) => (parseFloat(b.units_add) || 0) - (parseFloat(a.units_add) || 0)).slice(0, 5);
+
+    // Build all data rows for export
+    const allRows = plansInside.map(p => ({
+      type: 'תב"ע',
+      name: p.plan_summary || p.plan_name || '',
+      status: normalizeStatus(p.status_mavat || ''),
+      units_add: parseFloat(p.units_add) || 0,
+      minahak: p.minahak || ''
+    })).concat(tamaInside.map(p => ({
+      type: 'תמ"א 38',
+      name: p.address || p.tik || '',
+      status: p.status || '',
+      units_add: parseFloat(p.units_tose) || 0,
+      minahak: ''
+    })));
+
+    // Show result as DOM element
+    const prev = document.getElementById('area-select-result');
+    if (prev) prev.remove();
+    const statusHtml = Object.entries(byStatus).sort((a, b) => b[1] - a[1]).map(([st, cnt]) => '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>' + st + '</span><span style="font-weight:bold">' + cnt + '</span></div>').join('');
+    const topHtml = topPlans.map(p => '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px"><span>' + (p.plan_summary || p.plan_name || '') + '</span><span style="color:#4CAF50;font-weight:bold">+' + Math.round(parseFloat(p.units_add) || 0) + '</span></div>').join('');
+    const div = document.createElement('div');
+    div.id = 'area-select-result';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:min(320px,90vw);max-width:min(480px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
+    div.innerHTML = '<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' + '<h3 id="area-result-title" contenteditable="true" style="color:#e94560;margin:0 0 12px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">סיכום אזור נבחר</h3>' + '<div style="display:flex;gap:24px;margin-bottom:14px">' + '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות תב"ע</div></div>' + (tamaInside.length > 0 ? '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#FF9800">' + tamaInside.length + '</div><div style="font-size:11px;color:#aaa">תמ"א 38</div></div>' : '') + '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div>' + '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים בשטח (לפי שכבת מבנים עירונית)"><div style="font-size:28px;font-weight:bold;color:#5dade2">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div></div>' + (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') + (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '') + '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' + '<button id="area-export-excel" style="background:#2d6a4f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">📊 ייצוא Excel</button>' + '<button id="area-print" style="background:#1a5276;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🖨️ הדפסה</button>' + '</div>';
+    document.body.appendChild(div);
+
+    // Store export data on the element for button handlers
+    window.__areaExportData = allRows;
+
+    // Excel export handler
+    document.getElementById('area-export-excel').addEventListener('click', () => {
+      const rows = window.__areaExportData || [];
+      const title = document.getElementById('area-result-title')?.textContent || 'סיכום אזור';
+      const cols = ['סוג', 'שם', 'סטטוס', 'יח"ד תוספת', 'מינהק'];
+      const header = cols.join(',');
+      const csvRows = rows.map(r => [r.type, r.name, r.status, r.units_add, r.minahak].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + header + '\n' + csvRows.join('\n')], {
+        type: 'text/csv;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/\s+/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // Print handler
+    document.getElementById('area-print').addEventListener('click', () => {
+      const el = document.getElementById('area-select-result');
+      if (!el) return;
+      const win = window.open('', '_blank');
+      win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + (document.getElementById('area-result-title')?.textContent || 'סיכום אזור') + '</title>');
+      win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#e94560}button{display:none!important}</style></head><body>');
+      win.document.write(el.innerHTML);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    });
+
+    // Clean up drawing layers
+    const r = areaRef.current;
+    const map = mapInstanceRef.current;
+    if (map) {
+      r.markers.forEach(m => map.removeLayer(m));
+      if (r.polygon) map.removeLayer(r.polygon);
+    }
+    r.points = [];
+    r.markers = [];
+    r.polygon = null;
+  }, [areaFinished]);
+
+  // ── Measurement tool logic ──
+  const clearMeasurement = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const m = measureRef.current;
+    m.layers.forEach(l => map.removeLayer(l));
+    if (m.tooltip) map.removeLayer(m.tooltip);
+    if (m.guideLine) map.removeLayer(m.guideLine);
+    if (m.mainCircle) {
+      map.removeLayer(m.mainCircle);
+      m.mainCircle = null;
+    }
+    m.points = [];
+    m.layers = [];
+    m.tooltip = null;
+    m.guideLine = null;
+    setMeasureResult(null);
+  }, []);
+  const stopMeasure = useCallback(() => {
+    clearMeasurement();
+    setMeasureMode(null);
+    const map = mapInstanceRef.current;
+    if (map) map.getContainer().classList.remove('measuring');
+  }, [clearMeasurement]);
+
+  // Cancel every interactive mode so a fresh one can start without leftover state.
+  // `except` skips the mode-flag write for that mode (the one being activated).
+  // Sub-flags (programaAreaActive, treeAreaActive, etc.) and drawn polygons/centers
+  // are ALWAYS reset — the caller is expected to re-set its own sub-flag right after.
+  // Values: 'measure' | 'area' | 'radius' | 'landuse-compare' | 'shatzaf' | 'tree' | 'programa-area' | 'programa-radius' | null
+  const cancelAllModes = useCallback((except = null) => {
+    const map = mapInstanceRef.current;
+    const isAreaExcept = except === 'area' || except === 'programa-area';
+    const isRadiusExcept = except === 'radius' || except === 'programa-radius';
+
+    // 1. Measure
+    if (except !== 'measure') {
+      clearMeasurement();
+      setMeasureMode(null);
+    }
+    // 2. Area drawing: always wipe polygon + sub-flags + result panels.
+    //    Skip setting areaMode=false only if the caller is itself activating an area mode.
+    const r = areaRef.current;
+    if (map && r) {
+      r.markers.forEach(m => {
+        try {
+          map.removeLayer(m);
+        } catch (e) {}
+      });
+      if (r.polygon) {
+        try {
+          map.removeLayer(r.polygon);
+        } catch (e) {}
+      }
+      r.points = [];
+      r.markers = [];
+      r.polygon = null;
+    }
+    if (!isAreaExcept) setAreaMode(false);
+    setAreaPts(0);
+    setAreaFinished(null);
+    programaAreaActiveRef.current = false;
+    treeAreaActiveRef.current = false;
+    setTreeAreaActive(false);
+    fullReportAreaActiveRef.current = false;
+    setFullAreaReport(null);
+    setFullReportDrill(null);
+    setFullAreaLoading(false);
+    if (fullReportPolyRef.current && map) {
+      try {
+        map.removeLayer(fullReportPolyRef.current);
+      } catch (e) {}
+      fullReportPolyRef.current = null;
+    }
+    const prev1 = document.getElementById('area-select-result');
+    if (prev1) prev1.remove();
+    const prev2 = document.getElementById('programa-result');
+    if (prev2) prev2.remove();
+    const prev3 = document.getElementById('tree-panel');
+    if (prev3) prev3.remove();
+    // 3. Radius: always wipe center + sub-flags + result panel.
+    if (!isRadiusExcept) setRadiusMode(false);
+    setRadiusCenter(null);
+    programaRadiusActiveRef.current = false;
+    const prev4 = document.getElementById('radius-select-result');
+    if (prev4) prev4.remove();
+    // 4. Landuse compare
+    if (except !== 'landuse-compare') {
+      setLanduseCompareMode(null);
+      landuseCompareModeRef.current = null;
+    }
+    // 5. Shatzaf
+    if (except !== 'shatzaf') {
+      setShatzafMode(false);
+      shatzafModeRef.current = false;
+    }
+    // 6. Tree
+    if (except !== 'tree') {
+      setTreeMode(false);
+      treeModeRef.current = false;
+    }
+    // 7. Programa-active UI flag
+    if (except !== 'programa-area' && except !== 'programa-radius') {
+      setProgramaActive(null);
+    }
+    // 7.5 Marker-coords: wipe drawn helpers + close any open result modal.
+    if (except !== 'marker-coords') {
+      const mc = markerCoordsRef.current;
+      if (map && mc) {
+        mc.markers.forEach(m => {
+          try {
+            map.removeLayer(m);
+          } catch (_) {}
+        });
+        if (mc.polygon) {
+          try {
+            map.removeLayer(mc.polygon);
+          } catch (_) {}
+        }
+        mc.points = [];
+        mc.markers = [];
+        mc.polygon = null;
+      }
+      setMarkerCoordsMode(null);
+      setMarkerCoordsPts(0);
+      setMarkerCoordsResult(null);
+    }
+    // 8. Always strip cursor — entry handlers re-add it via useEffect or directly.
+    if (map) map.getContainer().classList.remove('measuring');
+  }, [clearMeasurement]);
+
+  // Format distance in m/km
+  function fmtDist(m) {
+    if (m >= 1000) return (m / 1000).toFixed(2) + ' ק"מ';
+    return Math.round(m) + ' מ\'';
+  }
+  // Format area in dunam / sqm
+  function fmtArea(sqm) {
+    const dunam = sqm / 1000;
+    if (dunam >= 1) return dunam.toFixed(2) + ' דונם' + ' (' + Math.round(sqm).toLocaleString() + ' מ"ר)';
+    return Math.round(sqm).toLocaleString() + ' מ"ר';
+  }
+  // Compute total polyline distance
+  function polylineDist(pts) {
+    let d = 0;
+    for (let i = 1; i < pts.length; i++) d += pts[i - 1].distanceTo(pts[i]);
+    return d;
+  }
+  // Compute polygon area using Shoelace on projected coords
+  function polygonArea(pts) {
+    if (pts.length < 3) return 0;
+    // Use L.GeometryUtil if available, otherwise Gauss's formula on EPSG:4326
+    // Spherical excess method for better accuracy
+    const toRad = Math.PI / 180;
+    const R = 6378137;
+    let area = 0;
+    const n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      const k = (i + 2) % n;
+      area += (pts[j].lng * toRad - pts[i].lng * toRad) * (2 + Math.sin(pts[i].lat * toRad) + Math.sin(pts[j].lat * toRad));
+    }
+    area = Math.abs(area * R * R / 2);
+    return area;
+  }
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const container = map.getContainer();
+    if (!measureMode) {
+      container.classList.remove('measuring');
+      return;
+    }
+    container.classList.add('measuring');
+    const m = measureRef.current;
+    // Clear any previous measurement
+    m.layers.forEach(l => map.removeLayer(l));
+    if (m.tooltip) map.removeLayer(m.tooltip);
+    if (m.guideLine) map.removeLayer(m.guideLine);
+    m.points = [];
+    m.layers = [];
+    m.tooltip = null;
+    m.guideLine = null;
+    setMeasureResult(null);
+    const lineStyle = {
+      color: '#e94560',
+      weight: 2,
+      dashArray: '6 4'
+    };
+    const fillStyle = {
+      color: '#e94560',
+      fillColor: 'rgba(233,69,96,0.15)',
+      weight: 2,
+      dashArray: '6 4'
+    };
+    const vertexStyle = {
+      radius: 5,
+      color: '#e94560',
+      fillColor: '#fff',
+      fillOpacity: 1,
+      weight: 2
+    };
+    function updateTooltip(latlng, text) {
+      if (m.tooltip) {
+        m.tooltip.setLatLng(latlng).setContent(text);
+      } else {
+        m.tooltip = L.tooltip({
+          permanent: true,
+          direction: 'top',
+          offset: [0, -10],
+          className: 'measure-tooltip'
+        }).setLatLng(latlng).setContent(text).addTo(map);
+      }
+    }
+    function onMapClick(e) {
+      // Ignore clicks on controls/popups
+      const tgt = e.originalEvent && e.originalEvent.target;
+      if (tgt && (tgt.closest('.leaflet-control') || tgt.closest('.leaflet-popup') || tgt.closest('.map-toolbar') || tgt.closest('.measure-result'))) return;
+      const pt = e.latlng;
+      m.points.push(pt);
+
+      // Add vertex marker
+      const marker = L.circleMarker(pt, vertexStyle).addTo(map);
+      m.layers.push(marker);
+      if (measureMode === 'distance') {
+        if (m.points.length > 1) {
+          const line = L.polyline(m.points, lineStyle).addTo(map);
+          // Remove old line if exists
+          if (m.mainLine) map.removeLayer(m.mainLine);
+          m.mainLine = line;
+          m.layers.push(line);
+        }
+        const dist = polylineDist(m.points);
+        if (dist > 0) {
+          updateTooltip(pt, fmtDist(dist));
+          setMeasureResult({
+            type: 'distance',
+            value: fmtDist(dist)
+          });
+        }
+      } else if (measureMode === 'radius') {
+        // Radius mode: first click = center, second click = edge
+        if (m.points.length === 1) {
+          updateTooltip(pt, 'לחצו על נקודת הקצה');
+        } else if (m.points.length === 2) {
+          const center = m.points[0];
+          const edge = m.points[1];
+          const radius = center.distanceTo(edge);
+          if (m.mainCircle) map.removeLayer(m.mainCircle);
+          const circle = L.circle(center, {
+            radius,
+            color: '#e94560',
+            fillColor: 'rgba(233,69,96,0.15)',
+            weight: 3,
+            dashArray: null
+          }).addTo(map);
+          m.mainCircle = circle;
+          m.layers.push(circle);
+          // Also draw radius line
+          const radLine = L.polyline([center, edge], {
+            color: '#e94560',
+            weight: 2,
+            dashArray: '6 4'
+          }).addTo(map);
+          m.layers.push(radLine);
+          const radiusText = fmtDist(radius);
+          updateTooltip(edge, 'רדיוס: ' + radiusText);
+          setMeasureResult({
+            type: 'radius',
+            value: radiusText
+          });
+          // Done — stop listening
+          if (m.guideLine) {
+            map.removeLayer(m.guideLine);
+            m.guideLine = null;
+          }
+          map.off('click', onMapClick);
+          map.off('mousemove', onMouseMove);
+          map.off('dblclick', onDblClick);
+          container.classList.remove('measuring');
+        }
+      } else {
+        // Area mode
+        if (m.mainPoly) map.removeLayer(m.mainPoly);
+        if (m.points.length >= 2) {
+          const poly = L.polygon(m.points, fillStyle).addTo(map);
+          m.mainPoly = poly;
+          m.layers.push(poly);
+        }
+        if (m.points.length >= 3) {
+          const area = polygonArea(m.points);
+          updateTooltip(pt, fmtArea(area));
+          setMeasureResult({
+            type: 'area',
+            value: fmtArea(area)
+          });
+        } else {
+          updateTooltip(pt, 'לחצו נקודות נוספות');
+        }
+      }
+    }
+    function onMouseMove(e) {
+      if (m.points.length === 0) return;
+      const lastPt = m.points[m.points.length - 1];
+      // Draw guide line from last point to cursor
+      if (m.guideLine) map.removeLayer(m.guideLine);
+      m.guideLine = L.polyline([lastPt, e.latlng], {
+        color: '#8888aa',
+        weight: 1,
+        dashArray: '4 4'
+      }).addTo(map);
+
+      // Show running measurement in tooltip
+      if (measureMode === 'distance') {
+        const totalDist = polylineDist(m.points) + lastPt.distanceTo(e.latlng);
+        updateTooltip(e.latlng, fmtDist(totalDist));
+      } else if (measureMode === 'radius') {
+        // Show growing circle from center to cursor
+        const center = m.points[0];
+        const radius = center.distanceTo(e.latlng);
+        if (m.mainCircle) map.removeLayer(m.mainCircle);
+        m.mainCircle = L.circle(center, {
+          radius,
+          color: '#e94560',
+          fillColor: 'rgba(233,69,96,0.1)',
+          weight: 1.5,
+          dashArray: '6 4'
+        }).addTo(map);
+        updateTooltip(e.latlng, 'רדיוס: ' + fmtDist(radius));
+      } else if (m.points.length >= 2) {
+        const tempPts = [...m.points, e.latlng];
+        const area = polygonArea(tempPts);
+        updateTooltip(e.latlng, fmtArea(area));
+      }
+    }
+    function onDblClick(e) {
+      L.DomEvent.stopPropagation(e);
+      L.DomEvent.preventDefault(e);
+      // Finish measurement
+      if (m.guideLine) {
+        map.removeLayer(m.guideLine);
+        m.guideLine = null;
+      }
+      if (measureMode === 'distance' && m.points.length >= 2) {
+        // Finalize line — solid
+        if (m.mainLine) map.removeLayer(m.mainLine);
+        const finalLine = L.polyline(m.points, {
+          color: '#e94560',
+          weight: 3
+        }).addTo(map);
+        m.layers.push(finalLine);
+        const dist = polylineDist(m.points);
+        setMeasureResult({
+          type: 'distance',
+          value: fmtDist(dist)
+        });
+        updateTooltip(m.points[m.points.length - 1], fmtDist(dist));
+      } else if (measureMode === 'area' && m.points.length >= 3) {
+        if (m.mainPoly) map.removeLayer(m.mainPoly);
+        const finalPoly = L.polygon(m.points, {
+          color: '#e94560',
+          fillColor: 'rgba(233,69,96,0.2)',
+          weight: 3
+        }).addTo(map);
+        m.layers.push(finalPoly);
+        const area = polygonArea(m.points);
+        setMeasureResult({
+          type: 'area',
+          value: fmtArea(area)
+        });
+        updateTooltip(m.points[m.points.length - 1], fmtArea(area));
+      }
+
+      // Stop listening but keep result visible
+      map.off('click', onMapClick);
+      map.off('mousemove', onMouseMove);
+      map.off('dblclick', onDblClick);
+      container.classList.remove('measuring');
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        stopMeasure();
+        document.removeEventListener('keydown', onKeyDown);
+      }
+    }
+
+    // Disable double-click zoom while measuring
+    map.doubleClickZoom.disable();
+    map.on('click', onMapClick);
+    map.on('mousemove', onMouseMove);
+    map.on('dblclick', onDblClick);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      map.off('click', onMapClick);
+      map.off('mousemove', onMouseMove);
+      map.off('dblclick', onDblClick);
+      document.removeEventListener('keydown', onKeyDown);
+      map.doubleClickZoom.enable();
+      container.classList.remove('measuring');
+      if (m.guideLine) {
+        map.removeLayer(m.guideLine);
+        m.guideLine = null;
+      }
+    };
+  }, [measureMode, stopMeasure]);
+
+  // ── Print function ──
+  const [printScale, setPrintScale] = useState('fit'); // 'fit' | 'current' | '1:2500' | ...
+  const [printPageSize, setPrintPageSize] = useState('A4'); // 'A4' | 'A3'
+  const [printOrientation, setPrintOrientation] = useState('landscape'); // 'landscape' | 'portrait'
+  const PRINT_SCALES = [{
+    value: 'fit',
+    label: 'מותאם לדף'
+  }, {
+    value: 'current',
+    label: 'קנ"מ נוכחי'
+  }, {
+    value: '1:2500',
+    label: '1:2,500',
+    denom: 2500
+  }, {
+    value: '1:5000',
+    label: '1:5,000',
+    denom: 5000
+  }, {
+    value: '1:10000',
+    label: '1:10,000',
+    denom: 10000
+  }, {
+    value: '1:15000',
+    label: '1:15,000',
+    denom: 15000
+  }, {
+    value: '1:25000',
+    label: '1:25,000',
+    denom: 25000
+  }];
+  const closePrintModal = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (printAreaRef.current.rectLayer && map) {
+      map.removeLayer(printAreaRef.current.rectLayer);
+      printAreaRef.current.rectLayer = null;
+    }
+    setPrintAreaBounds(null);
+    setShowPrint(false);
+  }, []);
+  const handlePrint = useCallback(async () => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const originalBounds = printAreaBounds ? map.getBounds() : null;
+    if (printAreaBounds && printAreaRef.current.rectLayer) {
+      map.removeLayer(printAreaRef.current.rectLayer);
+      printAreaRef.current.rectLayer = null;
+    }
+    if (printAreaBounds) {
+      map.fitBounds(printAreaBounds, {
+        animate: false,
+        padding: [0, 0]
+      });
+      await new Promise(r => setTimeout(r, 300));
+    }
+    const title = printShowTitle ? printTitle || 'מפת אורנים - תכנון עירוני' : '';
+
+    // Build legend HTML with print-safe colors
+    let legendHtml = '';
+    if (printShowLegend) {
+      legendHtml = '<div style="margin-top:12px;border:1px solid #ccc;border-radius:8px;padding:12px;background:#f9f9f9;direction:rtl;print-color-adjust:exact;-webkit-print-color-adjust:exact">';
+      legendHtml += '<div style="font-weight:bold;font-size:14px;margin-bottom:8px;border-bottom:1px solid #ddd;padding-bottom:6px">מקרא</div>';
+      // Plans legend section (only when plans layer is on)
+      if (layers['plans']) {
+        legendHtml += '<div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#555">תב"עות - סטטוס</div>';
+        legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+        PLANS_LEGEND.forEach(item => {
+          legendHtml += `<div style="display:flex;align-items:center;gap:4px;font-size:11px">` + `<span style="width:14px;height:14px;min-width:14px;min-height:14px;border-radius:3px;background:${item.color};display:inline-block;border:1px solid #aaa;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>` + `${item.label}</div>`;
+        });
+        legendHtml += '</div>';
+      }
+
+      // Education legend section (compact, when layers are on)
+      if (layers['mosadot_shchuna'] || layers['sara_march_2026']) {
+        legendHtml += '<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';
+        legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';
+        legendHtml += '<span style="font-weight:bold;color:#555">חינוך:</span>';
+        legendHtml += '<span>●יסודי</span> <span>■על-יסודי</span> <span>▲גני</span> <span>◆מעון</span>';
+        legendHtml += '<span style="margin-right:6px">|</span>';
+        legendHtml += `<span style="color:${PUBLIC_PALETTE.edu_mamlachti}">■</span>ממלכתי <span style="color:${PUBLIC_PALETTE.edu_mamlachti_dati}">■</span>דתי <span style="color:${PUBLIC_PALETTE.edu_aravi}">■</span>ערבי <span style="color:${PUBLIC_PALETTE.edu_haredi}">■</span>חרדי`;
+        legendHtml += '<span style="margin-right:6px">|</span>';
+        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_existing};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>קיים `;
+        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_authorized};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>הרשאה `;
+        legendHtml += `<span style="width:10px;height:10px;background:${PUBLIC_PALETTE.edu_status_no_auth};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>אין הרשאה`;
+        legendHtml += '</div></div>';
+      }
+
+      // Shavaz legend section (compact, when layers are on)
+      if (layers['shavaz_kayam'] || layers['future_shavaz'] || layers['sport_kayam']) {
+        legendHtml += '<div style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px">';
+        legendHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px">';
+        legendHtml += '<span style="font-weight:bold;color:#555">שב"צ:</span>';
+        SHAVAZ_LEGEND.forEach(item => {
+          legendHtml += `<span style="width:10px;height:10px;background:${item.color};display:inline-block;border-radius:2px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>${item.label} `;
+        });
+        legendHtml += '</div></div>';
+      }
+      legendHtml += '</div>';
+    }
+
+    // Determine map bounds based on selected scale
+    const mapContainer = map.getContainer();
+    const mapRect = mapContainer.getBoundingClientRect();
+    const center = map.getCenter();
+    let printScaleLabel;
+    const selectedScale = PRINT_SCALES.find(s => s.value === printScale);
+    if (printScale !== 'current' && printScale !== 'fit' && selectedScale && selectedScale.denom) {
+      // Calculate bounds for exact scale
+      // At this scale, 1 cm on paper = denom cm in reality
+      // Print area ~ A4 landscape = ~27cm x 17cm
+      const PAPER_SIZES = {
+        A4: {
+          w: 27,
+          h: 17
+        },
+        A3: {
+          w: 38,
+          h: 25
+        },
+        A2: {
+          w: 55,
+          h: 37
+        },
+        A1: {
+          w: 79,
+          h: 53
+        },
+        A0: {
+          w: 112,
+          h: 77
+        }
+      };
+      const baseDims = PAPER_SIZES[printPageSize] || PAPER_SIZES.A4;
+      const paperDims = printOrientation === 'landscape' ? baseDims : {
+        w: baseDims.h,
+        h: baseDims.w
+      };
+      const paperWidthCm = paperDims.w;
+      const paperHeightCm = paperDims.h;
+      const metersWide = selectedScale.denom * paperWidthCm / 100;
+      const metersHigh = selectedScale.denom * paperHeightCm / 100;
+
+      // Convert meters to degrees (approximate at Jerusalem latitude ~31.75)
+      const lat = center.lat;
+      const mPerDegLat = 111320;
+      const mPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
+      const dLat = metersHigh / 2 / mPerDegLat;
+      const dLng = metersWide / 2 / mPerDegLng;
+      printScaleLabel = selectedScale.label;
+    } else {
+      // Calculate current scale
+      const centerPx = map.latLngToContainerPoint(center);
+      const rightPx = L.point(centerPx.x + 100, centerPx.y);
+      const rightLL = map.containerPointToLatLng(rightPx);
+      const distM = center.distanceTo(rightLL);
+      const dpi = 96;
+      const distCm = 100 / dpi * 2.54;
+      const scaleDenom = Math.round(distM * 100 / distCm);
+      printScaleLabel = '1:' + scaleDenom.toLocaleString('he-IL');
+    }
+
+    // ── window.print() approach: inject print styles and print the page directly ──
+    const printOverlay = document.createElement('div');
+    printOverlay.id = 'print-overlay';
+    printOverlay.innerHTML = `
+                    ${title ? `<div class="print-header-title">${title}</div>` : ''}
                     <div class="print-header-date">${printScaleLabel} | ${new Date().toLocaleDateString('he-IL')}</div>
                 `;document.body.appendChild(printOverlay);let printLegendEl=null;if(printShowLegend&&legendHtml){printLegendEl=document.createElement('div');printLegendEl.id='print-legend-overlay';printLegendEl.innerHTML=legendHtml;document.body.appendChild(printLegendEl);}const PAGE_MM={A4:[210,297],A3:[297,420],A2:[420,594],A1:[594,841],A0:[841,1189]};const[pw,ph]=PAGE_MM[printPageSize]||PAGE_MM.A4;const pageSize=printOrientation==='landscape'?`${ph}mm ${pw}mm`:`${pw}mm ${ph}mm`;const printStyle=document.createElement('style');printStyle.id='print-inject-style';printStyle.textContent=`
                     @media print {
