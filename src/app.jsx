@@ -12766,6 +12766,16 @@
                         ? `<div class="pp-note" style="background:#fff8e1;border:1px solid #ffb300;border-radius:4px;padding:6px 8px;margin:6px 0;font-size:12px;color:#5d4037;line-height:1.45">📝 ${escape(p.manual_note)}</div>`
                         : '';
 
+                    // מבצ (טבלת מקבצי הקרקע של יותם) — פוטנציאל/המלצות מוזרקים לכאן כדי שכל
+                    // ההמלצות ירוכזו בשכבת הפרוייקטור (ולא בשכבות השב"צ/הפרשה).
+                    const mbzBlock = (p.mbz_potential || p.mbz_recommendations)
+                        ? `<div class="pp-note" style="background:#efebe9;border:1px solid #8d6e63;border-radius:4px;padding:6px 8px;margin:6px 0;font-size:12px;color:#3e2723;line-height:1.45">` +
+                            `<b style="color:#5d4037">🏛️ מטבלת המבצ${p.mbz_name ? ` — ${escape(p.mbz_name)}` : ''}</b>` +
+                            (p.mbz_potential ? `<div style="margin-top:3px"><b>פוטנציאל:</b> ${escape(p.mbz_potential)}</div>` : '') +
+                            (p.mbz_recommendations ? `<div style="margin-top:3px"><b>המלצות:</b> ${escape(p.mbz_recommendations)}</div>` : '') +
+                          `</div>`
+                        : '';
+
                     // Related features — clickable badges that pan the map to the
                     // referenced recommendation. Set via RELATED_FEATURES in the
                     // build script (e.g. חוות הנוער ↔ מבני בתירא לחיים יחיל).
@@ -12930,6 +12940,7 @@
                         servicesTable +
                         psCard + karCard + descBlock + overlapDetail +
                         noteBlock +
+                        mbzBlock +
                         relatedBlock +
                         footerBlock +
                         extrasBlock +
@@ -13682,7 +13693,9 @@
                                 '<div style="font-size:11px;font-weight:700;color:' + (s.fill || '#8B4513') + '">🏛️ מבצ — ' + (s.label || p.status || '') + '</div></div>';
                             h += '<div class="popup-body" style="padding:8px 10px">';
                             h += mbzRow('שכונה', p.sub) + mbzRow('סוג הקצאה', p.allocation) + mbzRow('ייעוד', p.yeud) + mbzRow('בעלות', p.ownership) + mbzRow('כתובת', p.address) + mbzRow('שטח (דונם)', p.dunam) + mbzRow('גוש/חלקה', p.gush_helka) + mbzRow('תב"ע', p.taba);
-                            h += mbzBlock('שימושים מותרים', p.allowed_uses) + mbzBlock('בינוי קיים', p.existing_built) + mbzBlock('שטח מבונה עתידי', p.future_m2) + mbzBlock('פוטנציאל', p.potential) + mbzBlock('המלצות', p.recommendations);
+                            h += mbzBlock('שימושים מותרים', p.allowed_uses) + mbzBlock('בינוי קיים', p.existing_built) + mbzBlock('שטח מבונה עתידי', p.future_m2);
+                            // פוטנציאל/המלצות אינם מוצגים כאן — הם מרוכזים בשכבת "המלצות הפרוייקטור".
+                            if (p.potential || p.recommendations) h += '<div style="margin-top:7px;font-size:11px;color:#7ec9a0;font-style:italic">💡 פוטנציאל והמלצות — ראה שכבת "המלצות הפרוייקטור"</div>';
                             h += '</div>';
                             return h;
                         };
