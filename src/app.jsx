@@ -22416,26 +22416,43 @@
                                         const win = window.open('', '_blank');   // open synchronously to keep the user-gesture (popup-blocker safe)
                                         // Capture a map image of the selected area (the highlight polygon is already on the map)
                                         let mapImg = '';
+                                        const map = mapInstanceRef.current;
+                                        const mapEl = map && map.getContainer();
+                                        const overlay = m.closest('.units-overlay');
+                                        const prevDisp = overlay ? overlay.style.display : null;
+                                        const ovPane = (map && map.getPane) ? map.getPane('overlayPane') : null;   // SVG vectors (roads/plans/highlight)
+                                        const ovPaneDisp = ovPane ? ovPane.style.display : null;
                                         try {
-                                            const map = mapInstanceRef.current;
-                                            const mapEl = map && map.getContainer();
                                             if (map && mapEl && window.html2canvas && areaFinished && areaFinished.length >= 3) {
-                                                const overlay = m.closest('.units-overlay');
-                                                const prev = { center: map.getCenter(), zoom: map.getZoom() };
-                                                try { map.fitBounds(L.latLngBounds(areaFinished), { animate: false, padding: [30, 30] }); } catch(e){}
-                                                const prevDisp = overlay ? overlay.style.display : null;
+                                                // Pan (no zoom change → avoids the heavy plan/overlap re-render) so the area is centred.
+                                                try { map.panTo(L.latLngBounds(areaFinished).getCenter(), { animate: false }); } catch(e){}
                                                 if (overlay) overlay.style.display = 'none';
-                                                await new Promise(r => setTimeout(r, 500));   // let tiles load
-                                                const canvas = await window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
-                                                if (overlay) overlay.style.display = prevDisp || '';
-                                                try { map.setView(prev.center, prev.zoom, { animate: false }); } catch(e){}
+                                                if (ovPane) ovPane.style.display = 'none';   // hide SVG vectors → html2canvas stays fast (plans composited below)
+                                                await new Promise(r => setTimeout(r, 350));   // let tiles settle
+                                                // Cap html2canvas with a timeout so a heavy map (e.g. roads layer on) can't hang the print.
+                                                const canvas = await Promise.race([
+                                                    window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false }),
+                                                    new Promise((_, rej) => setTimeout(() => rej(new Error('html2canvas timeout')), 9000))
+                                                ]);
+                                                // html2canvas does NOT capture Leaflet SVG vector layers — composite the plan
+                                                // polygons + the red area outline manually (projection matches the current view).
+                                                try {
+                                                    const ctx = canvas.getContext('2d');
+                                                    const rect = mapEl.getBoundingClientRect();
+                                                    const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+                                                    const toPx = (lat, lng) => { const pt = map.latLngToContainerPoint(L.latLng(lat, lng)); return [pt.x * sx, pt.y * sy]; };
+                                                    const ring = (coords, fill, stroke, lw) => { if (!coords || coords.length < 3) return; ctx.beginPath(); coords.forEach((c, i) => { if (!c || c.length < 2) return; const xy = toPx(c[1], c[0]); i ? ctx.lineTo(xy[0], xy[1]) : ctx.moveTo(xy[0], xy[1]); }); ctx.closePath(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); } };
+                                                    ((fullAreaReport && fullAreaReport.plans && fullAreaReport.plans.rows) || []).forEach(pr => { const g = pr.feat && pr.feat.geometry; if (!g) return; try { if (g.type === 'Polygon') g.coordinates.forEach(r => ring(r, 'rgba(33,150,243,0.18)', 'rgba(21,101,192,0.75)', 1.2 * sx)); else if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(r => ring(r, 'rgba(33,150,243,0.18)', 'rgba(21,101,192,0.75)', 1.2 * sx))); } catch(e){} });
+                                                    ctx.setLineDash([9, 6]); ctx.lineWidth = 3 * sx; ctx.strokeStyle = '#e94560'; ctx.beginPath(); areaFinished.forEach((p, i) => { const xy = toPx(p.lat, p.lng); i ? ctx.lineTo(xy[0], xy[1]) : ctx.moveTo(xy[0], xy[1]); }); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+                                                } catch (e) { console.warn('[FullArea] overlay composite failed', e); }
                                                 mapImg = canvas.toDataURL('image/jpeg', 0.85);
                                             }
                                         } catch (e) { console.warn('[FullArea] map capture failed', e); }
+                                        finally { if (overlay) overlay.style.display = prevDisp || ''; if (ovPane) ovPane.style.display = ovPaneDisp || ''; }
                                         const title = (document.getElementById('full-area-report-title')?.textContent || 'דוח אזור מקיף');
                                         win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' +
                                             '<style>*{color:#000 !important}body{font-family:Assistant,Arial,sans-serif;padding:20px;background:#fff}h2,h3{font-weight:bold}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th,th *{background:#1a1a2e !important;color:#fff !important}div[style*="background"]{background:none !important;border:none !important}img.areamap{display:block;width:100%;max-width:680px;border:1px solid #ccc;border-radius:6px;margin:0 0 14px}.cap{font-size:11px;margin:-10px 0 14px}</style></head><body>');
-                                        if (mapImg) win.document.write('<img class="areamap" src="' + mapImg + '"/><div class="cap">🗺️ האזור הנבחר (מסומן בקו אדום מקווקו)</div>');
+                                        if (mapImg) win.document.write('<img class="areamap" src="' + mapImg + '"/><div class="cap">🗺️ האזור הנבחר (קו אדום מקווקו) · תכניות התב"ע באזור (כחול)</div>');
                                         win.document.write(m.innerHTML.replace(/<button[^>]*>[\s\S]*?<\/button>/g, ''));
                                         win.document.write('</body></html>');
                                         win.document.close(); win.print();
