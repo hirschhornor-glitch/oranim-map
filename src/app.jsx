@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-05-28-crosswalk-table';
+        const APP_VERSION = '2026-06-09-mbz-enrichment';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -11722,37 +11722,31 @@
                     bindShavazPopupEvents(popup, entry.properties, latlng, null, allShavaz, idx);
                 }
 
-                // --- graft מבצ (Yotam's land-cell table) onto the existing shavaz layers, by col-F status ---
+                // --- graft מבצ (Yotam's land-cell table) onto the existing shavaz layers, by LOT (גוש/חלקה) ---
                 // No separate מבצ layer: each compound's statutory facts are attached as `_mbz` to the
-                // hosting feature so the shared buildShavazPopup surfaces them. Routing by status:
-                //   קיים/קיים-משתנה → shavaz_kayam · עתידי → landuse שב"צ-coded · הפרשה → landuse הפרשה-coded.
+                // hosting LOT polygon (matched offline by gush/חלקה → parcels overlap, stored as
+                // _host_fids/_host_oids on the מבצ — NOT by the מבצ point). Routing by status:
+                //   קיים/קיים-משתנה → shavaz_kayam (fid) · עתידי/הפרשה → landuse_xplan (objectid).
                 // Q/R (potential/recommendations) are NOT shown here — they live in the projector layer.
-                // Per-feature `_mbz_grafted` guard makes re-runs idempotent (landuse loads on-demand later).
+                // `_mbz_grafted` guard makes re-runs idempotent (landuse loads on-demand later).
                 if (gd.mbz_gonenim && gd.mbz_gonenim.features) {
-                    const _SH = new Set([400, 410, 450, 460, 1670]);
-                    const _HF = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
-                    const _ring = (x, y, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside; } return inside; };
-                    const _inGeom = (x, y, g) => {
-                        if (!g) return false;
-                        if (g.type === 'Polygon') { if (!_ring(x, y, g.coordinates[0])) return false; for (let k = 1; k < g.coordinates.length; k++) if (_ring(x, y, g.coordinates[k])) return false; return true; }
-                        if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) { if (_ring(x, y, poly[0])) { let hole = false; for (let k = 1; k < poly.length; k++) if (_ring(x, y, poly[k])) { hole = true; break; } if (!hole) return true; } } return false; }
-                        return false;
-                    };
                     const _statutory = p => ({ name: p.name, status: p.status, status_cat: p.status_cat, allocation: p.allocation, yeud: p.yeud, ownership: p.ownership, dunam: p.dunam, address: p.address, gush_helka: p.gush_helka, allowed_uses: p.allowed_uses, existing_built: p.existing_built, future_m2: p.future_m2, has_reco: !!(p.potential || p.recommendations) });
-                    const skF = (gd.shavaz_kayam && gd.shavaz_kayam.features) || [];
-                    const luF = (gd.landuse_xplan && gd.landuse_xplan.features) || [];
+                    let _skByFid = null, _luByOid = null;
                     gd.mbz_gonenim.features.forEach(mf => {
                         const mp = mf.properties;
                         if (mp._mbz_grafted) return;
-                        const cat = mp.status_cat, c = mf.geometry.coordinates, x = c[0], y = c[1];
-                        let host = null;
-                        if (cat === 'קיים' || cat === 'קיים_משתנה') {
-                            for (const f of skF) { if (_inGeom(x, y, f.geometry)) { host = f; break; } }
-                        } else if (cat === 'עתידי' || cat === 'עתידי_הפרשה') {
-                            const want = cat === 'עתידי' ? _SH : _HF;
-                            for (const f of luF) { if (want.has(parseInt(f.properties.mavat_code)) && _inGeom(x, y, f.geometry)) { host = f; break; } }
+                        const fids = mp._host_fids, oids = mp._host_oids;
+                        let done = false;
+                        if (Array.isArray(fids) && fids.length) {
+                            if (!_skByFid && gd.shavaz_kayam && gd.shavaz_kayam.features) { _skByFid = {}; gd.shavaz_kayam.features.forEach(f => { _skByFid[f.properties.fid] = f; }); }
+                            if (_skByFid) { fids.forEach(fid => { const h = _skByFid[fid]; if (h) (h.properties._mbz = h.properties._mbz || []).push(_statutory(mp)); }); done = true; }
+                        } else if (Array.isArray(oids) && oids.length) {
+                            if (!_luByOid && gd.landuse_xplan && gd.landuse_xplan.features) { _luByOid = {}; gd.landuse_xplan.features.forEach(f => { _luByOid[f.properties.objectid] = f; }); }
+                            if (_luByOid) { oids.forEach(oid => { const h = _luByOid[oid]; if (h) (h.properties._mbz = h.properties._mbz || []).push(_statutory(mp)); }); done = true; }
+                        } else {
+                            done = true; // no host lot (no gush/חלקה match) — nothing to enrich
                         }
-                        if (host) { (host.properties._mbz = host.properties._mbz || []).push(_statutory(mp)); mp._mbz_grafted = true; }
+                        if (done) mp._mbz_grafted = true;
                     });
                 }
 
@@ -22435,12 +22429,32 @@
                                     </div>
                                 ) : (<>
                                 <div style={{display:'flex',gap:6,position:'absolute',top:14,left:50}}>
-                                    <button onClick={() => {
+                                    <button onClick={async () => {
                                         const m = document.getElementById('full-area-report-modal');
                                         if (!m) return;
-                                        const win = window.open('', '_blank');
-                                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח אזור מקיף</title>' +
-                                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h2,h3{color:#e94560}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}div[style*="background"]{background:none !important;border:none !important}</style></head><body>');
+                                        const win = window.open('', '_blank');   // open synchronously to keep the user-gesture (popup-blocker safe)
+                                        // Capture a map image of the selected area (the highlight polygon is already on the map)
+                                        let mapImg = '';
+                                        try {
+                                            const map = mapInstanceRef.current;
+                                            const mapEl = map && map.getContainer();
+                                            if (map && mapEl && window.html2canvas && areaFinished && areaFinished.length >= 3) {
+                                                const overlay = m.closest('.units-overlay');
+                                                const prev = { center: map.getCenter(), zoom: map.getZoom() };
+                                                try { map.fitBounds(L.latLngBounds(areaFinished), { animate: false, padding: [30, 30] }); } catch(e){}
+                                                const prevDisp = overlay ? overlay.style.display : null;
+                                                if (overlay) overlay.style.display = 'none';
+                                                await new Promise(r => setTimeout(r, 500));   // let tiles load
+                                                const canvas = await window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
+                                                if (overlay) overlay.style.display = prevDisp || '';
+                                                try { map.setView(prev.center, prev.zoom, { animate: false }); } catch(e){}
+                                                mapImg = canvas.toDataURL('image/jpeg', 0.85);
+                                            }
+                                        } catch (e) { console.warn('[FullArea] map capture failed', e); }
+                                        const title = (document.getElementById('full-area-report-title')?.textContent || 'דוח אזור מקיף');
+                                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' +
+                                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h2,h3{color:#e94560}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}div[style*="background"]{background:none !important;border:none !important}img.areamap{display:block;width:100%;max-width:680px;border:1px solid #ccc;border-radius:6px;margin:0 0 14px}.cap{font-size:11px;color:#666;margin:-10px 0 14px}</style></head><body>');
+                                        if (mapImg) win.document.write('<img class="areamap" src="' + mapImg + '"/><div class="cap">🗺️ האזור הנבחר (מסומן בקו אדום מקווקו)</div>');
                                         win.document.write(m.innerHTML.replace(/<button[^>]*>[\s\S]*?<\/button>/g, ''));
                                         win.document.write('</body></html>');
                                         win.document.close(); win.print();
