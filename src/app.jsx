@@ -15118,9 +15118,14 @@
                     + '</table>'
                     + (trees ? '<div style="margin-top:8px;font-size:12px;border-top:1px solid #234;padding-top:6px"><b style="color:#9ab">פירוט מינים:</b>' + trees + '</div>' : '')
                     + surveyHtml
-                    + '<div style="margin-top:8px;font-size:12px">'
+                    + '<div style="margin-top:8px;font-size:12px;display:flex;flex-direction:column;gap:4px">'
                     +   '<a href="' + esc(rec.url) + '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
                     +   '🔗 פרטי האישור באתר מעירים ←</a>'
+                    // 7-digit license numbers are the official yeela (MOAG) format -
+                    // searchable on the public portal (paste the number shown).
+                    +   (/^\d{7}$/.test(String(rec.permit_number || ''))
+                          ? '<a href="https://yeela-trees.moag.gov.il/FoPublic/FoLicence" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">🔍 אימות ביעל״ה (רישיון ' + esc(rec.permit_number) + ') ←</a>'
+                          : '')
                     + '</div>'
                     + '</div>';
             }
