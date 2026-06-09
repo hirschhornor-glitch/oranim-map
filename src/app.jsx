@@ -1866,19 +1866,6 @@
             { label: 'הפרשה מבונה עתידי', color: PUBLIC_PALETTE.shavaz_future_stroke },
         ];
 
-        const TOPICS_LEGEND = [
-            { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
-            { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
-            { label: 'פרוייקטים עם דירות להשכרה', color: '#16a085', style: 'outline' },
-        ];
-
-        const OBJECTIONS_LEGEND = [
-            { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
-            { label: 'תכניות עם ישיבה קרובה', color: '#ff8c00', style: 'outline' },
-            { label: 'היתרים פתוחים להתנגדויות', color: '#ff3d7f', style: 'outline' },
-            { label: 'אישורי כריתת עצים פתוחים לערר', color: '#2e7d32', style: 'outline' },
-        ];
-
         const HIDDEN_PLANS_LEGEND = [
             { label: 'תכניות איחוד וחלוקה', color: '#00aa00', style: 'hatch' },
             { label: 'תכניות תשתיות', color: '#9b59b6', style: 'solid' },
@@ -17447,9 +17434,6 @@
                                     <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.topics?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
                                     <span>נושאים תכנוניים</span>
                                 </div>
-                                <button className="layer-legend-btn" title="מקרא נושאים תכנוניים"
-                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא נושאים תכנוניים', items: TOPICS_LEGEND }); }}
-                                    style={{fontSize:'14px',margin:0}}>⋯</button>
                             </div>
                             {!collapsedGroups.topics && (<div>
                             <div className="layer-item"
@@ -17480,11 +17464,8 @@
                                  style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                                 <div style={{display:'flex',alignItems:'center',gap:4}}>
                                     <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.objCommittees?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
-                                    <span>התנגדויות וועדות</span>
+                                    <span>ועדות והתנגדויות</span>
                                 </div>
-                                <button className="layer-legend-btn" title="מקרא התנגדויות וועדות"
-                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא התנגדויות וועדות', items: OBJECTIONS_LEGEND }); }}
-                                    style={{fontSize:'14px',margin:0}}>⋯</button>
                             </div>
                             {!collapsedGroups.objCommittees && (<div>
                             <div className="layer-item"
@@ -22453,7 +22434,7 @@
                                         } catch (e) { console.warn('[FullArea] map capture failed', e); }
                                         const title = (document.getElementById('full-area-report-title')?.textContent || 'דוח אזור מקיף');
                                         win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' +
-                                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222;background:#fff}h2,h3{color:#e94560}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#eee}div[style*="background"]{background:none !important;border:none !important}img.areamap{display:block;width:100%;max-width:680px;border:1px solid #ccc;border-radius:6px;margin:0 0 14px}.cap{font-size:11px;color:#666;margin:-10px 0 14px}</style></head><body>');
+                                            '<style>*{color:#000 !important}body{font-family:Assistant,Arial,sans-serif;padding:20px;background:#fff}h2,h3{font-weight:bold}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}th,td{border:1px solid #ccc;padding:5px;text-align:right}th,th *{background:#1a1a2e !important;color:#fff !important}div[style*="background"]{background:none !important;border:none !important}img.areamap{display:block;width:100%;max-width:680px;border:1px solid #ccc;border-radius:6px;margin:0 0 14px}.cap{font-size:11px;margin:-10px 0 14px}</style></head><body>');
                                         if (mapImg) win.document.write('<img class="areamap" src="' + mapImg + '"/><div class="cap">🗺️ האזור הנבחר (מסומן בקו אדום מקווקו)</div>');
                                         win.document.write(m.innerHTML.replace(/<button[^>]*>[\s\S]*?<\/button>/g, ''));
                                         win.document.write('</body></html>');
