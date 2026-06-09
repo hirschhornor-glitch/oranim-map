@@ -1868,10 +1868,15 @@
 
         const TOPICS_LEGEND = [
             { label: 'תבעות כפולות על אותו מרחב', color: '#3366ff', style: 'hatch' },
-            { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
-            { label: 'תכניות עם ישיבה קרובה', color: '#ff8c00', style: 'outline' },
             { label: 'מבני ציבור להריסה במסגרת התחדשות עירונית', color: '#ff4444', style: 'hatch' },
             { label: 'פרוייקטים עם דירות להשכרה', color: '#16a085', style: 'outline' },
+        ];
+
+        const OBJECTIONS_LEGEND = [
+            { label: 'תכניות המופקדות להתנגדויות', color: '#dd0000', style: 'outline' },
+            { label: 'תכניות עם ישיבה קרובה', color: '#ff8c00', style: 'outline' },
+            { label: 'היתרים פתוחים להתנגדויות', color: '#ff3d7f', style: 'outline' },
+            { label: 'אישורי כריתת עצים פתוחים לערר', color: '#2e7d32', style: 'outline' },
         ];
 
         const HIDDEN_PLANS_LEGEND = [
@@ -16690,7 +16695,9 @@
             };
 
             const resetView = () => {
-                mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM);
+                // animate:false — the animated zoom path stalls under the hundreds of
+                // per-layer zoomanim listeners, leaving the view unchanged (matches goBackView).
+                mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM, { animate: false });
             };
 
             const goBackView = () => {
@@ -17457,6 +17464,31 @@
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
+                                 title='פרוייקטים עם דירות להשכרה (יח"ד להשכרה > 0)'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, rental: !prev.rental}))}>
+                                <input type="checkbox" checked={planningTopics.rental} onChange={() => {}} />
+                                <label style={{flex:1}}>פרוייקטים עם דירות להשכרה</label>
+                                <button className="layer-legend-btn" title="דוח דיור להשכרה ומותנה"
+                                    onClick={(e) => { e.stopPropagation(); setSpecialHousingReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            </div>)}
+                        </div>
+
+                        <div className="sidebar-section">
+                            <div className="layer-group-title" onClick={() => setCollapsedGroups(prev => ({...prev, objCommittees: !prev.objCommittees}))}
+                                 style={{cursor:'pointer',userSelect:'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                    <span style={{fontSize:10,transition:'transform 0.2s',transform:collapsedGroups.objCommittees?'rotate(-90deg)':'rotate(0deg)',display:'inline-block'}}>▼</span>
+                                    <span>התנגדויות וועדות</span>
+                                </div>
+                                <button className="layer-legend-btn" title="מקרא התנגדויות וועדות"
+                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא התנגדויות וועדות', items: OBJECTIONS_LEGEND }); }}
+                                    style={{fontSize:'14px',margin:0}}>⋯</button>
+                            </div>
+                            {!collapsedGroups.objCommittees && (<div>
+                            <div className="layer-item"
                                  title='תוכניות בשלב הפקדה להתנגדויות'
                                  style={{display:'flex',alignItems:'center'}}
                                  onClick={() => setPlanningTopics(prev => ({...prev, objections: !prev.objections}))}>
@@ -17475,12 +17507,6 @@
                                 <button className="layer-legend-btn" title="דוח ישיבות קרובות"
                                     onClick={(e) => { e.stopPropagation(); setMeetingsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
-                            </div>
-                            <div className="layer-item"
-                                 title='פרוייקטים עם דירות להשכרה (יח"ד להשכרה > 0)'
-                                 onClick={() => setPlanningTopics(prev => ({...prev, rental: !prev.rental}))}>
-                                <input type="checkbox" checked={planningTopics.rental} onChange={() => {}} />
-                                <label>פרוייקטים עם דירות להשכרה</label>
                             </div>
                             <div className="layer-item"
                                  title='בקשות להיתר עם הקלות שפורסמו להתנגדויות (סעיף 149) — עם מועד אחרון להגשת התנגדות'

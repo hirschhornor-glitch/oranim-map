@@ -2379,6 +2379,15 @@ const TOPICS_LEGEND = [{
   color: '#3366ff',
   style: 'hatch'
 }, {
+  label: 'מבני ציבור להריסה במסגרת התחדשות עירונית',
+  color: '#ff4444',
+  style: 'hatch'
+}, {
+  label: 'פרוייקטים עם דירות להשכרה',
+  color: '#16a085',
+  style: 'outline'
+}];
+const OBJECTIONS_LEGEND = [{
   label: 'תכניות המופקדות להתנגדויות',
   color: '#dd0000',
   style: 'outline'
@@ -2387,12 +2396,12 @@ const TOPICS_LEGEND = [{
   color: '#ff8c00',
   style: 'outline'
 }, {
-  label: 'מבני ציבור להריסה במסגרת התחדשות עירונית',
-  color: '#ff4444',
-  style: 'hatch'
+  label: 'היתרים פתוחים להתנגדויות',
+  color: '#ff3d7f',
+  style: 'outline'
 }, {
-  label: 'פרוייקטים עם דירות להשכרה',
-  color: '#16a085',
+  label: 'אישורי כריתת עצים פתוחים לערר',
+  color: '#2e7d32',
   style: 'outline'
 }];
 const HIDDEN_PLANS_LEGEND = [{
@@ -19920,7 +19929,11 @@ function App() {
     }));
   };
   const resetView = () => {
-    mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM);
+    // animate:false — the animated zoom path stalls under the hundreds of
+    // per-layer zoomanim listeners, leaving the view unchanged (matches goBackView).
+    mapInstanceRef.current?.setView(CENTER, DEFAULT_ZOOM, {
+      animate: false
+    });
   };
   const goBackView = () => {
     const hist = viewHistoryRef.current;
@@ -20983,6 +20996,78 @@ function App() {
     }
   }, "\uD83D\uDCCA")), /*#__PURE__*/React.createElement("div", {
     className: "layer-item",
+    title: "\u05E4\u05E8\u05D5\u05D9\u05D9\u05E7\u05D8\u05D9\u05DD \u05E2\u05DD \u05D3\u05D9\u05E8\u05D5\u05EA \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4 (\u05D9\u05D7\"\u05D3 \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4 > 0)",
+    style: {
+      display: 'flex',
+      alignItems: 'center'
+    },
+    onClick: () => setPlanningTopics(prev => ({
+      ...prev,
+      rental: !prev.rental
+    }))
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: planningTopics.rental,
+    onChange: () => {}
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      flex: 1
+    }
+  }, "\u05E4\u05E8\u05D5\u05D9\u05D9\u05E7\u05D8\u05D9\u05DD \u05E2\u05DD \u05D3\u05D9\u05E8\u05D5\u05EA \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4"), /*#__PURE__*/React.createElement("button", {
+    className: "layer-legend-btn",
+    title: "\u05D3\u05D5\u05D7 \u05D3\u05D9\u05D5\u05E8 \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4 \u05D5\u05DE\u05D5\u05EA\u05E0\u05D4",
+    onClick: e => {
+      e.stopPropagation();
+      setSpecialHousingReport(true);
+    },
+    style: {
+      marginRight: 4,
+      fontSize: 11
+    }
+  }, "\uD83D\uDCCA")))), /*#__PURE__*/React.createElement("div", {
+    className: "sidebar-section"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "layer-group-title",
+    onClick: () => setCollapsedGroups(prev => ({
+      ...prev,
+      objCommittees: !prev.objCommittees
+    })),
+    style: {
+      cursor: 'pointer',
+      userSelect: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      transition: 'transform 0.2s',
+      transform: collapsedGroups.objCommittees ? 'rotate(-90deg)' : 'rotate(0deg)',
+      display: 'inline-block'
+    }
+  }, "\u25BC"), /*#__PURE__*/React.createElement("span", null, "\u05D4\u05EA\u05E0\u05D2\u05D3\u05D5\u05D9\u05D5\u05EA \u05D5\u05D5\u05E2\u05D3\u05D5\u05EA")), /*#__PURE__*/React.createElement("button", {
+    className: "layer-legend-btn",
+    title: "\u05DE\u05E7\u05E8\u05D0 \u05D4\u05EA\u05E0\u05D2\u05D3\u05D5\u05D9\u05D5\u05EA \u05D5\u05D5\u05E2\u05D3\u05D5\u05EA",
+    onClick: e => {
+      e.stopPropagation();
+      setLegendPopup({
+        title: 'מקרא התנגדויות וועדות',
+        items: OBJECTIONS_LEGEND
+      });
+    },
+    style: {
+      fontSize: '14px',
+      margin: 0
+    }
+  }, "\u22EF")), !collapsedGroups.objCommittees && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "layer-item",
     title: "\u05EA\u05D5\u05DB\u05E0\u05D9\u05D5\u05EA \u05D1\u05E9\u05DC\u05D1 \u05D4\u05E4\u05E7\u05D3\u05D4 \u05DC\u05D4\u05EA\u05E0\u05D2\u05D3\u05D5\u05D9\u05D5\u05EA",
     style: {
       display: 'flex',
@@ -21042,17 +21127,6 @@ function App() {
       fontSize: 11
     }
   }, "\uD83D\uDCCA")), /*#__PURE__*/React.createElement("div", {
-    className: "layer-item",
-    title: "\u05E4\u05E8\u05D5\u05D9\u05D9\u05E7\u05D8\u05D9\u05DD \u05E2\u05DD \u05D3\u05D9\u05E8\u05D5\u05EA \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4 (\u05D9\u05D7\"\u05D3 \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4 > 0)",
-    onClick: () => setPlanningTopics(prev => ({
-      ...prev,
-      rental: !prev.rental
-    }))
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: planningTopics.rental,
-    onChange: () => {}
-  }), /*#__PURE__*/React.createElement("label", null, "\u05E4\u05E8\u05D5\u05D9\u05D9\u05E7\u05D8\u05D9\u05DD \u05E2\u05DD \u05D3\u05D9\u05E8\u05D5\u05EA \u05DC\u05D4\u05E9\u05DB\u05E8\u05D4")), /*#__PURE__*/React.createElement("div", {
     className: "layer-item",
     title: "\u05D1\u05E7\u05E9\u05D5\u05EA \u05DC\u05D4\u05D9\u05EA\u05E8 \u05E2\u05DD \u05D4\u05E7\u05DC\u05D5\u05EA \u05E9\u05E4\u05D5\u05E8\u05E1\u05DE\u05D5 \u05DC\u05D4\u05EA\u05E0\u05D2\u05D3\u05D5\u05D9\u05D5\u05EA (\u05E1\u05E2\u05D9\u05E3 149) \u2014 \u05E2\u05DD \u05DE\u05D5\u05E2\u05D3 \u05D0\u05D7\u05E8\u05D5\u05DF \u05DC\u05D4\u05D2\u05E9\u05EA \u05D4\u05EA\u05E0\u05D2\u05D3\u05D5\u05EA",
     style: {
