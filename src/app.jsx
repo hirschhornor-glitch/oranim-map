@@ -389,7 +389,6 @@
             sara_march_2026: 'data/sara_march_2026.geojson',
             education_shanaton: 'data/education_shanaton.geojson',
             mosadot_moch: 'data/mosadot_moch.geojson',
-            migrash_panui: 'data/migrash_panui.geojson',
             master_plan_moshavot: 'data/master_plan_moshavot.geojson',
             master_plan_rasko: 'data/master_plan_rasko.geojson',
             master_plan_baka: 'data/master_plan_baka.geojson',
@@ -851,7 +850,6 @@
                     { id: 'future_shavaz', name: 'שב"צ עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי חינוך', desc: 'טבלת שרה - פרויקטי בנייה חינוך מרץ 2026', on: false },
-                    { id: 'migrash_panui', name: 'מגרשים פנויים', desc: '45 מגרשים ציבוריים ריקים (משב"ש) — פוטנציאל לשב"צ עתידי', on: false },
                 ]
             },
             master_plans: {
@@ -8737,7 +8735,7 @@
                     const gd = Object.assign({}, gdRoot);
                     const need = ['master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'projector_talpiot', 'projector_talpiot_subs',
                         // existing-state layers (מצב קיים)
-                        'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'migrash_panui', 'shavaz_kayam', 'sport_kayam', 'mivnei_lashimur', 'yiud_karka_kayam', 'roads'];
+                        'mosadot_moch', 'education_shanaton', 'mosadot_shchuna', 'shavaz_kayam', 'sport_kayam', 'mivnei_lashimur', 'yiud_karka_kayam', 'roads'];
                     await Promise.all(need.map(async key => {
                         if (gd[key] && gd[key].features) return;
                         if (cache[key]) { gd[key] = cache[key]; return; }
@@ -8916,7 +8914,6 @@
                 });
                 eduList.sort((a, b) => b.students - a.students);
                 let shchunaCount = 0; feats('mosadot_shchuna').forEach(f => { if (inPoly(f)) shchunaCount++; });
-                const vacant = { count: 0, area: 0 }; feats('migrash_panui').forEach(f => { if (!inPoly(f)) return; vacant.count++; vacant.area += parseFloat((f.properties || {}).gross_area) || 0; });
 
                 // 7b. אוכלוסייה (מפקד 2022) — sum stat areas whose centroid falls inside
                 const demo = { pop: 0, hh: 0, areas: 0 };
@@ -8943,7 +8940,7 @@
                 feats('roads').forEach(f => { const c = geomCentroid(f.geometry); if (!c || !pip(c, polyCoords)) return; const s = (((f.properties || {}).street || '') + '').trim(); if (s) streetSet.add(s); });
                 const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
 
-                const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, vacant, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
+                const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
                     title: 'סיכום אזור נבחר', areaSqm, streets,
@@ -11720,6 +11717,40 @@
                     bindShavazPopupEvents(popup, entry.properties, latlng, null, allShavaz, idx);
                 }
 
+                // --- graft מבצ (Yotam's land-cell table) onto the existing shavaz layers, by col-F status ---
+                // No separate מבצ layer: each compound's statutory facts are attached as `_mbz` to the
+                // hosting feature so the shared buildShavazPopup surfaces them. Routing by status:
+                //   קיים/קיים-משתנה → shavaz_kayam · עתידי → landuse שב"צ-coded · הפרשה → landuse הפרשה-coded.
+                // Q/R (potential/recommendations) are NOT shown here — they live in the projector layer.
+                // Per-feature `_mbz_grafted` guard makes re-runs idempotent (landuse loads on-demand later).
+                if (gd.mbz_gonenim && gd.mbz_gonenim.features) {
+                    const _SH = new Set([400, 410, 450, 460, 1670]);
+                    const _HF = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
+                    const _ring = (x, y, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside; } return inside; };
+                    const _inGeom = (x, y, g) => {
+                        if (!g) return false;
+                        if (g.type === 'Polygon') { if (!_ring(x, y, g.coordinates[0])) return false; for (let k = 1; k < g.coordinates.length; k++) if (_ring(x, y, g.coordinates[k])) return false; return true; }
+                        if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) { if (_ring(x, y, poly[0])) { let hole = false; for (let k = 1; k < poly.length; k++) if (_ring(x, y, poly[k])) { hole = true; break; } if (!hole) return true; } } return false; }
+                        return false;
+                    };
+                    const _statutory = p => ({ name: p.name, status: p.status, status_cat: p.status_cat, allocation: p.allocation, yeud: p.yeud, ownership: p.ownership, dunam: p.dunam, address: p.address, gush_helka: p.gush_helka, allowed_uses: p.allowed_uses, existing_built: p.existing_built, future_m2: p.future_m2, has_reco: !!(p.potential || p.recommendations) });
+                    const skF = (gd.shavaz_kayam && gd.shavaz_kayam.features) || [];
+                    const luF = (gd.landuse_xplan && gd.landuse_xplan.features) || [];
+                    gd.mbz_gonenim.features.forEach(mf => {
+                        const mp = mf.properties;
+                        if (mp._mbz_grafted) return;
+                        const cat = mp.status_cat, c = mf.geometry.coordinates, x = c[0], y = c[1];
+                        let host = null;
+                        if (cat === 'קיים' || cat === 'קיים_משתנה') {
+                            for (const f of skF) { if (_inGeom(x, y, f.geometry)) { host = f; break; } }
+                        } else if (cat === 'עתידי' || cat === 'עתידי_הפרשה') {
+                            const want = cat === 'עתידי' ? _SH : _HF;
+                            for (const f of luF) { if (want.has(parseInt(f.properties.mavat_code)) && _inGeom(x, y, f.geometry)) { host = f; break; } }
+                        }
+                        if (host) { (host.properties._mbz = host.properties._mbz || []).push(_statutory(mp)); mp._mbz_grafted = true; }
+                    });
+                }
+
                 // --- Shavaz Kayam (existing public buildings — background fill only) ---
                 if (layers['shavaz_kayam'] && gd.shavaz_kayam) {
                     const shavazKayamLayer = L.geoJSON(gd.shavaz_kayam, {
@@ -13659,64 +13690,8 @@
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
                 }
 
-                // --- מבצ (מקבצי קרקע ציבורית) overlay — split by status (col F from Yotam's table) ---
-                // Each compound is shown ALONGSIDE the matching shavaz layer toggle:
-                //   קיים/קיים-משתנה → shavaz_kayam · עתידי → future_shavaz · הפרשה → hafrashah_future.
-                // Keeps the city-GIS layers untouched; covers all 109 compounds uniformly.
-                if (gd.mbz_gonenim) {
-                    const MBZ_STYLE = {
-                        'קיים':        { fill: '#8B4513', stroke: '#5C2E0A', dash: false, label: 'שב"צ קיים' },
-                        'קיים_משתנה':  { fill: '#e65100', stroke: '#bf360c', dash: false, label: 'שב"צ קיים שעתיד להשתנות' },
-                        'עתידי':       { fill: '#D2B48C', stroke: '#8B4513', dash: true,  label: 'שב"צ עתידי' },
-                        'עתידי_הפרשה': { fill: '#c9a26b', stroke: '#8B4513', dash: true,  label: 'הפרשה מבונה עתידית' },
-                    };
-                    const mbzWant = new Set();
-                    if (layers['shavaz_kayam'])     { mbzWant.add('קיים'); mbzWant.add('קיים_משתנה'); }
-                    if (layers['future_shavaz'])    mbzWant.add('עתידי');
-                    if (layers['hafrashah_future']) mbzWant.add('עתידי_הפרשה');
-                    if (mbzWant.size) {
-                        const mbzIcon = (cat) => {
-                            const s = MBZ_STYLE[cat] || MBZ_STYLE['קיים']; const sz = 15; const d = s.dash ? ' stroke-dasharray="3,2"' : '';
-                            const html = '<svg width="' + sz + '" height="' + sz + '" xmlns="http://www.w3.org/2000/svg">' +
-                                '<rect x="2" y="2" width="' + (sz - 4) + '" height="' + (sz - 4) + '" fill="' + s.fill + '" stroke="' + s.stroke + '" stroke-width="2"' + d + ' rx="2"/>' +
-                                '<rect x="4.5" y="4.5" width="' + (sz - 9) + '" height="' + (sz - 9) + '" fill="none" stroke="#fff" stroke-width="1"/></svg>';
-                            return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
-                        };
-                        const _skip = v => (v === null || v === undefined || !String(v).trim() || String(v).trim() === 'לא רלוונטי' || String(v).trim() === 'nan');
-                        const mbzRow = (lbl, val) => _skip(val) ? '' :
-                            '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;margin:2px 0"><span style="color:#9ab;white-space:nowrap">' + lbl + '</span><span style="color:#e8e8e8;text-align:left">' + val + '</span></div>';
-                        const mbzBlock = (lbl, val) => _skip(val) ? '' :
-                            '<div style="margin-top:7px"><div style="font-size:11px;color:#7ec9a0;font-weight:700;margin-bottom:1px">' + lbl + '</div><div style="font-size:12px;color:#dcdcdc;white-space:pre-wrap;line-height:1.4">' + String(val) + '</div></div>';
-                        const buildMbzPopup = (p) => {
-                            const s = MBZ_STYLE[p.status_cat] || {};
-                            let h = '<div class="popup-header" style="border-bottom:3px solid ' + (s.stroke || '#8B4513') + '"><div class="popup-header-title">' + (p.name || 'מקבץ ציבורי') + '</div>' +
-                                '<div style="font-size:11px;font-weight:700;color:' + (s.fill || '#8B4513') + '">🏛️ מבצ — ' + (s.label || p.status || '') + '</div></div>';
-                            h += '<div class="popup-body" style="padding:8px 10px">';
-                            h += mbzRow('שכונה', p.sub) + mbzRow('סוג הקצאה', p.allocation) + mbzRow('ייעוד', p.yeud) + mbzRow('בעלות', p.ownership) + mbzRow('כתובת', p.address) + mbzRow('שטח (דונם)', p.dunam) + mbzRow('גוש/חלקה', p.gush_helka) + mbzRow('תב"ע', p.taba);
-                            h += mbzBlock('שימושים מותרים', p.allowed_uses) + mbzBlock('בינוי קיים', p.existing_built) + mbzBlock('שטח מבונה עתידי', p.future_m2);
-                            // פוטנציאל/המלצות אינם מוצגים כאן — הם מרוכזים בשכבת "המלצות הפרוייקטור".
-                            if (p.potential || p.recommendations) h += '<div style="margin-top:7px;font-size:11px;color:#7ec9a0;font-style:italic">💡 פוטנציאל והמלצות — ראה שכבת "המלצות הפרוייקטור"</div>';
-                            h += '</div>';
-                            return h;
-                        };
-                        const mbzLayer = L.geoJSON(gd.mbz_gonenim, {
-                            pane: 'shavazPane',
-                            filter: f => mbzWant.has(f.properties.status_cat),
-                            pointToLayer: (f, latlng) => L.marker(latlng, { icon: mbzIcon(f.properties.status_cat), pane: 'shavazMarkersPane' }),
-                            onEachFeature: (f, layer) => {
-                                layer.on('click', (e) => {
-                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
-                                    L.DomEvent.stopPropagation(e);
-                                    L.popup({ maxWidth: popupMaxWidth(), className: shavazPopupClass(true) })
-                                        .setLatLng(layer.getLatLng())
-                                        .setContent(buildMbzPopup(f.properties))
-                                        .openOn(map);
-                                });
-                            }
-                        }).addTo(map);
-                        geoLayersRef.current.mbz_gonenim = mbzLayer;
-                    }
-                }
+                // (מבצ אינו שכבה נפרדת — נתוניו מוזרקים כ-_mbz לפיצ'רי shavaz_kayam/landuse_xplan
+                //  ומוצגים בפופאפ המשותף buildShavazPopup. ההזרקה נעשית בבלוק "graft מבצ" למעלה.)
 
                 // --- Shared education icon builder ---
                 // Shape = סוג מוסד: גני=triangle, יסודי=circle, על יסודי/חט"ב/תיכון=square, מעון=diamond
@@ -13965,86 +13940,6 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.sara_march_2026 = saraLayer;
-                }
-
-                // --- Migrash Panui (empty public plots from MOCH DB) ---
-                if (layers['migrash_panui'] && gd.migrash_panui) {
-                    const mpClean = { ...gd.migrash_panui, features: gd.migrash_panui.features.filter(f => f.geometry && f.geometry.coordinates) };
-                    const mpLayer = L.geoJSON(mpClean, {
-                        pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => {
-                            const p = f.properties;
-                            const hasFs = (p.match_future_shavaz || []).length > 0;
-                            const hasHafrash = (p.match_landuse_xplan || []).some(h => h.is_hafrash);
-                            // Strong outline + filled = matches existing data; dashed = no match (potential gap)
-                            const matched = hasFs || hasHafrash;
-                            const fill = matched ? 'rgba(139,69,19,0.55)' : 'rgba(139,69,19,0.25)';
-                            const border = matched ? '2px solid #5C2E0A' : '2px dashed #5C2E0A';
-                            const html = `<div style="background:${fill};border:${border};width:14px;height:14px;box-shadow:0 1px 2px rgba(0,0,0,0.3)"></div>`;
-                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'mp-icon', iconSize: [16, 16], iconAnchor: [8, 8] }) });
-                        },
-                        onEachFeature: (f, layer) => {
-                            const p = f.properties;
-                            layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
-                                const accent = '#8B4513';
-                                let html = '<div style="font-family:inherit">';
-                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">מגרש ציבורי פנוי</div>`;
-                                const sub = [p.type, p.address].filter(Boolean).join(' · ');
-                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
-                                html += '</div><div class="popup-body">';
-                                const row = (label, value) => value ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
-                                html += row('שטח ברוטו', p.gross_area ? `${p.gross_area} מ"ר` : '');
-                                if (p.taba_id) html += row('תכנית', p.taba_id);
-                                if (p.planning_plot) html += row('מגרש', p.planning_plot);
-
-                                // Matches section
-                                const fsHits = p.match_future_shavaz || [];
-                                const xplHits = p.match_landuse_xplan || [];
-                                const hafHits = xplHits.filter(h => h.is_hafrash);
-                                const planHits = p.match_in_plans || [];
-
-                                html += '<hr style="margin:8px 0;border:none;border-top:1px solid rgba(255,255,255,0.15)">';
-                                html += `<div style="font-weight:600;margin-bottom:4px;font-size:12px">הצלבה עם נתוני המערכת</div>`;
-
-                                if (fsHits.length === 0 && hafHits.length === 0) {
-                                    html += `<div style="background:rgba(220,150,50,0.18);padding:6px 8px;border-radius:6px;font-size:11.5px;border-left:3px solid #d2691e">⚠ לא חופף ל-מבני ציבור עתידי או הפרשה — מגרש שאינו מתועד בשכבות הקיימות (פוטנציאל לחוסר?)</div>`;
-                                }
-
-                                if (fsHits.length > 0) {
-                                    html += `<div style="margin:4px 0 2px;font-size:11px;color:#9ec5fe">✓ מבני ציבור עתידי (${fsHits.length})</div>`;
-                                    fsHits.slice(0, 3).forEach(h => {
-                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">תכנית ${h.TABA || '?'}, מגרש ${h.MIGRASH || '?'} — ${h.MAVAT_NAME || ''} <span style="opacity:0.6">[${h.match}]</span></div>`;
-                                    });
-                                    if (fsHits.length > 3) html += `<div style="font-size:11px;padding:2px 8px;opacity:0.6">ועוד ${fsHits.length - 3}…</div>`;
-                                }
-
-                                if (hafHits.length > 0) {
-                                    html += `<div style="margin:6px 0 2px;font-size:11px;color:#90ee90">✓ הפרשה ב-landuse (${hafHits.length})</div>`;
-                                    hafHits.slice(0, 3).forEach(h => {
-                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">${h.pl_number || '?'}, מגרש ${h.num || '?'} — ${h.mavat_name || ''}</div>`;
-                                    });
-                                }
-
-                                if (planHits.length > 0) {
-                                    html += `<div style="margin:6px 0 2px;font-size:11px;color:#ffd180">✓ נמצא בתב"עות (${planHits.length})</div>`;
-                                    planHits.slice(0, 3).forEach(h => {
-                                        html += `<div style="font-size:11px;padding:2px 8px;opacity:0.9">${h.taba} <span style="opacity:0.6">${h.status || ''}</span> — ${h.plan_name_he || ''}</div>`;
-                                    });
-                                }
-
-                                if (xplHits.length > 0 && hafHits.length === 0) {
-                                    const sample = xplHits[0];
-                                    html += `<div style="margin:6px 0 2px;font-size:11px;opacity:0.7">ייעוד נוכחי ב-landuse: ${sample.mavat_name || sample.mavat_code} (${sample.pl_number})</div>`;
-                                }
-
-                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: מאגר מוסדות ציבור משב"ש · עודכן 01/2021</div>`;
-                                html += '</div></div>';
-                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
-                            });
-                        }
-                    }).addTo(map);
-                    geoLayersRef.current.migrash_panui = mpLayer;
                 }
 
                 // --- Mivnei Lashimur (רשימת השימור העירונית, enriched, in district) ---
@@ -16424,6 +16319,17 @@
                             if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
                         }
                     }
+                }
+                // מבצ enrichment — statutory facts from Yotam's land-cell table, grafted onto this
+                // feature by col-F status. Q/R (potential/recommendations) live in the projector layer.
+                if (Array.isArray(props._mbz) && props._mbz.length) {
+                    const _mbzSkip = v => (v === null || v === undefined || !String(v).trim() || String(v).trim() === 'לא רלוונטי' || String(v).trim() === 'nan');
+                    const _mbzRow = (lbl, val) => _mbzSkip(val) ? '' : `<div class="popup-row"><span class="popup-row-label">${lbl}</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${val}</span></div>`;
+                    props._mbz.forEach(m => {
+                        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #8d6e63"><span style="font-size:11px;font-weight:700;color:#c9a26b">🏛️ מבצ${m.name ? ' — ' + m.name : ''}</span></div>`;
+                        html += _mbzRow('סטטוס', m.status) + _mbzRow('סוג הקצאה', m.allocation) + _mbzRow('בעלות', m.ownership) + _mbzRow('שטח (דונם)', m.dunam) + _mbzRow('שימושים מותרים', m.allowed_uses) + _mbzRow('בינוי קיים', m.existing_built) + _mbzRow('שטח מבונה עתידי', m.future_m2);
+                        if (m.has_reco) html += `<div style="margin-top:3px;font-size:10px;color:#7ec9a0;font-style:italic">💡 פוטנציאל והמלצות — ראה שכבת "המלצות הפרוייקטור"</div>`;
+                    });
                 }
                 html += '</div>';
                 // Footer — jump-to-plan with exact taba matching
@@ -22525,7 +22431,6 @@
                                             if (ex.moch.total) { lines.push(['מצב קיים — מבני ציבור','מוסדות (משב"ש)', Math.round(ex.moch.area)+' מ"ר', String(ex.moch.total)]); Object.entries(ex.moch.byCat).forEach(([c,n])=>lines.push(['מצב קיים — מבני ציבור', c, '', String(n)])); (ex.moch.list||[]).forEach(m=>lines.push(['מצב קיים — מוסד ('+m.cat+')', m.name, m.address||'', ''])); }
                                             if (ex.eduInst) { lines.push(['מצב קיים — מבני ציבור','מוסדות חינוך (שנתון)', ex.eduStudents+' תלמידים', String(ex.eduInst)]); (ex.eduList||[]).forEach(m=>lines.push(['מצב קיים — מוסד חינוך', m.name, m.address||'', String(m.students||'')])); }
                                             if (ex.shchunaCount) lines.push(['מצב קיים — מבני ציבור','מוסדות שכונה','', String(ex.shchunaCount)]);
-                                            if (ex.vacant.count) lines.push(['מצב קיים — מבני ציבור','מגרשים פנויים', Math.round(ex.vacant.area)+' מ"ר', String(ex.vacant.count)]);
                                             if (ex.green.count) lines.push(['מצב קיים — ירוק','שצ"פ קיים', Math.round(ex.green.area)+' מ"ר', String(ex.green.count)]);
                                             if (ex.sportCount) lines.push(['מצב קיים — ירוק','מתקני ספורט','', String(ex.sportCount)]);
                                             if ((ex.trees.shimur+ex.trees.krita+ex.trees.haataka)>0) lines.push(['מצב קיים — עצים','עצים (סקר)', "שימור="+ex.trees.shimur+" כריתה="+ex.trees.krita+" העתקה="+ex.trees.haataka, String(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)]);
@@ -22546,7 +22451,7 @@
                                 {(() => {
                                     const d = fullAreaReport;
                                     const ex = d.existing || null;
-                                    const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.vacant.count || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
+                                    const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
                                     const eduByType = {};
                                     if (ex && ex.eduList) ex.eduList.forEach(m => { const t = (m.type || 'אחר').trim() || 'אחר'; eduByType[t] = (eduByType[t] || 0) + 1; });
                                     const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
@@ -22620,7 +22525,7 @@
                                         d.permits.totalPermits>0 && {k:'permits', label:'היתרים'},
                                         d.projector.count>0 && {k:'projector', label:'פרויקטור'},
                                         (d.masterPlans.length>0 || (ex&&ex.consCity.total)) && {k:'master', label:'אב ושימור'},
-                                        ex && (ex.moch.total||ex.eduInst||ex.vacant.count||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
+                                        ex && (ex.moch.total||ex.eduInst||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
                                         ex && (ex.green.count||ex.sportCount||(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)) && {k:'green', label:'ירוק ועצים'},
                                         ex && (ex.commerceIn||ex.employment||ex.yiud.total) && {k:'commerce', label:'מסחר/יעודים'},
                                     ].filter(Boolean);
@@ -22756,7 +22661,7 @@
                                             </>)}
 
                                             {/* ───── מצב קיים ───── */}
-                                            {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.vacant.count > 0 || ex.shchunaCount > 0) && section('inst', '🏛️ מבני ציבור ומוסדות קיימים', <>
+                                            {ex && (ex.moch.total > 0 || ex.eduInst > 0 || ex.shchunaCount > 0) && section('inst', '🏛️ מבני ציבור ומוסדות קיימים', <>
                                                     <button onClick={openPrograma} title="פתיחת דוח הפרוגרמה (צרכי ציבור) עבור אותו אזור" style={{width:'100%',background:'#1c2438',border:'1px solid #3a5a8a',color:'#9fd6ff',borderRadius:6,padding:'6px 10px',fontSize:11,cursor:'pointer',fontFamily:'inherit',marginBottom:8,textAlign:'center'}}>⚖️ פרוגרמה מפורטת — מאזן צרכי ציבור לאותו אזור →</button>
                                                     {ex.moch.total > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות (משב"ש)</span><span style={{color:'#aaa'}}>{ex.moch.total}{ex.moch.area > 0 ? ' · ' + fmt(ex.moch.area) + ' מ"ר' : ''}</span></div>}
                                                     {Object.entries(ex.moch.byCat).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([cat,c]) => {
@@ -22786,7 +22691,6 @@
                                                         <tbody>{ex.eduList.map((m,i)=>(<tr key={i} onClick={()=>zoomPt(m.lng,m.lat)} title={m.lat?'הצג על המפה':''} style={{cursor:m.lat?'pointer':'default'}}><td style={{...td,color:m.lat?'#9fd6ff':'#dfe3ea'}}>{m.name||'—'}</td><td style={td}>{m.type||'—'}</td><td style={{...td,color:'#7bdc8a'}}>{m.students||''}</td><td style={td}>{m.address||'—'}</td></tr>))}</tbody></table>
                                                     )}
                                                     {ex.shchunaCount > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מוסדות שכונה</span><span style={{color:'#aaa'}}>{ex.shchunaCount}</span></div>}
-                                                    {ex.vacant.count > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>מגרשים פנויים</span><span style={{color:'#aaa'}}>{ex.vacant.count}{ex.vacant.area > 0 ? ' · ' + fmt(ex.vacant.area) + ' מ"ר' : ''}</span></div>}
                                             </>)}
 
                                             {ex && (ex.green.count > 0 || ex.sportCount > 0 || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0) && section('green', '🌳 שטחים ירוקים ועצים', <>
