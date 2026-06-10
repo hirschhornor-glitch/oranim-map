@@ -6939,6 +6939,7 @@
                 // Current-state needs (existing units only) — used for "כיום" delta when targetYear != 'existing'
                 const currentNeeds = sumPublicNeeds(buckets, b => b.existing);
                 const nonEdu = sumNonEduServices(buckets, b => b.existing + b.planned);
+                const specialEd = sumSpecialEd(buckets, b => b.existing + b.planned);
                 // Stat areas actually carrying units, for the UI breakdown line.
                 const statBuckets = [...buckets.values()].filter(b => b.key !== BASE_KEY && (b.existing + b.planned) > 0);
                 // Breakdown line shown when the selection spans ≥2 statistical areas:
@@ -7218,6 +7219,18 @@
                         '<td style="padding:6px;text-align:center;color:#d4a574">' + fmtMeasure(svc.areaValue, svc.areaUnit) + '</td>' +
                         '</tr>';
                 }).join('');
+                // חינוך מיוחד (2% מהשנתון, לא מפוצל מגזרית) — טבלה נפרדת
+                const totalSpecialClasses = specialEd.reduce((s, x) => s + x.classes, 0);
+                const totalSpecialDunam = Math.round(specialEd.reduce((s, x) => s + x.dunam, 0) * 100) / 100;
+                const specialEdRows = specialEd.map(svc =>
+                    '<tr style="border-bottom:1px solid #222">' +
+                        '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + svc.children.toLocaleString() + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#888;font-size:11px">' + svc.classSize + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (svc.classes > 0 ? '#9c64f0' : '#666') + '">' + (svc.classes || '—') + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#aaa">' + (svc.dunam || 0) + '</td>' +
+                    '</tr>'
+                ).join('');
 
                 const prev = document.getElementById('programa-result');
                 if (prev) prev.remove();
@@ -7342,6 +7355,22 @@
                             '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש (כמה)</th>' +
                             '<th style="padding:6px;text-align:center;color:#d4a574" title="המדד הרשמי מהמדריך/אקסל: מ&quot;ר בנוי / משתתפים / אחיות / בורות">שטח/מדד (מדריך)</th>' +
                         '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' +
+                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🧩 חינוך מיוחד <span style="color:#888;font-size:10px;font-weight:normal">(2% מהשנתון · לפי המדריך הרשמי · לא מפוצל מגזרית · על-יסודי עד גיל 21)</span></h4>' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
+                        '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                            '<th style="padding:6px;text-align:right">שירות</th>' +
+                            '<th style="padding:6px;text-align:center">ילדים (2%)</th>' +
+                            '<th style="padding:6px;text-align:center">בכיתה</th>' +
+                            '<th style="padding:6px;text-align:center;color:#9c64f0">נדרש (כיתות)</th>' +
+                            '<th style="padding:6px;text-align:center">דונם</th>' +
+                        '</tr></thead><tbody>' + specialEdRows +
+                            '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #9c64f0">' +
+                                '<td style="padding:8px;color:#fff">סה"כ חינוך מיוחד</td>' +
+                                '<td></td><td></td>' +
+                                '<td style="padding:8px;text-align:center;color:#9c64f0">' + totalSpecialClasses + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:#aaa">' + totalSpecialDunam + '</td>' +
+                            '</tr>' +
+                        '</tbody></table>' +
                     statBreakdownHtml +
                     '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">' + demoFooterText + '</div>' +
                     '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
@@ -7425,6 +7454,11 @@
                     nonEdu.forEach(svc => {
                         const measure = svc.areaValue == null ? '' : (svc.areaUnit === 'מ"ר' ? Math.round(svc.areaValue) : Math.ceil(svc.areaValue));
                         lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count, measure, svc.areaUnit || ''].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                    });
+                    lines.push('');
+                    lines.push(['חינוך מיוחד (2% מהשנתון)','ילדים','בכיתה','נדרש (כיתות)','דונם'].join(','));
+                    specialEd.forEach(svc => {
+                        lines.push([svc.label, svc.children, svc.classSize, svc.classes, svc.dunam].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                     });
                     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
@@ -10388,6 +10422,39 @@
                     let areaValue = null, areaUnit = null;
                     if (svc.area) { areaValue = (areaBasis[svc.area.basis] || 0) * svc.area.coef; areaUnit = svc.area.unit; }
                     return { ...svc, basisValue: Math.round(val), count, areaValue, areaUnit };
+                });
+            }
+
+            // חינוך מיוחד — official Excel: 2% of the (full, NOT sector-split) single-year cohort,
+            // distributed across stages by years/class. Excel cells: מעון cohort×0.02×3/8 ·
+            // גן cohort×0.02×3/8 · יסודי cohort×0.02×6/10 · על-יסודי cohort×0.02×9/10 (extends to age 21).
+            const SPECIAL_ED_PARTICIPATION = 0.02;
+            const SPECIAL_ED_SERVICES = [
+                { key: 'maon_sp',     label: 'מעון (חינוך מיוחד)',      years: 3, classSize: 8,  dunamPerClass: 1.0 / 3 },
+                { key: 'gan_sp',      label: 'גן ילדים (חינוך מיוחד)',  years: 3, classSize: 8,  dunamPerClass: 0.5 },
+                { key: 'yesodi_sp',   label: 'יסודי (חינוך מיוחד)',     years: 6, classSize: 10, dunamPerClass: 0.3 },
+                { key: 'alyesodi_sp', label: 'על-יסודי (חינוך מיוחד)',  years: 9, classSize: 10, dunamPerClass: 0.4 },
+            ];
+            function rawSpecialEd(totalUnits, assumptions) {
+                const { householdSize, haredi, ageYearPctGeneral, ageYearPctHaredi } = assumptions;
+                const population = Math.max(0, totalUnits) * householdSize;
+                const h = Math.max(0, Math.min(1, haredi));
+                // Full single-year cohort (general + haredi) — special-ed is not split by sector.
+                const cohort = population * ((1 - h) * (ageYearPctGeneral || 0) + h * (ageYearPctHaredi || 0)) / 100;
+                const out = {};
+                SPECIAL_ED_SERVICES.forEach(svc => { out[svc.key] = cohort * SPECIAL_ED_PARTICIPATION * svc.years; });
+                return out;
+            }
+            // Pool raw special-ed children across buckets, ceil once (mirrors sumPublicNeeds).
+            function sumSpecialEd(buckets, unitsFn) {
+                const raw = {}; SPECIAL_ED_SERVICES.forEach(svc => { raw[svc.key] = 0; });
+                for (const b of buckets.values()) {
+                    const r = rawSpecialEd(unitsFn(b), b.assumptions);
+                    SPECIAL_ED_SERVICES.forEach(svc => { raw[svc.key] += r[svc.key]; });
+                }
+                return SPECIAL_ED_SERVICES.map(svc => {
+                    const classes = raw[svc.key] > 0 ? Math.ceil(raw[svc.key] / svc.classSize) : 0;
+                    return { ...svc, children: Math.round(raw[svc.key] * 10) / 10, classes, dunam: Math.round(classes * svc.dunamPerClass * 100) / 100 };
                 });
             }
 
