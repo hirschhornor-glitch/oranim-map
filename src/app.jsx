@@ -13747,8 +13747,12 @@
                         const cy = ring.reduce((s,c) => s+c[1], 0) / ring.length;
                         return pointInPolygon([cx, cy], distRing);
                     };
+                    const SHAVAZ_POLY_CODES = new Set([400, 410, 450, 460, 1670]);
                     const hafrashah = gd.landuse_xplan.features.filter(f => {
                         if (!passesShavazStatusFilter(f.properties.pl_number)) return false;
+                        // SHAVAZ-coded lots are rendered as future_shavaz polygons — never also as a
+                        // hafrashah point (that produced the polygon+point double-draw, e.g. code 1670).
+                        if (SHAVAZ_POLY_CODES.has(f.properties.mavat_code)) return false;
                         const taba = tabaFromPlNum(f.properties.pl_number);
                         const lotNum = String(f.properties.num || '');
                         const planHasLotData = !!hafrashLookup[taba];
