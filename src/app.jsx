@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-10-reversed-text';
+        const APP_VERSION = '2026-06-11-actual-uses';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -16465,6 +16465,11 @@
                 }
                 if (buildingType) {
                     html += `<div class="popup-row"><span class="popup-row-label">סוג מבנה</span><span class="popup-row-value">${buildingType}</span></div>`;
+                }
+                // שימושים בפועל — מוסדות ציבור (נקודות) שנמצאים מרחבית בתוך הפוליגון
+                const actualUses = fixHebrewText(cleanNull(props.actual_uses) || '');
+                if (actualUses) {
+                    html += `<div class="popup-row"><span class="popup-row-label">שימושים בפועל</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${actualUses}</span></div>`;
                 }
                 const serviceType = cleanNull(props.service_type) || '';
                 if (serviceType) {
