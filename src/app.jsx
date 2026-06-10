@@ -2267,12 +2267,52 @@
                     if (typeof p.ageYearPctGeneral === 'number') out.ageYearPctGeneral = p.ageYearPctGeneral;
                     if (typeof p.ageYearPctHaredi === 'number') out.ageYearPctHaredi = p.ageYearPctHaredi;
                     if (typeof p.haredi === 'number') out.haredi = p.haredi;
-                    if (typeof p.religious === 'number') out.religious = p.religious;
+                    // religious = PURE דתי per the 2018 public-allocation guide (religious-service
+                    // demand sized on דתי+חרדי education streams; חרדי is its own field, so this is
+                    // just דתי — NOT the legacy stored `religious` = דתי+½מסורתי). Prefer the per-area
+                    // census breakdown; fall back to the stored field only if the breakdown is absent.
+                    const _bd = p.datiyut_breakdown;
+                    if (_bd && typeof _bd['דתי/דתי מאוד'] === 'number') out.religious = _bd['דתי/דתי מאוד'] / 100;
+                    else if (typeof p.religious === 'number') out.religious = p.religious;
                     out._statAreaId = p.stat_area_id;
                     out._statAreaName = p.name;
                     return out;
                 }
                 return base;
+            };
+            // Minhak-level demographics for the programme — taken from the SAME engine that
+            // builds the "אוכלוסייה קיימת" dashboard (computePopulationByGeography), so the
+            // numbers match it EXACTLY (stat-areas assigned by sub-neighborhood, pop-weighted,
+            // lifestyle normalized to 100). CBS census 2022 is the authoritative source;
+            // PN_MINAHAK_PRESETS (hand-tuned, pre-census) is only an emergency fallback.
+            //   haredi    = lifestyle 'חרדי' (matches dashboard column)
+            //   religious = lifestyle 'דתי/דתי מאוד' (PURE דתי) — per the 2018 public-allocation
+            //               guide, religious-service demand (בית כנסת/מקווה) is sized on שומרי
+            //               מסורת estimated via the דתי+חרדי education streams; with חרדי held
+            //               as its own field, the religious fraction is pure דתי (NOT +½מסורתי).
+            //   ageYearPct = age0_19 / 20 (single-year cohort), same for both streams.
+            // Cached per session on window (stat_areas is static after load).
+            const computeMinhakDemography = (minahakName) => {
+                const gd = geoDataRef.current;
+                if (!gd || !gd.stat_areas || !gd.stat_areas.features || !minahakName) return null;
+                if (!window.__popGeoCache || window.__popGeoCacheN !== gd.stat_areas.features.length) {
+                    try { window.__popGeoCache = computePopulationByGeography(gd); window.__popGeoCacheN = gd.stat_areas.features.length; }
+                    catch (e) { return null; }
+                }
+                const node = (window.__popGeoCache.minhaks || []).find(m => m.name === minahakName);
+                if (!node || !node.metrics || !node.metrics.hasLifestyle) return null;
+                const m = node.metrics, ls = m.lifestyle || {};
+                const out = {
+                    haredi: (ls['חרדי'] || 0) / 100,
+                    religious: (ls['דתי/דתי מאוד'] || 0) / 100,
+                    _areaCount: m.areaCount, _pop: m.pop,
+                };
+                if (typeof m.householdSize === 'number') out.householdSize = m.householdSize;
+                if (typeof m.age0_19 === 'number') {
+                    const ageYear = Math.round(m.age0_19 / 20 * 10) / 10;
+                    out.ageYearPctGeneral = ageYear; out.ageYearPctHaredi = ageYear;
+                }
+                return out;
             };
             // "מותאם" badge ignores targetYear changes — only demographic params trigger override
             const hasPNOverride = (minahak) => {
@@ -6756,6 +6796,8 @@
                     parentModalId: 'units-modal-public-needs',
                     inGonen,
                     scopeGeom: { type: 'polygon', rings: allRings },
+                    minahakName,
+                    demoMode: 'minhak',
                 });
             }
             window.__openProgramaForMinahakPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForMinahakPolygon(name); };
@@ -6766,15 +6808,39 @@
             // arbitrary scope (polygon or circle) using default assumptions. Sources:
             //   existing units → buildings layer (NUM_APTS_C sum)
             //   planned units → sum of plans.units_add for plans whose centroid is in scope
-            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom }) {
+            function renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom, minahakName, demoMode }) {
                 // Route to the built-allocations report when that scope kind was requested.
                 if (reportKindRef.current === 'allocations') {
                     reportKindRef.current = 'programa';
                     return renderAllocationsModal({ candidatePlans: candidatePlans || [], scopeLabel });
                 }
                 candidatePlans = candidatePlans || [];
-                if (!window.__programaUserAssumptions) {
-                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
+                // Demographic source depends on the scope kind:
+                //  • minhak programme (demoMode='minhak') → the curated per-minhak preset, applied
+                //    uniformly to the whole scope (no per-area split).
+                //  • area / radius selection (default)    → per-statistical-area CBS values override
+                //    the base inside each bucket (getStatAreaAssumptions below).
+                // Re-seed when the scope changes so switching minhaks loads that minhak's preset;
+                // repeated opens of the SAME scope preserve the user's slider edits.
+                const isMinhakMode = demoMode === 'minhak';
+                // Minhak programme: demographics come from the CBS census (מפקד 2022) blend of the
+                // minhak's statistical areas — same source as the "אוכלוסייה קיימת" dashboard.
+                // PN_MINAHAK_PRESETS (hand-tuned, pre-census) is only an emergency fallback if
+                // stat_areas hasn't loaded.
+                const minhakBlend = isMinhakMode ? computeMinhakDemography(minahakName) : null;
+                const minhakDemoSource = isMinhakMode ? (minhakBlend ? 'census' : 'preset') : null;
+                const minhakSeed = isMinhakMode
+                    ? (minhakBlend
+                        ? { haredi: minhakBlend.haredi, religious: minhakBlend.religious,
+                            ageYearPctGeneral: minhakBlend.ageYearPctGeneral, ageYearPctHaredi: minhakBlend.ageYearPctHaredi,
+                            ...(minhakBlend.householdSize != null ? { householdSize: minhakBlend.householdSize } : {}) }
+                        : (PN_MINAHAK_PRESETS[minahakName] || null))
+                    : null;
+                const assumptionsScopeKey = isMinhakMode ? ('minhak:' + minahakName) : '__custom__';
+                if (!window.__programaUserAssumptions || window.__programaAssumptionsScope !== assumptionsScopeKey) {
+                    const prevYear = (window.__programaUserAssumptions && window.__programaUserAssumptions.targetYear) || 'existing';
+                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, ...(minhakSeed || {}), targetYear: prevYear };
+                    window.__programaAssumptionsScope = assumptionsScopeKey;
                 }
                 const assumpt = window.__programaUserAssumptions;
                 const tY = assumpt.targetYear;
@@ -6824,6 +6890,8 @@
                 };
                 const baseBucket = () => getBucket(BASE_KEY, null, assumpt);
                 const bucketForPoint = (lng, lat) => {
+                    // Minhak programme: every unit shares the minhak-preset demographics (base bucket).
+                    if (isMinhakMode) return baseBucket();
                     const a = getStatAreaAssumptions(lng, lat, assumpt);
                     if (a._statAreaId == null) return baseBucket();
                     return getBucket(a._statAreaId, a._statAreaName, a);
@@ -6917,10 +6985,15 @@
                                'משוקלל לפי יח"ד מ-' + d.areaCount + ' אזורים סטטיסטיים (מפקד הלמ"ס 2022)' + baseNote +
                                ' · אחוז ילידי שנת-גיל: כללי ' + d.ageYearPctGeneral.toFixed(1) + '% / חרדי ' + d.ageYearPctHaredi.toFixed(1) + '%';
                     }
-                    // No stat-area coverage → minahak preset fallback (neighborhood-level manual assumption)
+                    // Minhak programme → curated preset; otherwise minahak-default fallback (no stat-area coverage)
+                    const srcNote = isMinhakMode
+                        ? (minhakDemoSource === 'census'
+                            ? 'מפקד הלמ"ס 2022 · ממוצע מינהק ' + minahakName + (minhakBlend && minhakBlend._areaCount ? ' (' + minhakBlend._areaCount + ' אזו"ס)' : '')
+                            : 'ברירת-מחדל למינהק ' + minahakName + ' — stat_areas טרם נטען')
+                        : 'ברירת מחדל למינהק — אין כיסוי אזורי';
                     return 'גודל משק בית ' + assumpt.householdSize.toFixed(1) + ' נפש/יח"ד · ' +
                            Math.round(assumpt.haredi*100) + '% חרדי · ' + Math.round(assumpt.religious*100) + '% דתי · ' +
-                           'אחוז ילידי שנת-גיל כללי ' + assumpt.ageYearPctGeneral + '% (ברירת מחדל למינהק — אין כיסוי אזורי)';
+                           'אחוז ילידי שנת-גיל כללי ' + assumpt.ageYearPctGeneral + '% (' + srcNote + ')';
                 })();
                 const existingEdu = aggregateEduFeatures(eduFeats || []);
                 const hasExistingEdu = (eduFeats || []).length > 0;
@@ -6995,7 +7068,7 @@
                 const plansWithShavatzText = contributingPlans.filter(p => (p.shavatz_out_prog || '').trim() || (p.hafrash_prg || '').trim() || (p.shavatz_in_sqm || 0) > 0);
 
                 // Closure for re-rendering after assumption tweaks
-                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom });
+                const reRender = () => renderProgramaModal({ existingUnits, candidatePlans, eduFeats, scopeLabel, parentModalId, radiusInfo, inGonen, scopeGeom, minahakName, demoMode });
 
                 // Build education table — rows = service, cols = stream
                 const eduRows = PUBLIC_NEEDS_SERVICES.map(svc => {
@@ -7783,7 +7856,8 @@
                 if (ah) ah.addEventListener('change', e => { assumpt.ageYearPctHaredi = parseFloat(e.target.value) || 3.0; reRender(); });
                 const rst = document.getElementById('pa-reset');
                 if (rst) rst.addEventListener('click', () => {
-                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, targetYear: 'existing' };
+                    // Minhak programme resets to the census blend; area/radius resets to the global default.
+                    window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, ...(minhakSeed || {}), targetYear: 'existing' };
                     reRender();
                 });
             }
