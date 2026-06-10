@@ -13547,11 +13547,14 @@
                 // grouping (status_mavat + stage fallback). Accepts a pl_number ("101-0095612") or a
                 // bare taba number — both resolve to the same canonical taba key.
                 function passesShavazStatusFilter(plNumberOrTaba) {
-                    if (!shavazStatusFilter.length) return true;
                     const s = String(plNumberOrTaba || '');
                     const taba = s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
                     const planProps = (window.__planByTaba || {})[taba] || {};
-                    const sg = getFilterStatusGroup(normalizeStatus((planProps.status_mavat || '').trim()));
+                    const st = normalizeStatus((planProps.status_mavat || '').trim());
+                    // Always hide future שב"צ/הפרשה for rejected/archived plans — no future allocation.
+                    if (/נדחת|נגנז|בטל|מבוטל/.test(st)) return false;
+                    if (!shavazStatusFilter.length) return true;
+                    const sg = getFilterStatusGroup(st);
                     const sgStage = getFilterStatusGroup((planProps.stage || '').trim());
                     return (!!sg && shavazStatusFilter.includes(sg)) || (!!sgStage && shavazStatusFilter.includes(sgStage));
                 }
