@@ -21767,8 +21767,8 @@
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>%מימוש</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>אופק</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#7b6cf0'}}>+ מתוכנן (גולמי)</th>
-                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>שב"צ S</th>
-                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>הפרשה AR</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>שב"צ</th>
+                                                                                                <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333'}}>הפרשה</th>
                                                                                                 <th style={{padding:'3px 6px',textAlign:'center',borderBottom:'1px solid #333',color:'#e57373'}}>− להריסה</th>
                                                                                             </tr></thead>
                                                                                             <tbody>
