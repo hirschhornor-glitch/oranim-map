@@ -4124,20 +4124,60 @@
                     window.__planByTaba = planByTaba;
                     return planByTaba;
                 }
-                // Lot prefix accepts alphanumeric codes: "מגרש 201", "מגרש 201A", "מגרש r505"
-                const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+([\dא-תA-Za-z]+)\s*[-–]\s*(.*)$/;
-                // Match the FIRST (sqm) — ignore any trailing (...) which is usually a manual total/sum.
-                const HAFRASH_USE_RE = /^(.+?)\s*\((\d+)\)(?:\s*\(\d+\))*\s*$/;
-                // Fallback A: "<use> - N כיתות [(sqm)]" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
-                const HAFRASH_USE_CLASSES_TRAILING_RE = /^(.+?)\s*[-–]\s*(\d+)\s*כיתות?\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
-                // Fallback B: "N כיתות <use> [(sqm)]" (e.g., "9 כיתות מעון")
-                const HAFRASH_USE_CLASSES_LEADING_RE = /^(\d+)\s*כיתות?\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
-                // Fallback C: lead count "N <items>" (e.g., "2 בתי כנסת")
-                const HAFRASH_USE_LEAD_RE = /^(\d+)\s+(.+?)\s*(?:\(\s*\d[\d,]*\s*\)?)?\s*$/;
-                const HAFRASH_LOT_DUP_RE = /^מגרש\s+[\dא-תA-Za-z]+\s*[-–]?\s*/;
+                // Lot prefix accepts alphanumeric codes incl. "+" combos: "מגרש 201", "מגרש 1+2", "מגרש r505"
+                const HAFRASH_LOT_PREFIX_RE = /^מגרש\s+([\dא-תA-Za-z/+]+)\s*[-–]\s*(.*)$/;
+                const HAFRASH_LOT_DUP_RE = /^מגרש\s+[\dא-תA-Za-z/+]+\s*[-–]?\s*/;
+                // sqm = first parenthetical that holds a number; accepts "(440)" AND "(440 מ\"ר)"
+                // (the מ"ר text inside the parens previously broke the match → sqm was lost / shown as "1").
+                const HAFRASH_SQM_RE = /\(\s*(\d[\d,]*)\s*(?:מ["'״׳’]?ר|מ"ר|מר)?\s*\)/;
+                // class count "N כיתות"
+                const HAFRASH_CLS_RE = /(\d+)\s*כיתות?/;
+                // leading facility count "N <items>" (e.g. "2 בתי כנסת")
+                const HAFRASH_LEAD_RE = /^(\d+)\s+(.+)$/;
+                // Parse a single use sub-entry → {use, sqm?, count?, unit?}. An entry may carry BOTH
+                // an sqm and a class count (e.g. "3 כיתות מעון (440 מ\"ר)"). Never emits a bare count:1
+                // placeholder (that produced the meaningless "1" in popups). Returns null if empty.
+                function parseUseSub(sub) {
+                    let cleaned = String(sub || '').replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim();
+                    if (!cleaned) return null;
+                    let sqm = null;
+                    const mSqm = cleaned.match(HAFRASH_SQM_RE);
+                    if (mSqm) sqm = parseInt(mSqm[1].replace(/,/g, ''));
+                    let count = null, unit = null;
+                    const mCls = cleaned.match(HAFRASH_CLS_RE);
+                    if (mCls) { count = parseInt(mCls[1]); unit = 'כיתות'; }
+                    let use = cleaned.replace(/\([^)]*\)/g, '').replace(HAFRASH_CLS_RE, '')
+                        .replace(/^\s*\d+\s+/, '').replace(/^\*|\*$/g, '').replace(/\s{2,}/g, ' ')
+                        .replace(/^[\s,.\-–]+|[\s,.\-–]+$/g, '').trim();
+                    // "N <items>" lead count only when there's no class count and no sqm
+                    if (count == null && sqm == null) {
+                        const mLead = cleaned.replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim().match(HAFRASH_LEAD_RE);
+                        if (mLead) { count = parseInt(mLead[1]); unit = 'יחידות'; }
+                    }
+                    if (!use) {
+                        if (sqm == null && count == null) return null;
+                        use = 'מבני ציבור';
+                    }
+                    const entry = { use };
+                    if (sqm != null) entry.sqm = sqm;
+                    if (count != null) { entry.count = count; entry.unit = unit; }
+                    return entry;
+                }
+                // Flat parse for DISPLAY only — splits a free-text prg into entries regardless of
+                // whether it carries "מגרש N -" lot prefixes (handles comma-only formats too).
+                function parseProgEntriesFlat(prg) {
+                    const flat = [];
+                    String(prg || '').split(/\s*;\s*/).forEach(part => {
+                        const rem = part.replace(HAFRASH_LOT_PREFIX_RE, '$2');
+                        rem.split(/\s*,\s*/).forEach(sub => { const e = parseUseSub(sub); if (e) flat.push(e); });
+                    });
+                    return flat;
+                }
                 // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
                 // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
                 // Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
+                // NOTE: entries before any "מגרש N -" prefix are skipped here (keeps marker-lot keying
+                // stable); the popup surfaces such prefix-less prg via parseProgEntriesFlat instead.
                 function parsePrgByLot(planByTaba, fieldName) {
                     const result = {};
                     for (const taba in planByTaba) {
@@ -4155,47 +4195,7 @@
                             if (!currentLot) continue;
                             const subs = remainder.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
                             for (const sub of subs) {
-                                // Strip leading "מגרש N -" duplicate prefix that sometimes appears inside a sub-entry.
-                                const cleaned = sub.replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim();
-                                if (!cleaned) continue;
-                                let entry = null;
-                                // 1) Standard "use (sqm)" — most common in hafrash_prg
-                                const m = cleaned.match(HAFRASH_USE_RE);
-                                if (m) {
-                                    const use = m[1].trim().replace(HAFRASH_LOT_DUP_RE, '').replace(/^\*|\*$/g, '').trim()
-                                        .replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
-                                    if (use) entry = { use, sqm: parseInt(m[2]) };
-                                }
-                                // 2A) Trailing-classes "<use> - N כיתות" (e.g., "2 בתי ספר על יסודי - 66 כיתות")
-                                if (!entry) {
-                                    const mt = cleaned.match(HAFRASH_USE_CLASSES_TRAILING_RE);
-                                    if (mt) {
-                                        // Strip leading numeric count from use (redundant with כיתות count)
-                                        const use = mt[1].trim().replace(/^\d+\s+/, '').trim();
-                                        if (use) entry = { use, count: parseInt(mt[2]), unit: 'כיתות' };
-                                    }
-                                }
-                                // 2B) Leading-classes "N כיתות <use>" (e.g., "9 כיתות מעון")
-                                if (!entry) {
-                                    const mc = cleaned.match(HAFRASH_USE_CLASSES_LEADING_RE);
-                                    if (mc) {
-                                        const use = mc[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
-                                        if (use) entry = { use, count: parseInt(mc[1]), unit: 'כיתות' };
-                                    }
-                                }
-                                // 3) Lead count "N <items>" (e.g., "2 בתי כנסת (16250)")
-                                if (!entry) {
-                                    const ml = cleaned.match(HAFRASH_USE_LEAD_RE);
-                                    if (ml) {
-                                        const use = ml[2].trim().replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
-                                        if (use) entry = { use, count: parseInt(ml[1]), unit: 'יחידות' };
-                                    }
-                                }
-                                // 4) Plain use without count or sqm (e.g., "מקווה", "מועדון נוער")
-                                if (!entry) {
-                                    const use = cleaned.replace(/\s*\(\s*\d[\d,]*\s*\)\s*$/, '').trim();
-                                    if (use) entry = { use, count: 1, unit: '' };
-                                }
+                                const entry = parseUseSub(sub);
                                 if (!entry) continue;
                                 if (!result[taba]) result[taba] = {};
                                 if (!result[taba][currentLot]) result[taba][currentLot] = [];
@@ -16468,18 +16468,19 @@
                         // figure entered in the הפרשה מבונה מ"ר column).
                         let total = 0;
                         for (const e of merged) {
-                            let valueDisplay;
+                            // Build "<sqm> מ\"ר" and/or "<N> כיתות"; an entry may carry both. A bare
+                            // count of 1 "יחידות" (a single facility) shows no number — that was the
+                            // meaningless "1" the popup used to display.
+                            const bits = [];
                             if (e.sqm != null) {
                                 const sqm = parseInt(e.sqm) || 0;
                                 total += sqm;
-                                valueDisplay = sqm.toLocaleString() + ' מ"ר';
-                            } else if (e.count != null && e.unit) {
-                                valueDisplay = e.count + ' ' + e.unit;
-                            } else if (e.count != null) {
-                                valueDisplay = e.count.toLocaleString();
-                            } else {
-                                valueDisplay = '';
+                                bits.push(sqm.toLocaleString() + ' מ"ר');
                             }
+                            if (e.count != null && e.unit && !(e.unit === 'יחידות' && e.count <= 1)) {
+                                bits.push(e.count + ' ' + e.unit);
+                            }
+                            const valueDisplay = bits.join(' · ');
                             html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
                         }
                         if (merged.length > 1 && total > 0) {
@@ -16491,7 +16492,19 @@
                         if (hfSqm || hfPrg) {
                             html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (תכנית)</div>';
                             if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
-                            if (hfPrg) html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                            // Parse the free-text prg into a per-use list (handles comma-only formats with
+                            // no "מגרש N -" prefix that parsePrgByLot skips); fall back to raw text if empty.
+                            const flat = hfPrg ? parseProgEntriesFlat(hfPrg) : [];
+                            if (flat.length) {
+                                for (const e of flat) {
+                                    const bits = [];
+                                    if (e.sqm != null) bits.push((parseInt(e.sqm) || 0).toLocaleString() + ' מ"ר');
+                                    if (e.count != null && e.unit && !(e.unit === 'יחידות' && e.count <= 1)) bits.push(e.count + ' ' + e.unit);
+                                    html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${bits.join(' · ')}</span></div>`;
+                                }
+                            } else if (hfPrg) {
+                                html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
+                            }
                         }
                     }
                 }
