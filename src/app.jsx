@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-09-mbz-enrichment';
+        const APP_VERSION = '2026-06-10-exclude-zones';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -381,6 +381,8 @@
             minahak_baka: 'data/minahak_baka.geojson',
             future_shavaz: 'data/future_shavaz.geojson',
             shavaz_kayam: 'data/shavaz_kayam.geojson',
+            exclude_gila: 'data/exclude_gila.geojson',
+            exclude_nachlaot: 'data/exclude_nachlaot.geojson',
             mbz_gonenim: 'data/mbz_gonenim.geojson',
             sport_kayam: 'data/sport_kayam.geojson',
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
@@ -13559,6 +13561,29 @@
                     const domains = hafrashahFeatureDomains(props);
                     return hafrashDomainFilter.some(d => domains.has(d));
                 }
+                // Out-of-scope exclusion zones (גילה, נחלאות) — district_oranim includes Gilo, so
+                // shavaz/hafrash features there leak in. Hide any feature whose centroid falls inside
+                // an exclusion polygon. Zones load eagerly from exclude_*.geojson.
+                const _excludeRings = [];
+                ['exclude_gila', 'exclude_nachlaot'].forEach(k => {
+                    const g = gd[k];
+                    if (g && g.features) g.features.forEach(f => {
+                        if (!f.geometry) return;
+                        const polys = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates];
+                        polys.forEach(poly => { if (poly && poly[0]) _excludeRings.push(poly[0]); });
+                    });
+                });
+                function featureCentroidLngLat(f) {
+                    const g = f && f.geometry; if (!g) return null;
+                    const ring = g.type === 'MultiPolygon' ? g.coordinates[0][0] : g.coordinates[0];
+                    if (!ring || !ring.length) return null;
+                    let cx = 0, cy = 0; for (const p of ring) { cx += p[0]; cy += p[1]; }
+                    return [cx / ring.length, cy / ring.length];
+                }
+                function inExcludeZone(lngLat) {
+                    if (!lngLat || !_excludeRings.length) return false;
+                    return _excludeRings.some(ring => pointInPolygon(lngLat, ring));
+                }
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 // Strict separation from hafrashah_future: only pure-shavaz codes (no HAFRASHAH spill-over).
@@ -13568,7 +13593,7 @@
                     const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number),
+                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)),
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -13613,6 +13638,7 @@
                         const candidates = gd.landuse_xplan.features.filter(f =>
                             tabaFromPlNumFs(f.properties.pl_number) === taba
                             && RESIDENTIAL_MIXED_CODES_FS.has(f.properties.mavat_code)
+                            && !inExcludeZone(featureCentroidLngLat(f))
                         );
                         if (!candidates.length) continue;
                         candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
@@ -13732,7 +13758,7 @@
                         } else {
                             if (!isHafrashCode) return false;
                         }
-                        return inDistrict(f);
+                        return inDistrict(f) && !inExcludeZone(featureCentroidLngLat(f));
                     });
                     // Fallback: plans with hafrash_sqm > 0 in GS but no per-lot data and no HAFRASHAH-coded feature
                     // → put one marker on the plan's largest residential/mixed-use lot
@@ -13747,7 +13773,7 @@
                         const candidates = gd.landuse_xplan.features.filter(f => {
                             return tabaFromPlNum(f.properties.pl_number) === taba
                                 && RESIDENTIAL_MIXED_CODES.has(f.properties.mavat_code)
-                                && inDistrict(f);
+                                && inDistrict(f) && !inExcludeZone(featureCentroidLngLat(f));
                         });
                         if (!candidates.length) continue;
                         candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
@@ -13817,7 +13843,7 @@
                         const planCands = gd.landuse_xplan.features.filter(f =>
                             tabaFromPlNum(f.properties.pl_number) === taba
                             && RESIDENTIAL_MIXED_CODES.has(f.properties.mavat_code)
-                            && inDistrict(f));
+                            && inDistrict(f) && !inExcludeZone(featureCentroidLngLat(f)));
                         if (!planCands.length) continue;
                         // Prefer an anchor lot that isn't already showing a marker, to reduce overlap.
                         const free = planCands.filter(f => !matched.has(String(f.properties.num || '')));
