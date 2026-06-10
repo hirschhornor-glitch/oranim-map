@@ -16513,9 +16513,13 @@
                 if (Array.isArray(props._mbz) && props._mbz.length) {
                     const _mbzSkip = v => (v === null || v === undefined || !String(v).trim() || String(v).trim() === 'לא רלוונטי' || String(v).trim() === 'nan');
                     const _mbzRow = (lbl, val) => _mbzSkip(val) ? '' : `<div class="popup-row"><span class="popup-row-label">${lbl}</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${val}</span></div>`;
+                    // Trimmed (user 2026-06-10): keep only מבצ-unique facts; drop fields already shown
+                    // in the popup body/badge (סטטוס, שטח דונם, שימושים מותרים, שטח מבונה עתידי).
                     props._mbz.forEach(m => {
+                        const rows = _mbzRow('סוג הקצאה', m.allocation) + _mbzRow('בעלות', m.ownership) + _mbzRow('בינוי קיים', m.existing_built);
+                        if (!rows && !m.has_reco) return;
                         html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #8d6e63"><span style="font-size:11px;font-weight:700;color:#c9a26b">🏛️ מבצ${m.name ? ' — ' + m.name : ''}</span></div>`;
-                        html += _mbzRow('סטטוס', m.status) + _mbzRow('סוג הקצאה', m.allocation) + _mbzRow('בעלות', m.ownership) + _mbzRow('שטח (דונם)', m.dunam) + _mbzRow('שימושים מותרים', m.allowed_uses) + _mbzRow('בינוי קיים', m.existing_built) + _mbzRow('שטח מבונה עתידי', m.future_m2);
+                        html += rows;
                         if (m.has_reco) html += `<div style="margin-top:3px;font-size:10px;color:#7ec9a0;font-style:italic">💡 פוטנציאל והמלצות — ראה שכבת "המלצות הפרוייקטור"</div>`;
                     });
                 }
