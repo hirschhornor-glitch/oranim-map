@@ -7201,7 +7201,12 @@
                 const totalExistingNet = BALANCE_SERVICES.reduce((s, svc) => { const c = getServiceCounts(svc); return s + (c.exNet || 0); }, 0);
                 const totalDemolished = BALANCE_SERVICES.reduce((s, svc) => s + (demolishedClasses[svc.key] || 0), 0);
 
-                // Non-edu services
+                // Non-edu services — dual view: COUNT (1-per-N) + the official Excel measure (מ"ר/משתתפים/אחיות/בורות).
+                const fmtMeasure = (v, unit) => {
+                    if (v == null) return '<span style="color:#555">—</span>';
+                    const r = unit === 'מ"ר' ? Math.round(v).toLocaleString() : Math.ceil(v).toLocaleString();
+                    return '<b>' + r + '</b> <span style="color:#888;font-size:10px">' + unit + '</span>';
+                };
                 const nonEduRows = nonEdu.map(svc => {
                     const basisLabels = { residents: 'תושבים', elderly: 'בני 65+', frail_elderly: 'תשושים', religious_hh: 'משק"ב דתי/חרדי' };
                     return '<tr style="border-bottom:1px solid #222">' +
@@ -7210,6 +7215,7 @@
                         '<td style="padding:6px;text-align:center;color:#aaa">' + svc.basisValue.toLocaleString() + '</td>' +
                         '<td style="padding:6px;text-align:center;color:#aaa;font-size:11px">1 / ' + svc.per.toLocaleString() + '</td>' +
                         '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (svc.count > 0 ? '#4CAF50' : '#666') + '">' + (svc.count || '—') + '</td>' +
+                        '<td style="padding:6px;text-align:center;color:#d4a574">' + fmtMeasure(svc.areaValue, svc.areaUnit) + '</td>' +
                         '</tr>';
                 }).join('');
 
@@ -7326,14 +7332,15 @@
                         '</tbody></table>'
                     : '')) +
                     // (Per-plan classes drilldown is available via the "מוצע" cell click — no inline duplicate table needed.)
-                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים</h4>' +
+                    '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏥 שירותים נוספים <span style="color:#888;font-size:10px;font-weight:normal">(כמה + מדד לפי המדריך הרשמי — מ"ר/משתתפים/אחיות/בורות)</span></h4>' +
                     '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
                         '<thead><tr style="background:#1a1a2e;color:#aaa">' +
                             '<th style="padding:6px;text-align:right">שירות</th>' +
                             '<th style="padding:6px;text-align:center">בסיס חישוב</th>' +
                             '<th style="padding:6px;text-align:center">כמות בסיס</th>' +
                             '<th style="padding:6px;text-align:center">מנה</th>' +
-                            '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש</th>' +
+                            '<th style="padding:6px;text-align:center;color:#4CAF50">נדרש (כמה)</th>' +
+                            '<th style="padding:6px;text-align:center;color:#d4a574" title="המדד הרשמי מהמדריך/אקסל: מ&quot;ר בנוי / משתתפים / אחיות / בורות">שטח/מדד (מדריך)</th>' +
                         '</tr></thead><tbody>' + nonEduRows + '</tbody></table>' +
                     statBreakdownHtml +
                     '<div style="font-size:10px;color:#666;font-style:italic;margin-bottom:10px">' + demoFooterText + '</div>' +
@@ -7414,9 +7421,10 @@
                         });
                     }
                     lines.push('');
-                    lines.push(['שירות','בסיס','כמות','מנה','נדרש'].join(','));
+                    lines.push(['שירות','בסיס','כמות','מנה','נדרש (כמה)','שטח/מדד (מדריך)','יחידת מדד'].join(','));
                     nonEdu.forEach(svc => {
-                        lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        const measure = svc.areaValue == null ? '' : (svc.areaUnit === 'מ"ר' ? Math.round(svc.areaValue) : Math.ceil(svc.areaValue));
+                        lines.push([svc.label, svc.basis, svc.basisValue, svc.per, svc.count, measure, svc.areaUnit || ''].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                     });
                     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
@@ -10288,39 +10296,49 @@
             // Public Needs — 2018 Ministry of Planning guide
             // Type C (existing urban fabric) quotas only
             // ══════════════════════════════════════════
+            // Education services — formulas aligned to the official מינהל התכנון Excel calculator
+            // (progremati_07_24). Each stream's classes = single-year cohort × its YEARS × participation,
+            // ceiled by classSize. The cohort (ילדים בשנתון) is the average single-year cohort; the four
+            // stages distribute it across 0-17 by each stage's year-count ("חלקה היחסי"). Mamlakhti is
+            // co-ed; haredi streams are gender-split (×0.5). Excel cells:
+            //   מעון  cohort×0.5×3/20
+            //   גן    כללי cohort×3/30 · חרדי-בנים/בנות cohort×0.5×3/30
+            //   יסודי כללי cohort×6/27 · חרדי-בנים cohort×0.5×9/20 · חרדי-בנות cohort×0.5×8/27
+            //   על-יסודי כללי cohort×6/27 · חרדי-בנים cohort×0.5×4/20 · חרדי-בנות cohort×0.5×4/27
+            // years differ per stream (esp. haredi-banim יסודי=9), so years live on the stream, not the service.
             const PUBLIC_NEEDS_SERVICES = [
                 {
                     key: 'maon', label: 'מעון',
                     ageFrom: 0, ageTo: 3,
                     participation: 0.5,
                     dunamPerClass: 1.0 / 3,
-                    streams: { mamlakhti: { classSize: 20 }, haredi_b: { classSize: 20 }, haredi_g: { classSize: 20 } },
+                    streams: { mamlakhti: { classSize: 20, years: 3 }, haredi_b: { classSize: 20, years: 3 }, haredi_g: { classSize: 20, years: 3 } },
                 },
                 {
                     key: 'gan', label: 'גני ילדים',
                     ageFrom: 3, ageTo: 6,
                     participation: 1.0,
                     dunamPerClass: 0.5,
-                    streams: { mamlakhti: { classSize: 30 }, haredi_b: { classSize: 20 }, haredi_g: { classSize: 30 } },
+                    streams: { mamlakhti: { classSize: 30, years: 3 }, haredi_b: { classSize: 30, years: 3 }, haredi_g: { classSize: 30, years: 3 } },
                 },
                 {
                     key: 'yesodi', label: 'יסודי',
-                    ageFrom: 6, ageTo: 14,
+                    ageFrom: 6, ageTo: 12,
                     participation: 1.0,
                     streams: {
-                        mamlakhti: { classSize: 27, dunamPerClass: 0.3 },
-                        haredi_b:  { classSize: 20, dunamPerClass: 0.2 },
-                        haredi_g:  { classSize: 27, dunamPerClass: 0.3 },
+                        mamlakhti: { classSize: 27, years: 6, dunamPerClass: 0.3 },
+                        haredi_b:  { classSize: 20, years: 9, dunamPerClass: 0.2 },
+                        haredi_g:  { classSize: 27, years: 8, dunamPerClass: 0.3 },
                     },
                 },
                 {
                     key: 'al_yesodi', label: 'על-יסודי',
-                    ageFrom: 14, ageTo: 18,
+                    ageFrom: 12, ageTo: 18,
                     participation: 1.0,
                     streams: {
-                        mamlakhti: { classSize: 27, dunamPerClass: 0.4 },
-                        haredi_b:  { classSize: 20, dunamPerClass: 0.3 },
-                        haredi_g:  { classSize: 27, dunamPerClass: 0.4 },
+                        mamlakhti: { classSize: 27, years: 6, dunamPerClass: 0.4 },
+                        haredi_b:  { classSize: 20, years: 4, dunamPerClass: 0.3 },
+                        haredi_g:  { classSize: 27, years: 4, dunamPerClass: 0.4 },
                     },
                 },
             ];
@@ -10331,32 +10349,45 @@
             ];
 
             // Non-education services (neighborhood level). Thresholds approximate 2018 guide.
+            // `per`/`entry` = our service-radius COUNT (1 institution per N). `area` = the official
+            // מינהל-התכנון Excel measure (מ"ר/דונם/משתתפים/אחיות/בורות): value = areaBasis × coef.
+            //   areaBasis: pop=אוכלוסייה · cohort=ילדים בשנתון · religious_pop=אוכלוסייה×%(חרדי+דתי)
+            //   Excel cells: מרפאה pop×0.1 מ"ר · לשכת רווחה pop×0.011 מ"ר · טיפת חלב cohort×0.02 אחיות ·
+            //   מועדון נוער cohort×8×0.35 משתתפים · מועדון קשיש pop×0.075×0.15 · מרכז יום (תשושים) pop×0.075×0.02 ·
+            //   בית כנסת religious_pop×0.49×1.1 מ"ר · מקווה religious_pop×(0.07/22.5) בורות.
+            //   מתנ"ס/אולם-ספורט/ספרייה: no clean Excel area coefficient → count only.
             const NEIGHBORHOOD_PROGRAM_SERVICES = [
-                { key: 'tipat_chalav',   label: 'טיפת חלב',        basis: 'residents',     per: 5000,  entry: 3000,  note: 'תחנה לבריאות המשפחה' },
-                { key: 'clinic',         label: 'מרפאה שכונתית',    basis: 'residents',     per: 10000, entry: 5000,  note: 'קופת חולים' },
+                { key: 'tipat_chalav',   label: 'טיפת חלב',        basis: 'residents',     per: 5000,  entry: 3000,  note: 'תחנה לבריאות המשפחה', area: { basis: 'cohort', coef: 0.02, unit: 'אחיות' } },
+                { key: 'clinic',         label: 'מרפאה שכונתית',    basis: 'residents',     per: 10000, entry: 5000,  note: 'קופת חולים',          area: { basis: 'pop', coef: 0.1, unit: 'מ"ר' } },
                 { key: 'matnas',         label: 'מתנ"ס',           basis: 'residents',     per: 10000, entry: 5000,  note: 'מרכז קהילתי' },
-                { key: 'welfare_dept',   label: 'לשכת רווחה',       basis: 'residents',     per: 25000, entry: 10000, note: 'מחלקה לשירותים חברתיים' },
-                { key: 'noar_club',      label: 'מועדון נוער',      basis: 'residents',     per: 4000,  entry: 2500  },
-                { key: 'elderly_club',   label: 'מועדון קשיש',      basis: 'elderly',       per: 2000,  entry: 300,   note: 'לאזרחים ותיקים' },
-                { key: 'elderly_day',    label: 'מרכז יום לקשיש',   basis: 'frail_elderly', per: 200,   entry: 100,   note: 'תשושי גוף/נפש' },
-                { key: 'synagogue',      label: 'בית כנסת',        basis: 'religious_hh',  per: 300,   entry: 150,   note: 'לפי אוכלוסייה דתית/חרדית' },
-                { key: 'mikve',          label: 'מקווה טהרה',      basis: 'religious_hh',  per: 1500,  entry: 500,   note: 'לנשים' },
+                { key: 'welfare_dept',   label: 'לשכת רווחה',       basis: 'residents',     per: 25000, entry: 10000, note: 'מחלקה לשירותים חברתיים', area: { basis: 'pop', coef: 0.011, unit: 'מ"ר' } },
+                { key: 'noar_club',      label: 'מועדון נוער',      basis: 'residents',     per: 4000,  entry: 2500,  area: { basis: 'cohort', coef: 2.8, unit: 'משתתפים' } },
+                { key: 'elderly_club',   label: 'מועדון קשיש',      basis: 'elderly',       per: 2000,  entry: 300,   note: 'לאזרחים ותיקים',      area: { basis: 'pop', coef: 0.01125, unit: 'משתתפים' } },
+                { key: 'elderly_day',    label: 'מרכז יום לקשיש',   basis: 'frail_elderly', per: 200,   entry: 100,   note: 'תשושי גוף/נפש',       area: { basis: 'pop', coef: 0.0015, unit: 'משתתפים' } },
+                { key: 'synagogue',      label: 'בית כנסת',        basis: 'religious_hh',  per: 300,   entry: 150,   note: 'לפי אוכלוסייה דתית/חרדית', area: { basis: 'religious_pop', coef: 0.49 * 1.1, unit: 'מ"ר' } },
+                { key: 'mikve',          label: 'מקווה טהרה',      basis: 'religious_hh',  per: 1500,  entry: 500,   note: 'לנשים',               area: { basis: 'religious_pop', coef: 0.07 / 22.5, unit: 'בורות' } },
                 { key: 'sport_hall',     label: 'אולם ספורט',      basis: 'residents',     per: 20000, entry: 10000, note: '500-800 מ"ר' },
                 { key: 'library',        label: 'ספרייה שכונתית',  basis: 'residents',     per: 15000, entry: 5000   },
             ];
 
             function computeNeighborhoodProgramServices(totalUnits, assumptions) {
-                const { householdSize, haredi, religious } = assumptions;
+                const { householdSize, haredi, religious, ageYearPctGeneral, ageYearPctHaredi } = assumptions;
                 const population = Math.max(0, totalUnits) * householdSize;
                 const elderly = population * 0.12;            // ~12% age 65+
                 const frail_elderly = elderly * 0.10;         // ~10% of elderly need day center
                 const religiousFrac = Math.max(0, Math.min(1, haredi + religious));
                 const religious_hh = totalUnits * religiousFrac;
                 const basisValues = { residents: population, elderly, frail_elderly, religious_hh };
+                // Bases for the Excel area/measure formulas (parallel to the count above).
+                const haredi_frac = Math.max(0, Math.min(1, haredi));
+                const cohort = population * ((1 - haredi_frac) * (ageYearPctGeneral || 0) + haredi_frac * (ageYearPctHaredi || 0)) / 100;
+                const areaBasis = { pop: population, cohort, religious_pop: population * religiousFrac };
                 return NEIGHBORHOOD_PROGRAM_SERVICES.map(svc => {
                     const val = basisValues[svc.basis] || 0;
                     const count = val < svc.entry ? 0 : Math.ceil(val / svc.per);
-                    return { ...svc, basisValue: Math.round(val), count };
+                    let areaValue = null, areaUnit = null;
+                    if (svc.area) { areaValue = (areaBasis[svc.area.basis] || 0) * svc.area.coef; areaUnit = svc.area.unit; }
+                    return { ...svc, basisValue: Math.round(val), count, areaValue, areaUnit };
                 });
             }
 
@@ -10370,12 +10401,23 @@
                 const population = Math.max(0, totalUnits) * householdSize;
                 const haredi_frac = Math.max(0, Math.min(1, haredi));
                 const mam_frac = 1 - haredi_frac;
+                // One average single-year cohort (ילדים בשנתון) per stream-population.
+                const cohortMam = population * mam_frac * (ageYearPctGeneral / 100);
+                const cohortHrd = population * haredi_frac * (ageYearPctHaredi / 100);
                 const byService = {};
                 PUBLIC_NEEDS_SERVICES.forEach(svc => {
-                    const ageSpan = svc.ageTo - svc.ageFrom;
-                    const children_mam = population * mam_frac * (ageYearPctGeneral / 100) * ageSpan * svc.participation;
-                    const children_hrd = population * haredi_frac * (ageYearPctHaredi / 100) * ageSpan * svc.participation;
-                    byService[svc.key] = { mam: children_mam, haredi_b: children_hrd * 0.5, haredi_g: children_hrd * 0.5 };
+                    const part = svc.participation;
+                    const span = svc.ageTo - svc.ageFrom;
+                    const sm = svc.streams.mamlakhti, sb = svc.streams.haredi_b, sg = svc.streams.haredi_g;
+                    const yMam = sm.years !== undefined ? sm.years : span;
+                    const yHb  = sb.years !== undefined ? sb.years : span;
+                    const yHg  = sg.years !== undefined ? sg.years : span;
+                    // Each stage = cohort × its YEARS × participation. Mamlakhti co-ed; haredi gender-split (×0.5).
+                    byService[svc.key] = {
+                        mam: cohortMam * yMam * part,
+                        haredi_b: cohortHrd * 0.5 * yHb * part,
+                        haredi_g: cohortHrd * 0.5 * yHg * part,
+                    };
                 });
                 return { population, byService };
             }
@@ -10441,10 +10483,11 @@
                 let out = null;
                 for (const b of buckets.values()) {
                     const arr = computeNeighborhoodProgramServices(unitsFn(b), b.assumptions);
-                    if (!out) out = arr.map(s => ({ ...s, basisValue: 0, count: 0 }));
-                    arr.forEach((s, i) => { out[i].basisValue += s.basisValue; });
+                    if (!out) out = arr.map(s => ({ ...s, basisValue: 0, count: 0, areaValue: s.area ? 0 : null }));
+                    arr.forEach((s, i) => { out[i].basisValue += s.basisValue; if (s.areaValue != null) out[i].areaValue = (out[i].areaValue || 0) + s.areaValue; });
                 }
                 if (!out) return [];
+                // area is linear in the (additive) population/cohort bases, so summing per-bucket areaValue is exact.
                 out.forEach(s => { s.count = s.basisValue < s.entry ? 0 : Math.ceil(s.basisValue / s.per); });
                 return out;
             }
