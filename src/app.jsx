@@ -16500,15 +16500,19 @@
                             }
                         }
                         // No estimation — show only the מ"ר fed in the data; class counts with no
-                        // מ"ר show just the count. The total sums the explicit מ"ר (the per-lot
-                        // figure entered in the הפרשה מבונה מ"ר column).
+                        // מ"ר show just the count. Detect a lot-total mis-attached to one use: if a
+                        // multi-use lot has exactly ONE entry carrying an sqm (others count-only),
+                        // that sqm is the lot's TOTAL (e.g. "8 כיתות גן (14054)" — 14,054 is the whole
+                        // compound, not the gan). Show it as a "סה\"כ מגרש" row, not pinned to the use.
+                        const sqmEntries = merged.filter(e => e.sqm != null);
+                        const lotTotalEntry = (merged.length > 1 && sqmEntries.length === 1) ? sqmEntries[0] : null;
                         let total = 0;
                         for (const e of merged) {
                             // Build "<sqm> מ\"ר" and/or "<N> כיתות"; an entry may carry both. A bare
                             // count of 1 "יחידות" (a single facility) shows no number — that was the
                             // meaningless "1" the popup used to display.
                             const bits = [];
-                            if (e.sqm != null) {
+                            if (e.sqm != null && e !== lotTotalEntry) {
                                 const sqm = parseInt(e.sqm) || 0;
                                 total += sqm;
                                 bits.push(sqm.toLocaleString() + ' מ"ר');
@@ -16519,8 +16523,10 @@
                             const valueDisplay = bits.join(' · ');
                             html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
                         }
+                        if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
                         if (merged.length > 1 && total > 0) {
-                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">סה"כ</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
+                            const totalLabel = lotTotalEntry ? 'סה"כ מגרש' : 'סה"כ';
+                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">${totalLabel}</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
                         }
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
