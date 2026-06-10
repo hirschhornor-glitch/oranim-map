@@ -11213,7 +11213,9 @@
                                 return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
                             }
                             if (shavazActive) {
-                                return { color: statusColor, weight: 1.5, fillColor: fillColor, fillOpacity: 0.07, dashArray: '4,2' };
+                                // Outline-only — match future_shavaz/landuse (the faint 0.07 fill read as a
+                                // pink "filled plan" on warm-status מתחמים when only שב"צ קיים was on).
+                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
                             }
                             if (projectorActive) {
                                 // Fade plans when projector recommendations are on so the
@@ -11328,7 +11330,7 @@
                                 if (landuseOn) {
                                     layer.setStyle({ weight: 2.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
                                 } else if (shavazOn) {
-                                    layer.setStyle({ weight: 1.5, fillOpacity: 0.07, fillColor: fillColor, color: statusColor });
+                                    layer.setStyle({ weight: 1.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
                                 } else {
                                     layer.setStyle({ weight: 1.5, fillOpacity: isSat ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), fillColor: fillColor });
                                 }
