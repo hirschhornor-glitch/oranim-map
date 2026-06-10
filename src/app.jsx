@@ -4077,6 +4077,7 @@
                 const GS_OVERRIDE_FIELDS = [
                     'units_total','units_in','units_add',
                     'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog','shavatz_out_plot',
+                    'hafrash_sqm','hafrash_prg',
                     'shatzap_in','shatzap_out',
                     'commerce_in','commerce_out',
                     'employment','hotels','rental','conditional_housing','rental_duration','rental_inclusion',
