@@ -16613,15 +16613,27 @@
                             return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
                         }).join('');
                         if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
+                        // Field-authoritative total: Table 5 (the GS field) is the source of truth for
+                        // totals. When this is the plan's SOLE lot and the parsed entries sum to LESS
+                        // than the GS field (e.g. a school listed with no מ"ר), show the field as the
+                        // total so the specific popup never under-states vs the general תב"ע popup.
+                        // Guarded to single-lot plans so multi-lot plans don't double-count the field.
+                        let _fieldUsed = false;
+                        const _fieldProps = (window.__planByTaba || {})[taba] || {};
+                        const _fieldTotal = parseInt(String((isHafrashah ? _fieldProps.hafrash_sqm : _fieldProps.shavatz_out_sqm) || '').replace(/[^\d]/g, '')) || 0;
+                        const _lotLookup = isHafrashah ? (window.__hafrashByTabaLot || {}) : (window.__shavatzByTabaLot || {});
+                        const _soleLot = _lotLookup[taba] ? Object.keys(_lotLookup[taba]).length <= 1 : false;
+                        if (_soleLot && _fieldTotal > total) { total = _fieldTotal; _fieldUsed = true; }
                         const cntFoot = [];
                         if (totalClasses > 0) cntFoot.push(totalClasses + ' כיתות');
                         if (totalUnits > 0) cntFoot.push(totalUnits + ' יח"ד');
-                        const totalLabel = lotTotalEntry ? 'סה"כ מגרש' : 'סה"כ';
+                        const totalLabel = (lotTotalEntry || _fieldUsed) ? 'סה"כ מגרש' : 'סה"כ';
+                        const totalHint = _fieldUsed ? ` <span style="font-weight:normal;color:#888;font-size:9px">(טבלה 5 · פירוט חלקי)</span>` : '';
                         html += `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:4px">` +
                             `<thead><tr style="color:#9c8fd6;font-size:10px;border-bottom:1px solid #444"><th style="text-align:right;padding:2px 4px">שימוש</th><th style="text-align:center;padding:2px 4px">כמות</th><th style="text-align:left;padding:2px 4px">מ"ר</th></tr></thead>` +
                             `<tbody>${bodyRows}</tbody>` +
                             ((merged.length > 1 || total > 0)
-                                ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}</td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
+                                ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}${totalHint}</td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
                                 : '') +
                             `</table>`;
                     } else {
