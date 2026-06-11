@@ -2824,6 +2824,17 @@
                             } catch (err) { console.warn(err); }
                         });
                     });
+
+                    // Wire up "המלצות הפרוייקטור" link (P12) — turns on the projector
+                    // recommendations layer so the user can see the potential/recommendations.
+                    const recoBtns = root.querySelectorAll('[data-action="open-projector-reco"]');
+                    recoBtns.forEach(b => {
+                        b.addEventListener('click', (ev) => {
+                            ev.preventDefault();
+                            setLayers(prev => (prev.projector_gonenim ? prev : { ...prev, projector_gonenim: true }));
+                            notifyToast('שכבת "המלצות הפרוייקטור" הודלקה');
+                        });
+                    });
                 });
 
                 // Load Phase C — feature → cross-section thumbnails index.
@@ -4135,6 +4146,8 @@
                 const HAFRASH_SQM_RE = /\(\s*(\d[\d,]*)\s*(?:מ["'״׳’]?ר|מ"ר|מר)?\s*\)/;
                 // class count "N כיתות"
                 const HAFRASH_CLS_RE = /(\d+)\s*כיתות?/;
+                // singular "כיתת"/"כיתה" without a digit → exactly 1 class ([תה] excludes plural כיתות)
+                const HAFRASH_CLS1_RE = /כית[תה](?![א-ת])/;
                 // leading facility count "N <items>" (e.g. "2 בתי כנסת")
                 const HAFRASH_LEAD_RE = /^(\d+)\s+(.+)$/;
                 // Parse a single use sub-entry → {use, sqm?, count?, unit?}. An entry may carry BOTH
@@ -4149,10 +4162,13 @@
                     let count = null, unit = null;
                     const mCls = cleaned.match(HAFRASH_CLS_RE);
                     if (mCls) { count = parseInt(mCls[1]); unit = 'כיתות'; }
+                    // singular construct "כיתת גן" / standalone "כיתה" (no leading digit) → 1 class.
+                    // [תה] after כית distinguishes singular from plural כיתות (which has ו).
+                    else if (HAFRASH_CLS1_RE.test(cleaned)) { count = 1; unit = 'כיתות'; }
                     // housing units "N יח"ד" / "N דירות" (public/welfare housing — measured in units)
                     const HAFRASH_UNITS_RE = /(\d+)\s*(?:יח["'״]?ד|יחידות דיור|דירות)/;
                     if (count == null) { const mU = cleaned.match(HAFRASH_UNITS_RE); if (mU) { count = parseInt(mU[1]); unit = 'יח"ד'; } }
-                    let use = cleaned.replace(/\([^)]*\)/g, '').replace(HAFRASH_CLS_RE, '').replace(HAFRASH_UNITS_RE, '')
+                    let use = cleaned.replace(/\([^)]*\)/g, '').replace(HAFRASH_CLS_RE, '').replace(HAFRASH_CLS1_RE, '').replace(HAFRASH_UNITS_RE, '')
                         .replace(/^\s*\d+\s+/, '').replace(/^\*|\*$/g, '').replace(/\s{2,}/g, ' ')
                         .replace(/^[\s,.\-–]+|[\s,.\-–]+$/g, '').trim();
                     // "N <items>" lead count only when there's no class count and no sqm
@@ -16499,6 +16515,12 @@
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
                 }
+                // מבצ projector recommendations — moved up (below מגרש, above uses) as a plain
+                // clickable row that opens the "המלצות הפרוייקטור" layer. P10 (placement) + P12 (link).
+                const mbzHasReco = Array.isArray(props._mbz) && props._mbz.some(m => m && m.has_reco);
+                if (mbzHasReco) {
+                    html += `<div class="popup-row" style="cursor:pointer"><a href="#" data-action="open-projector-reco" style="color:#7ec9a0;text-decoration:underline;font-size:11px">💡 פוטנציאל והמלצות פרוייקטור ←</a></div>`;
+                }
                 if (buildingType) {
                     html += `<div class="popup-row"><span class="popup-row-label">סוג מבנה</span><span class="popup-row-value">${buildingType}</span></div>`;
                 }
@@ -16605,11 +16627,12 @@
                     // Trimmed (user 2026-06-10): keep only מבצ-unique facts; drop fields already shown
                     // in the popup body/badge (סטטוס, שטח דונם, שימושים מותרים, שטח מבונה עתידי).
                     props._mbz.forEach(m => {
+                        // Header ("🏛️ מבצ — name") removed per user 2026-06-11; reco note moved up
+                        // (rendered high as a clickable row above). Keep only the unique fact rows.
                         const rows = _mbzRow('סוג הקצאה', m.allocation) + _mbzRow('בעלות', m.ownership) + _mbzRow('בינוי קיים', m.existing_built);
-                        if (!rows && !m.has_reco) return;
-                        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #8d6e63"><span style="font-size:11px;font-weight:700;color:#c9a26b">🏛️ מבצ${m.name ? ' — ' + m.name : ''}</span></div>`;
+                        if (!rows) return;
+                        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #8d6e63"></div>`;
                         html += rows;
-                        if (m.has_reco) html += `<div style="margin-top:3px;font-size:10px;color:#7ec9a0;font-style:italic">💡 פוטנציאל והמלצות — ראה שכבת "המלצות הפרוייקטור"</div>`;
                     });
                 }
                 html += '</div>';
