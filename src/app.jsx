@@ -13872,6 +13872,12 @@
                         const t = tabaFromPlNum(f.properties.pl_number);
                         (matchedLotsByTaba[t] = matchedLotsByTaba[t] || new Set()).add(String(f.properties.num || ''));
                     });
+                    // Manual coords for OLD plans (pre-XPLAN) whose hafrash lots have no geometry
+                    // anywhere — neither HAFRASHAH-coded features nor residential lots to anchor to.
+                    // Approximate placement within the plan boundary (from the תשריט). taba → {lot: [lng,lat]}.
+                    const MANUAL_HAFRASH_COORDS = {
+                        '4539ב': { '202': [35.2148, 31.7471], '204': [35.2141, 31.7480] }  // בליליוס, תלפיות (מקורב מתשריט)
+                    };
                     for (const taba in hafrashLookup) {
                         if (!passesShavazStatusFilter(taba)) continue;
                         if (fsFallbackTabas.has(taba)) continue;  // already shown by future_shavaz fallback (merged entries)
@@ -13887,6 +13893,26 @@
                             });
                         }
                         if (!unplaced.length) continue;
+                        // Manual placement: drop a separate marker per lot at its hand-set coord, and
+                        // remove those lots from `unplaced` so the residual falls through to the anchor logic.
+                        const manual = MANUAL_HAFRASH_COORDS[taba];
+                        if (manual) {
+                            const mPlanProps = (window.__planByTaba || {})[taba] || {};
+                            const byLot = {};
+                            unplaced.forEach(e => { (byLot[e.lot] = byLot[e.lot] || []).push(e); });
+                            const remaining = [];
+                            Object.keys(byLot).forEach(lot => {
+                                if (manual[lot]) {
+                                    pointFeatures.push({
+                                        type: 'Feature',
+                                        properties: { TABA: taba, plan_name_he: mPlanProps.plan_name_he || '', num: lot, MIGRASH: lot, _hafrash_lot_entries: byLot[lot], _hafrash_manual: true },
+                                        geometry: { type: 'Point', coordinates: manual[lot] }
+                                    });
+                                } else remaining.push(...byLot[lot]);
+                            });
+                            unplaced.length = 0; unplaced.push(...remaining);
+                            if (!unplaced.length) continue;
+                        }
                         const planCands = gd.landuse_xplan.features.filter(f =>
                             tabaFromPlNum(f.properties.pl_number) === taba
                             && RESIDENTIAL_MIXED_CODES.has(f.properties.mavat_code)
