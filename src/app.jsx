@@ -4149,7 +4149,10 @@
                     let count = null, unit = null;
                     const mCls = cleaned.match(HAFRASH_CLS_RE);
                     if (mCls) { count = parseInt(mCls[1]); unit = 'כיתות'; }
-                    let use = cleaned.replace(/\([^)]*\)/g, '').replace(HAFRASH_CLS_RE, '')
+                    // housing units "N יח"ד" / "N דירות" (public/welfare housing — measured in units)
+                    const HAFRASH_UNITS_RE = /(\d+)\s*(?:יח["'״]?ד|יחידות דיור|דירות)/;
+                    if (count == null) { const mU = cleaned.match(HAFRASH_UNITS_RE); if (mU) { count = parseInt(mU[1]); unit = 'יח"ד'; } }
+                    let use = cleaned.replace(/\([^)]*\)/g, '').replace(HAFRASH_CLS_RE, '').replace(HAFRASH_UNITS_RE, '')
                         .replace(/^\s*\d+\s+/, '').replace(/^\*|\*$/g, '').replace(/\s{2,}/g, ' ')
                         .replace(/^[\s,.\-–]+|[\s,.\-–]+$/g, '').trim();
                     // "N <items>" lead count only when there's no class count and no sqm
@@ -13590,6 +13593,10 @@
                     if (!lngLat || !_excludeRings.length) return false;
                     return _excludeRings.some(ring => pointInPolygon(lngLat, ring));
                 }
+                // Tabas that get a future_shavaz fallback marker — so the hafrashah fallback can skip
+                // them (a plan with BOTH shavatz_out & hafrash got two markers on the same lot, one of
+                // which sat under the other and was un-clickable). Shared across the two layer blocks.
+                const fsFallbackTabas = new Set();
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
                 // Strict separation from hafrashah_future: only pure-shavaz codes (no HAFRASHAH spill-over).
@@ -13649,6 +13656,7 @@
                         if (!candidates.length) continue;
                         candidates.sort((a, b) => (b.properties.shape_area || 0) - (a.properties.shape_area || 0));
                         fallbackFeatures.push(candidates[0]);
+                        fsFallbackTabas.add(taba);
                     }
                     // Convert fallback polygons to interior points (reuse polygonInteriorPoint defined in hafrashah block — define a local one here too)
                     const fsInteriorPoint = (ring) => {
@@ -13700,7 +13708,9 @@
                         const c = fsInteriorPoint(ring);
                         const taba = tabaFromPlNumFs(f.properties.pl_number);
                         const planProps = planByTabaFs[taba] || {};
-                        const entries = parseShavatzProg(planProps.shavatz_out_prog);
+                        // Merge shavatz + hafrash entries so a plan with BOTH shows one combined marker
+                        // (avoids a second overlapping hafrashah marker on the same lot).
+                        const entries = [...parseShavatzProg(planProps.shavatz_out_prog), ...parseShavatzProg(planProps.hafrash_prg)];
                         const enrichedProps = entries.length
                             ? { ...f.properties, _hafrash_lot_entries: entries, pl_name: planProps.plan_name_he || f.properties.pl_name }
                             : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', pl_name: planProps.plan_name_he || f.properties.pl_name };
@@ -13777,6 +13787,9 @@
                     const planByTaba = window.__planByTaba || {};
                     for (const taba in planByTaba) {
                         if (coveredTabas.has(taba)) continue;
+                        // Plan already has a future_shavaz fallback marker (which now also carries the
+                        // hafrash entries) — skip to avoid a second overlapping, un-clickable marker.
+                        if (fsFallbackTabas.has(taba)) continue;
                         if (!passesShavazStatusFilter(taba)) continue;
                         const sqm = parseFloat(planByTaba[taba].hafrash_sqm) || 0;
                         if (sqm <= 0) continue;
@@ -13838,6 +13851,7 @@
                     });
                     for (const taba in hafrashLookup) {
                         if (!passesShavazStatusFilter(taba)) continue;
+                        if (fsFallbackTabas.has(taba)) continue;  // already shown by future_shavaz fallback (merged entries)
                         const matched = matchedLotsByTaba[taba] || new Set();
                         const unplaced = [];
                         for (const lot in hafrashLookup[taba]) {
@@ -16511,28 +16525,34 @@
                         // compound, not the gan). Show it as a "סה\"כ מגרש" row, not pinned to the use.
                         const sqmEntries = merged.filter(e => e.sqm != null);
                         const lotTotalEntry = (merged.length > 1 && sqmEntries.length === 1) ? sqmEntries[0] : null;
-                        let total = 0;
-                        for (const e of merged) {
-                            // Build "<sqm> מ\"ר" and/or "<N> כיתות"; an entry may carry both. A bare
-                            // count of 1 "יחידות" (a single facility) shows no number — that was the
-                            // meaningless "1" the popup used to display.
-                            const bits = [];
+                        // 3-column table: שימוש | כמות (כיתות/יח"ד) | מ"ר. Only מ"ר is summed in the total
+                        // (counts of classes/units are summed in their own column, not mixed into מ"ר).
+                        let total = 0, totalClasses = 0, totalUnits = 0;
+                        const bodyRows = merged.map(e => {
+                            let sqmCell = '', cntCell = '';
                             if (e.sqm != null && e !== lotTotalEntry) {
-                                const sqm = parseInt(e.sqm) || 0;
-                                total += sqm;
-                                bits.push(sqm.toLocaleString() + ' מ"ר');
+                                const sqm = parseInt(e.sqm) || 0; total += sqm;
+                                sqmCell = sqm.toLocaleString();
                             }
                             if (e.count != null && e.unit && !(e.unit === 'יחידות' && e.count <= 1)) {
-                                bits.push(e.count + ' ' + e.unit);
+                                cntCell = e.count + ' ' + e.unit;
+                                if (e.unit === 'כיתות') totalClasses += e.count;
+                                else if (e.unit === 'יח"ד') totalUnits += e.count;
                             }
-                            const valueDisplay = bits.join(' · ');
-                            html += `<div class="popup-row"><span class="popup-row-label">${e.use || ''}</span><span class="popup-row-value">${valueDisplay}</span></div>`;
-                        }
+                            return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
+                        }).join('');
                         if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
-                        if (merged.length > 1 && total > 0) {
-                            const totalLabel = lotTotalEntry ? 'סה"כ מגרש' : 'סה"כ';
-                            html += `<div class="popup-row" style="border-top:1px solid #444;margin-top:4px;padding-top:4px"><span class="popup-row-label">${totalLabel}</span><span class="popup-row-value"><strong>${total.toLocaleString()} מ"ר</strong></span></div>`;
-                        }
+                        const cntFoot = [];
+                        if (totalClasses > 0) cntFoot.push(totalClasses + ' כיתות');
+                        if (totalUnits > 0) cntFoot.push(totalUnits + ' יח"ד');
+                        const totalLabel = lotTotalEntry ? 'סה"כ מגרש' : 'סה"כ';
+                        html += `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:4px">` +
+                            `<thead><tr style="color:#9c8fd6;font-size:10px;border-bottom:1px solid #444"><th style="text-align:right;padding:2px 4px">שימוש</th><th style="text-align:center;padding:2px 4px">כמות</th><th style="text-align:left;padding:2px 4px">מ"ר</th></tr></thead>` +
+                            `<tbody>${bodyRows}</tbody>` +
+                            ((merged.length > 1 || total > 0)
+                                ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}</td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
+                                : '') +
+                            `</table>`;
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
                         const hfPrg = cleanNull(props.hafrash_prg);
