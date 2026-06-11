@@ -13908,6 +13908,28 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.hafrashah_future = hafrashaLayer;
+                    // Catch-all dedup: remove overlapping point markers for the SAME plan at the SAME
+                    // spot (future_shavaz fallback + hafrashah fallback/unplaced could both land on one
+                    // lot — one sat under the other and was un-clickable). Keep the richest (most entries).
+                    (() => {
+                        const tabaKey = (p) => { const s = String(p.pl_number || p.TABA || p.taba || ''); return s.includes('-') ? String(parseInt(s.split('-')[1])) : s; };
+                        const seen = new Map(); const toRemove = [];
+                        const visit = (layer, parent) => {
+                            if (layer.getLatLng && layer.feature) {
+                                const p = layer.feature.properties || {};
+                                const ll = layer.getLatLng();
+                                const key = tabaKey(p) + '|' + ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
+                                const n = (p._hafrash_lot_entries || []).length;
+                                const prev = seen.get(key);
+                                if (prev) {
+                                    if (n > prev.n) { toRemove.push([prev.parent, prev.marker]); seen.set(key, { marker: layer, parent, n }); }
+                                    else toRemove.push([parent, layer]);
+                                } else seen.set(key, { marker: layer, parent, n });
+                            } else if (layer.eachLayer) layer.eachLayer(sub => visit(sub, layer));
+                        };
+                        [geoLayersRef.current.future_shavaz, geoLayersRef.current.hafrashah_future].forEach(g => { if (g) visit(g, g); });
+                        toRemove.forEach(([parent, m]) => { try { parent.removeLayer(m); } catch (e) {} });
+                    })();
                 }
 
                 // (מבצ אינו שכבה נפרדת — נתוניו מוזרקים כ-_mbz לפיצ'רי shavaz_kayam/landuse_xplan
