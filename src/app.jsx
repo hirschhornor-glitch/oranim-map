@@ -13854,6 +13854,13 @@
                             ? { ...f.properties, _hafrash_lot_entries: lotEntries }
                             : { ...f.properties, hafrash_sqm: planProps.hafrash_sqm || '', hafrash_prg: planProps.hafrash_prg || '' };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: centroid } };
+                    }).filter(pf => {
+                        // P6: drop EMPTY hafrash markers — a HAFRASHAH-coded xplan lot whose plan has
+                        // no real embedded-public detail (e.g. standalone school 588897, mis-coded as
+                        // hafrashah). An empty "הפרשה מבונה" popup is noise; keep only markers with content.
+                        const p = pf.properties;
+                        return (p._hafrash_lot_entries && p._hafrash_lot_entries.length)
+                            || String(p.hafrash_sqm || '').trim() || String(p.hafrash_prg || '').trim();
                     });
                     // Surface per-lot GS entries whose lot id has NO matching landuse_xplan polygon
                     // (e.g. "מגרש 30199/40" — block/parcel-style ids absent from the `num` field).
@@ -13945,6 +13952,26 @@
                         };
                         [geoLayersRef.current.future_shavaz, geoLayersRef.current.hafrashah_future].forEach(g => { if (g) visit(g, g); });
                         toRemove.forEach(([parent, m]) => { try { parent.removeLayer(m); } catch (e) {} });
+                        // Second pass (P7): nudge — NOT remove — a hafrashah marker that visually
+                        // overlaps a future_shavaz marker of the SAME plan at a near-but-different
+                        // spot (distinct lots ~meters apart). The lower one was un-clickable; offset
+                        // it ~17m so both stay clickable. Plans with both shavatz+hafrash (e.g. 1133180).
+                        const shavatzPts = [];
+                        const collectSh = (l) => {
+                            if (l.getLatLng && l.feature) shavatzPts.push({ taba: tabaKey(l.feature.properties || {}), ll: l.getLatLng() });
+                            else if (l.eachLayer) l.eachLayer(collectSh);
+                        };
+                        if (geoLayersRef.current.future_shavaz) collectSh(geoLayersRef.current.future_shavaz);
+                        const NEAR = 0.00012;  // ~13m
+                        const nudgeIf = (l) => {
+                            if (l.getLatLng && l.feature) {
+                                const t = tabaKey(l.feature.properties || {});
+                                const ll = l.getLatLng();
+                                if (shavatzPts.some(s => s.taba === t && Math.abs(s.ll.lat - ll.lat) < NEAR && Math.abs(s.ll.lng - ll.lng) < NEAR))
+                                    l.setLatLng([ll.lat + 0.00016, ll.lng + 0.00012]);
+                            } else if (l.eachLayer) l.eachLayer(nudgeIf);
+                        };
+                        if (geoLayersRef.current.hafrashah_future) nudgeIf(geoLayersRef.current.hafrashah_future);
                     })();
                 }
 
