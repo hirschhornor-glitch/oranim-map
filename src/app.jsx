@@ -4302,6 +4302,15 @@
                     return !hasPermit && isOld;
                 }
                 window.__shouldHideKayam = shouldHideKayam;
+                // A rejected/archived plan (נגנזה/נדחתה) must never contribute a future
+                // public-building polygon — its program is dead. Used to filter future_shavaz.
+                function isRejectedTaba(taba) {
+                    const plan = window.__planByTaba ? window.__planByTaba[taba] : null;
+                    if (!plan) return false;
+                    const s = normalizeStatus((plan.status_mavat || '').trim());
+                    return s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה';
+                }
+                window.__isRejectedTaba = isRejectedTaba;
                 window.__kayamTabaSet = new Set();
                 window.__planByTaba = {};
                 window.__hafrashByTabaLot = {};
@@ -4312,8 +4321,9 @@
                     const gd = geoDataRef.current;
                     if (!gd) return;
                     const set = window.__kayamTabaSet;
-                    if (!set || set.size === 0) return;
-                    if (gd.landuse_xplan && gd.landuse_xplan.features) {
+                    const kayamActive = !!(set && set.size > 0);
+                    // landuse_xplan: only the kayam (existing-built) filter applies here.
+                    if (kayamActive && gd.landuse_xplan && gd.landuse_xplan.features) {
                         if (!gd.landuse_xplan._origFeatures) gd.landuse_xplan._origFeatures = gd.landuse_xplan.features;
                         const orig = gd.landuse_xplan._origFeatures;
                         const filtered = orig.filter(f => {
@@ -4325,15 +4335,18 @@
                         gd.landuse_xplan = { ...gd.landuse_xplan, features: filtered, _origFeatures: orig };
                         console.log('[Filter] landuse_xplan:', orig.length, '->', filtered.length, 'features');
                     }
+                    // future_shavaz: ALWAYS drop polygons of rejected/archived plans (runs even
+                    // when the kayam set is empty); additionally apply the kayam filter when active.
                     if (gd.future_shavaz && gd.future_shavaz.features) {
                         if (!gd.future_shavaz._origFeatures) gd.future_shavaz._origFeatures = gd.future_shavaz.features;
                         const orig = gd.future_shavaz._origFeatures;
                         const filtered = orig.filter(f => {
                             const t = String(f.properties.TABA || '').trim();
-                            return !t || !shouldHideKayam(t);
+                            if (t && isRejectedTaba(t)) return false;
+                            return !t || !kayamActive || !shouldHideKayam(t);
                         });
                         gd.future_shavaz = { ...gd.future_shavaz, features: filtered, _origFeatures: orig };
-                        console.log('[Filter] future_shavaz:', orig.length, '->', filtered.length, 'features');
+                        console.log('[Filter] future_shavaz:', orig.length, '->', filtered.length, 'features (rejected+kayam)');
                     }
                 }
                 window.__applyKayamFilter = applyKayamFilter;
