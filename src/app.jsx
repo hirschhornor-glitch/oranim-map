@@ -861,6 +861,7 @@
                     { id: 'construction_yb', name: 'התחלות בנייה לפי תת-רובע', desc: 'מספר דירות שבנייתן החלה 2022-2025 לפי תת-רובע — מפת חום. מקור: השנתון הסטטיסטי לירושלים 2026, לוח ט/7', on: false },
                     { id: 'construction_realized', name: 'עתודה מול בנייה', desc: 'מפת חום של מימוש: % יח"ד שבנייתן החלה (שנתון ט/7) מתוך העתודה התכנונית (units_add בתב"עות פעילות). אדום = עתודה גדולה שטרם נבנתה', on: false },
                     { id: 'dwellings_rental', name: '% דירות מושכרות', desc: 'שיעור הדירות המושכרות מתוך מלאי הדיור (2025) לפי תת-רובע — מפת חום. מקור: השנתון הסטטיסטי לירושלים 2026, לוח ט/16', on: false },
+                    { id: 'vacancy_est', name: 'אומדן דירות לא-מאוכלסות', desc: 'אומדן % דירות ללא משק בית מתגורר = מלאי דירות (שנתון ט/16) פחות משקי בית (הערכת מפקד 2022). אומדן כיווני, לא ספירה רשמית', on: false },
                 ]
             },
             master_plans: {
@@ -4602,8 +4603,8 @@
                 onDemand.forEach(key => {
                     const wanted = layers[key]
                         || (key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d]))
-                        // the "עתודה מול בנייה" + "% דירות מושכרות" layers render FROM the construction_yb file
-                        || (key === 'construction_yb' && (layers['construction_realized'] || layers['dwellings_rental']));
+                        // the "עתודה מול בנייה" + "% דירות מושכרות" + "דירות לא-מאוכלסות" layers render FROM the construction_yb file
+                        || (key === 'construction_yb' && (layers['construction_realized'] || layers['dwellings_rental'] || layers['vacancy_est']));
                     if (!wanted) return;
                     if (geoDataRef.current[key]) return;        // already loaded
                     if (window.__inFlightLoads.has(key)) return; // already fetching
@@ -8780,6 +8781,61 @@
                 return out;
             }
 
+            // Census households per sub-quarter — sum of stat_areas.hh_total over each
+            // sub-quarter's constituent stat-areas (the SAME stat-areas that compose the
+            // yearbook sub-quarter, verified 1:1 in-district). NOTE: hh_total is the
+            // Systematics census ESTIMATE (hh_total_approx), not an exact CBS count — so the
+            // dwellings-minus-households "vacant" figure is a directional estimate.
+            function computeHouseholdsBySubQuarter() {
+                const gd = geoDataRef.current || {};
+                const cb = gd.construction_yb, sa = gd.stat_areas;
+                const out = {};
+                if (!cb || !cb.features || !sa || !sa.features) return out;
+                const hhById = {};
+                sa.features.forEach(f => { hhById[String(f.properties.stat_area_id)] = f.properties.hh_total; });
+                cb.features.forEach(f => {
+                    const p = f.properties;
+                    let sum = 0, any = false;
+                    (p.stat_area_ids || []).forEach(id => { const h = hhById[id]; if (typeof h === 'number') { sum += h; any = true; } });
+                    out[p.subq] = any ? sum : null;
+                });
+                return out;
+            }
+
+            // Building permits ISSUED in 2022-2025 (units) per sub-quarter — from
+            // window.__allPermits (keyed by plan taba), bucketed via the plan's centroid.
+            // Temporally aligned with the yearbook 2022-25 window. Coverage is PARTIAL:
+            // only permits linked to a known plan taba are present.
+            function computePermitUnitsBySubQuarter() {
+                const gd = geoDataRef.current || {};
+                const cb = gd.construction_yb, plans = gd.plans;
+                const permits = window.__allPermits || {};
+                const out = {};
+                if (!cb || !cb.features || !plans || !plans.features) return out;
+                const cByTaba = {};
+                plans.features.forEach(f => {
+                    const t = String((f.properties || {}).taba || '').trim();
+                    if (t && !cByTaba[t]) { const c = geomCentroid(f.geometry); if (c) cByTaba[t] = c; }
+                });
+                const ISSUED = new Set(['הופק-הוצא היתר בניה', 'הופק היתר מוארך']);
+                Object.keys(permits).forEach(taba => {
+                    const rec = permits[taba];
+                    if (!rec || !rec.permits || !rec.permits.length) return;
+                    const c = cByTaba[String(taba).trim()];
+                    if (!c) return;
+                    let sq = null;
+                    for (const sf of cb.features) { if (pointInGeometry(c, sf.geometry)) { sq = sf.properties.subq; break; } }
+                    if (!sq) return;
+                    rec.permits.forEach(pm => {
+                        if (!ISSUED.has(pm.status)) return;
+                        const yr = String(pm.status_date || '').slice(-4);
+                        if (!['2022', '2023', '2024', '2025'].includes(yr)) return;
+                        out[sq] = (out[sq] || 0) + (parseInt(pm.units) || 0);
+                    });
+                });
+                return out;
+            }
+
             // ── Construction-activity report (yearbook ט/7) — building starts/completions
             //    per sub-quarter (תת-רובע), 2022-2025. Loads data/construction_yearbook.geojson
             //    on demand if its layer hasn't been toggled yet. ──
@@ -8803,7 +8859,7 @@
             }
 
             function renderConstructionDashboard(featsIn, view) {
-                view = ['compare', 'stock'].includes(view) ? view : 'build';
+                view = ['compare', 'stock', 'vacancy', 'permits'].includes(view) ? view : 'build';
                 const YEARS = [2022, 2023, 2024, 2025];
                 const DW_YEARS = [2023, 2024, 2025];
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -8846,12 +8902,14 @@
                 const aggOf = (list, label) => {
                     const a = { name_he: label, subq: '', _agg: true };
                     YEARS.forEach(y => { a['started_' + y] = 0; a['completed_' + y] = 0; });
-                    let pop = 0, st = 0, ct = 0, appr = 0, hasDw = false;
+                    let pop = 0, st = 0, ct = 0, appr = 0, hasDw = false, hh = 0, hasHh = false, perm = 0, surp = 0, hasSurp = false;
                     const dwY = {}, rentW = {};
                     DW_YEARS.forEach(y => { dwY[y] = 0; rentW[y] = 0; });
                     list.forEach(p => {
                         pop += p.pop_approx || 0; st += p.started_total || 0; ct += p.completed_total || 0;
-                        appr += p.approved || 0;
+                        appr += p.approved || 0; perm += p._permits || 0;
+                        if (typeof p._hh === 'number') { hh += p._hh; hasHh = true; }
+                        if (typeof p._surplus === 'number') { surp += p._surplus; hasSurp = true; }
                         YEARS.forEach(y => { a['started_' + y] += p['started_' + y] || 0; a['completed_' + y] += p['completed_' + y] || 0; });
                         if (p.has_dwellings) {
                             hasDw = true;
@@ -8859,6 +8917,7 @@
                         }
                     });
                     a.pop_approx = pop || null; a.started_total = st; a.completed_total = ct; a.approved = appr;
+                    a._permits = perm; a._hh = hasHh ? hh : null; a._surplus = hasSurp ? surp : null;
                     a.started_per_1000 = pop ? Math.round(st / pop * 1000 * 10) / 10 : null;
                     a.has_dwellings = hasDw;
                     DW_YEARS.forEach(y => { a['dwellings_' + y] = hasDw ? dwY[y] : null; a['rented_pct_' + y] = (hasDw && dwY[y]) ? Math.round(rentW[y] / dwY[y] * 10) / 10 : null; });
@@ -8906,6 +8965,31 @@
                 });
                 const avgRentPct = totDw ? Math.round(totRented / totDw * 1000) / 10 : null;
 
+                // ── vacancy view: estimated non-occupied dwellings = dwellings(yearbook) − households(census est.) ──
+                //   _surplus is per-area max(0, dwellings − households); totals SUM the positive
+                //   surpluses (deficit areas, where the household estimate exceeds dwellings, are
+                //   artifacts and contribute 0 — they must NOT cancel real surplus elsewhere).
+                const hhMap = (view === 'vacancy') ? computeHouseholdsBySubQuarter() : {};
+                const vacRows = rows.filter(p => p.has_dwellings).map(p => {
+                    const hh = hhMap[p.subq], dw = p.dwellings_2025;
+                    const _surplus = (typeof hh === 'number' && dw != null) ? Math.max(0, dw - hh) : null;
+                    return { ...p, _hh: hh, _surplus };
+                }).sort((a, b) => (b._surplus || 0) - (a._surplus || 0));
+                let totVacDw = 0, totVacHh = 0, totVacHasHh = false, totSurplus = 0, totSurpHas = false;
+                vacRows.forEach(p => {
+                    totVacDw += p.dwellings_2025 || 0;
+                    if (typeof p._hh === 'number') { totVacHh += p._hh; totVacHasHh = true; }
+                    if (typeof p._surplus === 'number') { totSurplus += p._surplus; totSurpHas = true; }
+                });
+                if (!totSurpHas) totSurplus = null;
+
+                // ── permits view: building permits issued 2022-25 (units) vs yearbook starts ──
+                const permMap = (view === 'permits') ? computePermitUnitsBySubQuarter() : {};
+                const permRows = rows.map(p => ({ ...p, _permits: permMap[p.subq] || 0 }))
+                    .sort((a, b) => (b._permits || 0) - (a._permits || 0));
+                let totPermits = 0;
+                permRows.forEach(p => { totPermits += p._permits || 0; });
+
                 const prev = document.getElementById('cbdash-result');
                 if (prev) prev.remove();
                 const div = document.createElement('div');
@@ -8921,18 +9005,22 @@
 
                 const titleTxt = view === 'compare' ? '🏗️ עתודה תכנונית מול בנייה בפועל'
                     : view === 'stock' ? '🏘️ מלאי דירות ושכירות לפי תת-רובע'
+                    : view === 'vacancy' ? '🏚️ אומדן דירות לא-מאוכלסות לפי תת-רובע'
+                    : view === 'permits' ? '🏗️ בנייה בפועל מול היתרים לפי תת-רובע'
                     : '🏗️ התחלות וגמר בנייה לפי תת-רובע';
                 const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #432">' +
                     '<h3 id="cbdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#ffb074;font-size:16px;outline:none;border-bottom:1px dashed #864;padding-bottom:2px;cursor:text">' + titleTxt + '</h3>' +
                     '<button id="cbdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button></div>';
 
-                // segmented view toggle (first=right-rounded, last=left-rounded, middle=square in RTL flow)
-                const tabBtn = (id, label, active, radius) =>
-                    '<button data-cbview="' + id + '" style="background:' + (active ? '#e65100' : '#1c1410') + ';color:' + (active ? '#fff' : '#c9a') + ';border:1px solid #e65100;padding:5px 14px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:' + radius + '">' + label + '</button>';
-                const toggle = '<div style="display:inline-flex;margin-bottom:12px">' +
-                    tabBtn('build', '🏗️ בנייה בפועל', view === 'build', '0 6px 6px 0') +
-                    tabBtn('compare', '⚖️ אושר מול נבנה', view === 'compare', '0') +
-                    tabBtn('stock', '🏘️ מלאי ושכירות', view === 'stock', '6px 0 0 6px') + '</div>';
+                // view toggle — individually-rounded chips (wraps on narrow screens)
+                const tabBtn = (id, label, active) =>
+                    '<button data-cbview="' + id + '" style="background:' + (active ? '#e65100' : '#1c1410') + ';color:' + (active ? '#fff' : '#c9a') + ';border:1px solid #e65100;padding:5px 12px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:6px">' + label + '</button>';
+                const toggle = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' +
+                    tabBtn('build', '🏗️ בנייה בפועל', view === 'build') +
+                    tabBtn('compare', '⚖️ אושר מול נבנה', view === 'compare') +
+                    tabBtn('stock', '🏘️ מלאי ושכירות', view === 'stock') +
+                    tabBtn('vacancy', '🏚️ דירות לא-מאוכלסות', view === 'vacancy') +
+                    tabBtn('permits', '📋 בנייה מול היתרים', view === 'permits') + '</div>';
 
                 let kpis, table, note;
                 if (view === 'build') {
@@ -9004,7 +9092,7 @@
                         '<b>נבנה</b> = דירות שבנייתן החלה/הסתיימה ב-2022–2025 בלבד (שנתון ירושלים 2026, ט/7). ' +
                         'לכן "% מהעתודה" משקף כמה מהעתודה כבר נכנס לבנייה בארבע השנים האחרונות — אחוז נמוך = עתודה גדולה שטרם מומשה. שיוך תב"ע לתת-רובע לפי מרכז הגיאומטריה.' +
                         '</div>';
-                } else {   // view === 'stock'
+                } else if (view === 'stock') {
                     const topRent = [...stkRows].sort((a, b) => (b.rented_pct_2025 || 0) - (a.rented_pct_2025 || 0))[0];
                     kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
                         kpi('מלאי דירות (2025)', n0(totDw), 'יח"ד קיימות', '#dd1c77') +
@@ -9040,6 +9128,71 @@
                         'מקור: השנתון הסטטיסטי לירושלים 2026 — לוח ט/16 ("דירות למגורים ושיעור הדירות המושכרות"). ' +
                         '<b>מלאי דירות</b> = סך יח"ד קיימות בסוף השנה. <b>% מושכרות</b> = שיעור הדירות בשכירות (ממוצע מינה"ק משוקלל לפי מלאי). ' +
                         '<b>בנייה % מהמלאי</b> = התחלות בנייה 2022–25 (ט/7) חלקי מלאי 2025 — עוצמת ההתחדשות.' +
+                        '</div>';
+                } else if (view === 'vacancy') {
+                    const topVac = [...vacRows].filter(p => p._surplus).sort((a, b) => b._surplus - a._surplus)[0];
+                    kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+                        kpi('מלאי דירות (2025)', n0(totVacDw), 'יח"ד', '#dd1c77') +
+                        kpi('משקי בית (אומדן)', totVacHasHh ? n0(totVacHh) : '—', 'מפקד 2022', '#9c6ade') +
+                        kpi('עודף דירות (אומדן)', totSurplus == null ? '—' : n0(totSurplus), 'לא-מאוכלסות', '#ff7043') +
+                        kpi('% לא-מאוכלס', (totSurplus != null && totVacDw) ? Math.round(totSurplus / totVacDw * 100) + '%' : '—', 'מתוך המלאי', '#e53935') +
+                        (topVac ? kpi('הכי בולט', esc(topVac.name_he || topVac.subq), n0(topVac._surplus) + ' דירות', '#b71c1c') : '') +
+                        '</div>';
+                    const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
+                    const mkRowV = (p, kind) => {
+                        const stl = kind === 'total' ? 'font-weight:bold;background:#241a13;color:#ffcfa0'
+                            : kind === 'minhak' ? 'font-weight:bold;background:#15232e;color:#bfe3ff' : 'color:#e8d8cc';
+                        const pad = kind === 'sub' ? 'padding:5px 18px 5px 6px' : 'padding:5px 7px';
+                        const dw = p.dwellings_2025, hh = p._hh, surplus = p._surplus;
+                        const vacTxt = (surplus && dw) ? Math.round(surplus / dw * 100) + '%' : '—';
+                        return '<tr style="border-bottom:1px solid #2a2018;' + stl + '">' +
+                            '<td style="' + pad + ';text-align:right;white-space:nowrap">' + esc(p.name_he || p.subq) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#a87">' + n0(dw) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#b388e0">' + (typeof hh === 'number' ? n0(hh) : '—') + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#ff7043">' + (surplus ? n0(surplus) : '—') + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#e57373">' + vacTxt + '</td>' +
+                            '</tr>';
+                    };
+                    table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241a13">' +
+                        '<th style="padding:5px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע / מינה"ק</th>' +
+                        th('מלאי דירות (2025)') + th('משקי בית (אומדן)') + th('עודף דירות') + th('% לא-מאוכלס') +
+                        '</tr></thead><tbody>' + buildGroupedBody(vacRows, mkRowV, '_surplus') + '</tbody></table>';
+                    note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
+                        '<b>כיצד חושב:</b> אומדן = <b>מלאי דירות</b> (ספירת למ"ס, שנתון ט/16 2025) פחות <b>משקי בית</b> (הערכת מפקד 2022). ' +
+                        '"עודף דירות" = דירות שאין מולן משק בית מתגורר → אומדן ל<b>דירות לא-מאוכלסות / השקעה</b>. ' +
+                        '⚠️ זהו אומדן כיווני, <b>לא ספירת דירות ריקות רשמית</b>: מספר משקי-הבית הוא הערכה מודלית (hh_total_approx), לא ספירת למ"ס מדויקת. ' +
+                        'איפה שמשקי-הבית ≥ הדירות מוצג "—" (אין עודף מזוהה / מגבלת האומדן). גבולות תת-הרובע זהים בין המקורות (מבוססי א"ס).' +
+                        '</div>';
+                } else if (view === 'permits') {
+                    const ratio = (a, b) => (b > 0) ? Math.round(a / b * 100) + '%' : (a > 0 ? '∞' : '—');
+                    const topP = permRows[0];
+                    kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+                        kpi('היתרים שהונפקו', n0(totPermits), '2022–25 · יח"ד', '#42a5f5') +
+                        kpi('התחלות בנייה (שנתון)', n0(totS), '2022–25 · יח"ד', '#fd8d3c') +
+                        kpi('יחס היתרים/התחלות', ratio(totPermits, totS), 'כיסוי חלקי', '#90caf9') +
+                        (topP && topP._permits ? kpi('הכי הרבה היתרים', esc(topP.name_he || topP.subq), n0(topP._permits) + ' יח"ד', '#1976d2') : '') +
+                        '</div>';
+                    const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
+                    const mkRowP = (p, kind) => {
+                        const stl = kind === 'total' ? 'font-weight:bold;background:#241a13;color:#ffcfa0'
+                            : kind === 'minhak' ? 'font-weight:bold;background:#15232e;color:#bfe3ff' : 'color:#e8d8cc';
+                        const pad = kind === 'sub' ? 'padding:5px 18px 5px 6px' : 'padding:5px 7px';
+                        return '<tr style="border-bottom:1px solid #2a2018;' + stl + '">' +
+                            '<td style="' + pad + ';text-align:right;white-space:nowrap">' + esc(p.name_he || p.subq) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#a87">' + n0(p.pop_approx) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#64b5f6">' + n0(p._permits) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#fd8d3c">' + n0(p.started_total) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#90caf9">' + ratio(p._permits, p.started_total) + '</td>' +
+                            '</tr>';
+                    };
+                    table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241a13">' +
+                        '<th style="padding:5px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע / מינה"ק</th>' +
+                        th('אוכלוסייה') + th('היתרים שהונפקו 22–25') + th('התחלות (שנתון) 22–25') + th('יחס') +
+                        '</tr></thead><tbody>' + buildGroupedBody(permRows, mkRowP, '_permits') + '</tbody></table>';
+                    note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
+                        '<b>כיצד חושב:</b> <b>היתרים שהונפקו</b> = יח"ד בהיתרי בנייה בסטטוס "הופק היתר בניה" עם תאריך 2022–2025, ממופים לתת-רובע דרך מרכז התב"ע המשויכת. ' +
+                        'מול <b>התחלות בנייה</b> (שנתון ט/7) באותו חלון — שני מקורות בלתי-תלויים (עירייה מול למ"ס). ' +
+                        '⚠️ <b>כיסוי חלקי</b>: באתר נשמרים רק היתרים המקושרים לתב"ע מוכרת — תת-רובע עם 0 אינו בהכרח ללא בנייה אלא חוסר-קישור. אינדיקטיבי, לא מאזן מלא.' +
                         '</div>';
                 }
                 // scope note shared by all views
@@ -9089,7 +9242,7 @@
                         lines.push([q('סה"כ'), '', '', totPop, totApproved, totS, totC,
                             totApproved > 0 ? Math.round(totS / totApproved * 100) : '',
                             totApproved > 0 ? Math.round(totC / totApproved * 100) : ''].join(','));
-                    } else {   // stock
+                    } else if (view === 'stock') {
                         lines.push(['תת-רובע', 'קוד', 'מינהק', 'אוכלוסייה']
                             .concat(DW_YEARS.map(y => 'מלאי ' + y)).concat(DW_YEARS.map(y => '% שכירות ' + y))
                             .concat(['בנייה % מהמלאי']).map(q).join(','));
@@ -9099,6 +9252,24 @@
                             .concat([p.started_pct_of_stock == null ? '' : p.started_pct_of_stock]).join(',')));
                         lines.push([q('סה"כ'), '', '', totStkPop, '', '', totDw, '', '', avgRentPct == null ? '' : avgRentPct,
                             totDw > 0 ? Math.round(totStkStarts / totDw * 100) : ''].join(','));
+                    } else if (view === 'vacancy') {
+                        lines.push(['תת-רובע', 'קוד', 'מינהק', 'מלאי דירות 2025', 'משקי בית (אומדן)', 'עודף דירות', '% לא-מאוכלס'].map(q).join(','));
+                        vacRows.forEach(p => {
+                            const dw = p.dwellings_2025, hh = p._hh;
+                            const surplus = (dw == null || typeof hh !== 'number') ? '' : Math.max(0, dw - hh);
+                            lines.push([q(p.name_he || ''), q(p.subq), q(mn(p)), dw == null ? '' : dw,
+                                typeof hh === 'number' ? hh : '', surplus,
+                                (surplus !== '' && dw) ? Math.round(surplus / dw * 100) : ''].join(','));
+                        });
+                        lines.push([q('סה"כ'), '', '', totVacDw, totVacHasHh ? totVacHh : '', totSurplus == null ? '' : totSurplus,
+                            (totSurplus != null && totVacDw) ? Math.round(totSurplus / totVacDw * 100) : ''].join(','));
+                    } else {   // permits
+                        lines.push(['תת-רובע', 'קוד', 'מינהק', 'אוכלוסייה', 'היתרים שהונפקו 2022-25', 'התחלות שנתון 2022-25', 'יחס %'].map(q).join(','));
+                        permRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), q(mn(p)), p.pop_approx == null ? '' : p.pop_approx,
+                            p._permits || 0, p.started_total || 0,
+                            p.started_total > 0 ? Math.round((p._permits || 0) / p.started_total * 100) : ''].join(',')));
+                        lines.push([q('סה"כ'), '', '', totPop, totPermits, totS,
+                            totS > 0 ? Math.round(totPermits / totS * 100) : ''].join(','));
                     }
                     const title = (document.getElementById('cbdash-title') || {}).textContent || 'בנייה לפי תת-רובע';
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -12531,6 +12702,63 @@
                         ).join('');
                         leg.innerHTML = '<div style="font-weight:bold;color:#dd1c77;margin-bottom:5px">% דירות מושכרות (2025)</div>' + rows +
                             '<div style="color:#789;margin-top:5px;font-size:9px">שנתון ירושלים 2026 · לוח ט/16 · לפי תת-רובע</div>';
+                        cont.appendChild(leg);
+                    } catch (e) { /* legend non-critical */ }
+                }
+
+                // --- Estimated non-occupied dwellings (אומדן דירות לא-מאוכלסות) — sequential reds.
+                //     vac% = max(0, dwellings(ט/16) − households(census estimate)) / dwellings. ---
+                { const _oldVacLeg = document.getElementById('vacancy-est-legend'); if (_oldVacLeg) _oldVacLeg.remove(); }
+                if (layers['vacancy_est'] && gd.construction_yb) {
+                    const hhMapL = computeHouseholdsBySubQuarter();
+                    const REDS = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15'];
+                    const vacColor = (v) => v >= 25 ? REDS[5] : v >= 20 ? REDS[4] : v >= 15 ? REDS[3]
+                        : v >= 10 ? REDS[2] : v >= 5 ? REDS[1] : REDS[0];
+                    const _ny = (v) => (v == null ? '—' : v.toLocaleString());
+                    const vacOf = (p) => {
+                        const dw = p.dwellings_2025, hh = hhMapL[p.subq];
+                        if (dw == null || typeof hh !== 'number' || dw <= 0) return null;
+                        const surplus = Math.max(0, dw - hh);
+                        return { surplus, hh, dw, pct: Math.round(surplus / dw * 100) };
+                    };
+                    const vacLayer = L.geoJSON(gd.construction_yb, {
+                        pane: 'constructionPane',
+                        style: (f) => {
+                            const v = vacOf(f.properties || {});
+                            if (!v) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
+                            return { fillColor: vacColor(v.pct), fillOpacity: 0.64, color: '#7a0c12', weight: 1, opacity: 0.65 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const v = vacOf(p);
+                            const html = '<div style="direction:rtl;font-family:Assistant,sans-serif;font-size:12px;min-width:215px">' +
+                                '<div style="font-weight:bold;color:#a50f15;font-size:13px;margin-bottom:3px">' + (p.name_he || 'תת-רובע ' + p.subq) + '</div>' +
+                                (v
+                                    ? '<div>מלאי דירות (2025): <b>' + _ny(v.dw) + '</b></div>' +
+                                      '<div>משקי בית (אומדן מפקד): <b>' + _ny(v.hh) + '</b></div>' +
+                                      '<div>עודף דירות (אומדן): <b style="color:#d32f2f">' + _ny(v.surplus) + '</b> (' + v.pct + '%)</div>'
+                                    : '<div style="color:#9ab">אין נתון מספק לאומדן</div>') +
+                                '<div style="margin-top:4px;color:#9a6;font-size:10px">⚠️ אומדן כיווני (דירות למ"ס − משקי-בית הערכה), לא ספירת דירות ריקות רשמית</div>' +
+                                '</div>';
+                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
+                            layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                        },
+                    }).addTo(map);
+                    geoLayersRef.current.vacancy_est = vacLayer;
+
+                    try {
+                        const cont = map.getContainer();
+                        const leg = document.createElement('div');
+                        leg.id = 'vacancy-est-legend';
+                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #a50f15;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        const rows = [
+                            ['25%+', REDS[5]], ['20–24%', REDS[4]], ['15–19%', REDS[3]],
+                            ['10–14%', REDS[2]], ['5–9%', REDS[1]], ['<5%', REDS[0]], ['אין עודף / אין נתון', '#555'],
+                        ].map(([lbl, c]) =>
+                            '<div style="display:flex;align-items:center;gap:6px;margin:1px 0"><span style="display:inline-block;width:14px;height:11px;background:' + c + ';border:0.5px solid #7a0c12;border-radius:2px"></span><span>' + lbl + '</span></div>'
+                        ).join('');
+                        leg.innerHTML = '<div style="font-weight:bold;color:#e53935;margin-bottom:5px">אומדן % דירות לא-מאוכלסות</div>' + rows +
+                            '<div style="color:#789;margin-top:5px;font-size:9px">דירות (ט/16) − משקי-בית (מפקד) · אומדן כיווני</div>';
                         cont.appendChild(leg);
                     } catch (e) { /* legend non-critical */ }
                 }
