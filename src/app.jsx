@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-11-actual-uses';
+        const APP_VERSION = '2026-06-14-dwellings';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -411,6 +411,7 @@
             projector_gonenim: 'data/projector_gonenim.geojson',
             projector_gonenim_tzatal: 'data/projector_gonenim_tzatal.geojson',
             mivnei_lashimur: 'data/arcgis/mivnei_lashimur.geojson',
+            construction_yb: 'data/construction_yearbook.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -852,6 +853,14 @@
                     { id: 'future_shavaz', name: 'שב"צ עתידי', desc: 'מבני ציבור עתידיים מתוכניות', on: false },
                     { id: 'hafrashah_future', name: 'הפרשה מבונה עתידי', desc: 'שטחי ציבור בתוך מבני מגורים עתידיים', on: false },
                     { id: 'sara_march_2026', name: 'פרויקטי חינוך', desc: 'טבלת שרה - פרויקטי בנייה חינוך מרץ 2026', on: false },
+                ]
+            },
+            construction_group: {
+                title: 'בינוי בפועל (שנתון)',
+                layers: [
+                    { id: 'construction_yb', name: 'התחלות בנייה לפי תת-רובע', desc: 'מספר דירות שבנייתן החלה 2022-2025 לפי תת-רובע — מפת חום. מקור: השנתון הסטטיסטי לירושלים 2026, לוח ט/7', on: false },
+                    { id: 'construction_realized', name: 'עתודה מול בנייה', desc: 'מפת חום של מימוש: % יח"ד שבנייתן החלה (שנתון ט/7) מתוך העתודה התכנונית (units_add בתב"עות פעילות). אדום = עתודה גדולה שטרם נבנתה', on: false },
+                    { id: 'dwellings_rental', name: '% דירות מושכרות', desc: 'שיעור הדירות המושכרות מתוך מלאי הדיור (2025) לפי תת-רובע — מפת חום. מקור: השנתון הסטטיסטי לירושלים 2026, לוח ט/16', on: false },
                 ]
             },
             master_plans: {
@@ -4016,6 +4025,10 @@
                 shavazMarkersP.style.zIndex = 565;
                 const landuseP = map.createPane('landusePane');
                 landuseP.style.zIndex = 295;
+                // Construction-yearbook choropleth — background thematic fill, sits below
+                // sub-neighborhood outlines/labels (250) and plans (300) so it reads as a backdrop.
+                const constructionP = map.createPane('constructionPane');
+                constructionP.style.zIndex = 235;
 
                 // Load all GeoJSON data + CSV for plan_type enrichment.
                 // Heaviest files (11 MB+) are deferred — fetched in the background
@@ -4037,7 +4050,7 @@
                     'givat_hamatos_arab_armenian', 'givat_hamatos_state',
                     'givat_hamatos_companies', 'givat_hamatos_jewish',
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
-                    'easements',
+                    'easements', 'construction_yb',
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -4588,7 +4601,9 @@
                 const LANDUSE_DEPENDENTS = ['future_shavaz', 'hafrashah_future'];
                 onDemand.forEach(key => {
                     const wanted = layers[key]
-                        || (key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d]));
+                        || (key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d]))
+                        // the "עתודה מול בנייה" + "% דירות מושכרות" layers render FROM the construction_yb file
+                        || (key === 'construction_yb' && (layers['construction_realized'] || layers['dwellings_rental']));
                     if (!wanted) return;
                     if (geoDataRef.current[key]) return;        // already loaded
                     if (window.__inFlightLoads.has(key)) return; // already fetching
@@ -8731,6 +8746,313 @@
                 paint(initialMinhak && data.minhaks.some(m => m.name === initialMinhak) ? initialMinhak : null);
             }
 
+            // Approved-housing pipeline per sub-quarter: sum of units_add over active
+            // (non-rejected, non-infra) plans, deduped by taba, bucketed into the
+            // construction_yearbook sub-quarter polygons by plan centroid. Same plan
+            // filter + centroid bucketing used elsewhere (buildProjectorTalpiotPlanSet,
+            // area report). Returns { subq: approvedUnits }. Needs gd.plans + gd.construction_yb.
+            function computeApprovedUnitsBySubQuarter() {
+                const gd = geoDataRef.current || {};
+                const cb = gd.construction_yb, plans = gd.plans;
+                const out = {};
+                if (!cb || !cb.features || !plans || !plans.features) return out;
+                const seenTaba = new Set();
+                plans.features.forEach(f => {
+                    const p = f.properties || {};
+                    const taba = String(p.taba || '').trim();
+                    if (taba && seenTaba.has(taba)) return;
+                    const s = normalizeStatus((p.status_mavat || '').trim());
+                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                    if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                    const ua = parseFloat(p.units_add) || 0;
+                    if (ua <= 0) return;                 // only plans that add homes
+                    if (taba) seenTaba.add(taba);        // dedup once, regardless of location
+                    const c = geomCentroid(f.geometry);
+                    if (!c) return;
+                    for (const sf of cb.features) {
+                        if (pointInGeometry(c, sf.geometry)) {
+                            const sq = sf.properties.subq;
+                            out[sq] = (out[sq] || 0) + ua;
+                            break;
+                        }
+                    }
+                });
+                return out;
+            }
+
+            // ── Construction-activity report (yearbook ט/7) — building starts/completions
+            //    per sub-quarter (תת-רובע), 2022-2025. Loads data/construction_yearbook.geojson
+            //    on demand if its layer hasn't been toggled yet. ──
+            function openConstructionDashboard() {
+                const gd = geoDataRef.current || {};
+                const render = () => renderConstructionDashboard(
+                    (geoDataRef.current.construction_yb || {}).features || []);
+                if (gd.construction_yb && gd.construction_yb.features) { render(); return; }
+                // fetch once, then render
+                const prev = document.getElementById('cbdash-result');
+                if (prev) prev.remove();
+                const loading = document.createElement('div');
+                loading.id = 'cbdash-result';
+                loading.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:24px;border-radius:14px;border:2px solid #e65100;direction:rtl;font-family:Assistant,sans-serif';
+                loading.textContent = 'טוען נתוני בנייה…';
+                document.body.appendChild(loading);
+                fetch('data/construction_yearbook.geojson?v=' + APP_VERSION)
+                    .then(r => r.json())
+                    .then(d => { geoDataRef.current.construction_yb = d; render(); })
+                    .catch(() => { loading.textContent = 'שגיאה בטעינת נתוני הבנייה.'; });
+            }
+
+            function renderConstructionDashboard(featsIn, view) {
+                view = ['compare', 'stock'].includes(view) ? view : 'build';
+                const YEARS = [2022, 2023, 2024, 2025];
+                const DW_YEARS = [2023, 2024, 2025];
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const n0 = (v) => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString();
+                const pct = (a, b) => (b > 0) ? Math.round(a / b * 100) + '%' : '—';
+                const rows = (featsIn || []).map(f => f.properties || {})
+                    .filter(p => p.has_data)
+                    .sort((a, b) => (b.started_total || 0) - (a.started_total || 0));
+                const tot = {};
+                YEARS.forEach(y => { tot['started_' + y] = 0; tot['completed_' + y] = 0; });
+                let totS = 0, totC = 0, totPop = 0;
+                rows.forEach(p => {
+                    YEARS.forEach(y => { tot['started_' + y] += p['started_' + y] || 0; tot['completed_' + y] += p['completed_' + y] || 0; });
+                    totS += p.started_total || 0; totC += p.completed_total || 0; totPop += p.pop_approx || 0;
+                });
+                // mkRow reads these off the row object for the totals line too
+                tot.started_total = totS; tot.completed_total = totC; tot.pop_approx = totPop;
+                tot.started_per_1000 = totPop ? Math.round(totS / totPop * 1000 * 10) / 10 : null;
+                const top = rows[0];
+
+                // ── compare view: approved pipeline (units_add) per sub-quarter vs actual built ──
+                const approvedMap = (view === 'compare') ? computeApprovedUnitsBySubQuarter() : {};
+                const cmpRows = rows.map(p => ({ ...p, approved: approvedMap[p.subq] || 0 }))
+                    .sort((a, b) => (b.approved || 0) - (a.approved || 0));
+                let totApproved = 0;
+                cmpRows.forEach(p => { totApproved += p.approved || 0; });
+                tot.approved = totApproved;   // so the compare total row shows the pipeline sum
+
+                // ── stock view: dwelling stock + rental share (ט/16) ──
+                const stkRows = rows.filter(p => p.has_dwellings)
+                    .sort((a, b) => (b.dwellings_2025 || 0) - (a.dwellings_2025 || 0));
+                let totDw = 0, totRented = 0, totStkStarts = 0, totStkPop = 0;
+                stkRows.forEach(p => {
+                    const d = p.dwellings_2025 || 0;
+                    totDw += d;
+                    if (p.rented_pct_2025 != null) totRented += d * p.rented_pct_2025 / 100;
+                    totStkStarts += p.started_total || 0;
+                    totStkPop += p.pop_approx || 0;
+                });
+                const avgRentPct = totDw ? Math.round(totRented / totDw * 1000) / 10 : null;
+
+                const prev = document.getElementById('cbdash-result');
+                if (prev) prev.remove();
+                const div = document.createElement('div');
+                div.id = 'cbdash-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(16,24,32,0.98);color:#cfe;padding:20px;border-radius:14px;border:2px solid #e65100;direction:rtl;width:min(960px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                document.body.appendChild(div);
+
+                const kpi = (label, val, sub2, color) =>
+                    '<div style="background:#1c1410;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px;flex:1">' +
+                    '<div style="font-size:11px;color:#c9a">' + label + '</div>' +
+                    '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    (sub2 ? '<div style="font-size:10px;color:#a87">' + sub2 + '</div>' : '') + '</div>';
+
+                const titleTxt = view === 'compare' ? '🏗️ עתודה תכנונית מול בנייה בפועל'
+                    : view === 'stock' ? '🏘️ מלאי דירות ושכירות לפי תת-רובע'
+                    : '🏗️ התחלות וגמר בנייה לפי תת-רובע';
+                const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #432">' +
+                    '<h3 id="cbdash-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#ffb074;font-size:16px;outline:none;border-bottom:1px dashed #864;padding-bottom:2px;cursor:text">' + titleTxt + '</h3>' +
+                    '<button id="cbdash-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button></div>';
+
+                // segmented view toggle (first=right-rounded, last=left-rounded, middle=square in RTL flow)
+                const tabBtn = (id, label, active, radius) =>
+                    '<button data-cbview="' + id + '" style="background:' + (active ? '#e65100' : '#1c1410') + ';color:' + (active ? '#fff' : '#c9a') + ';border:1px solid #e65100;padding:5px 14px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:' + radius + '">' + label + '</button>';
+                const toggle = '<div style="display:inline-flex;margin-bottom:12px">' +
+                    tabBtn('build', '🏗️ בנייה בפועל', view === 'build', '0 6px 6px 0') +
+                    tabBtn('compare', '⚖️ אושר מול נבנה', view === 'compare', '0') +
+                    tabBtn('stock', '🏘️ מלאי ושכירות', view === 'stock', '6px 0 0 6px') + '</div>';
+
+                let kpis, table, note;
+                if (view === 'build') {
+                    kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+                        kpi('סה"כ התחלות בנייה', n0(totS), '2022–2025 · יח"ד', '#fd8d3c') +
+                        kpi('סה"כ גמר בנייה', n0(totC), '2022–2025 · יח"ד', '#f6a96b') +
+                        kpi('תת-רבעים', String(rows.length), 'עם נתונים', '#e0a64d') +
+                        (top ? kpi('הכי פעיל', esc(top.name_he || top.subq), n0(top.started_total) + ' התחלות', '#ff7043') : '') +
+                        '</div>';
+                    const yhdr = YEARS.map(y => '<th colspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px;border-right:1px solid #432">' + y + '</th>').join('');
+                    const ysub = YEARS.map(() => '<th style="padding:3px 6px;color:#c9a;font-size:10px;font-weight:normal">התחלה</th><th style="padding:3px 6px;color:#c9a;font-size:10px;font-weight:normal">גמר</th>').join('');
+                    const mkRow = (p, isTot) => {
+                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
+                        const cells = YEARS.map(y =>
+                            '<td style="padding:4px 6px;text-align:center">' + n0(p['started_' + y]) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#b9a">' + n0(p['completed_' + y]) + '</td>').join('');
+                        return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
+                            '<td style="padding:4px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + (isTot ? n0(totPop) : n0(p.pop_approx)) + '</td>' +
+                            cells +
+                            '<td style="padding:4px 6px;text-align:center;font-weight:bold;color:#fd8d3c">' + n0(p.started_total) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#f6a96b">' + n0(p.completed_total) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + (p.started_per_1000 == null ? '—' : p.started_per_1000) + '</td>' +
+                            '</tr>';
+                    };
+                    table = '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+                        '<thead>' +
+                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">אוכלוסייה</th>' + yhdr +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">סה"כ התחלות</th>' +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">סה"כ גמר</th>' +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">התחלות/1000</th></tr>' +
+                        '<tr style="background:#1c1410">' + ysub + '</tr>' +
+                        '</thead><tbody>' + rows.map(p => mkRow(p, false)).join('') + mkRow(tot, true) + '</tbody></table>';
+                    note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
+                        'מקור: השנתון הסטטיסטי לירושלים 2026, מכון ירושלים למחקרי מדיניות — לוח ט/7 ("התחלות וגמר בנייה לפי תת-רובע ומספר דירות"). ' +
+                        'היחידה: מספר דירות (יח"ד). "התחלות/1000" = סך התחלות 2022–2025 לכל 1,000 תושבים (מפקד 2022). תת-רבעים ללא אוכלוסייה מסומנים —.' +
+                        '</div>';
+                } else if (view === 'compare') {
+                    kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+                        kpi('עתודה תכנונית', n0(totApproved), 'יח"ד בתב"עות פעילות', '#9c6ade') +
+                        kpi('נבנה (התחלות)', n0(totS), '2022–2025 · יח"ד', '#fd8d3c') +
+                        kpi('נבנה (גמר)', n0(totC), '2022–2025 · יח"ד', '#f6a96b') +
+                        kpi('% התחלות מהעתודה', pct(totS, totApproved), 'מומש מתוך העתודה', '#5fd3a0') +
+                        '</div>';
+                    const mkRowC = (p, isTot) => {
+                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
+                        const sp = isTot ? pct(totS, totApproved) : pct(p.started_total, p.approved);
+                        const cp = isTot ? pct(totC, totApproved) : pct(p.completed_total, p.approved);
+                        return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
+                            '<td style="padding:5px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#a87">' + (isTot ? n0(totPop) : n0(p.pop_approx)) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#b388e0">' + n0(p.approved) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#fd8d3c">' + n0(p.started_total) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#f6a96b">' + n0(p.completed_total) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#5fd3a0">' + sp + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#7fb89a">' + cp + '</td>' +
+                            '</tr>';
+                    };
+                    const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
+                    table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241a13">' +
+                        '<th style="padding:5px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        th('אוכלוסייה') + th('עתודה תכנונית (יח"ד)') + th('נבנה — התחלות') + th('נבנה — גמר') + th('% התחלות מהעתודה') + th('% גמר מהעתודה') +
+                        '</tr></thead><tbody>' + cmpRows.map(p => mkRowC(p, false)).join('') + mkRowC(tot, true) + '</tbody></table>';
+                    note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
+                        '<b>עתודה תכנונית</b> = סך יח"ד נוספות (units_add) בתב"עות פעילות (לא נדחות/נגנזות, לא תשתיות) שמרכזן בתת-הרובע — צבירת כל הפַּייפליין התכנוני, ללא חתך זמן. ' +
+                        '<b>נבנה</b> = דירות שבנייתן החלה/הסתיימה ב-2022–2025 בלבד (שנתון ירושלים 2026, ט/7). ' +
+                        'לכן "% מהעתודה" משקף כמה מהעתודה כבר נכנס לבנייה בארבע השנים האחרונות — אחוז נמוך = עתודה גדולה שטרם מומשה. שיוך תב"ע לתת-רובע לפי מרכז הגיאומטריה.' +
+                        '</div>';
+                } else {   // view === 'stock'
+                    const topRent = [...stkRows].sort((a, b) => (b.rented_pct_2025 || 0) - (a.rented_pct_2025 || 0))[0];
+                    kpis = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+                        kpi('מלאי דירות (2025)', n0(totDw), 'יח"ד קיימות', '#dd1c77') +
+                        kpi('% שכירות ממוצע', avgRentPct == null ? '—' : avgRentPct + '%', 'משוקלל לפי מלאי', '#df65b0') +
+                        kpi('בנייה כ-% מהמלאי', pct(totStkStarts, totDw), 'התחלות 2022–25', '#fd8d3c') +
+                        (topRent ? kpi('שכירות גבוהה', esc(topRent.name_he || topRent.subq), topRent.rented_pct_2025 + '%', '#980043') : '') +
+                        '</div>';
+                    const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
+                    const dwHdr = DW_YEARS.map(y => '<th style="padding:4px 6px;color:#ffb074;font-size:11px">' + y + '</th>').join('');
+                    const rentHdr = DW_YEARS.map(y => '<th style="padding:4px 6px;color:#df65b0;font-size:11px">' + y + '</th>').join('');
+                    const mkRowS = (p, isTot) => {
+                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
+                        const dwc = DW_YEARS.map(y => '<td style="padding:4px 6px;text-align:center">' + n0(isTot ? (y === 2025 ? totDw : null) : p['dwellings_' + y]) + '</td>').join('');
+                        const rentc = DW_YEARS.map(y => {
+                            const v = isTot ? (y === 2025 ? avgRentPct : null) : p['rented_pct_' + y];
+                            return '<td style="padding:4px 6px;text-align:center;color:#e0a0c8">' + (v == null ? '—' : v + '%') + '</td>';
+                        }).join('');
+                        const stockPct = isTot ? pct(totStkStarts, totDw)
+                            : (p.started_pct_of_stock == null ? '—' : p.started_pct_of_stock + '%');
+                        return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
+                            '<td style="padding:4px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + (isTot ? n0(totStkPop) : n0(p.pop_approx)) + '</td>' +
+                            dwc + rentc +
+                            '<td style="padding:4px 6px;text-align:center;font-weight:bold;color:#fd8d3c">' + stockPct + '</td>' +
+                            '</tr>';
+                    };
+                    table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead>' +
+                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">אוכלוסייה</th>' +
+                        '<th colspan="3" style="padding:4px 6px;color:#ffb074;font-size:11px;border-right:1px solid #432">מלאי דירות</th>' +
+                        '<th colspan="3" style="padding:4px 6px;color:#df65b0;font-size:11px;border-right:1px solid #432">% מושכרות</th>' +
+                        '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">בנייה % מהמלאי</th></tr>' +
+                        '<tr style="background:#1c1410">' + dwHdr + rentHdr + '</tr>' +
+                        '</thead><tbody>' + stkRows.map(p => mkRowS(p, false)).join('') + mkRowS(tot, true) + '</tbody></table>';
+                    note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
+                        'מקור: השנתון הסטטיסטי לירושלים 2026 — לוח ט/16 ("דירות למגורים ושיעור הדירות המושכרות"). ' +
+                        '<b>מלאי דירות</b> = סך יח"ד קיימות בסוף השנה. <b>% מושכרות</b> = שיעור הדירות בשכירות. ' +
+                        '<b>בנייה % מהמלאי</b> = התחלות בנייה 2022–25 (ט/7) חלקי מלאי 2025 — עוצמת ההתחדשות. ' +
+                        '6 תת-רבעים במזרח העיר חסרים בלוח ט/16 ואינם מוצגים כאן.' +
+                        '</div>';
+                }
+
+                const footer = '<div style="display:flex;gap:8px;margin-top:14px">' +
+                    '<button id="cbdash-csv" style="background:#e65100;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
+                    '<button id="cbdash-print" style="background:#1c1410;border:1px solid #e65100;color:#ffcfa0;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                    '</div>';
+
+                if (!rows.length) {
+                    div.innerHTML = head + '<div style="color:#c9a;padding:16px;text-align:center">אין נתוני בנייה זמינים.</div>' + footer;
+                } else {
+                    div.innerHTML = head + toggle + kpis + table + note + footer;
+                }
+                document.getElementById('cbdash-close').addEventListener('click', () => div.remove());
+                div.querySelectorAll('[data-cbview]').forEach(b => b.addEventListener('click', () => {
+                    const want = b.getAttribute('data-cbview');
+                    if (want !== view) renderConstructionDashboard(featsIn, want);
+                }));
+
+                document.getElementById('cbdash-csv').addEventListener('click', () => {
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    if (view === 'build') {
+                        const hdr = ['תת-רובע', 'קוד', 'אוכלוסייה']
+                            .concat(YEARS.flatMap(y => ['התחלה ' + y, 'גמר ' + y]))
+                            .concat(['סה"כ התחלות', 'סה"כ גמר', 'התחלות ל-1000']);
+                        lines.push(hdr.map(q).join(','));
+                        rows.forEach(p => lines.push(
+                            [q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx]
+                                .concat(YEARS.flatMap(y => [p['started_' + y] || 0, p['completed_' + y] || 0]))
+                                .concat([p.started_total, p.completed_total, p.started_per_1000 == null ? '' : p.started_per_1000]).join(',')));
+                        lines.push([q('סה"כ'), '', totPop].concat(YEARS.flatMap(y => [tot['started_' + y], tot['completed_' + y]])).concat([totS, totC, '']).join(','));
+                    } else if (view === 'compare') {
+                        lines.push(['תת-רובע', 'קוד', 'אוכלוסייה', 'עתודה תכנונית (יח"ד)', 'נבנה התחלות 2022-25', 'נבנה גמר 2022-25', '% התחלות מהעתודה', '% גמר מהעתודה'].map(q).join(','));
+                        cmpRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx,
+                            p.approved, p.started_total, p.completed_total,
+                            p.approved > 0 ? Math.round(p.started_total / p.approved * 100) : '',
+                            p.approved > 0 ? Math.round(p.completed_total / p.approved * 100) : ''].join(',')));
+                        lines.push([q('סה"כ'), '', totPop, totApproved, totS, totC,
+                            totApproved > 0 ? Math.round(totS / totApproved * 100) : '',
+                            totApproved > 0 ? Math.round(totC / totApproved * 100) : ''].join(','));
+                    } else {   // stock
+                        lines.push(['תת-רובע', 'קוד', 'אוכלוסייה']
+                            .concat(DW_YEARS.map(y => 'מלאי ' + y)).concat(DW_YEARS.map(y => '% שכירות ' + y))
+                            .concat(['בנייה % מהמלאי']).map(q).join(','));
+                        stkRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx]
+                            .concat(DW_YEARS.map(y => p['dwellings_' + y] == null ? '' : p['dwellings_' + y]))
+                            .concat(DW_YEARS.map(y => p['rented_pct_' + y] == null ? '' : p['rented_pct_' + y]))
+                            .concat([p.started_pct_of_stock == null ? '' : p.started_pct_of_stock]).join(',')));
+                        lines.push([q('סה"כ'), '', totStkPop, '', '', totDw, '', '', avgRentPct == null ? '' : avgRentPct,
+                            totDw > 0 ? Math.round(totStkStarts / totDw * 100) : ''].join(','));
+                    }
+                    const title = (document.getElementById('cbdash-title') || {}).textContent || 'בנייה לפי תת-רובע';
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+                document.getElementById('cbdash-print').addEventListener('click', () => {
+                    const title = (document.getElementById('cbdash-title') || {}).textContent || 'התחלות וגמר בנייה לפי תת-רובע';
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#e65100;margin:0 0 8px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:4px;text-align:center}th{background:#fbe9da;color:#9a3a00}td:first-child,th:first-child{text-align:right}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
+                });
+            }
+
             // ── Programa-direct from "מבני ציבור > אזור": handle area before regular analysis ──
             useEffect(() => {
                 if (!areaFinished || areaFinished.length < 3 || !programaAreaActiveRef.current) return;
@@ -11968,6 +12290,182 @@
                         interactive: false,
                     }).addTo(map);
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
+                }
+
+                // --- Construction activity (yearbook ט/7) — choropleth of building STARTS
+                //     (number of dwellings, 2022-2025) per sub-quarter (תת-רובע). ---
+                // Legend is a plain DOM badge in the map container; remove any stale one on every
+                // effect run so it disappears when the layer is toggled off.
+                { const _oldCbLeg = document.getElementById('construction-yb-legend'); if (_oldCbLeg) _oldCbLeg.remove(); }
+                if (layers['construction_yb'] && gd.construction_yb) {
+                    // Sequential orange ramp — distinct from the 4 thematic families
+                    // (סגול=מסחר, חום=ציבור, כחול=היתרים, ירוק=שצ"פ).
+                    const CB_RAMP = [
+                        [2000, '#7f2704'], [1000, '#a63603'], [600, '#d94801'], [350, '#f16913'],
+                        [150, '#fd8d3c'], [50, '#fdae6b'], [1, '#fdd0a2'], [0, '#feedde'],
+                    ];
+                    const cbColor = (v) => {
+                        for (const [t, c] of CB_RAMP) { if (v >= t) return c; }
+                        return CB_RAMP[CB_RAMP.length - 1][1];
+                    };
+                    const _ny = (v) => (v == null ? '—' : v.toLocaleString());
+                    const cbLayer = L.geoJSON(gd.construction_yb, {
+                        pane: 'constructionPane',
+                        style: (f) => {
+                            const p = f.properties || {};
+                            if (!p.has_data) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
+                            return { fillColor: cbColor(p.started_total || 0), fillOpacity: 0.62, color: '#7f2704', weight: 1, opacity: 0.65 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const yr = (y) => p['started_' + y] != null
+                                ? y + "׳: " + p['started_' + y] + "/" + p['completed_' + y] : '';
+                            const perK = (p.started_per_1000 != null)
+                                ? '<div style="color:#789">אוכלוסייה: ' + _ny(p.pop_approx) + ' · ' + p.started_per_1000 + ' התחלות / 1,000 תושבים</div>' : '';
+                            const html = '<div style="direction:rtl;font-family:Assistant,sans-serif;font-size:12px;min-width:200px">' +
+                                '<div style="font-weight:bold;color:#e65100;font-size:13px;margin-bottom:3px">' + (p.name_he || 'תת-רובע ' + p.subq) + '</div>' +
+                                (p.has_data
+                                    ? '<div>התחלות בנייה 2022–2025: <b style="color:#e65100">' + _ny(p.started_total) + '</b> יח"ד</div>' +
+                                      '<div>גמר בנייה 2022–2025: <b>' + _ny(p.completed_total) + '</b> יח"ד</div>' +
+                                      perK +
+                                      '<div style="margin-top:4px;color:#9ab;font-size:11px">לפי שנה (התחלה/גמר): ' +
+                                        [2022, 2023, 2024, 2025].map(yr).filter(Boolean).join(' · ') + '</div>'
+                                    : '<div style="color:#9ab">אין נתוני בנייה לתת-רובע זה</div>') +
+                                '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/7</div>' +
+                                '</div>';
+                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
+                            layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                        },
+                    }).addTo(map);
+                    geoLayersRef.current.construction_yb = cbLayer;
+
+                    // Legend badge
+                    try {
+                        const cont = map.getContainer();
+                        const leg = document.createElement('div');
+                        leg.id = 'construction-yb-legend';
+                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #e65100;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        const rows = [
+                            ['2,000+', '#7f2704'], ['1,000–1,999', '#a63603'], ['600–999', '#d94801'],
+                            ['350–599', '#f16913'], ['150–349', '#fd8d3c'], ['50–149', '#fdae6b'],
+                            ['1–49', '#fdd0a2'], ['0', '#feedde'],
+                        ].map(([lbl, c]) =>
+                            '<div style="display:flex;align-items:center;gap:6px;margin:1px 0"><span style="display:inline-block;width:14px;height:11px;background:' + c + ';border:0.5px solid #7f2704;border-radius:2px"></span><span>' + lbl + '</span></div>'
+                        ).join('');
+                        leg.innerHTML = '<div style="font-weight:bold;color:#e65100;margin-bottom:5px">התחלות בנייה (יח"ד) 2022–2025</div>' + rows +
+                            '<div style="color:#789;margin-top:5px;font-size:9px">שנתון ירושלים 2026 · לוח ט/7 · לפי תת-רובע</div>';
+                        cont.appendChild(leg);
+                    } catch (e) { /* legend is non-critical */ }
+                }
+
+                // --- Construction realization (עתודה מול בנייה) — diverging choropleth of
+                //     started dwellings (ט/7) as a share of the approved pipeline (units_add). ---
+                { const _oldRzLeg = document.getElementById('construction-realized-legend'); if (_oldRzLeg) _oldRzLeg.remove(); }
+                if (layers['construction_realized'] && gd.construction_yb) {
+                    const approvedMap = computeApprovedUnitsBySubQuarter();
+                    // RdBu diverging: red = much approved but little built; blue = built out
+                    const rzColor = (ratio) => {           // ratio = started/approved, 0..>1
+                        if (ratio >= 1.0) return '#2166ac';
+                        if (ratio >= 0.75) return '#67a9cf';
+                        if (ratio >= 0.50) return '#d1e5f0';
+                        if (ratio >= 0.25) return '#fddbc7';
+                        if (ratio >= 0.10) return '#ef8a62';
+                        return '#b2182b';
+                    };
+                    const _ny = (v) => (v == null ? '—' : v.toLocaleString());
+                    const rzLayer = L.geoJSON(gd.construction_yb, {
+                        pane: 'constructionPane',
+                        style: (f) => {
+                            const p = f.properties || {};
+                            const ap = approvedMap[p.subq] || 0;
+                            if (ap <= 0) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
+                            return { fillColor: rzColor((p.started_total || 0) / ap), fillOpacity: 0.62, color: '#2c3e50', weight: 1, opacity: 0.65 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const ap = approvedMap[p.subq] || 0;
+                            const ratioTxt = ap > 0 ? Math.round((p.started_total || 0) / ap * 100) + '%' : '—';
+                            const html = '<div style="direction:rtl;font-family:Assistant,sans-serif;font-size:12px;min-width:210px">' +
+                                '<div style="font-weight:bold;color:#2166ac;font-size:13px;margin-bottom:3px">' + (p.name_he || 'תת-רובע ' + p.subq) + '</div>' +
+                                '<div>עתודה תכנונית: <b style="color:#7e57c2">' + _ny(ap) + '</b> יח"ד</div>' +
+                                '<div>נבנה (התחלות) 2022–2025: <b style="color:#e65100">' + _ny(p.started_total) + '</b> יח"ד</div>' +
+                                '<div>גמר 2022–2025: ' + _ny(p.completed_total) + ' יח"ד</div>' +
+                                '<div style="margin-top:3px">% התחלות מהעתודה: <b>' + ratioTxt + '</b></div>' +
+                                (ap <= 0 ? '<div style="color:#9ab;font-size:11px">אין עתודה תכנונית רשומה (יתכן בנייה ללא תוספת יח"ד)</div>' : '') +
+                                '<div style="margin-top:4px;color:#667;font-size:10px">עתודה: units_add בתב"עות פעילות · בנייה: שנתון ט/7</div>' +
+                                '</div>';
+                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
+                            layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                        },
+                    }).addTo(map);
+                    geoLayersRef.current.construction_realized = rzLayer;
+
+                    try {
+                        const cont = map.getContainer();
+                        const leg = document.createElement('div');
+                        leg.id = 'construction-realized-legend';
+                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #2166ac;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        const rows = [
+                            ['100%+ (נבנה ≥ עתודה)', '#2166ac'], ['75–99%', '#67a9cf'], ['50–74%', '#d1e5f0'],
+                            ['25–49%', '#fddbc7'], ['10–24%', '#ef8a62'], ['<10% (עתודה לא ממומשת)', '#b2182b'],
+                            ['אין עתודה רשומה', '#555'],
+                        ].map(([lbl, c]) =>
+                            '<div style="display:flex;align-items:center;gap:6px;margin:1px 0"><span style="display:inline-block;width:14px;height:11px;background:' + c + ';border:0.5px solid #2c3e50;border-radius:2px"></span><span>' + lbl + '</span></div>'
+                        ).join('');
+                        leg.innerHTML = '<div style="font-weight:bold;color:#2166ac;margin-bottom:5px">% התחלות בנייה מהעתודה התכנונית</div>' + rows +
+                            '<div style="color:#789;margin-top:5px;font-size:9px">שנתון ט/7 מול units_add בתב"עות · לפי תת-רובע</div>';
+                        cont.appendChild(leg);
+                    } catch (e) { /* legend non-critical */ }
+                }
+
+                // --- Rental share (% דירות מושכרות, ט/16) — sequential PuRd choropleth on 2025 ---
+                { const _oldDwLeg = document.getElementById('dwellings-rental-legend'); if (_oldDwLeg) _oldDwLeg.remove(); }
+                if (layers['dwellings_rental'] && gd.construction_yb) {
+                    const PURD = ['#f1eef6', '#d4b9da', '#c994c7', '#df65b0', '#dd1c77', '#980043'];
+                    const rentColor = (v) => v >= 55 ? PURD[5] : v >= 45 ? PURD[4] : v >= 35 ? PURD[3]
+                        : v >= 25 ? PURD[2] : v >= 15 ? PURD[1] : PURD[0];
+                    const _ny = (v) => (v == null ? '—' : v.toLocaleString());
+                    const dwLayer = L.geoJSON(gd.construction_yb, {
+                        pane: 'constructionPane',
+                        style: (f) => {
+                            const p = f.properties || {};
+                            if (!p.has_dwellings || p.rented_pct_2025 == null) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
+                            return { fillColor: rentColor(p.rented_pct_2025), fillOpacity: 0.64, color: '#6a1b4d', weight: 1, opacity: 0.65 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const yrs = [2023, 2024, 2025].map(y => p['rented_pct_' + y] != null ? y + "׳: " + p['rented_pct_' + y] + '%' : '').filter(Boolean).join(' · ');
+                            const html = '<div style="direction:rtl;font-family:Assistant,sans-serif;font-size:12px;min-width:210px">' +
+                                '<div style="font-weight:bold;color:#980043;font-size:13px;margin-bottom:3px">' + (p.name_he || 'תת-רובע ' + p.subq) + '</div>' +
+                                (p.has_dwellings
+                                    ? '<div>% דירות מושכרות (2025): <b style="color:#dd1c77">' + (p.rented_pct_2025 == null ? '—' : p.rented_pct_2025 + '%') + '</b></div>' +
+                                      '<div>מלאי דירות (2025): <b>' + _ny(p.dwellings_2025) + '</b></div>' +
+                                      (p.started_pct_of_stock != null ? '<div>התחלות בנייה 2022–25 = ' + p.started_pct_of_stock + '% מהמלאי</div>' : '') +
+                                      '<div style="margin-top:3px;color:#9ab;font-size:11px">שכירות לפי שנה: ' + yrs + '</div>'
+                                    : '<div style="color:#9ab">אין נתוני מלאי דירות לתת-רובע זה</div>') +
+                                '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/16</div>' +
+                                '</div>';
+                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
+                            layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                        },
+                    }).addTo(map);
+                    geoLayersRef.current.dwellings_rental = dwLayer;
+
+                    try {
+                        const cont = map.getContainer();
+                        const leg = document.createElement('div');
+                        leg.id = 'dwellings-rental-legend';
+                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #980043;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        const rows = [
+                            ['55%+', PURD[5]], ['45–54%', PURD[4]], ['35–44%', PURD[3]],
+                            ['25–34%', PURD[2]], ['15–24%', PURD[1]], ['<15%', PURD[0]], ['אין נתון', '#555'],
+                        ].map(([lbl, c]) =>
+                            '<div style="display:flex;align-items:center;gap:6px;margin:1px 0"><span style="display:inline-block;width:14px;height:11px;background:' + c + ';border:0.5px solid #6a1b4d;border-radius:2px"></span><span>' + lbl + '</span></div>'
+                        ).join('');
+                        leg.innerHTML = '<div style="font-weight:bold;color:#dd1c77;margin-bottom:5px">% דירות מושכרות (2025)</div>' + rows +
+                            '<div style="color:#789;margin-top:5px;font-size:9px">שנתון ירושלים 2026 · לוח ט/16 · לפי תת-רובע</div>';
+                        cont.appendChild(leg);
+                    } catch (e) { /* legend non-critical */ }
                 }
 
                 // --- Sport Kayam (existing sport facilities as points) ---
@@ -19891,6 +20389,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">אוכלוסייה קיימת</span>
                                                     <span className="report-desc">פרופיל דמוגרפי לפי מינהל/תת-שכונה: גיל, אורח חיים, דיור (מפקד 2022)</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openConstructionDashboard(); }}>
+                                                <span className="report-icon">🏗️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">התחלות בנייה לפי תת-רובע</span>
+                                                    <span className="report-desc">התחלות וגמר בנייה 2022–2025 לפי תת-רובע (שנתון ירושלים 2026, ט/7)</span>
                                                 </div>
                                             </button>
                                             <div className="reports-menu-item" onClick={(e) => {
