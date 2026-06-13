@@ -11356,10 +11356,12 @@
                                 }
                             });
                             // Labels: zoom-dependent with fit-in-polygon check.
-                            // Use the concise plan NAME (plan_name_he) for the map label — plan_summary
-                            // is often a long description/sentence. Hard-cap length so no single plan
-                            // renders a paragraph on the map (full text still shows in the popup).
-                            let shortName = f.properties.plan_name_he || f.properties.plan_summary || '';
+                            // Use the SHORT plan name (plan_summary) for the map label — it is the
+                            // curated/abbreviated name (avg ~18 chars). plan_name_he is the full Mavat
+                            // title (avg ~46 chars) and only serves as fallback when summary is empty.
+                            // Hard-cap length so no single plan renders a paragraph on the map
+                            // (full name still shows in the popup).
+                            let shortName = f.properties.plan_summary || f.properties.plan_name_he || '';
                             if (shortName.length > 42) shortName = shortName.slice(0, 40).trim() + '…';
                             const add = parseFloat(f.properties.units_add) || 0;
                             const zoom = map.getZoom();
