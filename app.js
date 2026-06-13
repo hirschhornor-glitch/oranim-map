@@ -10209,9 +10209,14 @@ function App() {
     //    then keep ONLY sub-quarters that land in one of the 6 councils == inside
     //    the Oranim district boundary (same model as the population dashboard). ──
     const gdRep = geoDataRef.current || {};
+    // מינהל מוסדי מלחה is an institutional/sports zone (no residential sub-neighborhoods
+    // of ours — גבעת משואה/רכס לבן belong to it geographically but aren't part of the
+    // Oranim residential scope), so exclude it from the report scope.
+    const REPORT_EXCLUDE_MINHAKS = new Set(['מינהל מוסדי מלחה']);
     const findMinhakC = c => {
       if (!c) return null;
       for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
+        if (REPORT_EXCLUDE_MINHAKS.has(heb)) continue;
         const lyr = gdRep[MINAHAK_HEB_TO_LAYER[heb]];
         if (lyr && pointInLayer(c, lyr)) return heb;
       }
