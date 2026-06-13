@@ -8809,19 +8809,81 @@
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const n0 = (v) => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString();
                 const pct = (a, b) => (b > 0) ? Math.round(a / b * 100) + '%' : '—';
-                const rows = (featsIn || []).map(f => f.properties || {})
-                    .filter(p => p.has_data)
-                    .sort((a, b) => (b.started_total || 0) - (a.started_total || 0));
-                const tot = {};
-                YEARS.forEach(y => { tot['started_' + y] = 0; tot['completed_' + y] = 0; });
-                let totS = 0, totC = 0, totPop = 0;
-                rows.forEach(p => {
-                    YEARS.forEach(y => { tot['started_' + y] += p['started_' + y] || 0; tot['completed_' + y] += p['completed_' + y] || 0; });
-                    totS += p.started_total || 0; totC += p.completed_total || 0; totPop += p.pop_approx || 0;
+
+                // ── district scoping: assign each sub-quarter to its dominant community
+                //    council (מינהק) by majority vote over its constituent stat-area centroids,
+                //    then keep ONLY sub-quarters that land in one of the 6 councils == inside
+                //    the Oranim district boundary (same model as the population dashboard). ──
+                const gdRep = geoDataRef.current || {};
+                const findMinhakC = (c) => {
+                    if (!c) return null;
+                    for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
+                        const lyr = gdRep[MINAHAK_HEB_TO_LAYER[heb]];
+                        if (lyr && pointInLayer(c, lyr)) return heb;
+                    }
+                    return null;
+                };
+                const statC = {};
+                ((gdRep.stat_areas && gdRep.stat_areas.features) || []).forEach(f => {
+                    statC[String(f.properties.stat_area_id)] = geomCentroid(f.geometry);
                 });
-                // mkRow reads these off the row object for the totals line too
-                tot.started_total = totS; tot.completed_total = totC; tot.pop_approx = totPop;
-                tot.started_per_1000 = totPop ? Math.round(totS / totPop * 1000 * 10) / 10 : null;
+                const minhakBySubq = {};
+                (featsIn || []).map(f => f.properties || {}).filter(p => p.has_data).forEach(p => {
+                    const votes = {};
+                    (p.stat_area_ids || []).forEach(id => { const m = findMinhakC(statC[id]); if (m) votes[m] = (votes[m] || 0) + 1; });
+                    let best = null, bn = 0;
+                    Object.keys(votes).forEach(m => { if (votes[m] > bn) { bn = votes[m]; best = m; } });
+                    if (!best) best = findMinhakC(geomCentroid({ type: 'Point', coordinates: statC[(p.stat_area_ids || [])[0]] || [0, 0] }));
+                    minhakBySubq[p.subq] = best;
+                });
+                const allRows = (featsIn || []).map(f => f.properties || {}).filter(p => p.has_data);
+                const districtScoped = allRows.some(p => minhakBySubq[p.subq]);   // false if minhak layers not loaded
+                const rows = (districtScoped ? allRows.filter(p => minhakBySubq[p.subq]) : allRows)
+                    .sort((a, b) => (b.started_total || 0) - (a.started_total || 0));
+
+                // ── aggregation helper: sums absolute fields, dwelling-weighted avg for rental %,
+                //    derived per-1000 / %-of-stock. Used for the per-minhak summary + grand total. ──
+                const aggOf = (list, label) => {
+                    const a = { name_he: label, subq: '', _agg: true };
+                    YEARS.forEach(y => { a['started_' + y] = 0; a['completed_' + y] = 0; });
+                    let pop = 0, st = 0, ct = 0, appr = 0, hasDw = false;
+                    const dwY = {}, rentW = {};
+                    DW_YEARS.forEach(y => { dwY[y] = 0; rentW[y] = 0; });
+                    list.forEach(p => {
+                        pop += p.pop_approx || 0; st += p.started_total || 0; ct += p.completed_total || 0;
+                        appr += p.approved || 0;
+                        YEARS.forEach(y => { a['started_' + y] += p['started_' + y] || 0; a['completed_' + y] += p['completed_' + y] || 0; });
+                        if (p.has_dwellings) {
+                            hasDw = true;
+                            DW_YEARS.forEach(y => { const d = p['dwellings_' + y] || 0; dwY[y] += d; if (p['rented_pct_' + y] != null) rentW[y] += d * p['rented_pct_' + y]; });
+                        }
+                    });
+                    a.pop_approx = pop || null; a.started_total = st; a.completed_total = ct; a.approved = appr;
+                    a.started_per_1000 = pop ? Math.round(st / pop * 1000 * 10) / 10 : null;
+                    a.has_dwellings = hasDw;
+                    DW_YEARS.forEach(y => { a['dwellings_' + y] = hasDw ? dwY[y] : null; a['rented_pct_' + y] = (hasDw && dwY[y]) ? Math.round(rentW[y] / dwY[y] * 10) / 10 : null; });
+                    a.started_pct_of_stock = (hasDw && dwY[2025]) ? Math.round(st / dwY[2025] * 1000) / 10 : null;
+                    return a;
+                };
+                const MINHAK_LABEL = { 'מינהל מוסדי מלחה': 'מלחה' };
+                const mlabel = (m) => '🏛️ ' + (MINHAK_LABEL[m] || m);
+                // Build minhak → rows groups + per-group aggregate, ordered by a metric.
+                const buildGroupedBody = (list, mkRow, metric) => {
+                    if (!districtScoped) return list.map(p => mkRow(p, 'sub')).join('') + mkRow(aggOf(list, 'סה"כ'), 'total');
+                    const g = {};
+                    list.forEach(p => { const m = minhakBySubq[p.subq] || 'אחר'; (g[m] = g[m] || []).push(p); });
+                    const aggs = {}; Object.keys(g).forEach(m => { aggs[m] = aggOf(g[m], mlabel(m)); });
+                    const order = Object.keys(g).sort((x, y) => (aggs[y][metric] || 0) - (aggs[x][metric] || 0));
+                    let html = '';
+                    order.forEach(m => {
+                        html += mkRow(aggs[m], 'minhak');
+                        g[m].slice().sort((x, y) => (y[metric] || 0) - (x[metric] || 0)).forEach(p => { html += mkRow(p, 'sub'); });
+                    });
+                    return html + mkRow(aggOf(list, 'סה"כ — כל המינהקים'), 'total');
+                };
+
+                let totS = 0, totC = 0, totPop = 0;
+                rows.forEach(p => { totS += p.started_total || 0; totC += p.completed_total || 0; totPop += p.pop_approx || 0; });
                 const top = rows[0];
 
                 // ── compare view: approved pipeline (units_add) per sub-quarter vs actual built ──
@@ -8830,7 +8892,6 @@
                     .sort((a, b) => (b.approved || 0) - (a.approved || 0));
                 let totApproved = 0;
                 cmpRows.forEach(p => { totApproved += p.approved || 0; });
-                tot.approved = totApproved;   // so the compare total row shows the pipeline sum
 
                 // ── stock view: dwelling stock + rental share (ט/16) ──
                 const stkRows = rows.filter(p => p.has_dwellings)
@@ -8883,14 +8944,16 @@
                         '</div>';
                     const yhdr = YEARS.map(y => '<th colspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px;border-right:1px solid #432">' + y + '</th>').join('');
                     const ysub = YEARS.map(() => '<th style="padding:3px 6px;color:#c9a;font-size:10px;font-weight:normal">התחלה</th><th style="padding:3px 6px;color:#c9a;font-size:10px;font-weight:normal">גמר</th>').join('');
-                    const mkRow = (p, isTot) => {
-                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
+                    const mkRow = (p, kind) => {
+                        const st = kind === 'total' ? 'font-weight:bold;background:#241a13;color:#ffcfa0'
+                            : kind === 'minhak' ? 'font-weight:bold;background:#15232e;color:#bfe3ff' : 'color:#e8d8cc';
+                        const pad = kind === 'sub' ? 'padding:4px 18px 4px 6px' : 'padding:4px 7px';
                         const cells = YEARS.map(y =>
                             '<td style="padding:4px 6px;text-align:center">' + n0(p['started_' + y]) + '</td>' +
                             '<td style="padding:4px 6px;text-align:center;color:#b9a">' + n0(p['completed_' + y]) + '</td>').join('');
                         return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
-                            '<td style="padding:4px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
-                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + (isTot ? n0(totPop) : n0(p.pop_approx)) + '</td>' +
+                            '<td style="' + pad + ';text-align:right;white-space:nowrap">' + esc(p.name_he || p.subq) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + n0(p.pop_approx) + '</td>' +
                             cells +
                             '<td style="padding:4px 6px;text-align:center;font-weight:bold;color:#fd8d3c">' + n0(p.started_total) + '</td>' +
                             '<td style="padding:4px 6px;text-align:center;color:#f6a96b">' + n0(p.completed_total) + '</td>' +
@@ -8899,13 +8962,13 @@
                     };
                     table = '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
                         '<thead>' +
-                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע / מינה"ק</th>' +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">אוכלוסייה</th>' + yhdr +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">סה"כ התחלות</th>' +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">סה"כ גמר</th>' +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">התחלות/1000</th></tr>' +
                         '<tr style="background:#1c1410">' + ysub + '</tr>' +
-                        '</thead><tbody>' + rows.map(p => mkRow(p, false)).join('') + mkRow(tot, true) + '</tbody></table>';
+                        '</thead><tbody>' + buildGroupedBody(rows, mkRow, 'started_total') + '</tbody></table>';
                     note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
                         'מקור: השנתון הסטטיסטי לירושלים 2026, מכון ירושלים למחקרי מדיניות — לוח ט/7 ("התחלות וגמר בנייה לפי תת-רובע ומספר דירות"). ' +
                         'היחידה: מספר דירות (יח"ד). "התחלות/1000" = סך התחלות 2022–2025 לכל 1,000 תושבים (מפקד 2022). תת-רבעים ללא אוכלוסייה מסומנים —.' +
@@ -8917,25 +8980,25 @@
                         kpi('נבנה (גמר)', n0(totC), '2022–2025 · יח"ד', '#f6a96b') +
                         kpi('% התחלות מהעתודה', pct(totS, totApproved), 'מומש מתוך העתודה', '#5fd3a0') +
                         '</div>';
-                    const mkRowC = (p, isTot) => {
-                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
-                        const sp = isTot ? pct(totS, totApproved) : pct(p.started_total, p.approved);
-                        const cp = isTot ? pct(totC, totApproved) : pct(p.completed_total, p.approved);
+                    const mkRowC = (p, kind) => {
+                        const st = kind === 'total' ? 'font-weight:bold;background:#241a13;color:#ffcfa0'
+                            : kind === 'minhak' ? 'font-weight:bold;background:#15232e;color:#bfe3ff' : 'color:#e8d8cc';
+                        const pad = kind === 'sub' ? 'padding:5px 18px 5px 6px' : 'padding:5px 7px';
                         return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
-                            '<td style="padding:5px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
-                            '<td style="padding:5px 6px;text-align:center;color:#a87">' + (isTot ? n0(totPop) : n0(p.pop_approx)) + '</td>' +
+                            '<td style="' + pad + ';text-align:right;white-space:nowrap">' + esc(p.name_he || p.subq) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#a87">' + n0(p.pop_approx) + '</td>' +
                             '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#b388e0">' + n0(p.approved) + '</td>' +
                             '<td style="padding:5px 6px;text-align:center;color:#fd8d3c">' + n0(p.started_total) + '</td>' +
                             '<td style="padding:5px 6px;text-align:center;color:#f6a96b">' + n0(p.completed_total) + '</td>' +
-                            '<td style="padding:5px 6px;text-align:center;color:#5fd3a0">' + sp + '</td>' +
-                            '<td style="padding:5px 6px;text-align:center;color:#7fb89a">' + cp + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#5fd3a0">' + pct(p.started_total, p.approved) + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#7fb89a">' + pct(p.completed_total, p.approved) + '</td>' +
                             '</tr>';
                     };
                     const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
                     table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241a13">' +
-                        '<th style="padding:5px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        '<th style="padding:5px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע / מינה"ק</th>' +
                         th('אוכלוסייה') + th('עתודה תכנונית (יח"ד)') + th('נבנה — התחלות') + th('נבנה — גמר') + th('% התחלות מהעתודה') + th('% גמר מהעתודה') +
-                        '</tr></thead><tbody>' + cmpRows.map(p => mkRowC(p, false)).join('') + mkRowC(tot, true) + '</tbody></table>';
+                        '</tr></thead><tbody>' + buildGroupedBody(cmpRows, mkRowC, 'approved') + '</tbody></table>';
                     note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
                         '<b>עתודה תכנונית</b> = סך יח"ד נוספות (units_add) בתב"עות פעילות (לא נדחות/נגנזות, לא תשתיות) שמרכזן בתת-הרובע — צבירת כל הפַּייפליין התכנוני, ללא חתך זמן. ' +
                         '<b>נבנה</b> = דירות שבנייתן החלה/הסתיימה ב-2022–2025 בלבד (שנתון ירושלים 2026, ט/7). ' +
@@ -8952,35 +9015,38 @@
                     const th = (t) => '<th style="padding:5px 6px;color:#ffb074;font-size:11px">' + t + '</th>';
                     const dwHdr = DW_YEARS.map(y => '<th style="padding:4px 6px;color:#ffb074;font-size:11px">' + y + '</th>').join('');
                     const rentHdr = DW_YEARS.map(y => '<th style="padding:4px 6px;color:#df65b0;font-size:11px">' + y + '</th>').join('');
-                    const mkRowS = (p, isTot) => {
-                        const st = isTot ? 'font-weight:bold;background:#241a13;color:#ffcfa0' : 'color:#e8d8cc';
-                        const dwc = DW_YEARS.map(y => '<td style="padding:4px 6px;text-align:center">' + n0(isTot ? (y === 2025 ? totDw : null) : p['dwellings_' + y]) + '</td>').join('');
-                        const rentc = DW_YEARS.map(y => {
-                            const v = isTot ? (y === 2025 ? avgRentPct : null) : p['rented_pct_' + y];
-                            return '<td style="padding:4px 6px;text-align:center;color:#e0a0c8">' + (v == null ? '—' : v + '%') + '</td>';
-                        }).join('');
-                        const stockPct = isTot ? pct(totStkStarts, totDw)
-                            : (p.started_pct_of_stock == null ? '—' : p.started_pct_of_stock + '%');
+                    const mkRowS = (p, kind) => {
+                        const st = kind === 'total' ? 'font-weight:bold;background:#241a13;color:#ffcfa0'
+                            : kind === 'minhak' ? 'font-weight:bold;background:#15232e;color:#bfe3ff' : 'color:#e8d8cc';
+                        const pad = kind === 'sub' ? 'padding:4px 18px 4px 6px' : 'padding:4px 7px';
+                        const dwc = DW_YEARS.map(y => '<td style="padding:4px 6px;text-align:center">' + n0(p['dwellings_' + y]) + '</td>').join('');
+                        const rentc = DW_YEARS.map(y => '<td style="padding:4px 6px;text-align:center;color:#e0a0c8">' + (p['rented_pct_' + y] == null ? '—' : p['rented_pct_' + y] + '%') + '</td>').join('');
                         return '<tr style="border-bottom:1px solid #2a2018;' + st + '">' +
-                            '<td style="padding:4px 7px;text-align:right;white-space:nowrap">' + esc(isTot ? 'סה"כ' : (p.name_he || p.subq)) + '</td>' +
-                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + (isTot ? n0(totStkPop) : n0(p.pop_approx)) + '</td>' +
+                            '<td style="' + pad + ';text-align:right;white-space:nowrap">' + esc(p.name_he || p.subq) + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;color:#a87">' + n0(p.pop_approx) + '</td>' +
                             dwc + rentc +
-                            '<td style="padding:4px 6px;text-align:center;font-weight:bold;color:#fd8d3c">' + stockPct + '</td>' +
+                            '<td style="padding:4px 6px;text-align:center;font-weight:bold;color:#fd8d3c">' + (p.started_pct_of_stock == null ? '—' : p.started_pct_of_stock + '%') + '</td>' +
                             '</tr>';
                     };
                     table = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead>' +
-                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע</th>' +
+                        '<tr style="background:#241a13"><th rowspan="2" style="padding:4px 7px;text-align:right;color:#ffb074;font-size:11px">תת-רובע / מינה"ק</th>' +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">אוכלוסייה</th>' +
                         '<th colspan="3" style="padding:4px 6px;color:#ffb074;font-size:11px;border-right:1px solid #432">מלאי דירות</th>' +
                         '<th colspan="3" style="padding:4px 6px;color:#df65b0;font-size:11px;border-right:1px solid #432">% מושכרות</th>' +
                         '<th rowspan="2" style="padding:4px 6px;color:#ffb074;font-size:11px">בנייה % מהמלאי</th></tr>' +
                         '<tr style="background:#1c1410">' + dwHdr + rentHdr + '</tr>' +
-                        '</thead><tbody>' + stkRows.map(p => mkRowS(p, false)).join('') + mkRowS(tot, true) + '</tbody></table>';
+                        '</thead><tbody>' + buildGroupedBody(stkRows, mkRowS, 'dwellings_2025') + '</tbody></table>';
                     note = '<div style="font-size:10px;color:#a87;margin-top:10px;line-height:1.5">' +
                         'מקור: השנתון הסטטיסטי לירושלים 2026 — לוח ט/16 ("דירות למגורים ושיעור הדירות המושכרות"). ' +
-                        '<b>מלאי דירות</b> = סך יח"ד קיימות בסוף השנה. <b>% מושכרות</b> = שיעור הדירות בשכירות. ' +
-                        '<b>בנייה % מהמלאי</b> = התחלות בנייה 2022–25 (ט/7) חלקי מלאי 2025 — עוצמת ההתחדשות. ' +
-                        '6 תת-רבעים במזרח העיר חסרים בלוח ט/16 ואינם מוצגים כאן.' +
+                        '<b>מלאי דירות</b> = סך יח"ד קיימות בסוף השנה. <b>% מושכרות</b> = שיעור הדירות בשכירות (ממוצע מינה"ק משוקלל לפי מלאי). ' +
+                        '<b>בנייה % מהמלאי</b> = התחלות בנייה 2022–25 (ט/7) חלקי מלאי 2025 — עוצמת ההתחדשות.' +
+                        '</div>';
+                }
+                // scope note shared by all views
+                if (districtScoped) {
+                    note += '<div style="font-size:10px;color:#789;margin-top:6px;line-height:1.5">' +
+                        '🏛️ מוצגים רק תת-רבעים שבתוך גבול הרובע (6 המינהלים הקהילתיים), מקובצים עם סיכום פר-מינה"ק. ' +
+                        'שיוך תת-רובע למינה"ק לפי רוב האזורים הסטטיסטיים שבו (תת-רובע יחיד משויך למינה"ק הדומיננטי שלו).' +
                         '</div>';
                 }
 
@@ -9002,35 +9068,36 @@
 
                 document.getElementById('cbdash-csv').addEventListener('click', () => {
                     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const mn = (p) => minhakBySubq[p.subq] ? (MINHAK_LABEL[minhakBySubq[p.subq]] || minhakBySubq[p.subq]) : '';
                     const lines = [];
                     if (view === 'build') {
-                        const hdr = ['תת-רובע', 'קוד', 'אוכלוסייה']
+                        const grand = aggOf(rows, 'סה"כ');
+                        lines.push(['תת-רובע', 'קוד', 'מינהק', 'אוכלוסייה']
                             .concat(YEARS.flatMap(y => ['התחלה ' + y, 'גמר ' + y]))
-                            .concat(['סה"כ התחלות', 'סה"כ גמר', 'התחלות ל-1000']);
-                        lines.push(hdr.map(q).join(','));
+                            .concat(['סה"כ התחלות', 'סה"כ גמר', 'התחלות ל-1000']).map(q).join(','));
                         rows.forEach(p => lines.push(
-                            [q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx]
+                            [q(p.name_he || ''), q(p.subq), q(mn(p)), p.pop_approx == null ? '' : p.pop_approx]
                                 .concat(YEARS.flatMap(y => [p['started_' + y] || 0, p['completed_' + y] || 0]))
                                 .concat([p.started_total, p.completed_total, p.started_per_1000 == null ? '' : p.started_per_1000]).join(',')));
-                        lines.push([q('סה"כ'), '', totPop].concat(YEARS.flatMap(y => [tot['started_' + y], tot['completed_' + y]])).concat([totS, totC, '']).join(','));
+                        lines.push([q('סה"כ'), '', '', totPop].concat(YEARS.flatMap(y => [grand['started_' + y], grand['completed_' + y]])).concat([totS, totC, grand.started_per_1000 == null ? '' : grand.started_per_1000]).join(','));
                     } else if (view === 'compare') {
-                        lines.push(['תת-רובע', 'קוד', 'אוכלוסייה', 'עתודה תכנונית (יח"ד)', 'נבנה התחלות 2022-25', 'נבנה גמר 2022-25', '% התחלות מהעתודה', '% גמר מהעתודה'].map(q).join(','));
-                        cmpRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx,
+                        lines.push(['תת-רובע', 'קוד', 'מינהק', 'אוכלוסייה', 'עתודה תכנונית (יח"ד)', 'נבנה התחלות 2022-25', 'נבנה גמר 2022-25', '% התחלות מהעתודה', '% גמר מהעתודה'].map(q).join(','));
+                        cmpRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), q(mn(p)), p.pop_approx == null ? '' : p.pop_approx,
                             p.approved, p.started_total, p.completed_total,
                             p.approved > 0 ? Math.round(p.started_total / p.approved * 100) : '',
                             p.approved > 0 ? Math.round(p.completed_total / p.approved * 100) : ''].join(',')));
-                        lines.push([q('סה"כ'), '', totPop, totApproved, totS, totC,
+                        lines.push([q('סה"כ'), '', '', totPop, totApproved, totS, totC,
                             totApproved > 0 ? Math.round(totS / totApproved * 100) : '',
                             totApproved > 0 ? Math.round(totC / totApproved * 100) : ''].join(','));
                     } else {   // stock
-                        lines.push(['תת-רובע', 'קוד', 'אוכלוסייה']
+                        lines.push(['תת-רובע', 'קוד', 'מינהק', 'אוכלוסייה']
                             .concat(DW_YEARS.map(y => 'מלאי ' + y)).concat(DW_YEARS.map(y => '% שכירות ' + y))
                             .concat(['בנייה % מהמלאי']).map(q).join(','));
-                        stkRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), p.pop_approx == null ? '' : p.pop_approx]
+                        stkRows.forEach(p => lines.push([q(p.name_he || ''), q(p.subq), q(mn(p)), p.pop_approx == null ? '' : p.pop_approx]
                             .concat(DW_YEARS.map(y => p['dwellings_' + y] == null ? '' : p['dwellings_' + y]))
                             .concat(DW_YEARS.map(y => p['rented_pct_' + y] == null ? '' : p['rented_pct_' + y]))
                             .concat([p.started_pct_of_stock == null ? '' : p.started_pct_of_stock]).join(',')));
-                        lines.push([q('סה"כ'), '', totStkPop, '', '', totDw, '', '', avgRentPct == null ? '' : avgRentPct,
+                        lines.push([q('סה"כ'), '', '', totStkPop, '', '', totDw, '', '', avgRentPct == null ? '' : avgRentPct,
                             totDw > 0 ? Math.round(totStkStarts / totDw * 100) : ''].join(','));
                     }
                     const title = (document.getElementById('cbdash-title') || {}).textContent || 'בנייה לפי תת-רובע';
