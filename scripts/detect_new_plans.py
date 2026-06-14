@@ -41,10 +41,20 @@ from scope_filter import EXCLUDE_PLAN_NUMBERS, load_exclusion_geometry, plan_maj
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
+# Repo root (.../oranim-app) and its parent (.../ORANIM locally). On Windows the
+# hardcoded absolute paths below resolve directly; in CI (Ubuntu) they don't
+# exist, so _local_or_repo() falls back to a path relative to this checkout.
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT  = os.path.dirname(_SCRIPT_DIR)          # .../oranim-app
+
+def _local_or_repo(win_path, *repo_relparts):
+    """Prefer the local absolute path; fall back to a repo-relative path in CI."""
+    return win_path if os.path.exists(win_path) else os.path.join(_REPO_ROOT, *repo_relparts)
+
 CREDS_FILE     = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID       = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
-PLANS_GEOJSON  = r"C:\ORANIM\oranim-app\data\plans.geojson"
-BOUNDARY_GEOJSON = r"C:\ORANIM\oranim-app\data\district_oranim.geojson"
+PLANS_GEOJSON  = _local_or_repo(r"C:\ORANIM\oranim-app\data\plans.geojson", "data", "plans.geojson")
+BOUNDARY_GEOJSON = _local_or_repo(r"C:\ORANIM\oranim-app\data\district_oranim.geojson", "data", "district_oranim.geojson")
 # EXCLUDE_PLAN_NUMBERS / exclusion geometry now live in scope_filter.py (imported above).
 
 GITHUB_REPO    = "hirschhornor-glitch/oranim-map"
@@ -60,9 +70,10 @@ XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/X
 XPLAN_BLUE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 MAX_PER_REQUEST = 1000
 
-# Output files
-REPORT_FILE  = r"C:\ORANIM\new_plans_report.json"
-SUMMARY_FILE = r"C:\ORANIM\last_detection_summary.txt"
+# Output files (local Windows dir if it exists, else repo root so CI can upload them)
+_OUT_DIR     = r"C:\ORANIM" if os.path.isdir(r"C:\ORANIM") else _REPO_ROOT
+REPORT_FILE  = os.path.join(_OUT_DIR, "new_plans_report.json")
+SUMMARY_FILE = os.path.join(_OUT_DIR, "last_detection_summary.txt")
 
 # Google Sheets column indices (1-based) — matches Oranim_Taba structure
 SHEET_COLUMNS = {
