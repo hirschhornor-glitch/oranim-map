@@ -66,7 +66,11 @@ EMAIL_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")
 EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT", "Or_hi@jerusalem.muni.il")
 
 # XPLAN API
-XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
+# NOTE: iplan restructured the Xplan service (~2026-06) — the old land-use layer
+# /MapServer/4 is now empty (returns 0 features for any query). The plan polygons
+# (one blue-line boundary per plan, with pl_number/mp_id/pl_name) now live in
+# /MapServer/1, so we query that for both detection and geometry.
+XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 XPLAN_BLUE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 MAX_PER_REQUEST = 1000
 
@@ -208,7 +212,9 @@ def fetch_xplan_plans(bbox_itm):
             'geometryType':      'esriGeometryEnvelope',
             'inSR':              '2039',
             'spatialRel':        'esriSpatialRelIntersects',
-            'outFields':         'pl_number,mp_id,pl_name,mavat_code,mavat_name,station,station_desc,last_update_date,shape_area,legal_area',
+            # Only fields that exist on /MapServer/1. (mavat_code/mavat_name/
+            # station/legal_area lived on the old layer 4 and weren't used here.)
+            'outFields':         'pl_number,mp_id,pl_name,station_desc,last_update_date,shape_area',
             'returnGeometry':    'true',
             'f':                 'geojson',
             'outSR':             '4326',   # WGS84 for direct use in plans.geojson
@@ -1037,8 +1043,12 @@ async def run(do_update=False, skip_mavat=False):
     bbox = get_bbox_from_boundary()
     xplan_features = fetch_xplan_plans(bbox)
     if not xplan_features:
-        print("No features returned from XPLAN. Exiting.")
-        return
+        # The Oranim area always has plans — 0 features means the XPLAN service
+        # broke or changed (e.g. a layer was emptied/renumbered). Fail loudly so
+        # CI goes red instead of silently "succeeding" with no detection.
+        print("ERROR: XPLAN returned 0 features for the Oranim bbox. The service "
+              "may have changed (check the MapServer layer). Aborting.")
+        sys.exit(1)
 
     # Load boundary for spatial filtering
     boundary_rings = load_boundary_polygon()
