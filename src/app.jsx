@@ -8781,6 +8781,39 @@
                 return out;
             }
 
+            // Assign every yearbook sub-quarter to its dominant Oranim community council
+            // (מינהק) by majority vote over its constituent stat-area centroids vs the council
+            // polygons — EXCLUDING מינהל מוסדי מלחה (institutional, non-residential). Returns
+            // { subq: minhakName|null }; null = outside the district. Shared by the report
+            // (scope + grouping) AND the map layers (so both show the same areas).
+            const CONSTRUCTION_EXCLUDE_MINHAKS = new Set(['מינהל מוסדי מלחה']);
+            function constructionSubqMinhak() {
+                const gd = geoDataRef.current || {};
+                const cb = gd.construction_yb;
+                const out = {};
+                if (!cb || !cb.features) return out;
+                const findM = (c) => {
+                    if (!c) return null;
+                    for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
+                        if (CONSTRUCTION_EXCLUDE_MINHAKS.has(heb)) continue;
+                        const lyr = gd[MINAHAK_HEB_TO_LAYER[heb]];
+                        if (lyr && pointInLayer(c, lyr)) return heb;
+                    }
+                    return null;
+                };
+                const statC = {};
+                ((gd.stat_areas && gd.stat_areas.features) || []).forEach(f => { statC[String(f.properties.stat_area_id)] = geomCentroid(f.geometry); });
+                cb.features.forEach(f => {
+                    const p = f.properties;
+                    const votes = {};
+                    (p.stat_area_ids || []).forEach(id => { const m = findM(statC[id]); if (m) votes[m] = (votes[m] || 0) + 1; });
+                    let best = null, bn = 0;
+                    Object.keys(votes).forEach(m => { if (votes[m] > bn) { bn = votes[m]; best = m; } });
+                    out[p.subq] = best;
+                });
+                return out;
+            }
+
             // Census households per sub-quarter — sum of stat_areas.hh_total over each
             // sub-quarter's constituent stat-areas (the SAME stat-areas that compose the
             // yearbook sub-quarter, verified 1:1 in-district). NOTE: hh_total is the
@@ -8866,37 +8899,9 @@
                 const n0 = (v) => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString();
                 const pct = (a, b) => (b > 0) ? Math.round(a / b * 100) + '%' : '—';
 
-                // ── district scoping: assign each sub-quarter to its dominant community
-                //    council (מינהק) by majority vote over its constituent stat-area centroids,
-                //    then keep ONLY sub-quarters that land in one of the 6 councils == inside
-                //    the Oranim district boundary (same model as the population dashboard). ──
-                const gdRep = geoDataRef.current || {};
-                // מינהל מוסדי מלחה is an institutional/sports zone (no residential sub-neighborhoods
-                // of ours — גבעת משואה/רכס לבן belong to it geographically but aren't part of the
-                // Oranim residential scope), so exclude it from the report scope.
-                const REPORT_EXCLUDE_MINHAKS = new Set(['מינהל מוסדי מלחה']);
-                const findMinhakC = (c) => {
-                    if (!c) return null;
-                    for (const heb of Object.keys(MINAHAK_HEB_TO_LAYER)) {
-                        if (REPORT_EXCLUDE_MINHAKS.has(heb)) continue;
-                        const lyr = gdRep[MINAHAK_HEB_TO_LAYER[heb]];
-                        if (lyr && pointInLayer(c, lyr)) return heb;
-                    }
-                    return null;
-                };
-                const statC = {};
-                ((gdRep.stat_areas && gdRep.stat_areas.features) || []).forEach(f => {
-                    statC[String(f.properties.stat_area_id)] = geomCentroid(f.geometry);
-                });
-                const minhakBySubq = {};
-                (featsIn || []).map(f => f.properties || {}).filter(p => p.has_data).forEach(p => {
-                    const votes = {};
-                    (p.stat_area_ids || []).forEach(id => { const m = findMinhakC(statC[id]); if (m) votes[m] = (votes[m] || 0) + 1; });
-                    let best = null, bn = 0;
-                    Object.keys(votes).forEach(m => { if (votes[m] > bn) { bn = votes[m]; best = m; } });
-                    if (!best) best = findMinhakC(geomCentroid({ type: 'Point', coordinates: statC[(p.stat_area_ids || [])[0]] || [0, 0] }));
-                    minhakBySubq[p.subq] = best;
-                });
+                // ── district scoping: assign each sub-quarter to its dominant community council
+                //    (מינהק), keeping ONLY in-district ones — shared engine with the map layers. ──
+                const minhakBySubq = constructionSubqMinhak();
                 const allRows = (featsIn || []).map(f => f.properties || {}).filter(p => p.has_data);
                 const districtScoped = allRows.some(p => minhakBySubq[p.subq]);   // false if minhak layers not loaded
                 const rows = (districtScoped ? allRows.filter(p => minhakBySubq[p.subq]) : allRows)
@@ -12535,6 +12540,13 @@
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
                 }
 
+                // All four yearbook choropleths share one in-district filter (same scope as the
+                // report) so the map shows only our community-council sub-quarters, not the whole
+                // BBOX. Computed once; null when no yearbook layer is on (skips the work).
+                const _cbAnyOn = layers['construction_yb'] || layers['construction_realized'] || layers['dwellings_rental'] || layers['vacancy_est'];
+                const cbSubqMap = (_cbAnyOn && gd.construction_yb) ? constructionSubqMinhak() : null;
+                const cbInDistrict = (f) => !cbSubqMap || !!cbSubqMap[(f.properties || {}).subq];
+
                 // --- Construction activity (yearbook ט/7) — choropleth of building STARTS
                 //     (number of dwellings, 2022-2025) per sub-quarter (תת-רובע). ---
                 // Legend is a plain DOM badge in the map container; remove any stale one on every
@@ -12554,6 +12566,7 @@
                     const _ny = (v) => (v == null ? '—' : v.toLocaleString());
                     const cbLayer = L.geoJSON(gd.construction_yb, {
                         pane: 'constructionPane',
+                        filter: cbInDistrict,
                         style: (f) => {
                             const p = f.properties || {};
                             if (!p.has_data) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
@@ -12576,7 +12589,6 @@
                                     : '<div style="color:#9ab">אין נתוני בנייה לתת-רובע זה</div>') +
                                 '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/7</div>' +
                                 '</div>';
-                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
                         },
                     }).addTo(map);
@@ -12618,6 +12630,7 @@
                     const _ny = (v) => (v == null ? '—' : v.toLocaleString());
                     const rzLayer = L.geoJSON(gd.construction_yb, {
                         pane: 'constructionPane',
+                        filter: cbInDistrict,
                         style: (f) => {
                             const p = f.properties || {};
                             const ap = approvedMap[p.subq] || 0;
@@ -12637,7 +12650,6 @@
                                 (ap <= 0 ? '<div style="color:#9ab;font-size:11px">אין עתודה תכנונית רשומה (יתכן בנייה ללא תוספת יח"ד)</div>' : '') +
                                 '<div style="margin-top:4px;color:#667;font-size:10px">עתודה: units_add בתב"עות פעילות · בנייה: שנתון ט/7</div>' +
                                 '</div>';
-                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
                         },
                     }).addTo(map);
@@ -12670,6 +12682,7 @@
                     const _ny = (v) => (v == null ? '—' : v.toLocaleString());
                     const dwLayer = L.geoJSON(gd.construction_yb, {
                         pane: 'constructionPane',
+                        filter: cbInDistrict,
                         style: (f) => {
                             const p = f.properties || {};
                             if (!p.has_dwellings || p.rented_pct_2025 == null) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
@@ -12688,7 +12701,6 @@
                                     : '<div style="color:#9ab">אין נתוני מלאי דירות לתת-רובע זה</div>') +
                                 '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/16</div>' +
                                 '</div>';
-                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
                         },
                     }).addTo(map);
@@ -12728,6 +12740,7 @@
                     };
                     const vacLayer = L.geoJSON(gd.construction_yb, {
                         pane: 'constructionPane',
+                        filter: cbInDistrict,
                         style: (f) => {
                             const v = vacOf(f.properties || {});
                             if (!v) return { fillColor: '#555', fillOpacity: 0.12, color: '#777', weight: 0.6, opacity: 0.5 };
@@ -12745,7 +12758,6 @@
                                     : '<div style="color:#9ab">אין נתון מספק לאומדן</div>') +
                                 '<div style="margin-top:4px;color:#9a6;font-size:10px">⚠️ אומדן כיווני (דירות למ"ס − משקי-בית הערכה), לא ספירת דירות ריקות רשמית</div>' +
                                 '</div>';
-                            layer.bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.97 });
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
                         },
                     }).addTo(map);
