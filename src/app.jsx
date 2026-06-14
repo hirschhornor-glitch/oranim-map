@@ -4026,10 +4026,13 @@
                 shavazMarkersP.style.zIndex = 565;
                 const landuseP = map.createPane('landusePane');
                 landuseP.style.zIndex = 295;
-                // Construction-yearbook choropleth — background thematic fill, sits below
-                // sub-neighborhood outlines/labels (250) and plans (300) so it reads as a backdrop.
+                // Construction-yearbook choropleth — thematic fill that must be CLICKABLE across
+                // the whole sub-quarter, so it sits ABOVE the sub-neighborhood outlines (250),
+                // minhak (260) and plans (300) panes; otherwise those transparent-but-interactive
+                // layers swallow clicks inside the neighborhoods. Still below the label panes (550+),
+                // so neighborhood/minhak name labels stay visible on top. Fill is semi-transparent.
                 const constructionP = map.createPane('constructionPane');
-                constructionP.style.zIndex = 235;
+                constructionP.style.zIndex = 305;
 
                 // Load all GeoJSON data + CSV for plan_type enrichment.
                 // Heaviest files (11 MB+) are deferred — fetched in the background
@@ -12546,6 +12549,26 @@
                 const _cbAnyOn = layers['construction_yb'] || layers['construction_realized'] || layers['dwellings_rental'] || layers['vacancy_est'];
                 const cbSubqMap = (_cbAnyOn && gd.construction_yb) ? constructionSubqMinhak() : null;
                 const cbInDistrict = (f) => !cbSubqMap || !!cbSubqMap[(f.properties || {}).subq];
+                // Shared polish helpers for the yearbook choropleths:
+                //  • addCbValueLabel — small permanent value badge centered on each polygon
+                //    (labelsPane, non-interactive, attached as _labelMarker so cleanupLayer removes it).
+                //  • cbHoverWire — subtle highlight on hover (the click→popup gives the detail).
+                const addCbValueLabel = (sub, f, text) => {
+                    if (text == null || text === '') return;
+                    const c = visualCenter(f.geometry) || geomCentroid(f.geometry);
+                    if (!c) return;
+                    sub._labelMarker = L.marker([c[1], c[0]], {
+                        pane: 'labelsPane', interactive: false, keyboard: false,
+                        icon: L.divIcon({ className: 'cb-vlabel', iconSize: null, iconAnchor: [0, 0],
+                            html: '<div style="position:absolute;transform:translate(-50%,-50%);background:rgba(16,24,32,0.78);color:#fff;font:700 11px Assistant,sans-serif;padding:1px 6px;border-radius:7px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.5)">' + text + '</div>' }),
+                    }).addTo(map);
+                };
+                // grpGetter is a lazy getter (the group const isn't initialized yet when
+                // onEachFeature runs — accessing it directly would hit the TDZ).
+                const cbHoverWire = (grpGetter, sub) => {
+                    sub.on('mouseover', () => sub.setStyle({ weight: 3, fillOpacity: 0.82 }));
+                    sub.on('mouseout', () => { try { grpGetter().resetStyle(sub); } catch (e) { } });
+                };
 
                 // --- Construction activity (yearbook ט/7) — choropleth of building STARTS
                 //     (number of dwellings, 2022-2025) per sub-quarter (תת-רובע). ---
@@ -12590,6 +12613,8 @@
                                 '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/7</div>' +
                                 '</div>';
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                            cbHoverWire(() => cbLayer, layer);
+                            if (p.has_data) addCbValueLabel(layer, f, _ny(p.started_total));
                         },
                     }).addTo(map);
                     geoLayersRef.current.construction_yb = cbLayer;
@@ -12651,6 +12676,8 @@
                                 '<div style="margin-top:4px;color:#667;font-size:10px">עתודה: units_add בתב"עות פעילות · בנייה: שנתון ט/7</div>' +
                                 '</div>';
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                            cbHoverWire(() => rzLayer, layer);
+                            if (ap > 0) addCbValueLabel(layer, f, ratioTxt);
                         },
                     }).addTo(map);
                     geoLayersRef.current.construction_realized = rzLayer;
@@ -12702,6 +12729,8 @@
                                 '<div style="margin-top:4px;color:#667;font-size:10px">תת-רובע ' + p.subq + ' · מקור: שנתון ירושלים 2026, ט/16</div>' +
                                 '</div>';
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                            cbHoverWire(() => dwLayer, layer);
+                            if (p.has_dwellings && p.rented_pct_2025 != null) addCbValueLabel(layer, f, p.rented_pct_2025 + '%');
                         },
                     }).addTo(map);
                     geoLayersRef.current.dwellings_rental = dwLayer;
@@ -12759,6 +12788,8 @@
                                 '<div style="margin-top:4px;color:#9a6;font-size:10px">⚠️ אומדן כיווני (דירות למ"ס − משקי-בית הערכה), לא ספירת דירות ריקות רשמית</div>' +
                                 '</div>';
                             layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                            cbHoverWire(() => vacLayer, layer);
+                            if (v && v.pct > 0) addCbValueLabel(layer, f, v.pct + '%');
                         },
                     }).addTo(map);
                     geoLayersRef.current.vacancy_est = vacLayer;
