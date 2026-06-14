@@ -503,7 +503,11 @@ def check_xplan_updates(changed_plans):
         new_eas_raw = query_xplan_easements_by_plan(pl_number)
         old_eas_keys = {ff['properties'].get('objectid') for ff in existing_eas}
         new_eas_keys = {ff['properties'].get('objectid') for ff in new_eas_raw}
-        if old_eas_keys != new_eas_keys:
+        # Guard: an empty result almost always means the XPLAN entity layer is down
+        # (iplan ~2026-06 migration emptied layers 0/3/4), not that the plan lost all
+        # its easements. Never delete-to-empty — only apply the replace when we
+        # actually got features back, so existing easements survive a source outage.
+        if new_eas_raw and old_eas_keys != new_eas_keys:
             # Look up enrichment fields from plans.geojson (matches schema of
             # fetch_easements_from_xplan.py).
             plan_props = next((p['properties'] for p in plans_gj['features']
@@ -582,7 +586,11 @@ def check_xplan_updates(changed_plans):
         old_counts = {k: old_tree_row.get(k, 0) for k in new_counts}
         old_total = old_tree_row.get('total', 0)
         new_total = sum(new_counts.values())
-        if taba_key_tree and (new_counts != old_counts or new_total != old_total):
+        # Guard: `new_tree_raw` empty almost always means the XPLAN point layer is
+        # down (iplan ~2026-06 migration emptied layer 0), not that the plan lost
+        # all its trees. Require features back before applying, so a source outage
+        # can't drop existing xplan-sourced tree rows (the elif below).
+        if taba_key_tree and new_tree_raw and (new_counts != old_counts or new_total != old_total):
             if new_total > 0:
                 tree_surveys[taba_key_tree] = {
                     'total':      new_total,
