@@ -23,7 +23,6 @@ import gspread
 import pdfplumber
 import requests
 from google.oauth2.service_account import Credentials
-from playwright.async_api import async_playwright
 from requests.adapters import HTTPAdapter
 
 warnings.filterwarnings("ignore")
@@ -303,6 +302,10 @@ def identify_plans():
 # ── Step 2: Download PDF + extract ──
 async def download_and_extract(plans):
     """Download Table 5 PDFs from Mavat and extract data."""
+    # Lazy import: only the PDF-download path needs playwright. CI runs --no-pdf
+    # and doesn't install playwright, so a module-level import would crash at
+    # startup (the bug that took this workflow down). Import only when used.
+    from playwright.async_api import async_playwright
     os.makedirs(TEMP_DIR, exist_ok=True)
     results = {}
 
