@@ -12599,7 +12599,7 @@
                         const cont = map.getContainer();
                         const leg = document.createElement('div');
                         leg.id = 'construction-yb-legend';
-                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #e65100;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        leg.style.cssText = 'position:absolute;bottom:54px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #e65100;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
                         const rows = [
                             ['2,000+', '#7f2704'], ['1,000–1,999', '#a63603'], ['600–999', '#d94801'],
                             ['350–599', '#f16913'], ['150–349', '#fd8d3c'], ['50–149', '#fdae6b'],
@@ -12659,7 +12659,7 @@
                         const cont = map.getContainer();
                         const leg = document.createElement('div');
                         leg.id = 'construction-realized-legend';
-                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #2166ac;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        leg.style.cssText = 'position:absolute;bottom:54px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #2166ac;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
                         const rows = [
                             ['100%+ (נבנה ≥ עתודה)', '#2166ac'], ['75–99%', '#67a9cf'], ['50–74%', '#d1e5f0'],
                             ['25–49%', '#fddbc7'], ['10–24%', '#ef8a62'], ['<10% (עתודה לא ממומשת)', '#b2182b'],
@@ -12710,7 +12710,7 @@
                         const cont = map.getContainer();
                         const leg = document.createElement('div');
                         leg.id = 'dwellings-rental-legend';
-                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #980043;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        leg.style.cssText = 'position:absolute;bottom:54px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #980043;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
                         const rows = [
                             ['55%+', PURD[5]], ['45–54%', PURD[4]], ['35–44%', PURD[3]],
                             ['25–34%', PURD[2]], ['15–24%', PURD[1]], ['<15%', PURD[0]], ['אין נתון', '#555'],
@@ -12767,7 +12767,7 @@
                         const cont = map.getContainer();
                         const leg = document.createElement('div');
                         leg.id = 'vacancy-est-legend';
-                        leg.style.cssText = 'position:absolute;bottom:24px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #a50f15;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
+                        leg.style.cssText = 'position:absolute;bottom:54px;left:10px;z-index:650;background:rgba(16,24,32,0.92);color:#cfe;padding:8px 10px;border-radius:8px;border:1px solid #a50f15;direction:rtl;font-family:Assistant,sans-serif;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,0.5);pointer-events:none';
                         const rows = [
                             ['25%+', REDS[5]], ['20–24%', REDS[4]], ['15–19%', REDS[3]],
                             ['10–14%', REDS[2]], ['5–9%', REDS[1]], ['<5%', REDS[0]], ['אין עודף / אין נתון', '#555'],
