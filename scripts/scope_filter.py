@@ -21,7 +21,16 @@ import json
 
 # Out-of-scope areas (WGS84 GeoJSON). A plan whose unioned geometry is
 # majority-inside any of these is dropped.
-EXCLUDE_GEOJSONS = [r"C:\ORANIM\oranim-app\data\exclude_gila.geojson"]
+# Resolve against the repo's data/ dir (relative to this file) so the exclusion
+# works in CI too — a bare C:\ORANIM path is invisible on the Ubuntu runner,
+# which silently disabled the Gilo filter and let ~65 out-of-scope plans through.
+_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+
+def _exclude_path(name):
+    win = os.path.join(r"C:\ORANIM\oranim-app\data", name)
+    return win if os.path.exists(win) else os.path.join(_DATA_DIR, name)
+
+EXCLUDE_GEOJSONS = [_exclude_path("exclude_gila.geojson")]
 
 # Specific plans to permanently ignore (normalized numbers — see
 # normalize_plan_number; prefix and leading zeros stripped).
