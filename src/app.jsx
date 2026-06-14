@@ -9208,7 +9208,7 @@
                 // scope note shared by all views
                 if (districtScoped) {
                     note += '<div style="font-size:10px;color:#789;margin-top:6px;line-height:1.5">' +
-                        '🏛️ מוצגים רק תת-רבעים שבתוך גבול הרובע (6 המינהלים הקהילתיים), מקובצים עם סיכום פר-מינה"ק. ' +
+                        '🏛️ מוצגים רק תת-רבעים שבתוך המינהלים הקהילתיים הרזידנציאליים שלנו (מלחה המוסדי הוחרג), מקובצים עם סיכום פר-מינה"ק. ' +
                         'שיוך תת-רובע למינה"ק לפי רוב האזורים הסטטיסטיים שבו (תת-רובע יחיד משויך למינה"ק הדומיננטי שלו).' +
                         '</div>';
                 }
@@ -17879,8 +17879,18 @@
                 el.addEventListener('change', el._popupChangeHandler);
             }
 
+            // The 4 yearbook choropleths (התחלות/עתודה/שכירות/דירות-לא-מאוכלסות) share one
+            // map pane + one bottom-left legend slot, so showing more than one at a time just
+            // stacks overlapping fills and legends. Keep them mutually exclusive.
+            const CONSTRUCTION_YB_LAYERS = ['construction_yb', 'construction_realized', 'dwellings_rental', 'vacancy_est'];
             const toggleLayer = (id) => {
-                setLayers(prev => ({ ...prev, [id]: !prev[id] }));
+                setLayers(prev => {
+                    const next = { ...prev, [id]: !prev[id] };
+                    if (!prev[id] && CONSTRUCTION_YB_LAYERS.includes(id)) {
+                        CONSTRUCTION_YB_LAYERS.forEach(k => { if (k !== id) next[k] = false; });
+                    }
+                    return next;
+                });
             };
 
             const resetView = () => {
