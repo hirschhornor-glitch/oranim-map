@@ -111,6 +111,20 @@ def update_plans():
     print(f"עדכון אחרון: {last_update}")
 
     sheet = get_sheet()
+
+    # The Oranim_Taba sheet1 header row periodically vanishes (rows get inserted
+    # above it / sorted away). get_all_records() then treats a data row as the
+    # header and dies with a cryptic "duplicate header ''" error. Detect that
+    # here and fail with an actionable message instead. To restore: re-insert the
+    # column header at row 1 (see reference_gs_oranim_taba_columns memory).
+    _row1 = sheet.row_values(1)
+    if _row1[:6] != ["agam_id", "ver_id", "taba", "status_mavat", "mavat_url", "plan_name"]:
+        raise SystemExit(
+            "ERROR: Oranim_Taba sheet1 is missing its header row (row 1 is data, "
+            f"not headers — got {_row1[:6]}). Restore the 53-column header before "
+            "syncing. Aborting to avoid corrupting plans.geojson."
+        )
+
     all_rows = sheet.get_all_records()
 
     changed_rows = {}
