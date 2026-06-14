@@ -73,7 +73,8 @@ class ParseResult:
     total_units: int = 0              # sum of יח"ד across all rows
     commerce_sqm: float = 0.0         # built area of pure-מסחר rows
     employment_sqm: float = 0.0       # built area of pure-תעסוקה/משרדים rows
-    public_building_sqm: float = 0.0  # built area of pure-מבנים ומוסדות ציבור (שב"צ) rows
+    public_building_sqm: float = 0.0  # built area of pure-מבנים ומוסדות ציבור (שב"צ) — יעוד must be public
+    hafrash_built_sqm: float = 0.0    # built area of institutional space WITHIN a residential lot (הפרשה מבונה)
     shatzap_sqm: float = 0.0          # land area of שטח ציבורי פתוח (שצ"פ) rows
     mixed_use_sqm: float = 0.0        # built area of multi-use rows (can't be split)
     total_building_sqm_all: float = 0.0
@@ -324,22 +325,34 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
         # mixed_use_sqm rather than being double-counted.
         area = _bldg_area(r)
         result.total_building_sqm_all += area
-        cats = _categories(r.use) or _categories(r.yiyud)
+        # יעוד (lot zoning) and שימוש (specific use) carry different signals.
+        # שב"צ vs הפרשה מבונה distinction (2026-06-07, plan 1300003):
+        #   - True שב"צ: יעוד=מבני ציבור AND שימוש=מבני ציבור → public_building_sqm
+        #   - הפרשה מבונה: יעוד=מגורים AND שימוש=מוסדות ציבור → hafrash_built_sqm
+        # Without checking יעוד, the "מבנים ומוסדות ציבור" row of a residential
+        # plot was wrongly counted as שב"צ.
+        yiyud_cats = _categories(r.yiyud)
+        use_cats = _categories(r.use)
+        cats = use_cats or yiyud_cats  # generic combined view (back-compat)
         # שצ"פ is open land — use plot area, not built area, and count even if mixed.
         if "shatzap" in cats:
             result.shatzap_sqm += r.plot_size_sqm
-        non_resid = cats - {"resid", "shatzap"}
-        if len(non_resid) == 1 and "resid" not in cats:
-            c = next(iter(non_resid))
-            if c == "commerce":
-                result.commerce_sqm += area
-            elif c == "employment":
-                result.employment_sqm += area
-            elif c == "public":
-                result.public_building_sqm += area
-        elif non_resid:
-            # 2+ non-residential categories, or non-resid mixed with residential
-            result.mixed_use_sqm += area
+        # Hafrash override: institutional space inside a residential lot.
+        if "public" in use_cats and "resid" in yiyud_cats and "public" not in yiyud_cats:
+            result.hafrash_built_sqm += area
+        else:
+            non_resid = cats - {"resid", "shatzap"}
+            if len(non_resid) == 1 and "resid" not in cats:
+                c = next(iter(non_resid))
+                if c == "commerce":
+                    result.commerce_sqm += area
+                elif c == "employment":
+                    result.employment_sqm += area
+                elif c == "public":
+                    result.public_building_sqm += area
+            elif non_resid:
+                # 2+ non-residential categories, or non-resid mixed with residential
+                result.mixed_use_sqm += area
 
     result.rows = [asdict(r) for r in rows_data]
     return result
@@ -356,6 +369,7 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
         "commerce_sqm": round(r.commerce_sqm, 1),
         "employment_sqm": round(r.employment_sqm, 1),
         "public_building_sqm": round(r.public_building_sqm, 1),
+        "hafrash_built_sqm": round(r.hafrash_built_sqm, 1),
         "shatzap_sqm": round(r.shatzap_sqm, 1),
         "mixed_use_sqm": round(r.mixed_use_sqm, 1),
         "total_building_sqm_all": round(r.total_building_sqm_all, 1),
