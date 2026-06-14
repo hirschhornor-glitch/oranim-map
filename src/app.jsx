@@ -14760,7 +14760,7 @@
                     // anywhere — neither HAFRASHAH-coded features nor residential lots to anchor to.
                     // Approximate placement within the plan boundary (from the תשריט). taba → {lot: [lng,lat]}.
                     const MANUAL_HAFRASH_COORDS = {
-                        '4539ב': { '202': [35.2148, 31.7471], '204': [35.2141, 31.7480] }  // בליליוס, תלפיות (מקורב מתשריט)
+                        '4539ב': { '202': [35.2148, 31.7471], '204': [35.213977, 31.747379] }  // בליליוס, תלפיות (202 מקורב; 204 מדויק מהמשתמשת)
                     };
                     for (const taba in hafrashLookup) {
                         if (!passesShavazStatusFilter(taba)) continue;
