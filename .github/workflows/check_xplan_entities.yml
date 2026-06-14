@@ -1,0 +1,30 @@
+name: Watch XPLAN entities (iplan migration)
+
+# Polls the iplan XPLAN entity layers (land-use / easements / trees) that were
+# emptied in the ~2026-06 migration. While they stay empty the job is green and
+# silent. The moment any layer reports features again, the script exits non-zero
+# and this job fails — GitHub then emails the repo owner: the signal to revive
+# (and possibly re-point) the easement/tree/land-use scrapers.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday 06:00 UTC (09:00 Israel)
+  workflow_dispatch:
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Check whether entity data has returned
+        run: python scripts/check_xplan_entities.py
