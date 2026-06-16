@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-16-edu-forecast10';
+        const APP_VERSION = '2026-06-16-edu-forecast14';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13963,7 +13963,8 @@
                                 ? `${fmtNum(s.units_required)} ${escape(s.units_label || '')}` : '—';
                             const yr = escape(s.year_execution || '—');
                             const ch = s.chumash ? `חומש ${s.chumash}` : '';
-                            const bg = isThis ? `background:${cfg.color}22;font-weight:600` : '';
+                            // No row highlight — a filled/bold row reads like a header.
+                            const bg = '';
                             const clickable = !isThis;
                             const cursorStyle = clickable ? 'cursor:pointer' : '';
                             const dp = s.display_point || [];
@@ -13977,8 +13978,14 @@
                             const domChip = withDomChip
                                 ? `<span style="display:inline-block;font-size:10px;background:${(DOM_COLOR[s.domain] || '#666')}22;color:${DOM_COLOR[s.domain] || '#666'};padding:1px 5px;border-radius:8px;margin-left:5px;font-weight:600">${DOM_LABEL[s.domain] || s.domain || '—'}</span>`
                                 : '';
-                            return `<tr class="${cls}" style="${bg};${cursorStyle}" ${dataAttrs}><td style="padding:3px 6px;white-space:nowrap">${isThis ? '▸ ' : ''}${sv}${domChip}</td><td style="padding:3px 6px;color:#546e7a">${un}</td><td style="padding:3px 6px;color:#546e7a">${yr}${ch ? ' · ' + ch : ''}</td></tr>`;
+                            return `<tr class="${cls}" style="${bg};${cursorStyle}" ${dataAttrs}><td style="padding:3px 6px;white-space:nowrap">${sv}${domChip}</td><td style="padding:3px 6px;color:#546e7a">${un}</td><td style="padding:3px 6px;color:#546e7a">${yr}${ch ? ' · ' + ch : ''}</td></tr>`;
                         };
+
+                        // Sort recommendations by חומש (ascending; missing → last).
+                        // crossDom keeps domain grouping, then חומש within each domain.
+                        const chumKey = (s) => { const c = parseInt(s.chumash, 10); return isNaN(c) ? 99 : c; };
+                        sameDom.sort((a, b) => chumKey(a) - chumKey(b));
+                        crossDom.sort((a, b) => (a.domain || '').localeCompare(b.domain || '') || chumKey(a) - chumKey(b));
 
                         const sections = [];
 
@@ -20629,6 +20636,8 @@
                     {showEduForecast && (() => {
                         const N = eduForecastChumash;
                         const RANGES = { 1: '2024–2030', 2: '2031–2035', 3: '2036–2040' };
+                        // סוג השטח → marker: מגרש ציבורי = שטח חום · שטח ציבורי מבונה = הפרשה מבונה
+                        const LAND_KIND = { 'מגרש ציבורי': { t: 'שטח חום', c: '#a1887f' }, 'שטח ציבורי מבונה': { t: 'הפרשה מבונה', c: '#7986cb' } };
                         const COLORS = { 1: '#b71c1c', 2: '#e65100', 3: '#1a237e' };
                         const RY = { 1: [2024, 2030], 2: [2031, 2035], 3: [2036, 2040] };
                         const [yStart, yEnd] = RY[N];
@@ -20641,12 +20650,14 @@
                         const parseYr = (v) => { const m = /(\d{4})/.exec(String(v || '')); return m ? parseInt(m[1]) : null; };
                         // forecast year: our mimush engine first; fall back to the projector's own
                         // estimate (est_year) for facilities with no statutory plan.
-                        const fcYear = (f) => f._ourEstYear || parseYr(f.est_year);
-                        const isEstimate = (f) => !f._ourEstYear && parseYr(f.est_year) != null; // projector estimate, not our engine
+                        // priority: מטה בינוי delivery (official, overrides) > our mimush engine > Yotam estimate
+                        const fcYear = (f) => f.matebinui_year || f._ourEstYear || parseYr(f.est_year);
+                        const isEstimate = (f) => !f.matebinui_year && !f._ourEstYear && parseYr(f.est_year) != null; // projector estimate, not our engine
                         const ourText = (f) => {
+                            if (f.matebinui_year) return f.matebinui_year + ' · מטה בינוי';
                             if (f._ourEstYear) return f._ourEstYear + (f._ourMimushPct != null ? ' · ' + Math.round(f._ourMimushPct) + '%' : '');
                             const y = parseYr(f.est_year);
-                            return y ? ('≈' + y) : '—';
+                            return y ? ('≈' + y + ' (הערכה)') : '—';
                         };
                         // "בפיגור" = forecast year is LATER than the חומש window ends (delayed).
                         // Being EARLY (forecast before the window) is ahead-of-schedule, NOT a violation.
@@ -20662,7 +20673,7 @@
                                 {sub ? <div style={{ fontSize: 11, marginTop: 1 }}>{sub}</div> : <div style={{ fontSize: 11, marginTop: 1, color: 'transparent' }}>·</div>}
                             </div>
                         );
-                        const OUR_EXPLAIN = 'תחזית מימוש שלנו: שנת אכלוס משוערת לפי מנוע אחוזי-המימוש של המערכת — נגזרת משלב התכנון/רישוי הנוכחי של התכנית, משך הזמן שחלף בשלב, וגודל התכנית. אדום = השנה מאוחרת מסיום החומש (פיגור); הקדמה אינה נחשבת חריגה.';
+                        const OUR_EXPLAIN = 'מימוש צפוי: שנת המימוש לפי סדר עדיפות — (1) מועד מסירה רשמי ממטה בינוי [כתום] גובר על הכל; (2) מנוע אחוזי-המימוש שלנו [ירוק, לפי שלב תכנון/רישוי+ותק+גודל]; (3) הערכת הפרויקטור [אפור]. אדום = מאוחר מסיום החומש (פיגור); הקדמה אינה נחשבת חריגה.';
                         // Lazy-load SheetJS only when the user exports (no impact on initial load).
                         const ensureXlsx = () => new Promise((resolve, reject) => {
                             if (window.XLSX) return resolve(window.XLSX);
@@ -20704,13 +20715,14 @@
                                 if (d) aoa.push(['כיתות קיימות', d.supply_existing, 'נדרש עד חומש ' + N, num1(demandCum), 'מתוכנן', num1(s.plannedClasses), 'מאזן צפוי', num1(bal), 'כיתות בפיגור', num1(lateClasses) + ' (' + lateCount + ' מוסדות)']);
                                 else aoa.push(['אין נתוני צורך']);
                                 aoa.push([]);
-                                aoa.push(['תת-שכונה', 'מוסד', 'כתובת / פרטים', 'כיתות', 'סטטוס תכנית בפועל', 'תחזית מימוש שלנו', 'בפיגור']);
+                                aoa.push(['תת-שכונה', 'מוסד', 'סוג שטח', 'כתובת / פרטים', 'כיתות', 'סטטוס תכנית בפועל', 'מימוש צפוי', 'מטה בינוי - מסירה', 'מטה בינוי - סטטוס', 'בפיגור']);
                                 s.items.forEach(f => aoa.push([
-                                    f.neighborhood || '', f.name || '',
+                                    f.neighborhood || '', f.name || '', (LAND_KIND[f.area_type] || {}).t || '',
                                     [f.address, cmX(f.pikuach), cmX(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)'),
-                                    f['classes_c' + N] || 0, f._statusLabel, ourText(f) + (isEstimate(f) ? ' (הערכה)' : ''), outOfH(f) ? 'פיגור' : '']));
+                                    f['classes_c' + N] || 0, f._statusLabel, ourText(f) + (isEstimate(f) ? ' (הערכה)' : ''),
+                                    f.matebinui_year || '', f.matebinui_status || '', outOfH(f) ? 'פיגור' : '']));
                                 const ws = XLSX.utils.aoa_to_sheet(aoa);
-                                ws['!cols'] = [{ wch: 13 }, { wch: 34 }, { wch: 42 }, { wch: 7 }, { wch: 18 }, { wch: 17 }, { wch: 11 }];
+                                ws['!cols'] = [{ wch: 13 }, { wch: 32 }, { wch: 11 }, { wch: 38 }, { wch: 7 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 9 }];
                                 XLSX.utils.book_append_sheet(wb, ws, s.label.slice(0, 28));
                             });
                             XLSX.writeFile(wb, 'תחזית_חינוך_חומש' + N + '.xlsx');
@@ -20736,15 +20748,18 @@
                                 html += 'מתוכנן בחומש ' + N + ': <b>' + fmt(s.plannedClasses) + '</b> (' + s.items.length + ' מוסדות) · כיתות בפיגור: <b>' + fmt(lateClasses) + '</b> (' + lateItems.length + ' מוסדות)';
                                 html += '</div>';
                                 if (!s.items.length) { html += '<div style="font-size:12px;color:#999;margin-bottom:8px">אין מוסדות שהפרויקטור תכנן לחומש זה.</div>'; return; }
-                                html += '<table><thead><tr><th>מוסד</th><th>כתובת / פרטים</th><th>כיתות</th><th>סטטוס תכנית בפועל</th><th>תחזית מימוש שלנו</th></tr></thead><tbody>';
+                                html += '<table><thead><tr><th>מוסד</th><th>סוג שטח</th><th>כתובת / פרטים</th><th>כיתות</th><th>סטטוס תכנית בפועל</th><th>מימוש צפוי</th><th>מטה בינוי (סטטוס)</th></tr></thead><tbody>';
                                 s.items.forEach(f => {
                                     const late = outOfH(f);
                                     const addr = [f.address, cmP(f.pikuach), cmP(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)');
+                                    const mb = f.matebinui_year ? (f.matebinui_status || '') : '';
                                     html += '<tr><td>' + esc(f.name) + (f._fieldObs ? ' (תצפית שטח)' : '') + '</td>'
+                                        + '<td>' + esc((LAND_KIND[f.area_type] || {}).t || '') + '</td>'
                                         + '<td class="addr">' + esc(addr) + '</td>'
                                         + '<td class="cls">' + fmt(f['classes_c' + N]) + '</td>'
                                         + '<td>' + esc(f._statusLabel) + '</td>'
-                                        + '<td class="' + (late ? 'late' : '') + '">' + esc(ourText(f)) + (isEstimate(f) ? ' (הערכה)' : '') + '</td></tr>';
+                                        + '<td class="' + (late ? 'late' : '') + '">' + esc(ourText(f)) + (isEstimate(f) ? ' (הערכה)' : '') + '</td>'
+                                        + '<td style="color:#b26a00">' + esc(mb) + '</td></tr>';
                                 });
                                 html += '</tbody></table>';
                             });
@@ -20836,27 +20851,31 @@
                                                             <span style={{ flex: 1 }}>מוסד</span>
                                                             <span style={{ width: 54, textAlign: 'center' }}>כיתות</span>
                                                             <span style={{ width: 110, textAlign: 'center' }}>סטטוס תכנית בפועל</span>
-                                                            <span title={OUR_EXPLAIN} style={{ width: 112, textAlign: 'left', cursor: 'help' }}>תחזית מימוש שלנו (?)</span>
+                                                            <span title={OUR_EXPLAIN} style={{ width: 112, textAlign: 'left', cursor: 'help' }}>מימוש צפוי (?)</span>
                                                         </div>
                                                         {s.items.map((f, i) => {
                                                             const late = outOfH(f);
                                                             const est = isEstimate(f);
                                                             const cm = (v) => (v && v !== 'לא רלוונטי' && v !== 'עתידי') ? v : null;
                                                             const meta = [f.address, cm(f.pikuach), cm(f.notes)].filter(Boolean).join(' · ');
+                                                            const land = LAND_KIND[f.area_type];
+                                                            const mb = f.matebinui_year;
                                                             return (
                                                             <div key={i} onClick={() => zoomToEduFacility(f)} title={f._taba ? 'קליק לזום במפה' : 'אין תכנית סטטוטורית מקושרת — מיקום לפי כתובת'}
                                                                 style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 14px', borderTop: i ? '1px solid #22223e' : 'none', cursor: f._taba ? 'pointer' : 'default', background: late ? '#2a1620' : 'transparent' }}>
                                                                 <span style={{ flex: 1, fontSize: 13, color: '#e8ebf5' }}>
                                                                     <span style={{ fontWeight: 600 }}>{f.name}</span>
+                                                                    {land ? <span style={{ background: land.c, color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, marginRight: 6, whiteSpace: 'nowrap' }}>{land.t}</span> : null}
                                                                     {f._fieldObs ? <span style={{ color: '#9fb0d0', fontSize: 10 }}> · תצפית שטח</span> : null}
                                                                     {!f._taba ? <span style={{ color: '#ff6b6b', fontSize: 11 }}> (ללא תכנית)</span> : null}
                                                                     {meta ? <span style={{ display: 'block', fontSize: 11, color: '#8a9bc0', marginTop: 1 }}>{meta}</span> : null}
+                                                                    {mb && f.matebinui_status ? <span style={{ display: 'block', fontSize: 11, color: '#ffb74d', marginTop: 1, fontWeight: 600 }}>מטה בינוי — {f.matebinui_status}</span> : null}
                                                                 </span>
                                                                 <span style={{ width: 54, textAlign: 'center', fontSize: 18, fontWeight: 800, color: '#cfd6ea' }}>{fmt(f['classes_c' + N])}</span>
                                                                 <span style={{ width: 110, textAlign: 'center', paddingTop: 2 }}>{badge(f._statusLabel, f._statusColor)}</span>
-                                                                <span style={{ width: 112, textAlign: 'left', fontSize: 13, fontWeight: late ? 800 : 600, color: late ? '#ff6b6b' : (est ? '#9fb0d0' : '#81c784'), whiteSpace: 'nowrap', paddingTop: 2 }}
-                                                                    title={est ? 'הערכת הפרויקטור — אין תכנית סטטוטורית לחישוב תחזית' : (late ? ('צפוי להתממש ב-' + fcYear(f) + ' — מאוחר מסיום חומש ' + N + ' (' + RANGES[N] + '), בפיגור') : undefined)}>
-                                                                    {ourText(f)}{est ? <span style={{ fontSize: 9, fontWeight: 400, color: '#6b7aa0' }}> (הערכה)</span> : null}
+                                                                <span style={{ width: 112, textAlign: 'left', fontSize: 13, fontWeight: late ? 800 : 600, color: late ? '#ff6b6b' : (mb ? '#ffb74d' : (est ? '#9fb0d0' : '#81c784')), whiteSpace: 'nowrap', paddingTop: 2 }}
+                                                                    title={mb ? 'מועד מסירה רשמי ממטה בינוי — גובר על תחזית המנוע' : (est ? 'הערכת הפרויקטור — אין תכנית סטטוטורית לחישוב תחזית' : (late ? ('צפוי להתממש ב-' + fcYear(f) + ' — מאוחר מסיום חומש ' + N + ' (' + RANGES[N] + '), בפיגור') : undefined))}>
+                                                                    {ourText(f)}
                                                                 </span>
                                                             </div>
                                                         ); })}
@@ -20866,7 +20885,8 @@
                                             );
                                         })}
                                         <div style={{ fontSize: 11, color: '#8a9bc0', marginTop: 4, lineHeight: 1.6 }}>
-                                            "ללא תכנית" = המלצת הצוות שטרם עוגנה בתב"ע (מוצגת כתובת + הערכת הפרויקטור). <b style={{ color: '#c0c9e0' }}>תחזית מימוש שלנו</b> = שנת אכלוס + אחוז מימוש לפי מנוע אחוזי-המימוש (שלב תכנון/רישוי, ותק בשלב, גודל). <span style={{ color: '#ff6b6b' }}>אדום = השנה מאוחרת מסיום החומש (פיגור)</span> · הקדמה אינה חריגה · קליק על שורה מזניק זום במפה.
+                                            "ללא תכנית" = המלצת הצוות שטרם עוגנה בתב"ע (מוצגת כתובת + הערכת הפרויקטור). <b style={{ color: '#c0c9e0' }}>מימוש צפוי</b>: <span style={{ color: '#ffb74d' }}>מטה בינוי</span> (מועד מסירה רשמי) גובר על <span style={{ color: '#81c784' }}>מנוע אחוזי-המימוש שלנו</span> שגובר על <span style={{ color: '#9fb0d0' }}>הערכת הפרויקטור</span>. <span style={{ color: '#ff6b6b' }}>אדום = מאוחר מסיום החומש (פיגור)</span> · הקדמה אינה חריגה · קליק על שורה מזניק זום במפה.
+                                            <br /><span style={{ background: '#a1887f', color: '#fff', borderRadius: 4, padding: '0 5px' }}>שטח חום</span> = מגרש ציבורי עצמאי · <span style={{ background: '#7986cb', color: '#fff', borderRadius: 4, padding: '0 5px' }}>הפרשה מבונה</span> = הקצאת כיתות בתוך פרויקט · <span style={{ color: '#ffb74d' }}>מטה בינוי</span> = מועד מסירה וסטטוס בנייה רשמיים.
                                         </div>
                                     </div>
                                 </div>

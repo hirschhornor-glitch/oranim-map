@@ -175,6 +175,59 @@ def extract_demand(wb):
     return scopes
 
 
+# ── מטה בינוי — construction-HQ pipeline (delivery date + build status) ─────
+# Documents/מטה בינוי.xlsx (Sheet1). ~9 Gonenim education building projects with
+# official delivery date (col 9) + construction/licensing status. Joined to the
+# forecast facilities by classes + name/address token overlap.
+MATEBINUI_XLSX = os.path.join(os.path.expanduser("~"), "Documents", "מטה בינוי.xlsx")
+
+
+# Explicit facility→מטה בינוי links: (distinctive substring in facility name, classes, מס מניפה).
+# Token matching over-matches (common words מעון/יום/בי"ס), so links are curated.
+# When the file updates, revisit these. Unlinked מטה בינוי projects (e.g. חרדי בנים/בנות
+# at רבי צדוק, יסודי רבי חלפתא) have no matching facility in Yotam's forecast yet.
+MATEBINUI_LINKS = [
+    ("משרה מלכה", 3, "1955"),    # 3 גני ילדים גוננים
+    ("אילנות", 15, "1939"),      # יסודי חינוך מיוחד אילנות
+    ("פלא", 18, "2003"),         # בי"ס יסודי מכיל גוננים (ממ"ד פלא)
+    ('ממ"ד גוננים', 24, "2188"),  # ממ"ד גוננים 24 כיתות
+    ("המשתלה", 3, "2016"),       # מעון יום מתחם המשתלה
+    ("זקס", 18, "2016"),         # יסודי גוננים 18 כיתות (במתחם המשתלה) = יונתן זקס ממ"ד
+    ('עי"ס', 12, "2074"),        # בי"ס עי"ס גוננים 12 כיתות
+]
+
+
+def load_matebinui():
+    if not os.path.exists(MATEBINUI_XLSX):
+        print('  WARNING: מטה בינוי file not found, skipping')
+        return {}
+    wb = openpyxl.load_workbook(MATEBINUI_XLSX, data_only=True, read_only=True)
+    ws = wb["Sheet1"]
+    by_key = {}  # (manifa, classes) -> {year, status, name}
+    for r in ws.iter_rows(min_row=2, values_only=True):
+        name = txt(r[C(2)])
+        if not name:
+            continue
+        cls = num(r[C(4)])
+        deliv = r[C(9)]
+        year = deliv.year if hasattr(deliv, "year") else (lambda m: int(m.group(1)) if m else None)(re.search(r"(20\d{2})", str(deliv or "")))
+        status = re.sub(r"^\s*\d+\s*[-–]\s*", "", txt(r[C(5)]) or "")  # strip "8 - " prefix
+        if cls is not None:
+            by_key[(txt(r[C(1)]), round(cls))] = {"year": year, "status": status, "name": name}
+    return by_key
+
+
+def match_matebinui(fac, mate_by_key):
+    cls = fac.get("classes_potential")
+    name = fac.get("name") or ""
+    if not cls:
+        return None
+    for key, links_cls, manifa in MATEBINUI_LINKS:
+        if links_cls == round(cls) and key in name:
+            return mate_by_key.get((manifa, links_cls))
+    return None
+
+
 # ── מנח"י realization year/status — from "טבלה ראשית " ─────────────────────
 MANHI_XLSX = os.path.join(os.path.expanduser("~"), "Downloads",
                           "טבלת מעקב תכניות 24-11 מעודכן למנחי - 24-12-25.xlsx")
@@ -244,6 +297,8 @@ def main():
     demand = extract_demand(wb)
     context = extract_context(wb)
     manhi = load_manhi()
+    matebinui = load_matebinui()
+    matebinui_hits = 0
 
     facilities = []
     counts = {"קיים": 0, "עתידי": 0, "other": 0}
@@ -333,8 +388,44 @@ def main():
             fac["manhi_year_text"] = None
             fac["manhi_status"] = None
             fac["manhi_function"] = None
+        # מטה בינוי construction-HQ delivery date + status (authoritative for active builds)
+        mb = match_matebinui(fac, matebinui)
+        if mb:
+            matebinui_hits += 1
+            fac["matebinui_year"] = mb["year"]
+            fac["matebinui_status"] = mb["status"]
+        else:
+            fac["matebinui_year"] = None
+            fac["matebinui_status"] = None
         facilities.append(fac)
         counts[status if status in counts else "other"] += 1
+
+    # מטה בינוי projects that are real buildings in the גבעת גונן compound but absent
+    # from Yotam's forecast (חרדי schools). Added as facilities tied to the גבעת גונן
+    # plan (1166586, קטמונים ח-ט) so they get live plan status + appear in the report.
+    extra = [
+        {"name": "יסודי בנים חרדי — מתחם גבעת גונן", "cls": 9, "pikuach": "חרדי בנים"},
+        {"name": "יסודי בנות חרדי — מתחם גבעת גונן", "cls": 16, "pikuach": "חרדי בנות"},
+    ]
+    for e in extra:
+        facilities.append({
+            "id": None, "name": e["name"], "neighborhood": "קטמונים ח-ט", "cluster": "רובע אורנים",
+            "status": "עתידי", "area_type": None, "semel_iri": None, "semel_moe": None,
+            "address": "רבי צדוק (מתחם גבעת גונן)", "edu_type": "רגיל", "edu_stage": "יסודי",
+            "pikuach": e["pikuach"], "service": None,
+            "classes_existing": 0, "classes_delta": e["cls"], "classes_potential": float(e["cls"]),
+            "taba": "1166586", "tabas": ["1166586"], "plan_name_yotam": None,
+            "est_year": "2028", "chumash": "חומש 1", "chumash_primary": 1,
+            "mimush_c1": 1, "mimush_c2": 0, "mimush_c3": 0,
+            "classes_c1": float(e["cls"]), "classes_c2": 0.0, "classes_c3": 0.0,
+            "classes_mimush_total": float(e["cls"]), "classes_remaining_full": 0,
+            "migrash": None, "gush": None, "helka": None, "x_itm": None, "y_itm": None,
+            "notes": "נבנה כחלק ממתחם גבעת גונן (מקור: מטה בינוי; לא נכלל בתחזית יותם)",
+            "matebinui_year": 2028, "matebinui_status": "רישוי+תבע",
+            "manhi_year": None, "manhi_year_text": None, "manhi_status": None, "manhi_function": None,
+            "_source": "matebinui",
+        })
+        counts["עתידי"] += 1
 
     payload = {
         "source": "טבלת מעקב גוננים (יותם צברי).xlsx / היצע שירותי חינוך",
@@ -355,6 +446,7 @@ def main():
     fut_no_taba = sum(1 for f in facilities if f["status"] == "עתידי" and not f["tabas"])
     print("  future facilities without a plan (ללא תכנית): %d" % fut_no_taba)
     print("  facilities matched to מנח\"י: %d" % manhi_hits)
+    print("  facilities matched to מטה בינוי: %d (of %d projects)" % (matebinui_hits, len(matebinui)))
     print("  demand block: %s (scopes: %d)" % ("OK" if demand and demand.get("__all__") else "MISSING", len(demand)))
 
 
