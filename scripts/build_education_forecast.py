@@ -44,6 +44,12 @@ C = lambda n: n - 1
 MANUAL_TABA = {
     ("עתידי בית הנוער", "רסקו"): "1158146",  # "בית הנוער העברי" (בבדיקה תכנונית)
 }
+# Same, keyed by מזהה שבצ/הפרשה (col 1) — links a whole compound's facilities at once.
+MANUAL_TABA_BY_ID = {
+    "11": "1115484",  # מתחם אילנות (ממ"ד גוננים / ביס מ"מ אילנות) — "מתחם מבני חינוך וציבור בין הורקניה וברנקי"
+    "33": "1322452",  # יוסי בן יועזר (ממ"ד פלא / עי"ס) — "קביעת בינוי למבנים למוסדות ציבור - יוסי בן יועזר"
+    "4": "1297548",   # מתחם לוריא — "בית הספר לוריא"
+}
 
 
 def norm_tabas(v):
@@ -182,18 +188,20 @@ def extract_demand(wb):
 MATEBINUI_XLSX = os.path.join(os.path.expanduser("~"), "Documents", "מטה בינוי.xlsx")
 
 
-# Explicit facility→מטה בינוי links: (distinctive substring in facility name, classes, מס מניפה).
-# Token matching over-matches (common words מעון/יום/בי"ס), so links are curated.
-# When the file updates, revisit these. Unlinked מטה בינוי projects (e.g. חרדי בנים/בנות
-# at רבי צדוק, יסודי רבי חלפתא) have no matching facility in Yotam's forecast yet.
+# Explicit facility→מטה בינוי links: (name substring, classes, מס מניפה, optional address-substring filter).
+# Token matching over-matches (common words מעון/יום/בי"ס), so links are curated. The 4th field
+# disambiguates when a name substring matches several facilities (e.g. "משרה מלכה" exists both as a
+# ממלכתי gan at הורקניה and a ממ"ד gan at קנאי הגליל — only the ממלכתי/הורקניה one is מניפה 1955).
+# When the file updates, revisit these. Unlinked מטה בינוי projects (חרדי בנים/בנות at רבי צדוק,
+# יסודי רבי חלפתא) have no matching facility in Yotam's forecast yet.
 MATEBINUI_LINKS = [
-    ("משרה מלכה", 3, "1955"),    # 3 גני ילדים גוננים
-    ("אילנות", 15, "1939"),      # יסודי חינוך מיוחד אילנות
-    ("פלא", 18, "2003"),         # בי"ס יסודי מכיל גוננים (ממ"ד פלא)
-    ('ממ"ד גוננים', 24, "2188"),  # ממ"ד גוננים 24 כיתות
-    ("המשתלה", 3, "2016"),       # מעון יום מתחם המשתלה
-    ("זקס", 18, "2016"),         # יסודי גוננים 18 כיתות (במתחם המשתלה) = יונתן זקס ממ"ד
-    ('עי"ס', 12, "2074"),        # בי"ס עי"ס גוננים 12 כיתות
+    ("משרה מלכה", 3, "1955", "הורקניה"),  # 3 גני ילדים גוננים (הממלכתי, לא הממ"ד בקנאי הגליל)
+    ("אילנות", 15, "1939", None),       # יסודי חינוך מיוחד אילנות
+    ("פלא", 18, "2003", None),          # בי"ס יסודי מכיל גוננים (ממ"ד פלא)
+    ('ממ"ד גוננים', 24, "2188", None),   # ממ"ד גוננים 24 כיתות
+    ("המשתלה", 3, "2016", None),        # מעון יום מתחם המשתלה
+    ("זקס", 18, "2016", None),          # יסודי גוננים 18 כיתות (במתחם המשתלה) = יונתן זקס ממ"ד
+    ('עי"ס', 12, "2074", None),         # בי"ס עי"ס גוננים 12 כיתות
 ]
 
 
@@ -222,8 +230,9 @@ def match_matebinui(fac, mate_by_key):
     name = fac.get("name") or ""
     if not cls:
         return None
-    for key, links_cls, manifa in MATEBINUI_LINKS:
-        if links_cls == round(cls) and key in name:
+    addr = fac.get("address") or ""
+    for key, links_cls, manifa, addr_key in MATEBINUI_LINKS:
+        if links_cls == round(cls) and key in name and (not addr_key or addr_key in addr):
             return mate_by_key.get((manifa, links_cls))
     return None
 
@@ -311,7 +320,7 @@ def main():
             continue  # blank spacer row
         tabas = norm_tabas(r[C(21)])
         if not tabas:
-            ov = MANUAL_TABA.get((name, txt(r[C(2)])))
+            ov = MANUAL_TABA.get((name, txt(r[C(2)]))) or MANUAL_TABA_BY_ID.get(txt(r[C(1)]) or "")
             if ov:
                 tabas = [ov]
         if tabas:
@@ -426,6 +435,24 @@ def main():
             "_source": "matebinui",
         })
         counts["עתידי"] += 1
+
+    # Collapse the לוריא school listed twice (ממלכתי + ממ"ד) — it is ONE school of
+    # undecided stream (plan "בית הספר לוריא"; the name says "1 בי\"ס"). Targeted on the
+    # "1 בי\"ס" marker so multi-gan groups (5 gans at פת, 4 at מעגלי יבנה) are NOT merged.
+    seen_one, deduped = {}, []
+    for f in facilities:
+        nm = f.get("name") or ""
+        if f.get("status") == "עתידי" and '1 בי"ס' in nm:
+            key = (nm, f.get("address"), f.get("classes_potential"))
+            if key in seen_one:
+                seen_one[key]["pikuach"] = 'ממלכתי / ממ"ד (טרם הוכרע)'
+                seen_one[key]["_stream_undecided"] = True
+                continue
+            seen_one[key] = f
+        deduped.append(f)
+    if len(deduped) != len(facilities):
+        print("  collapsed %d 'one-school' stream-duplicate(s)" % (len(facilities) - len(deduped)))
+    facilities = deduped
 
     payload = {
         "source": "טבלת מעקב גוננים (יותם צברי).xlsx / היצע שירותי חינוך",

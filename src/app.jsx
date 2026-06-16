@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-16-edu-forecast16';
+        const APP_VERSION = '2026-06-16-edu-forecast19';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -16552,9 +16552,13 @@
                         .filter(f => (f[clsKey] || 0) > 0)
                         .sort((a, b) => (b._riskLvl - a._riskLvl) || ((b[clsKey] || 0) - (a[clsKey] || 0)));
                     const plannedClasses = items.reduce((s, f) => s + (f[clsKey] || 0), 0);
+                    // cumulative planned classes through חומש N (existing recommendations) — used for
+                    // the projected balance so it reconciles with the displayed recommendations.
+                    const ck = ['classes_c1', 'classes_c2', 'classes_c3'];
+                    const plannedCumulative = inDomain.reduce((s, f) => s + ck.slice(0, chumash).reduce((a, k) => a + (f[k] || 0), 0), 0);
                     // total the projector proposes for the domain (all חומשים) = Σ potential classes
                     const proposedTotal = inDomain.reduce((s, f) => s + (f.classes_potential || 0), 0);
-                    return { ...d, demand: demand[d.key] || null, items, plannedClasses, proposedTotal };
+                    return { ...d, demand: demand[d.key] || null, items, plannedClasses, plannedCumulative, proposedTotal };
                 });
                 return { chumash, sections };
             }
@@ -20738,7 +20742,7 @@
                             const stats = rep.sections.map(s => {
                                 const d = s.demand;
                                 const demandCum = d ? (d.demand_existing + sumN(d.add_demand)) : null;
-                                const supplyCum = d ? (d.supply_existing + sumN(d.add_supply)) : null;
+                                const supplyCum = d ? (d.supply_existing + s.plannedCumulative) : null;
                                 const lateItems = s.items.filter(outOfH);
                                 return { s, d, demandCum, supplyCum, bal: d ? supplyCum - demandCum : null,
                                     lateClasses: lateItems.reduce((a, f) => a + (f['classes_c' + N] || 0), 0), lateCount: lateItems.length };
@@ -20782,7 +20786,7 @@
                             rep.sections.forEach(s => {
                                 const d = s.demand;
                                 const demandCum = d ? (d.demand_existing + sumNp(d.add_demand)) : null;
-                                const supplyCum = d ? (d.supply_existing + sumNp(d.add_supply)) : null;
+                                const supplyCum = d ? (d.supply_existing + s.plannedCumulative) : null;
                                 const bal = d ? (supplyCum - demandCum) : null;
                                 const lateItems = s.items.filter(outOfH);
                                 const lateClasses = lateItems.reduce((a, f) => a + (f['classes_c' + N] || 0), 0);
@@ -20865,7 +20869,7 @@
                                             const sum = (arr) => arr.slice(0, N).reduce((a, b) => a + b, 0);
                                             const addDemThis = dd ? (dd.add_demand[N - 1] || 0) : 0;
                                             const demandCum = dd ? (dd.demand_existing + sum(dd.add_demand)) : null;   // need by end of חומש N
-                                            const supplyCum = dd ? (dd.supply_existing + sum(dd.add_supply)) : null;   // supply by end of חומש N
+                                            const supplyCum = dd ? (dd.supply_existing + s.plannedCumulative) : null;    // existing + מתוכנן מצטבר (recommendations)
                                             const balanceCum = dd ? (supplyCum - demandCum) : null;                    // projected balance
                                             const lateItems = s.items.filter(outOfH);
                                             const lateCount = lateItems.length;

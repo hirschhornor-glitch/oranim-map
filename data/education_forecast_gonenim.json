@@ -1,7 +1,7 @@
 {
  "source": "טבלת מעקב גוננים (יותם צברי).xlsx / היצע שירותי חינוך",
  "sheet": "היצע שירותי חינוך",
- "count": 195,
+ "count": 194,
  "demand": {
   "__all__": {
    "maon": {
@@ -409,8 +409,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -453,8 +455,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -717,8 +721,10 @@
    "classes_existing": 1.0,
    "classes_delta": null,
    "classes_potential": 1.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -2243,8 +2249,10 @@
    "classes_existing": 0.0,
    "classes_delta": 7.0,
    "classes_potential": 7.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": "לא רלוונטי",
@@ -2773,8 +2781,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -2817,8 +2827,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -3153,8 +3165,8 @@
    "manhi_year_text": null,
    "manhi_status": null,
    "manhi_function": null,
-   "matebinui_year": 2027,
-   "matebinui_status": "רישוי לאחר וועדה"
+   "matebinui_year": null,
+   "matebinui_status": null
   },
   {
    "id": "72",
@@ -4025,8 +4037,10 @@
    "classes_existing": 1.0,
    "classes_delta": null,
    "classes_potential": 1.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -4069,8 +4083,10 @@
    "classes_existing": 1.0,
    "classes_delta": null,
    "classes_potential": 1.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -4685,8 +4701,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -4729,8 +4747,10 @@
    "classes_existing": 1.0,
    "classes_delta": -1.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": null,
@@ -5345,8 +5365,10 @@
    "classes_existing": 0.0,
    "classes_delta": 15.0,
    "classes_potential": 15.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": "2029",
    "chumash": "חומש 1",
@@ -5433,8 +5455,10 @@
    "classes_existing": 12.0,
    "classes_delta": -12.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": "2029",
    "chumash": "חומש 1",
@@ -5970,13 +5994,15 @@
    "address": "מתחם לוריא",
    "edu_type": "רגיל",
    "edu_stage": "יסודי",
-   "pikuach": "ממלכתי",
+   "pikuach": "ממלכתי / ממ\"ד (טרם הוכרע)",
    "service": "יסודי ממלכתי",
    "classes_existing": 0.0,
    "classes_delta": 12.0,
    "classes_potential": 12.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": "2030",
    "chumash": "חומש 1",
@@ -6000,7 +6026,8 @@
    "manhi_status": null,
    "manhi_function": null,
    "matebinui_year": null,
-   "matebinui_status": null
+   "matebinui_status": null,
+   "_stream_undecided": true
   },
   {
    "id": "34",
@@ -6151,8 +6178,10 @@
    "classes_existing": 12.0,
    "classes_delta": -12.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": "2027",
    "chumash": "חומש 1",
@@ -6195,8 +6224,10 @@
    "classes_existing": 0.0,
    "classes_delta": 24.0,
    "classes_potential": 24.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": "2027",
    "chumash": "חומש 1",
@@ -6239,8 +6270,10 @@
    "classes_existing": 0.0,
    "classes_delta": 18.0,
    "classes_potential": 18.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1322452",
+   "tabas": [
+    "1322452"
+   ],
    "plan_name_yotam": null,
    "est_year": "2025",
    "chumash": "חומש 1",
@@ -6359,50 +6392,6 @@
    "matebinui_status": null
   },
   {
-   "id": "4",
-   "name": "מתחם לוריא - 1 בי\"ס של 12 כיתות",
-   "neighborhood": "רסקו",
-   "cluster": "רובע אורנים",
-   "status": "עתידי",
-   "area_type": "מגרש ציבורי",
-   "semel_iri": "עתידי",
-   "semel_moe": "עתידי",
-   "address": "מתחם לוריא",
-   "edu_type": "רגיל",
-   "edu_stage": "יסודי",
-   "pikuach": "ממלכתי דתי",
-   "service": "יסודי ממלכתי דתי",
-   "classes_existing": 0.0,
-   "classes_delta": 12.0,
-   "classes_potential": 12.0,
-   "taba": null,
-   "tabas": [],
-   "plan_name_yotam": null,
-   "est_year": "2030",
-   "chumash": "חומש 1",
-   "chumash_primary": 1,
-   "mimush_c1": 1.0,
-   "mimush_c2": 0.0,
-   "mimush_c3": 0.0,
-   "classes_c1": 12.0,
-   "classes_c2": 0.0,
-   "classes_c3": 0.0,
-   "classes_mimush_total": 12.0,
-   "classes_remaining_full": 0.0,
-   "migrash": "ממלכתי",
-   "gush": null,
-   "helka": null,
-   "x_itm": null,
-   "y_itm": null,
-   "notes": null,
-   "manhi_year": null,
-   "manhi_year_text": null,
-   "manhi_status": null,
-   "manhi_function": null,
-   "matebinui_year": null,
-   "matebinui_status": null
-  },
-  {
    "id": "10",
    "name": "עתידי בית הנוער",
    "neighborhood": "רסקו",
@@ -6509,8 +6498,10 @@
    "classes_existing": 6.0,
    "classes_delta": -6.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1322452",
+   "tabas": [
+    "1322452"
+   ],
    "plan_name_yotam": null,
    "est_year": "2025",
    "chumash": "חומש 1",
@@ -6553,8 +6544,10 @@
    "classes_existing": 18.0,
    "classes_delta": -18.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": "2027",
    "chumash": "חומש 1",
@@ -6597,8 +6590,10 @@
    "classes_existing": 0.0,
    "classes_delta": 6.0,
    "classes_potential": 6.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1115484",
+   "tabas": [
+    "1115484"
+   ],
    "plan_name_yotam": null,
    "est_year": "2032",
    "chumash": "חומש 2",
@@ -7143,8 +7138,10 @@
    "classes_existing": 0.0,
    "classes_delta": 3.0,
    "classes_potential": 3.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": "לא רלוונטי",
@@ -7689,8 +7686,10 @@
    "classes_existing": 0.0,
    "classes_delta": 3.0,
    "classes_potential": 3.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1297548",
+   "tabas": [
+    "1297548"
+   ],
    "plan_name_yotam": null,
    "est_year": null,
    "chumash": "לא רלוונטי",
@@ -8189,8 +8188,10 @@
    "classes_existing": 2.0,
    "classes_delta": -2.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1322452",
+   "tabas": [
+    "1322452"
+   ],
    "plan_name_yotam": null,
    "est_year": "2023",
    "chumash": "חומש 1",
@@ -8233,8 +8234,10 @@
    "classes_existing": 8.0,
    "classes_delta": -8.0,
    "classes_potential": 0.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1322452",
+   "tabas": [
+    "1322452"
+   ],
    "plan_name_yotam": null,
    "est_year": "2023",
    "chumash": "חומש 1",
@@ -8765,8 +8768,10 @@
    "classes_existing": 0.0,
    "classes_delta": 12.0,
    "classes_potential": 12.0,
-   "taba": null,
-   "tabas": [],
+   "taba": "1322452",
+   "tabas": [
+    "1322452"
+   ],
    "plan_name_yotam": null,
    "est_year": "2027",
    "chumash": "חומש 1",
