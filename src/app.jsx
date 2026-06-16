@@ -17181,12 +17181,12 @@
                         html += `<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">×${mult}</span></div>`;
                     }
                     html += '</div>';
-                    // Sub-row: special housing types
+                    // Sub-row: residential subtypes only (מותנה/שכירות). מלונאות is NOT residential —
+                    // it gets its own section below so it isn't read as part of the יח"ד count.
                     const cond = v(props.conditional_housing);
                     const rent = v(props.rental);
-                    const htl = v(props.hotels);
                     const rentDur = v(props.rental_duration);
-                    if (cond || rent || htl) {
+                    if (cond || rent) {
                         html += '<div class="popup-sub-row">';
                         if (cond) html += `מותנה: <span>${cond}</span>`;
                         if (rent) {
@@ -17195,9 +17195,16 @@
                                 : '';
                             html += `${cond ? ' | ' : ''}מתוכם שכירות: <span>${rent}${durSuffix}</span>`;
                         }
-                        if (htl) html += `${(cond || rent) ? ' | ' : ''}מלונאות: <span>${htl}</span>`;
                         html += '</div>';
                     }
+                }
+                // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units)
+                const htlRooms = v(props.hotels);
+                if (htlRooms) {
+                    html += '<div class="popup-section-title">מלונאות</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">חדרי מלון</span><span class="popup-pair-value">${fmt(htlRooms)}</span></div>`;
+                    html += '</div>';
                 }
 
                 // Section: שב"צ
