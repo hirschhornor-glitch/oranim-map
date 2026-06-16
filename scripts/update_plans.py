@@ -1,10 +1,13 @@
 import os
 import json
+import time
 import base64
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+
+_HEADER_START = ["agam_id", "ver_id", "taba", "status_mavat", "mavat_url", "plan_name"]
 
 GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
 GOOGLE_CREDS   = os.environ["GOOGLE_CREDS"]
@@ -106,26 +109,45 @@ def write_summary(updated, changed_rows, last_update):
         with open(step_summary, "w", encoding="utf-8") as f:
             f.write("## " + "\n\n".join(lines))
 
+def read_sheet_rows(attempts=4):
+    """Read all Sheet records, retrying transient Google Sheets API errors
+    (429 quota / 5xx / network blips). This cron runs every 10 min, so a brief
+    quota spike — e.g. another script reading the same sheet — would otherwise
+    fail the job and email a false alarm. The 'header missing' check is a REAL
+    condition (not transient), so it aborts immediately without retrying."""
+    last_err = None
+    for i in range(attempts):
+        try:
+            sheet = get_sheet()
+            # The Oranim_Taba sheet1 header row periodically vanishes (a sort over
+            # an unfrozen header — now frozen, see reference_gs_oranim_taba_columns).
+            # Without it get_all_records() dies with a cryptic "duplicate header ''".
+            row1 = sheet.row_values(1)
+            if row1[:6] != _HEADER_START:
+                raise SystemExit(
+                    "ERROR: Oranim_Taba sheet1 is missing its header row (row 1 is "
+                    f"data, not headers — got {row1[:6]}). Restore the 53-column "
+                    "header (it should be frozen). Aborting to avoid corrupting "
+                    "plans.geojson."
+                )
+            return sheet.get_all_records()
+        except SystemExit:
+            raise  # header genuinely missing — do not retry
+        except Exception as e:
+            last_err = e
+            if i < attempts - 1:
+                wait = 5 * (2 ** i)  # 5, 10, 20s
+                print(f"  sheet read failed ({type(e).__name__}: {str(e)[:80]}); "
+                      f"retry {i + 1}/{attempts} in {wait}s")
+                time.sleep(wait)
+    raise SystemExit(f"ERROR: sheet read failed after {attempts} attempts: {last_err}")
+
+
 def update_plans():
     last_update = load_last_update()
     print(f"עדכון אחרון: {last_update}")
 
-    sheet = get_sheet()
-
-    # The Oranim_Taba sheet1 header row periodically vanishes (rows get inserted
-    # above it / sorted away). get_all_records() then treats a data row as the
-    # header and dies with a cryptic "duplicate header ''" error. Detect that
-    # here and fail with an actionable message instead. To restore: re-insert the
-    # column header at row 1 (see reference_gs_oranim_taba_columns memory).
-    _row1 = sheet.row_values(1)
-    if _row1[:6] != ["agam_id", "ver_id", "taba", "status_mavat", "mavat_url", "plan_name"]:
-        raise SystemExit(
-            "ERROR: Oranim_Taba sheet1 is missing its header row (row 1 is data, "
-            f"not headers — got {_row1[:6]}). Restore the 53-column header before "
-            "syncing. Aborting to avoid corrupting plans.geojson."
-        )
-
-    all_rows = sheet.get_all_records()
+    all_rows = read_sheet_rows()
 
     changed_rows = {}
     for row in all_rows:
