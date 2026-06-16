@@ -14,6 +14,7 @@ on:
 jobs:
   watch:
     runs-on: ubuntu-latest
+    timeout-minutes: 5          # hard cap — never let a slow/hung iplan burn CI
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
