@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-14-dwellings';
+        const APP_VERSION = '2026-06-16-edu-forecast10';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2220,6 +2220,10 @@
             const [permitsBySubMinahakFilter, setPermitsBySubMinahakFilter] = useState('all');
             // Neighborhood Program report — based on 2018 Ministry of Planning guide (type C = existing urban fabric)
             const [showPublicNeeds, setShowPublicNeeds] = useState(false);
+            // Education forecast (Yotam per-חומש) vs current plan status report
+            const [showEduForecast, setShowEduForecast] = useState(false);
+            const [eduForecastChumash, setEduForecastChumash] = useState(1); // 1 | 2 | 3
+            const [eduForecastNb, setEduForecastNb] = useState('all'); // 'all' | 'גוננים א-ו' | 'קטמונים ח-ט' | 'רסקו' | 'פת'
             const [showAllocChooser, setShowAllocChooser] = useState(false); // scope chooser for the built-allocations report
             const [dashSub, setDashSub] = useState('גוננים א-ו'); // selected sub-neighborhood for the neighborhood dashboard
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
@@ -2619,6 +2623,7 @@
                         [showAnnotations, () => setShowAnnotations(false)],
                         [showAllocChooser, () => setShowAllocChooser(false)],
                         [showFilter, () => setShowFilter(false)],
+                        [showEduForecast, () => setShowEduForecast(false)],
                         [showReportsMenu, () => setShowReportsMenu(false)],
                     ];
                     const hit = closers.find(([open]) => open);
@@ -2629,7 +2634,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -4086,6 +4091,7 @@
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
                     ['__treePermits', 'data/tree_permits.json'],
+                    ['__eduForecast', 'data/education_forecast_gonenim.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4499,6 +4505,7 @@
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
+                            else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
                                 const idx = {};
@@ -16417,6 +16424,132 @@
                 if (stage === PERMIT_STAGE_DONE) return PERMITS_PALETTE.done;
                 return PERMITS_PALETTE.tama38_marker;
             }
+
+            // ─── Education forecast (Yotam per-חומש) vs current plan status ─────────
+            // Joins each education facility from Yotam's "היצע שירותי חינוך" sheet
+            // (window.__eduForecast) to the live plan status + permits, so we can see
+            // what the projector assumed would be built each חומש against reality.
+            // statusRank: 0 ללא תכנית · 1 בתכנון/הפקדה · 2 מאושרת · 3 טרום-רישוי ·
+            //             4 ברישוי · 5 הופק היתר/בבנייה.
+            function eduForecastStatusBucketLabel(rank) {
+                if (rank >= 5) return 'מתממש';
+                if (rank >= 3) return 'ברישוי';
+                if (rank === 2) return 'מאושר';
+                if (rank === 1) return 'בתכנון';
+                return 'ללא תכנית';
+            }
+            function enrichEduFacility(fac) {
+                const taba = fac.taba ? String(fac.taba).trim() : null;
+                const plan = taba ? (window.__planByTaba || {})[taba] : null;
+                let rank = 0, planLabel = 'ללא תכנית', planStageIdx = null;
+                let fieldObs = false;
+                if (plan) {
+                    planStageIdx = getStageFromStatus(plan.status_mavat, plan.stage);
+                    if (planStageIdx >= 1) { rank = 2; planLabel = 'תב"ע מאושרת'; }
+                    else if (planStageIdx === 0) { rank = 1; planLabel = 'תב"ע בתכנון/הפקדה'; }
+                    else { rank = 0; planLabel = 'תב"ע נגנזה/נדחתה'; }
+                    if (plan.field_observation) fieldObs = true;
+                } else if (taba) {
+                    planLabel = 'תב"ע לא נמצאה';
+                }
+                const permits = taba ? getPermitsForTaba(taba) : [];
+                let bestPermitStage = null, bestPermitRank = 0;
+                const STAGE_RANK = { pre_licensing: 3, licensing: 4, issued: 5, done: 5 };
+                permits.forEach(p => {
+                    if (p.field_observation) fieldObs = true;
+                    const st = getPermitStage(p);
+                    const r = STAGE_RANK[st] || 3;
+                    if (r > bestPermitRank) { bestPermitRank = r; bestPermitStage = st; }
+                });
+                if (bestPermitRank > rank) rank = bestPermitRank;
+
+                // current-status badge
+                let statusLabel, statusColor;
+                if (bestPermitStage) { statusLabel = getPermitStageLabel(bestPermitStage); statusColor = getPermitStageColor(bestPermitStage); }
+                else if (rank === 2) { statusLabel = 'תב"ע מאושרת'; statusColor = '#558b2f'; }
+                else if (rank === 1) { statusLabel = 'בתכנון/הפקדה'; statusColor = '#ef6c00'; }
+                else if (taba && plan) { statusLabel = planLabel; statusColor = '#9e9e9e'; }
+                else { statusLabel = 'ללא תכנית'; statusColor = '#c62828'; }
+
+                // gap / risk vs the חומש Yotam assumed
+                const c = fac.chumash_primary; // 1/2/3/null
+                let risk, riskColor, riskLvl;
+                if (rank >= 5) { risk = 'מתממש'; riskColor = '#2e7d32'; riskLvl = 0; }
+                else if (rank >= 3) { risk = 'בתהליך רישוי'; riskColor = '#0288d1'; riskLvl = 1; }
+                else if (!plan && !taba) { risk = (c === 1) ? 'ללא תכנית — בסיכון' : 'ללא תכנית'; riskColor = (c === 1) ? '#c62828' : '#ef6c00'; riskLvl = (c === 1) ? 3 : 2; }
+                else if (rank === 2) { risk = (c === 1) ? 'מאושר, טרם היתר' : ('מאושר — אופק ' + (c || '?')); riskColor = (c === 1) ? '#f9a825' : '#558b2f'; riskLvl = (c === 1) ? 1 : 0; }
+                else { risk = (c === 1) ? 'בפיגור מול חומש 1' : ('בתכנון — אופק ' + (c || '?')); riskColor = (c === 1) ? '#c62828' : '#ef6c00'; riskLvl = (c === 1) ? 3 : 2; }
+
+                const yotamMimush = Math.max(fac.mimush_c1 || 0, fac.mimush_c2 || 0, fac.mimush_c3 || 0);
+                // OUR realization forecast — from the app's mimush stage table (calcMimush).
+                let ourEstYear = null, ourMimushPct = null;
+                if (plan) {
+                    const mm = calcMimush(plan);
+                    if (mm) { ourEstYear = mm.estimatedYear; ourMimushPct = mm.mimushPct; }
+                }
+                return {
+                    ...fac, _taba: taba, _plan: plan, _permits: permits, _permitCount: permits.length,
+                    _rank: rank, _bucket: eduForecastStatusBucketLabel(rank),
+                    _planLabel: planLabel, _planStageIdx: planStageIdx, _fieldObs: fieldObs,
+                    _statusLabel: statusLabel, _statusColor: statusColor,
+                    _risk: risk, _riskColor: riskColor, _riskLvl: riskLvl,
+                    _yotamMimush: yotamMimush, _ourEstYear: ourEstYear, _ourMimushPct: ourMimushPct,
+                };
+            }
+            // Yotam edu_stage -> one of the 4 report domains.
+            const EDU_DOMAIN_BY_STAGE = { 'מעון יום': 'maon', 'מעון': 'maon', 'גן ילדים': 'gan', 'יסודי': 'yesodi', 'על יסודי': 'al_yesodi' };
+            const EDU_DOMAINS = [
+                { key: 'maon', label: 'מעונות יום' },
+                { key: 'gan', label: 'גני ילדים' },
+                { key: 'yesodi', label: 'יסודי' },
+                { key: 'al_yesodi', label: 'על-יסודי' },
+            ];
+            function eduDomainOf(fac) {
+                return EDU_DOMAIN_BY_STAGE[(fac.edu_stage || '').trim()]
+                    || EDU_DOMAIN_BY_STAGE[(fac.edu_type || '').trim()] || 'other';
+            }
+            // Build the per-domain report for ONE חומש (1/2/3): each domain carries its
+            // demand header (students / classes-needed from Yotam's balance) + the planned
+            // institutions that carry class-realisation weight in that חומש.
+            function computeEduForecastByChumash(chumash, nbFilter) {
+                const data = window.__eduForecast || [];
+                const demandRoot = window.__eduForecastDemand || {};
+                const scopeKey = (nbFilter && nbFilter !== 'all') ? nbFilter : '__all__';
+                const demand = demandRoot[scopeKey] || {}; // existing supply/demand per domain (chumash-independent)
+                let future = data.filter(f => f.status === 'עתידי');
+                if (nbFilter && nbFilter !== 'all') future = future.filter(f => f.neighborhood === nbFilter);
+                future = future.map(enrichEduFacility);
+                const clsKey = 'classes_c' + chumash;
+                const sections = EDU_DOMAINS.map(d => {
+                    const inDomain = future.filter(f => eduDomainOf(f) === d.key);
+                    const items = inDomain
+                        .filter(f => (f[clsKey] || 0) > 0)
+                        .sort((a, b) => (b._riskLvl - a._riskLvl) || ((b[clsKey] || 0) - (a[clsKey] || 0)));
+                    const plannedClasses = items.reduce((s, f) => s + (f[clsKey] || 0), 0);
+                    // total the projector proposes for the domain (all חומשים) = Σ potential classes
+                    const proposedTotal = inDomain.reduce((s, f) => s + (f.classes_potential || 0), 0);
+                    return { ...d, demand: demand[d.key] || null, items, plannedClasses, proposedTotal };
+                });
+                return { chumash, sections };
+            }
+            // Zoom the map to a forecast facility — prefer the plan polygon, fall back to ITM point.
+            function zoomToEduFacility(fac) {
+                try {
+                    const gd = geoDataRef.current;
+                    if (fac._taba && gd && gd.plans && gd.plans.features) {
+                        const pf = gd.plans.features.find(f => String(f.properties.taba || '').trim() === fac._taba);
+                        if (pf && pf.geometry && mapInstanceRef.current) {
+                            const gj = L.geoJSON(pf);
+                            const b = gj.getBounds();
+                            if (b.isValid()) { mapInstanceRef.current.fitBounds(b, { maxZoom: 17, padding: [40, 40] }); setShowEduForecast(false); return; }
+                        }
+                    }
+                    if (fac.x_itm && fac.y_itm && window.proj4 && window.proj4.defs('EPSG:2039') && mapInstanceRef.current) {
+                        const [lng, lat] = window.proj4('EPSG:2039', 'EPSG:4326', [fac.x_itm, fac.y_itm]);
+                        mapInstanceRef.current.setView([lat, lng], 17); setShowEduForecast(false);
+                    }
+                } catch (e) { console.warn('[EduForecast] zoom failed', e); }
+            }
             // ─── Permit category — aligned with YK official request_type taxonomy ─
             // Categories derived from analyzing distinct values of request_type field
             // in all_permits.json (211 non-empty out of 505 active permits, 57 distinct).
@@ -20473,6 +20606,255 @@
                         </div>
                     )}
 
+                    {/* ── Education Forecast (Yotam per-חומש) vs current status ── */}
+                    {showEduForecast && (() => {
+                        const N = eduForecastChumash;
+                        const RANGES = { 1: '2024–2030', 2: '2031–2035', 3: '2036–2040' };
+                        const COLORS = { 1: '#b71c1c', 2: '#e65100', 3: '#1a237e' };
+                        const RY = { 1: [2024, 2030], 2: [2031, 2035], 3: [2036, 2040] };
+                        const [yStart, yEnd] = RY[N];
+                        const rep = computeEduForecastByChumash(N, eduForecastNb);
+                        const NB_OPTS = [['all', 'מינה״ק גוננים'], ['גוננים א-ו', 'גוננים'], ['קטמונים ח-ט', 'קטמונים'], ['רסקו', 'רסקו'], ['פת', 'פת']];
+                        const nbLabel = (NB_OPTS.find(o => o[0] === eduForecastNb) || NB_OPTS[0])[1];
+                        const ctxScope = (window.__eduForecastContext || {})[(eduForecastNb && eduForecastNb !== 'all') ? eduForecastNb : '__all__'] || null;
+                        const ctxN = ctxScope ? ctxScope['c' + N] : null;
+                        const fmt = (n) => (n == null || n === '' ? '' : (Math.round(n * 10) / 10).toString());
+                        const parseYr = (v) => { const m = /(\d{4})/.exec(String(v || '')); return m ? parseInt(m[1]) : null; };
+                        // forecast year: our mimush engine first; fall back to the projector's own
+                        // estimate (est_year) for facilities with no statutory plan.
+                        const fcYear = (f) => f._ourEstYear || parseYr(f.est_year);
+                        const isEstimate = (f) => !f._ourEstYear && parseYr(f.est_year) != null; // projector estimate, not our engine
+                        const ourText = (f) => {
+                            if (f._ourEstYear) return f._ourEstYear + (f._ourMimushPct != null ? ' · ' + Math.round(f._ourMimushPct) + '%' : '');
+                            const y = parseYr(f.est_year);
+                            return y ? ('≈' + y) : '—';
+                        };
+                        // "בפיגור" = forecast year is LATER than the חומש window ends (delayed).
+                        // Being EARLY (forecast before the window) is ahead-of-schedule, NOT a violation.
+                        const outOfH = (f) => { const y = fcYear(f); return y != null && y > yEnd; };
+                        // current shortfall vs need (existing only): required − existing.
+                        // positive = חוסר (deficit), negative/0 = עודף (surplus).
+                        const gapOf = (s) => (s.demand ? ((s.demand.demand_existing || 0) - (s.demand.supply_existing || 0)) : null);
+                        const badge = (t, color) => (<span style={{ background: color, color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 11, whiteSpace: 'nowrap' }}>{t}</span>);
+                        const tile = (label, value, accent, sub) => (
+                            <div style={{ flex: '1 1 130px', minWidth: 120, background: '#10193a', border: '1px solid #2a3a5e', borderRadius: 10, padding: '9px 10px', textAlign: 'center' }}>
+                                <div style={{ fontSize: 11, color: '#9fb0d0', whiteSpace: 'nowrap' }}>{label}</div>
+                                <div style={{ fontSize: 30, fontWeight: 800, color: accent, lineHeight: 1.15 }}>{value}</div>
+                                {sub ? <div style={{ fontSize: 11, marginTop: 1 }}>{sub}</div> : <div style={{ fontSize: 11, marginTop: 1, color: 'transparent' }}>·</div>}
+                            </div>
+                        );
+                        const OUR_EXPLAIN = 'תחזית מימוש שלנו: שנת אכלוס משוערת לפי מנוע אחוזי-המימוש של המערכת — נגזרת משלב התכנון/רישוי הנוכחי של התכנית, משך הזמן שחלף בשלב, וגודל התכנית. אדום = השנה מאוחרת מסיום החומש (פיגור); הקדמה אינה נחשבת חריגה.';
+                        // Lazy-load SheetJS only when the user exports (no impact on initial load).
+                        const ensureXlsx = () => new Promise((resolve, reject) => {
+                            if (window.XLSX) return resolve(window.XLSX);
+                            const sc = document.createElement('script');
+                            sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                            sc.onload = () => resolve(window.XLSX); sc.onerror = reject;
+                            document.head.appendChild(sc);
+                        });
+                        const sumN = (arr) => (arr || []).slice(0, N).reduce((a, b) => a + b, 0);
+                        const cmX = (v) => (v && v !== 'לא רלוונטי' && v !== 'עתידי') ? v : '';
+                        const num1 = (x) => (x == null ? '' : Math.round(x * 10) / 10);
+                        // Multi-sheet xlsx: a סיכום overview + one sheet per domain. תת-שכונה column for filtering.
+                        const exportXlsx = async () => {
+                            let XLSX;
+                            try { XLSX = await ensureXlsx(); } catch (e) { alert('שגיאה בטעינת ספריית האקסל'); return; }
+                            const wb = XLSX.utils.book_new();
+                            wb.Workbook = { Views: [{ RTL: true }] };
+                            const stats = rep.sections.map(s => {
+                                const d = s.demand;
+                                const demandCum = d ? (d.demand_existing + sumN(d.add_demand)) : null;
+                                const supplyCum = d ? (d.supply_existing + sumN(d.add_supply)) : null;
+                                const lateItems = s.items.filter(outOfH);
+                                return { s, d, demandCum, supplyCum, bal: d ? supplyCum - demandCum : null,
+                                    lateClasses: lateItems.reduce((a, f) => a + (f['classes_c' + N] || 0), 0), lateCount: lateItems.length };
+                            });
+                            // ── סיכום sheet ──
+                            const sumAoa = [['תחזית חינוך — חומש ' + N + ' (' + RANGES[N] + ') · ' + nbLabel]];
+                            if (ctxN) sumAoa.push(['כלל האוכלוסייה הצפויה', ctxN.pop_total, 'תוספת יח"ד בחומש', ctxN.units_added, 'מצב קיים (יח"ד)', ctxScope.units_existing, 'תושבים', ctxScope.residents_now]);
+                            sumAoa.push([]);
+                            sumAoa.push(['תחום', 'כיתות קיימות', 'נדרש עד חומש ' + N, 'מתוכנן בחומש ' + N, 'מאזן צפוי', 'כיתות בפיגור', 'מוסדות מתוכננים', 'מוסדות בפיגור']);
+                            stats.forEach(({ s, d, demandCum, bal, lateClasses, lateCount }) =>
+                                sumAoa.push([s.label, d ? d.supply_existing : '', num1(demandCum), num1(s.plannedClasses), num1(bal), num1(lateClasses), s.items.length, lateCount]));
+                            const wsSum = XLSX.utils.aoa_to_sheet(sumAoa);
+                            wsSum['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 11 }, { wch: 12 }, { wch: 16 }, { wch: 14 }];
+                            XLSX.utils.book_append_sheet(wb, wsSum, 'סיכום');
+                            // ── one sheet per domain ──
+                            stats.forEach(({ s, d, demandCum, supplyCum, bal, lateClasses, lateCount }) => {
+                                const aoa = [[s.label + ' — חומש ' + N + ' (' + RANGES[N] + ') · ' + nbLabel]];
+                                if (d) aoa.push(['כיתות קיימות', d.supply_existing, 'נדרש עד חומש ' + N, num1(demandCum), 'מתוכנן', num1(s.plannedClasses), 'מאזן צפוי', num1(bal), 'כיתות בפיגור', num1(lateClasses) + ' (' + lateCount + ' מוסדות)']);
+                                else aoa.push(['אין נתוני צורך']);
+                                aoa.push([]);
+                                aoa.push(['תת-שכונה', 'מוסד', 'כתובת / פרטים', 'כיתות', 'סטטוס תכנית בפועל', 'תחזית מימוש שלנו', 'בפיגור']);
+                                s.items.forEach(f => aoa.push([
+                                    f.neighborhood || '', f.name || '',
+                                    [f.address, cmX(f.pikuach), cmX(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)'),
+                                    f['classes_c' + N] || 0, f._statusLabel, ourText(f) + (isEstimate(f) ? ' (הערכה)' : ''), outOfH(f) ? 'פיגור' : '']));
+                                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                                ws['!cols'] = [{ wch: 13 }, { wch: 34 }, { wch: 42 }, { wch: 7 }, { wch: 18 }, { wch: 17 }, { wch: 11 }];
+                                XLSX.utils.book_append_sheet(wb, ws, s.label.slice(0, 28));
+                            });
+                            XLSX.writeFile(wb, 'תחזית_חינוך_חומש' + N + '.xlsx');
+                        };
+                        const printReport = () => {
+                            const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const cmP = (v) => (v && v !== 'לא רלוונטי' && v !== 'עתידי') ? v : '';
+                            const css = 'body{font-family:Assistant,Arial,sans-serif;padding:22px;color:#222}h1{font-size:20px;margin:0 0 6px}.ctx{font-size:13px;color:#333;margin-bottom:18px;padding:10px 14px;background:#eef3fb;border:1px solid #cfe;border-radius:8px}h2{font-size:16px;margin:20px 0 2px;color:#0f3460}.stats{font-size:12.5px;color:#333;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid #0f3460}table{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:4px}th,td{border:1px solid #bbb;padding:6px 8px;text-align:right;vertical-align:top}th{background:#0f3460;color:#fff}tr:nth-child(even){background:#f5f7fb}.late{color:#c62828;font-weight:bold}.addr{color:#777;font-size:11px}.cls{text-align:center;font-weight:bold;font-size:14px}@media print{h2{page-break-after:avoid}table{page-break-inside:auto}tr{page-break-inside:avoid}}';
+                            let html = '<html dir="rtl"><head><meta charset="utf-8"><title>תחזית חינוך — חומש ' + N + '</title><style>' + css + '</style></head><body>';
+                            html += '<h1>תחזית חינוך — חומש ' + N + ' (' + RANGES[N] + ')</h1>';
+                            if (ctxN) html += '<div class="ctx"><b>' + esc(nbLabel) + '</b> · עד סוף חומש ' + N + ': כלל האוכלוסייה הצפויה <b>' + ctxN.pop_total.toLocaleString() + '</b> נפש · תוספת בחומש <b>+' + ((ctxN.units_added || 0).toLocaleString()) + '</b> יח״ד · מצב קיים: ' + ctxScope.units_existing.toLocaleString() + ' יח״ד / ' + ctxScope.residents_now.toLocaleString() + ' תושבים</div>';
+                            const sumNp = (arr) => (arr || []).slice(0, N).reduce((a, b) => a + b, 0);
+                            rep.sections.forEach(s => {
+                                const d = s.demand;
+                                const demandCum = d ? (d.demand_existing + sumNp(d.add_demand)) : null;
+                                const supplyCum = d ? (d.supply_existing + sumNp(d.add_supply)) : null;
+                                const bal = d ? (supplyCum - demandCum) : null;
+                                const lateItems = s.items.filter(outOfH);
+                                const lateClasses = lateItems.reduce((a, f) => a + (f['classes_c' + N] || 0), 0);
+                                html += '<h2>' + esc(s.label) + '</h2>';
+                                html += '<div class="stats">';
+                                if (d) html += 'כיתות קיימות <b>' + fmt(d.supply_existing) + '</b> · נדרש עד חומש ' + N + ' <b>' + fmt(demandCum) + '</b> · מאזן צפוי <b>' + (bal >= 0 ? '+' : '') + fmt(bal) + '</b> · ';
+                                html += 'מתוכנן בחומש ' + N + ': <b>' + fmt(s.plannedClasses) + '</b> (' + s.items.length + ' מוסדות) · כיתות בפיגור: <b>' + fmt(lateClasses) + '</b> (' + lateItems.length + ' מוסדות)';
+                                html += '</div>';
+                                if (!s.items.length) { html += '<div style="font-size:12px;color:#999;margin-bottom:8px">אין מוסדות שהפרויקטור תכנן לחומש זה.</div>'; return; }
+                                html += '<table><thead><tr><th>מוסד</th><th>כתובת / פרטים</th><th>כיתות</th><th>סטטוס תכנית בפועל</th><th>תחזית מימוש שלנו</th></tr></thead><tbody>';
+                                s.items.forEach(f => {
+                                    const late = outOfH(f);
+                                    const addr = [f.address, cmP(f.pikuach), cmP(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)');
+                                    html += '<tr><td>' + esc(f.name) + (f._fieldObs ? ' (תצפית שטח)' : '') + '</td>'
+                                        + '<td class="addr">' + esc(addr) + '</td>'
+                                        + '<td class="cls">' + fmt(f['classes_c' + N]) + '</td>'
+                                        + '<td>' + esc(f._statusLabel) + '</td>'
+                                        + '<td class="' + (late ? 'late' : '') + '">' + esc(ourText(f)) + (isEstimate(f) ? ' (הערכה)' : '') + '</td></tr>';
+                                });
+                                html += '</tbody></table>';
+                            });
+                            html += '</body></html>';
+                            const w = window.open('', '_blank');
+                            w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 350);
+                        };
+                        return (
+                            <div className="units-overlay" onClick={() => setShowEduForecast(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1180, width: '96%' }}>
+                                    <div className="units-header" style={{ background: COLORS[N] }}>
+                                        <h2>תחזית חינוך — חומש {N} ({RANGES[N]})</h2>
+                                        <button className="units-close" onClick={() => setShowEduForecast(false)}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
+                                        {/* חומש switcher */}
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>חומש:</span>
+                                            {[1, 2, 3].map(c => (
+                                                <button key={c} onClick={() => setEduForecastChumash(c)} style={{ padding: '5px 14px', borderRadius: 16, border: '1.5px solid ' + COLORS[c], cursor: 'pointer', fontSize: 12, fontWeight: 700, background: c === N ? COLORS[c] : 'transparent', color: c === N ? '#fff' : '#d8def0' }}>
+                                                    חומש {c} <span style={{ fontWeight: 400, fontSize: 10 }}>({RANGES[c]})</span>
+                                                </button>
+                                            ))}
+                                            <span style={{ flex: 1 }} />
+                                            <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #2e7d32', color: '#81c784', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={exportXlsx}>ייצוא אקסל</button>
+                                            <button style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #6b7aa0', color: '#c0c9e0', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={printReport}>הדפסה</button>
+                                        </div>
+                                        {/* sub-neighborhood filter */}
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>תת-שכונה:</span>
+                                            {NB_OPTS.map(([val, lbl]) => (
+                                                <button key={val} onClick={() => setEduForecastNb(val)} style={{ padding: '4px 12px', borderRadius: 16, border: '1px solid ' + (val === eduForecastNb ? '#00897b' : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: val === eduForecastNb ? 700 : 400, background: val === eduForecastNb ? '#00897b' : 'transparent', color: val === eduForecastNb ? '#fff' : '#9fb0d0' }}>{lbl}</button>
+                                            ))}
+                                        </div>
+
+                                        {/* area context banner — population & units for the selected חומש + scope (same for all domains) */}
+                                        {ctxN && (
+                                            <div style={{ background: 'linear-gradient(135deg,#16213e,#0f3460)', border: '1px solid #2a3a5e', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
+                                                <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 8 }}>{nbLabel} · עד סוף חומש {N} ({RANGES[N]})</div>
+                                                <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: 12, color: '#9fb0d0' }}>כלל האוכלוסייה הצפויה</div>
+                                                        <div style={{ fontSize: 30, fontWeight: 800, color: '#4db6ac', lineHeight: 1.1 }}>{ctxN.pop_total.toLocaleString()} <span style={{ fontSize: 13, fontWeight: 400, color: '#9fb0d0' }}>נפש</span></div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: 12, color: '#9fb0d0' }}>תוספת יח״ד בחומש</div>
+                                                        <div style={{ fontSize: 30, fontWeight: 800, color: '#ffb74d', lineHeight: 1.1 }}>{ctxN.units_added != null ? ('+' + ctxN.units_added.toLocaleString()) : '—'} <span style={{ fontSize: 13, fontWeight: 400, color: '#9fb0d0' }}>יח״ד</span></div>
+                                                    </div>
+                                                    <div style={{ fontSize: 12, color: '#8a9bc0', paddingBottom: 4 }}>
+                                                        מצב קיים: {ctxScope.units_existing.toLocaleString()} יח״ד · {ctxScope.residents_now.toLocaleString()} תושבים<br />
+                                                        תוספת אוכלוסייה בחומש: ~{ctxN.pop_added.toLocaleString()} נפש
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {rep.sections.map(s => {
+                                            const dd = s.demand;
+                                            const sum = (arr) => arr.slice(0, N).reduce((a, b) => a + b, 0);
+                                            const addDemThis = dd ? (dd.add_demand[N - 1] || 0) : 0;
+                                            const demandCum = dd ? (dd.demand_existing + sum(dd.add_demand)) : null;   // need by end of חומש N
+                                            const supplyCum = dd ? (dd.supply_existing + sum(dd.add_supply)) : null;   // supply by end of חומש N
+                                            const balanceCum = dd ? (supplyCum - demandCum) : null;                    // projected balance
+                                            const lateItems = s.items.filter(outOfH);
+                                            const lateCount = lateItems.length;
+                                            const lateClasses = lateItems.reduce((a, f) => a + (f['classes_c' + N] || 0), 0);
+                                            return (
+                                            <div key={s.key} style={{ marginBottom: 26, border: '1px solid #2a2a4a', borderRadius: 12, overflow: 'hidden', background: '#13132b' }}>
+                                                {/* dashboard header */}
+                                                <div style={{ background: 'linear-gradient(135deg,#16213e,#0f3460)', padding: '12px 14px', borderBottom: '1px solid #2a3a5e' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                                        <span style={{ fontWeight: 800, fontSize: 18, color: '#fff' }}>{s.label}</span>
+                                                        {!dd && <span style={{ fontSize: 11, color: '#8a9bc0' }}>· אין נתוני צורך</span>}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                                        {tile('כיתות קיימות', dd ? fmt(dd.supply_existing) : '—', '#4db6ac', <span style={{ color: '#8a9bc0' }}>מצב קיים</span>)}
+                                                        {tile('נדרש עד חומש ' + N, demandCum != null ? fmt(demandCum) : '—', '#64b5f6', dd ? <span style={{ color: '#8a9bc0' }}>קיים {fmt(dd.demand_existing)}{addDemThis ? ' + ' + fmt(addDemThis) + ' גידול' : ''}</span> : null)}
+                                                        {tile('מתוכנן בחומש ' + N, fmt(s.plannedClasses), '#ba68c8', <span style={{ color: '#8a9bc0' }}>{s.items.length} מוסדות</span>)}
+                                                        {tile('מאזן צפוי עד חומש ' + N, balanceCum != null ? (balanceCum >= 0 ? '+' : '') + fmt(balanceCum) : '—', balanceCum != null && balanceCum < 0 ? '#ff6b6b' : '#81c784', balanceCum != null ? <span style={{ color: '#8a9bc0' }}>{balanceCum >= 0 ? 'עודף' : 'חוסר'} · היצע {fmt(supplyCum)}</span> : null)}
+                                                        {tile('כיתות בפיגור', fmt(lateClasses), lateClasses ? '#ff6b6b' : '#81c784', <span style={{ color: '#8a9bc0' }}>{lateCount}/{s.items.length} מוסדות בפיגור</span>)}
+                                                    </div>
+                                                </div>
+                                                {/* institution list */}
+                                                {s.items.length === 0 ? (
+                                                    <div style={{ padding: '12px 14px', fontSize: 12, color: '#8a9bc0' }}>אין מוסדות שהפרויקטור תכנן לחומש זה.</div>
+                                                ) : (
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 14px', background: '#0f0f24', fontSize: 10.5, color: '#8a9bc0', borderBottom: '1px solid #2a2a4a' }}>
+                                                            <span style={{ flex: 1 }}>מוסד</span>
+                                                            <span style={{ width: 54, textAlign: 'center' }}>כיתות</span>
+                                                            <span style={{ width: 110, textAlign: 'center' }}>סטטוס תכנית בפועל</span>
+                                                            <span title={OUR_EXPLAIN} style={{ width: 112, textAlign: 'left', cursor: 'help' }}>תחזית מימוש שלנו (?)</span>
+                                                        </div>
+                                                        {s.items.map((f, i) => {
+                                                            const late = outOfH(f);
+                                                            const est = isEstimate(f);
+                                                            const cm = (v) => (v && v !== 'לא רלוונטי' && v !== 'עתידי') ? v : null;
+                                                            const meta = [f.address, cm(f.pikuach), cm(f.notes)].filter(Boolean).join(' · ');
+                                                            return (
+                                                            <div key={i} onClick={() => zoomToEduFacility(f)} title={f._taba ? 'קליק לזום במפה' : 'אין תכנית סטטוטורית מקושרת — מיקום לפי כתובת'}
+                                                                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 14px', borderTop: i ? '1px solid #22223e' : 'none', cursor: f._taba ? 'pointer' : 'default', background: late ? '#2a1620' : 'transparent' }}>
+                                                                <span style={{ flex: 1, fontSize: 13, color: '#e8ebf5' }}>
+                                                                    <span style={{ fontWeight: 600 }}>{f.name}</span>
+                                                                    {f._fieldObs ? <span style={{ color: '#9fb0d0', fontSize: 10 }}> · תצפית שטח</span> : null}
+                                                                    {!f._taba ? <span style={{ color: '#ff6b6b', fontSize: 11 }}> (ללא תכנית)</span> : null}
+                                                                    {meta ? <span style={{ display: 'block', fontSize: 11, color: '#8a9bc0', marginTop: 1 }}>{meta}</span> : null}
+                                                                </span>
+                                                                <span style={{ width: 54, textAlign: 'center', fontSize: 18, fontWeight: 800, color: '#cfd6ea' }}>{fmt(f['classes_c' + N])}</span>
+                                                                <span style={{ width: 110, textAlign: 'center', paddingTop: 2 }}>{badge(f._statusLabel, f._statusColor)}</span>
+                                                                <span style={{ width: 112, textAlign: 'left', fontSize: 13, fontWeight: late ? 800 : 600, color: late ? '#ff6b6b' : (est ? '#9fb0d0' : '#81c784'), whiteSpace: 'nowrap', paddingTop: 2 }}
+                                                                    title={est ? 'הערכת הפרויקטור — אין תכנית סטטוטורית לחישוב תחזית' : (late ? ('צפוי להתממש ב-' + fcYear(f) + ' — מאוחר מסיום חומש ' + N + ' (' + RANGES[N] + '), בפיגור') : undefined)}>
+                                                                    {ourText(f)}{est ? <span style={{ fontSize: 9, fontWeight: 400, color: '#6b7aa0' }}> (הערכה)</span> : null}
+                                                                </span>
+                                                            </div>
+                                                        ); })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            );
+                                        })}
+                                        <div style={{ fontSize: 11, color: '#8a9bc0', marginTop: 4, lineHeight: 1.6 }}>
+                                            "ללא תכנית" = המלצת הצוות שטרם עוגנה בתב"ע (מוצגת כתובת + הערכת הפרויקטור). <b style={{ color: '#c0c9e0' }}>תחזית מימוש שלנו</b> = שנת אכלוס + אחוז מימוש לפי מנוע אחוזי-המימוש (שלב תכנון/רישוי, ותק בשלב, גודל). <span style={{ color: '#ff6b6b' }}>אדום = השנה מאוחרת מסיום החומש (פיגור)</span> · הקדמה אינה חריגה · קליק על שורה מזניק זום במפה.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── Reports Menu Modal ── */}
                     {showReportsMenu && (
                         <div className="units-overlay" onClick={() => setShowReportsMenu(false)}>
@@ -20704,6 +21086,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">מנורמל ליח״ד</span>
                                                     <span className="report-desc">השוואה לפי המלצות + תקציב לכל 1,000 יח״ד</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setEduForecastChumash(1); setShowEduForecast(true); }}>
+                                                <span className="report-icon">🎓</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">תחזית חינוך לפי חומש מול סטטוס</span>
+                                                    <span className="report-desc">צורך מול מתוכנן (פרויקטור) מול מצב בפועל — 4 תחומים, לפי חומש</span>
                                                 </div>
                                             </button>
                                         </div>
