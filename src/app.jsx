@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-16-edu-forecast14';
+        const APP_VERSION = '2026-06-16-edu-forecast16';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -16561,19 +16561,38 @@
             // Zoom the map to a forecast facility — prefer the plan polygon, fall back to ITM point.
             function zoomToEduFacility(fac) {
                 try {
-                    const gd = geoDataRef.current;
+                    const map = mapInstanceRef.current; const gd = geoDataRef.current;
+                    if (!map) return;
+                    let bounds = null, latlng = null;
                     if (fac._taba && gd && gd.plans && gd.plans.features) {
                         const pf = gd.plans.features.find(f => String(f.properties.taba || '').trim() === fac._taba);
-                        if (pf && pf.geometry && mapInstanceRef.current) {
-                            const gj = L.geoJSON(pf);
-                            const b = gj.getBounds();
-                            if (b.isValid()) { mapInstanceRef.current.fitBounds(b, { maxZoom: 17, padding: [40, 40] }); setShowEduForecast(false); return; }
-                        }
+                        if (pf && pf.geometry) { const b = L.geoJSON(pf).getBounds(); if (b.isValid()) { bounds = b; latlng = b.getCenter(); } }
                     }
-                    if (fac.x_itm && fac.y_itm && window.proj4 && window.proj4.defs('EPSG:2039') && mapInstanceRef.current) {
-                        const [lng, lat] = window.proj4('EPSG:2039', 'EPSG:4326', [fac.x_itm, fac.y_itm]);
-                        mapInstanceRef.current.setView([lat, lng], 17); setShowEduForecast(false);
+                    if (!latlng && fac.x_itm && fac.y_itm && window.proj4 && window.proj4.defs('EPSG:2039')) {
+                        const [lng, lat] = window.proj4('EPSG:2039', 'EPSG:4326', [fac.x_itm, fac.y_itm]); latlng = L.latLng(lat, lng);
                     }
+                    if (!latlng) return; // no location to show
+                    setShowEduForecast(false);
+                    if (bounds) map.fitBounds(bounds, { maxZoom: 17, padding: [40, 40] }); else map.setView(latlng, 17);
+                    if (window.__eduFcHighlight) { try { map.removeLayer(window.__eduFcHighlight); } catch (e) { } }
+                    // popup summary
+                    let fcst = '—';
+                    if (fac.matebinui_year) fcst = 'מסירה ' + fac.matebinui_year + ' — מטה בינוי' + (fac.matebinui_status ? ' (' + fac.matebinui_status + ')' : '');
+                    else if (fac._ourEstYear) fcst = 'צפי ' + fac._ourEstYear + (fac._ourMimushPct != null ? ' · ' + Math.round(fac._ourMimushPct) + '%' : '');
+                    else if (fac.est_year) fcst = '≈' + fac.est_year + ' (הערכת פרויקטור)';
+                    const land = { 'מגרש ציבורי': 'שטח חום (שב"צ)', 'שטח ציבורי מבונה': 'הפרשה מבונה' }[fac.area_type] || '';
+                    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const html = '<div style="font-family:Assistant,Arial,sans-serif;direction:rtl;min-width:210px">'
+                        + '<div style="font-weight:800;font-size:14px;color:#00695c;margin-bottom:4px">🎓 ' + esc(fac.name) + '</div>'
+                        + '<div style="font-size:12px;line-height:1.8">'
+                        + '<b>' + esc(fac.edu_stage || fac.edu_type || '') + '</b>' + (fac.classes_potential ? ' · ' + fac.classes_potential + ' כיתות' : '') + (land ? ' · ' + land : '') + '<br/>'
+                        + 'סטטוס תכנית: <b>' + esc(fac._statusLabel || '—') + '</b><br/>'
+                        + 'מימוש צפוי: <b>' + esc(fcst) + '</b>'
+                        + (fac.address ? '<br/><span style="color:#777">📍 ' + esc(fac.address) + '</span>' : '')
+                        + (!fac._taba ? '<br/><span style="color:#c62828">ללא תכנית סטטוטורית מקושרת</span>' : '')
+                        + '</div></div>';
+                    window.__eduFcHighlight = L.circleMarker(latlng, { radius: 16, color: '#00897b', weight: 3, fillColor: '#26a69a', fillOpacity: 0.35 })
+                        .addTo(map).bindPopup(html, { maxWidth: 320 }).openPopup();
                 } catch (e) { console.warn('[EduForecast] zoom failed', e); }
             }
             // ─── Permit category — aligned with YK official request_type taxonomy ─
@@ -20638,6 +20657,31 @@
                         const RANGES = { 1: '2024–2030', 2: '2031–2035', 3: '2036–2040' };
                         // סוג השטח → marker: מגרש ציבורי = שטח חום · שטח ציבורי מבונה = הפרשה מבונה
                         const LAND_KIND = { 'מגרש ציבורי': { t: 'שטח חום', c: '#a1887f' }, 'שטח ציבורי מבונה': { t: 'הפרשה מבונה', c: '#7986cb' } };
+                        // Resolve שטח חום (שב"צ) vs הפרשה מבונה. Yotam's סוג השטח is authoritative;
+                        // when blank, derive from the plan: shavatz-only=שב"צ, hafrash-only=הפרשה,
+                        // both=match the facility type against the program text (school→שב"צ, גן/מעון→הפרשה).
+                        const SHATZ = { t: 'שטח חום', c: '#a1887f' }, HAFR = { t: 'הפרשה מבונה', c: '#7986cb' };
+                        const landKindOf = (f) => {
+                            if (f.area_type && LAND_KIND[f.area_type]) return LAND_KIND[f.area_type];
+                            const p = f._plan;
+                            if (!p) return null;
+                            const shProg = p.shavatz_out_prog || '', hfProg = p.hafrash_prg || '';
+                            const shHas = !!(p.shavatz_out_sqm || p.shavatz_out_plot || shProg);
+                            const hfHas = !!(p.hafrash_sqm || hfProg);
+                            if (!shHas && !hfHas) return null;
+                            const d = (o) => ({ ...o, dv: true }); // dv = derived from plan
+                            if (shHas && !hfHas) return d(SHATZ);
+                            if (hfHas && !shHas) return d(HAFR);
+                            const st = f.edu_stage || '';
+                            const kws = st.indexOf('מעון') >= 0 ? ['מעון']
+                                : st.indexOf('גן') >= 0 ? ['גני', 'כיתות גן', 'גן יל']
+                                : (st.indexOf('יסודי') >= 0 || st.indexOf('ספר') >= 0) ? ['בית ספר', 'בי"ס', 'יסודי']
+                                : ['על יסוד', 'תיכון', 'חטיב'];
+                            const inSh = kws.some(k => shProg.indexOf(k) >= 0), inHf = kws.some(k => hfProg.indexOf(k) >= 0);
+                            if (inHf && !inSh) return d(HAFR);
+                            if (inSh && !inHf) return d(SHATZ);
+                            return d({ t: 'שב"צ/הפרשה', c: '#8d6e63' });
+                        };
                         const COLORS = { 1: '#b71c1c', 2: '#e65100', 3: '#1a237e' };
                         const RY = { 1: [2024, 2030], 2: [2031, 2035], 3: [2036, 2040] };
                         const [yStart, yEnd] = RY[N];
@@ -20717,7 +20761,7 @@
                                 aoa.push([]);
                                 aoa.push(['תת-שכונה', 'מוסד', 'סוג שטח', 'כתובת / פרטים', 'כיתות', 'סטטוס תכנית בפועל', 'מימוש צפוי', 'מטה בינוי - מסירה', 'מטה בינוי - סטטוס', 'בפיגור']);
                                 s.items.forEach(f => aoa.push([
-                                    f.neighborhood || '', f.name || '', (LAND_KIND[f.area_type] || {}).t || '',
+                                    f.neighborhood || '', f.name || '', (lk => lk ? lk.t + (lk.dv ? ' (עפ"י תכנית)' : '') : '')(landKindOf(f)),
                                     [f.address, cmX(f.pikuach), cmX(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)'),
                                     f['classes_c' + N] || 0, f._statusLabel, ourText(f) + (isEstimate(f) ? ' (הערכה)' : ''),
                                     f.matebinui_year || '', f.matebinui_status || '', outOfH(f) ? 'פיגור' : '']));
@@ -20754,7 +20798,7 @@
                                     const addr = [f.address, cmP(f.pikuach), cmP(f.notes)].filter(Boolean).join(' · ') + (f._taba ? '' : ' (ללא תכנית)');
                                     const mb = f.matebinui_year ? (f.matebinui_status || '') : '';
                                     html += '<tr><td>' + esc(f.name) + (f._fieldObs ? ' (תצפית שטח)' : '') + '</td>'
-                                        + '<td>' + esc((LAND_KIND[f.area_type] || {}).t || '') + '</td>'
+                                        + '<td>' + esc((lk => lk ? lk.t + (lk.dv ? ' (עפ"י תכנית)' : '') : '')(landKindOf(f))) + '</td>'
                                         + '<td class="addr">' + esc(addr) + '</td>'
                                         + '<td class="cls">' + fmt(f['classes_c' + N]) + '</td>'
                                         + '<td>' + esc(f._statusLabel) + '</td>'
@@ -20858,14 +20902,14 @@
                                                             const est = isEstimate(f);
                                                             const cm = (v) => (v && v !== 'לא רלוונטי' && v !== 'עתידי') ? v : null;
                                                             const meta = [f.address, cm(f.pikuach), cm(f.notes)].filter(Boolean).join(' · ');
-                                                            const land = LAND_KIND[f.area_type];
+                                                            const land = landKindOf(f);
                                                             const mb = f.matebinui_year;
                                                             return (
-                                                            <div key={i} onClick={() => zoomToEduFacility(f)} title={f._taba ? 'קליק לזום במפה' : 'אין תכנית סטטוטורית מקושרת — מיקום לפי כתובת'}
+                                                            <div key={i} onClick={() => zoomToEduFacility(f)} title={f._taba ? 'קליק לזום והצגה במפה' : 'אין מיקום במפה — מוסד ללא תכנית/קואורדינטות'}
                                                                 style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 14px', borderTop: i ? '1px solid #22223e' : 'none', cursor: f._taba ? 'pointer' : 'default', background: late ? '#2a1620' : 'transparent' }}>
                                                                 <span style={{ flex: 1, fontSize: 13, color: '#e8ebf5' }}>
                                                                     <span style={{ fontWeight: 600 }}>{f.name}</span>
-                                                                    {land ? <span style={{ background: land.c, color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, marginRight: 6, whiteSpace: 'nowrap' }}>{land.t}</span> : null}
+                                                                    {land ? <span title={land.dv ? 'נגזר מנתוני התכנית (לא צוין במפורש)' : undefined} style={{ background: land.c, color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, marginRight: 6, whiteSpace: 'nowrap', opacity: land.dv ? 0.7 : 1 }}>{land.t}{land.dv ? '~' : ''}</span> : null}
                                                                     {f._fieldObs ? <span style={{ color: '#9fb0d0', fontSize: 10 }}> · תצפית שטח</span> : null}
                                                                     {!f._taba ? <span style={{ color: '#ff6b6b', fontSize: 11 }}> (ללא תכנית)</span> : null}
                                                                     {meta ? <span style={{ display: 'block', fontSize: 11, color: '#8a9bc0', marginTop: 1 }}>{meta}</span> : null}
@@ -20886,7 +20930,7 @@
                                         })}
                                         <div style={{ fontSize: 11, color: '#8a9bc0', marginTop: 4, lineHeight: 1.6 }}>
                                             "ללא תכנית" = המלצת הצוות שטרם עוגנה בתב"ע (מוצגת כתובת + הערכת הפרויקטור). <b style={{ color: '#c0c9e0' }}>מימוש צפוי</b>: <span style={{ color: '#ffb74d' }}>מטה בינוי</span> (מועד מסירה רשמי) גובר על <span style={{ color: '#81c784' }}>מנוע אחוזי-המימוש שלנו</span> שגובר על <span style={{ color: '#9fb0d0' }}>הערכת הפרויקטור</span>. <span style={{ color: '#ff6b6b' }}>אדום = מאוחר מסיום החומש (פיגור)</span> · הקדמה אינה חריגה · קליק על שורה מזניק זום במפה.
-                                            <br /><span style={{ background: '#a1887f', color: '#fff', borderRadius: 4, padding: '0 5px' }}>שטח חום</span> = מגרש ציבורי עצמאי · <span style={{ background: '#7986cb', color: '#fff', borderRadius: 4, padding: '0 5px' }}>הפרשה מבונה</span> = הקצאת כיתות בתוך פרויקט · <span style={{ color: '#ffb74d' }}>מטה בינוי</span> = מועד מסירה וסטטוס בנייה רשמיים.
+                                            <br /><span style={{ background: '#a1887f', color: '#fff', borderRadius: 4, padding: '0 5px' }}>שטח חום</span> = מגרש ציבורי עצמאי · <span style={{ background: '#7986cb', color: '#fff', borderRadius: 4, padding: '0 5px' }}>הפרשה מבונה</span> = הקצאת כיתות בתוך פרויקט · סימון עם <b>~</b> = נגזר מנתוני התכנית (לא צוין במפורש אצל יותם) · <span style={{ color: '#ffb74d' }}>מטה בינוי</span> = מועד מסירה וסטטוס בנייה רשמיים.
                                         </div>
                                     </div>
                                 </div>
