@@ -7972,6 +7972,22 @@
             const ALLOC_LBLS = { maon:'מעון יום', gan:'גן ילדים', yesodi:'בי"ס יסודי', al_yesodi:'בי"ס על-יסודי', tipat_chalav:'טיפת חלב', clinic:'מרפאה', matnas:'מתנ"ס/מרכז קהילתי', welfare_dept:'לשכת רווחה', noar_club:'מועדון נוער', elderly_club:'מועדון קשיש', elderly_day:'מרכז יום לקשיש', synagogue:'בית כנסת', mikve:'מקווה', sport_hall:'אולם ספורט', library:'ספרייה' };
             function renderAllocationsModal({ candidatePlans, scopeLabel }) {
                 const gd = geoDataRef.current || {};
+                // A plan that already has at least one building permit is reported with the
+                // status "היתרים" (blue) instead of its statutory status (e.g. "מאושרת"/"אישור").
+                // "Has permit" reuses the same definition as the היתרים map filter:
+                // getPermitsForTaba(taba).length > 0 (reads all_permits.json, infra/hidden-gated).
+                const PERMIT_STATUS_LABEL = 'היתרים';
+                const PERMIT_STATUS_COLOR = '#4ba1f0';
+                const _hasPermitCache = {};
+                function planHasPermit(taba) {
+                    const t = String(taba || '').trim();
+                    if (!t) return false;
+                    if (_hasPermitCache[t] === undefined) _hasPermitCache[t] = getPermitsForTaba(t).length > 0;
+                    return _hasPermitCache[t];
+                }
+                function effectivePlanStatus(taba, status) {
+                    return planHasPermit(taba) ? PERMIT_STATUS_LABEL : status;
+                }
                 const propsByTaba = {};
                 if (gd.plans) gd.plans.features.forEach(f => {
                     const t = String((f.properties || {}).taba || '').trim();
@@ -8046,18 +8062,21 @@
                     });
                 });
                 detailRows.sort((a, b) => (a.use < b.use ? -1 : a.use > b.use ? 1 : (a.taba < b.taba ? -1 : a.taba > b.taba ? 1 : 0)));
-                const planRows = detailRows.map(r =>
-                    '<tr style="border-bottom:1px solid #222">' +
+                const planRows = detailRows.map(r => {
+                    const hasPermit = planHasPermit(r.taba);
+                    const dispStatus = hasPermit ? PERMIT_STATUS_LABEL : r.status;
+                    const statusStyle = hasPermit ? 'color:' + PERMIT_STATUS_COLOR + ';font-weight:bold' : 'color:#999';
+                    return '<tr style="border-bottom:1px solid #222">' +
                     '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                     '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
-                    '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.status) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;' + statusStyle + '">' + esc(dispStatus) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
                     '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
                     '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (r.sqm > 0 ? Math.round(r.sqm).toLocaleString() : '—') + '</td>' +
                     '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.use) + '</td>' +
-                    '</tr>'
-                ).join('');
+                    '</tr>';
+                }).join('');
 
                 const kpi = (label, val, color) =>
                     '<div style="background:#1f1a16;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:120px">' +
@@ -8109,7 +8128,7 @@
                     PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
                     lines.push('');
                     lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
-                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
+                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(effectivePlanStatus(r.taba, r.status)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
