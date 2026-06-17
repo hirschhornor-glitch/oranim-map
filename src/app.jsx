@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-16-edu-forecast19';
+        const APP_VERSION = '2026-06-17-decision-summary4';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4078,6 +4078,7 @@
                 window.__meetings = {};
                 window.__objectionsPermits = {};
                 window.__treePermits = {};
+                window.__decisionSummaries = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4092,6 +4093,7 @@
                     ['__objectionsPermits', 'data/objections_permits.json'],
                     ['__treePermits', 'data/tree_permits.json'],
                     ['__eduForecast', 'data/education_forecast_gonenim.json'],
+                    ['__decisionSummaries', 'data/decision_summaries.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4505,6 +4507,7 @@
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
+                            else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
@@ -17495,6 +17498,17 @@
                 }
                 html += '</div>';
 
+                // ── Committee decision summary (status "במילוי תנאים להפקדה" only) ──
+                // After the district-committee deposit hearing a decision document is
+                // published; we summarize its spatial changes and link to it here.
+                const decision = (window.__decisionSummaries || {})[taba];
+                if (decision && normalizeStatus(status) === 'במילוי תנאים להפקדה') {
+                    const decFeatureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end;align-items:center;gap:8px">';
+                    html += `<button class="popup-btn-permit" data-action="show-decision" data-taba='${taba}' data-feature='${decFeatureJson}' style="background:#f56e05;border-color:#f56e05;color:#1a1a2e">📋 סיכום החלטת ועדה ←</button>`;
+                    html += '</div>';
+                }
+
                 const tabaForJump = props.taba || props.TABA || '';
                 const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
                 const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
@@ -17516,6 +17530,85 @@
                     html += `<button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}">התייחסות לתכנית אב ←</button>`;
                     html += '</div>';
                 }
+
+                html += '</div>';
+                return html;
+            }
+
+            // Decision-document summary popup — reached from the "סיכום החלטת ועדה"
+            // button in the plan popup (status "במילוי תנאים להפקדה"). Shows the
+            // spatial changes the plan will undergo before deposit-for-objections.
+            function buildDecisionPopup(dec, featureData, navInfo) {
+                const esc = (s) => String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const CAT_ICONS = {
+                    'תחום התכנית': '🗺️',
+                    'קווי בניין': '📐',
+                    'פרוגרמה': '🏘️',
+                    'שטח ציבורי': '🌳',
+                    'גובה וקומות': '🏢',
+                    'בינוי ועיצוב': '✏️',
+                    'תנועה וחניה': '🚗',
+                    'אחר': '•',
+                };
+                const orange = '#f56e05';
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+
+                // ── Header ──
+                const title = esc(dec.plan_name_he || dec.plan_name || 'החלטת ועדה');
+                html += `<div class="popup-header" style="background:linear-gradient(135deg, #3d2510, #0f3460);border-bottom:2px solid ${orange}">`;
+                html += `<div class="popup-header-title">${title}</div>`;
+                html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
+                html += `<span class="popup-status-badge" style="background:${orange}33;color:${orange};border:1px solid ${orange}">החלטת ועדה מחוזית</span>`;
+                if (dec.decision_date) html += `<span style="font-size:11px;color:#8899bb">${esc(dec.decision_date)}</span>`;
+                html += '</div>';
+                // meta line: committee · meeting # · outcome
+                const metaBits = [];
+                if (dec.committee) metaBits.push(esc(dec.committee));
+                if (dec.meeting_number) metaBits.push('ישיבה ' + esc(dec.meeting_number));
+                if (metaBits.length) html += `<div style="text-align:center;margin-top:5px;font-size:10px;color:#8899bb">${metaBits.join(' · ')}</div>`;
+                html += '</div>';
+
+                html += '<div class="popup-body">';
+                if (dec.outcome) {
+                    html += `<div class="popup-sub-row" style="margin-bottom:6px"><span style="color:${orange};font-weight:700">${esc(dec.outcome)}</span></div>`;
+                }
+                if (dec.summary) {
+                    html += `<div style="font-size:12px;line-height:1.5;color:#cdd6e6;margin-bottom:8px">${esc(dec.summary)}</div>`;
+                }
+
+                // ── Spatial changes by category ──
+                const changes = Array.isArray(dec.changes) ? dec.changes.filter(c => c && c.text) : [];
+                if (changes.length) {
+                    html += '<div class="popup-section-title" style="color:' + orange + '">מה ישתנה לקראת ההפקדה</div>';
+                    changes.forEach(c => {
+                        const icon = CAT_ICONS[c.category] || '•';
+                        html += '<div style="margin:6px 0;padding:6px 8px;background:#ffffff0a;border-right:3px solid ' + orange + ';border-radius:4px">';
+                        html += `<div style="font-weight:700;font-size:11px;color:#e6ecf7">${icon} ${esc(c.category || 'אחר')}</div>`;
+                        html += `<div style="font-size:11px;line-height:1.45;color:#bcc6d8;margin-top:3px">${esc(c.text)}</div>`;
+                        html += '</div>';
+                    });
+                }
+
+                // ── Conditions for deposit ──
+                const conditions = Array.isArray(dec.conditions) ? dec.conditions.filter(Boolean) : [];
+                if (conditions.length) {
+                    html += '<div class="popup-section-title" style="color:#8899bb;margin-top:8px">תנאים להפקדה</div>';
+                    html += '<ul style="margin:4px 0;padding-inline-start:18px;font-size:11px;line-height:1.5;color:#bcc6d8">';
+                    conditions.forEach(cond => { html += `<li>${esc(cond)}</li>`; });
+                    html += '</ul>';
+                }
+                html += '</div>'; // end body
+
+                // ── Footer: mavat link + back to plan ──
+                html += '<div class="popup-footer" style="flex-direction:row;justify-content:space-between;align-items:center;gap:8px">';
+                if (dec.mavat_url) {
+                    html += `<a class="popup-link" href="${esc(dec.mavat_url)}" target="_blank" rel="noopener">← מסמך ההחלטות במבא"ת</a>`;
+                }
+                const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                html += `<button class="popup-btn-permit" data-action="back-to-plan" data-feature='${featureJson}'>↩ חזרה לתכנית</button>`;
+                html += '</div>';
 
                 html += '</div>';
                 return html;
@@ -18054,6 +18147,22 @@
                         bindShavazPopupEvents(popup, originShavazProps, popup.getLatLng(), null, null, 0);
                         return;
                     }
+                    // ── Show committee decision summary (jump from plan popup) ──
+                    if (permitBtn && permitBtn.dataset.action === 'show-decision') {
+                        ev.stopPropagation();
+                        const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
+                        const dec = (window.__decisionSummaries || {})[permitBtn.dataset.taba];
+                        const fd = permitBtn.dataset.feature
+                            ? JSON.parse(permitBtn.dataset.feature)
+                            : { properties: allFeatures[currentIdx].properties };
+                        if (dec) {
+                            // widen for the decision content (more text/categories)
+                            popup.options.maxWidth = Math.min(440, window.innerWidth * 0.92);
+                            popup.setContent(buildDecisionPopup(dec, fd, navInfo));
+                            popup.update();
+                        }
+                        return;
+                    }
                     // ── Show all permits for a plan/tama38 ──
                     if (permitBtn && permitBtn.dataset.action === 'show-permits') {
                         ev.stopPropagation();
@@ -18095,7 +18204,9 @@
                         const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
                         if (permitBtn.dataset.action === 'back-to-plan') {
                             const fd = permitBtn.dataset.feature ? JSON.parse(permitBtn.dataset.feature) : { properties: allFeatures[currentIdx].properties };
+                            popup.options.maxWidth = popupMaxWidth();  // restore default (decision popup widened it)
                             popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
+                            popup.update();
                             setTimeout(() => setLayers(prev => ({
                                 ...prev,
                                 plans: !prev.plans ? true : prev.plans,
