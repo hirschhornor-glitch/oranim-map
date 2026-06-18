@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-17-decision-summary5';
+        const APP_VERSION = '2026-06-17-decision-summary6';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -18156,8 +18156,12 @@
                             ? JSON.parse(permitBtn.dataset.feature)
                             : { properties: allFeatures[currentIdx].properties };
                         if (dec) {
-                            // widen for the decision content (more text/categories)
-                            popup.options.maxWidth = Math.min(440, window.innerWidth * 0.92);
+                            // widen for the decision content (long text/categories) — the actual
+                            // width comes from the .decision-popup CSS override (the global rule
+                            // pins .leaflet-popup-content to 300px !important); maxWidth keeps autopan sane.
+                            popup.options.maxWidth = Math.min(520, window.innerWidth * 0.95);
+                            const el = popup.getElement();
+                            if (el) el.classList.add('decision-popup');
                             popup.setContent(buildDecisionPopup(dec, fd, navInfo));
                             popup.update();
                         }
@@ -18205,6 +18209,8 @@
                         if (permitBtn.dataset.action === 'back-to-plan') {
                             const fd = permitBtn.dataset.feature ? JSON.parse(permitBtn.dataset.feature) : { properties: allFeatures[currentIdx].properties };
                             popup.options.maxWidth = popupMaxWidth();  // restore default (decision popup widened it)
+                            const elbp = popup.getElement();
+                            if (elbp) elbp.classList.remove('decision-popup');
                             popup.setContent(buildPlanPopup(fd.properties, fd, navInfo));
                             popup.update();
                             setTimeout(() => setLayers(prev => ({
