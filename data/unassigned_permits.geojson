@@ -8,8 +8,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2123891,
-     31.7401414
+     35.2088587,
+     31.741232
     ]
    },
    "properties": {
@@ -19,7 +19,7 @@
     "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
     "request_description": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
     "address": "טבאליה 11",
-    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+    "sub_neighborhood": "בית צפאפא,שרפת",
     "neighborhood_yk": "בית צפפה",
     "geocode_type": "tertiary",
     "source": "unassigned (old plan, geocoded)",
@@ -79,32 +79,6 @@
     "visit_date": "2025-07-23",
     "eta_quarter": "",
     "developer": "האדיה מונתסר 050-5322899"
-   }
-  },
-  {
-   "type": "Feature",
-   "geometry": {
-    "type": "Point",
-    "coordinates": [
-     35.2011571,
-     31.7332114
-    ]
-   },
-   "properties": {
-    "file_number": "2019/0496.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "19/05/2024",
-    "request_type": "תמ\"א 38 - תוספות",
-    "request_description": "תוספת בניה עפ\"י תמ\"א 38.",
-    "address": "מבוא הצרי 12",
-    "sub_neighborhood": "בית צפאפא,שרפת",
-    "neighborhood_yk": "גילה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
-    "field_status": "טרם הוחל בבניה",
-    "visit_date": "2025-04-02",
-    "eta_quarter": "Q2\\2026",
-    "developer": "אדרכלית : הודיה מורן 0527688817\nיזם: אולביה צרפתי \nמנהלת חיים נאון מנהל עבודה: \n054-7516668"
    }
   },
   {
@@ -209,32 +183,6 @@
     "visit_date": "2025-12-28",
     "eta_quarter": "",
     "developer": ""
-   }
-  },
-  {
-   "type": "Feature",
-   "geometry": {
-    "type": "Point",
-    "coordinates": [
-     35.196118,
-     31.7403428
-    ]
-   },
-   "properties": {
-    "file_number": "2022/0272.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "25/08/2025",
-    "request_type": "בניה חדשה / בניין חדש",
-    "request_description": "בקשה עבור הקמת 2 בניינים חדשים למגורים על מסד מסחרי וגן ילדים - סה\"כ 179 יח\"ד",
-    "address": "הסיגלית",
-    "sub_neighborhood": "בית צפאפא,שרפת",
-    "neighborhood_yk": "גילה",
-    "geocode_type": "tertiary",
-    "source": "unassigned (old plan, geocoded)",
-    "field_status": "",
-    "visit_date": "",
-    "eta_quarter": "Q2\\2026",
-    "developer": "אחים ישראל-יונתן 0543122992"
    }
   },
   {

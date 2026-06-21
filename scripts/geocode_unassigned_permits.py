@@ -65,10 +65,20 @@ def main():
     polys = [(f["properties"].get("schn_nama", ""), shape(f["geometry"]).buffer(0).buffer(BUF))
              for f in subn["features"] if f.get("geometry")]
 
+    # YK neighborhoods outside Oranim's footprint — exclude by authoritative
+    # shemSchuna even if geocoding lands the point in a neighbouring in-scope
+    # polygon (e.g. גילה addresses geocoded into בית צפאפא/שרפאת).
+    OUT_OF_SCOPE_YK = ("גילה", "קריית שמואל", "קרית שמואל")
+
     feats = []
-    inside = outside = nogeo = 0
+    inside = outside = nogeo = skipped_yk = 0
     for r in unm:
         fn, addr = r["file_number"], r.get("address", "").strip()
+        hood_yk = r.get("neighborhood_yk", "")
+        if any(o in hood_yk for o in OUT_OF_SCOPE_YK):
+            skipped_yk += 1
+            print(f"  ⊘ {fn:15} '{addr[:22]:22}' -> excluded (YK שכונה={hood_yk}, מחוץ לתחום)")
+            continue
         if not addr:
             nogeo += 1
             print(f"  ✗ {fn:15} (no address)"); continue
@@ -98,7 +108,7 @@ def main():
     fc = {"type": "FeatureCollection", "source": "היתרים בשכונות אורנים שאינם משויכים לתב\"ע במאגר (תב\"עות ישנות)",
           "source_date": "2026-06-21", "features": feats}
     json.dump(fc, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print(f"\n{inside} inside footprint (written), {outside} outside, {nogeo} ungeocodable. -> {OUT}")
+    print(f"\n{inside} inside footprint (written), {skipped_yk} excluded by YK שכונה, {outside} outside, {nogeo} ungeocodable. -> {OUT}")
 
 
 if __name__ == "__main__":
