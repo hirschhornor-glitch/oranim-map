@@ -25,7 +25,8 @@ UA = "oranim-gis/1.0 (unassigned-permit mapping)"
 # light normalization of street names that trip Nominatim
 def variants(addr, hood):
     a = addr.replace('"', "").replace("'", "")
-    a2 = a.replace("רמבן", 'רמב"ן').replace("רמב״ן", 'רמב"ן')
+    a2 = (a.replace("רמבן", 'רמב"ן').replace("רמב״ן", 'רמב"ן')
+           .replace("חרלפ", 'חרל"פ').replace("חרל״פ", 'חרל"פ'))
     qs = []
     if hood:
         qs += [f"{a}, {hood}, ירושלים", f"{a2}, {hood}, ירושלים"]
@@ -68,7 +69,7 @@ def main():
     # YK neighborhoods outside Oranim's footprint — exclude by authoritative
     # shemSchuna even if geocoding lands the point in a neighbouring in-scope
     # polygon (e.g. גילה addresses geocoded into בית צפאפא/שרפאת).
-    OUT_OF_SCOPE_YK = ("גילה", "קריית שמואל", "קרית שמואל")
+    OUT_OF_SCOPE_YK = ("גילה",)  # קריית שמואל IS in scope (adjacent to רחביה/טלביה)
 
     feats = []
     inside = outside = nogeo = skipped_yk = 0

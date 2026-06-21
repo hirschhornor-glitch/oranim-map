@@ -164,6 +164,32 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
+     35.2120909,
+     31.7695833
+    ]
+   },
+   "properties": {
+    "file_number": "2021/0311.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/12/2024",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובניית בניין חדש בן 5 קומות לפי תמ\"א 38/2",
+    "address": "חרלפ 26",
+    "sub_neighborhood": "רסקו - גבעת הורדים",
+    "neighborhood_yk": "קריית שמואל",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-07-03",
+    "eta_quarter": "",
+    "developer": "שלומית אדלר0505905316"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
      35.213158,
      31.7742787
     ]
