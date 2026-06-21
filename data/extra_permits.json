@@ -1,0 +1,253 @@
+{
+ "source": "YK API — היתרים שהסקרייפר פספס (טבלת טרם החלו בנייה)",
+ "source_date": "2026-06-21",
+ "count": 17,
+ "by_taba": {
+  "897066": [
+   {
+    "file_number": "2014/0472.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "29/10/2024",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת שתי קומות מעל בנין קיים  (תוספת 3 יח\"ד חדשות)   סה\"כ 9 יח\"ד",
+    "address": "",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "897066"
+    ]
+   }
+  ],
+  "511923": [
+   {
+    "file_number": "2023/0326.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "31/12/2023",
+    "request_type": "עבודות הריסה, חפירה ומילוי",
+    "request_description": "היתר הריסה, חפירה ודיפון, פינוי בינוי עבור 210 יח\"ד",
+    "address": "בר יוחאי 13-11",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "511923"
+    ]
+   },
+   {
+    "file_number": "2023/0326.01",
+    "status": "נדונה ברשות הרישוי",
+    "status_date": "28/10/2025",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "היתר ראשי לבניין 2-3 מתכנית פינוי בינוי, 426 יח\"ד, מתוכם 148 דירות תמורה. ",
+    "address": "בר יוחאי 13,11",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "511923"
+    ]
+   }
+  ],
+  "950493": [
+   {
+    "file_number": "2024/0027.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "04/12/2024",
+    "request_type": "חפירה ומילוי",
+    "request_description": "היתר חפירה ודיפון + הריסת מבנים קיימים",
+    "address": "שדה יצחק 15 8",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "950493"
+    ]
+   }
+  ],
+  "1002054": [
+   {
+    "file_number": "2024/0333.01",
+    "status": "שולמה מקדמה",
+    "status_date": "10/07/2025",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, שינוי שימוש, תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה, ממ\"ד, בניית מרפסת",
+    "request_description": "הקמת 7 מרתפים , קומת קרקע מסחרית , 3 מבנים מגורים ומבנה ציבור",
+    "address": "שכ קטמון הישנה 0",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "1002054"
+    ]
+   }
+  ],
+  "791467": [
+   {
+    "file_number": "2024/0390.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "25/12/2025",
+    "request_type": "חפירה ומילוי, עבודות הריסה",
+    "request_description": "חפירה ודיפון+ הריסת בניין קיים עבור פינוי בינוי - 107 יח\"ד",
+    "address": "שד עין צורים 2",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "791467"
+    ]
+   },
+   {
+    "file_number": "2024/0390.01",
+    "status": "נפתח תיק רישוי",
+    "status_date": "05/11/2025",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין מגורים בעל 107 יח\"ד ב24 קומות+ מסחר+ גני ילדים+ 9 קומות מרתפים. במסגרת התחדשות עירונית.",
+    "address": "שד עין צורים 2",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "791467"
+    ]
+   }
+  ],
+  "1115294": [
+   {
+    "file_number": "2024/0493.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "22/01/2026",
+    "request_type": "חפירה ומילוי, עבודות הריסה, בניית קיר תומך/מגן",
+    "request_description": "היתר הריסה, חפירה, דיפון וביסוס ל-176 יח\"ד בשלום יהודה 16-18 במסגרת התחדשות עירונית",
+    "address": "שלום יהודה 16-18",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "1115294"
+    ]
+   },
+   {
+    "file_number": "2024/0493.01",
+    "status": "נפתח תיק רישוי",
+    "status_date": "19/04/2026",
+    "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
+    "request_description": "התחדשות עירונית בשני מגדלי מגורים ב-31 ו-10 קומות, סה\"כ 173 יח\"ד, מבנ\"צ, מסחר ומשרדים, ח. שנאים וגז, פיתוח שצ\"פ.",
+    "address": "שלום יהודה 16-18",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "1115294"
+    ]
+   }
+  ],
+  "928176": [
+   {
+    "file_number": "2025/0067.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "11/12/2025",
+    "request_type": "חפירה ומילוי, עבודות הריסה",
+    "request_description": "פינוי בינוי 603 יח\"ד - היתר הריסה חפירה דיפון ורצפה ראשונה",
+    "address": "דרך חברון 0",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "928176"
+    ]
+   },
+   {
+    "file_number": "2025/0067.01",
+    "status": "שולמה מקדמה",
+    "status_date": "06/07/2025",
+    "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי",
+    "request_description": "פינוי בינוי בקשה להקמת 3 מגדלי מגורים סה\"כ 36 קומות 603 יח\"ד מעל 3 קומות מסד ו7 קומות מרתף פיתוח שטח וצובר גז.",
+    "address": "דרך חברון 0",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "928176"
+    ]
+   }
+  ],
+  "855585": [
+   {
+    "file_number": "2025/0115.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/12/2025",
+    "request_type": "חפירה ומילוי",
+    "request_description": "הריסת 6 מבני מגורים, עבודות דיפון חפירה וביסוס עבור התחדשות עירונית כ-667 יח\"ד",
+    "address": "אברהם אלמליח 143",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "855585"
+    ]
+   },
+   {
+    "file_number": "2025/0115.01",
+    "status": "נפתח תיק רישוי",
+    "status_date": "06/05/2026",
+    "request_type": "בניה חדשה / בניין חדש, התחדשות עירונית - פינוי בינוי, עבודות הריסה",
+    "request_description": "תכנית התחדשות עירונית המציעה רובע עירוני חדש הכולל ארבעה מגדלי מגורים,שטחים ציבוריים פתוחים, שטחי מסחר ושטחים בנויים לציבור.",
+    "address": "אברהם אלמליח 143",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "855585"
+    ]
+   }
+  ],
+  "771600": [
+   {
+    "file_number": "2025/0319.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "29/12/2025",
+    "request_type": "עבודות הריסה",
+    "request_description": "הריסת בנין בן  72 יח\"ד , דיפון וחפירה במסגרת התחדשות עירונית 334 יח\"ד.",
+    "address": "דרך בית לחם 127",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "771600"
+    ]
+   },
+   {
+    "file_number": "2025/0319.01",
+    "status": "נפתח תיק רישוי",
+    "status_date": "11/03/2026",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "פרויקט התחדשות עירונית  מוצע 334 יח\"ד",
+    "address": "דרך בית לחם 127",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "178129",
+     "771600"
+    ]
+   },
+   {
+    "file_number": "2025/0333.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "25/12/2025",
+    "request_type": "עבודות הריסה",
+    "request_description": "הריסת 3 בניינים, דיפון וחפירה עבור פינוי בינוי להקמת 4 מבני מגורים, מסחר ותעסוקה עם שטחים ציבוריים. סה\"כ 1019 יח\"ד",
+    "address": "דרך חברון 6",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "771600"
+    ]
+   },
+   {
+    "file_number": "2025/0333.01",
+    "status": "הגשה מקוונת הושלמה",
+    "status_date": "14/09/2025",
+    "request_type": "התחדשות עירונית - פינוי בינוי",
+    "request_description": " במסגרת פינוי בינוי - בנייה של 3 מגדלים חדשים הכוללים 693 יח\"ד ,שטחי מסחר ותעסוקה  ו8 קומות מרתף . ",
+    "address": "דרך חברון 160",
+    "source": "missing_permits_api",
+    "source_date": "2026-06-21",
+    "all_matched_tabas": [
+     "771600"
+    ]
+   }
+  ]
+ }
+}

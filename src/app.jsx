@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-17-decision-summary6';
+        const APP_VERSION = '2026-06-21-extra-permits';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4079,6 +4079,8 @@
                 window.__objectionsPermits = {};
                 window.__treePermits = {};
                 window.__decisionSummaries = {};
+                window.__fieldObs = {};
+                window.__extraPermits = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4094,6 +4096,8 @@
                     ['__treePermits', 'data/tree_permits.json'],
                     ['__eduForecast', 'data/education_forecast_gonenim.json'],
                     ['__decisionSummaries', 'data/decision_summaries.json'],
+                    ['__fieldObs', 'data/field_observations.json'],
+                    ['__extraPermits', 'data/extra_permits.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4508,6 +4512,8 @@
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
+                            else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
+                            else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
                                 // Build lookup by plan_id. Keep only future meetings (date >= today).
@@ -4527,7 +4533,22 @@
                                 window.__meetings = idx;
                             }
                         });
-                        console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length);
+                        // Merge side-file extra_permits (permits the taba-driven scraper missed,
+                        // recovered via the YK JSON API) into __allPermits. Decoupled from the
+                        // scraper so it survives re-scrapes; dedupe by file_number.
+                        const extra = window.__extraPermits || {};
+                        let extraAdded = 0;
+                        for (const taba in extra) {
+                            let cur = window.__allPermits[taba];
+                            if (!cur) { cur = window.__allPermits[taba] = { permits: [], permit_count: 0 }; }
+                            if (!cur.permits) cur.permits = [];
+                            const have = new Set(cur.permits.map(p => p.file_number));
+                            for (const p of extra[taba]) {
+                                if (!have.has(p.file_number)) { cur.permits.push(p); extraAdded++; }
+                            }
+                            cur.permit_count = cur.permits.length;
+                        }
+                        console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
                     });
 
                     // === Stage 2c: deferred big GeoJSONs ===
@@ -16454,6 +16475,36 @@
                 return PERMITS_PALETTE.tama38_marker;
             }
 
+            // Colour for the on-the-ground construction status from the municipal
+            // "טרם החלו בנייה" tracking table (window.__fieldObs, keyed by file_number).
+            function fieldStatusColor(s) {
+                s = s || '';
+                if (s.includes('גמר')) return '#2e7d32';            // work finished
+                if (s.includes('הריסה')) return '#c62828';          // demolition
+                if (s.includes('טרם')) return '#9e9e9e';            // not yet started
+                if (s.includes('לא ידוע')) return '#8888aa';
+                return '#5dade2';                                    // active: חפירה/שלד/מחיצות/הכנת השטח
+            }
+            // Build the "תצפית שטח" block for one permit, or '' if we have no observation.
+            function renderFieldObs(fileNumber) {
+                const fo = (window.__fieldObs || {})[(fileNumber || '').trim()];
+                if (!fo) return '';
+                const bits = [];
+                if (fo.field_status) {
+                    const c = fieldStatusColor(fo.field_status);
+                    bits.push(`<span class="popup-status-badge" style="background:${c}33;color:${c};border:1px solid ${c};font-size:10px">${fo.field_status}</span>`);
+                }
+                if (fo.visit_date) bits.push(`<span style="color:#8888aa">ביקור: ${fo.visit_date}</span>`);
+                if (fo.eta_quarter) bits.push(`<span style="color:#cfa23a">צפי ביצוע: ${fo.eta_quarter}</span>`);
+                if (fo.licensing_status) bits.push(`<span style="color:#9a9aba">תיק רישוי: ${fo.licensing_status}</span>`);
+                if (fo.developer) bits.push(`<span style="color:#9a9aba">יזם: ${fo.developer}</span>`);
+                if (!bits.length) return '';
+                return `<div style="margin-top:3px;padding:3px 6px;border-right:2px solid #cf7a3a;background:rgba(207,122,58,0.08);border-radius:4px;font-size:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">`
+                    + `<span style="color:#cf7a3a;font-weight:bold" title="${fo.source || ''} (${fo.source_date || ''})">תצפית שטח</span>`
+                    + bits.join('<span style="color:#444">·</span>')
+                    + `</div>`;
+            }
+
             // ─── Education forecast (Yotam per-חומש) vs current plan status ─────────
             // Joins each education facility from Yotam's "היצע שירותי חינוך" sheet
             // (window.__eduForecast) to the live plan status + permits, so we can see
@@ -16905,6 +16956,7 @@
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
                     }
+                    html += renderFieldObs(p.file_number);
                     html += `</div>`; // end content
                     html += `</div>`; // end row
                 });
