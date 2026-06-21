@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-21-extra-permits';
+        const APP_VERSION = '2026-06-21-unassigned-permits';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -412,6 +412,7 @@
             projector_gonenim_tzatal: 'data/projector_gonenim_tzatal.geojson',
             mivnei_lashimur: 'data/arcgis/mivnei_lashimur.geojson',
             construction_yb: 'data/construction_yearbook.geojson',
+            unassigned_permits: 'data/unassigned_permits.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -15597,8 +15598,35 @@
                         });
                         geoLayersRef.current.tama38Permits = tama38PermGroup;
                     }
-                    // Bundle polygons + labels so toggling off removes both
-                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, permitLabelsGroup]).addTo(map);
+                    // Unassigned permits: issued permits on old (pre-Mavat) plans with no
+                    // polygon in our data — placed as APPROXIMATE points geocoded from their
+                    // address. Hollow dashed marker signals "מיקום מקורב". Toggles with permits.
+                    const unassignedGroup = L.layerGroup();
+                    if (gd.unassigned_permits && gd.unassigned_permits.features) {
+                        gd.unassigned_permits.features.forEach(f => {
+                            const pr = f.properties || {};
+                            const c = f.geometry && f.geometry.coordinates;
+                            if (!c) return;
+                            const latlng = L.latLng(c[1], c[0]);
+                            const stage = getPermitStage(pr);
+                            const col = getPermitStageColor(stage);
+                            const marker = L.circleMarker(latlng, {
+                                pane: 'tama38Pane', radius: 6, color: col, weight: 2,
+                                fillColor: col, fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false
+                            });
+                            marker.on('click', () => {
+                                const title = pr.address || pr.file_number || 'היתר';
+                                const subtitle = 'מיקום מקורב לפי כתובת · ' + (pr.sub_neighborhood || '') + ' · לא משויך לתב"ע במאגר';
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(latlng)
+                                    .setContent(buildPermitsDetailPopup([pr], title, subtitle, null, null, '', 0, 'unassigned:' + pr.file_number, 0));
+                                popup.openOn(map);
+                            });
+                            marker.addTo(unassignedGroup);
+                        });
+                    }
+                    // Bundle polygons + labels + unassigned points so toggling off removes all
+                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, permitLabelsGroup, unassignedGroup]).addTo(map);
                 }
 
                 // --- Open-for-objections permits (הקלות שפורסמו, סעיף 149) ---
@@ -16978,9 +17006,11 @@
                     html += `<div style="font-size:10px;color:#8888aa;margin-top:2px">נספרו <span data-permit-included-count>${countIncluded}</span> מתוך ${permits.length} היתרים <span style="opacity:0.7">(${defaultMode})</span></div>`;
                     html += `</div>`;
                 }
-                html += '<div class="popup-footer">';
-                html += `<button class="popup-btn-permit" data-action="${backAction}" ${backDataAttr}>→ חזרה</button>`;
-                html += '</div>';
+                if (backAction) {
+                    html += '<div class="popup-footer">';
+                    html += `<button class="popup-btn-permit" data-action="${backAction}" ${backDataAttr}>→ חזרה</button>`;
+                    html += '</div>';
+                }
                 html += '</div>';
                 return html;
             }

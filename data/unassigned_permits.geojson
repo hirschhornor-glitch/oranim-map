@@ -1,0 +1,293 @@
+{
+ "type": "FeatureCollection",
+ "source": "היתרים בשכונות אורנים שאינם משויכים לתב\"ע במאגר (תב\"עות ישנות)",
+ "source_date": "2026-06-21",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2123891,
+     31.7401414
+    ]
+   },
+   "properties": {
+    "file_number": "1993/0683.02",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "03/09/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
+    "address": "טבאליה 11",
+    "sub_neighborhood": "תלפיות - תעשייה ומסחר",
+    "neighborhood_yk": "בית צפפה",
+    "geocode_type": "tertiary",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-09-18",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2177161,
+     31.7752769
+    ]
+   },
+   "properties": {
+    "file_number": "2016/0609.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "12/12/2023",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בניין מגורים בן 8 קומות, 22 יח\"ד מעל3 קומות של חניון תת קרקעי",
+    "address": "אגרון 12",
+    "sub_neighborhood": "קוממיות - טלביה",
+    "neighborhood_yk": "רחביה",
+    "geocode_type": "tertiary",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-06-29",
+    "eta_quarter": "",
+    "developer": "שמראל עסקים בע\"מ - גבריאל ברדה 052-6565652\\058-4492626 מנה\"פ נעים יצחק \n054-9966868\\050-7217422"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2265029,
+     31.7608325
+    ]
+   },
+   "properties": {
+    "file_number": "2018/0265.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "07/02/2024",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "הקמת מבנה מגורים חדש וגן ילדים , בשכונת אבו-טור.",
+    "address": "דיר אבו טור",
+    "sub_neighborhood": "גבעת חנניה - אבו תור",
+    "neighborhood_yk": "אבו טור",
+    "geocode_type": "place_of_worship",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-07-23",
+    "eta_quarter": "",
+    "developer": "האדיה מונתסר 050-5322899"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2011571,
+     31.7332114
+    ]
+   },
+   "properties": {
+    "file_number": "2019/0496.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "19/05/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה עפ\"י תמ\"א 38.",
+    "address": "מבוא הצרי 12",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "neighborhood_yk": "גילה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-04-02",
+    "eta_quarter": "Q2\\2026",
+    "developer": "אדרכלית : הודיה מורן 0527688817\nיזם: אולביה צרפתי \nמנהלת חיים נאון מנהל עבודה: \n054-7516668"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2190427,
+     31.7584229
+    ]
+   },
+   "properties": {
+    "file_number": "2020/0470.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "20/07/2023",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובנייה מחדש לפי תמ\"א 38/2 תוך שימור חלקי מבנה וחזיתותיו",
+    "address": "דן 4",
+    "sub_neighborhood": "בקעה",
+    "neighborhood_yk": "גאולים - בקעה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-11-26",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2162176,
+     31.7746434
+    ]
+   },
+   "properties": {
+    "file_number": "2020/0666.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "09/05/2024",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בנית מבנה מגורים חדש הכולל 10 יח\"ד",
+    "address": "רמבן 13",
+    "sub_neighborhood": "קוממיות - טלביה",
+    "neighborhood_yk": "רחביה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-12-01",
+    "eta_quarter": "",
+    "developer": "0502286764 יוחאי הנרי"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.228007,
+     31.764695
+    ]
+   },
+   "properties": {
+    "file_number": "2021/0165.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "08/09/2022",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובניה מחדש עפ\"י תכנית 10038 ותמ\"א 38",
+    "address": "עובד 11",
+    "sub_neighborhood": "גבעת חנניה - אבו תור",
+    "neighborhood_yk": "גבעת חנניה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-01-06",
+    "eta_quarter": "",
+    "developer": "מתנאל שי הרבטס 076-5445061"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.213158,
+     31.7742787
+    ]
+   },
+   "properties": {
+    "file_number": "2022/0063.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "30/06/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת שטחים עיקריים וממדים + תוספת 3 יח\"ד + חיזוק וחידוש הבניין ע\"פ תמ\"א 38",
+    "address": "רמבן 39",
+    "sub_neighborhood": "רחביה",
+    "neighborhood_yk": "רחביה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-12-28",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.196118,
+     31.7403428
+    ]
+   },
+   "properties": {
+    "file_number": "2022/0272.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "25/08/2025",
+    "request_type": "בניה חדשה / בניין חדש",
+    "request_description": "בקשה עבור הקמת 2 בניינים חדשים למגורים על מסד מסחרי וגן ילדים - סה\"כ 179 יח\"ד",
+    "address": "הסיגלית",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "neighborhood_yk": "גילה",
+    "geocode_type": "tertiary",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "",
+    "visit_date": "",
+    "eta_quarter": "Q2\\2026",
+    "developer": "אחים ישראל-יונתן 0543122992"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.2136303,
+     31.7715404
+    ]
+   },
+   "properties": {
+    "file_number": "2022/0300.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "18/11/2025",
+    "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
+    "request_description": "הריסת בניין קיים והקמת בניין חדש בין 5 קומות + קומת חניה הכולל 8 יח\"ד",
+    "address": "י. אלפסי 22",
+    "sub_neighborhood": "קוממיות - טלביה",
+    "neighborhood_yk": "רחביה",
+    "geocode_type": "tertiary",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-11-25",
+    "eta_quarter": "",
+    "developer": "שמואל שטרן 0546486144"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.219194,
+     31.758235
+    ]
+   },
+   "properties": {
+    "file_number": "2022/0583.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "26/02/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "בקשה להריסה ובנייה מחדש במסגרת תמ\"א 38.",
+    "address": "דן 1",
+    "sub_neighborhood": "בקעה",
+    "neighborhood_yk": "גאולים - בקעה",
+    "geocode_type": "house",
+    "source": "unassigned (old plan, geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-11-24",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  }
+ ]
+}
