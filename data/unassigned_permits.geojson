@@ -1,6 +1,6 @@
 {
  "type": "FeatureCollection",
- "source": "היתרים בשכונות אורנים שאינם משויכים לתב\"ע במאגר (תב\"עות ישנות)",
+ "source": "היתרים בשכונות אורנים שאינם משויכים לתב\"ע במאגר (תב\"עות ישנות, מיקום geocode מ-govmap)",
  "source_date": "2026-06-21",
  "features": [
   {
@@ -8,23 +8,47 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2088587,
-     31.741232
+     35.213983,
+     31.771844
     ]
    },
    "properties": {
-    "file_number": "1993/0683.02",
+    "file_number": "1950/0211.03",
     "status": "הופק-הוצא היתר בניה",
-    "status_date": "03/09/2025",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
-    "request_description": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
-    "address": "טבאליה 11",
-    "sub_neighborhood": "בית צפאפא,שרפת",
-    "neighborhood_yk": "בית צפפה",
-    "geocode_type": "tertiary",
-    "source": "unassigned (old plan, geocoded)",
+    "status_date": "18/06/2024",
+    "request_type": "התקנת מעלית חיצונית, חפירה ומילוי, תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת קומת קרקע תת קרקעית, מעלית רכב, תוספת 2 קומות מעל קיים הכוללות 3 יח\"ד חדשות - סה\"כ 10 יח\"ד.",
+    "address": "האר\"י 3",
+    "sub_neighborhood": "קוממיות - טלביה",
+    "neighborhood_yk": "רחביה",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
-    "visit_date": "2025-09-18",
+    "visit_date": "2024-06-18",
+    "eta_quarter": "",
+    "developer": "בלוסום אן רבינוביץ' 052-2282017"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.210427,
+     31.771071
+    ]
+   },
+   "properties": {
+    "file_number": "1989/0928.03",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "03/11/2021",
+    "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת קומות לפי תב\"ע 9988",
+    "address": "דונש בן לברט 6",
+    "sub_neighborhood": "רסקו - גבעת הורדים",
+    "neighborhood_yk": "רחביה",
+    "source": "unassigned (old plan, govmap-geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2020-11-17",
     "eta_quarter": "",
     "developer": ""
    }
@@ -34,8 +58,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2177161,
-     31.7752769
+     35.218917,
+     31.775736
     ]
    },
    "properties": {
@@ -47,8 +71,7 @@
     "address": "אגרון 12",
     "sub_neighborhood": "קוממיות - טלביה",
     "neighborhood_yk": "רחביה",
-    "geocode_type": "tertiary",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-06-29",
     "eta_quarter": "",
@@ -60,34 +83,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2265029,
-     31.7608325
-    ]
-   },
-   "properties": {
-    "file_number": "2018/0265.00",
-    "status": "הופק-הוצא היתר בניה",
-    "status_date": "07/02/2024",
-    "request_type": "בניה חדשה / בניין חדש",
-    "request_description": "הקמת מבנה מגורים חדש וגן ילדים , בשכונת אבו-טור.",
-    "address": "דיר אבו טור",
-    "sub_neighborhood": "גבעת חנניה - אבו תור",
-    "neighborhood_yk": "אבו טור",
-    "geocode_type": "place_of_worship",
-    "source": "unassigned (old plan, geocoded)",
-    "field_status": "טרם הוחל בבניה",
-    "visit_date": "2025-07-23",
-    "eta_quarter": "",
-    "developer": "האדיה מונתסר 050-5322899"
-   }
-  },
-  {
-   "type": "Feature",
-   "geometry": {
-    "type": "Point",
-    "coordinates": [
-     35.2190427,
-     31.7584229
+     35.218999,
+     31.758496
     ]
    },
    "properties": {
@@ -99,8 +96,7 @@
     "address": "דן 4",
     "sub_neighborhood": "בקעה",
     "neighborhood_yk": "גאולים - בקעה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-11-26",
     "eta_quarter": "",
@@ -112,8 +108,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2162176,
-     31.7746434
+     35.216267,
+     31.774632
     ]
    },
    "properties": {
@@ -125,8 +121,7 @@
     "address": "רמבן 13",
     "sub_neighborhood": "קוממיות - טלביה",
     "neighborhood_yk": "רחביה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-12-01",
     "eta_quarter": "",
@@ -138,8 +133,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.228007,
-     31.764695
+     35.227867,
+     31.764621
     ]
    },
    "properties": {
@@ -151,8 +146,7 @@
     "address": "עובד 11",
     "sub_neighborhood": "גבעת חנניה - אבו תור",
     "neighborhood_yk": "גבעת חנניה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-01-06",
     "eta_quarter": "",
@@ -164,8 +158,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2120909,
-     31.7695833
+     35.212024,
+     31.769564
     ]
    },
    "properties": {
@@ -177,8 +171,7 @@
     "address": "חרלפ 26",
     "sub_neighborhood": "רסקו - גבעת הורדים",
     "neighborhood_yk": "קריית שמואל",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-07-03",
     "eta_quarter": "",
@@ -190,8 +183,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.213158,
-     31.7742787
+     35.213135,
+     31.774271
     ]
    },
    "properties": {
@@ -203,8 +196,7 @@
     "address": "רמבן 39",
     "sub_neighborhood": "רחביה",
     "neighborhood_yk": "רחביה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-12-28",
     "eta_quarter": "",
@@ -216,8 +208,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.2136303,
-     31.7715404
+     35.211767,
+     31.773118
     ]
    },
    "properties": {
@@ -227,10 +219,9 @@
     "request_type": "בניה חדשה / בניין חדש, עבודות הריסה",
     "request_description": "הריסת בניין קיים והקמת בניין חדש בין 5 קומות + קומת חניה הכולל 8 יח\"ד",
     "address": "י. אלפסי 22",
-    "sub_neighborhood": "קוממיות - טלביה",
+    "sub_neighborhood": "רחביה",
     "neighborhood_yk": "רחביה",
-    "geocode_type": "tertiary",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-11-25",
     "eta_quarter": "",
@@ -242,8 +233,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     35.219194,
-     31.758235
+     35.216777,
+     31.758036
     ]
    },
    "properties": {
@@ -255,10 +246,84 @@
     "address": "דן 1",
     "sub_neighborhood": "בקעה",
     "neighborhood_yk": "גאולים - בקעה",
-    "geocode_type": "house",
-    "source": "unassigned (old plan, geocoded)",
+    "source": "unassigned (old plan, govmap-geocoded)",
     "field_status": "טרם הוחל בבניה",
     "visit_date": "2025-11-24",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.203018,
+     31.745608
+    ]
+   },
+   "properties": {
+    "file_number": "2018/0329.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "04/08/2022",
+    "request_type": "תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "הכשרת בניין קיים קומה אחד ותוספת קומה מעל הבניין קיים, הסה\"כ 4 יח\"ד.",
+    "address": "",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "neighborhood_yk": "בית צפפה",
+    "source": "unassigned (old plan, govmap-geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2024-12-18",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.204738,
+     31.735225
+    ]
+   },
+   "properties": {
+    "file_number": "2020/0656.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "29/07/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בניה (הרחבת דירה ) + תוספת 4 יח\"ד . סה\"כ 6 יח\"ד",
+    "address": "אל ווחדה 21",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "neighborhood_yk": "בית צפפה",
+    "source": "unassigned (old plan, govmap-geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-09-02",
+    "eta_quarter": "",
+    "developer": ""
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.207866,
+     31.741892
+    ]
+   },
+   "properties": {
+    "file_number": "1993/0683.02",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "03/09/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת קומה 2 יח\"ד מעל בניין קיים 2 קומות 4יח\"ד ושינוי המרתף ל 2 יח\"ד סה\"כ 8 יח\"ד",
+    "address": "טבאליה 11",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "neighborhood_yk": "בית צפפה",
+    "source": "unassigned (old plan, govmap-geocoded)",
+    "field_status": "טרם הוחל בבניה",
+    "visit_date": "2025-09-18",
     "eta_quarter": "",
     "developer": ""
    }
