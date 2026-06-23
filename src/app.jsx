@@ -12450,9 +12450,17 @@
                             const r = parseFloat(f.properties.rental) || 0;
                             if (r > 0) {
                                 layer.bindTooltip(
-                                    '<div style="color:#16a085;font-size:8pt;font-weight:bold;font-family:Assistant,sans-serif">' + Math.round(r) + ' יח"ד להשכרה</div>',
-                                    { permanent: true, direction: 'center', className: 'rental-label', opacity: 0.95 }
+                                    '<div class="label-inner">' + Math.round(r) + ' יח"ד להשכרה</div>',
+                                    { permanent: true, direction: 'center', className: 'rental-label', opacity: 1, offset: [0, 22] }
                                 );
+                                // Anchor the label at the polygon's visual center (pole of
+                                // inaccessibility) instead of Leaflet's default geometric centroid,
+                                // which falls outside concave/irregular plan shapes — same placement
+                                // as the "+יח״ד" plan labels.
+                                layer.on('tooltipopen', e => {
+                                    const c = f.geometry && visualCenter(f.geometry);
+                                    if (c) e.tooltip.setLatLng(c);
+                                });
                             }
                             layer.on('add', () => { const el = layer.getElement(); if (el) el.style.pointerEvents = 'auto'; });
                             layer.on('click', () => {

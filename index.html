@@ -2132,6 +2132,36 @@
                 -1px 0 0 #fafafa, 1px 0 0 #fafafa;
         }
         .plan-label-center::before { display: none; }
+
+        /* Rental ("יח״ד להשכרה") label — frameless, sits just below the plan label,
+           teal text with the same white halo as the plan label for legibility. */
+        .leaflet-tooltip.rental-label {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            white-space: nowrap;
+            opacity: 1 !important;
+            /* App runs RTL; Leaflet positions tooltips via transform off the static
+               position, which flips to the right edge under RTL and shifts the label
+               left by its own width. Pin to the left edge so the transform centers it. */
+            left: 0 !important;
+            right: auto !important;
+        }
+        .leaflet-tooltip.rental-label::before { display: none !important; }
+        .rental-label .label-inner {
+            color: #0f7a66;
+            font-size: 8pt;
+            font-weight: bold;
+            font-family: 'Assistant', 'Segoe UI', Tahoma, Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            text-shadow:
+                -1px -1px 0 #fafafa, 1px -1px 0 #fafafa,
+                -1px 1px 0 #fafafa, 1px 1px 0 #fafafa,
+                0 -1px 0 #fafafa, 0 1px 0 #fafafa,
+                -1px 0 0 #fafafa, 1px 0 0 #fafafa;
+        }
         .plan-label-large .label-inner { font-size: 10pt; color: rgba(0,0,0,0.7); }
         .plan-label-small .label-inner { font-size: 8pt; color: rgba(0,0,0,0.7); }
         .plan-label-z18 .label-inner { font-size: 10pt !important; }
@@ -2362,7 +2392,7 @@
 <body>
     <div id="root"></div>
 
-    <script src="app.js?v=20260621f"></script>
+    <script src="app.js?v=20260623b"></script>
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
