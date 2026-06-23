@@ -9562,6 +9562,14 @@
                 const planRowsAll = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0))
                     .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: normalizeStatus(x.props.status_mavat || ''), minahak: x.props.minahak || '', feat: x.feat }));
                 const topPlans = planRowsAll.slice(0, 8);
+                // יח"ד להשכרה (rental) — per plan + total. Raw count from _rental_raw (pre-fold) or rental.
+                let rentalTotal = 0;
+                const rentalRows = [];
+                plansInside.forEach(x => {
+                    const rv = parseFloat(x.props._rental_raw != null ? x.props._rental_raw : x.props.rental) || 0;
+                    if (rv > 0) { rentalTotal += rv; rentalRows.push({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', rental: rv, duration: ((x.props.rental_duration || '') + '').trim(), feat: x.feat }); }
+                });
+                rentalRows.sort((a, b) => b.rental - a.rental);
 
                 // ── 2. תמ"א 38 ──
                 let tamaCount = 0, tamaUnits = 0;
@@ -9739,7 +9747,7 @@
 
                 setFullAreaReport({
                     title: 'סיכום אזור נבחר', areaSqm, streets,
-                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll },
+                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll, rental: rentalTotal, rentalRows },
                     tama: { count: tamaCount, units: tamaUnits, rows: tamaRows },
                     existingUnits,
                     permits: { totalPermits, totalIncludedUnits, stageAgg, catAgg, rows: permitRows },
@@ -24434,6 +24442,7 @@
                                         lines.push(['סיכום','יח"ד קיימות', '', String(Math.round(d.existingUnits))]);
                                         lines.push(['סיכום','היתרים', String(d.permits.totalPermits), String(Math.round(d.permits.totalIncludedUnits))]);
                                         d.plans.top.forEach(p => lines.push(['תב"ע', p.name, p.status, String(Math.round(p.unitsAdd))]));
+                                        if (d.plans.rental > 0) { lines.push(['יח"ד להשכרה','סה"כ באזור','', String(Math.round(d.plans.rental))]); (d.plans.rentalRows||[]).forEach(r => lines.push(['יח"ד להשכרה', r.name, (r.duration ? (r.duration==='צמיתות'?'צמיתות':r.duration+' שנים') : ''), String(Math.round(r.rental))])); }
                                         PERMIT_STAGES_ALL.forEach(st => { const a = d.permits.stageAgg[st]; if (a && (a.count||a.units)) lines.push(['היתרים — שלב', getPermitStageLabel(st), String(a.count)+' היתרים', String(Math.round(a.units))]); });
                                         Object.entries(d.permits.catAgg).forEach(([cat,a]) => lines.push(['היתרים — קטגוריה', getPermitCategoryLabel(cat), String(a.count)+' היתרים', String(Math.round(a.units))]));
                                         d.projector.byDomain.forEach(dm => lines.push(['פרויקטור', dm.label, dm.names.join(' · '), String(dm.count)]));
@@ -24603,6 +24612,12 @@
                                                     {fullReportTables['plansTbl'] && d.plans.rows && (
                                                         <table style={tblWrap}><thead><tr><th style={th}>שם תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>סטטוס</th><th style={th}>תוספת יח"ד</th><th style={th}>מינהק</th></tr></thead>
                                                         <tbody>{d.plans.rows.map((r,i)=>(<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name}</td><td style={td}>{r.taba||'—'}</td><td style={td}>{r.status||'—'}</td><td style={{...td,color:'#7bdc8a'}}>{r.unitsAdd?Math.round(r.unitsAdd):''}</td><td style={td}>{r.minahak||'—'}</td></tr>))}</tbody></table>
+                                                    )}
+                                                    {d.plans.rental > 0 && <div style={{...rowStyle,borderTop:'1px solid #2a2a3e',marginTop:6,paddingTop:6}}><span style={{color:'#cfd3dc'}}>🏠 יח"ד להשכרה</span><span style={{color:'#81c784',fontWeight:'bold'}}>{fmt(d.plans.rental)}</span></div>}
+                                                    {d.plans.rentalRows && d.plans.rentalRows.length > 0 && detailRow('rentalTbl', 'פירוט יח"ד להשכרה (' + d.plans.rentalRows.length + ' תכניות)')}
+                                                    {fullReportTables['rentalTbl'] && d.plans.rentalRows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>יח"ד להשכרה</th><th style={th}>משך</th></tr></thead>
+                                                        <tbody>{d.plans.rentalRows.map((r,i)=>{ const dur = r.duration ? (r.duration === 'צמיתות' ? 'צמיתות' : r.duration + ' שנים') : '—'; return (<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name||'—'}</td><td style={td}>{r.taba||'—'}</td><td style={{...td,color:'#81c784'}}>{Math.round(r.rental)}</td><td style={td}>{dur}</td></tr>); })}</tbody></table>
                                                     )}
                                             </>)}
 
