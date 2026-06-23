@@ -38,8 +38,12 @@ READ_SECTION_JS = r"""
 """
 
 # Table-5 xlsx result key -> GS header (the authoritative "out"/planned state)
+# units_total = residential units only ("מגורים" in שימוש). Hotel rooms /
+# dorms / other non-residential unit-counted uses are excluded — see plan
+# 1360650 (דרך בית לחם 150): the XLSX has 80 מגורים + 200 מלונאות, plan
+# proposes 80 yu"d, not 280.
 OUT_MAP = [
-    ("total_units", "units_total"),
+    ("total_residential_units", "units_total"),
     ("commerce_sqm", "commerce_out"),
     ("employment_sqm", "employment"),
     ("public_building_sqm", "shavatz_out_sqm"),
@@ -135,13 +139,14 @@ def compute_changes(h, row, scraped, plan_label=""):
 
     # IN fields — accordion only.
     ui = bal.get("units_in")
-    if ui is not None and t5.get("total_units"):
+    if ui is not None and t5.get("total_residential_units"):
         set_field("units_in", ui, "units_in")
     if bal.get("commerce_in"):
         set_field("commerce_in", bal["commerce_in"], "commerce_in")
 
-    # Derived מכפיל/תוספת — OUT (t5) minus IN (bal). No accordion fallback for OUT.
-    out_total = t5.get("total_units")
+    # Derived מכפיל/תוספת — residential OUT (t5) minus residential IN (bal).
+    # Uses total_residential_units to match the units_total mapping above.
+    out_total = t5.get("total_residential_units")
     if out_total is not None and ui is not None and ui >= 0 and out_total >= ui:
         set_field("units_add", out_total - ui, "units_add")
         if ui:

@@ -7,6 +7,7 @@ Step 4: Update Google Sheets with the new data.
 import os
 import asyncio
 import json
+import re
 import ssl
 import sys
 try:
@@ -758,9 +759,16 @@ def _parse_dmy(s):
         return None
 
 
-def _yk_compute_objection_end(taba):
+def _yk_compute_objection_end(taba, status_date=None):
     """Call YK API and compute the objection-end date.
-    Returns (date_str dd/mm/yyyy, source_label) or (None, reason)."""
+    Returns (date_str dd/mm/yyyy, source_label) or (None, reason).
+
+    When status_date is given (the Mavat date the plan entered
+    'הפקדה להתנגדויות'), YK pub_dates older than ~status_date are treated as
+    stale (previous deposit cycles) and ignored. Fallback: status_date + 60.
+    Plan 1338425 (אנטיגונוס 10) on 2026-06-21: status=17/06 but YK only had
+    pub=13/03 → naïve pub+60 gave 12/05 (BEFORE status date, impossible).
+    """
     body = {"ProcName": YK_API_PROC_PROCESS, "Cnn": "cnnGisYk",
             "Parameters": {"SystemID": "26400001", "TikNum": str(taba)}}
     try:
@@ -770,19 +778,40 @@ def _yk_compute_objection_end(taba):
         data = r.json()
     except Exception as e:
         return None, f'ERR {str(e)[:50]}'
+
+    def _status_fallback(reason):
+        if status_date:
+            return (status_date + timedelta(days=60)).strftime('%d/%m/%Y'), f'status+60 ({reason})'
+        return None, reason
+
     deposit_steps = [s for s in data if s.get('processText') == 'תהליך הפקדת תכנית']
     if not deposit_steps:
-        return None, 'no deposit process'
-    # Explicit "תום תקופת הפקדה" wins if present
+        return _status_fallback('no deposit process in YK')
+
+    # Explicit "תום תקופת הפקדה" wins — but only if not BEFORE status_date.
     pub_dates = []
     for step in deposit_steps:
         step_text = step.get('stepCodeText') or ''
         d = _parse_dmy(step.get('execDateStr') or step.get('planDateStr'))
         if not d: continue
         if 'תום תקופת' in step_text:
+            if status_date and d < status_date:
+                # Stale explicit end-date from a previous cycle. Skip.
+                continue
             return d.strftime('%d/%m/%Y'), 'explicit'
         if 'פרסום ההפקדה' in step_text:
             pub_dates.append(d)
+
+    # Filter pub_dates to current cycle (>= status_date - 7d grace).
+    if status_date:
+        floor = status_date - timedelta(days=7)
+        relevant = [d for d in pub_dates if d >= floor]
+        if relevant:
+            latest = max(relevant)
+            return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'pub({latest.strftime("%d/%m/%Y")})+60'
+        return _status_fallback('YK pubs stale')
+
+    # No status_date provided — original behavior.
     if pub_dates:
         latest = max(pub_dates)
         return (latest + timedelta(days=60)).strftime('%d/%m/%Y'), f'pub({latest.strftime("%d/%m/%Y")})+60'
@@ -806,6 +835,7 @@ def fetch_objection_dates(all_data, sheet, progress):
     # Collect candidate plans (all in הפקדה להתנגדויות status, dedupe by taba)
     plan_name_he_idx = h.get('plan_name_he')
     minhak_idx = h.get('minahak')
+    mavat_date_idx = h.get('mavat_date')
 
     def _cell(row, idx):
         return row[idx].strip() if (idx is not None and idx < len(row)) else ''
@@ -826,6 +856,7 @@ def fetch_objection_dates(all_data, sheet, progress):
             'row': row_num, 'taba': taba, 'plan_name': plan_name,
             'plan_name_he': _cell(row, plan_name_he_idx),
             'minhak': _cell(row, minhak_idx),
+            'status_date': _parse_dmy(_cell(row, mavat_date_idx)),
             'current': current,
         })
 
@@ -836,7 +867,7 @@ def fetch_objection_dates(all_data, sheet, progress):
 
     results = {}
     for i, plan in enumerate(plans):
-        end_date, source = _yk_compute_objection_end(plan['taba'])
+        end_date, source = _yk_compute_objection_end(plan['taba'], status_date=plan.get('status_date'))
         if end_date:
             results[plan['taba']] = {
                 'row': plan['row'], 'objection_end': end_date,
@@ -885,6 +916,106 @@ def fetch_objection_dates(all_data, sheet, progress):
              'old_date': d.get('old_date', ''),
              'source': d.get('source', '')}
             for t, d in changed.items()]
+
+
+_PLAN_RE = re.compile(r'(101-\d+|תתל[\s/]\S+)')
+
+
+def _parse_xplan_report(xplan_report, plan_meta):
+    """Convert the line-based xplan_report into structured table rows.
+
+    Returns (summary_lines, rows). Each row is a dict with keys:
+      plan_name, plan_name_he, minhak, type_emoji, type_label, details (str).
+
+    The 📊 (Table 5) header carries no detail of its own — its subsequent
+    indented lines are aggregated into one cell joined by <br>.
+    """
+    import re as _re
+    summary, rows = [], []
+    t5_acc = None
+
+    def _flush():
+        nonlocal t5_acc
+        if t5_acc:
+            t5_acc['details'] = '<br>'.join(t5_acc.pop('details_lines')) or '-'
+            rows.append(t5_acc)
+            t5_acc = None
+
+    type_map = [
+        ('🗺️', 'ייעודי קרקע'),
+        ('🛤️', 'זיקות הנאה'),
+        ('🌳', 'עצים'),
+        ('📊', 'טבלה 5 + נכנס'),
+    ]
+
+    for line in xplan_report or []:
+        stripped = line.strip()
+        if not stripped:
+            _flush()
+            continue
+        # Top-level summary or no-changes marker (no per-plan info)
+        if stripped.startswith('XPLAN:') or stripped.startswith('✅'):
+            _flush()
+            summary.append(stripped)
+            continue
+        # Indented Table 5 detail line ("      units_in: 0 → 28")
+        if line.startswith('      ') and ':' in stripped and t5_acc is not None:
+            t5_acc['details_lines'].append(stripped)
+            continue
+        # Plan-level entries — find emoji, plan_name, and details
+        emoji_found = None
+        for emoji, label in type_map:
+            if emoji in stripped:
+                emoji_found = (emoji, label)
+                break
+        m_plan = _PLAN_RE.search(stripped)
+        pn = m_plan.group(1) if m_plan else ''
+        meta = plan_meta.get(pn, {})
+        if emoji_found:
+            emoji, label = emoji_found
+            m_details = _re.search(
+                rf'{_re.escape(emoji)}\s*\S+(?:\s*\([^)]*\))?:\s*(.*)',
+                stripped,
+            )
+            details = m_details.group(1).strip() if m_details else stripped
+            if emoji == '📊':
+                _flush()
+                t5_acc = {
+                    'plan_name': pn,
+                    'plan_name_he': meta.get('plan_name_he', ''),
+                    'minhak': meta.get('minhak', ''),
+                    'status': meta.get('status', ''),
+                    'type_emoji': emoji,
+                    'type_label': label,
+                    'details_lines': [],
+                }
+            else:
+                _flush()
+                rows.append({
+                    'plan_name': pn,
+                    'plan_name_he': meta.get('plan_name_he', ''),
+                    'minhak': meta.get('minhak', ''),
+                    'status': meta.get('status', ''),
+                    'type_emoji': emoji,
+                    'type_label': label,
+                    'details': details,
+                })
+            continue
+        # "לא נמצא ב-XPLAN" or other plan-level note without an emoji
+        if pn:
+            _flush()
+            note = stripped.split(':', 1)[1].strip() if ':' in stripped else stripped
+            rows.append({
+                'plan_name': pn,
+                'plan_name_he': meta.get('plan_name_he', ''),
+                'minhak': meta.get('minhak', ''),
+                'status': meta.get('status', ''),
+                'type_emoji': '❓',
+                'type_label': 'הערה',
+                'details': note,
+            })
+    _flush()
+    return summary, rows
 
 
 def send_email_notification(updates, objection_results=None, xplan_report=None):
@@ -955,13 +1086,74 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             html += f"</tr>"
         html += "</table><br>"
 
-    # XPLAN geometry check section
+    # XPLAN geometry check section — one row per plan, columns per change type.
     if has_xplan:
+        plan_meta = {u['plan_name']: {
+            'plan_name_he': u.get('plan_name_he', ''),
+            'minhak': u.get('minhak', ''),
+            'status': u.get('new_status', ''),
+        } for u in (updates or []) if u.get('plan_name')}
+        xplan_summary, xplan_rows = _parse_xplan_report(xplan_report, plan_meta)
+        # Group flat rows by plan_name, with one cell per change-type.
+        # emoji → column key
+        col_for_emoji = {
+            '🗺️': 'landuse',
+            '🛤️': 'easements',
+            '🌳': 'trees',
+            '📊': 'table5',
+        }
+        grouped = {}  # plan_name → {meta + cells}
+        plan_order = []  # preserve appearance order
+        for r in xplan_rows:
+            pn = r.get('plan_name', '')
+            if not pn:
+                continue
+            if pn not in grouped:
+                grouped[pn] = {
+                    'plan_name': pn,
+                    'plan_name_he': r.get('plan_name_he', ''),
+                    'minhak': r.get('minhak', ''),
+                    'status': r.get('status', ''),
+                    'cells': {'landuse': [], 'easements': [], 'trees': [], 'table5': []},
+                }
+                plan_order.append(pn)
+            col = col_for_emoji.get(r.get('type_emoji', ''))
+            detail = r.get('details', '')
+            if col:
+                grouped[pn]['cells'][col].append(detail)
+            else:
+                # ❓ "לא נמצא ב-XPLAN" → surface in landuse cell with a clear marker
+                grouped[pn]['cells']['landuse'].append(f"⚠ {detail}")
+
         html += "<h2>בדיקת XPLAN (geometry / ייעודים / שב\"צ)</h2>"
-        html += "<ul>"
-        for line in xplan_report:
-            html += f"<li>{line}</li>"
-        html += "</ul>"
+        for s in xplan_summary:
+            html += f"<p style='margin: 4px 0;'>{s}</p>"
+        if grouped:
+            html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
+            html += ("<tr style='background-color: #f2f2f2;'>"
+                     "<th>מספר תכנית</th><th>מינה\"ק</th><th>שם תכנית</th>"
+                     "<th>סטטוס תכנית</th>"
+                     "<th>🗺️ ייעודי קרקע</th><th>🛤️ זיקות הנאה</th>"
+                     "<th>🌳 עצים</th><th>📊 טבלה 5 + נכנס</th></tr>")
+            for pn in plan_order:
+                row = grouped[pn]
+                name_he = (row['plan_name_he'] or '').split('זיהוי וסיווג')[0].strip().rstrip(',').strip()
+                cells = row['cells']
+
+                def _cell(key):
+                    return '<br>'.join(cells[key]) if cells[key] else ''
+
+                html += "<tr>"
+                html += f"<td>{row['plan_name']}</td>"
+                html += f"<td>{row['minhak']}</td>"
+                html += f"<td dir='rtl'>{name_he}</td>"
+                html += f"<td dir='rtl'>{row['status']}</td>"
+                html += f"<td dir='rtl'>{_cell('landuse')}</td>"
+                html += f"<td dir='rtl'>{_cell('easements')}</td>"
+                html += f"<td dir='rtl'>{_cell('trees')}</td>"
+                html += f"<td dir='rtl'>{_cell('table5')}</td>"
+                html += "</tr>"
+            html += "</table><br>"
 
     html += "<p>הודעה זו נשלחה אוטומטית על ידי סקריפט הסנכרון של מבאת.</p></body></html>"
 
