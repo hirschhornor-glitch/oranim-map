@@ -52,11 +52,21 @@ OUT = os.path.join(DATA_DIR, "tree_permits.json")
 UA = {"User-Agent": "Mozilla/5.0 (oranim-tree-permits-fetch)"}
 
 
-def fetch_page(page):
+def fetch_page(page, attempts=3):
+    # Retry every page (incl. page 1) — a transient Meirim hiccup on the first
+    # request or the final json.load must not crash the whole CI job.
     qs = urllib.parse.urlencode({"PLACE": PLACE, "page": page})
-    req = urllib.request.Request(API + "?" + qs, headers=UA)
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+    last = None
+    for attempt in range(attempts):
+        try:
+            req = urllib.request.Request(API + "?" + qs, headers=UA)
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except Exception as e:
+            last = e
+            print(f"  page {page} retry {attempt+1}/{attempts}: {e}")
+            time.sleep(2 * (attempt + 1))
+    raise last
 
 
 def fetch_all():
@@ -66,13 +76,10 @@ def fetch_all():
     rows = list(first["data"])
     print(f"rowCount={pag.get('rowCount')} pages={pages}")
     for p in range(2, pages + 1):
-        for attempt in range(3):
-            try:
-                rows.extend(fetch_page(p)["data"])
-                break
-            except Exception as e:
-                print(f"  page {p} retry {attempt+1}: {e}")
-                time.sleep(2)
+        try:
+            rows.extend(fetch_page(p)["data"])
+        except Exception as e:
+            print(f"  page {p} failed after retries, skipping: {e}")
         if p % 20 == 0:
             print(f"  ...fetched page {p}/{pages}")
         time.sleep(0.15)

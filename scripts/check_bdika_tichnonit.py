@@ -30,9 +30,29 @@ warnings.filterwarnings("ignore")
 # ── Config ──
 CREDS_FILE    = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID      = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
-PLANS_GEOJSON = r"C:\ORANIM\oranim-app\data\plans.geojson"
-SHAVAZ_GEOJSON = r"C:\ORANIM\oranim-app\data\future_shavaz.geojson"
-TEMP_DIR      = r"C:\ORANIM\temp_pdfs"
+
+
+def _find_data_dir():
+    # Resolve data/ in both local (script under oranim-app/scripts) and CI
+    # (script copied to repo root, run from there) — never hardcode C:\… paths,
+    # which don't exist on the Ubuntu runner. Mirrors fetch_tree_permits.py.
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(here, "..", "data"),         # local: script under scripts/
+        os.path.join(here, "data"),               # CI: script at repo root
+        os.path.join(here, "oranim-app", "data"),  # script sitting at C:\ORANIM
+        r"C:\ORANIM\oranim-app\data",             # absolute local fallback
+    ]
+    for d in candidates:
+        if os.path.isfile(os.path.join(d, "plans.geojson")):
+            return os.path.abspath(d)
+    raise SystemExit("could not locate data/ dir (plans.geojson) near " + here)
+
+
+DATA_DIR       = _find_data_dir()
+PLANS_GEOJSON  = os.path.join(DATA_DIR, "plans.geojson")
+SHAVAZ_GEOJSON = os.path.join(DATA_DIR, "future_shavaz.geojson")
+TEMP_DIR       = os.path.join(os.path.dirname(DATA_DIR), "temp_pdfs")
 MAVAT_BASE    = "https://mavat.iplan.gov.il"
 XPLAN_URL     = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
 JLM_BBOX_ITM  = (210000, 622000, 238000, 642000)
