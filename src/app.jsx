@@ -1012,7 +1012,8 @@
             'הכרעה בהתנגדויות / אישור': 'objections',
             'הפקדה להתנגדויות/השגות': 'deposit',
             'במילוי תנאים להפקדה': 'conditions', 'תכנית עומדת בתנאי סף': 'conditions',
-            'נפתח תיק למתכנן': 'open', 'נפתח תיק תבע': 'open', 'בבדיקה תכנונית': 'open', 'נקלטה מקובץ מבאת': 'open',
+            'נפתח תיק למתכנן': 'open', 'נפתח תיק תבע': 'open', 'נקלטה מקובץ מבאת': 'open',
+            'בבדיקה תכנונית': 'review',
         };
         function getFilterStatusGroup(status) {
             if (FILTER_STATUS_MAP[status]) return FILTER_STATUS_MAP[status];
@@ -2445,6 +2446,7 @@
                 { key: 'deposit', label: 'הפקדה' },
                 { key: 'conditions', label: 'במילוי תנאים להפקדה' },
                 { key: 'open', label: 'פתיחת תיק / בדיקה' },
+                { key: 'review', label: 'בבדיקה תכנונית' },
                 { key: 'ו-גמר בנייה', label: 'גמר בנייה' },
                 { key: 'ה-בבנייה', label: 'בבנייה' },
                 { key: 'ד-היתר בנייה', label: 'היתר בנייה' },
