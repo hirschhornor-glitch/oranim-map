@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-25-execution-staging';
+        const APP_VERSION = '2026-06-25-staging-v2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2193,6 +2193,7 @@
             const [cellReport, setCellReport] = useState(null); // {minahak, statusKey, statusLabel, plans}
             const [showMimush, setShowMimush] = useState(false);
             const [stagingReport, setStagingReport] = useState(false); // execution-staging cross-plan report
+            const [stagingDomainFilter, setStagingDomainFilter] = useState('all'); // all|public_space|roads|public_building
             const [mimushData, setMimushData] = useState(null);
             const [mimushDrilldown, setMimushDrilldown] = useState(null);
             const [mimushExpanded, setMimushExpanded] = useState(null); // null | 'stage' | 'tail'
@@ -17741,9 +17742,9 @@
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const blue = '#6fa8dc', blueDk = '#1f3a52', gold = '#e0a635';
                 const INFRA = {
-                    public_space:    { icon: '🌳', label: 'שטחים ציבוריים / שצ"פ' },
-                    public_building: { icon: '🏛️', label: 'מבני ציבור' },
-                    roads:           { icon: '🛣️', label: 'דרכים / תשתית' },
+                    public_space:    { label: 'שצ"פ' },
+                    public_building: { label: 'הפרשה מבונה / מבני ציבור' },
+                    roads:           { label: 'דרך / תשתית' },
                 };
                 let html = '<div>';
                 html += buildNavBar(navInfo);
@@ -17756,27 +17757,27 @@
                 html += `<div class="popup-header-title">${title}</div>`;
                 html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
                 html += `<span class="popup-status-badge" style="background:${blue}33;color:${blue};border:1px solid ${blue}">שלביות ותנאי ביצוע</span>`;
-                if (stg.confidence === 'low') html += '<span style="font-size:10px;color:#caa64a" title="חולץ אוטומטית — מומלץ לאמת מול ההוראות">⚠ לאימות</span>';
+                if (stg.confidence === 'low') html += '<span style="font-size:10px;color:#caa64a" title="חולץ אוטומטית — מומלץ לאמת מול ההוראות">לאימות</span>';
                 html += '</div></div>';
 
                 html += '<div class="popup-body">';
 
                 // ── Banners: allocation gate / occupancy gate / duration / elongation ──
                 if (stg.occupancy_gated_on_public) {
-                    html += `<div style="background:${gold}1f;border-right:3px solid ${gold};border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:11.5px;color:#f0e2bf">⚠ אכלוס מותנה בהשלמת תשתית ציבורית</div>`;
+                    html += `<div style="background:${gold}1f;border-right:3px solid ${gold};border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:11.5px;color:#f0e2bf">אכלוס מותנה בהשלמת תשתית ציבורית</div>`;
                 }
                 const banners = [];
-                if (stg.allocation_gate_stage) banners.push(`🔑 ההפרשות הציבוריות מתקבלות בשלב ${esc(stg.allocation_gate_stage)}`);
-                if (stg.est_years) banners.push(`⏱ משך משוער: ${esc(stg.est_years)} שנים`);
+                if (stg.allocation_gate_stage) banners.push(`ההפרשות הציבוריות מתקבלות בשלב ${esc(stg.allocation_gate_stage)}`);
+                if (stg.est_years) banners.push(`משך משוער: ${esc(stg.est_years)} שנים`);
                 const ELONG = { high: ['התארכות גבוהה', '#e06666'], medium: ['התארכות בינונית', '#e0a635'], low: ['התארכות נמוכה', '#93c47d'], none: ['ללא שלביות', '#93c47d'] };
-                if (stg.elongation && ELONG[stg.elongation]) banners.push(`<span style="color:${ELONG[stg.elongation][1]}">📈 ${ELONG[stg.elongation][0]}</span>`);
+                if (stg.elongation && ELONG[stg.elongation]) banners.push(`<span style="color:${ELONG[stg.elongation][1]}">${ELONG[stg.elongation][0]}</span>`);
                 if (banners.length) {
                     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
                     banners.forEach(b => { html += `<span style="font-size:11px;background:#ffffff0d;border-radius:10px;padding:3px 9px;color:#cdd6e6">${b}</span>`; });
                     html += '</div>';
                 }
                 if (stg.single_phase) {
-                    html += `<div style="font-size:12px;color:#93c47d;margin-bottom:6px">✓ הבנייה בהינף אחד — לא נקבעה בנייה בשלבים.</div>`;
+                    html += `<div style="font-size:12px;color:#93c47d;margin-bottom:6px">הבנייה בהינף אחד — לא נקבעה בנייה בשלבים.</div>`;
                 }
                 if (stg.defers_to) {
                     html += `<div style="font-size:11px;color:#8899bb;margin-bottom:6px">שלביות הביצוע כמאושר בהוראות תכנית ${esc(stg.defers_to)}.</div>`;
@@ -17794,7 +17795,7 @@
                         const br = gate ? `border-right:3px solid ${gold}` : 'border-right:3px solid transparent';
                         html += `<tr style="background:${bg};${br}">`;
                         html += `<td style="padding:4px;vertical-align:top;color:#cdd6e6;font-weight:700">${esc(s.stage_number)}</td>`;
-                        html += `<td style="padding:4px;vertical-align:top;color:#e6ecf7">${esc(s.description)}${gate ? ` <span style="display:inline-block;background:${gold};color:#1a1a2e;border-radius:8px;padding:0 6px;font-size:9.5px;font-weight:700">🔑 הפרשות ציבוריות</span>` : ''}</td>`;
+                        html += `<td style="padding:4px;vertical-align:top;color:#e6ecf7">${esc(s.description)}${gate ? ` <span style="display:inline-block;background:${gold};color:#1a1a2e;border-radius:8px;padding:0 6px;font-size:9.5px;font-weight:700">הפרשות ציבוריות</span>` : ''}</td>`;
                         html += `<td style="padding:4px;vertical-align:top;color:#bcc6d8;line-height:1.4">${esc(s.condition || '')}</td>`;
                         html += '</tr>';
                     });
@@ -17809,10 +17810,10 @@
                         if (!group.length) return;
                         html += `<div class="popup-section-title" style="color:${blue};margin-top:8px">${label}</div>`;
                         group.forEach(c => {
-                            const meta = INFRA[c.category] || { icon: '•', label: '' };
+                            const meta = INFRA[c.category] || { label: '' };
                             const br = c.gates ? `border-right:3px solid ${gold}` : 'border-right:3px solid #ffffff22';
                             html += `<div style="margin:5px 0;padding:6px 8px;background:#ffffff0a;${br};border-radius:4px">`;
-                            html += `<div style="font-weight:700;font-size:10.5px;color:#e6ecf7">${meta.icon} ${esc(meta.label)}${c.gates ? ` <span style="color:${gold}">· מתנה</span>` : ''}</div>`;
+                            html += `<div style="font-weight:700;font-size:10.5px;color:#e6ecf7">${esc(meta.label)}${c.gates ? ` <span style="color:${gold}">· מתנה</span>` : ''}</div>`;
                             html += `<div style="font-size:11px;line-height:1.45;color:#bcc6d8;margin-top:3px">${esc(c.text)}</div>`;
                             html += '</div>';
                         });
@@ -26468,34 +26469,48 @@
                             const t = (f.properties.taba || f.properties.TABA || '').toString().trim();
                             if (t && !planByTaba[t]) planByTaba[t] = f.properties;
                         });
-                        const INFRA_ICON = { public_space: '🌳', public_building: '🏛️', roads: '🛣️' };
+                        const CAT_LABEL = { public_space: 'שצ"פ', public_building: 'הפרשה מבונה', roads: 'דרך' };
                         const ELONG_RANK = { high: 0, medium: 1, low: 2, none: 3 };
                         const ELONG_LABEL = { high: 'גבוהה', medium: 'בינונית', low: 'נמוכה', none: '—' };
-                        const ELONG_COLOR = { high: '#e06666', medium: '#e0a635', low: '#93c47d', none: '#888' };
+                        const ELONG_COLOR = { high: '#e06666', medium: '#e0a635', low: '#93c47d', none: '#8a93a6' };
                         const rows = [];
                         Object.keys(stg).forEach(taba => {
                             const s = stg[taba] || {};
                             const nStages = (s.stages || []).length;
-                            const nConds = (s.conditions || []).length;
-                            if (!nStages && !nConds && !s.single_phase) return;
+                            const conds = s.conditions || [];
+                            if (!nStages && !conds.length && !s.single_phase) return;
                             const pp = planByTaba[taba] || {};
                             rows.push({
                                 taba,
                                 name: pp.plan_summary || pp.plan_name_he || s.plan_name || taba,
                                 minahak: (pp.minahak || '').trim(),
                                 nStages,
+                                single: !!s.single_phase,
                                 gateStage: s.allocation_gate_stage || '',
                                 infra: s.requires_public_infra || [],
                                 occGated: !!s.occupancy_gated_on_public,
                                 estYears: s.est_years || null,
                                 elong: s.elongation || 'none',
                                 conf: s.confidence || 'low',
+                                conds,
                             });
                         });
                         rows.sort((a, b) => (ELONG_RANK[a.elong] - ELONG_RANK[b.elong]) || (b.nStages - a.nStages));
+
+                        const filter = stagingDomainFilter;
+                        const viewRows = filter === 'all' ? rows : rows.filter(r => r.infra.includes(filter));
+                        const DOMAINS = [['all', 'כל התחומים'], ['public_space', 'שצ"פ'], ['roads', 'דרך'], ['public_building', 'הפרשה מבונה']];
+                        // flatten the conditions of the selected domain for the detail view
+                        const detailRows = [];
+                        if (filter !== 'all') viewRows.forEach(r => {
+                            r.conds.filter(c => c.category === filter).forEach(c => {
+                                detailRows.push({ taba: r.taba, name: r.name, minahak: r.minahak, type: c.type, gates: !!c.gates, text: c.text, conf: r.conf });
+                            });
+                        });
+
                         const kMulti = rows.filter(r => r.nStages >= 2).length;
                         const kGated = rows.filter(r => r.occGated).length;
-                        const kInfra = rows.filter(r => r.infra.length).length;
+                        const domainCount = (cat) => rows.filter(r => r.infra.includes(cat)).length;
                         const yrs = rows.filter(r => r.estYears).map(r => r.estYears);
                         const kAvgYears = yrs.length ? Math.round(yrs.reduce((a, b) => a + b, 0) / yrs.length) : null;
                         const KPI = (val, lbl, col) => (
@@ -26503,90 +26518,155 @@
                                 <div style={{fontSize:20,fontWeight:700,color:col}}>{val}</div>
                                 <div style={{fontSize:11,color:'#aab'}}>{lbl}</div>
                             </div>);
+                        const anyLow = (filter === 'all' ? rows : detailRows).some(r => r.conf === 'low');
+                        const closeReport = () => { setStagingReport(false); setStagingDomainFilter('all'); };
+                        const goToPlan = (taba) => {
+                            if (!gd || !gd.plans || !mapInstanceRef.current) return;
+                            const feat = gd.plans.features.find(f => ((f.properties.taba||f.properties.TABA||'').toString().trim()) === taba);
+                            if (!feat || !feat.geometry) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                            const props = JSON.parse(JSON.stringify(feat.properties));
+                            closeReport();
+                            setTimeout(() => {
+                                mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                setTimeout(() => {
+                                    const mapped = mapPlanProps(props);
+                                    const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                    popup.openOn(mapInstanceRef.current);
+                                    bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                }, 600);
+                            }, 100);
+                        };
+                        const thR = { textAlign:'right', padding:'7px 8px', color:'#cfd6e4', fontWeight:600, fontSize:11.5 };
+                        const thC = { textAlign:'center', padding:'7px 8px', color:'#cfd6e4', fontWeight:600, fontSize:11.5 };
                         return (
-                        <div className="units-overlay" onClick={() => setStagingReport(false)}>
-                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(950px, 96vw)', maxHeight:'86vh', display:'flex', flexDirection:'column'}}>
-                                <button className="units-close" onClick={() => setStagingReport(false)}>&times;</button>
+                        <div className="units-overlay" onClick={closeReport}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1000px, 96vw)', maxHeight:'88vh', display:'flex', flexDirection:'column'}}>
+                                <button className="units-close" onClick={closeReport}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto', flex:1}}>
-                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128202; שלביות ותנאי ביצוע</h2>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>שלביות ותנאי ביצוע</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{rows.length} תכניות עם שלביות/תנאי ביצוע · מדורג לפי סיכון התארכות וקצב מימוש ההפרשות הציבוריות</p>
                                     <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
                                         {KPI(kMulti, 'תכניות רב-שלביות', '#6fa8dc')}
                                         {KPI(kGated, 'אכלוס מותנה בתשתית ציבורית', '#e0a635')}
-                                        {KPI(kInfra, 'עם תנאי תשתית ציבורית', '#93c47d')}
+                                        {KPI(domainCount('public_space'), 'תכניות עם תנאי שצ"פ', '#93c47d')}
                                         {KPI(kAvgYears != null ? kAvgYears : '—', 'משך משוער ממוצע (שנים)', '#b39ddb')}
                                     </div>
-                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
-                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
-                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
-                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>תכנית</th>
-                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שלבים</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שלב הפרשות</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תנאי תשתית</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>משך משוער</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>התארכות</th>
-                                        </tr></thead>
-                                        <tbody>
-                                            {rows.map((r, i) => (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = (e) => {
-                                                    e.stopPropagation();
-                                                    if (!gd || !gd.plans || !mapInstanceRef.current) return;
-                                                    const feat = gd.plans.features.find(f => ((f.properties.taba||f.properties.TABA||'').toString().trim()) === r.taba);
-                                                    if (!feat || !feat.geometry) return;
-                                                    const coords = [];
-                                                    const g = feat.geometry;
-                                                    if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
-                                                    else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
-                                                    if (!coords.length) return;
-                                                    const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
-                                                    const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
-                                                    const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
-                                                    const props = JSON.parse(JSON.stringify(feat.properties));
-                                                    setStagingReport(false);
-                                                    setTimeout(() => {
-                                                        mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
-                                                        setTimeout(() => {
-                                                            const mapped = mapPlanProps(props);
-                                                            const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
-                                                            popup.openOn(mapInstanceRef.current);
-                                                            bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
-                                                        }, 600);
-                                                    }, 100);
-                                                }; }}>
-                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}{r.conf === 'low' ? <span title="חולץ אוטומטית — לאימות" style={{color:'#caa64a'}}> ⚠</span> : ''}</td>
-                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{r.name}</td>
-                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{r.minahak || '-'}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:'#e0e0e0'}}>{r.nStages || (stg[r.taba] && stg[r.taba].single_phase ? 'הינף אחד' : '-')}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:r.gateStage ? '#e0a635' : '#666',fontWeight:r.gateStage ? 700 : 400}}>{r.gateStage ? ('🔑 ' + r.gateStage) : '-'}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',fontSize:14}}>{r.infra.length ? r.infra.map(c => INFRA_ICON[c] || '').join(' ') : '-'}{r.occGated ? <span title="אכלוס מותנה בתשתית" style={{fontSize:11}}> ⚠</span> : ''}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:'#b39ddb'}}>{r.estYears ? (r.estYears + ' שנים') : '-'}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:ELONG_COLOR[r.elong],fontWeight:600}}>{ELONG_LABEL[r.elong]}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                    {/* domain filter */}
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12,alignItems:'center'}}>
+                                        <span style={{fontSize:12,color:'#8a93a6',marginInlineEnd:4}}>סינון לפי תחום:</span>
+                                        {DOMAINS.map(([k, lbl]) => {
+                                            const active = filter === k;
+                                            const cnt = k === 'all' ? rows.length : domainCount(k);
+                                            return (
+                                                <button key={k} onClick={() => setStagingDomainFilter(k)} style={{
+                                                    background: active ? '#4a6b8a' : 'transparent',
+                                                    color: active ? '#eaf2fb' : '#aab4c4',
+                                                    border: '1px solid ' + (active ? '#4a6b8a' : '#3a4256'),
+                                                    borderRadius: 16, padding: '4px 12px', fontSize: 12, cursor: 'pointer', fontWeight: active ? 600 : 400,
+                                                }}>{lbl} <span style={{opacity:.65,fontSize:11}}>({cnt})</span></button>);
+                                        })}
+                                    </div>
+
+                                    {filter === 'all' ? (
+                                        <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:12}}>
+                                            <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                                <th style={thR}>#</th>
+                                                <th style={thR}>תכנית</th>
+                                                <th style={thR}>מינה"ק</th>
+                                                <th style={thC}>מס' שלבים</th>
+                                                <th style={thC}>שלב הפרשות</th>
+                                                <th style={thR}>תנאי תשתית</th>
+                                                <th style={thC}>משך משוער</th>
+                                                <th style={thC}>התארכות</th>
+                                                <th style={thC}>אכלוס מותנה</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {viewRows.map((r, i) => (
+                                                    <tr key={r.taba} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                        <td style={{padding:'5px 8px',color:'#8a93a6',fontSize:11}}>{i+1}{r.conf === 'low' ? <span title="חולץ אוטומטית — לאימות" style={{color:'#caa64a'}}>*</span> : ''}</td>
+                                                        <td style={{padding:'5px 8px'}}><a href="#" onClick={e=>{e.preventDefault();goToPlan(r.taba);}} style={{color:'#64b5f6',textDecoration:'none'}}>{r.name}</a></td>
+                                                        <td style={{padding:'5px 8px',color:'#c9a8d6'}}>{r.minahak || '—'}</td>
+                                                        <td style={{textAlign:'center',padding:'5px 8px',color:'#dde3ee'}}>{r.nStages || (r.single ? 'הינף אחד' : '—')}</td>
+                                                        <td style={{textAlign:'center',padding:'5px 8px',color:r.gateStage ? '#e0a635' : '#6a7283',fontWeight:r.gateStage ? 700 : 400}}>{r.gateStage || '—'}</td>
+                                                        <td style={{padding:'5px 8px',color:'#bcc6d8'}}>{r.infra.length ? r.infra.map(c => CAT_LABEL[c] || c).join(', ') : '—'}</td>
+                                                        <td style={{textAlign:'center',padding:'5px 8px',color:'#b39ddb'}}>{r.estYears ? (r.estYears + ' שנים') : '—'}</td>
+                                                        <td style={{textAlign:'center',padding:'5px 8px',color:ELONG_COLOR[r.elong],fontWeight:600}}>{ELONG_LABEL[r.elong]}</td>
+                                                        <td style={{textAlign:'center',padding:'5px 8px',color:r.occGated ? '#e0a635' : '#6a7283'}}>{r.occGated ? 'כן' : '—'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <div>
+                                            <p style={{color:'#aab4c4',fontSize:12.5,marginBottom:8}}>{detailRows.length} תנאים בתחום <b style={{color:'#eaf2fb'}}>{CAT_LABEL[filter]}</b> ב-{viewRows.length} תכניות</p>
+                                            <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:12}}>
+                                                <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                                    <th style={thR}>#</th>
+                                                    <th style={thR}>תכנית</th>
+                                                    <th style={thR}>מינה"ק</th>
+                                                    <th style={thC}>סוג</th>
+                                                    <th style={thC}>מתנה</th>
+                                                    <th style={thR}>פירוט התנאי</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {detailRows.map((d, i) => (
+                                                        <tr key={i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                            <td style={{padding:'5px 8px',color:'#8a93a6',fontSize:11,verticalAlign:'top'}}>{i+1}{d.conf === 'low' ? <span title="חולץ אוטומטית — לאימות" style={{color:'#caa64a'}}>*</span> : ''}</td>
+                                                            <td style={{padding:'5px 8px',verticalAlign:'top'}}><a href="#" onClick={e=>{e.preventDefault();goToPlan(d.taba);}} style={{color:'#64b5f6',textDecoration:'none'}}>{d.name}</a></td>
+                                                            <td style={{padding:'5px 8px',color:'#c9a8d6',verticalAlign:'top'}}>{d.minahak || '—'}</td>
+                                                            <td style={{textAlign:'center',padding:'5px 8px',color:'#dde3ee',verticalAlign:'top'}}>{d.type === 'occupancy' ? 'אכלוס' : 'היתר'}</td>
+                                                            <td style={{textAlign:'center',padding:'5px 8px',color:d.gates ? '#e0a635' : '#6a7283',fontWeight:d.gates ? 700 : 400,verticalAlign:'top'}}>{d.gates ? 'כן' : '—'}</td>
+                                                            <td style={{padding:'5px 8px',color:'#bcc6d8',lineHeight:1.45,verticalAlign:'top'}}>{d.text}</td>
+                                                        </tr>
+                                                    ))}
+                                                    {detailRows.length === 0 && <tr><td colSpan={6} style={{padding:'12px 8px',color:'#8a93a6',textAlign:'center'}}>אין תנאים בתחום זה</td></tr>}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                    {anyLow && <p style={{color:'#8a93a6',fontSize:11,marginBottom:10}}>* נתון שחולץ אוטומטית מההוראות — מומלץ לאמת מול המקור.</p>}
+
                                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                                         <button onClick={() => {
-                                            const ICON_TXT = { public_space: 'שצ"פ', public_building: 'מבני ציבור', roads: 'דרכים' };
+                                            const isDetail = filter !== 'all';
                                             const printWin = window.open('', '_blank');
                                             printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>שלביות ותנאי ביצוע</title>');
-                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl;color:#1a1a1a}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd;vertical-align:top}th{background:#f0f2f5;font-weight:700}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
                                             printWin.document.write('</head><body>');
                                             printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
-                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
-                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">הדפסה</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">שמור CSV</button>');
                                             printWin.document.write('</div>');
-                                            printWin.document.write('<div class="header"><h2>שלביות ותנאי ביצוע</h2><p>' + rows.length + ' תכניות</p></div>');
-                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>שלבים</th><th>שלב הפרשות</th><th>תנאי תשתית</th><th>משך משוער</th><th>התארכות</th><th>אכלוס מותנה</th></tr></thead><tbody>');
-                                            const csvRows = ['"#","מספר תכנית","תכנית","מינהק","שלבים","שלב הפרשות","תנאי תשתית","משך משוער","התארכות","אכלוס מותנה בתשתית"'];
-                                            rows.forEach((r, i) => {
-                                                const infraTxt = r.infra.map(c => ICON_TXT[c] || c).join(', ');
-                                                const nS = r.nStages || ((stg[r.taba] && stg[r.taba].single_phase) ? 'הינף אחד' : '');
-                                                const occ = r.occGated ? 'כן' : '';
-                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + nS + '</td><td>' + (r.gateStage||'-') + '</td><td>' + (infraTxt||'-') + '</td><td>' + (r.estYears ? r.estYears + ' שנים' : '-') + '</td><td>' + ELONG_LABEL[r.elong] + '</td><td>' + occ + '</td></tr>');
-                                                csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + nS + '","' + (r.gateStage||'') + '","' + infraTxt.replace(/"/g,'""') + '","' + (r.estYears||'') + '","' + ELONG_LABEL[r.elong] + '","' + occ + '"');
-                                            });
+                                            const subtitle = isDetail ? ('תחום: ' + CAT_LABEL[filter]) : 'כל התחומים';
+                                            printWin.document.write('<div class="header"><h2>שלביות ותנאי ביצוע</h2><p>' + subtitle + ' · ' + (isDetail ? detailRows.length + ' תנאים' : rows.length + ' תכניות') + '</p></div>');
+                                            let csvRows;
+                                            if (isDetail) {
+                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סוג</th><th>מתנה</th><th>פירוט התנאי</th></tr></thead><tbody>');
+                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","סוג","מתנה","פירוט התנאי"'];
+                                                detailRows.forEach((d, i) => {
+                                                    const tp = d.type === 'occupancy' ? 'אכלוס' : 'היתר';
+                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + d.taba + '</td><td>' + d.name + '</td><td>' + (d.minahak||'-') + '</td><td>' + tp + '</td><td>' + (d.gates?'כן':'-') + '</td><td>' + d.text + '</td></tr>');
+                                                    csvRows.push('"' + (i+1) + '","' + d.taba + '","' + (d.name||'').replace(/"/g,'""') + '","' + (d.minahak||'').replace(/"/g,'""') + '","' + tp + '","' + (d.gates?'כן':'') + '","' + (d.text||'').replace(/"/g,'""') + '"');
+                                                });
+                                            } else {
+                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>מס\' שלבים</th><th>שלב הפרשות</th><th>תנאי תשתית</th><th>משך משוער</th><th>התארכות</th><th>אכלוס מותנה</th></tr></thead><tbody>');
+                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","מס\' שלבים","שלב הפרשות","תנאי תשתית","משך משוער","התארכות","אכלוס מותנה"'];
+                                                viewRows.forEach((r, i) => {
+                                                    const infraTxt = r.infra.map(c => CAT_LABEL[c] || c).join(', ');
+                                                    const nS = r.nStages || (r.single ? 'הינף אחד' : '');
+                                                    const occ = r.occGated ? 'כן' : '';
+                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + nS + '</td><td>' + (r.gateStage||'-') + '</td><td>' + (infraTxt||'-') + '</td><td>' + (r.estYears ? r.estYears + ' שנים' : '-') + '</td><td>' + ELONG_LABEL[r.elong] + '</td><td>' + occ + '</td></tr>');
+                                                    csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + nS + '","' + (r.gateStage||'') + '","' + infraTxt.replace(/"/g,'""') + '","' + (r.estYears||'') + '","' + ELONG_LABEL[r.elong] + '","' + occ + '"');
+                                                });
+                                            }
                                             printWin.document.write('</tbody></table>');
                                             const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="שלביות_ביצוע.csv";a.click()});<\/script>');
@@ -26594,7 +26674,7 @@
                                             printWin.document.close();
                                             printWin.focus();
                                         }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
-                                            &#128424; הדפסה / CSV
+                                            הדפסה / CSV
                                         </button>
                                     </div>
                                 </div>
