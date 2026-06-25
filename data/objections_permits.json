@@ -172,6 +172,11 @@
     "helka": null,
     "deadline_publish": "28/06/2026",
     "deadline_check": "18/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2024/0541.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220792,
+      631182
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -184,12 +189,7 @@
       35.218541,
       31.773313
     ],
-    "scraped_at": "2026-06-04T14:03:48.573555",
-    "itm": [
-      220792,
-      631182
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2024/0541.00&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-25T22:54:32.191855"
   },
   "1949/0126.02": {
     "tik": "1949/0126.02",
