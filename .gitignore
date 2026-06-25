@@ -31,3 +31,7 @@ _bootstrap/
 # Python caches (build/scraper scripts)
 __pycache__/
 *.pyc
+
+# execution-staging extractor checkpoint artifacts
+data/execution_staging.json.done
+data/execution_staging.json.tmp
