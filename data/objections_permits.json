@@ -204,6 +204,11 @@
     "helka": null,
     "deadline_publish": "13/07/2026",
     "deadline_check": "04/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1949/0126.02&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220217,
+      631139
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -216,12 +221,7 @@
       35.212471,
       31.772925
     ],
-    "scraped_at": "2026-06-04T14:54:35.504802",
-    "itm": [
-      220217,
-      631139
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1949/0126.02&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-25T23:49:06.973804"
   },
   "1985/0733.02": {
     "tik": "1985/0733.02",
@@ -702,5 +702,69 @@
       220473,
       631023
     ]
+  },
+  "1978/0433.03": {
+    "tik": "1978/0433.03",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "12/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד, עבודות לשיפור נגישות, התקנת מעלית חיצונית",
+    "request_description": "תוספת בניה ל2 דירות הגג+חדר מחוזק בגג +מדרגות גישה +מרפסת גג + מעלית ומבואות.",
+    "address": "אלעזר המודעי 5, גוננים",
+    "street": "אלעזר המודעי",
+    "house": "5",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "20/07/2026",
+    "deadline_check": "12/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1978/0433.03&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220421,
+      629702
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.214623,
+      31.759966
+    ],
+    "scraped_at": "2026-06-25T23:44:16.300262"
+  },
+  "1949/0126.01": {
+    "tik": "1949/0126.01",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "07/06/2026",
+    "request_type": "שינויים ללא תוספת שטחים, רישוי בניה - שימוש חורג מתכנית",
+    "request_description": "שימוש חורג ממגורים לגן ילדים",
+    "address": "י. אלפסי 19, רחביה",
+    "street": "אלפסי",
+    "house": "19",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "14/07/2026",
+    "deadline_check": "07/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1949/0126.01&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220379,
+      631228
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.214181,
+      31.773728
+    ],
+    "scraped_at": "2026-06-25T23:45:17.185448"
   }
 }
