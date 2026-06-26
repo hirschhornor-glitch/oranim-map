@@ -868,5 +868,165 @@
       31.767722
     ],
     "scraped_at": "2026-06-26T06:09:21.314500"
+  },
+  "2009/0622.02": {
+    "tik": "2009/0622.02",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "14/06/2026",
+    "request_type": "ממ\"ד",
+    "request_description": "תוספת ממ\"ד",
+    "address": "מקור חיים 28, מקור חיים",
+    "street": "מקור חיים",
+    "house": "28",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "21/07/2026",
+    "deadline_check": "14/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2009/0622.02&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220135,
+      629214
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.211604,
+      31.755565
+    ],
+    "scraped_at": "2026-06-26T06:46:53.098114"
+  },
+  "2010/0196.01": {
+    "tik": "2010/0196.01",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "10/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים, ממ\"ד, בניית מרפסת",
+    "request_description": "תוספת בניה עפ\"י תב\"ע, ממ\"ד, מחסן ומרפסת",
+    "address": "ניקנור 217, גוננים",
+    "street": "ניקנור",
+    "house": "217",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "19/07/2026",
+    "deadline_check": "10/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2010/0196.01&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      218993,
+      629420
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.19955,
+      31.757423
+    ],
+    "scraped_at": "2026-06-26T07:32:53.815802"
+  },
+  "2026/0180.00": {
+    "tik": "2026/0180.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "10/06/2026",
+    "request_type": null,
+    "request_description": "תוספת בניה, ממ\"דים ומרפסות ו-4 יח\"ד חדשות עפ\"י תמ\"א 38/1 ותכנית 10038",
+    "address": "עמק רפאים 51, מושבה גרמנית",
+    "street": "עמק רפאים",
+    "house": "51",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "19/07/2026",
+    "deadline_check": "10/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0180.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220725,
+      629875
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.217832,
+      31.761526
+    ],
+    "scraped_at": "2026-06-26T07:51:01.750044"
+  },
+  "2026/0247.00": {
+    "tik": "2026/0247.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "24/06/2026",
+    "request_type": null,
+    "request_description": "פינוי בינוי, הריסת בניין קיים ובניית שני מבנים חדשים למגורים עד 7 קומות מעל מפלס הכניסה ושתי קומות חניה תת קרקעית",
+    "address": "עמק רפאים 51, מושבה גרמנית",
+    "street": "עמק רפאים",
+    "house": "51",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "19/07/2026",
+    "deadline_check": "10/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0247.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220725,
+      629875
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.217832,
+      31.761526
+    ],
+    "scraped_at": "2026-06-26T07:51:19.333686"
+  },
+  "2026/0146.00": {
+    "tik": "2026/0146.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "17/06/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תמ\"א 38/1 - חיזוק ותוספות במבנה קיים",
+    "address": "שופן 2, קטמון הישנה",
+    "street": "פרידריק שופן",
+    "house": "2",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "26/07/2026",
+    "deadline_check": "17/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0146.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220363,
+      630652
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.214012,
+      31.768533
+    ],
+    "scraped_at": "2026-06-26T08:30:09.062685"
   }
 }
