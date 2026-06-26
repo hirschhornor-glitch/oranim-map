@@ -35,3 +35,4 @@ __pycache__/
 # execution-staging extractor checkpoint artifacts
 data/execution_staging.json.done
 data/execution_staging.json.tmp
+data/execution_staging.json.cur
