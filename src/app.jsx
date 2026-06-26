@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-25-staging-v2';
+        const APP_VERSION = '2026-06-26-floor-allocations';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4088,6 +4088,7 @@
                 window.__fieldObs = {};
                 window.__extraPermits = {};
                 window.__executionStaging = {};
+                window.__floorAllocations = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4106,6 +4107,7 @@
                     ['__fieldObs', 'data/field_observations.json'],
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
+                    ['__floorAllocations', 'data/floor_allocations.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4521,6 +4523,7 @@
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
+                            else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
@@ -8326,6 +8329,83 @@
                     win.document.close();
                     win.print();
                 });
+            }
+
+            // ── דוח קומות הפרשות מבונות (נקרא מחתכי נספח בינוי) ──
+            // Printable + CSV report listing, per plan, on which floor each built public
+            // allocation sits. Elevated (non-ground) allocations are highlighted first.
+            function openFloorAllocReport() {
+                const fa = window.__floorAllocations || {};
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const normT = (t) => String(t == null ? '' : t).replace(/^101-?/, '').replace(/^0+/, '');
+                const gd = geoDataRef.current || {};
+                const nameByTaba = {};
+                ((gd.plans && gd.plans.features) || []).forEach(f => {
+                    const p = f.properties || {};
+                    const k = normT(p.taba || p.TABA);
+                    if (k && !nameByTaba[k]) nameByTaba[k] = p.plan_summary || p.plan_name_he || p.plan_name || '';
+                });
+                const confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' };
+                const rows = [];
+                let nDeterminable = 0, nUndet = 0, nElevated = 0, nPlans = 0;
+                Object.keys(fa).forEach(taba => {
+                    if (taba.charAt(0) === '_') return;
+                    const e = fa[taba]; if (!e) return;
+                    nPlans++;
+                    const determinable = e.source_type !== 'none_found' && e.source_type !== 'table_only';
+                    if (determinable) nDeterminable++; else nUndet++;
+                    let planElevated = false;
+                    (e.allocations || []).forEach(a => {
+                        const fl = a.floor_label || '';
+                        const isElev = determinable && /קומ[הות] *[1-9]|פודיום עליון|מעל המסחר|מעל קומ|מפלס *\+?1[0-9]|מפלס *\+?[4-9]|קומה -/.test(fl);
+                        if (isElev) planElevated = true;
+                        rows.push({
+                            taba, name: nameByTaba[normT(taba)] || (e.plan_name || ''),
+                            use: a.use || '', floor: fl, elev: a.elev_m || '',
+                            conf: confHe[e.confidence] || e.confidence || '', src: e.source_doc || '',
+                            determinable, isElev
+                        });
+                    });
+                    if (planElevated) nElevated++;
+                });
+                const rank = (r) => !r.determinable ? 2 : (r.isElev ? 0 : 1);
+                rows.sort((a, b) => rank(a) - rank(b) || String(a.taba).localeCompare(String(b.taba)));
+                const csvHeader = ['תב"ע', 'שם תכנית', 'שימוש', 'קומה', 'מפלס', 'ביטחון', 'מקור'];
+                const csvLines = [csvHeader.join(',')].concat(rows.map(r =>
+                    [r.taba, r.name, r.use, r.determinable ? r.floor : 'לא נמצא פילוח קומה בנספח', r.elev, r.conf, r.src]
+                        .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')));
+                const csvHref = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csvLines.join('\r\n'));
+                const trHtml = rows.map(r => {
+                    const bg = !r.determinable ? '#f3f3f3' : (r.isElev ? '#fff4e6' : '#fff');
+                    const floorCell = r.determinable
+                        ? esc(r.floor) + (r.elev ? ' <span style="color:#888">(' + esc(r.elev) + ')</span>' : '')
+                        : '<span style="color:#b00">לא נמצא פילוח קומה בנספח</span>';
+                    return '<tr style="background:' + bg + '"><td>' + esc(r.taba) + '</td><td>' + esc(r.name) +
+                        '</td><td>' + esc(r.use) + '</td><td>' + floorCell + '</td><td style="text-align:center">' +
+                        esc(r.conf) + '</td><td style="font-size:10px;color:#666">' + esc(r.src) + '</td></tr>';
+                }).join('');
+                const docHtml = '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>קומות הפרשות מבונות</title><style>' +
+                    'body{font-family:Arial,sans-serif;margin:20px;color:#1a1a2e}h1{font-size:20px;margin:0 0 4px}' +
+                    '.sub{color:#666;font-size:12px;margin-bottom:12px}.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}' +
+                    '.kpi{border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:90px}.kpi .v{font-size:20px;font-weight:bold}.kpi .l{font-size:11px;color:#666}' +
+                    'table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:5px 7px;text-align:right}' +
+                    'th{background:#b5651d;color:#fff}.btns{margin-bottom:12px}' +
+                    '.btns a,.btns button{margin-left:8px;padding:6px 12px;border:1px solid #b5651d;background:#b5651d;color:#fff;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px}' +
+                    '@media print{.btns{display:none}}</style></head><body>' +
+                    '<h1>🏢 קומות הפרשות מבונות</h1>' +
+                    '<div class="sub">באיזו קומה יושבת כל הפרשה מבונה (גן/מעון/מבנה ציבור/בית כנסת) — נקרא מחתכי ונספחי הבינוי של התכניות. שורות כתומות = הפרשה שאינה בקומת הקרקע.</div>' +
+                    '<div class="kpis"><div class="kpi"><div class="v">' + nPlans + '</div><div class="l">תכניות</div></div>' +
+                    '<div class="kpi"><div class="v">' + nDeterminable + '</div><div class="l">עם קומה מזוהה</div></div>' +
+                    '<div class="kpi"><div class="v" style="color:#b5651d">' + nElevated + '</div><div class="l">לא בקומת הקרקע</div></div>' +
+                    '<div class="kpi"><div class="v" style="color:#b00">' + nUndet + '</div><div class="l">ללא פילוח בנספח</div></div></div>' +
+                    '<div class="btns"><button onclick="window.print()">🖨️ הדפסה</button>' +
+                    '<a href="' + csvHref + '" download="floor_allocations.csv">📊 הורד CSV</a></div>' +
+                    '<table><thead><tr><th>תב"ע</th><th>שם תכנית</th><th>שימוש</th><th>קומה</th><th>ביטחון</th><th>מקור</th></tr></thead><tbody>' +
+                    trHtml + '</tbody></table></body></html>';
+                const win = window.open('', '_blank');
+                if (!win) { alert('החלון נחסם — אפשר חלונות קופצים לאתר'); return; }
+                win.document.write(docHtml);
+                win.document.close();
             }
 
             // ── דשבורד מינהל קהילתי — same one-page style as renderSubDashboard, with
@@ -17628,6 +17708,25 @@
                     html += '</div>';
                 }
 
+                // ── קומות הפרשות מבונות (נקראו מחתכי נספח בינוי) ──
+                // On which floor each built public allocation (גן/מעון/מבנה ציבור/בית כנסת)
+                // actually sits — read from the building-appendix cross-sections + floor plans.
+                const floorAlloc = (window.__floorAllocations || {})[taba];
+                if (floorAlloc && floorAlloc.allocations && floorAlloc.allocations.length &&
+                    floorAlloc.source_type !== 'none_found' && floorAlloc.source_type !== 'table_only') {
+                    const escF = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' }[floorAlloc.confidence] || floorAlloc.confidence || '';
+                    html += '<div style="margin-top:8px;padding:8px 10px;background:rgba(181,101,29,0.10);border:1px solid rgba(181,101,29,0.35);border-radius:6px">';
+                    html += '<div style="font-weight:bold;color:#d9954a;font-size:12px;margin-bottom:4px">🏢 קומות הפרשות מבונות</div>';
+                    floorAlloc.allocations.forEach(a => {
+                        html += '<div style="font-size:11px;color:#e6e9ef;margin:2px 0"><b>' + escF(a.use) + ':</b> ' + escF(a.floor_label || '') +
+                            (a.elev_m ? ' <span style="color:#9ca3af">(מפלס ' + escF(a.elev_m) + ')</span>' : '') + '</div>';
+                    });
+                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:3px">מקור: ' + escF(floorAlloc.source_doc || 'נספח בינוי') +
+                        (confHe ? ' · ביטחון ' + confHe : '') + '</div>';
+                    html += '</div>';
+                }
+
                 const tabaForJump = props.taba || props.TABA || '';
                 const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
                 const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
@@ -21319,6 +21418,20 @@
                                                 <div className="report-text">
                                                     <span className="report-title">דוח אזור מקיף</span>
                                                     <span className="report-desc">צייר אזור וקבל סיכום מלא (דאבל-קליק לסיום)</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {/* קטגוריה: קומות הפרשות מבונות */}
+                                    <div className="reports-category" style={{border:'1px dashed #b5651d', background:'rgba(181,101,29,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                        <h3 style={{color:'#b5651d'}}>🏢 קומות הפרשות מבונות</h3>
+                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>באיזו קומה יושבת כל הפרשה מבונה (גן/מעון/מבנה ציבור/בית כנסת) — נקרא מחתכי נספחי הבינוי. כולל ייצוא CSV והדפסה.</div>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openFloorAllocReport(); }}>
+                                                <span className="report-icon">🏢</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">קומות הפרשות מבונות</span>
+                                                    <span className="report-desc">טבלת קומה לכל הפרשה + ייצוא</span>
                                                 </div>
                                             </button>
                                         </div>
