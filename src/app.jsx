@@ -26776,21 +26776,28 @@
                         const rows = [];
                         Object.keys(stg).forEach(taba => {
                             const s = stg[taba] || {};
-                            const nStages = (s.stages || []).length;
-                            const conds = s.conditions || [];
-                            if (!nStages && !conds.length && !s.single_phase) return;
                             const pp = planByTaba[taba] || {};
                             const der = stagingDerive(s);
-                            const delivered = [...new Set(der.schedule.flatMap(it => it.gets))];
+                            // a real delivery milestone hands over public (gets non-empty);
+                            // bare occupancy stages with no public payload are noise.
+                            const realSchedule = der.schedule.filter(it => it.gets.length > 0);
+                            const delivered = [...new Set(realSchedule.flatMap(it => it.gets))];
+                            const occGated = !!s.occupancy_gated_on_public;
+                            // include only plans with an ACTUAL staging impact on public
+                            // allocations — phased delivery, an upfront (road) prerequisite,
+                            // or occupancy gated on public completion. Single-phase /
+                            // no-condition plans (the all-dash noise) drop out.
+                            if (!delivered.length && !der.prereqs.length && !occGated) return;
                             rows.push({
                                 taba,
                                 name: pp.plan_summary || pp.plan_name_he || s.plan_name || taba,
                                 minahak: (pp.minahak || '').trim(),
+                                status: normalizeStatus((pp.status_mavat || pp.Status_Mavat || '').trim()),
                                 single: !!s.single_phase,
-                                deliverySteps: der.schedule.length,
+                                deliverySteps: realSchedule.length,
                                 delivered,
                                 prereqs: der.prereqs,
-                                schedule: der.schedule,
+                                schedule: realSchedule,
                                 occGated: !!s.occupancy_gated_on_public,
                                 estYears: s.est_years || null,
                                 elong: s.elongation || 'none',
@@ -26808,10 +26815,10 @@
                         const detailRows = [];
                         if (filter !== 'all') viewRows.forEach(r => {
                             r.schedule.filter(it => it.gets.includes(DELIV_LABEL[filter])).forEach(it => {
-                                detailRows.push({ taba: r.taba, name: r.name, minahak: r.minahak, kind: 'מסירה', unit: it.unit, detail: it.gets.join(', '), conf: r.conf });
+                                detailRows.push({ taba: r.taba, name: r.name, minahak: r.minahak, status: r.status, kind: 'מסירה', unit: it.unit, detail: it.gets.join(', '), conf: r.conf });
                             });
                             if (filter === 'roads') r.prereqs.forEach(p => {
-                                detailRows.push({ taba: r.taba, name: r.name, minahak: r.minahak, kind: 'תנאי מקדים', unit: '—', detail: p, conf: r.conf });
+                                detailRows.push({ taba: r.taba, name: r.name, minahak: r.minahak, status: r.status, kind: 'תנאי מקדים', unit: '—', detail: p, conf: r.conf });
                             });
                         });
 
@@ -26889,6 +26896,7 @@
                                                 <th style={thR}>#</th>
                                                 <th style={thR}>תכנית</th>
                                                 <th style={thR}>מינה"ק</th>
+                                                <th style={thR}>סטטוס</th>
                                                 <th style={thC}>שלבי מסירה</th>
                                                 <th style={thR}>מתקבל בשלבים</th>
                                                 <th style={thR}>תנאים מקדימים</th>
@@ -26901,8 +26909,9 @@
                                                         <td style={{padding:'5px 8px',color:'#8a93a6',fontSize:11,verticalAlign:'top'}}>{i+1}{r.conf === 'low' ? <span title="חולץ אוטומטית — לאימות" style={{color:'#caa64a'}}>*</span> : ''}</td>
                                                         <td style={{padding:'5px 8px',verticalAlign:'top'}}><a href="#" onClick={e=>{e.preventDefault();goToPlan(r.taba);}} style={{color:'#64b5f6',textDecoration:'none'}}>{r.name}</a></td>
                                                         <td style={{padding:'5px 8px',color:'#c9a8d6',verticalAlign:'top'}}>{r.minahak || '—'}</td>
+                                                        <td style={{padding:'5px 8px',verticalAlign:'top'}}>{r.status ? <span style={{color:getStatusColor(r.status),fontSize:11}}>{r.status}</span> : '—'}</td>
                                                         <td style={{textAlign:'center',padding:'5px 8px',color:r.deliverySteps>=2?'#6fa8dc':'#dde3ee',fontWeight:r.deliverySteps>=2?700:400,verticalAlign:'top'}}>{r.deliverySteps || (r.single ? 'הינף אחד' : '—')}</td>
-                                                        <td style={{padding:'5px 8px',color:'#bcc6d8',verticalAlign:'top'}}>{r.delivered.length ? r.delivered.join(', ') : '—'}</td>
+                                                        <td style={{padding:'5px 8px',color:r.delivered.length?'#bcc6d8':'#9ba6b8',verticalAlign:'top'}}>{r.delivered.length ? r.delivered.join(', ') : (r.occGated ? 'מותנה בהשלמת ציבור' : '—')}</td>
                                                         <td style={{padding:'5px 8px',color:r.prereqs.length?'#f0d8a8':'#6a7283',verticalAlign:'top'}}>{r.prereqs.length ? r.prereqs.join(' · ') : '—'}</td>
                                                         <td style={{textAlign:'center',padding:'5px 8px',color:'#b39ddb',verticalAlign:'top'}}>{r.estYears ? (r.estYears + ' שנים') : '—'}</td>
                                                         <td style={{textAlign:'center',padding:'5px 8px',color:ELONG_COLOR[r.elong],fontWeight:600,verticalAlign:'top'}}>{ELONG_LABEL[r.elong]}</td>
@@ -26918,6 +26927,7 @@
                                                     <th style={thR}>#</th>
                                                     <th style={thR}>תכנית</th>
                                                     <th style={thR}>מינה"ק</th>
+                                                    <th style={thR}>סטטוס</th>
                                                     <th style={thC}>סוג</th>
                                                     <th style={thR}>יחידה / מתי</th>
                                                     <th style={thR}>פירוט</th>
@@ -26928,12 +26938,13 @@
                                                             <td style={{padding:'5px 8px',color:'#8a93a6',fontSize:11,verticalAlign:'top'}}>{i+1}{d.conf === 'low' ? <span title="חולץ אוטומטית — לאימות" style={{color:'#caa64a'}}>*</span> : ''}</td>
                                                             <td style={{padding:'5px 8px',verticalAlign:'top'}}><a href="#" onClick={e=>{e.preventDefault();goToPlan(d.taba);}} style={{color:'#64b5f6',textDecoration:'none'}}>{d.name}</a></td>
                                                             <td style={{padding:'5px 8px',color:'#c9a8d6',verticalAlign:'top'}}>{d.minahak || '—'}</td>
+                                                            <td style={{padding:'5px 8px',verticalAlign:'top'}}>{d.status ? <span style={{color:getStatusColor(d.status),fontSize:11}}>{d.status}</span> : '—'}</td>
                                                             <td style={{textAlign:'center',padding:'5px 8px',color:d.kind==='תנאי מקדים'?'#f0d8a8':'#9ed0a8',verticalAlign:'top',whiteSpace:'nowrap'}}>{d.kind}</td>
                                                             <td style={{padding:'5px 8px',color:'#e6ecf7',fontWeight:600,verticalAlign:'top',whiteSpace:'nowrap'}}>{d.unit}</td>
                                                             <td style={{padding:'5px 8px',color:'#bcc6d8',lineHeight:1.45,verticalAlign:'top'}}>{d.detail}</td>
                                                         </tr>
                                                     ))}
-                                                    {detailRows.length === 0 && <tr><td colSpan={6} style={{padding:'12px 8px',color:'#8a93a6',textAlign:'center'}}>אין מסירה בתחום זה</td></tr>}
+                                                    {detailRows.length === 0 && <tr><td colSpan={7} style={{padding:'12px 8px',color:'#8a93a6',textAlign:'center'}}>אין מסירה בתחום זה</td></tr>}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -26955,21 +26966,21 @@
                                             printWin.document.write('<div class="header"><h2>שלביות ביצוע — מסירת הפרשות ציבוריות</h2><p>' + subtitle + ' · ' + (isDetail ? detailRows.length + ' רשומות' : rows.length + ' תכניות') + '</p></div>');
                                             let csvRows;
                                             if (isDetail) {
-                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סוג</th><th>יחידה / מתי</th><th>פירוט</th></tr></thead><tbody>');
-                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","סוג","יחידה","פירוט"'];
+                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סטטוס</th><th>סוג</th><th>יחידה / מתי</th><th>פירוט</th></tr></thead><tbody>');
+                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","סטטוס","סוג","יחידה","פירוט"'];
                                                 detailRows.forEach((d, i) => {
-                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + d.taba + '</td><td>' + d.name + '</td><td>' + (d.minahak||'-') + '</td><td>' + d.kind + '</td><td>' + d.unit + '</td><td>' + d.detail + '</td></tr>');
-                                                    csvRows.push('"' + (i+1) + '","' + d.taba + '","' + (d.name||'').replace(/"/g,'""') + '","' + (d.minahak||'').replace(/"/g,'""') + '","' + d.kind + '","' + (d.unit||'').replace(/"/g,'""') + '","' + (d.detail||'').replace(/"/g,'""') + '"');
+                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + d.taba + '</td><td>' + d.name + '</td><td>' + (d.minahak||'-') + '</td><td>' + (d.status||'-') + '</td><td>' + d.kind + '</td><td>' + d.unit + '</td><td>' + d.detail + '</td></tr>');
+                                                    csvRows.push('"' + (i+1) + '","' + d.taba + '","' + (d.name||'').replace(/"/g,'""') + '","' + (d.minahak||'').replace(/"/g,'""') + '","' + (d.status||'').replace(/"/g,'""') + '","' + d.kind + '","' + (d.unit||'').replace(/"/g,'""') + '","' + (d.detail||'').replace(/"/g,'""') + '"');
                                                 });
                                             } else {
-                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>שלבי מסירה</th><th>מתקבל בשלבים</th><th>תנאים מקדימים</th><th>משך משוער</th><th>התארכות</th></tr></thead><tbody>');
-                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","שלבי מסירה","מתקבל בשלבים","תנאים מקדימים","משך משוער","התארכות"'];
+                                                printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סטטוס</th><th>שלבי מסירה</th><th>מתקבל בשלבים</th><th>תנאים מקדימים</th><th>משך משוער</th><th>התארכות</th></tr></thead><tbody>');
+                                                csvRows = ['"#","מספר תכנית","תכנית","מינהק","סטטוס","שלבי מסירה","מתקבל בשלבים","תנאים מקדימים","משך משוער","התארכות"'];
                                                 viewRows.forEach((r, i) => {
-                                                    const deliv = r.delivered.join(', ');
+                                                    const deliv = r.delivered.length ? r.delivered.join(', ') : (r.occGated ? 'מותנה בהשלמת ציבור' : '');
                                                     const prq = r.prereqs.join(' · ');
                                                     const nS = r.deliverySteps || (r.single ? 'הינף אחד' : '');
-                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + nS + '</td><td>' + (deliv||'-') + '</td><td>' + (prq||'-') + '</td><td>' + (r.estYears ? r.estYears + ' שנים' : '-') + '</td><td>' + ELONG_LABEL[r.elong] + '</td></tr>');
-                                                    csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + nS + '","' + deliv.replace(/"/g,'""') + '","' + prq.replace(/"/g,'""') + '","' + (r.estYears||'') + '","' + ELONG_LABEL[r.elong] + '"');
+                                                    printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + (r.status||'-') + '</td><td>' + nS + '</td><td>' + (deliv||'-') + '</td><td>' + (prq||'-') + '</td><td>' + (r.estYears ? r.estYears + ' שנים' : '-') + '</td><td>' + ELONG_LABEL[r.elong] + '</td></tr>');
+                                                    csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + (r.status||'').replace(/"/g,'""') + '","' + nS + '","' + deliv.replace(/"/g,'""') + '","' + prq.replace(/"/g,'""') + '","' + (r.estYears||'') + '","' + ELONG_LABEL[r.elong] + '"');
                                                 });
                                             }
                                             printWin.document.write('</tbody></table>');
