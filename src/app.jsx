@@ -1390,6 +1390,38 @@
             } catch(e) { return 0; }
         }
 
+        // The נכנס-יוצא tool reads yiud_karka_kayam + landuse_xplan from __geoDataForLanduse,
+        // but both are ON_DEMAND layers (fetched only when toggled on). If the user opens the
+        // tool without having enabled those layers first, the data is missing and the analysis
+        // silently returns nothing. This force-fetches them (without rendering) so the tool works
+        // standalone. Mutates the shared geoData dict so later renders reuse the loaded data.
+        function ensureLanduseDataLoaded() {
+            const filesMap = window.__geojsonFilesMap || GEOJSON_FILES || {};
+            const gd = window.__geoDataForLanduse || {};
+            const need = ['yiud_karka_kayam', 'landuse_xplan'].filter(k => !(gd[k] && gd[k].features) && filesMap[k]);
+            if (need.length === 0) return Promise.resolve();
+            if (!window.__inFlightLoads) window.__inFlightLoads = new Set();
+            return Promise.all(need.map(k => {
+                window.__inFlightLoads.add(k);
+                return fetch(filesMap[k] + '?v=' + APP_VERSION)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data) return;
+                        const g = window.__geoDataForLanduse || {};
+                        g[k] = data;
+                        window.__geoDataForLanduse = g;
+                        if (k === 'yiud_karka_kayam' && data.features) {
+                            const set = new Set();
+                            data.features.forEach(f => { const t = String(f.properties.TABA || '').trim(); if (t) set.add(t); });
+                            window.__kayamTabaSet = set;
+                        }
+                        console.log(`[Landuse] ensure-loaded ${k} (${data.features ? data.features.length : '?'} features)`);
+                    })
+                    .catch(e => console.warn(`[Landuse] ensure load failed: ${k}`, e))
+                    .finally(() => window.__inFlightLoads.delete(k));
+            }));
+        }
+
         function analyzeLanduseComparison(polyCoords, planNames) {
             window.__landuseComparePolyCoords = polyCoords;
             const gd = window.__geoDataForLanduse || {};
@@ -4731,8 +4763,10 @@
                         const planId = p.plan_name || p.pl_number || p.TABA || '';
                         const planSummary = p.plan_summary || p.plan_name_he || '';
                         const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
-                        const result = analyzeLanduseComparison(polyCoords, [planDisplay]);
-                        showLanduseComparePanel(result);
+                        ensureLanduseDataLoaded().then(() => {
+                            const result = analyzeLanduseComparison(polyCoords, [planDisplay]);
+                            showLanduseComparePanel(result);
+                        });
                         setLanduseCompareMode(null);
                     }
                 }
@@ -5957,8 +5991,10 @@
                     });
                 }
 
-                const result = analyzeLanduseComparison(polyCoords, planNames);
-                showLanduseComparePanel(result);
+                ensureLanduseDataLoaded().then(() => {
+                    const result = analyzeLanduseComparison(polyCoords, planNames);
+                    showLanduseComparePanel(result);
+                });
                 // Mark that landuse handled this areaFinished - so regular area analysis skips it
                 window.__landuseHandledArea = true;
                 landuseCompareModeRef.current = null;
@@ -15044,6 +15080,56 @@
                             } else if (l.eachLayer) l.eachLayer(nudgeIf);
                         };
                         if (geoLayersRef.current.hafrashah_future) nudgeIf(geoLayersRef.current.hafrashah_future);
+                    })();
+                    // Cross-plan de-collision: two DIFFERENT plans' hafrashah markers can land on
+                    // the exact same point (adjacent/overlapping lots). The same-plan dedup above
+                    // keys on taba, so it never separates them — the lower marker in DOM order sits
+                    // exactly under the upper one and is completely un-clickable (clicks only ever
+                    // reach the top marker). Fan any stacked markers out onto a small geographic ring
+                    // (~15m) so every plan's allocation stays individually clickable. Markers belong
+                    // to distinct plans (distinct data) so they must be nudged apart, never merged.
+                    (() => {
+                        const hLayer = geoLayersRef.current.hafrashah_future;
+                        if (!hLayer) return;
+                        const markers = [];
+                        const collect = (l) => { if (l.getLatLng && l.feature) markers.push(l); else if (l.eachLayer) l.eachLayer(collect); };
+                        collect(hLayer);
+                        const M_PER_DEG = 111000;
+                        const cosLat = Math.cos(31.76 * Math.PI / 180);
+                        const distM = (a, b) => {
+                            const dy = (a.lat - b.lat) * M_PER_DEG;
+                            const dx = (a.lng - b.lng) * M_PER_DEG * cosLat;
+                            return Math.sqrt(dx * dx + dy * dy);
+                        };
+                        const COLLIDE = 9;   // meters — closer than this counts as "stacked"
+                        const RING = 15;     // meters — base separation radius
+                        // Seed with future_shavaz marker positions as fixed obstacles, so a nudged
+                        // hafrashah marker doesn't land on top of a shavaz marker (different layer).
+                        const placed = [];
+                        if (geoLayersRef.current.future_shavaz) {
+                            const seed = (l) => { if (l.getLatLng && l.feature) placed.push(l.getLatLng()); else if (l.eachLayer) l.eachLayer(seed); };
+                            seed(geoLayersRef.current.future_shavaz);
+                        }
+                        markers.forEach((mk) => {
+                            let ll = mk.getLatLng();
+                            if (placed.some(p => distM(p, ll) < COLLIDE)) {
+                                // Search outward rings for the first free slot.
+                                outer:
+                                for (let ring = 1; ring <= 3; ring++) {
+                                    const n = 6 * ring, r = RING * ring;
+                                    for (let k = 0; k < n; k++) {
+                                        const ang = (2 * Math.PI / n) * k + ring * 0.7;
+                                        const cand = L.latLng(
+                                            ll.lat + (r * Math.cos(ang)) / M_PER_DEG,
+                                            ll.lng + (r * Math.sin(ang)) / (M_PER_DEG * cosLat)
+                                        );
+                                        if (placed.every(p => distM(p, cand) >= COLLIDE)) { ll = cand; break outer; }
+                                    }
+                                }
+                                mk.setLatLng(ll);
+                            }
+                            placed.push(mk.getLatLng());
+                        });
                     })();
                 }
 
