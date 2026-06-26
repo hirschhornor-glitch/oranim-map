@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-26-floor-split2';
+        const APP_VERSION = '2026-06-26-floor-v2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -18268,7 +18268,8 @@
                             if (/מבנ[יה].*ציבור|מוסדות ציבור|שימוש ציבורי|ציבורי|תפעול|חירום/.test(t)) return 'public';
                             return 'x_' + t.slice(0, 10); };
                         const _floorMap = {};
-                        if (_faDet) (_fa.allocations || []).forEach(a => { const c = _floorCat(a.use); if (c && !_floorMap[c]) _floorMap[c] = { fs: a.floor_start, cf: a.confidence }; });
+                        if (_faDet) (_fa.allocations || []).forEach(a => { const c = _floorCat(a.use); if (c && !_floorMap[c]) _floorMap[c] = { fs: a.floor_start, cf: a.confidence, lb: a.floor_label }; });
+                        const _attr = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                         const _fmtFloor = (fs) => { if (fs == null || fs === '') return ''; const s = String(fs); if (s === 'קרקע') return 'קרקע'; if (/^-?\d+$/.test(s)) return 'קומה ' + s; return s; };
                         const _confDot = (cf) => { const col = { high: '#4caf50', medium: '#e6b800', low: '#e06666' }[cf] || '#888'; const tt = { high: 'ביטחון גבוה', medium: 'ביטחון בינוני', low: 'ביטחון נמוך' }[cf] || ''; return cf ? ` <span title="${tt}" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};vertical-align:middle"></span>` : ''; };
                         let total = 0, totalClasses = 0, totalUnits = 0;
@@ -18285,7 +18286,8 @@
                             }
                             const _fm = _floorMap[_floorCat(e.use)];
                             const floorCell = _fm && _fm.fs ? _fmtFloor(_fm.fs) + _confDot(_fm.cf) : '';
-                            return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;font-size:10px;white-space:nowrap">${floorCell || '—'}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
+                            const _floorTitle = _fm && _fm.lb ? ` title="${_attr(_fm.lb)}"` : '';
+                            return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;font-size:10px;white-space:nowrap"${_floorTitle}>${floorCell || '—'}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
                         }).join('');
                         if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
                         // Field-authoritative total: Table 5 (the GS field) is the source of truth for
