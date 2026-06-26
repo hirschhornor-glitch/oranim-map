@@ -236,6 +236,11 @@
     "helka": null,
     "deadline_publish": "23/06/2026",
     "deadline_check": "25/07/2025",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1985/0733.02&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220136,
+      631026
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -248,12 +253,7 @@
       35.211616,
       31.771906
     ],
-    "scraped_at": "2026-06-04T17:58:55.079285",
-    "itm": [
-      220136,
-      631026
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1985/0733.02&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-26T00:39:48.228897"
   },
   "2026/0039.00": {
     "tik": "2026/0039.00",
@@ -268,6 +268,11 @@
     "helka": null,
     "deadline_publish": "23/06/2026",
     "deadline_check": "13/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0039.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      221518,
+      630091
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -280,12 +285,7 @@
       35.226203,
       31.763472
     ],
-    "scraped_at": "2026-06-04T18:10:53.280977",
-    "itm": [
-      221518,
-      630091
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0039.00&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-26T00:51:57.240866"
   },
   "2025/0174.00": {
     "tik": "2025/0174.00",
@@ -355,15 +355,20 @@
     "tik": "2026/0203.00",
     "status": "תחילת פרסום הבקשה להקלה",
     "status_date": "03/06/2026",
-    "request_type": null,
+    "request_type": "רישוי בניה - שימוש חורג מתכנית",
     "request_description": "שימוש חורג ממגורים לחנות קיוסק מורחב",
     "address": "הרכבת 13, גאולים - בקעה",
     "street": "דרך הרכבת",
     "house": "13",
     "gush": null,
     "helka": null,
-    "deadline_publish": null,
-    "deadline_check": "25/03/2026",
+    "deadline_publish": "12/07/2026",
+    "deadline_check": "03/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0203.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      221039,
+      629991
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -376,12 +381,7 @@
       35.221147,
       31.762571
     ],
-    "scraped_at": "2026-06-04T18:40:03.604848",
-    "itm": [
-      221039,
-      629991
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0203.00&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-26T01:15:48.240120"
   },
   "2023/0294.00": {
     "tik": "2023/0294.00",
@@ -428,6 +428,11 @@
     "helka": "27",
     "deadline_publish": "06/07/2026",
     "deadline_check": "27/06/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1970/0308.07&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      218615,
+      629166
+    ],
     "subs": [],
     "tabas": [
       "1207158",
@@ -440,12 +445,7 @@
       35.195561,
       31.755132
     ],
-    "scraped_at": "2026-06-04T19:44:27.844577",
-    "itm": [
-      218615,
-      629166
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1970/0308.07&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-26T02:19:31.659029"
   },
   "1987/0212.07": {
     "tik": "1987/0212.07",
@@ -460,9 +460,17 @@
     "helka": null,
     "deadline_publish": "24/06/2026",
     "deadline_check": "16/06/2026",
-    "subs": [],
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1987/0212.07&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220220,
+      629720
+    ],
+    "subs": [
+      "קטמון הישנה"
+    ],
     "tabas": [
       "1207158",
+      "1437755",
       "1454198",
       "615880",
       "853093",
@@ -472,12 +480,7 @@
       35.212502,
       31.760128
     ],
-    "scraped_at": "2026-06-04T21:19:02.620419",
-    "itm": [
-      220220,
-      629720
-    ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1987/0212.07&SystemCode=26400046&Page=BakashalInfo"
+    "scraped_at": "2026-06-26T03:50:16.077088"
   },
   "2019/0378.00": {
     "tik": "2019/0378.00",
@@ -646,16 +649,23 @@
     "request_type": "בניה חדשה / בניין חדש, עבודות הריסה, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
     "request_description": "הריסת מבנה קיים המיועד למגורים והקמתו מחדש לפי סעיף 13 לתמ\"א 38 (52 יח\"ד)",
     "address": "שד עין צורים 18, ארנונה",
-    "street": "שדרות עין צורים",
+    "street": "יעקב צור",
     "house": "18",
     "gush": null,
     "helka": null,
     "deadline_publish": "09/06/2026",
     "deadline_check": "30/05/2026",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0113.00&SystemCode=26400046&Page=BakashalInfo",
-    "subs": [],
+    "itm": [
+      221048,
+      628401
+    ],
+    "subs": [
+      "תלפיות ארנונה"
+    ],
     "tabas": [
       "1207158",
+      "1244417",
       "1454198",
       "615880",
       "853093",
@@ -665,11 +675,7 @@
       35.221239,
       31.748232
     ],
-    "scraped_at": "2026-06-05T02:20:30.543735",
-    "itm": [
-      221048,
-      628401
-    ]
+    "scraped_at": "2026-06-26T04:33:23.869344"
   },
   "1990/0451.04": {
     "tik": "1990/0451.04",
@@ -766,5 +772,101 @@
       31.773728
     ],
     "scraped_at": "2026-06-25T23:45:17.185448"
+  },
+  "2026/0034.00": {
+    "tik": "2026/0034.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "16/06/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, שינוי שימוש, חפירה ומילוי, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "הקמת מבנה חדש",
+    "address": "דרך בית לחם 58, גאולים - בקעה",
+    "street": "דרך בית לחם",
+    "house": "58",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "23/07/2026",
+    "deadline_check": "16/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0034.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      221106,
+      629728
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.221854,
+      31.760199
+    ],
+    "scraped_at": "2026-06-26T01:12:09.733171"
+  },
+  "1994/0896.03": {
+    "tik": "1994/0896.03",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "23/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, בניית מרפסת",
+    "request_description": "תוספת ממ\"ד ומרפסות",
+    "address": "התקופה 6, גבעת הורדים",
+    "street": "התקופה",
+    "house": "6",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "30/07/2026",
+    "deadline_check": "23/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1994/0896.03&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      219096,
+      629821
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.200637,
+      31.761039
+    ],
+    "scraped_at": "2026-06-26T03:16:09.186693"
+  },
+  "2026/0032.00": {
+    "tik": "2026/0032.00",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "10/06/2026",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובנייה חדשה מכוח תמ\"א 38/2 ו-10038",
+    "address": "מבוא יורם 8, קטמון הישנה",
+    "street": "מבוא יורם",
+    "house": "8",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "19/07/2026",
+    "deadline_check": "10/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0032.00&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220338,
+      630562
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.213748,
+      31.767722
+    ],
+    "scraped_at": "2026-06-26T06:09:21.314500"
   }
 }
