@@ -4269,6 +4269,10 @@
                     });
                     return flat;
                 }
+                // buildShavazPopup() lives in a sibling scope and can't see this declaration directly
+                // (its hafrash-prg display called parseProgEntriesFlat and threw ReferenceError → the
+                // whole popup failed to open). Bridge it via window so the popup can reach it.
+                window.__parseProgEntriesFlat = parseProgEntriesFlat;
                 // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
                 // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
                 // Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
@@ -18315,7 +18319,7 @@
                             if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
                             // Parse the free-text prg into a per-use list (handles comma-only formats with
                             // no "מגרש N -" prefix that parsePrgByLot skips); fall back to raw text if empty.
-                            const flat = hfPrg ? parseProgEntriesFlat(hfPrg) : [];
+                            const flat = (hfPrg && window.__parseProgEntriesFlat) ? window.__parseProgEntriesFlat(hfPrg) : [];
                             if (flat.length) {
                                 for (const e of flat) {
                                     const bits = [];
