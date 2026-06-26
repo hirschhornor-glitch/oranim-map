@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-26-floor-allocations';
+        const APP_VERSION = '2026-06-26-staging-delivery';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -17708,25 +17708,6 @@
                     html += '</div>';
                 }
 
-                // ── קומות הפרשות מבונות (נקראו מחתכי נספח בינוי) ──
-                // On which floor each built public allocation (גן/מעון/מבנה ציבור/בית כנסת)
-                // actually sits — read from the building-appendix cross-sections + floor plans.
-                const floorAlloc = (window.__floorAllocations || {})[taba];
-                if (floorAlloc && floorAlloc.allocations && floorAlloc.allocations.length &&
-                    floorAlloc.source_type !== 'none_found' && floorAlloc.source_type !== 'table_only') {
-                    const escF = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' }[floorAlloc.confidence] || floorAlloc.confidence || '';
-                    html += '<div style="margin-top:8px;padding:8px 10px;background:rgba(181,101,29,0.10);border:1px solid rgba(181,101,29,0.35);border-radius:6px">';
-                    html += '<div style="font-weight:bold;color:#d9954a;font-size:12px;margin-bottom:4px">🏢 קומות הפרשות מבונות</div>';
-                    floorAlloc.allocations.forEach(a => {
-                        html += '<div style="font-size:11px;color:#e6e9ef;margin:2px 0"><b>' + escF(a.use) + ':</b> ' + escF(a.floor_label || '') +
-                            (a.elev_m ? ' <span style="color:#9ca3af">(מפלס ' + escF(a.elev_m) + ')</span>' : '') + '</div>';
-                    });
-                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:3px">מקור: ' + escF(floorAlloc.source_doc || 'נספח בינוי') +
-                        (confHe ? ' · ביטחון ' + confHe : '') + '</div>';
-                    html += '</div>';
-                }
-
                 const tabaForJump = props.taba || props.TABA || '';
                 const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
                 const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
@@ -18225,6 +18206,25 @@
                         }
                     }
                 }
+                // ── קומות הפרשות מבונות (נקראו מחתכי נספח בינוי) ──
+                // On which floor each built public allocation sits — read from the
+                // building-appendix cross-sections + floor plans, keyed by taba.
+                const _floorAlloc = (window.__floorAllocations || {})[taba];
+                if (_floorAlloc && _floorAlloc.allocations && _floorAlloc.allocations.length &&
+                    _floorAlloc.source_type !== 'none_found' && _floorAlloc.source_type !== 'table_only') {
+                    const _escF = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const _confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' }[_floorAlloc.confidence] || _floorAlloc.confidence || '';
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(181,101,29,0.12);border:1px solid rgba(181,101,29,0.4);border-radius:5px">';
+                    html += '<div style="font-weight:bold;color:#d9954a;font-size:11px;margin-bottom:3px">🏢 קומות (מנספח בינוי)</div>';
+                    _floorAlloc.allocations.forEach(a => {
+                        html += '<div style="font-size:10px;color:#e6e9ef;margin:1px 0"><b>' + _escF(a.use) + ':</b> ' + _escF(a.floor_label || '') +
+                            (a.elev_m ? ' <span style="color:#9ca3af">(מפלס ' + _escF(a.elev_m) + ')</span>' : '') + '</div>';
+                    });
+                    html += '<div style="font-size:8px;color:#8a8a9a;margin-top:2px">מקור: ' + _escF(_floorAlloc.source_doc || 'נספח בינוי') +
+                        (_confHe ? ' · ביטחון ' + _confHe : '') + '</div>';
+                    html += '</div>';
+                }
+
                 // מבצ enrichment — statutory facts from Yotam's land-cell table, grafted onto this
                 // feature by col-F status. Q/R (potential/recommendations) live in the projector layer.
                 if (Array.isArray(props._mbz) && props._mbz.length) {
@@ -18241,6 +18241,32 @@
                         html += rows;
                     });
                 }
+                // ── מסירת ההפרשה בשלבים (משלביות הביצוע של התב"ע) ──
+                // When the plan is built in phases, the public allocations are handed
+                // over gradually — each building/compound delivers its own with its
+                // occupancy. Surface that here so a specific הפרשה מבונה shows when it
+                // is received relative to the buildings.
+                const _stgKey = taba.replace(/[^\d]/g, '');
+                const _stgRec = (window.__executionStaging || {})[taba] || (window.__executionStaging || {})[_stgKey];
+                if ((isHafrashah || hasLotEntries || isFuture) && _stgRec && typeof stagingDerive === 'function') {
+                    const _der = stagingDerive(_stgRec);
+                    if (_der.schedule.length >= 2) {
+                        const _escS = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(111,168,220,0.10);border:1px solid rgba(111,168,220,0.35);border-radius:5px">';
+                        html += '<div style="font-weight:bold;color:#6fa8dc;font-size:11px;margin-bottom:3px">מסירה בשלבים</div>';
+                        html += '<div style="font-size:10px;color:#c4ccda;margin-bottom:3px">ההפרשות הציבוריות נמסרות בהדרגה — כל מבנה מוסר את ההפרשות שבמתחמו עם אכלוסו (' + _der.schedule.length + ' שלבי מסירה):</div>';
+                        _der.schedule.forEach(it => {
+                            const getsTxt = it.gets.length ? it.gets.join(', ') : '—';
+                            html += '<div style="font-size:10px;color:#e6e9ef;margin:1px 0"><b>' + _escS(it.unit) + '</b> — <span style="color:#bcc6d8">' + _escS(getsTxt) + '</span></div>';
+                        });
+                        if (_der.prereqs.length) html += '<div style="font-size:9.5px;color:#e0c08a;margin-top:3px">תנאי מקדים: ' + _escS(_der.prereqs.join(' · ')) + '</div>';
+                        html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">הפרשה זו מתקבלת עם אכלוס המבנה במתחם שבו היא ממוקמת.</div>';
+                        html += '</div>';
+                    } else if (_stgRec.single_phase) {
+                        html += '<div style="font-size:10px;color:#86b89a;margin-top:6px;padding-top:5px;border-top:1px solid #444">מתקבלת במלואה — הבנייה בהינף אחד, ללא שלביות.</div>';
+                    }
+                }
+
                 html += '</div>';
                 // Footer — jump-to-plan with exact taba matching
                 const tabaNum = taba.replace(/[^\d]/g, '');
