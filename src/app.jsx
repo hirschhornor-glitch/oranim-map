@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-26-staging-delivery';
+        const APP_VERSION = '2026-06-26-floor-table';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -18251,6 +18251,22 @@
                         const lotTotalEntry = (merged.length > 1 && sqmEntries.length === 1) ? sqmEntries[0] : null;
                         // 3-column table: שימוש | כמות (כיתות/יח"ד) | מ"ר. Only מ"ר is summed in the total
                         // (counts of classes/units are summed in their own column, not mixed into מ"ר).
+                        // ── Floor (קומה) lookup from floor_allocations, matched to each use by category.
+                        // Shows the START floor + a confidence dot (green/amber/red) per use.
+                        const _fa = (window.__floorAllocations || {})[taba];
+                        const _faDet = !!(_fa && _fa.source_type !== 'none_found' && _fa.source_type !== 'table_only');
+                        const _floorCat = (u) => { const t = String(u || '');
+                            if (/בי"?ס|בית[- ]ספר|חינוך/.test(t)) return 'school';
+                            if (/מעון/.test(t)) return 'maon';
+                            if (/גן|גני ילדים|כיתת גן|כיתות גן|גנ"י/.test(t)) return 'gan';
+                            if (/בית כנסת|ביכנ|בכנ|דת/.test(t)) return 'knesset';
+                            if (/קהיל|רווחה|מתנ"ס|תרבות|מועדון|פנאי/.test(t)) return 'kehila';
+                            if (/מבנ[יה].*ציבור|מוסדות ציבור|שימוש ציבורי|ציבורי|תפעול|חירום/.test(t)) return 'public';
+                            return 'x_' + t.slice(0, 10); };
+                        const _floorMap = {};
+                        if (_faDet) (_fa.allocations || []).forEach(a => { const c = _floorCat(a.use); if (c && !_floorMap[c]) _floorMap[c] = { fs: a.floor_start, cf: a.confidence }; });
+                        const _fmtFloor = (fs) => { if (fs == null || fs === '') return ''; const s = String(fs); if (s === 'קרקע') return 'קרקע'; if (/^-?\d+$/.test(s)) return 'קומה ' + s; return s; };
+                        const _confDot = (cf) => { const col = { high: '#4caf50', medium: '#e6b800', low: '#e06666' }[cf] || '#888'; const tt = { high: 'ביטחון גבוה', medium: 'ביטחון בינוני', low: 'ביטחון נמוך' }[cf] || ''; return cf ? ` <span title="${tt}" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};vertical-align:middle"></span>` : ''; };
                         let total = 0, totalClasses = 0, totalUnits = 0;
                         const bodyRows = merged.map(e => {
                             let sqmCell = '', cntCell = '';
@@ -18263,7 +18279,9 @@
                                 if (e.unit === 'כיתות') totalClasses += e.count;
                                 else if (e.unit === 'יח"ד') totalUnits += e.count;
                             }
-                            return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
+                            const _fm = _floorMap[_floorCat(e.use)];
+                            const floorCell = _fm && _fm.fs ? _fmtFloor(_fm.fs) + _confDot(_fm.cf) : '';
+                            return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;font-size:10px;white-space:nowrap">${floorCell || '—'}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
                         }).join('');
                         if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
                         // Field-authoritative total: Table 5 (the GS field) is the source of truth for
@@ -18283,10 +18301,10 @@
                         const totalLabel = (lotTotalEntry || _fieldUsed) ? 'סה"כ מגרש' : 'סה"כ';
                         const totalHint = _fieldUsed ? ` <span style="font-weight:normal;color:#888;font-size:9px">(טבלה 5 · פירוט חלקי)</span>` : '';
                         html += `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:4px">` +
-                            `<thead><tr style="color:#9c8fd6;font-size:10px;border-bottom:1px solid #444"><th style="text-align:right;padding:2px 4px">שימוש</th><th style="text-align:center;padding:2px 4px">כמות</th><th style="text-align:left;padding:2px 4px">מ"ר</th></tr></thead>` +
+                            `<thead><tr style="color:#9c8fd6;font-size:10px;border-bottom:1px solid #444"><th style="text-align:right;padding:2px 4px">שימוש</th><th style="text-align:center;padding:2px 4px" title="קומת התחלה מתוך חתך נספח הבינוי. הנקודה = רמת ביטחון (ירוק=גבוה, כתום=בינוני, אדום=נמוך)">קומה</th><th style="text-align:center;padding:2px 4px">כמות</th><th style="text-align:left;padding:2px 4px">מ"ר</th></tr></thead>` +
                             `<tbody>${bodyRows}</tbody>` +
                             ((merged.length > 1 || total > 0)
-                                ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}${totalHint}</td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
+                                ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}${totalHint}</td><td style="padding:4px"></td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
                                 : '') +
                             `</table>`;
                     } else {
@@ -18311,24 +18329,8 @@
                         }
                     }
                 }
-                // ── קומות הפרשות מבונות (נקראו מחתכי נספח בינוי) ──
-                // On which floor each built public allocation sits — read from the
-                // building-appendix cross-sections + floor plans, keyed by taba.
-                const _floorAlloc = (window.__floorAllocations || {})[taba];
-                if (_floorAlloc && _floorAlloc.allocations && _floorAlloc.allocations.length &&
-                    _floorAlloc.source_type !== 'none_found' && _floorAlloc.source_type !== 'table_only') {
-                    const _escF = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const _confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' }[_floorAlloc.confidence] || _floorAlloc.confidence || '';
-                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(181,101,29,0.12);border:1px solid rgba(181,101,29,0.4);border-radius:5px">';
-                    html += '<div style="font-weight:bold;color:#d9954a;font-size:11px;margin-bottom:3px">🏢 קומות (מנספח בינוי)</div>';
-                    _floorAlloc.allocations.forEach(a => {
-                        html += '<div style="font-size:10px;color:#e6e9ef;margin:1px 0"><b>' + _escF(a.use) + ':</b> ' + _escF(a.floor_label || '') +
-                            (a.elev_m ? ' <span style="color:#9ca3af">(מפלס ' + _escF(a.elev_m) + ')</span>' : '') + '</div>';
-                    });
-                    html += '<div style="font-size:8px;color:#8a8a9a;margin-top:2px">מקור: ' + _escF(_floorAlloc.source_doc || 'נספח בינוי') +
-                        (_confHe ? ' · ביטחון ' + _confHe : '') + '</div>';
-                    html += '</div>';
-                }
+                // (עמודת "קומה" בטבלת השימושים לעיל מציגה את קומת ההתחלה לכל שימוש,
+                //  עם נקודת ביטחון, מתוך window.__floorAllocations — נקרא מחתכי נספח הבינוי.)
 
                 // מבצ enrichment — statutory facts from Yotam's land-cell table, grafted onto this
                 // feature by col-F status. Q/R (potential/recommendations) live in the projector layer.
