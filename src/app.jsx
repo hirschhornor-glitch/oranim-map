@@ -6021,6 +6021,18 @@
                     }
                 }
 
+                // Double-click anywhere finalizes the polygon (same as pressing the "סיום ✓"
+                // toolbar button) — matches the שצ"פ/מדידה tools, so finishing is discoverable.
+                // setAreaFinished routes to whichever area tool's finish-effect is active.
+                function onDblClick(e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    if (r.points.length >= 3) {
+                        setAreaFinished([...r.points]);
+                        setAreaMode(false);
+                    }
+                }
+
                 function onKeyDown(e) {
                     if (e.key === 'Escape') {
                         // Clean up and exit
@@ -6032,10 +6044,14 @@
                     }
                 }
 
+                map.doubleClickZoom.disable();
                 map.on('click', onClick);
+                map.on('dblclick', onDblClick);
                 document.addEventListener('keydown', onKeyDown);
                 return () => {
                     map.off('click', onClick);
+                    map.off('dblclick', onDblClick);
+                    map.doubleClickZoom.enable();
                     document.removeEventListener('keydown', onKeyDown);
                     map.getContainer().classList.remove('measuring');
                     // Clean up drawn polygon and markers when area mode ends
@@ -20127,7 +20143,7 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
                                         <span className="sub-label">תכנית</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="ציור אזור חופשי להשוואה" onClick={() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }}>
+                                    <button className="toolbar-dropdown-item" data-tip="ציור אזור חופשי להשוואה (קליק לקודקוד, דאבל-קליק לסיום)" onClick={() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('area'); setAreaMode(true); setActiveDropdown(null); }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                         <span className="sub-label">אזור</span>
                                     </button>
