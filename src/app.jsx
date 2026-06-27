@@ -1,4 +1,4 @@
-        const { useState, useEffect, useRef, useCallback } = React;
+﻿        const { useState, useEffect, useRef, useCallback } = React;
 
         // Layers that are always visible (no toggle)
         const ALWAYS_ON_LAYERS = ['district_oranim'];
@@ -15104,13 +15104,12 @@
                         };
                         if (geoLayersRef.current.hafrashah_future) nudgeIf(geoLayersRef.current.hafrashah_future);
                     })();
-                    // Cross-plan de-collision: two DIFFERENT plans' hafrashah markers can land on
-                    // the exact same point (adjacent/overlapping lots). The same-plan dedup above
-                    // keys on taba, so it never separates them — the lower marker in DOM order sits
-                    // exactly under the upper one and is completely un-clickable (clicks only ever
-                    // reach the top marker). Fan any stacked markers out onto a small geographic ring
-                    // (~15m) so every plan's allocation stays individually clickable. Markers belong
-                    // to distinct plans (distinct data) so they must be nudged apart, never merged.
+                    // Cross-plan de-collision: only fan apart markers from DIFFERENT plans that
+                    // land on the same pixel. Lots of the SAME plan each stay at their own
+                    // lot-polygon centroid (genuinely distinct allocations at distinct locations).
+                    // If same-plan lots happen to overlap, the topmost DOM element is clickable
+                    // (same plan → same popup), which is acceptable.
+                    // placed[] stores {ll, taba} so same-plan markers are transparent to each other.
                     (() => {
                         const hLayer = geoLayersRef.current.hafrashah_future;
                         if (!hLayer) return;
@@ -15126,17 +15125,17 @@
                         };
                         const COLLIDE = 9;   // meters — closer than this counts as "stacked"
                         const RING = 15;     // meters — base separation radius
-                        // Seed with future_shavaz marker positions as fixed obstacles, so a nudged
-                        // hafrashah marker doesn't land on top of a shavaz marker (different layer).
+                        // Seed with future_shavaz positions as fixed obstacles (taba=null).
                         const placed = [];
                         if (geoLayersRef.current.future_shavaz) {
-                            const seed = (l) => { if (l.getLatLng && l.feature) placed.push(l.getLatLng()); else if (l.eachLayer) l.eachLayer(seed); };
+                            const seed = (l) => { if (l.getLatLng && l.feature) placed.push({ ll: l.getLatLng(), taba: null }); else if (l.eachLayer) l.eachLayer(seed); };
                             seed(geoLayersRef.current.future_shavaz);
                         }
                         markers.forEach((mk) => {
+                            const taba = mk.feature && mk.feature.properties && mk.feature.properties.taba;
                             let ll = mk.getLatLng();
-                            if (placed.some(p => distM(p, ll) < COLLIDE)) {
-                                // Search outward rings for the first free slot.
+                            // Only dodge OTHER-plan obstacles; same-plan lots are invisible to each other.
+                            if (placed.some(p => (p.taba === null || p.taba !== taba) && distM(p.ll, ll) < COLLIDE)) {
                                 outer:
                                 for (let ring = 1; ring <= 3; ring++) {
                                     const n = 6 * ring, r = RING * ring;
@@ -15146,12 +15145,12 @@
                                             ll.lat + (r * Math.cos(ang)) / M_PER_DEG,
                                             ll.lng + (r * Math.sin(ang)) / (M_PER_DEG * cosLat)
                                         );
-                                        if (placed.every(p => distM(p, cand) >= COLLIDE)) { ll = cand; break outer; }
+                                        if (placed.every(p => (p.taba !== null && p.taba === taba) || distM(p.ll, cand) >= COLLIDE)) { ll = cand; break outer; }
                                     }
                                 }
                                 mk.setLatLng(ll);
                             }
-                            placed.push(mk.getLatLng());
+                            placed.push({ ll: mk.getLatLng(), taba });
                         });
                     })();
                 }
@@ -17790,64 +17789,47 @@
 
                 html += '</div>'; // end popup-body
 
-                // ── Footer (mavat link + permits button) ──
+                 // ── Unified footer: all action buttons in one flex row ──
                 const permits = getPermitsForTaba(taba);
-                html += '<div class="popup-footer" style="flex-direction:row;justify-content:space-between;align-items:center;gap:8px">';
-                if (mavatUrl) {
-                    html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener">\u2190 צפה במבא"ת</a>`;
-                }
-                if (permits.length > 0) {
-                    const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
-                    html += `<button class="popup-btn-permit" data-action="show-permits" data-feature='${featureJson}' data-taba='${taba}'>${permits.length} היתרים ←</button>`;
-                }
-                html += '</div>';
-
-                // ── Committee decision summary (status "במילוי תנאים להפקדה" only) ──
-                // After the district-committee deposit hearing a decision document is
-                // published; we summarize its spatial changes and link to it here.
                 const decision = (window.__decisionSummaries || {})[taba];
-                if (decision && normalizeStatus(status) === 'במילוי תנאים להפקדה') {
-                    const decFeatureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
-                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end;align-items:center;gap:8px">';
-                    html += `<button class="popup-btn-permit" data-action="show-decision" data-taba='${taba}' data-feature='${decFeatureJson}' style="background:#f56e05;border-color:#f56e05;color:#1a1a2e">📋 סיכום החלטת ועדה ←</button>`;
-                    html += '</div>';
-                }
-
-                // ── Execution staging + permit/occupancy conditions ──
-                // Phasing table from the plan's regulations: when (which stage) the
-                // public allocations actually land, and which permit/occupancy
-                // conditions are tied to public-infrastructure development.
                 const staging = (window.__executionStaging || {})[taba];
-                if (staging && ((staging.stages && staging.stages.length) ||
-                                (staging.conditions && staging.conditions.length))) {
-                    const stgFeatureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
-                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end;align-items:center;gap:8px">';
-                    html += `<button class="popup-btn-permit" data-action="show-staging" data-taba='${taba}' data-feature='${stgFeatureJson}' style="background:#4a6b8a;border-color:#4a6b8a;color:#eaf2fb">📊 שלביות ותנאי ביצוע ←</button>`;
-                    html += '</div>';
-                }
-
+                const mpCompForBtn = (window.__masterPlanCompliance || {})[props.plan_name];
                 const tabaForJump = props.taba || props.TABA || '';
                 const gd = (window.__geoDataRef && window.__geoDataRef.current) || {};
-                const hasShavaz = tabaForJump && [gd.shavaz_kayam, gd.future_shavaz].some(ds =>
-                    ds && ds.features && ds.features.some(f => (f.properties.TABA || f.properties.taba || '') === tabaForJump)
-                );
-                if (originShavazProps) {
-                    html += '<div class="popup-footer" style="flex-direction:row;border-top:none;padding-top:0">';
-                    html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
-                    html += '</div>';
-                }
 
-                // Annotation display
+                // Annotation display (above footer)
                 if (note) html += '<div style="background:#ffeaa7;padding:6px;border-radius:4px;margin-top:6px;font-size:11px;color:#2d3436">📝 ' + note + '</div>';
 
-                // Master plan compliance — styled like the "N היתרים" button (popup-footer pattern)
-                const mpCompForBtn = (window.__masterPlanCompliance || {})[props.plan_name];
-                if (mpCompForBtn) {
-                    html += '<div class="popup-footer" style="flex-direction:row;justify-content:flex-end;align-items:center;gap:8px">';
-                    html += `<button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}">התייחסות לתכנית אב ←</button>`;
+                const hasFooterItems = mavatUrl || permits.length > 0 ||
+                    (decision && normalizeStatus(status) === 'במילוי תנאים להפקדה') ||
+                    (staging && ((staging.stages && staging.stages.length) || (staging.conditions && staging.conditions.length))) ||
+                    mpCompForBtn || originShavazProps;
+
+                if (hasFooterItems) {
+                    html += '<div class="popup-footer" style="flex-direction:row;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:6px">';
+                    if (originShavazProps) {
+                        html += `<button class="popup-icon-btn" data-action="back-to-shavaz" title="חזרה לשב״צ">↩</button>`;
+                    }
+                    if (mavatUrl) {
+                        html += `<a class="popup-link" href="${mavatUrl}" target="_blank" rel="noopener" style="white-space:nowrap">← מבא"ת</a>`;
+                    }
+                    if (permits.length > 0) {
+                        const featureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                        html += `<button class="popup-btn-permit" data-action="show-permits" data-feature='${featureJson}' data-taba='${taba}' style="white-space:nowrap">${permits.length} היתרים ←</button>`;
+                    }
+                    if (decision && normalizeStatus(status) === 'במילוי תנאים להפקדה') {
+                        const decFeatureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                        html += `<button class="popup-btn-permit" data-action="show-decision" data-taba='${taba}' data-feature='${decFeatureJson}' style="background:#f56e05;border-color:#f56e05;color:#1a1a2e;white-space:nowrap">📋 החלטת ועדה ←</button>`;
+                    }
+                    if (staging && ((staging.stages && staging.stages.length) || (staging.conditions && staging.conditions.length))) {
+                        const stgFeatureJson = JSON.stringify(featureData).replace(/'/g, "&#39;");
+                        html += `<button class="popup-btn-permit" data-action="show-staging" data-taba='${taba}' data-feature='${stgFeatureJson}' style="background:#4a6b8a;border-color:#4a6b8a;color:#eaf2fb;white-space:nowrap">📊 שלביות ←</button>`;
+                    }
+                    if (mpCompForBtn) {
+                        html += `<button class="popup-btn-permit" data-action="show-mp-compliance" data-plan="${(props.plan_name||'').replace(/"/g,'&quot;')}" style="white-space:nowrap">תכנית אב ←</button>`;
+                    }
                     html += '</div>';
                 }
-
                 html += '</div>';
                 return html;
             }
