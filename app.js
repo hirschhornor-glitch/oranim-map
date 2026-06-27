@@ -18143,12 +18143,10 @@ function App() {
         if (geoLayersRef.current.hafrashah_future) nudgeIf(geoLayersRef.current.hafrashah_future);
       })();
       // Cross-plan de-collision: two DIFFERENT plans' hafrashah markers can land on
-      // the exact same point (adjacent/overlapping lots). The same-plan dedup above
-      // keys on taba, so it never separates them — the lower marker in DOM order sits
-      // exactly under the upper one and is completely un-clickable (clicks only ever
-      // reach the top marker). Fan any stacked markers out onto a small geographic ring
-      // (~15m) so every plan's allocation stays individually clickable. Markers belong
-      // to distinct plans (distinct data) so they must be nudged apart, never merged.
+      // the exact same point (adjacent/overlapping lots). Only separate markers from
+      // distinct plans — lots of the SAME plan stack at one canonical position (only
+      // the topmost DOM element is clickable, which is fine since they share the same
+      // popup data). placed[] stores {ll, taba} so same-plan entries are ignored.
       (() => {
         const hLayer = geoLayersRef.current.hafrashah_future;
         if (!hLayer) return;
@@ -18166,26 +18164,35 @@ function App() {
         };
         const COLLIDE = 9; // meters — closer than this counts as "stacked"
         const RING = 15; // meters — base separation radius
-        // Seed with future_shavaz marker positions as fixed obstacles, so a nudged
-        // hafrashah marker doesn't land on top of a shavaz marker (different layer).
+        // Seed with future_shavaz marker positions as fixed obstacles (taba=null).
         const placed = [];
         if (geoLayersRef.current.future_shavaz) {
           const seed = l => {
-            if (l.getLatLng && l.feature) placed.push(l.getLatLng());else if (l.eachLayer) l.eachLayer(seed);
+            if (l.getLatLng && l.feature) placed.push({
+              ll: l.getLatLng(),
+              taba: null
+            });else if (l.eachLayer) l.eachLayer(seed);
           };
           seed(geoLayersRef.current.future_shavaz);
         }
+        // One canonical position per taba — all lots of the same plan stack there.
+        const tabaPos = {};
         markers.forEach(mk => {
+          const taba = mk.feature && mk.feature.properties && mk.feature.properties.taba;
+          if (taba && tabaPos[taba] !== undefined) {
+            mk.setLatLng(tabaPos[taba]);
+            return;
+          }
           let ll = mk.getLatLng();
-          if (placed.some(p => distM(p, ll) < COLLIDE)) {
-            // Search outward rings for the first free slot.
+          // Only dodge markers from OTHER plans (taba=null = shavaz seed).
+          if (placed.some(p => (p.taba === null || p.taba !== taba) && distM(p.ll, ll) < COLLIDE)) {
             outer: for (let ring = 1; ring <= 3; ring++) {
               const n = 6 * ring,
                 r = RING * ring;
               for (let k = 0; k < n; k++) {
                 const ang = 2 * Math.PI / n * k + ring * 0.7;
                 const cand = L.latLng(ll.lat + r * Math.cos(ang) / M_PER_DEG, ll.lng + r * Math.sin(ang) / (M_PER_DEG * cosLat));
-                if (placed.every(p => distM(p, cand) >= COLLIDE)) {
+                if (placed.every(p => p.taba !== null && p.taba === taba || distM(p.ll, cand) >= COLLIDE)) {
                   ll = cand;
                   break outer;
                 }
@@ -18193,7 +18200,11 @@ function App() {
             }
             mk.setLatLng(ll);
           }
-          placed.push(mk.getLatLng());
+          if (taba) tabaPos[taba] = ll;
+          placed.push({
+            ll: mk.getLatLng(),
+            taba
+          });
         });
       })();
     }
