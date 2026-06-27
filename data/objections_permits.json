@@ -399,7 +399,7 @@
     "house": "52",
     "gush": null,
     "helka": null,
-    "deadline_publish": "07/07/2026",
+    "deadline_publish": "02/06/2026",
     "deadline_check": "06/09/2023",
     "subs": [],
     "tabas": [
@@ -418,7 +418,9 @@
       221260,
       629715
     ],
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2023/0294.00&SystemCode=26400046&Page=BakashalInfo"
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2023/0294.00&SystemCode=26400046&Page=BakashalInfo",
+    "deadline_verified": "2026-06-27",
+    "deadline_source": "תום מועד להגשת התנגדויות (manual, multi-cycle)"
   },
   "1970/0308.07": {
     "tik": "1970/0308.07",
@@ -563,7 +565,7 @@
     "house": "12",
     "gush": null,
     "helka": null,
-    "deadline_publish": "01/07/2026",
+    "deadline_publish": "23/06/2026",
     "deadline_check": "24/06/2026",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2019/0608.00&SystemCode=26400046&Page=BakashalInfo",
     "subs": [],
@@ -582,7 +584,9 @@
     "itm": [
       220450,
       630625
-    ]
+    ],
+    "deadline_verified": "2026-06-27",
+    "deadline_source": "תום מועד להגשת התנגדויות (manual, multi-cycle)"
   },
   "2024/0269.00": {
     "tik": "2024/0269.00",
