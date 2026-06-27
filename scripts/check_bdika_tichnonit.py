@@ -482,7 +482,10 @@ def fetch_and_merge_parcels(plans):
     if new_feats:
         shavaz['features'].extend(new_feats)
         with open(SHAVAZ_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(shavaz, f, ensure_ascii=False, indent=2)
+            # Single-line (default separators) to match plans.geojson / shavaz_kayam.geojson
+            # convention - indent=2 reformatted the whole file every run, producing
+            # 36k-line diffs for a single new parcel and bloating git history.
+            json.dump(shavaz, f, ensure_ascii=False)
         print(f"\n  Merged {len(new_feats)} new public parcels into future_shavaz.geojson")
 
     return total_parcels, len(new_feats)
