@@ -28,6 +28,10 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 API = "https://api.meirim.org/api/tree/"
 PLACE = "ירושלים"
 GRACE_DAYS = 0           # only permits whose objection window is still open (deadline >= today)
+MAX_OBJECTION_DAYS = 120  # drop records whose deadline is implausibly far from the issue date —
+                          # Meirim's synthetic muni records ("meirim-jer-…") carry a bogus
+                          # deadline = start + 3 years, which keeps a 2024 permit "open" for years.
+                          # A real objection window is ~14 days.
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -52,21 +56,11 @@ OUT = os.path.join(DATA_DIR, "tree_permits.json")
 UA = {"User-Agent": "Mozilla/5.0 (oranim-tree-permits-fetch)"}
 
 
-def fetch_page(page, attempts=3):
-    # Retry every page (incl. page 1) — a transient Meirim hiccup on the first
-    # request or the final json.load must not crash the whole CI job.
+def fetch_page(page):
     qs = urllib.parse.urlencode({"PLACE": PLACE, "page": page})
-    last = None
-    for attempt in range(attempts):
-        try:
-            req = urllib.request.Request(API + "?" + qs, headers=UA)
-            with urllib.request.urlopen(req, timeout=60) as r:
-                return json.load(r)
-        except Exception as e:
-            last = e
-            print(f"  page {page} retry {attempt+1}/{attempts}: {e}")
-            time.sleep(2 * (attempt + 1))
-    raise last
+    req = urllib.request.Request(API + "?" + qs, headers=UA)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r)
 
 
 def fetch_all():
@@ -76,10 +70,13 @@ def fetch_all():
     rows = list(first["data"])
     print(f"rowCount={pag.get('rowCount')} pages={pages}")
     for p in range(2, pages + 1):
-        try:
-            rows.extend(fetch_page(p)["data"])
-        except Exception as e:
-            print(f"  page {p} failed after retries, skipping: {e}")
+        for attempt in range(3):
+            try:
+                rows.extend(fetch_page(p)["data"])
+                break
+            except Exception as e:
+                print(f"  page {p} retry {attempt+1}: {e}")
+                time.sleep(2)
         if p % 20 == 0:
             print(f"  ...fetched page {p}/{pages}")
         time.sleep(0.15)
@@ -226,7 +223,7 @@ def main():
     idx = load_parcel_index()
     buildings = load_buildings_index()
     out = {}
-    kept_total = skipped_deadline = skipped_outside = skipped_noloc = 0
+    kept_total = skipped_deadline = skipped_outside = skipped_noloc = skipped_bogus = 0
     src_counts = {}
 
     for r in rows:
@@ -234,6 +231,17 @@ def main():
         if not deadline_iso or deadline_iso < cutoff:
             skipped_deadline += 1
             continue
+
+        # Reject an implausibly long objection window (Meirim date bug — see above).
+        issue_iso = iso_date(r.get("permit_issue_date")) or iso_date(r.get("start_date"))
+        if issue_iso:
+            try:
+                span = (datetime.date.fromisoformat(deadline_iso) - datetime.date.fromisoformat(issue_iso)).days
+                if span > MAX_OBJECTION_DAYS:
+                    skipped_bogus += 1
+                    continue
+            except ValueError:
+                pass
 
         # Best available Meirim geometry → centroid + footprint flag.
         geom = r.get("geom")
@@ -309,7 +317,7 @@ def main():
     print(f"today={today}  grace={GRACE_DAYS}d  cutoff>={cutoff}")
     print(f"kept (open for objection, in area): {kept_total}")
     print(f"location sources: {src_counts}")
-    print(f"skipped: deadline={skipped_deadline}  outside-area={skipped_outside}  no-location={skipped_noloc}")
+    print(f"skipped: deadline={skipped_deadline}  bogus-window={skipped_bogus}  outside-area={skipped_outside}  no-location={skipped_noloc}")
     print(f"geo_approx (unresolved shared default): {approx}")
     print(f"wrote {OUT}  ({os.path.getsize(OUT)} bytes)")
 
