@@ -5,12 +5,21 @@ on:
     - cron: '0 5 * * 3'  # Every Wednesday at 05:00 UTC (08:00 Israel)
   workflow_dispatch:        # Manual trigger
 
+# Needed so the auto-commit step can push back to master.
+permissions:
+  contents: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # Persist PAT credentials so `git push` works (the default GITHUB_TOKEN
+          # is read-only here). Without this the push failed and was silently
+          # swallowed by `|| true`, so this workflow never actually committed.
+          token: ${{ secrets.PAT_TOKEN || github.token }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -37,11 +46,16 @@ jobs:
         run: python check_bdika_tichnonit.py --no-pdf
 
       - name: Commit updated data
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --cached --quiet || git commit -m "auto: update bdika tichnonit parcels"
-          git push || true
+          if git diff --cached --quiet; then
+            echo "No data changes — nothing to commit."
+            exit 0
+          fi
+          git commit -m "auto: update bdika tichnonit parcels [skip ci]"
+          # Rebase onto any concurrent pushes then push. No `|| true` — a real
+          # push failure should surface as a job failure, not hide silently.
+          git pull --rebase --autostash origin master
+          git push
