@@ -524,7 +524,7 @@
     "street": "פינסקר",
     "house": "2",
     "gush": "30021",
-    "helka": "104",
+    "helka": "105",
     "deadline_publish": "21/06/2026",
     "deadline_check": "25/12/2025",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2017/0247.02&SystemCode=26400046&Page=BakashalInfo",
@@ -592,8 +592,15 @@
     "deadline_publish": "21/06/2026",
     "deadline_check": "11/06/2026",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2024/0269.00&SystemCode=26400046&Page=BakashalInfo",
-    "subs": [],
+    "itm": [
+      218525,
+      629075
+    ],
+    "subs": [
+      "קטמונים"
+    ],
     "tabas": [
+      "1166586",
       "1207158",
       "1454198",
       "615880",
@@ -604,11 +611,7 @@
       35.194611,
       31.754311
     ],
-    "scraped_at": "2026-06-05T02:03:56.449544",
-    "itm": [
-      218525,
-      629075
-    ]
+    "scraped_at": "2026-06-26T08:50:35.507437"
   },
   "2016/0013.02": {
     "tik": "2016/0013.02",
@@ -649,7 +652,7 @@
     "request_type": "בניה חדשה / בניין חדש, עבודות הריסה, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
     "request_description": "הריסת מבנה קיים המיועד למגורים והקמתו מחדש לפי סעיף 13 לתמ\"א 38 (52 יח\"ד)",
     "address": "שד עין צורים 18, ארנונה",
-    "street": "יעקב צור",
+    "street": "שדרות עין צורים",
     "house": "18",
     "gush": null,
     "helka": null,
@@ -675,7 +678,7 @@
       35.221239,
       31.748232
     ],
-    "scraped_at": "2026-06-26T04:33:23.869344"
+    "scraped_at": "2026-06-26T09:06:49.392553"
   },
   "1990/0451.04": {
     "tik": "1990/0451.04",
@@ -980,8 +983,8 @@
     "deadline_check": "10/07/2026",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2026/0247.00&SystemCode=26400046&Page=BakashalInfo",
     "itm": [
-      220725,
-      629875
+      220525,
+      629775
     ],
     "subs": [],
     "tabas": [
@@ -992,8 +995,8 @@
       "965152"
     ],
     "lnglat": [
-      35.217832,
-      31.761526
+      35.215721,
+      31.760624
     ],
     "scraped_at": "2026-06-26T07:51:19.333686"
   },
@@ -1028,5 +1031,69 @@
       31.768533
     ],
     "scraped_at": "2026-06-26T08:30:09.062685"
+  },
+  "1999/0519.05": {
+    "tik": "1999/0519.05",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "14/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד",
+    "request_description": "הרחבות לבניין קיים ותוספת על הגג ע\"פ תבע 6990 א הרחבת ממ\"ד , הפיכת שטח שרות לשטח עיקרי ומרפסות",
+    "address": "רשב\"ג 16, גוננים",
+    "street": "רשב''ג",
+    "house": "16",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "21/07/2026",
+    "deadline_check": "14/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1999/0519.05&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220007,
+      629347
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.210253,
+      31.756764
+    ],
+    "scraped_at": "2026-06-26T09:00:08.757374"
+  },
+  "1961/0308.03": {
+    "tik": "1961/0308.03",
+    "status": "תחילת פרסום הבקשה להקלה",
+    "status_date": "11/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד",
+    "request_description": "תוספת ממ\"דים לבניין קיים",
+    "address": "תל חי 5, קטמון הישנה",
+    "street": "תל חי",
+    "house": "5",
+    "gush": null,
+    "helka": null,
+    "deadline_publish": "20/07/2026",
+    "deadline_check": "11/07/2026",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1961/0308.03&SystemCode=26400046&Page=BakashalInfo",
+    "itm": [
+      220354,
+      630307
+    ],
+    "subs": [],
+    "tabas": [
+      "1207158",
+      "1454198",
+      "615880",
+      "853093",
+      "965152"
+    ],
+    "lnglat": [
+      35.213916,
+      31.765422
+    ],
+    "scraped_at": "2026-06-26T09:24:21.836804"
   }
 }

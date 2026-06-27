@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-06-27-hadar-floors';
+const APP_VERSION = '2026-06-27-objections-expired';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -19131,6 +19131,7 @@ function App() {
       };
       Object.values(window.__objectionsPermits).forEach(rec => {
         if (rec.status === 'תום תקופת פרסום') return; // objection window closed
+        if (objectionIsExpired(rec)) return; // §149 deadline already passed
         const latlng = objectionResolveLatLng(rec);
         if (!latlng) return;
         const llp = [latlng.lng, latlng.lat];
@@ -19726,6 +19727,14 @@ function App() {
     if (days <= 7) return '#d32f2f'; // ≤ 1 week — urgent
     if (days <= 21) return '#f57c00'; // ≤ 3 weeks
     return '#c2185b'; // further out
+  }
+  function objectionIsExpired(rec) {
+    // Hide permits whose §149 objection deadline (מועד אחרון) has already
+    // passed: YK is slow to flip the status to 'תום תקופת פרסום', so an open
+    // publication status can outlive the actual deadline. Unknown/unparseable
+    // deadlines are NOT treated as expired (we can't tell → keep visible).
+    const d = objectionsDaysLeft(rec && rec.deadline_publish);
+    return d != null && d < 0;
   }
   function objectionYkUrl(tik) {
     // Deterministic deep-link to the permit's detail page on the muni site.
@@ -37527,7 +37536,7 @@ function App() {
   })(), permitObjectionsReport && (() => {
     const distFeat = geoDataRef.current.district_oranim && geoDataRef.current.district_oranim.features && geoDataRef.current.district_oranim.features[0];
     const distRings = distFeat ? distFeat.geometry.type === 'MultiPolygon' ? distFeat.geometry.coordinates.map(poly => poly[0]) : [distFeat.geometry.coordinates[0]] : null;
-    const recs = Object.values(window.__objectionsPermits || {}).filter(r => r.status !== 'תום תקופת פרסום' && r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
+    const recs = Object.values(window.__objectionsPermits || {}).filter(r => r.status !== 'תום תקופת פרסום' && !objectionIsExpired(r) && r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
     const dval = s => {
       const m = String(s || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
       return m ? m[3] + m[2] + m[1] : '99999999';
