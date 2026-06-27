@@ -34,16 +34,14 @@ jobs:
           GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
         run: echo "$GOOGLE_CREDS" > /tmp/gcloud_creds.json
 
-      - name: Copy script and data
-        run: |
-          cp scripts/check_bdika_tichnonit.py check_bdika_tichnonit.py 2>/dev/null || true
-          # Script needs plans.geojson and future_shavaz.geojson
-          mkdir -p oranim-app/data temp_pdfs
-
       - name: Run check (XPLAN only, no PDF download)
         env:
           GOOGLE_CREDS_FILE: /tmp/gcloud_creds.json
-        run: python check_bdika_tichnonit.py --no-pdf
+        # Run in place (not copied to repo root) so any sibling-module import
+        # resolves — the copy-to-root pattern is what crashed detect_new_plans
+        # (left scope_filter.py behind). The script creates its own temp dir and
+        # resolves data/ via ../data, so no prep step is needed.
+        run: python scripts/check_bdika_tichnonit.py --no-pdf
 
       - name: Commit updated data
         run: |
