@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-26-floor-v2';
+        const APP_VERSION = '2026-06-27-hadar-floors';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26801,9 +26801,12 @@
                             const realSchedule = der.schedule.filter(it => it.gets.length > 0);
                             const delivered = [...new Set(realSchedule.flatMap(it => it.gets))];
                             const occGated = !!s.occupancy_gated_on_public;
-                            // Staging report = the DELIVERY/timing dimension: include plans
-                            // whose public allocations arrive in phases or are gated on public
-                            // completion. Prerequisites/conditions live in the conditions report.
+                            // Staging report = the PHASING dimension. Single-phase plans
+                            // ("בהינף אחד") have no phasing → they don't belong here (their
+                            // conditions live in the conditions report). Include only plans
+                            // whose public allocations actually arrive in phases, or whose
+                            // occupancy is gated on public completion across stages.
+                            if (s.single_phase) return;
                             if (!delivered.length && !occGated) return;
                             rows.push({
                                 taba,
