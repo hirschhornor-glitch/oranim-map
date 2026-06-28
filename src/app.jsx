@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-27-floor-review';
+        const APP_VERSION = '2026-06-28-objections-official';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14829,9 +14829,8 @@
                         const c = fsInteriorPoint(ring);
                         const taba = tabaFromPlNumFs(f.properties.pl_number);
                         const planProps = planByTabaFs[taba] || {};
-                        // Merge shavatz + hafrash entries so a plan with BOTH shows one combined marker
-                        // (avoids a second overlapping hafrashah marker on the same lot).
-                        const entries = [...parseShavatzProg(planProps.shavatz_out_prog), ...parseShavatzProg(planProps.hafrash_prg)];
+                        // Only carry shavatz entries — hafrashah is a separate layer/marker.
+                        const entries = parseShavatzProg(planProps.shavatz_out_prog);
                         const enrichedProps = entries.length
                             ? { ...f.properties, _hafrash_lot_entries: entries, pl_name: planProps.plan_name_he || f.properties.pl_name }
                             : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', pl_name: planProps.plan_name_he || f.properties.pl_name };
@@ -14908,9 +14907,7 @@
                     const planByTaba = window.__planByTaba || {};
                     for (const taba in planByTaba) {
                         if (coveredTabas.has(taba)) continue;
-                        // Plan already has a future_shavaz fallback marker (which now also carries the
-                        // hafrash entries) — skip to avoid a second overlapping, un-clickable marker.
-                        if (fsFallbackTabas.has(taba)) continue;
+                        // שב"צ והפרשה מבונה הם שכבות נפרדות — תוכנית עם שניהם מקבלת שני מרקרים נפרדים.
                         if (!passesShavazStatusFilter(taba)) continue;
                         const sqm = parseFloat(planByTaba[taba].hafrash_sqm) || 0;
                         if (sqm <= 0) continue;
