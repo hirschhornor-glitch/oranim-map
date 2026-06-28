@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-28-floor-filter';
+        const APP_VERSION = '2026-06-28-floor-modal';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2245,6 +2245,11 @@
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
             const [showReportsMenu, setShowReportsMenu] = useState(false);
+            // Floor-allocations report (in-app modal) + its filters.
+            const [showFloorReport, setShowFloorReport] = useState(false);
+            const [flrFrom, setFlrFrom] = useState('');
+            const [flrTo, setFlrTo] = useState('');
+            const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
@@ -8394,7 +8399,8 @@
             // ── דוח קומות הפרשות מבונות (נקרא מחתכי נספח בינוי) ──
             // Printable + CSV report listing, per plan, on which floor each built public
             // allocation sits. Elevated (non-ground) allocations are highlighted first.
-            function openFloorAllocReport() {
+            // Builds the floor-allocations dataset; rendered in-app by the React modal below.
+            function buildFloorAllocData() {
                 const fa = window.__floorAllocations || {};
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const att = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -8436,6 +8442,8 @@
                 });
                 const rank = (r) => !r.determinable ? 2 : (r.isElev ? 0 : 1);
                 rows.sort((a, b) => rank(a) - rank(b) || String(a.taba).localeCompare(String(b.taba)));
+                return { rows, nPlans, nDeterminable, nElevated, nUndet, DOM_HE };
+                /* eslint-disable */ /* legacy window.open report below — superseded by the in-app modal */
                 const trHtml = rows.map(r => {
                     const bg = !r.determinable ? '#f3f3f3' : (r.isElev ? '#fff4e6' : '#fff');
                     const floorCell = r.determinable
@@ -21317,6 +21325,96 @@
                         </div>
                     )}
 
+                    {/* ── קומות הפרשות מבונות (in-app report, filters by domain + floor range) ── */}
+                    {showFloorReport && (() => {
+                        const D = buildFloorAllocData();
+                        const from = flrFrom === '' ? -Infinity : parseInt(flrFrom);
+                        const to = flrTo === '' ? Infinity : parseInt(flrTo);
+                        const floorActive = flrFrom !== '' || flrTo !== '';
+                        const filtered = D.rows.filter(r => {
+                            if (flrDoms.length && !flrDoms.includes(r.domKey)) return false;
+                            if (floorActive) { if (r.fn === '') return false; if (r.fn < from || r.fn > to) return false; }
+                            return true;
+                        });
+                        const toggleDom = (k) => setFlrDoms(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]);
+                        const setRange = (a, b) => { setFlrFrom(a == null ? '' : String(a)); setFlrTo(b == null ? '' : String(b)); };
+                        const pill = (on, color) => ({ padding: '4px 12px', borderRadius: 16, border: '1px solid ' + (on ? color : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? color : 'transparent', color: on ? '#fff' : '#9fb0d0' });
+                        const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right' };
+                        const csv = () => {
+                            const hdr = ['תב"ע', 'שם תכנית', 'שימוש', 'תחום', 'קומה', 'ביטחון', 'מקור'];
+                            const lines = [hdr.join(',')].concat(filtered.map(r => [r.taba, r.name, r.use, r.domHe, r.determinable ? (r.floor || '—') : 'לא נמצא פילוח קומה', r.conf, r.src].map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')));
+                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'floor_allocations.csv'; document.body.appendChild(a); a.click(); a.remove();
+                        };
+                        const prnt = () => {
+                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>קומות הפרשות מבונות</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#b5651d;color:#fff}</style></head><body><h1>🏢 קומות הפרשות מבונות</h1><table><thead><tr><th>תב"ע</th><th>שם תכנית</th><th>שימוש</th><th>תחום</th><th>קומה</th><th>ביטחון</th><th>מקור</th></tr></thead><tbody>';
+                            filtered.forEach(r => { h += '<tr><td>' + e2(r.taba) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.use) + '</td><td>' + e2(r.domHe) + '</td><td>' + e2(r.determinable ? (r.floor || '—') : 'לא נמצא פילוח') + '</td><td>' + e2(r.conf) + '</td><td>' + e2(r.src) + '</td></tr>'; });
+                            h += '</tbody></table></body></html>';
+                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
+                        };
+                        return (
+                            <div className="units-overlay" onClick={() => setShowFloorReport(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1080, width: '96%' }}>
+                                    <div className="units-header" style={{ background: '#b5651d' }}>
+                                        <h2>🏢 קומות הפרשות מבונות</h2>
+                                        <button className="units-close" onClick={() => setShowFloorReport(false)}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
+                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>באיזו קומה יושבת כל הפרשה מבונה — נקרא מחתכי ונספחי הבינוי. שורות כתומות = לא בקומת הקרקע.</div>
+                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                                            {[['תכניות', D.nPlans, '#d8def0'], ['עם קומה מזוהה', D.nDeterminable, '#d8def0'], ['לא בקומת הקרקע', D.nElevated, '#ffb74d'], ['ללא פילוח', D.nUndet, '#ef9a9a']].map((k, i) => (
+                                                <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 80 }}>
+                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
+                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>תחום:</span>
+                                            {Object.keys(D.DOM_HE).map(k => (
+                                                <button key={k} onClick={() => toggleDom(k)} style={pill(flrDoms.length === 0 || flrDoms.includes(k), '#b5651d')}>{D.DOM_HE[k]}</button>
+                                            ))}
+                                            {flrDoms.length > 0 && <button onClick={() => setFlrDoms([])} style={{ border: 'none', background: 'transparent', color: '#9fb0d0', textDecoration: 'underline', cursor: 'pointer', fontSize: 12 }}>נקה</button>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>קומה:</span>
+                                            <button onClick={() => setRange(0, 0)} style={pill(flrFrom === '0' && flrTo === '0', '#00897b')}>קרקע</button>
+                                            <button onClick={() => setRange(1, 3)} style={pill(flrFrom === '1' && flrTo === '3', '#00897b')}>קומות 1-3</button>
+                                            <button onClick={() => setRange(5, null)} style={pill(flrFrom === '5' && flrTo === '', '#00897b')}>מעל קומה 4</button>
+                                            <button onClick={() => setRange(null, null)} style={pill(!floorActive, '#00897b')}>הכל</button>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0', marginRight: 6 }}>מקומה</span>
+                                            <input type="number" value={flrFrom} onChange={e => setFlrFrom(e.target.value)} style={{ width: 50, padding: '3px 5px', background: '#0f1830', border: '1px solid #2a3a5e', color: '#d8def0', borderRadius: 4 }} />
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>עד</span>
+                                            <input type="number" value={flrTo} onChange={e => setFlrTo(e.target.value)} style={{ width: 50, padding: '3px 5px', background: '#0f1830', border: '1px solid #2a3a5e', color: '#d8def0', borderRadius: 4 }} />
+                                            <span style={{ flex: 1 }} />
+                                            <button onClick={csv} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #2e7d32', color: '#81c784', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>ייצוא CSV</button>
+                                            <button onClick={prnt} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #6b7aa0', color: '#c0c9e0', background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>הדפסה</button>
+                                        </div>
+                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 6 }}>מוצג: <b style={{ color: '#d8def0' }}>{filtered.length}</b> / {D.rows.length}</div>
+                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12 }}>
+                                            <thead><tr>{['תב"ע', 'שם תכנית', 'שימוש', 'תחום', 'קומה', 'ביטחון', 'מקור'].map((h, i) => (
+                                                <th key={i} style={{ border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', position: 'sticky', top: 0, background: '#b5651d', color: '#fff' }}>{h}</th>))}
+                                            </tr></thead>
+                                            <tbody>
+                                                {filtered.map((r, i) => (
+                                                    <tr key={i} style={{ background: !r.determinable ? '#241f17' : (r.isElev ? '#2a2418' : 'transparent'), color: '#d8def0' }}>
+                                                        <td style={td}>{r.taba}</td>
+                                                        <td style={td}>{r.name}</td>
+                                                        <td style={td}>{r.use}</td>
+                                                        <td style={{ ...td, textAlign: 'center' }}>{r.domHe}</td>
+                                                        <td style={td} title={r.label}>{r.determinable ? (r.floor || '—') : <span style={{ color: '#ef9a9a' }}>לא נמצא פילוח</span>}</td>
+                                                        <td style={{ ...td, textAlign: 'center' }}>{r.conf}</td>
+                                                        <td style={{ ...td, fontSize: 10, color: '#8a9bc0' }}>{r.src}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── Education Forecast (Yotam per-חומש) vs current status ── */}
                     {showEduForecast && (() => {
                         const N = eduForecastChumash;
@@ -21639,7 +21737,7 @@
                                         <h3 style={{color:'#b5651d'}}>🏢 קומות הפרשות מבונות</h3>
                                         <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>באיזו קומה יושבת כל הפרשה מבונה (גן/מעון/מבנה ציבור/בית כנסת) — נקרא מחתכי נספחי הבינוי. כולל ייצוא CSV והדפסה.</div>
                                         <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openFloorAllocReport(); }}>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowFloorReport(true); }}>
                                                 <span className="report-icon">🏢</span>
                                                 <div className="report-text">
                                                     <span className="report-title">קומות הפרשות מבונות</span>
