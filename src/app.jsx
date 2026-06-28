@@ -2228,6 +2228,7 @@
             const [stagingDomainFilter, setStagingDomainFilter] = useState('all'); // all|public_space|roads|public_building
             const [conditionsReport, setConditionsReport] = useState(false); // public permit/occupancy conditions report
             const [conditionsDomainFilter, setConditionsDomainFilter] = useState('all');
+            const [conditionsActorFilter, setConditionsActorFilter] = useState('all'); // all|יזם|רשות
             const [mimushData, setMimushData] = useState(null);
             const [mimushDrilldown, setMimushDrilldown] = useState(null);
             const [mimushExpanded, setMimushExpanded] = useState(null); // null | 'stage' | 'tail'
@@ -2650,7 +2651,7 @@
                         [showCommerceTable, () => setShowCommerceTable(false)],
                         [showMimush, () => setShowMimush(false)],
                         [stagingReport, () => setStagingReport(false)],
-                        [conditionsReport, () => setConditionsReport(false)],
+                        [conditionsReport, () => { setConditionsReport(false); setConditionsActorFilter('all'); }],
                         [showPermitsGap, () => setShowPermitsGap(false)],
                         [showPermitsBySub, () => setShowPermitsBySub(false)],
                         [showPublicNeeds, () => setShowPublicNeeds(false)],
@@ -27009,6 +27010,16 @@
                         });
                         const CAT_LABEL = { public_space: 'שצ"פ', roads: 'דרך', public_building: 'הפרשה מבונה' };
                         const TYPE_LABEL = { permit: 'היתר', occupancy: 'אכלוס' };
+                        // classify each condition as יזם (developer obligation) or רשות (authority prerequisite)
+                        const actorOf = (row) => {
+                            if (row.kind === 'מקדים') return 'רשות';
+                            const t = row.text || '';
+                            if (/כביש\s+\d+/.test(t)) return 'רשות';
+                            if (/(?:^|[\s(])דרך\s+\d+/.test(t)) return 'רשות';
+                            if (/קבלת\s+היתר\s+(?:בניה\s+)?לביצוע/.test(t)) return 'רשות';
+                            if (/פינוי\s+(?:כל\s+)?(?:שטח|מבנ)/.test(t)) return 'רשות';
+                            return 'יזם';
+                        };
                         // flatten every public-infra condition + derived road prerequisites
                         const rows = [];
                         Object.keys(stg).forEach(taba => {
@@ -27023,18 +27034,25 @@
                             };
                             (s.conditions || []).forEach(c => {
                                 if (!c.category) return;
-                                rows.push({ ...base, kind: TYPE_LABEL[c.type] || 'היתר', domain: c.domain || c.category, gates: !!c.gates, text: c.text });
+                                const row = { ...base, kind: TYPE_LABEL[c.type] || 'היתר', domain: c.domain || c.category, gates: !!c.gates, text: c.text };
+                                row.actor = actorOf(row);
+                                rows.push(row);
                             });
                             stagingDerive(s).prereqs.forEach(p => {
-                                rows.push({ ...base, kind: 'מקדים', domain: 'roads', gates: true, text: p });
+                                const row = { ...base, kind: 'מקדים', domain: 'roads', gates: true, text: p };
+                                row.actor = 'רשות';
+                                rows.push(row);
                             });
                         });
                         rows.sort((a, b) => (b.gates - a.gates) || a.name.localeCompare(b.name, 'he'));
 
                         const filter = conditionsDomainFilter;
-                        const viewRows = filter === 'all' ? rows : rows.filter(r => r.domain === filter);
+                        const actorFilter = conditionsActorFilter;
+                        const filteredRows = filter === 'all' ? rows : rows.filter(r => r.domain === filter);
+                        const viewRows = actorFilter === 'all' ? filteredRows : filteredRows.filter(r => r.actor === actorFilter);
                         const DOMAINS = [['all', 'כל התחומים'], ['public_space', 'שצ"פ'], ['roads', 'דרך'], ['public_building', 'הפרשה מבונה']];
                         const domainCount = (k) => k === 'all' ? rows.length : rows.filter(r => r.domain === k).length;
+                        const actorCount = (a) => (filter === 'all' ? rows : rows.filter(r => r.domain === filter)).filter(r => a === 'all' || r.actor === a).length;
                         const plansCount = new Set(rows.map(r => r.taba)).size;
                         const kGate = rows.filter(r => r.gates).length;
                         const kOcc = rows.filter(r => r.kind === 'אכלוס').length;
@@ -27044,7 +27062,7 @@
                                 <div style={{fontSize:20,fontWeight:700,color:col}}>{val}</div>
                                 <div style={{fontSize:11,color:'#aab'}}>{lbl}</div>
                             </div>);
-                        const closeReport = () => { setConditionsReport(false); setConditionsDomainFilter('all'); };
+                        const closeReport = () => { setConditionsReport(false); setConditionsDomainFilter('all'); setConditionsActorFilter('all'); };
                         const goToPlan = (taba) => {
                             if (!gd || !gd.plans || !mapInstanceRef.current) return;
                             const feat = gd.plans.features.find(f => ((f.properties.taba||f.properties.TABA||'').toString().trim()) === taba);
@@ -27084,8 +27102,8 @@
                                         {KPI(kOcc, 'תנאי אכלוס', '#e06666')}
                                         {KPI(domainCount('roads'), 'תנאי דרך/כביש', '#93c47d')}
                                     </div>
-                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12,alignItems:'center'}}>
-                                        <span style={{fontSize:12,color:'#8a93a6',marginInlineEnd:4}}>סינון לפי תחום:</span>
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}}>
+                                        <span style={{fontSize:12,color:'#8a93a6',marginInlineEnd:4}}>תחום:</span>
                                         {DOMAINS.map(([k, lbl]) => {
                                             const active = filter === k;
                                             return (
@@ -27096,6 +27114,20 @@
                                                 }}>{lbl} <span style={{opacity:.65,fontSize:11}}>({domainCount(k)})</span></button>);
                                         })}
                                     </div>
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12,alignItems:'center'}}>
+                                        <span style={{fontSize:12,color:'#8a93a6',marginInlineEnd:4}}>אחריות:</span>
+                                        {[['all','הכל'],['יזם','יזם'],['רשות','רשות']].map(([k,lbl]) => {
+                                            const active = actorFilter === k;
+                                            const col = k === 'יזם' ? '#7ab8c8' : k === 'רשות' ? '#e0a635' : '#4a6b8a';
+                                            return (
+                                                <button key={k} onClick={() => setConditionsActorFilter(k)} style={{
+                                                    background: active ? col : 'transparent', color: active ? '#fff' : '#aab4c4',
+                                                    border: '1px solid ' + (active ? col : '#3a4256'),
+                                                    borderRadius: 16, padding: '4px 12px', fontSize: 12, cursor: 'pointer', fontWeight: active ? 600 : 400,
+                                                }}>{lbl} <span style={{opacity:.65,fontSize:11}}>({actorCount(k)})</span></button>);
+                                        })}
+                                        <span style={{fontSize:11,color:'#6a7283',marginInlineStart:6}}>יזם = חובה בתחום הפרויקט · רשות = תנאי מקדים חיצוני</span>
+                                    </div>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:12}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
                                             <th style={thR}>#</th>
@@ -27104,6 +27136,7 @@
                                             <th style={thR}>סטטוס</th>
                                             <th style={thC}>סוג</th>
                                             <th style={thC}>תחום</th>
+                                            <th style={thC}>אחריות</th>
                                             <th style={thC}>מתנה</th>
                                             <th style={thR}>פירוט התנאי</th>
                                         </tr></thead>
@@ -27116,11 +27149,12 @@
                                                     <td style={{padding:'5px 8px',verticalAlign:'top'}}>{r.status ? <span style={{color:getStatusColor(r.status),fontSize:11}}>{r.status}</span> : '—'}</td>
                                                     <td style={{textAlign:'center',padding:'5px 8px',color:r.kind==='מקדים'?'#f0d8a8':(r.kind==='אכלוס'?'#e0908a':'#9ed0a8'),verticalAlign:'top',whiteSpace:'nowrap'}}>{r.kind}</td>
                                                     <td style={{textAlign:'center',padding:'5px 8px',color:'#bcc6d8',verticalAlign:'top',whiteSpace:'nowrap'}}>{CAT_LABEL[r.domain] || r.domain}</td>
+                                                    <td style={{textAlign:'center',padding:'5px 8px',verticalAlign:'top',whiteSpace:'nowrap',color:r.actor==='רשות'?'#e0a635':'#7ab8c8',fontWeight:600,fontSize:11}}>{r.actor || '—'}</td>
                                                     <td style={{textAlign:'center',padding:'5px 8px',color:r.gates?'#e0a635':'#6a7283',fontWeight:r.gates?700:400,verticalAlign:'top'}}>{r.gates ? 'כן' : '—'}</td>
                                                     <td style={{padding:'5px 8px',color:'#bcc6d8',lineHeight:1.45,verticalAlign:'top'}}>{r.text}</td>
                                                 </tr>
                                             ))}
-                                            {viewRows.length === 0 && <tr><td colSpan={8} style={{padding:'12px 8px',color:'#8a93a6',textAlign:'center'}}>אין תנאים בתחום זה</td></tr>}
+                                            {viewRows.length === 0 && <tr><td colSpan={9} style={{padding:'12px 8px',color:'#8a93a6',textAlign:'center'}}>אין תנאים בסינון זה</td></tr>}
                                         </tbody>
                                     </table>
                                     {anyLow && <p style={{color:'#8a93a6',fontSize:11,marginBottom:10}}>* נתון שחולץ אוטומטית מההוראות — מומלץ לאמת מול המקור.</p>}
@@ -27133,12 +27167,12 @@
                                             printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">הדפסה</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">שמור CSV</button></div>');
                                             const sub = filter === 'all' ? 'כל התחומים' : ('תחום: ' + CAT_LABEL[filter]);
                                             printWin.document.write('<div class="header"><h2>תנאים והפרשות ציבוריות</h2><p>' + sub + ' · ' + viewRows.length + ' תנאים</p></div>');
-                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סטטוס</th><th>סוג</th><th>תחום</th><th>מתנה</th><th>פירוט התנאי</th></tr></thead><tbody>');
-                                            const csvRows = ['"#","מספר תכנית","תכנית","מינהק","סטטוס","סוג","תחום","מתנה","פירוט התנאי"'];
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>תכנית</th><th>מינה"ק</th><th>סטטוס</th><th>סוג</th><th>תחום</th><th>אחריות</th><th>מתנה</th><th>פירוט התנאי</th></tr></thead><tbody>');
+                                            const csvRows = ['"#","מספר תכנית","תכנית","מינהק","סטטוס","סוג","תחום","אחריות","מתנה","פירוט התנאי"'];
                                             viewRows.forEach((r, i) => {
                                                 const dom = CAT_LABEL[r.domain] || r.domain;
-                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + (r.status||'-') + '</td><td>' + r.kind + '</td><td>' + dom + '</td><td>' + (r.gates?'כן':'-') + '</td><td>' + r.text + '</td></tr>');
-                                                csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + (r.status||'').replace(/"/g,'""') + '","' + r.kind + '","' + dom + '","' + (r.gates?'כן':'') + '","' + (r.text||'').replace(/"/g,'""') + '"');
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + r.taba + '</td><td>' + r.name + '</td><td>' + (r.minahak||'-') + '</td><td>' + (r.status||'-') + '</td><td>' + r.kind + '</td><td>' + dom + '</td><td>' + (r.actor||'-') + '</td><td>' + (r.gates?'כן':'-') + '</td><td>' + r.text + '</td></tr>');
+                                                csvRows.push('"' + (i+1) + '","' + r.taba + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.minahak||'').replace(/"/g,'""') + '","' + (r.status||'').replace(/"/g,'""') + '","' + r.kind + '","' + dom + '","' + (r.actor||'') + '","' + (r.gates?'כן':'') + '","' + (r.text||'').replace(/"/g,'""') + '"');
                                             });
                                             printWin.document.write('</tbody></table>');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvRows.join('\n')) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="תנאים_והפרשות.csv";a.click()});<\/script>');
