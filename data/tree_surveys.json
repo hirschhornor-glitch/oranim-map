@@ -4227,5 +4227,23 @@
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
+  },
+  "1469246": {
+    "total": 15,
+    "shimur": 4,
+    "krita": 5,
+    "haataka": 6,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1446145": {
+    "total": 48,
+    "shimur": 0,
+    "krita": 48,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
   }
 }
