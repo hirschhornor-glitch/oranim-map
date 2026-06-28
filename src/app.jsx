@@ -6314,14 +6314,24 @@
                     const existingUnits = sumExistingUnitsInRadius(radiusCenter, radiusMeters, gd.buildings);
                     const eduFeats = eduFeaturesInRadius(radiusCenter, radiusMeters, gd);
                     const inGonen = pointInLayer({ lat: radiusCenter.lat, lng: radiusCenter.lng }, gd.minahak_gonen);
+                    const _MDET = [
+                        ['בית צפאפא', gd.minahak_beit_tzfafa],
+                        ['גוננים', gd.minahak_gonen],
+                        ['בקעה רבתי', gd.minahak_baka],
+                        ['א.ת. תלפיות', gd.minahak_talpiot],
+                        ['מינהל מוסדי מלחה', gd.minahak_malha],
+                        ['גינות העיר', gd.minahak_ganot],
+                    ];
+                    const radiusMinhak = (_MDET.find(([, lyr]) => pointInLayer({ lat: radiusCenter.lat, lng: radiusCenter.lng }, lyr)) || [])[0] || null;
                     renderProgramaModal({
                         existingUnits,
                         candidatePlans,
                         eduFeats,
-                        scopeLabel: 'רדיוס ' + radiusMeters + 'מ' + (inGonen ? ' · גוננים' : ''),
+                        scopeLabel: 'רדיוס ' + radiusMeters + 'מ' + (radiusMinhak ? ' · ' + radiusMinhak : ''),
                         parentModalId: null,
                         radiusInfo: { value: radiusMeters, onChange: (m) => setRadiusMeters(m) },
                         inGonen,
+                        minahakName: radiusMinhak,
                         scopeGeom: { type: 'radius', center: radiusCenter, meters: radiusMeters },
                     });
                     return;
@@ -6997,8 +7007,8 @@
                             ageYearPctGeneral: minhakBlend.ageYearPctGeneral, ageYearPctHaredi: minhakBlend.ageYearPctHaredi,
                             ...(minhakBlend.householdSize != null ? { householdSize: minhakBlend.householdSize } : {}) }
                         : (PN_MINAHAK_PRESETS[minahakName] || null))
-                    : null;
-                const assumptionsScopeKey = isMinhakMode ? ('minhak:' + minahakName) : '__custom__';
+                    : (minahakName ? (PN_MINAHAK_PRESETS[minahakName] || null) : null);
+                const assumptionsScopeKey = isMinhakMode ? ('minhak:' + minahakName) : (minahakName ? 'radius:' + minahakName : '__custom__');
                 if (!window.__programaUserAssumptions || window.__programaAssumptionsScope !== assumptionsScopeKey) {
                     const prevYear = (window.__programaUserAssumptions && window.__programaUserAssumptions.targetYear) || 'existing';
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, ...(minhakSeed || {}), targetYear: prevYear };
@@ -9626,13 +9636,23 @@
                 for (let i = 0; i < n; i++) { centX += polyCoords[i][0]; centY += polyCoords[i][1]; }
                 centX /= n; centY /= n;
                 const inGonen = pointInLayer([centX, centY], gd.minahak_gonen);
+                const _MDET2 = [
+                    ['בית צפאפא', gd.minahak_beit_tzfafa],
+                    ['גוננים', gd.minahak_gonen],
+                    ['בקעה רבתי', gd.minahak_baka],
+                    ['א.ת. תלפיות', gd.minahak_talpiot],
+                    ['מינהל מוסדי מלחה', gd.minahak_malha],
+                    ['גינות העיר', gd.minahak_ganot],
+                ];
+                const polyMinhak = (_MDET2.find(([, lyr]) => pointInLayer([centX, centY], lyr)) || [])[0] || null;
                 renderProgramaModal({
                     existingUnits,
                     candidatePlans,
                     eduFeats,
-                    scopeLabel: 'אזור נבחר' + (inGonen ? ' · גוננים' : ''),
+                    scopeLabel: 'אזור נבחר' + (polyMinhak ? ' · ' + polyMinhak : ''),
                     parentModalId: null,
                     inGonen,
+                    minahakName: polyMinhak,
                     scopeGeom: { type: 'polygon', rings: [polyCoords] },
                 });
 
