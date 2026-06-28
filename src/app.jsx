@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-28-objections-official';
+        const APP_VERSION = '2026-06-28-floor-filter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -8397,6 +8397,7 @@
             function openFloorAllocReport() {
                 const fa = window.__floorAllocations || {};
                 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const att = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
                 const normT = (t) => String(t == null ? '' : t).replace(/^101-?/, '').replace(/^0+/, '');
                 const gd = geoDataRef.current || {};
                 const nameByTaba = {};
@@ -8406,6 +8407,10 @@
                     if (k && !nameByTaba[k]) nameByTaba[k] = p.plan_summary || p.plan_name_he || p.plan_name || '';
                 });
                 const confHe = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' };
+                const DOM_HE = { education: 'חינוך', religion: 'דת', sport: 'ספורט', health: 'בריאות', welfare: 'רווחה', culture: 'קהילה ותרבות', emergency: 'חירום', other: 'כללי' };
+                // floor_start → numeric floor (קרקע/פודיום=0; "5-8"→5; integers as-is; else '' unknown)
+                const floorNum = (fs) => { if (fs == null) return ''; const s = String(fs).trim(); if (s === 'קרקע' || s === 'פודיום') return 0; const m = s.match(/^(-?\d+)/); return m ? parseInt(m[1]) : ''; };
+                const fmtFloor = (fs) => { if (fs == null || fs === '') return ''; const s = String(fs); if (s === 'קרקע') return 'קרקע'; if (/^-?\d+$/.test(s)) return 'קומה ' + s; return s; };
                 const rows = [];
                 let nDeterminable = 0, nUndet = 0, nElevated = 0, nPlans = 0;
                 Object.keys(fa).forEach(taba => {
@@ -8416,52 +8421,72 @@
                     if (determinable) nDeterminable++; else nUndet++;
                     let planElevated = false;
                     (e.allocations || []).forEach(a => {
-                        const fl = a.floor_label || '';
-                        const isElev = determinable && /קומ[הות] *[1-9]|פודיום עליון|מעל המסחר|מעל קומ|מפלס *\+?1[0-9]|מפלס *\+?[4-9]|קומה -/.test(fl);
+                        const fn = determinable ? floorNum(a.floor_start) : '';
+                        const isElev = (fn !== '' && fn !== 0);
                         if (isElev) planElevated = true;
+                        const domKey = hafrashUseDomain(a.use) || 'other';
                         rows.push({
                             taba, name: nameByTaba[normT(taba)] || (e.plan_name || ''),
-                            use: a.use || '', floor: fl, elev: a.elev_m || '',
-                            conf: confHe[e.confidence] || e.confidence || '', src: e.source_doc || '',
-                            determinable, isElev
+                            use: a.use || '', floor: determinable ? fmtFloor(a.floor_start) : '', fn,
+                            label: a.floor_label || '', conf: confHe[e.confidence] || e.confidence || '',
+                            src: e.source_doc || '', domKey, domHe: DOM_HE[domKey] || domKey, determinable, isElev
                         });
                     });
                     if (planElevated) nElevated++;
                 });
                 const rank = (r) => !r.determinable ? 2 : (r.isElev ? 0 : 1);
                 rows.sort((a, b) => rank(a) - rank(b) || String(a.taba).localeCompare(String(b.taba)));
-                const csvHeader = ['תב"ע', 'שם תכנית', 'שימוש', 'קומה', 'מפלס', 'ביטחון', 'מקור'];
-                const csvLines = [csvHeader.join(',')].concat(rows.map(r =>
-                    [r.taba, r.name, r.use, r.determinable ? r.floor : 'לא נמצא פילוח קומה בנספח', r.elev, r.conf, r.src]
-                        .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')));
-                const csvHref = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csvLines.join('\r\n'));
                 const trHtml = rows.map(r => {
                     const bg = !r.determinable ? '#f3f3f3' : (r.isElev ? '#fff4e6' : '#fff');
                     const floorCell = r.determinable
-                        ? esc(r.floor) + (r.elev ? ' <span style="color:#888">(' + esc(r.elev) + ')</span>' : '')
+                        ? '<span title="' + att(r.label) + '">' + esc(r.floor || '—') + '</span>'
                         : '<span style="color:#b00">לא נמצא פילוח קומה בנספח</span>';
-                    return '<tr style="background:' + bg + '"><td>' + esc(r.taba) + '</td><td>' + esc(r.name) +
-                        '</td><td>' + esc(r.use) + '</td><td>' + floorCell + '</td><td style="text-align:center">' +
-                        esc(r.conf) + '</td><td style="font-size:10px;color:#666">' + esc(r.src) + '</td></tr>';
+                    return '<tr data-domain="' + r.domKey + '" data-floor="' + (r.fn === '' ? '' : r.fn) + '" data-det="' + (r.determinable ? 1 : 0) + '" style="background:' + bg + '">' +
+                        '<td>' + esc(r.taba) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.use) + '</td>' +
+                        '<td style="text-align:center">' + esc(r.domHe) + '</td><td>' + floorCell + '</td>' +
+                        '<td style="text-align:center">' + esc(r.conf) + '</td><td style="font-size:10px;color:#666">' + esc(r.src) + '</td></tr>';
                 }).join('');
+                const domChecks = Object.keys(DOM_HE).map(k =>
+                    '<label style="margin-left:10px;white-space:nowrap"><input type="checkbox" class="fdom" value="' + k + '" checked onchange="applyFilt()"> ' + DOM_HE[k] + '</label>').join('');
                 const docHtml = '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>קומות הפרשות מבונות</title><style>' +
                     'body{font-family:Arial,sans-serif;margin:20px;color:#1a1a2e}h1{font-size:20px;margin:0 0 4px}' +
-                    '.sub{color:#666;font-size:12px;margin-bottom:12px}.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}' +
-                    '.kpi{border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:90px}.kpi .v{font-size:20px;font-weight:bold}.kpi .l{font-size:11px;color:#666}' +
+                    '.sub{color:#666;font-size:12px;margin-bottom:10px}.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}' +
+                    '.kpi{border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:80px}.kpi .v{font-size:20px;font-weight:bold}.kpi .l{font-size:11px;color:#666}' +
+                    '.filt{border:1px solid #e3c9a8;background:#fbf6ef;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px}' +
+                    '.filt b{color:#b5651d}.filt input[type=number]{width:52px;padding:2px 4px}.filt .pre{cursor:pointer;border:1px solid #b5651d;background:#fff;color:#b5651d;border-radius:5px;padding:2px 8px;margin-left:5px;font-size:12px}' +
                     'table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:5px 7px;text-align:right}' +
-                    'th{background:#b5651d;color:#fff}.btns{margin-bottom:12px}' +
-                    '.btns a,.btns button{margin-left:8px;padding:6px 12px;border:1px solid #b5651d;background:#b5651d;color:#fff;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px}' +
-                    '@media print{.btns{display:none}}</style></head><body>' +
+                    'th{background:#b5651d;color:#fff;position:sticky;top:0}.btns{margin-bottom:12px}' +
+                    '.btns button{margin-left:8px;padding:6px 12px;border:1px solid #b5651d;background:#b5651d;color:#fff;border-radius:6px;cursor:pointer;font-size:13px}' +
+                    '@media print{.btns,.filt{display:none}th{position:static}}</style></head><body>' +
                     '<h1>🏢 קומות הפרשות מבונות</h1>' +
-                    '<div class="sub">באיזו קומה יושבת כל הפרשה מבונה (גן/מעון/מבנה ציבור/בית כנסת) — נקרא מחתכי ונספחי הבינוי של התכניות. שורות כתומות = הפרשה שאינה בקומת הקרקע.</div>' +
+                    '<div class="sub">באיזו קומה יושבת כל הפרשה מבונה — נקרא מחתכי ונספחי הבינוי. שורות כתומות = לא בקומת הקרקע.</div>' +
                     '<div class="kpis"><div class="kpi"><div class="v">' + nPlans + '</div><div class="l">תכניות</div></div>' +
                     '<div class="kpi"><div class="v">' + nDeterminable + '</div><div class="l">עם קומה מזוהה</div></div>' +
                     '<div class="kpi"><div class="v" style="color:#b5651d">' + nElevated + '</div><div class="l">לא בקומת הקרקע</div></div>' +
                     '<div class="kpi"><div class="v" style="color:#b00">' + nUndet + '</div><div class="l">ללא פילוח בנספח</div></div></div>' +
-                    '<div class="btns"><button onclick="window.print()">🖨️ הדפסה</button>' +
-                    '<a href="' + csvHref + '" download="floor_allocations.csv">📊 הורד CSV</a></div>' +
-                    '<table><thead><tr><th>תב"ע</th><th>שם תכנית</th><th>שימוש</th><th>קומה</th><th>ביטחון</th><th>מקור</th></tr></thead><tbody>' +
-                    trHtml + '</tbody></table></body></html>';
+                    '<div class="filt"><div style="margin-bottom:6px"><b>סינון תחום:</b> ' + domChecks +
+                    ' <span class="pre" onclick="allDom(true)">הכל</span><span class="pre" onclick="allDom(false)">נקה</span></div>' +
+                    '<div><b>סינון קומה:</b> מקומה <input type="number" id="ffrom" onchange="applyFilt()"> עד <input type="number" id="fto" onchange="applyFilt()"> ' +
+                    '<span class="pre" onclick="setF(0,0)">קרקע</span><span class="pre" onclick="setF(1,3)">קומות 1-3</span><span class="pre" onclick="setF(5,null)">מעל קומה 4</span><span class="pre" onclick="setF(null,null)">כל הקומות</span>' +
+                    ' &nbsp; <span style="color:#666">מוצג: <b id="cnt">' + rows.length + '</b> / ' + rows.length + '</span></div></div>' +
+                    '<div class="btns"><button onclick="window.print()">🖨️ הדפסה</button><button onclick="dlCsv()">📊 הורד CSV (מסונן)</button></div>' +
+                    '<table><thead><tr><th>תב"ע</th><th>שם תכנית</th><th>שימוש</th><th>תחום</th><th>קומה</th><th>ביטחון</th><th>מקור</th></tr></thead><tbody>' +
+                    trHtml + '</tbody></table>' +
+                    '<script>' +
+                    'function setF(a,b){document.getElementById("ffrom").value=(a==null?"":a);document.getElementById("fto").value=(b==null?"":b);applyFilt();}' +
+                    'function allDom(v){document.querySelectorAll(".fdom").forEach(function(c){c.checked=v;});applyFilt();}' +
+                    'function applyFilt(){var doms=Array.prototype.map.call(document.querySelectorAll(".fdom:checked"),function(c){return c.value;});' +
+                    'var fv=document.getElementById("ffrom").value,tv=document.getElementById("fto").value;' +
+                    'var from=fv===""?-Infinity:parseInt(fv),to=tv===""?Infinity:parseInt(tv);var floorActive=(fv!==""||tv!=="");' +
+                    'var shown=0;document.querySelectorAll("tbody tr").forEach(function(tr){var dom=tr.getAttribute("data-domain");var fl=tr.getAttribute("data-floor");' +
+                    'var ok=doms.indexOf(dom)>=0;if(ok&&floorActive){if(fl===""){ok=false;}else{var n=parseInt(fl);if(n<from||n>to)ok=false;}}' +
+                    'tr.style.display=ok?"":"none";if(ok)shown++;});document.getElementById("cnt").textContent=shown;}' +
+                    'function dlCsv(){var hdr=["תב\\u0022ע","שם תכנית","שימוש","תחום","קומה","ביטחון","מקור"];var lines=[hdr.join(",")];' +
+                    'document.querySelectorAll("tbody tr").forEach(function(tr){if(tr.style.display==="none")return;var vals=[];' +
+                    'tr.querySelectorAll("td").forEach(function(td){vals.push(td.textContent.trim());});' +
+                    'lines.push(vals.map(function(v){return "\\u0022"+String(v).replace(/\\u0022/g,"\\u0022\\u0022")+"\\u0022";}).join(","));});' +
+                    'var blob="\\ufeff"+lines.join("\\r\\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(blob);a.download="floor_allocations.csv";document.body.appendChild(a);a.click();a.remove();}' +
+                    '<\/script></body></html>';
                 const win = window.open('', '_blank');
                 if (!win) { alert('החלון נחסם — אפשר חלונות קופצים לאתר'); return; }
                 win.document.write(docHtml);
