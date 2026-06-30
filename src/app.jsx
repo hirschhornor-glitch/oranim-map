@@ -600,16 +600,29 @@
         // need the domain bucket, so the keyword set is broader/looser. Returns null if no domain
         // is recognized (caller buckets those as 'other' / כללי-לא-מסווג). Order matters: the more
         // specific / higher-priority domains are tested first (e.g. חירום before רווחה/קהילה).
+        // Ordered domain regexes. A single use string may contain more than one domain
+        // (e.g. "טיפת חלב ומעון יום" = health + education), so callers can collect ALL matches.
+        const HAFRASH_DOMAIN_RX = [
+            ['education', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/],
+            ['religion',  /(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)/],
+            ['sport',     /(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/],
+            ['health',    /(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/],
+            ['emergency', /(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/],
+            ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/],
+            ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
+        ];
+        // First matching domain only (kept for callers that want a single label).
         function hafrashUseDomain(t) {
             if (!t || !t.trim()) return null;
-            if (/(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/.test(t)) return 'education';
-            if (/(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)/.test(t)) return 'religion';
-            if (/(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/.test(t)) return 'sport';
-            if (/(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/.test(t)) return 'health';
-            if (/(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/.test(t)) return 'emergency';
-            if (/(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/.test(t)) return 'welfare';
-            if (/(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/.test(t)) return 'culture';
+            for (const [dom, rx] of HAFRASH_DOMAIN_RX) if (rx.test(t)) return dom;
             return null;
+        }
+        // ALL domains present in a use string (a combined string can yield several).
+        function hafrashUseDomainsAll(t) {
+            const out = [];
+            if (!t || !t.trim()) return out;
+            for (const [dom, rx] of HAFRASH_DOMAIN_RX) if (rx.test(t)) out.push(dom);
+            return out;
         }
         // Resolve the set of allocation domains present on a hafrashah feature, from its per-lot
         // use entries (preferred) or the free-text hafrash_prg fallback. Features with no recognized
@@ -622,7 +635,7 @@
             } else if (props.hafrash_prg) {
                 uses = String(props.hafrash_prg).split(/[;,]/).map(s => s.trim());
             }
-            uses.forEach(u => { const d = hafrashUseDomain(u); if (d) domains.add(d); });
+            uses.forEach(u => { hafrashUseDomainsAll(u).forEach(d => domains.add(d)); });
             if (domains.size === 0) domains.add('other');
             return domains;
         }
