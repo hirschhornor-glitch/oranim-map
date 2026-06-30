@@ -15276,25 +15276,7 @@
                             geometry: { type: 'Point', coordinates: coords }
                         });
                     }
-                    // Merge multiple same-plan markers into one pin (one per plan, not one per lot)
-                    const hafrashByTaba = {};
-                    pointFeatures.forEach(pf => {
-                        const s = String(pf.properties.pl_number || pf.properties.TABA || pf.properties.taba || '');
-                        const t = s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
-                        if (!hafrashByTaba[t]) hafrashByTaba[t] = [];
-                        hafrashByTaba[t].push(pf);
-                    });
-                    const mergedPointFeatures = Object.values(hafrashByTaba).map(group => {
-                        if (group.length === 1) return group[0];
-                        const allEntries = [];
-                        group.forEach(pf => {
-                            const e = pf.properties._hafrash_lot_entries;
-                            if (Array.isArray(e) && e.length) allEntries.push(...e);
-                        });
-                        const anchor = group[0];
-                        return { ...anchor, properties: { ...anchor.properties, _hafrash_lot_entries: allEntries.length ? allEntries : anchor.properties._hafrash_lot_entries } };
-                    });
-                    const pointCollection = { type: 'FeatureCollection', features: mergedPointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
+                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
@@ -15413,22 +15395,53 @@
                 // Zoom-responsive pin sizing: update icon dimensions whenever the user zooms.
                 // Iterates both mivnei layers and calls setIcon so the anchor also updates.
                 if (layers['future_shavaz'] || layers['hafrashah_future']) {
+                    const _mivneiTabaKey = (p) => { const s = String(p.pl_number || p.TABA || p.taba || ''); return s.includes('-') ? String(parseInt(s.split('-')[1])) : s; };
                     function _updateMivneiSizes() {
                         const z = map.getZoom();
-                        function _visitLayer(grp, typeKey) {
-                            if (!grp) return;
-                            const visit = (l) => {
-                                if (l.setIcon && l.feature) {
-                                    l.setIcon(mivneiDivIcon(l.feature.properties, typeKey, z));
-                                } else if (l.eachLayer) l.eachLayer(visit);
-                            };
-                            visit(grp);
-                        }
-                        _visitLayer(geoLayersRef.current.future_shavaz, 'shavaz');
-                        _visitLayer(geoLayersRef.current.hafrashah_future, 'hafrash');
+                        const mergeMode = z <= 15; // at low zoom: one pin per plan; at zoom 16+: per lot
+
+                        // Resize future_shavaz (already one per plan — just resize icons)
+                        const visitShavaz = (l) => {
+                            if (l.setIcon && l.feature) l.setIcon(mivneiDivIcon(l.feature.properties, 'shavaz', z));
+                            else if (l.eachLayer) l.eachLayer(visitShavaz);
+                        };
+                        if (geoLayersRef.current.future_shavaz) visitShavaz(geoLayersRef.current.future_shavaz);
+
+                        // Hafrashah: collect all markers, group by plan, show/hide per zoom
+                        const hafLayer = geoLayersRef.current.hafrashah_future;
+                        if (!hafLayer) return;
+                        const hafMarkers = [];
+                        const collectHaf = (l) => { if (l.setIcon && l.feature) hafMarkers.push(l); else if (l.eachLayer) l.eachLayer(collectHaf); };
+                        collectHaf(hafLayer);
+                        // Group and find richest marker per plan
+                        const byTaba = {};
+                        hafMarkers.forEach(m => {
+                            const t = _mivneiTabaKey(m.feature.properties);
+                            if (!byTaba[t]) byTaba[t] = [];
+                            byTaba[t].push(m);
+                        });
+                        const bestOf = {};
+                        Object.entries(byTaba).forEach(([t, group]) => {
+                            let best = group[0], bestN = (best.feature.properties._hafrash_lot_entries || []).length;
+                            group.forEach(m => { const n = (m.feature.properties._hafrash_lot_entries || []).length; if (n > bestN) { best = m; bestN = n; } });
+                            bestOf[t] = best;
+                        });
+                        hafMarkers.forEach(m => {
+                            const t = _mivneiTabaKey(m.feature.properties);
+                            const show = !mergeMode || byTaba[t].length === 1 || m === bestOf[t];
+                            if (show) {
+                                m.setIcon(mivneiDivIcon(m.feature.properties, 'hafrash', z));
+                                const el = m.getElement ? m.getElement() : null;
+                                if (el) { el.style.pointerEvents = ''; el.style.visibility = ''; }
+                            } else {
+                                m.setIcon(L.divIcon({ html: '', className: '', iconSize: [0, 0], iconAnchor: [0, 0] }));
+                                const el = m.getElement ? m.getElement() : null;
+                                if (el) { el.style.pointerEvents = 'none'; el.style.visibility = 'hidden'; }
+                            }
+                        });
                     }
                     map.on('zoomend', _updateMivneiSizes);
-                    // Stash handler so cleanup can remove it
+                    _updateMivneiSizes(); // apply immediately at current zoom
                     geoLayersRef.current._mivneiZoomHandler = _updateMivneiSizes;
                 }
 
