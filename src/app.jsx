@@ -14881,12 +14881,20 @@
                 // domainKey: from hafrashahFeatureDomains(). strokeColor: plan status color.
                 // w/h: rendered pixel size (viewBox stays 26×35 so icons scale correctly).
                 function makeMivneiPinSVG(typeKey, domainKey, strokeColor, isDashed, w, h) {
-                    // Match the existing polygon fill palette for visual consistency
+                    // domainKey: null | string | [string, string] — array = split icon (two mini icons)
                     const fill = typeKey === 'hafrash' ? PUBLIC_PALETTE.shavaz_kayam_fill : PUBLIC_PALETTE.shavaz_future_fill;
                     const pinPath = 'M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z';
                     const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
-                    const icon = domainKey ? mivneiDomainIconSVG(domainKey) : '';
                     const W = w || 26, H = h || 35;
+                    let icon = '';
+                    if (Array.isArray(domainKey) && domainKey.length >= 2) {
+                        // Two icons at 50% scale: left centered at (8,12), right at (18,12)
+                        icon = `<g transform="translate(1.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[0])}</g>` +
+                               `<line x1="13" y1="4.5" x2="13" y2="20" stroke="white" stroke-width="0.6" opacity="0.5"/>` +
+                               `<g transform="translate(11.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[1])}</g>`;
+                    } else if (domainKey) {
+                        icon = mivneiDomainIconSVG(domainKey);
+                    }
                     return `<svg viewBox="0 0 26 35" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">` +
                            `<path d="${pinPath}" fill="${fill}" stroke="${strokeColor}" stroke-width="2.5"${dash} stroke-linejoin="round"/>` +
                            icon +
@@ -14906,7 +14914,8 @@
                 function mivneiDivIcon(props, typeKey, zoom) {
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
-                    const domainKey = MIVNEI_DOMAIN_ORDER.find(d => domains.has(d)) || null;
+                    const matched = MIVNEI_DOMAIN_ORDER.filter(d => domains.has(d));
+                    const domainKey = matched.length >= 2 ? [matched[0], matched[1]] : (matched[0] || null);
                     const [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
                     const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
                     return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] });
@@ -15055,7 +15064,7 @@
                             const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
                             const c = fsInteriorPoint(ring);
                             // Enrich with shavatz lot entries so hafrashahFeatureDomains can classify the icon
-                            return { type: 'Feature', properties: enrichFutureShavazProps(f.properties), geometry: { type: 'Point', coordinates: c } };
+                            return { type: 'Feature', properties: { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true }, geometry: { type: 'Point', coordinates: c } };
                         });
                     const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
                         pane: 'shavazPane',
@@ -15310,6 +15319,7 @@
                         const visit = (layer, parent) => {
                             if (layer.getLatLng && layer.feature) {
                                 const p = layer.feature.properties || {};
+                                if (p._is_shavaz_poly) return; // polygon centroid markers are visual-only; don't dedup against hafrashah
                                 const ll = layer.getLatLng();
                                 const key = tabaKey(p) + '|' + ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
                                 const n = (p._hafrash_lot_entries || []).length;
