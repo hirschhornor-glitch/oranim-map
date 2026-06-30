@@ -1071,6 +1071,9 @@
             shavaz_kayam_stroke:   '#5C2E0A',
             shavaz_future_fill:    '#D2B48C',
             shavaz_future_stroke:  '#C4956A',
+            moch_kayam_fill:       '#9575CD',  // lilac for existing public buildings
+            moch_kayam_stroke:     '#4527A0',  // deep purple border (normal existing)
+            moch_demolition_stroke:'#D32F2F',  // red border (slated for demolition)
             edu_mamlachti:         '#0d47a1',
             edu_mamlachti_dati:    '#d63384',
             edu_aravi:             '#7b1fa2',
@@ -1927,11 +1930,13 @@
         const SHAVAZ_LEGEND = [
             // ── Type (fill) ──
             { label: 'סוג', style: 'header' },
+            { label: 'מבנה ציבור קיים', style: 'svg', svg: _legendPin('#9575CD', '#4527A0') },
+            { label: 'קיים — מיועד להריסה', style: 'svg', svg: _legendPin('#9575CD', '#D32F2F', '', true) },
             { label: 'שב"צ עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888') },
             { label: 'הפרשה מבונה עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888') },
             { label: 'מבני ציבור קיים (שטח)', color: PUBLIC_PALETTE.shavaz_kayam_fill },
-            // ── Status border ──
-            { label: 'גבול — סטטוס תכנית', style: 'header' },
+            // ── Status border (future only) ──
+            { label: 'גבול — סטטוס תכנית (עתידי)', style: 'header' },
             { label: 'מאושרת', style: 'svg', svg: _legendPin('#333', '#50d25a') },
             { label: 'היתר בנייה', style: 'svg', svg: _legendPin('#333', '#42A5F5') },
             { label: 'גמר בנייה', style: 'svg', svg: _legendPin('#333', '#9575CD') },
@@ -11851,6 +11856,10 @@
                     map.off('zoomend', geoLayersRef.current._mivneiZoomHandler);
                     delete geoLayersRef.current._mivneiZoomHandler;
                 }
+                if (geoLayersRef.current._kayamZoomHandler) {
+                    map.off('zoomend', geoLayersRef.current._kayamZoomHandler);
+                    delete geoLayersRef.current._kayamZoomHandler;
+                }
                 Object.values(geoLayersRef.current).forEach(l => {
                     if (Array.isArray(l)) l.forEach(ll => cleanupLayer(ll));
                     else if (l) cleanupLayer(l);
@@ -14881,7 +14890,9 @@
                 // w/h: rendered pixel size (viewBox stays 26×35 so icons scale correctly).
                 function makeMivneiPinSVG(typeKey, domainKey, strokeColor, isDashed, w, h) {
                     // domainKey: null | string | [string, string] — array = split icon (two mini icons)
-                    const fill = typeKey === 'hafrash' ? PUBLIC_PALETTE.shavaz_kayam_fill : PUBLIC_PALETTE.shavaz_future_fill;
+                    const fill = typeKey === 'hafrash' ? PUBLIC_PALETTE.shavaz_kayam_fill
+                              : typeKey === 'kayam'   ? PUBLIC_PALETTE.moch_kayam_fill
+                              : PUBLIC_PALETTE.shavaz_future_fill;
                     const pinPath = 'M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z';
                     const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
                     const W = w || 26, H = h || 35;
@@ -14906,6 +14917,27 @@
                     if (zoom >= 17) return [38, 51];
                     if (zoom >= 16) return [32, 43];
                     return [22, 30];
+                }
+
+                // Zoom handler for kayam (existing) pin layers — registered once, shared by mosadot_moch + shanaton.
+                function _ensureKayamZoomHandler() {
+                    if (geoLayersRef.current._kayamZoomHandler) return; // already registered
+                    const handler = () => {
+                        const [w, h] = mivneiIconSize(map.getZoom());
+                        const resize = (l) => {
+                            if (l.setIcon && l._mochDomain !== undefined) {
+                                const cnt = l._shanatonCount || 0;
+                                const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
+                                const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
+                                const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }));
+                            } else if (l.eachLayer) l.eachLayer(resize);
+                        };
+                        if (geoLayersRef.current.mosadot_moch) resize(geoLayersRef.current.mosadot_moch);
+                        if (geoLayersRef.current.education_shanaton) resize(geoLayersRef.current.education_shanaton);
+                    };
+                    map.on('zoomend', handler);
+                    geoLayersRef.current._kayamZoomHandler = handler;
                 }
 
                 // Wrap feature props → divIcon with custom pin SVG, sized for current zoom.
@@ -15454,6 +15486,20 @@
                                 if (el) { el.style.pointerEvents = 'none'; el.style.visibility = 'hidden'; }
                             }
                         });
+
+                        // Resize kayam (mosadot_moch + education_shanaton) pins
+                        const [w, h] = mivneiIconSize(z);
+                        const resizeKayam = (l) => {
+                            if (l.setIcon && l._mochDomain !== undefined) {
+                                const cnt = l._shanatonCount || 0;
+                                const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
+                                const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
+                                const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }));
+                            } else if (l.eachLayer) l.eachLayer(resizeKayam);
+                        };
+                        if (geoLayersRef.current.mosadot_moch) resizeKayam(geoLayersRef.current.mosadot_moch);
+                        if (geoLayersRef.current.education_shanaton) resizeKayam(geoLayersRef.current.education_shanaton);
                     }
                     map.on('zoomend', _updateMivneiSizes);
                     _updateMivneiSizes(); // apply immediately at current zoom
@@ -15783,22 +15829,23 @@
                     if (layers[toggle]) cats.forEach(c => _mochActiveCats.add(c));
                 });
                 if (_mochActiveCats.size > 0 && gd.mosadot_moch) {
-                    const MOCH_CAT_COLOR = {
-                        'דת':            '#FFB300',  // amber/gold
-                        'ספורט':         '#388E3C',  // green
-                        'תרבות וקהילה':   '#7E57C2',  // purple
-                        'רווחה':          '#FB8C00',  // orange
-                        'בריאות':         '#D32F2F',  // red
-                        'חירום וכללי':    '#546E7A',  // slate
+                    const MOCH_CAT_TO_DOMAIN = {
+                        'דת': 'religion', 'ספורט': 'sport', 'תרבות וקהילה': 'culture',
+                        'רווחה': 'welfare', 'בריאות': 'health', 'חירום וכללי': 'emergency',
                     };
                     const mochClean = { ...gd.mosadot_moch, features: gd.mosadot_moch.features.filter(f => f.geometry && f.geometry.coordinates && _mochActiveCats.has(f.properties.category || '')) };
                     const mochLayer = L.geoJSON(mochClean, {
                         pane: 'stationsPane',
                         pointToLayer: (f, latlng) => {
-                            const cat = f.properties.category || '';
-                            const fill = MOCH_CAT_COLOR[cat] || '#888';
-                            const html = `<div style="background:${fill};border:1.5px solid #5C2E0A;border-radius:50%;width:14px;height:14px;box-shadow:0 1px 2px rgba(0,0,0,0.4)"></div>`;
-                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'moch-icon', iconSize: [14, 14], iconAnchor: [7, 7] }) });
+                            const p = f.properties;
+                            const domain = MOCH_CAT_TO_DOMAIN[p.category || ''] || null;
+                            const stroke = p.demolition_planned ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
+                            const isDashed = !!p.demolition_planned;
+                            const [w, h] = mivneiIconSize(map.getZoom());
+                            const svg = makeMivneiPinSVG('kayam', domain, stroke, isDashed, w, h);
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }) });
+                            mk._mochDomain = domain; mk._mochDemolition = isDashed;
+                            return mk;
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
@@ -15826,6 +15873,7 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.mosadot_moch = mochLayer;
+                    _ensureKayamZoomHandler();
                 }
 
                 // --- Education Shanaton (institutions from manhi yearbook, grouped by address) ---
@@ -15842,11 +15890,16 @@
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const cnt = p.institutions_count || 1;
-                            const primaryType = p.primary_type || (p.institutions[0] || {}).type || 'אחר';
-                            const fill = TYPE_COLOR[primaryType] || TYPE_COLOR['אחר'];
-                            const size = cnt > 1 ? 22 : 16;
-                            const html = `<div style="background:${fill};border:1.5px solid #333;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#222;box-shadow:0 1px 3px rgba(0,0,0,0.3)">${cnt > 1 ? cnt : ''}</div>`;
-                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'edu-shanaton-icon', iconSize: [size, size], iconAnchor: [size/2, size/2] }) });
+                            const stroke = p.demolition_planned ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
+                            const isDashed = !!p.demolition_planned;
+                            const [w, h] = mivneiIconSize(map.getZoom());
+                            const svg = makeMivneiPinSVG('kayam', 'education', stroke, isDashed, w, h);
+                            // Overlay institution count badge when >1
+                            const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
+                            const wrapper = `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>`;
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: wrapper, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }) });
+                            mk._mochDomain = 'education'; mk._mochDemolition = isDashed; mk._shanatonCount = cnt;
+                            return mk;
                         },
                         onEachFeature: (f, layer) => {
                             const p = f.properties;
@@ -15897,6 +15950,7 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.education_shanaton = shanatonLayer;
+                    _ensureKayamZoomHandler();
                 }
 
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
