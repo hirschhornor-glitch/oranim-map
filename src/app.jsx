@@ -1916,7 +1916,7 @@
         }
         const _LP = {
             edu:  `<polygon points="13,7.5 18.5,11 13,14.5 7.5,11" fill="white"/><line x1="18.5" y1="11" x2="18.5" y2="15" stroke="white" stroke-width="1.2"/><rect x="17.3" y="15" width="2.4" height="0.9" rx="0.4" fill="white"/>`,
-            rel:  `<polygon points="13,7.5 8.84,12.4 17.16,12.4" fill="none" stroke="white" stroke-width="1.3"/><polygon points="13,16.5 17.16,11.6 8.84,11.6" fill="none" stroke="white" stroke-width="1.3"/>`,
+            rel:  `<polygon points="13,7.5 14.3,9.75 16.9,9.75 15.5,12 16.9,14.25 14.3,14.25 13,16.5 11.7,14.25 9.1,14.25 10.5,12 9.1,9.75 11.7,9.75" fill="white"/>`,
             spt:  `<circle cx="13" cy="12" r="5" fill="none" stroke="white" stroke-width="1.6"/><line x1="13" y1="7" x2="13" y2="17" stroke="white" stroke-width="0.8"/><line x1="8" y1="12" x2="18" y2="12" stroke="white" stroke-width="0.8"/>`,
             hlt:  `<polyline points="7,12 9,12 10.5,8.5 12,15.5 13.5,8.5 14.5,14 16,12 19,12" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
             emg:  `<path d="M 13,7 L 17.5,9 L 17.5,13.5 C 17.5,16 13,18 13,18 C 13,18 8.5,16 8.5,13.5 L 8.5,9 Z" fill="none" stroke="white" stroke-width="1.2"/><line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.6"/><line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.6"/>`,
@@ -14841,9 +14841,8 @@
                                    `<line x1="18.5" y1="11" x2="18.5" y2="15" stroke="white" stroke-width="1.2"/>` +
                                    `<rect x="17.3" y="15" width="2.4" height="0.9" rx="0.4" fill="white"/>`;
                         case 'religion':
-                            // Star of David — two interlocking equilateral triangles (outline)
-                            return `<polygon points="13,7.5 8.84,12.4 17.16,12.4" fill="none" stroke="white" stroke-width="1.3"/>` +
-                                   `<polygon points="13,16.5 17.16,11.6 8.84,11.6" fill="none" stroke="white" stroke-width="1.3"/>`;
+                            // Star of David — filled 12-vertex hexagram (outer R=4.5, inner R=2.6)
+                            return `<polygon points="13,7.5 14.3,9.75 16.9,9.75 15.5,12 16.9,14.25 14.3,14.25 13,16.5 11.7,14.25 9.1,14.25 10.5,12 9.1,9.75 11.7,9.75" fill="white"/>`;
                         case 'sport':
                             // Ball — circle with crosshairs
                             return `<circle cx="13" cy="12" r="5" fill="none" stroke="white" stroke-width="1.6"/>` +
