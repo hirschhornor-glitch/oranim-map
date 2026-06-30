@@ -2808,7 +2808,7 @@
                     .filter(([, v]) => v)
                     .map(([k]) => k)
                     .join(',');
-                const hash = `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}`;
+                const hash = `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}` + serializeOpenReport();
                 window.history.replaceState(null, '', '#' + hash);
             }
 
@@ -4736,6 +4736,35 @@
 
             // Keep refs in sync
             useEffect(() => { layersRef.current = layers; updateHash(); }, [layers]);
+
+            // Keep the URL hash in sync with the currently-open report + its filters,
+            // so the global "שיתוף" link (and the browser address bar) always reflect
+            // the exact report state the user is viewing.
+            useEffect(() => { updateHash(); }, [
+                showUnits, unitsExpanded, unitsDrilldown,
+                showCommerceTable, commerceExpanded, commerceDrilldown,
+                showMimush, mimushExpanded, mimushDrilldown,
+                stagingReport, stagingDomainFilter,
+                conditionsReport, conditionsDomainFilter, conditionsActorFilter,
+                shavazKayamReport, shavazReportFilter,
+                overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
+                meetingsReport, specialHousingReport, masterPlanReport,
+                showEduForecast, eduForecastChumash, eduForecastNb,
+                showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
+                showPermitsGap, permitsGapDrilldown,
+                showFloorReport, flrFrom, flrTo, flrDoms,
+                showPublicNeeds, publicNeedsMinahak, reportScope,
+            ]);
+
+            // On first load, if the hash names a report, re-open it (with its filters)
+            // once the app has settled and base data has had a moment to load.
+            const reportHashAppliedRef = useRef(false);
+            useEffect(() => {
+                if (reportHashAppliedRef.current) return;
+                reportHashAppliedRef.current = true;
+                const hp = initialHashRef.current;
+                if (hp && hp.report) setTimeout(() => applyReportFromHash(hp), 450);
+            }, []);
             // GeoJSON layers have built-in pointer cursor on hover — no probe needed
 
             // ── On-demand layer loading ──
@@ -11830,6 +11859,112 @@
                 if (!unitsData) ensureUnitsData().then(open);
                 else open();
             }, [buildMimushData, ensureUnitsData, unitsData]);
+
+            // ── Report deep-linking ──────────────────────────────────────────────
+            // Registry of menu-driven React-modal reports. Each entry knows how to
+            // detect whether it's open, how to (re)open it, and how to serialize /
+            // restore its filter parameters to/from the URL hash. This lets the
+            // "שיתוף" link carry not just the map view but the exact report + filters
+            // the user is looking at, so a recipient lands on the same analysis.
+            // (Popup-window dashboards — אוכלוסייה / בנייה / דשבורד שכונתי-מינהל /
+            // פרוגרמה — open in a separate browser window and are not deep-linkable.)
+            function reportDefs() {
+                return [
+                    { key: 'units', isOpen: () => showUnits, open: () => setShowUnits(true),
+                        ser: () => ({ exp: unitsExpanded, drill: unitsDrilldown }),
+                        apply: p => { if (p.exp) setUnitsExpanded(p.exp); if (p.drill) setUnitsDrilldown(p.drill); } },
+                    { key: 'commerce', isOpen: () => showCommerceTable, open: () => setShowCommerceTable(true),
+                        ser: () => ({ exp: commerceExpanded, drill: commerceDrilldown }),
+                        apply: p => { if (p.exp) setCommerceExpanded(p.exp); if (p.drill) setCommerceDrilldown(p.drill); } },
+                    { key: 'mimush', isOpen: () => showMimush, open: () => openMimushModal(),
+                        ser: () => ({ exp: mimushExpanded, drill: mimushDrilldown }),
+                        apply: p => { if (p.exp) setMimushExpanded(p.exp); if (p.drill) setMimushDrilldown(p.drill); } },
+                    { key: 'staging', isOpen: () => stagingReport, open: () => setStagingReport(true),
+                        ser: () => ({ dom: stagingDomainFilter }),
+                        apply: p => { if (p.dom) setStagingDomainFilter(p.dom); } },
+                    { key: 'conditions', isOpen: () => conditionsReport, open: () => setConditionsReport(true),
+                        ser: () => ({ dom: conditionsDomainFilter, actor: conditionsActorFilter }),
+                        apply: p => { if (p.dom) setConditionsDomainFilter(p.dom); if (p.actor) setConditionsActorFilter(p.actor); } },
+                    { key: 'shavaz', isOpen: () => shavazKayamReport, open: () => setShavazKayamReport(true),
+                        ser: () => ({ sub: shavazReportFilter.sub, minahak: shavazReportFilter.minahak, q: shavazReportFilter.q }),
+                        apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
+                    { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
+                    { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true) },
+                    { key: 'permitObjections', isOpen: () => permitObjectionsReport, open: () => setPermitObjectionsReport(true) },
+                    { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
+                    { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
+                    { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
+                    { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
+                        ser: () => ({ mp: masterPlanReport }) },
+                    { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
+                        ser: () => ({ ch: String(eduForecastChumash), nb: eduForecastNb }),
+                        apply: p => { if (p.ch) setEduForecastChumash(parseInt(p.ch) || 1); if (p.nb) setEduForecastNb(p.nb); } },
+                    { key: 'permitsBySub', isOpen: () => showPermitsBySub, open: () => setShowPermitsBySub(true),
+                        ser: () => ({ drill: permitsBySubDrilldown, min: permitsBySubMinahakFilter }),
+                        apply: p => { if (p.drill) setPermitsBySubDrilldown(p.drill); if (p.min) setPermitsBySubMinahakFilter(p.min); } },
+                    { key: 'permitsGap', isOpen: () => showPermitsGap, open: () => setShowPermitsGap(true),
+                        ser: () => ({ drill: permitsGapDrilldown }),
+                        apply: p => { if (p.drill) setPermitsGapDrilldown(p.drill); } },
+                    { key: 'floorReport', isOpen: () => showFloorReport, open: () => setShowFloorReport(true),
+                        ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
+                        apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
+                    { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
+                        ser: () => ({ min: publicNeedsMinahak }),
+                        apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
+                ];
+            }
+
+            // Build the report fragment of the URL hash for whichever report is open.
+            function serializeOpenReport() {
+                const def = reportDefs().find(d => d.isOpen());
+                if (!def) return '';
+                let frag = '&report=' + def.key;
+                if (reportScope) frag += '&scope=' + encodeURIComponent(reportScope);
+                if (def.ser) {
+                    Object.entries(def.ser()).forEach(([k, v]) => {
+                        if (v != null && v !== '') frag += '&rp_' + k + '=' + encodeURIComponent(v);
+                    });
+                }
+                return frag;
+            }
+
+            // Restore a report (and its filters) from parsed hash params on first load.
+            function applyReportFromHash(params) {
+                if (!params || !params.report) return;
+                const def = reportDefs().find(d => d.key === params.report);
+                if (!def) return;
+                const rp = {};
+                Object.keys(params).forEach(k => { if (k.indexOf('rp_') === 0) rp[k.slice(3)] = params[k]; });
+                if (params.scope) { window.__reportScope = params.scope; setReportScope(params.scope); }
+                def.open(rp);
+                if (def.apply) setTimeout(() => def.apply(rp), 80);
+            }
+
+            // Copy a shareable link to the current view + open report. Reused by the
+            // global "שיתוף" button and the per-report 🔗 buttons in modal headers.
+            function shareCurrentLink() {
+                updateHash();
+                const url = window.location.href;
+                const done = () => notifyToast('הקישור הועתק!');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(done).catch(() => {
+                        const ta = document.createElement('textarea'); ta.value = url;
+                        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                        document.body.removeChild(ta); done();
+                    });
+                } else {
+                    const ta = document.createElement('textarea'); ta.value = url;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); done();
+                }
+            }
+
+            // Small reusable 🔗 button for report modal headers.
+            const ReportLinkBtn = () => (
+                <button className="modal-close" title="העתק קישור לדוח זה (כולל הסינון הנוכחי)"
+                    onClick={shareCurrentLink}
+                    style={{ fontSize: 15, marginLeft: 4 }}>🔗</button>
+            );
 
             // Activate the built-allocations report for a drawn area / radius (mirrors the
             // programa area/radius activation, but flags the scope collector for allocations).
@@ -20233,16 +20368,8 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                                         <span className="sub-label">הדפסה</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="העתקת קישור לתצוגה הנוכחית" onClick={() => {
-                                        updateHash();
-                                        navigator.clipboard.writeText(window.location.href).then(() => {
-                                            notifyToast('הקישור הועתק!');
-                                        }).catch(() => {
-                                            const ta = document.createElement('textarea'); ta.value = window.location.href;
-                                            document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                                            document.body.removeChild(ta);
-                                            notifyToast('הקישור הועתק!');
-                                        });
+                                    <button className="toolbar-dropdown-item" data-tip="העתקת קישור לתצוגה הנוכחית (כולל דוח פתוח ופילטרים)" onClick={() => {
+                                        shareCurrentLink();
                                         setActiveDropdown(null);
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -21764,7 +21891,7 @@
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1080, width: '96%' }}>
                                     <div className="units-header" style={{ background: '#b5651d' }}>
                                         <h2>🏢 קומות הפרשות מבונות</h2>
-                                        <button className="units-close" onClick={() => setShowFloorReport(false)}>&times;</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowFloorReport(false)}>&times;</button>
                                     </div>
                                     <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
                                         <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>באיזו קומה יושבת כל הפרשה מבונה — נקרא מחתכי ונספחי הבינוי. שורות כתומות = לא בקומת הקרקע.</div>
@@ -21987,7 +22114,7 @@
                                 <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1180, width: '96%' }}>
                                     <div className="units-header" style={{ background: COLORS[N] }}>
                                         <h2>תחזית חינוך — חומש {N} ({RANGES[N]})</h2>
-                                        <button className="units-close" onClick={() => setShowEduForecast(false)}>&times;</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowEduForecast(false)}>&times;</button>
                                     </div>
                                     <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
                                         {/* חומש switcher */}
@@ -22607,7 +22734,7 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()}>
                                         <div className="units-header">
                                             <h2>📊 היתרים מול תב"ע</h2>
-                                            <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים...</p></div></div>
                                     </div>
@@ -22789,7 +22916,7 @@
                                                     } catch(e) { console.warn('[permits-gap zoom] failed:', e); }
                                                 }, 150);
                                             }}>{row.plan_name}</span> 🗺️</h2>
-                                            <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body">
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
@@ -22957,7 +23084,7 @@
                                                 כלול יח"ד מותנות
                                             </label>
                                         </div>
-                                        <button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
                                     </div>
                                     <div className="units-body">
                                         {(() => {
@@ -23042,7 +23169,7 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()}>
                                         <div className="units-header">
                                             <h2>🏘️ היתרים לפי תת-שכונה</h2>
-                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים...</p></div></div>
                                     </div>
@@ -23215,7 +23342,7 @@
                                                 <button onClick={exportDrilldownCsv} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
                                                 <button onClick={printDrilldown} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
                                             </div>
-                                            <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body" style={{padding:0,color:'#e0e0e0'}}>
                                             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,color:'#e0e0e0'}}>
@@ -23296,7 +23423,7 @@
                                                 </select>
                                                 <button onClick={exportSubReport} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
                                                 <button onClick={printSubReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
-                                                <button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
+                                                <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsBySub(false); setPermitsBySubDrilldown(null); }}>&times;</button>
                                             </div>
                                         </div>
                                         <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
@@ -23447,7 +23574,7 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()}>
                                         <div className="units-header">
                                             <h2>🏘️ פרוגרמה שכונתית</h2>
-                                            <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body"><div className="units-loading"><p style={{fontSize:'28px',marginBottom:'10px'}}>⏳</p><p>טוען נתונים...</p></div></div>
                                     </div>
@@ -23849,7 +23976,7 @@
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(720px,95vw)'}}>
                                         <div className="units-header">
                                             <h2 style={{margin:0,color:'#e0e0ff'}}>🏘️ פרוגרמה שכונתית — בחר מינהל</h2>
-                                            <button className="units-close" onClick={() => setShowPublicNeeds(false)}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => setShowPublicNeeds(false)}>&times;</button>
                                         </div>
                                         <div className="units-body" style={{padding:24,color:'#e0e0e0'}}>
                                             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14}}>
@@ -23881,7 +24008,7 @@
                                             <div className="units-header">
                                                 <button className="units-back-btn" onClick={() => setPublicNeedsDrilldown(null)}>← חזור</button>
                                                 <h2>{sub}</h2>
-                                                <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); setPublicNeedsDrilldown(null); }}>&times;</button>
+                                                <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); setPublicNeedsDrilldown(null); }}>&times;</button>
                                             </div>
                                             <div className="units-body"><div className="units-loading"><p>אין נתונים לתת-שכונה זו</p></div></div>
                                         </div>
@@ -23894,7 +24021,7 @@
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPublicNeedsDrilldown(null)} style={{marginLeft:8}}>← חזור</button>
                                             <h2>🏘️ {sub} — פירוט חישוב ({yearLabel(mData.targetYear)})</h2>
-                                            <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); setPublicNeedsDrilldown(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); setPublicNeedsDrilldown(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body" style={{padding:14,color:'#e0e0e0'}}>
                                             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
@@ -23964,7 +24091,7 @@
                                         <div className="units-header">
                                             <button className="units-back-btn" onClick={() => setPublicNeedsMinahak(null)}>← חזור</button>
                                             <h2>{publicNeedsMinahak}</h2>
-                                            <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
+                                            <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
                                         </div>
                                         <div className="units-body"><div className="units-loading"><p>אין נתונים למינהל זה</p></div></div>
                                     </div>
@@ -24197,7 +24324,7 @@
                                             <div style={{display:'flex',gap:8,alignItems:'center'}}>
                                                 <button onClick={exportPNCsv} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>📊 CSV</button>
                                                 <button onClick={printPNReport} style={{background:'#1a5276',color:'#fff',border:'none',padding:'4px 10px',borderRadius:4,cursor:'pointer',fontSize:11}}>🖨️ הדפסה</button>
-                                                <button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
+                                                <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPublicNeeds(false); setPublicNeedsMinahak(null); }}>&times;</button>
                                             </div>
                                         </div>
                                         {renderControls(publicNeedsMinahak)}
@@ -24819,7 +24946,7 @@
                                             win.document.close();
                                             win.focus();
                                         }}>📊 הדפסה / CSV</button>
-                                    <button className="modal-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
+                                    <ReportLinkBtn /><button className="modal-close" onClick={() => { setShowUnits(false); setUnitsDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
                                     {unitsLoading || !unitsData ? (
@@ -25090,7 +25217,7 @@
                                     ) : (
                                         <h2>🏬 מסחר ותעסוקה לפי מינהל קהילתי (מ"ר)</h2>
                                     )}
-                                    <button className="modal-close" onClick={() => { setShowCommerceTable(false); setCommerceDrilldown(null); }}>&times;</button>
+                                    <ReportLinkBtn /><button className="modal-close" onClick={() => { setShowCommerceTable(false); setCommerceDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
                                     {commerceLoading || !commerceData ? (
@@ -25925,7 +26052,7 @@
                     {masterPlanReport && (
                         <div className="units-overlay" onClick={() => setMasterPlanReport(null)}>
                             <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(700px, 95vw)', maxHeight: '85vh', display:'flex', flexDirection:'column'}}>
-                                <button className="units-close" onClick={() => setMasterPlanReport(null)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setMasterPlanReport(null)}>&times;</button>
                                 <div style={{overflowY:'auto', flex:1}}>
                                 <h2 style={{color:'#fff',fontSize:18,marginBottom:12}}>&#128202; דוח סיכום — תכנית אב {masterPlanReport}</h2>
                                 {(() => {
@@ -26391,7 +26518,7 @@
                                         printWin.document.close();
                                         printWin.focus();
                                     }}>&#128424; דוח</button>
-                                    <button className="units-close" onClick={() => { setShowMimush(false); setMimushDrilldown(null); setMimushCellReport(null); }}>&times;</button>
+                                    <ReportLinkBtn /><button className="units-close" onClick={() => { setShowMimush(false); setMimushDrilldown(null); setMimushCellReport(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
                                     <div className="mimush-legend">
@@ -26715,7 +26842,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setObjectionsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(750px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
-                                <button className="units-close" onClick={() => setObjectionsReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setObjectionsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128203; תכניות המופקדות להתנגדויות</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} תכניות</p>
@@ -26819,7 +26946,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setPermitObjectionsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(820px,95vw)',maxHeight:'85vh',display:'flex',flexDirection:'column'}}>
-                                <button className="units-close" onClick={() => setPermitObjectionsReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setPermitObjectionsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#9878;&#65039; היתרים פתוחים להתנגדויות</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{recs.length} בקשות להיתר עם הקלות (סעיף 149) · ממוין לפי מועד אחרון</p>
@@ -26898,7 +27025,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setTreePermitsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(860px,95vw)',maxHeight:'85vh',display:'flex',flexDirection:'column'}}>
-                                <button className="units-close" onClick={() => setTreePermitsReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setTreePermitsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#127795; אישורי כריתת עצים פתוחים לערר</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{recs.length} אישורים · {totalTrees.toLocaleString()} עצים · ממוין לפי מועד אחרון · מקור: מעירים / פקיד היערות</p>
@@ -27021,7 +27148,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setSpecialHousingReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(980px, 96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
-                                <button className="units-close" onClick={() => setSpecialHousingReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setSpecialHousingReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏘️ דיור להשכרה ומותנה</h2>
                                     <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{rows.length} תכניות · סה"כ יח"ד להשכרה: {tot.rental.toLocaleString()} · יח"ד מותנות: {tot.conditional.toLocaleString()}</p>
@@ -27194,7 +27321,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setMeetingsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(850px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
-                                <button className="units-close" onClick={() => setMeetingsReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setMeetingsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128197; תכניות בדיון בוועדות הקרובות</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{rows.length} תכניות</p>
@@ -27398,7 +27525,7 @@
                         return (
                         <div className="units-overlay" onClick={closeReport}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1000px, 96vw)', maxHeight:'88vh', display:'flex', flexDirection:'column'}}>
-                                <button className="units-close" onClick={closeReport}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={closeReport}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto', flex:1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>שלביות ביצוע — מסירת הפרשות ציבוריות</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{rows.length} תכניות · מתי מתקבלות ההפרשות הציבוריות (שצ"פ/הפרשה מבונה) בהדרגה · מדורג לפי סיכון התארכות</p>
@@ -27622,7 +27749,7 @@
                         return (
                         <div className="units-overlay" onClick={closeReport}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1040px, 96vw)', maxHeight:'88vh', display:'flex', flexDirection:'column'}}>
-                                <button className="units-close" onClick={closeReport}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={closeReport}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto', flex:1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>תנאים והפרשות ציבוריות</h2>
                                     <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{rows.length} תנאים ב-{plansCount} תכניות · תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)</p>
@@ -27993,7 +28120,7 @@
                         return (
                         <div className="units-overlay" onClick={() => setOverlapReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(900px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
-                                <button className="units-close" onClick={() => setOverlapReport(false)}>&times;</button>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setOverlapReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🔀 תכניות כפולות על אותו מרחב</h2>
                                     <div style={{display:'flex',gap:8,marginBottom:8}}>
@@ -28112,7 +28239,7 @@
                             return (
                                 <div className="units-overlay" onClick={() => setShavazKayamReport(false)}>
                                     <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:520}}>
-                                        <button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
                                         <div style={{padding:'30px 24px',color:'#e0e0ff',textAlign:'center'}}>
                                             <h2>🏛️ שב"צ קיים</h2>
                                             <p style={{color:'#aab',marginTop:12}}>שכבת "שב"צ קיים" לא נטענה. הפעל אותה בתפריט השכבות ונסה שוב.</p>
@@ -28352,7 +28479,7 @@
                                     <div style={{display:'flex',gap:6,alignItems:'center'}}>
                                         <button onClick={printShavazReport} style={{background:'#3a5a8c',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📄 הדפסה / PDF</button>
                                         <button onClick={exportShavazCSV} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📊 ייצוא אקסל</button>
-                                        <button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShavazKayamReport(false)}>&times;</button>
                                     </div>
                                 </div>
                                 <div style={{padding:'8px 16px',borderBottom:'1px solid #2a2a4a',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',fontSize:11}}>
