@@ -19639,7 +19639,7 @@
                                                 onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מוסדות חינוך', items: MOSADOT_LEGEND }); }}
                                                 style={{fontSize:'14px',margin:0}}>⋯</button>
                                         )}
-                                        {groupKey === 'shavaz' && (
+                                        {(groupKey === 'shavaz_kayam_group' || groupKey === 'shavaz_atid_group') && (
                                             <button className="layer-legend-btn" title="מקרא מבני ציבור"
                                                 onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא מבני ציבור', items: SHAVAZ_LEGEND }); }}
                                                 style={{fontSize:'14px',margin:0}}>⋯</button>
