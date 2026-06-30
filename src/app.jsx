@@ -14898,9 +14898,17 @@
                     const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
                     const W = w || 26, H = h || 35;
                     let icon = '';
-                    if (Array.isArray(domainKey) && domainKey.length >= 3) {
+                    if (Array.isArray(domainKey) && domainKey.length >= 4) {
+                        // Four icons in 2×2 grid at 40% scale
+                        // Centers: TL=(8,7.5) TR=(18,7.5) BL=(8,16.5) BR=(18,16.5)
+                        const s = 0.40;
+                        const g4 = (d, cx, cy) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
+                        icon = g4(domainKey[0], 8, 7.5) + g4(domainKey[1], 18, 7.5) +
+                               `<line x1="13" y1="2.5" x2="13" y2="21.5" stroke="white" stroke-width="0.5" opacity="0.4"/>` +
+                               `<line x1="3" y1="12" x2="23" y2="12" stroke="white" stroke-width="0.5" opacity="0.4"/>` +
+                               g4(domainKey[2], 8, 16.5) + g4(domainKey[3], 18, 16.5);
+                    } else if (Array.isArray(domainKey) && domainKey.length >= 3) {
                         // Three icons at 37% scale, centered at x=5.5 / 13 / 20.5, y=12
-                        // transform math: translate(cx-13s, cy-12s) scale(s) where s=0.37
                         const s = 0.37, cy = 12;
                         const g3 = (d, cx) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
                         icon = g3(domainKey[0], 5.5) +
@@ -14959,13 +14967,15 @@
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
                     const matched = MIVNEI_DOMAIN_ORDER.filter(d => domains.has(d));
-                    const domainKey = matched.length >= 3 ? [matched[0], matched[1], matched[2]]
+                    const domainKey = matched.length >= 4 ? [matched[0], matched[1], matched[2], matched[3]]
+                                    : matched.length === 3 ? [matched[0], matched[1], matched[2]]
                                     : matched.length === 2 ? [matched[0], matched[1]]
                                     : (matched[0] || null);
                     const nSplit = Array.isArray(domainKey) ? domainKey.length : 0;
                     let [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
                     if (nSplit === 2) { w = Math.round(w * 1.25); h = Math.round(h * 1.25); }
                     if (nSplit === 3) { w = Math.round(w * 1.5);  h = Math.round(h * 1.5);  }
+                    if (nSplit === 4) { w = Math.round(w * 1.6);  h = Math.round(h * 1.6);  }
                     const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
                     return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] });
                 }
