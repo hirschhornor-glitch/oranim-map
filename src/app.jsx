@@ -15330,14 +15330,30 @@
                     const _lotKey = (pf) => { const s = String(pf.properties.pl_number || pf.properties.TABA || ''); const t = s.includes('-') ? String(parseInt(s.split('-')[1])) : s; return t + '|' + String(pf.properties.num || ''); };
                     const _byLot = {};
                     pointFeatures.forEach(pf => { const k = _lotKey(pf); if (!_byLot[k]) _byLot[k] = []; _byLot[k].push(pf); });
-                    const lotMergedFeatures = Object.values(_byLot).map(group => {
+                    const _mergeGroup = (group) => {
                         if (group.length === 1) return group[0];
                         const allEntries = [];
                         group.forEach(pf => { const e = pf.properties._hafrash_lot_entries; if (Array.isArray(e) && e.length) allEntries.push(...e); });
                         const anchor = group.reduce((best, pf) => (pf.properties._hafrash_lot_entries || []).length > (best.properties._hafrash_lot_entries || []).length ? pf : best, group[0]);
                         return { ...anchor, properties: { ...anchor.properties, _hafrash_lot_entries: allEntries.length ? allEntries : anchor.properties._hafrash_lot_entries } };
+                    };
+                    const lotMergedFeatures = Object.values(_byLot).map(_mergeGroup);
+
+                    // Secondary proximity merge: features from DIFFERENT plans/lots that landed on the
+                    // same physical spot (within 15m) get merged into one pin.
+                    const _dist2 = (a, b) => { const dx=(a[0]-b[0])*89000, dy=(a[1]-b[1])*111000; return Math.sqrt(dx*dx+dy*dy); };
+                    const proximityGroups = []; const assigned = new Set();
+                    lotMergedFeatures.forEach((pf, i) => {
+                        if (assigned.has(i)) return;
+                        const grp = [pf]; assigned.add(i);
+                        const c = pf.geometry.coordinates;
+                        lotMergedFeatures.forEach((pf2, j) => {
+                            if (assigned.has(j)) return;
+                            if (_dist2(c, pf2.geometry.coordinates) <= 15) { grp.push(pf2); assigned.add(j); }
+                        });
+                        proximityGroups.push(_mergeGroup(grp));
                     });
-                    const pointCollection = { type: 'FeatureCollection', features: lotMergedFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
+                    const pointCollection = { type: 'FeatureCollection', features: proximityGroups.filter(pf => passesHafrashDomainFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
