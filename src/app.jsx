@@ -1927,8 +1927,8 @@
         const SHAVAZ_LEGEND = [
             // ── Type (fill) ──
             { label: 'סוג', style: 'header' },
-            { label: 'שב"צ עתידי', style: 'svg', svg: _legendPin('#D4954A', '#888') },
-            { label: 'הפרשה מבונה עתידי', style: 'svg', svg: _legendPin('#7A4010', '#888') },
+            { label: 'שב"צ עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888') },
+            { label: 'הפרשה מבונה עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888') },
             { label: 'מבני ציבור קיים (שטח)', color: PUBLIC_PALETTE.shavaz_kayam_fill },
             // ── Status border ──
             { label: 'גבול — סטטוס תכנית', style: 'header' },
@@ -1939,14 +1939,14 @@
             { label: 'בבדיקה / פתיחת תיק', style: 'svg', svg: _legendPin('#333', '#eb0000') },
             // ── Domain icon ──
             { label: 'אייקון — ייעוד', style: 'header' },
-            { label: 'חינוך', style: 'svg', svg: _legendPin('#7A4010', '#888', _LP.edu) },
-            { label: 'דת', style: 'svg', svg: _legendPin('#7A4010', '#888', _LP.rel) },
-            { label: 'ספורט', style: 'svg', svg: _legendPin('#D4954A', '#888', _LP.spt) },
-            { label: 'בריאות', style: 'svg', svg: _legendPin('#7A4010', '#888', _LP.hlt) },
-            { label: 'חירום', style: 'svg', svg: _legendPin('#D4954A', '#888', _LP.emg) },
-            { label: 'רווחה', style: 'svg', svg: _legendPin('#7A4010', '#888', _LP.wlf) },
-            { label: 'תרבות / קהילה', style: 'svg', svg: _legendPin('#D4954A', '#888', _LP.clt) },
-            { label: 'כללי / לא מסווג', style: 'svg', svg: _legendPin('#7A4010', '#888', _LP.oth) },
+            { label: 'חינוך', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.edu) },
+            { label: 'דת', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.rel) },
+            { label: 'ספורט', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.spt) },
+            { label: 'בריאות', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.hlt) },
+            { label: 'חירום', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.emg) },
+            { label: 'רווחה', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.wlf) },
+            { label: 'תרבות / קהילה', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.clt) },
+            { label: 'כללי / לא מסווג', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.oth) },
         ];
 
         const HIDDEN_PLANS_LEGEND = [
@@ -11846,6 +11846,11 @@
                 }
                 // Also remove any orphaned hatch overlays from SVG
                 document.querySelectorAll('.hatch-overlay').forEach(el => el.remove());
+                // Remove mivnei zoom handler before iterating layers (it's a function, not a layer)
+                if (geoLayersRef.current._mivneiZoomHandler) {
+                    map.off('zoomend', geoLayersRef.current._mivneiZoomHandler);
+                    delete geoLayersRef.current._mivneiZoomHandler;
+                }
                 Object.values(geoLayersRef.current).forEach(l => {
                     if (Array.isArray(l)) l.forEach(ll => cleanupLayer(ll));
                     else if (l) cleanupLayer(l);
@@ -14872,38 +14877,39 @@
                 }
 
                 // Builds the full SVG string for a pin marker.
-                // typeKey: 'shavaz' (שב"צ, lighter brown) | 'hafrash' (הפרשה מבונה, dark brown)
-                // domainKey: from hafrashahFeatureDomains() — pick the first (highest-priority) domain.
-                // strokeColor: hex color for pin border (from mivneiPinStrokeColor).
-                // isDashed: true → dashed border (demolition candidate).
-                function makeMivneiPinSVG(typeKey, domainKey, strokeColor, isDashed) {
-                    const fill = typeKey === 'hafrash' ? '#7A4010' : '#D4954A';
-                    // Full silhouette: circle arc (large, CCW) + pointed tail
-                    // Circle r=10, center (13,12). Tail half-width=5.5 → join at y≈20.35.
+                // typeKey: 'shavaz' (שב"צ, tan) | 'hafrash' (הפרשה מבונה, saddle brown)
+                // domainKey: from hafrashahFeatureDomains(). strokeColor: plan status color.
+                // w/h: rendered pixel size (viewBox stays 26×35 so icons scale correctly).
+                function makeMivneiPinSVG(typeKey, domainKey, strokeColor, isDashed, w, h) {
+                    // Match the existing polygon fill palette for visual consistency
+                    const fill = typeKey === 'hafrash' ? PUBLIC_PALETTE.shavaz_kayam_fill : PUBLIC_PALETTE.shavaz_future_fill;
                     const pinPath = 'M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z';
                     const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
                     const icon = domainKey ? mivneiDomainIconSVG(domainKey) : '';
-                    return `<svg viewBox="0 0 26 35" xmlns="http://www.w3.org/2000/svg" width="26" height="35">` +
-                           `<path d="${pinPath}" fill="${fill}" stroke="${strokeColor}" stroke-width="3.5"${dash} stroke-linejoin="round"/>` +
+                    const W = w || 26, H = h || 35;
+                    return `<svg viewBox="0 0 26 35" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">` +
+                           `<path d="${pinPath}" fill="${fill}" stroke="${strokeColor}" stroke-width="2.5"${dash} stroke-linejoin="round"/>` +
                            icon +
                            `</svg>`;
                 }
 
-                // Wrap feature props → divIcon with custom pin SVG.
-                function mivneiDivIcon(props, typeKey) {
+                // Pixel dimensions for pin markers — bigger at higher zoom levels.
+                function mivneiIconSize(zoom) {
+                    if (zoom >= 18) return [38, 51];
+                    if (zoom >= 17) return [32, 43];
+                    if (zoom >= 16) return [26, 35];
+                    return [20, 27];
+                }
+
+                // Wrap feature props → divIcon with custom pin SVG, sized for current zoom.
+                const MIVNEI_DOMAIN_ORDER = ['education','religion','sport','health','emergency','welfare','culture','other'];
+                function mivneiDivIcon(props, typeKey, zoom) {
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
-                    // Pick the first domain (order: education > religion > sport > health > emergency > welfare > culture > other)
-                    const DOMAIN_ORDER = ['education','religion','sport','health','emergency','welfare','culture','other'];
-                    const domainKey = DOMAIN_ORDER.find(d => domains.has(d)) || null;
-                    const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false);
-                    return L.divIcon({
-                        html: svg,
-                        className: '',
-                        iconSize: [26, 35],
-                        iconAnchor: [13, 33],
-                        popupAnchor: [0, -33]
-                    });
+                    const domainKey = MIVNEI_DOMAIN_ORDER.find(d => domains.has(d)) || null;
+                    const [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
+                    const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
+                    return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] });
                 }
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
@@ -15339,6 +15345,28 @@
                             placed.push({ ll: mk.getLatLng(), taba });
                         });
                     })();
+                }
+
+                // Zoom-responsive pin sizing: update icon dimensions whenever the user zooms.
+                // Iterates both mivnei layers and calls setIcon so the anchor also updates.
+                if (layers['future_shavaz'] || layers['hafrashah_future']) {
+                    function _updateMivneiSizes() {
+                        const z = map.getZoom();
+                        function _visitLayer(grp, typeKey) {
+                            if (!grp) return;
+                            const visit = (l) => {
+                                if (l.setIcon && l.feature) {
+                                    l.setIcon(mivneiDivIcon(l.feature.properties, typeKey, z));
+                                } else if (l.eachLayer) l.eachLayer(visit);
+                            };
+                            visit(grp);
+                        }
+                        _visitLayer(geoLayersRef.current.future_shavaz, 'shavaz');
+                        _visitLayer(geoLayersRef.current.hafrashah_future, 'hafrash');
+                    }
+                    map.on('zoomend', _updateMivneiSizes);
+                    // Stash handler so cleanup can remove it
+                    geoLayersRef.current._mivneiZoomHandler = _updateMivneiSizes;
                 }
 
                 // (מבצ אינו שכבה נפרדת — נתוניו מוזרקים כ-_mbz לפיצ'רי shavaz_kayam/landuse_xplan
