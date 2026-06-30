@@ -1072,7 +1072,7 @@
             shavaz_future_fill:    '#D2B48C',
             shavaz_future_stroke:  '#C4956A',
             moch_kayam_fill:       '#9575CD',  // lilac for existing public buildings
-            moch_kayam_stroke:     '#4527A0',  // deep purple border (normal existing)
+            moch_kayam_stroke:     '#00ACC1',  // teal/cyan border (normal existing)
             moch_demolition_stroke:'#D32F2F',  // red border (slated for demolition)
             edu_mamlachti:         '#0d47a1',
             edu_mamlachti_dati:    '#d63384',

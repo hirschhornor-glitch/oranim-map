@@ -1461,8 +1461,8 @@ const PUBLIC_PALETTE = {
   shavaz_future_stroke: '#C4956A',
   moch_kayam_fill: '#9575CD',
   // lilac for existing public buildings
-  moch_kayam_stroke: '#4527A0',
-  // deep purple border (normal existing)
+  moch_kayam_stroke: '#00ACC1',
+  // teal/cyan border (normal existing)
   moch_demolition_stroke: '#D32F2F',
   // red border (slated for demolition)
   edu_mamlachti: '#0d47a1',
@@ -2429,10 +2429,126 @@ const MASTER_PLAN_LEGEND = [{
 
 // Helper: generate a mini pin SVG for legend use (w=20, h=27).
 // fill=body color, stroke=border color, iconSvg=inner icon markup (scaled).
-function _legendPin(fill,stroke,iconSvg='',dashed=false){const dash=dashed?' stroke-dasharray="4,2.5"':'';return`<svg viewBox="0 0 26 35" width="20" height="27" xmlns="http://www.w3.org/2000/svg">`+`<path d="M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z" fill="${fill}" stroke="${stroke}" stroke-width="3.5"${dash} stroke-linejoin="round"/>`+iconSvg+`</svg>`;}const _LP={edu:`<polygon points="13,7.5 18.5,11 13,14.5 7.5,11" fill="white"/><line x1="18.5" y1="11" x2="18.5" y2="15" stroke="white" stroke-width="1.2"/><rect x="17.3" y="15" width="2.4" height="0.9" rx="0.4" fill="white"/>`,rel:`<polygon points="13,7.5 14.3,9.75 16.9,9.75 15.5,12 16.9,14.25 14.3,14.25 13,16.5 11.7,14.25 9.1,14.25 10.5,12 9.1,9.75 11.7,9.75" fill="none" stroke="white" stroke-width="0.8"/>`,spt:`<circle cx="13" cy="12" r="5" fill="none" stroke="white" stroke-width="1.6"/><line x1="13" y1="7" x2="13" y2="17" stroke="white" stroke-width="0.8"/><line x1="8" y1="12" x2="18" y2="12" stroke="white" stroke-width="0.8"/>`,hlt:`<polyline points="7,12 9,12 10.5,8.5 12,15.5 13.5,8.5 14.5,14 16,12 19,12" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,emg:`<path d="M 13,7 L 17.5,9 L 17.5,13.5 C 17.5,16 13,18 13,18 C 13,18 8.5,16 8.5,13.5 L 8.5,9 Z" fill="none" stroke="white" stroke-width="1.2"/><line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.6"/><line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.6"/>`,wlf:`<path d="M 13,16.5 C 8.5,14 7,10 9.5,8 C 11,7 13,9 13,9 C 13,9 15,7 16.5,8 C 19,10 17.5,14 13,16.5 Z" fill="white"/>`,clt:`<ellipse cx="11" cy="15.5" rx="2.8" ry="1.9" fill="white" transform="rotate(-15,11,15.5)"/><line x1="13.5" y1="15" x2="13.5" y2="7.5" stroke="white" stroke-width="1.5"/><path d="M 13.5,7.5 C 16.5,8 18,9.5 15.5,11.5" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>`,oth:`<rect x="9.5" y="10" width="7" height="6.5" fill="none" stroke="white" stroke-width="1.2"/><polyline points="9,10 13,7 17,10" fill="none" stroke="white" stroke-width="1.2"/><rect x="12" y="13" width="2" height="3.5" fill="white"/>`};const SHAVAZ_LEGEND=[// ── Type (fill) ──
-{label:'סוג',style:'header'},{label:'מבנה ציבור קיים',style:'svg',svg:_legendPin('#9575CD','#4527A0')},{label:'קיים — מיועד להריסה',style:'svg',svg:_legendPin('#9575CD','#D32F2F','',true)},{label:'שב"צ עתידי',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_future_fill,'#888')},{label:'הפרשה מבונה עתידי',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888')},{label:'מבני ציבור קיים (שטח)',color:PUBLIC_PALETTE.shavaz_kayam_fill},// ── Status border (future only) ──
-{label:'גבול — סטטוס תכנית (עתידי)',style:'header'},{label:'מאושרת',style:'svg',svg:_legendPin('#333','#50d25a')},{label:'היתר בנייה',style:'svg',svg:_legendPin('#333','#42A5F5')},{label:'גמר בנייה',style:'svg',svg:_legendPin('#333','#9575CD')},{label:'הפקדה / תנאים',style:'svg',svg:_legendPin('#333','#f56e05')},{label:'בבדיקה / פתיחת תיק',style:'svg',svg:_legendPin('#333','#eb0000')},// ── Domain icon ──
-{label:'אייקון — ייעוד',style:'header'},{label:'חינוך',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888',_LP.edu)},{label:'דת',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888',_LP.rel)},{label:'ספורט',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_future_fill,'#888',_LP.spt)},{label:'בריאות',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888',_LP.hlt)},{label:'חירום',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_future_fill,'#888',_LP.emg)},{label:'רווחה',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888',_LP.wlf)},{label:'תרבות / קהילה',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_future_fill,'#888',_LP.clt)},{label:'כללי / לא מסווג',style:'svg',svg:_legendPin(PUBLIC_PALETTE.shavaz_kayam_fill,'#888',_LP.oth)}];const HIDDEN_PLANS_LEGEND=[{label:'תכניות איחוד וחלוקה',color:'#00aa00',style:'hatch'},{label:'תכניות תשתיות',color:'#9b59b6',style:'solid'},{label:'תכניות 77/78',color:'#e74c3c',style:'hatch'},{label:'תכניות שנגנזו',color:'#888',style:'hatch'}];// תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
+function _legendPin(fill, stroke, iconSvg = '', dashed = false) {
+  const dash = dashed ? ' stroke-dasharray="4,2.5"' : '';
+  return `<svg viewBox="0 0 26 35" width="20" height="27" xmlns="http://www.w3.org/2000/svg">` + `<path d="M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z" fill="${fill}" stroke="${stroke}" stroke-width="3.5"${dash} stroke-linejoin="round"/>` + iconSvg + `</svg>`;
+}
+const _LP = {
+  edu: `<polygon points="13,7.5 18.5,11 13,14.5 7.5,11" fill="white"/><line x1="18.5" y1="11" x2="18.5" y2="15" stroke="white" stroke-width="1.2"/><rect x="17.3" y="15" width="2.4" height="0.9" rx="0.4" fill="white"/>`,
+  rel: `<polygon points="13,7.5 14.3,9.75 16.9,9.75 15.5,12 16.9,14.25 14.3,14.25 13,16.5 11.7,14.25 9.1,14.25 10.5,12 9.1,9.75 11.7,9.75" fill="none" stroke="white" stroke-width="0.8"/>`,
+  spt: `<circle cx="13" cy="12" r="5" fill="none" stroke="white" stroke-width="1.6"/><line x1="13" y1="7" x2="13" y2="17" stroke="white" stroke-width="0.8"/><line x1="8" y1="12" x2="18" y2="12" stroke="white" stroke-width="0.8"/>`,
+  hlt: `<polyline points="7,12 9,12 10.5,8.5 12,15.5 13.5,8.5 14.5,14 16,12 19,12" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  emg: `<path d="M 13,7 L 17.5,9 L 17.5,13.5 C 17.5,16 13,18 13,18 C 13,18 8.5,16 8.5,13.5 L 8.5,9 Z" fill="none" stroke="white" stroke-width="1.2"/><line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.6"/><line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.6"/>`,
+  wlf: `<path d="M 13,16.5 C 8.5,14 7,10 9.5,8 C 11,7 13,9 13,9 C 13,9 15,7 16.5,8 C 19,10 17.5,14 13,16.5 Z" fill="white"/>`,
+  clt: `<ellipse cx="11" cy="15.5" rx="2.8" ry="1.9" fill="white" transform="rotate(-15,11,15.5)"/><line x1="13.5" y1="15" x2="13.5" y2="7.5" stroke="white" stroke-width="1.5"/><path d="M 13.5,7.5 C 16.5,8 18,9.5 15.5,11.5" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>`,
+  oth: `<rect x="9.5" y="10" width="7" height="6.5" fill="none" stroke="white" stroke-width="1.2"/><polyline points="9,10 13,7 17,10" fill="none" stroke="white" stroke-width="1.2"/><rect x="12" y="13" width="2" height="3.5" fill="white"/>`
+};
+const SHAVAZ_LEGEND = [
+// ── Type (fill) ──
+{
+  label: 'סוג',
+  style: 'header'
+}, {
+  label: 'מבנה ציבור קיים',
+  style: 'svg',
+  svg: _legendPin('#9575CD', '#4527A0')
+}, {
+  label: 'קיים — מיועד להריסה',
+  style: 'svg',
+  svg: _legendPin('#9575CD', '#D32F2F', '', true)
+}, {
+  label: 'שב"צ עתידי',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888')
+}, {
+  label: 'הפרשה מבונה עתידי',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888')
+}, {
+  label: 'מבני ציבור קיים (שטח)',
+  color: PUBLIC_PALETTE.shavaz_kayam_fill
+},
+// ── Status border (future only) ──
+{
+  label: 'גבול — סטטוס תכנית (עתידי)',
+  style: 'header'
+}, {
+  label: 'מאושרת',
+  style: 'svg',
+  svg: _legendPin('#333', '#50d25a')
+}, {
+  label: 'היתר בנייה',
+  style: 'svg',
+  svg: _legendPin('#333', '#42A5F5')
+}, {
+  label: 'גמר בנייה',
+  style: 'svg',
+  svg: _legendPin('#333', '#9575CD')
+}, {
+  label: 'הפקדה / תנאים',
+  style: 'svg',
+  svg: _legendPin('#333', '#f56e05')
+}, {
+  label: 'בבדיקה / פתיחת תיק',
+  style: 'svg',
+  svg: _legendPin('#333', '#eb0000')
+},
+// ── Domain icon ──
+{
+  label: 'אייקון — ייעוד',
+  style: 'header'
+}, {
+  label: 'חינוך',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.edu)
+}, {
+  label: 'דת',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.rel)
+}, {
+  label: 'ספורט',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.spt)
+}, {
+  label: 'בריאות',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.hlt)
+}, {
+  label: 'חירום',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.emg)
+}, {
+  label: 'רווחה',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.wlf)
+}, {
+  label: 'תרבות / קהילה',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888', _LP.clt)
+}, {
+  label: 'כללי / לא מסווג',
+  style: 'svg',
+  svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888', _LP.oth)
+}];
+const HIDDEN_PLANS_LEGEND = [{
+  label: 'תכניות איחוד וחלוקה',
+  color: '#00aa00',
+  style: 'hatch'
+}, {
+  label: 'תכניות תשתיות',
+  color: '#9b59b6',
+  style: 'solid'
+}, {
+  label: 'תכניות 77/78',
+  color: '#e74c3c',
+  style: 'hatch'
+}, {
+  label: 'תכניות שנגנזו',
+  color: '#888',
+  style: 'hatch'
+}];
+
+// תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
 // מקבלות plan_type='מוסתר' ולכן מסוננות מכל החישובים, הסטטיסטיקות והשכבות
 const SKIP_PLAN_IDS = new Set(['101-0262717', '101-0564583', '101-0402925', '101-0406504', '101-0433359', '101-0740555', '101-0306944', '101-0326751', '101-0415976', '101-0113381', '101-0098897', '101-0054676', '101-0068593', '101-0059576', '101-0060434', '101-0055293', '101-0095612', '101-0571190']);
 
