@@ -608,7 +608,7 @@
             if (/(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/.test(t)) return 'health';
             if (/(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/.test(t)) return 'emergency';
             if (/(רווחה|שירותים חברתיים|חברתי|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום)/.test(t)) return 'welfare';
-            if (/(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון)/.test(t)) return 'culture';
+            if (/(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/.test(t)) return 'culture';
             return null;
         }
         // Resolve the set of allocation domains present on a hafrashah feature, from its per-lot
@@ -14902,7 +14902,7 @@
                 }
 
                 // Wrap feature props → divIcon with custom pin SVG, sized for current zoom.
-                const MIVNEI_DOMAIN_ORDER = ['education','religion','sport','health','emergency','welfare','culture','other'];
+                const MIVNEI_DOMAIN_ORDER = ['education','religion','sport','health','emergency','welfare','culture'];
                 function mivneiDivIcon(props, typeKey, zoom) {
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
@@ -15048,7 +15048,35 @@
                             });
                         }
                     });
-                    const combined = L.featureGroup([futureShavazLayer, fallbackLayer]).addTo(map);
+                    // Centroid pin markers on top of each שב"צ polygon so the icon is visible
+                    const shavazPolyPoints = gd.landuse_xplan.features
+                        .filter(f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)))
+                        .map(f => {
+                            const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                            const c = fsInteriorPoint(ring);
+                            return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: c } };
+                        });
+                    const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
+                        pane: 'shavazPane',
+                        pointToLayer: (f, latlng) => L.marker(latlng, {
+                            pane: 'shavazMarkersPane',
+                            icon: mivneiDivIcon(f.properties, 'shavaz'),
+                            interactive: true
+                        }),
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                L.DomEvent.stopPropagation(e);
+                                const allShavaz = findOverlappingShavaz(e.latlng);
+                                const clickedKey = String(f.properties.pl_number || '') + '|' + String(f.properties.num || '');
+                                const idx = allShavaz.findIndex(s => (String(s.properties.pl_number || '') + '|' + String(s.properties.num || '')) === clickedKey);
+                                if (idx > 0) { const [first] = allShavaz.splice(idx, 1); allShavaz.unshift(first); }
+                                else if (idx < 0) allShavaz.unshift({ properties: enrichFutureShavazProps(f.properties), isFuture: true });
+                                openShavazPopup(allShavaz, e.latlng, 0);
+                            });
+                        }
+                    });
+                    const combined = L.featureGroup([futureShavazLayer, shavazPolyMarkersLayer, fallbackLayer]).addTo(map);
                     geoLayersRef.current.future_shavaz = combined;
                 }
 
@@ -15232,7 +15260,25 @@
                             geometry: { type: 'Point', coordinates: coords }
                         });
                     }
-                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
+                    // Merge multiple same-plan markers into one pin (one per plan, not one per lot)
+                    const hafrashByTaba = {};
+                    pointFeatures.forEach(pf => {
+                        const s = String(pf.properties.pl_number || pf.properties.TABA || pf.properties.taba || '');
+                        const t = s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
+                        if (!hafrashByTaba[t]) hafrashByTaba[t] = [];
+                        hafrashByTaba[t].push(pf);
+                    });
+                    const mergedPointFeatures = Object.values(hafrashByTaba).map(group => {
+                        if (group.length === 1) return group[0];
+                        const allEntries = [];
+                        group.forEach(pf => {
+                            const e = pf.properties._hafrash_lot_entries;
+                            if (Array.isArray(e) && e.length) allEntries.push(...e);
+                        });
+                        const anchor = group[0];
+                        return { ...anchor, properties: { ...anchor.properties, _hafrash_lot_entries: allEntries.length ? allEntries : anchor.properties._hafrash_lot_entries } };
+                    });
+                    const pointCollection = { type: 'FeatureCollection', features: mergedPointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
