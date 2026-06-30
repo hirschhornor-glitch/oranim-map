@@ -1072,7 +1072,7 @@
             shavaz_future_fill:    '#D2B48C',
             shavaz_future_stroke:  '#C4956A',
             moch_kayam_fill:       '#9575CD',  // lilac for existing public buildings
-            moch_kayam_stroke:     '#00ACC1',  // teal/cyan border (normal existing)
+            moch_kayam_stroke:     '#4527A0',  // deep purple border (normal existing)
             moch_demolition_stroke:'#D32F2F',  // red border (slated for demolition)
             edu_mamlachti:         '#0d47a1',
             edu_mamlachti_dati:    '#d63384',
@@ -1938,7 +1938,7 @@
             // ── Status border (future only) ──
             { label: 'גבול — סטטוס תכנית (עתידי)', style: 'header' },
             { label: 'מאושרת', style: 'svg', svg: _legendPin('#333', '#50d25a') },
-            { label: 'היתר בנייה', style: 'svg', svg: _legendPin('#333', '#42A5F5') },
+            { label: 'היתר בנייה', style: 'svg', svg: _legendPin('#333', '#00ACC1') },
             { label: 'גמר בנייה', style: 'svg', svg: _legendPin('#333', '#9575CD') },
             { label: 'הפקדה / תנאים', style: 'svg', svg: _legendPin('#333', '#f56e05') },
             { label: 'בבדיקה / פתיחת תיק', style: 'svg', svg: _legendPin('#333', '#eb0000') },
@@ -14834,7 +14834,7 @@
                     const stage = (planProps.stage || '').trim();
                     if (stage === 'ו-גמר בנייה')   return '#9575CD'; // purple = complete
                     if (stage === 'ה-בבנייה')       return '#5C6BC0'; // indigo = in construction
-                    if (stage === 'ד-היתר בנייה')  return '#42A5F5'; // blue = permit
+                    if (stage === 'ד-היתר בנייה')  return '#00ACC1'; // teal = permit
                     if (stage === 'ג-רישוי בתהליך') return '#90CAF9'; // light-blue = licensing
                     const status = normalizeStatus((planProps.status_mavat || '').trim());
                     return STATUS_COLORS[status] || '#888888';
