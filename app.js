@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-06-28-floor-retry';
+const APP_VERSION = '2026-06-30-mp-floors';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -5124,7 +5124,14 @@ function App() {
       cols.push(cur.trim());
       return cols;
     }
-    const GS_OVERRIDE_FIELDS = ['units_total', 'units_in', 'units_add', 'shavatz_in_sqm', 'shavatz_in_prog', 'shavatz_out_sqm', 'shavatz_out_prog', 'shavatz_out_plot', 'hafrash_sqm', 'hafrash_prg', 'shatzap_in', 'shatzap_out', 'commerce_in', 'commerce_out', 'employment', 'hotels', 'rental', 'conditional_housing', 'rental_duration', 'rental_inclusion', 'plan_summary', 'plan_name_he', 'architect', 'developer'];
+    const GS_OVERRIDE_FIELDS = ['units_total', 'units_in', 'units_add', 'shavatz_in_sqm', 'shavatz_in_prog', 'shavatz_out_sqm', 'shavatz_out_prog', 'shavatz_out_plot', 'hafrash_sqm', 'hafrash_prg', 'shatzap_in', 'shatzap_out', 'commerce_in', 'commerce_out', 'employment', 'hotels', 'rental', 'conditional_housing', 'rental_duration', 'rental_inclusion', 'plan_summary', 'plan_name_he', 'architect', 'developer', 'floors_max', 'height_max'];
+    // GS header name differs from the geojson property name for these
+    // (like SUB_N→sub_neighborhood). Floors/height live in GS as
+    // level_num/High but the geojson + popup use floors_max/height_max.
+    const GS_OVERRIDE_RENAMES = {
+      floors_max: 'level_num',
+      height_max: 'High'
+    };
     // Snapshot raw GeoJSON values (units_total/rental) so rental fold can be
     // re-run idempotently after CSV overrides arrive.
     function snapshotRentalSources(gd) {
@@ -5308,7 +5315,7 @@ function App() {
       const hfPrgIdx = headers.findIndex(h => h === 'hafrash_prg');
       const gsOverrideIdx = {};
       GS_OVERRIDE_FIELDS.forEach(k => {
-        gsOverrideIdx[k] = headers.findIndex(h => h === k);
+        gsOverrideIdx[k] = headers.findIndex(h => h === (GS_OVERRIDE_RENAMES[k] || k));
       });
       if (ptIdx < 0 || nameIdx < 0) return;
       const csvMap = {};
