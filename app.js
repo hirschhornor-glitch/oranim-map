@@ -17904,11 +17904,12 @@ function App() {
         const g4 = (d, cx, cy) => `<g transform="translate(${(cx - 13 * s).toFixed(2)},${(cy - 12 * s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
         icon = g4(domainKey[0], 8, 7.5) + g4(domainKey[1], 18, 7.5) + `<line x1="13" y1="2.5" x2="13" y2="21.5" stroke="white" stroke-width="0.5" opacity="0.4"/>` + `<line x1="3" y1="12" x2="23" y2="12" stroke="white" stroke-width="0.5" opacity="0.4"/>` + g4(domainKey[2], 8, 16.5) + g4(domainKey[3], 18, 16.5);
       } else if (Array.isArray(domainKey) && domainKey.length >= 3) {
-        // Three icons at 37% scale, centered at x=5.5 / 13 / 20.5, y=12
-        const s = 0.37,
+        // Three icons at 38% scale, each in equal 1/3 of the circle (x=3..23, width=20)
+        // Section centers: 3+20/6=6.33, 13, 3+100/6=19.67  |  dividers at 9.67 and 16.33
+        const s = 0.38,
           cy = 12;
         const g3 = (d, cx) => `<g transform="translate(${(cx - 13 * s).toFixed(2)},${(cy - 12 * s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
-        icon = g3(domainKey[0], 5.5) + `<line x1="9" y1="4.5" x2="9" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[1], 13) + `<line x1="17" y1="4.5" x2="17" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[2], 20.5);
+        icon = g3(domainKey[0], 6.33) + `<line x1="9.67" y1="4" x2="9.67" y2="21" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[1], 13) + `<line x1="16.33" y1="4" x2="16.33" y2="21" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[2], 19.67);
       } else if (Array.isArray(domainKey) && domainKey.length >= 2) {
         // Two icons at 50% scale: left centered at (8,12), right at (18,12)
         icon = `<g transform="translate(1.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[0])}</g>` + `<line x1="13" y1="4.5" x2="13" y2="20" stroke="white" stroke-width="0.6" opacity="0.5"/>` + `<g transform="translate(11.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[1])}</g>`;
