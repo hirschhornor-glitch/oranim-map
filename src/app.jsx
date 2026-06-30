@@ -4739,8 +4739,17 @@
 
             // Keep the URL hash in sync with the currently-open report + its filters,
             // so the global "שיתוף" link (and the browser address bar) always reflect
-            // the exact report state the user is viewing.
-            useEffect(() => { updateHash(); }, [
+            // the exact report state the user is viewing. Reports can stack (opening
+            // one from the menu doesn't close another), so we track open order in a
+            // stack and let serializeOpenReport() pick the topmost (last-opened) one.
+            const reportStackRef = useRef([]);
+            useEffect(() => {
+                const openKeys = reportDefs().filter(d => d.isOpen()).map(d => d.key);
+                const stack = reportStackRef.current.filter(k => openKeys.includes(k));
+                openKeys.forEach(k => { if (!stack.includes(k)) stack.push(k); });
+                reportStackRef.current = stack;
+                updateHash();
+            }, [
                 showUnits, unitsExpanded, unitsDrilldown,
                 showCommerceTable, commerceExpanded, commerceDrilldown,
                 showMimush, mimushExpanded, mimushDrilldown,
@@ -11914,9 +11923,12 @@
                 ];
             }
 
-            // Build the report fragment of the URL hash for whichever report is open.
+            // Build the report fragment of the URL hash for whichever report is on top.
             function serializeOpenReport() {
-                const def = reportDefs().find(d => d.isOpen());
+                const defs = reportDefs();
+                const stack = reportStackRef.current || [];
+                const topKey = stack[stack.length - 1];
+                const def = (topKey && defs.find(d => d.key === topKey && d.isOpen())) || defs.find(d => d.isOpen());
                 if (!def) return '';
                 let frag = '&report=' + def.key;
                 if (reportScope) frag += '&scope=' + encodeURIComponent(reportScope);
