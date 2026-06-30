@@ -15054,7 +15054,8 @@
                         .map(f => {
                             const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
                             const c = fsInteriorPoint(ring);
-                            return { type: 'Feature', properties: f.properties, geometry: { type: 'Point', coordinates: c } };
+                            // Enrich with shavatz lot entries so hafrashahFeatureDomains can classify the icon
+                            return { type: 'Feature', properties: enrichFutureShavazProps(f.properties), geometry: { type: 'Point', coordinates: c } };
                         });
                     const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
                         pane: 'shavazPane',
