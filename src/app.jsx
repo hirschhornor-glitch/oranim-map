@@ -14916,7 +14916,9 @@
                     const domains = hafrashahFeatureDomains(props);
                     const matched = MIVNEI_DOMAIN_ORDER.filter(d => domains.has(d));
                     const domainKey = matched.length >= 2 ? [matched[0], matched[1]] : (matched[0] || null);
-                    const [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
+                    const isSplit = Array.isArray(domainKey);
+                    let [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
+                    if (isSplit) { w = Math.round(w * 1.25); h = Math.round(h * 1.25); }
                     const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
                     return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] });
                 }
