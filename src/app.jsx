@@ -11882,7 +11882,8 @@
                     if (allAdminOn) return true;
                     if (selectedSubs.length === 0) return false;
                     const n = (props.neighborho || '').trim();
-                    return selectedSubs.includes(n);
+                    // exact match first; also handle compound values like "המושבה הגרמנית והמושבה היוונית"
+                    return selectedSubs.some(s => n === s || n.includes(s));
                 }
 
                 // Shared plan-visibility predicate — used by the plans layer, the landuse_xplan
@@ -14897,7 +14898,17 @@
                     const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
                     const W = w || 26, H = h || 35;
                     let icon = '';
-                    if (Array.isArray(domainKey) && domainKey.length >= 2) {
+                    if (Array.isArray(domainKey) && domainKey.length >= 3) {
+                        // Three icons at 37% scale, centered at x=5.5 / 13 / 20.5, y=12
+                        // transform math: translate(cx-13s, cy-12s) scale(s) where s=0.37
+                        const s = 0.37, cy = 12;
+                        const g3 = (d, cx) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
+                        icon = g3(domainKey[0], 5.5) +
+                               `<line x1="9" y1="4.5" x2="9" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` +
+                               g3(domainKey[1], 13) +
+                               `<line x1="17" y1="4.5" x2="17" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` +
+                               g3(domainKey[2], 20.5);
+                    } else if (Array.isArray(domainKey) && domainKey.length >= 2) {
                         // Two icons at 50% scale: left centered at (8,12), right at (18,12)
                         icon = `<g transform="translate(1.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[0])}</g>` +
                                `<line x1="13" y1="4.5" x2="13" y2="20" stroke="white" stroke-width="0.6" opacity="0.5"/>` +
@@ -14948,10 +14959,13 @@
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
                     const matched = MIVNEI_DOMAIN_ORDER.filter(d => domains.has(d));
-                    const domainKey = matched.length >= 2 ? [matched[0], matched[1]] : (matched[0] || null);
-                    const isSplit = Array.isArray(domainKey);
+                    const domainKey = matched.length >= 3 ? [matched[0], matched[1], matched[2]]
+                                    : matched.length === 2 ? [matched[0], matched[1]]
+                                    : (matched[0] || null);
+                    const nSplit = Array.isArray(domainKey) ? domainKey.length : 0;
                     let [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
-                    if (isSplit) { w = Math.round(w * 1.25); h = Math.round(h * 1.25); }
+                    if (nSplit === 2) { w = Math.round(w * 1.25); h = Math.round(h * 1.25); }
+                    if (nSplit === 3) { w = Math.round(w * 1.5);  h = Math.round(h * 1.5);  }
                     const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
                     return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] });
                 }
