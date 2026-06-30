@@ -14943,15 +14943,16 @@
                                `<line x1="3" y1="12" x2="23" y2="12" stroke="white" stroke-width="0.5" opacity="0.4"/>` +
                                g4(domainKey[2], 8, 16.5) + g4(domainKey[3], 18, 16.5);
                     } else if (Array.isArray(domainKey) && domainKey.length >= 3) {
-                        // Three icons at 37% scale, evenly spaced (centers 7.5 apart): x=5.5 / 13 / 20.5, y=12.
-                        // Dividers sit at the icon midpoints (9, 17) — balanced relative to the icons.
-                        const s = 0.37, cy = 12;
-                        const g3 = (d, cx) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
-                        icon = g3(domainKey[0], 5.5) +
-                               `<line x1="9" y1="4.5" x2="9" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` +
-                               g3(domainKey[1], 13) +
-                               `<line x1="17" y1="4.5" x2="17" y2="20" stroke="white" stroke-width="0.5" opacity="0.45"/>` +
-                               g3(domainKey[2], 20.5);
+                        // Three PIE sectors (Mercedes-style): radial dividers from center (13,12) to the
+                        // circle edge (r=10) at 90°/210°/330°. Icons sit in each sector bisector at r≈4.5:
+                        //   top-left (9.1,9.75)  top-right (16.9,9.75)  bottom (13,16.5)
+                        const s = 0.34;
+                        const gP = (d, cx, cy) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
+                        const div = (x2, y2) => `<line x1="13" y1="12" x2="${x2}" y2="${y2}" stroke="white" stroke-width="0.5" opacity="0.45"/>`;
+                        icon = div(13, 2.5) + div(5.2, 16.5) + div(20.8, 16.5) +
+                               gP(domainKey[0], 9.1, 9.75) +
+                               gP(domainKey[1], 16.9, 9.75) +
+                               gP(domainKey[2], 13, 16.7);
                     } else if (Array.isArray(domainKey) && domainKey.length >= 2) {
                         // Two icons at 50% scale: left centered at (8,12), right at (18,12)
                         icon = `<g transform="translate(1.5,6) scale(0.5)">${mivneiDomainIconSVG(domainKey[0])}</g>` +
