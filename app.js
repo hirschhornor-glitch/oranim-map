@@ -17707,6 +17707,85 @@ function App() {
     // which sat under the other and was un-clickable). Shared across the two layer blocks.
     const fsFallbackTabas = new Set();
 
+    // --- Pin marker helpers for מבני ציבור (future_shavaz + hafrashah_future) ---
+    // Returns a hex stroke color based on the plan's status/stage, matching the plan-boundary
+    // color scheme so the pin border is immediately recognizable.
+    function mivneiPinStrokeColor(props) {
+      const s = String(props.pl_number || props.TABA || props.taba || '');
+      const taba = s.includes('-') ? String(parseInt(s.split('-')[1])) : s;
+      const planProps = (window.__planByTaba || {})[taba] || {};
+      const stage = (planProps.stage || '').trim();
+      if (stage === 'ו-גמר בנייה') return '#9575CD'; // purple = complete
+      if (stage === 'ה-בבנייה') return '#5C6BC0'; // indigo = in construction
+      if (stage === 'ד-היתר בנייה') return '#42A5F5'; // blue = permit
+      if (stage === 'ג-רישוי בתהליך') return '#90CAF9'; // light-blue = licensing
+      const status = normalizeStatus((planProps.status_mavat || '').trim());
+      return STATUS_COLORS[status] || '#888888';
+    }
+
+    // Returns SVG icon markup (paths/shapes, all white) for a given domain key.
+    // Icons are designed for a 26×35 pin viewBox, circle r=10 centered at (13,12).
+    function mivneiDomainIconSVG(domainKey) {
+      switch (domainKey) {
+        case 'education':
+          // Graduation cap (mortarboard) — diamond top + tassel
+          return `<polygon points="13,7.5 18.5,11 13,14.5 7.5,11" fill="white"/>` + `<line x1="18.5" y1="11" x2="18.5" y2="15" stroke="white" stroke-width="1.2"/>` + `<rect x="17.3" y="15" width="2.4" height="0.9" rx="0.4" fill="white"/>`;
+        case 'religion':
+          // Star of David — two interlocking equilateral triangles (outline)
+          return `<polygon points="13,7.5 8.84,12.4 17.16,12.4" fill="none" stroke="white" stroke-width="1.3"/>` + `<polygon points="13,16.5 17.16,11.6 8.84,11.6" fill="none" stroke="white" stroke-width="1.3"/>`;
+        case 'sport':
+          // Ball — circle with crosshairs
+          return `<circle cx="13" cy="12" r="5" fill="none" stroke="white" stroke-width="1.6"/>` + `<line x1="13" y1="7" x2="13" y2="17" stroke="white" stroke-width="0.8"/>` + `<line x1="8" y1="12" x2="18" y2="12" stroke="white" stroke-width="0.8"/>`;
+        case 'health':
+          // Heartbeat / EKG pulse line
+          return `<polyline points="7,12 9,12 10.5,8.5 12,15.5 13.5,8.5 14.5,14 16,12 19,12"` + ` fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+        case 'emergency':
+          // Shield with cross
+          return `<path d="M 13,7 L 17.5,9 L 17.5,13.5 C 17.5,16 13,18 13,18 C 13,18 8.5,16 8.5,13.5 L 8.5,9 Z"` + ` fill="none" stroke="white" stroke-width="1.2"/>` + `<line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.6"/>` + `<line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.6"/>`;
+        case 'welfare':
+          // Filled heart
+          return `<path d="M 13,16.5 C 8.5,14 7,10 9.5,8 C 11,7 13,9 13,9 C 13,9 15,7 16.5,8 C 19,10 17.5,14 13,16.5 Z"` + ` fill="white"/>`;
+        case 'culture':
+          // Music note ♪
+          return `<ellipse cx="11" cy="15.5" rx="2.8" ry="1.9" fill="white" transform="rotate(-15,11,15.5)"/>` + `<line x1="13.5" y1="15" x2="13.5" y2="7.5" stroke="white" stroke-width="1.5"/>` + `<path d="M 13.5,7.5 C 16.5,8 18,9.5 15.5,11.5" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>`;
+        default:
+          // Generic public building — roof + box
+          return `<rect x="9.5" y="10" width="7" height="6.5" fill="none" stroke="white" stroke-width="1.2"/>` + `<polyline points="9,10 13,7 17,10" fill="none" stroke="white" stroke-width="1.2"/>` + `<rect x="12" y="13" width="2" height="3.5" fill="white"/>`;
+      }
+    }
+
+    // Builds the full SVG string for a pin marker.
+    // typeKey: 'shavaz' (שב"צ, lighter brown) | 'hafrash' (הפרשה מבונה, dark brown)
+    // domainKey: from hafrashahFeatureDomains() — pick the first (highest-priority) domain.
+    // strokeColor: hex color for pin border (from mivneiPinStrokeColor).
+    // isDashed: true → dashed border (demolition candidate).
+    function makeMivneiPinSVG(typeKey, domainKey, strokeColor, isDashed) {
+      const fill = typeKey === 'hafrash' ? '#7A4010' : '#D4954A';
+      // Full silhouette: circle arc (large, CCW) + pointed tail
+      // Circle r=10, center (13,12). Tail half-width=5.5 → join at y≈20.35.
+      const pinPath = 'M 18.5,20.35 A 10,10 0 1 0 7.5,20.35 L 13,33 Z';
+      const dash = isDashed ? ' stroke-dasharray="4,2.5"' : '';
+      const icon = domainKey ? mivneiDomainIconSVG(domainKey) : '';
+      return `<svg viewBox="0 0 26 35" xmlns="http://www.w3.org/2000/svg" width="26" height="35">` + `<path d="${pinPath}" fill="${fill}" stroke="${strokeColor}" stroke-width="3.5"${dash} stroke-linejoin="round"/>` + icon + `</svg>`;
+    }
+
+    // Wrap feature props → divIcon with custom pin SVG.
+    function mivneiDivIcon(props, typeKey) {
+      const strokeColor = mivneiPinStrokeColor(props);
+      const domains = hafrashahFeatureDomains(props);
+      // Pick the first domain (order: education > religion > sport > health > emergency > welfare > culture > other)
+      const DOMAIN_ORDER = ['education', 'religion', 'sport', 'health', 'emergency', 'welfare', 'culture', 'other'];
+      const domainKey = DOMAIN_ORDER.find(d => domains.has(d)) || null;
+      const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false);
+      return L.divIcon({
+        html: svg,
+        className: '',
+        iconSize: [26, 35],
+        iconAnchor: [13, 33],
+        popupAnchor: [0, -33]
+      });
+    }
+
     // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
     // Strict separation from hafrashah_future: only pure-shavaz codes (no HAFRASHAH spill-over).
     if (layers['future_shavaz'] && gd.landuse_xplan) {
@@ -17860,13 +17939,10 @@ function App() {
         features: fbPoints
       }, {
         pane: 'shavazPane',
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+        pointToLayer: (f, latlng) => L.marker(latlng, {
           pane: 'shavazMarkersPane',
-          radius: 5,
-          fillColor: '#D2B48C',
-          fillOpacity: 0.8,
-          color: '#8B4513',
-          weight: 1
+          icon: mivneiDivIcon(f.properties, 'shavaz'),
+          interactive: true
         }),
         onEachFeature: (f, layer) => {
           layer.on('click', e => {
@@ -18106,13 +18182,10 @@ function App() {
       };
       const hafrashaLayer = L.geoJSON(pointCollection, {
         pane: 'shavazPane',
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+        pointToLayer: (f, latlng) => L.marker(latlng, {
           pane: 'shavazMarkersPane',
-          radius: 5,
-          fillColor: PUBLIC_PALETTE.shavaz_future_stroke,
-          fillOpacity: 0.8,
-          color: PUBLIC_PALETTE.shavaz_kayam_fill,
-          weight: 1
+          icon: mivneiDivIcon(f.properties, 'hafrash'),
+          interactive: true
         }),
         onEachFeature: (f, layer) => {
           layer.on('click', e => {
@@ -41032,4 +41105,4 @@ function App() {
   }), /*#__PURE__*/React.createElement("span", null, item.label))))));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render( /*#__PURE__*/React.createElement(App, null));
+root.render(/*#__PURE__*/React.createElement(App, null));
