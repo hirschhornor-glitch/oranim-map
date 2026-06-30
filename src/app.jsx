@@ -607,7 +607,7 @@
             if (/(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/.test(t)) return 'sport';
             if (/(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/.test(t)) return 'health';
             if (/(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/.test(t)) return 'emergency';
-            if (/(רווחה|שירותים חברתיים|חברתי|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/.test(t)) return 'welfare';
+            if (/(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/.test(t)) return 'welfare';
             if (/(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/.test(t)) return 'culture';
             return null;
         }
@@ -15057,15 +15057,21 @@
                             });
                         }
                     });
-                    // Centroid pin markers on top of each שב"צ polygon so the icon is visible
-                    const shavazPolyPoints = gd.landuse_xplan.features
+                    // One centroid marker per plan (largest polygon lot) — merging avoids stacking
+                    const shavazPolyByTaba = {};
+                    gd.landuse_xplan.features
                         .filter(f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)))
-                        .map(f => {
-                            const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
-                            const c = fsInteriorPoint(ring);
-                            // Enrich with shavatz lot entries so hafrashahFeatureDomains can classify the icon
-                            return { type: 'Feature', properties: { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true }, geometry: { type: 'Point', coordinates: c } };
+                        .forEach(f => {
+                            const t = tabaFromPlNumFs(f.properties.pl_number);
+                            if (!t) return;
+                            if (!shavazPolyByTaba[t] || (f.properties.shape_area || 0) > (shavazPolyByTaba[t].properties.shape_area || 0))
+                                shavazPolyByTaba[t] = f;
                         });
+                    const shavazPolyPoints = Object.values(shavazPolyByTaba).map(f => {
+                        const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+                        const c = fsInteriorPoint(ring);
+                        return { type: 'Feature', properties: { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true }, geometry: { type: 'Point', coordinates: c } };
+                    });
                     const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
