@@ -2799,17 +2799,69 @@
                 return params;
             }
 
-            function updateHash() {
+            // Base hash = map view + active layers, without any report fragment.
+            function buildBaseHash() {
                 const map = mapInstanceRef.current;
-                if (!map) return;
+                if (!map) return '';
                 const c = map.getCenter();
                 const z = map.getZoom();
                 const activeLayers = Object.entries(layersRef.current)
                     .filter(([, v]) => v)
                     .map(([k]) => k)
                     .join(',');
-                const hash = `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}` + serializeOpenReport();
+                return `z=${z}&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}&layers=${activeLayers}`;
+            }
+
+            // Imperative-overlay dashboards (אוכלוסייה / בנייה / דשבורד שכונתי / מינהל)
+            // are plain DOM overlays, not React state. impReportRef tracks the open one
+            // so the share link can carry it. Set on open, cleared on close.
+            const impReportRef = useRef(null);
+            function serializeImpFrag(key, params) {
+                let f = '&impreport=' + key;
+                Object.entries(params || {}).forEach(([k, v]) => {
+                    if (v != null && v !== '') f += '&ip_' + k + '=' + encodeURIComponent(v);
+                });
+                return f;
+            }
+
+            function updateHash() {
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                // Priority: an open React-modal report wins; otherwise the open overlay dashboard.
+                const reportFrag = serializeOpenReport() ||
+                    (impReportRef.current ? serializeImpFrag(impReportRef.current.key, impReportRef.current.params) : '');
+                const hash = buildBaseHash() + reportFrag;
                 window.history.replaceState(null, '', '#' + hash);
+            }
+
+            // Mark an overlay dashboard as the active report and refresh the hash.
+            function setImpReport(key, params) {
+                impReportRef.current = key ? { key, params: params || {} } : null;
+                updateHash();
+            }
+            // Copy a deep-link to the given overlay dashboard (used by its 🔗 button).
+            function shareImpLink(key, params) {
+                const url = window.location.origin + window.location.pathname + '#' + buildBaseHash() + serializeImpFrag(key, params);
+                const done = () => notifyToast('הקישור הועתק!');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(done).catch(() => {
+                        const ta = document.createElement('textarea'); ta.value = url;
+                        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                        document.body.removeChild(ta); done();
+                    });
+                } else {
+                    const ta = document.createElement('textarea'); ta.value = url;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); done();
+                }
+            }
+            // HTML for the 🔗 button injected into overlay-dashboard toolbars.
+            function impLinkBtnHtml(id) {
+                return '<button id="' + id + '" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🔗 העתק קישור</button>';
+            }
+            function wireImpLinkBtn(id, key, params) {
+                const b = document.getElementById(id);
+                if (b) b.addEventListener('click', () => shareImpLink(key, params));
             }
 
             // Apply hash on first load
@@ -4772,7 +4824,7 @@
                 if (reportHashAppliedRef.current) return;
                 reportHashAppliedRef.current = true;
                 const hp = initialHashRef.current;
-                if (hp && hp.report) setTimeout(() => applyReportFromHash(hp), 450);
+                if (hp && (hp.report || hp.impreport)) setTimeout(() => applyReportFromHash(hp), 450);
             }, []);
             // GeoJSON layers have built-in pointer cursor on hover — no probe needed
 
@@ -8462,9 +8514,12 @@
                     '<div style="display:flex;gap:8px;margin-top:16px">' +
                         '<button id="subdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                         '<button id="subdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                        impLinkBtnHtml('subdash-link') +
                     '</div>';
                 document.body.appendChild(div);
-                document.getElementById('subdash-close').addEventListener('click', () => div.remove());
+                setImpReport('subDash', { sub: subName });
+                wireImpLinkBtn('subdash-link', 'subDash', { sub: subName });
+                document.getElementById('subdash-close').addEventListener('click', () => { div.remove(); setImpReport(null); });
 
                 document.getElementById('subdash-csv').addEventListener('click', () => {
                     const title = document.getElementById('subdash-title')?.textContent || 'דשבורד';
@@ -8763,9 +8818,12 @@
                         '<button id="minhakdash-demo" style="background:#1d5a6b;border:1px solid #54c8e8;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📈 נתונים דמוגרפיים</button>' +
                         '<button id="minhakdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                         '<button id="minhakdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                        impLinkBtnHtml('minhakdash-link') +
                     '</div>';
                 document.body.appendChild(div);
-                document.getElementById('minhakdash-close').addEventListener('click', () => div.remove());
+                setImpReport('minhakDash', { min: minhakName });
+                wireImpLinkBtn('minhakdash-link', 'minhakDash', { min: minhakName });
+                document.getElementById('minhakdash-close').addEventListener('click', () => { div.remove(); setImpReport(null); });
                 document.getElementById('minhakdash-demo').addEventListener('click', () => { div.remove(); openPopulationDashboard(minhakName); });
                 div.querySelectorAll('.minhak-sub-link').forEach(b =>
                     b.addEventListener('click', () => { div.remove(); renderSubDashboard(b.getAttribute('data-sub')); }));
@@ -9004,6 +9062,7 @@
                     const footer = '<div style="display:flex;gap:8px;margin-top:16px">' +
                         '<button id="popdash-csv" style="background:#2e7d8f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                         '<button id="popdash-print" style="background:#13212b;border:1px solid #2e7d8f;color:#cfe;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                        impLinkBtnHtml('popdash-link') +
                         '</div>';
                     let bodyHtml;
                     if (!minhakName) {
@@ -9045,13 +9104,16 @@
                         bodyHtml = kpis + BLOCKS.map(spec => buildTable(spec, mh.subs, t)).join('') + areasTable;
                     }
                     div.innerHTML = head + bodyHtml + footer;
-                    document.getElementById('popdash-close').addEventListener('click', () => div.remove());
+                    document.getElementById('popdash-close').addEventListener('click', () => { div.remove(); setImpReport(null); });
                     const backBtn = document.getElementById('popdash-back');
                     if (backBtn) backBtn.addEventListener('click', () => paint(null));
                     div.querySelectorAll('.popdash-card').forEach(b =>
                         b.addEventListener('click', () => paint(b.getAttribute('data-minhak'))));
                     document.getElementById('popdash-csv').addEventListener('click', exportCsv);
                     document.getElementById('popdash-print').addEventListener('click', printView);
+                    // Track current (drilled) view for the share link.
+                    setImpReport('populationDash', minhakName ? { min: minhakName } : {});
+                    wireImpLinkBtn('popdash-link', 'populationDash', minhakName ? { min: minhakName } : {});
                 }
 
                 function exportCsv() {
@@ -9561,6 +9623,7 @@
                 const footer = '<div style="display:flex;gap:8px;margin-top:14px">' +
                     '<button id="cbdash-csv" style="background:#e65100;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
                     '<button id="cbdash-print" style="background:#1c1410;border:1px solid #e65100;color:#ffcfa0;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה</button>' +
+                    impLinkBtnHtml('cbdash-link') +
                     '</div>';
 
                 if (!rows.length) {
@@ -9568,7 +9631,9 @@
                 } else {
                     div.innerHTML = head + toggle + kpis + table + note + footer;
                 }
-                document.getElementById('cbdash-close').addEventListener('click', () => div.remove());
+                setImpReport('constructionDash', {});
+                wireImpLinkBtn('cbdash-link', 'constructionDash', {});
+                document.getElementById('cbdash-close').addEventListener('click', () => { div.remove(); setImpReport(null); });
                 div.querySelectorAll('[data-cbview]').forEach(b => b.addEventListener('click', () => {
                     const want = b.getAttribute('data-cbview');
                     if (want !== view) renderConstructionDashboard(featsIn, want);
@@ -11942,7 +12007,21 @@
 
             // Restore a report (and its filters) from parsed hash params on first load.
             function applyReportFromHash(params) {
-                if (!params || !params.report) return;
+                if (!params) return;
+                // Imperative overlay dashboards (אוכלוסייה / בנייה / דשבורד שכונתי / מינהל).
+                if (params.impreport) {
+                    const ip = {};
+                    Object.keys(params).forEach(k => { if (k.indexOf('ip_') === 0) ip[k.slice(3)] = params[k]; });
+                    const gen = {
+                        populationDash: () => openPopulationDashboard(ip.min || undefined),
+                        constructionDash: () => openConstructionDashboard(),
+                        subDash: () => renderSubDashboard(ip.sub || dashSub),
+                        minhakDash: () => renderMinhakDashboard(ip.min || reportsMenuMinahak),
+                    }[params.impreport];
+                    if (gen) gen();
+                    return;
+                }
+                if (!params.report) return;
                 const def = reportDefs().find(d => d.key === params.report);
                 if (!def) return;
                 const rp = {};
