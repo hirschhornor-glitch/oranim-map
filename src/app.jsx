@@ -14902,14 +14902,16 @@
 
                 // Pixel dimensions for pin markers — bigger at higher zoom levels.
                 function mivneiIconSize(zoom) {
-                    if (zoom >= 18) return [38, 51];
-                    if (zoom >= 17) return [32, 43];
-                    if (zoom >= 16) return [26, 35];
-                    return [20, 27];
+                    if (zoom >= 18) return [46, 62];
+                    if (zoom >= 17) return [38, 51];
+                    if (zoom >= 16) return [32, 43];
+                    return [22, 30];
                 }
 
                 // Wrap feature props → divIcon with custom pin SVG, sized for current zoom.
-                const MIVNEI_DOMAIN_ORDER = ['education','religion','sport','health','emergency','welfare','culture'];
+                // Priority for split-icon display: education first, then culture/welfare/health, religion last
+                // (religion still shows correctly when it's the ONLY domain; order only affects 2-icon split selection)
+                const MIVNEI_DOMAIN_ORDER = ['education','culture','welfare','sport','health','emergency','religion'];
                 function mivneiDivIcon(props, typeKey, zoom) {
                     const strokeColor = mivneiPinStrokeColor(props);
                     const domains = hafrashahFeatureDomains(props);
@@ -15277,7 +15279,19 @@
                             geometry: { type: 'Point', coordinates: coords }
                         });
                     }
-                    const pointCollection = { type: 'FeatureCollection', features: pointFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
+                    // Merge entries that landed on the SAME lot (same taba + lot num) into one marker.
+                    // Different lots of the same plan stay separate (shown per-lot at high zoom).
+                    const _lotKey = (pf) => { const s = String(pf.properties.pl_number || pf.properties.TABA || ''); const t = s.includes('-') ? String(parseInt(s.split('-')[1])) : s; return t + '|' + String(pf.properties.num || ''); };
+                    const _byLot = {};
+                    pointFeatures.forEach(pf => { const k = _lotKey(pf); if (!_byLot[k]) _byLot[k] = []; _byLot[k].push(pf); });
+                    const lotMergedFeatures = Object.values(_byLot).map(group => {
+                        if (group.length === 1) return group[0];
+                        const allEntries = [];
+                        group.forEach(pf => { const e = pf.properties._hafrash_lot_entries; if (Array.isArray(e) && e.length) allEntries.push(...e); });
+                        const anchor = group.reduce((best, pf) => (pf.properties._hafrash_lot_entries || []).length > (best.properties._hafrash_lot_entries || []).length ? pf : best, group[0]);
+                        return { ...anchor, properties: { ...anchor.properties, _hafrash_lot_entries: allEntries.length ? allEntries : anchor.properties._hafrash_lot_entries } };
+                    });
+                    const pointCollection = { type: 'FeatureCollection', features: lotMergedFeatures.filter(pf => passesHafrashDomainFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
