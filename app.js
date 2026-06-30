@@ -17898,15 +17898,16 @@ function App() {
         H = h || 35;
       let icon = '';
       if (Array.isArray(domainKey) && domainKey.length >= 4) {
-        // Four icons in 2×2 grid at 40% scale
-        // Centers: TL=(8,7.5) TR=(18,7.5) BL=(8,16.5) BR=(18,16.5)
-        const s = 0.40;
+        // Four icons in 2×2 grid. Centers: TL=(8,7.5) TR=(18,7.5) BL=(8,16.5) BR=(18,16.5)
+        // Scale 0.36 keeps each quadrant icon clear of the dividers.
+        const s = 0.36;
         const g4 = (d, cx, cy) => `<g transform="translate(${(cx - 13 * s).toFixed(2)},${(cy - 12 * s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
         icon = g4(domainKey[0], 8, 7.5) + g4(domainKey[1], 18, 7.5) + `<line x1="13" y1="2.5" x2="13" y2="21.5" stroke="white" stroke-width="0.5" opacity="0.4"/>` + `<line x1="3" y1="12" x2="23" y2="12" stroke="white" stroke-width="0.5" opacity="0.4"/>` + g4(domainKey[2], 8, 16.5) + g4(domainKey[3], 18, 16.5);
       } else if (Array.isArray(domainKey) && domainKey.length >= 3) {
-        // Three icons at 38% scale, each in equal 1/3 of the circle (x=3..23, width=20)
+        // Three icons each in equal 1/3 of the circle (x=3..23, width=20).
+        // Scale 1/3 mirrors the 2-icon halves (scale 0.5) → identical visual weight per section.
         // Section centers: 3+20/6=6.33, 13, 3+100/6=19.67  |  dividers at 9.67 and 16.33
-        const s = 0.38,
+        const s = 0.3333,
           cy = 12;
         const g3 = (d, cx) => `<g transform="translate(${(cx - 13 * s).toFixed(2)},${(cy - 12 * s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
         icon = g3(domainKey[0], 6.33) + `<line x1="9.67" y1="4" x2="9.67" y2="21" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[1], 13) + `<line x1="16.33" y1="4" x2="16.33" y2="21" stroke="white" stroke-width="0.5" opacity="0.45"/>` + g3(domainKey[2], 19.67);
