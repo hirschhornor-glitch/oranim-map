@@ -14930,7 +14930,7 @@
                                 const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
                                 const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                                 const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
-                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }));
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*12/35)], popupAnchor: [0, -h] }));
                             } else if (l.eachLayer) l.eachLayer(resize);
                         };
                         if (geoLayersRef.current.mosadot_moch) resize(geoLayersRef.current.mosadot_moch);
@@ -15495,7 +15495,7 @@
                                 const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
                                 const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                                 const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
-                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }));
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*12/35)], popupAnchor: [0, -h] }));
                             } else if (l.eachLayer) l.eachLayer(resizeKayam);
                         };
                         if (geoLayersRef.current.mosadot_moch) resizeKayam(geoLayersRef.current.mosadot_moch);
@@ -15843,7 +15843,7 @@
                             const isDashed = !!p.demolition_planned;
                             const [w, h] = mivneiIconSize(map.getZoom());
                             const svg = makeMivneiPinSVG('kayam', domain, stroke, isDashed, w, h);
-                            const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }) });
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*12/35)], popupAnchor: [0, -h] }) });
                             mk._mochDomain = domain; mk._mochDemolition = isDashed;
                             return mk;
                         },
@@ -15852,7 +15852,8 @@
                             layer.on('click', (e) => {
                                 if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                                 const cat = p.category || '';
-                                const accent = MOCH_CAT_COLOR[cat] || '#888';
+                                const _MOCH_ACCENT = {'דת':'#FFB300','ספורט':'#388E3C','תרבות וקהילה':'#7E57C2','רווחה':'#FB8C00','בריאות':'#D32F2F','חירום וכללי':'#546E7A'};
+                                const accent = _MOCH_ACCENT[cat] || '#888';
                                 const headerTitle = p.name || p.type || 'מוסד ציבור';
                                 let html = '<div style="font-family:inherit">';
                                 html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">${headerTitle}</div>`;
@@ -15897,7 +15898,7 @@
                             // Overlay institution count badge when >1
                             const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                             const wrapper = `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>`;
-                            const mk = L.marker(latlng, { icon: L.divIcon({ html: wrapper, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }) });
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: wrapper, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*12/35)], popupAnchor: [0, -h] }) });
                             mk._mochDomain = 'education'; mk._mochDemolition = isDashed; mk._shanatonCount = cnt;
                             return mk;
                         },
