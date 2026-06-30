@@ -14934,14 +14934,15 @@
                     const W = w || 26, H = h || 35;
                     let icon = '';
                     if (Array.isArray(domainKey) && domainKey.length >= 4) {
-                        // Four icons in 2×2 grid. Centers: TL=(8,7.5) TR=(18,7.5) BL=(8,16.5) BR=(18,16.5)
-                        // Scale 0.36 keeps each quadrant icon clear of the dividers.
-                        const s = 0.36;
-                        const g4 = (d, cx, cy) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
-                        icon = g4(domainKey[0], 8, 7.5) + g4(domainKey[1], 18, 7.5) +
-                               `<line x1="13" y1="2.5" x2="13" y2="21.5" stroke="white" stroke-width="0.5" opacity="0.4"/>` +
-                               `<line x1="3" y1="12" x2="23" y2="12" stroke="white" stroke-width="0.5" opacity="0.4"/>` +
-                               g4(domainKey[2], 8, 16.5) + g4(domainKey[3], 18, 16.5);
+                        // Four PIE quadrants: radial dividers from center (13,12) to the circle edge (r=10)
+                        // at 0°/90°/180°/270° (right/up/left/down). Icons sit in each quadrant bisector
+                        // (45°) at r≈4.6: TR(16.3,8.7) TL(9.7,8.7) BL(9.7,15.3) BR(16.3,15.3).
+                        const s = 0.34;
+                        const gP = (d, cx, cy) => `<g transform="translate(${(cx-13*s).toFixed(2)},${(cy-12*s).toFixed(2)}) scale(${s})">${mivneiDomainIconSVG(d)}</g>`;
+                        const div = (x2, y2) => `<line x1="13" y1="12" x2="${x2}" y2="${y2}" stroke="white" stroke-width="0.5" opacity="0.42"/>`;
+                        icon = div(13, 2.5) + div(13, 21.5) + div(3.5, 12) + div(22.5, 12) +
+                               gP(domainKey[0], 9.7, 8.7) + gP(domainKey[1], 16.3, 8.7) +
+                               gP(domainKey[2], 9.7, 15.3) + gP(domainKey[3], 16.3, 15.3);
                     } else if (Array.isArray(domainKey) && domainKey.length >= 3) {
                         // Three PIE sectors (Mercedes-style): radial dividers from center (13,12) to the
                         // circle edge (r=10) at 90°/210°/330°. Icons sit in each sector bisector at r≈4.5:
