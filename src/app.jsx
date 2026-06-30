@@ -14930,7 +14930,7 @@
                                 const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
                                 const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                                 const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
-                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }));
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }));
                             } else if (l.eachLayer) l.eachLayer(resize);
                         };
                         if (geoLayersRef.current.mosadot_moch) resize(geoLayersRef.current.mosadot_moch);
@@ -14953,7 +14953,7 @@
                     let [w, h] = mivneiIconSize(zoom != null ? zoom : map.getZoom());
                     if (isSplit) { w = Math.round(w * 1.25); h = Math.round(h * 1.25); }
                     const svg = makeMivneiPinSVG(typeKey, domainKey, strokeColor, false, w, h);
-                    return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] });
+                    return L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] });
                 }
 
                 // --- Future Shavaz (planned public buildings) — sourced from landuse_xplan ---
@@ -15495,7 +15495,7 @@
                                 const svg = makeMivneiPinSVG('kayam', l._mochDomain, l._mochDemolition ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke, !!l._mochDemolition, w, h);
                                 const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                                 const html = cnt > 1 ? `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>` : svg;
-                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }));
+                                l.setIcon(L.divIcon({ html, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }));
                             } else if (l.eachLayer) l.eachLayer(resizeKayam);
                         };
                         if (geoLayersRef.current.mosadot_moch) resizeKayam(geoLayersRef.current.mosadot_moch);
@@ -15843,7 +15843,7 @@
                             const isDashed = !!p.demolition_planned;
                             const [w, h] = mivneiIconSize(map.getZoom());
                             const svg = makeMivneiPinSVG('kayam', domain, stroke, isDashed, w, h);
-                            const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }) });
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }) });
                             mk._mochDomain = domain; mk._mochDemolition = isDashed;
                             return mk;
                         },
@@ -15897,7 +15897,7 @@
                             // Overlay institution count badge when >1
                             const badge = cnt > 1 ? `<div style="position:absolute;top:-4px;right:-6px;background:#4527A0;color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;border:1px solid #fff">${cnt}</div>` : '';
                             const wrapper = `<div style="position:relative;width:${w}px;height:${h}px">${svg}${badge}</div>`;
-                            const mk = L.marker(latlng, { icon: L.divIcon({ html: wrapper, className: '', iconSize: [w, h], iconAnchor: [w/2, h], popupAnchor: [0, -h] }) });
+                            const mk = L.marker(latlng, { icon: L.divIcon({ html: wrapper, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*33/35)], popupAnchor: [0, -Math.round(h*33/35)] }) });
                             mk._mochDomain = 'education'; mk._mochDemolition = isDashed; mk._shanatonCount = cnt;
                             return mk;
                         },
