@@ -706,12 +706,13 @@
     "source": "xplan"
   },
   "1215656": {
-    "total": 16,
-    "shimur": 3,
-    "krita": 13,
+    "total": 11,
+    "shimur": 4,
+    "krita": 7,
     "haataka": 0,
     "lo_nidresh": 0,
-    "confidence": "high"
+    "confidence": "xplan",
+    "source": "xplan"
   },
   "1430339": {
     "total": 7,
@@ -741,9 +742,9 @@
     "source": "xplan"
   },
   "1398130": {
-    "total": 36,
+    "total": 37,
     "shimur": 10,
-    "krita": 24,
+    "krita": 25,
     "haataka": 2,
     "lo_nidresh": 0,
     "confidence": "xplan",
@@ -3915,9 +3916,9 @@
   },
   "1496140": {
     "total": 10,
-    "shimur": 0,
+    "shimur": 2,
     "krita": 3,
-    "haataka": 7,
+    "haataka": 5,
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
@@ -4242,6 +4243,168 @@
     "shimur": 0,
     "krita": 48,
     "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "266437": {
+    "total": 8,
+    "shimur": 8,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "73619": {
+    "total": 3,
+    "shimur": 3,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "51995": {
+    "total": 4,
+    "shimur": 0,
+    "krita": 3,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "59410": {
+    "total": 47,
+    "shimur": 20,
+    "krita": 13,
+    "haataka": 14,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "92114": {
+    "total": 8,
+    "shimur": 2,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "51532": {
+    "total": 6,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "117663": {
+    "total": 26,
+    "shimur": 1,
+    "krita": 8,
+    "haataka": 17,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "175505": {
+    "total": 120,
+    "shimur": 17,
+    "krita": 100,
+    "haataka": 3,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "387449": {
+    "total": 435,
+    "shimur": 133,
+    "krita": 290,
+    "haataka": 12,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "808840": {
+    "total": 2,
+    "shimur": 0,
+    "krita": 1,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "581850": {
+    "total": 5,
+    "shimur": 0,
+    "krita": 5,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1298694": {
+    "total": 5,
+    "shimur": 0,
+    "krita": 0,
+    "haataka": 5,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1475052": {
+    "total": 15,
+    "shimur": 2,
+    "krita": 13,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1550508": {
+    "total": 2,
+    "shimur": 2,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1583848": {
+    "total": 3,
+    "shimur": 0,
+    "krita": 3,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1516707": {
+    "total": 83,
+    "shimur": 13,
+    "krita": 65,
+    "haataka": 5,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "766154": {
+    "total": 58,
+    "shimur": 20,
+    "krita": 28,
+    "haataka": 10,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1449511": {
+    "total": 41,
+    "shimur": 13,
+    "krita": 24,
+    "haataka": 4,
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
