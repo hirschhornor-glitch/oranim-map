@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-developers-report-r6';
+        const APP_VERSION = '2026-07-02-developers-report-r7';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4708,7 +4708,7 @@
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
-                            else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; }
+                            else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
@@ -27515,10 +27515,11 @@
                         const seenPN = new Set();
                         const devMap = {};
                         const allMinahaks = new Set();
+                        const excludePlans = new Set(window.__devExcludePlans || []);
                         for (const f of gd.plans.features) {
                             const p = f.properties || {};
                             const pn = (p.plan_name || '').trim();
-                            if (!pn || seenPN.has(pn)) continue;
+                            if (!pn || seenPN.has(pn) || excludePlans.has(pn)) continue;
                             const st = (p.status_mavat || '').trim();
                             if (/נדחתה|נגנזה|בטלה|מבוטל|ביטול|הבקשה נסגרה/.test(st)) continue;
                             const units = num(p.units_add);
