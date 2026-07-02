@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v11-meetings-netfirst';
+const CACHE_VERSION = 'v12-dev-aliases-netfirst';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
@@ -7,6 +7,7 @@ const FRESH_DATA_FILES = [
   '/data/meetings.json',
   '/data/last_update.txt',
   '/data/last_run_summary.txt',
+  '/data/developer_aliases.json',
 ];
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
