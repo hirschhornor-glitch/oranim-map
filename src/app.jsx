@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-developers-report-r3';
+        const APP_VERSION = '2026-07-02-developers-report-r4';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -27524,7 +27524,11 @@
                             const bucket = bucketOf(p);
                             if (!bucket) continue;
                             const devs = splitDevelopers(p.developer);
-                            const names = devs.length ? devs.map(canonOf).filter(Boolean) : ['לא ידוע'];
+                            let names = devs.length ? devs.map(canonOf).filter(Boolean) : ['לא ידוע'];
+                            // מגיש משותף של רשות מקומית + יזם פרטי: היזם הפרטי הוא היזם בפועל
+                            const isMunicipal = (n) => /עיריית|עירית|ועדה מקומית|הועדה המקומית|הוועדה המקומית|רשות מקומית/.test(n);
+                            const privateNames = names.filter(n => !isMunicipal(n));
+                            if (privateNames.length && privateNames.length < names.length) names = privateNames;
                             const shared = names.length > 1;
                             names.forEach(name => {
                                 const d = devMap[name] || (devMap[name] = { name, plans: [], units: 0, buckets: {}, minahaks: {}, shared: 0 });
