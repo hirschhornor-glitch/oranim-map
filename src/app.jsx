@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-use-gaps-report';
+        const APP_VERSION = '2026-07-02-use-gaps-lean';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2323,7 +2323,6 @@
             const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
             // Use-gaps report: asset uses (ספר הנכסים) vs plan program, overlap-aware.
             const [showUseGaps, setShowUseGaps] = useState(false);
-            const [useGapsSection, setUseGapsSection] = useState('gaps'); // gaps | resolved | matched
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
@@ -4864,7 +4863,7 @@
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
                 showFloorReport, flrFrom, flrTo, flrDoms,
-                showUseGaps, useGapsSection,
+                showUseGaps,
                 showPublicNeeds, publicNeedsMinahak, reportScope,
             ]);
 
@@ -12066,9 +12065,7 @@
                     { key: 'floorReport', isOpen: () => showFloorReport, open: () => setShowFloorReport(true),
                         ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
-                    { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true),
-                        ser: () => ({ sec: useGapsSection }),
-                        apply: p => { if (p.sec) setUseGapsSection(p.sec); } },
+                    { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
@@ -22242,13 +22239,11 @@
                         });
                         const secOf = (s) => rows.filter(r => r.section === s);
                         const opRows = rows.filter(r => r.opGaps.length);
-                        const SECTIONS = [['gaps', 'פערים לבדיקה', '#ef9a9a'], ['resolved', 'נפתרו ע"י חפיפה', '#ffb74d'], ['matched', 'תואמים', '#86b89a']];
-                        const shown = secOf(useGapsSection);
-                        const secNote = {
-                            gaps: 'שימוש בנכס העירוני שאף תכנית מועמדת (כולל חופפות) לא מכסה בפרוגרמה — לבירור מול טבלה 5 / העירייה.',
-                            resolved: 'נכסים שנראים כפער מול תכנית אחת, אבל תכנית חופפת אחרת במיקום כן מכסה את השימוש — שויכו אליה.',
-                            matched: 'השימוש בנכס תואם את הפרוגרמה של תכנית מכסה.',
-                        }[useGapsSection];
+                        // Only questionable items are shown — assets whose use matches a covering
+                        // plan (incl. via an overlapping one) are counted in the KPI but not listed.
+                        const shown = secOf('gaps');
+                        const nOk = secOf('matched').length + secOf('resolved').length;
+                        const secNote = 'שימוש בנכס העירוני שאף תכנית מועמדת (כולל חופפות) לא מכסה בפרוגרמה — לבירור מול טבלה 5 / העירייה.';
                         const planDisp = (t) => { const nm = (pcats[t] || {}).name || ''; return t + (nm ? ' · ' + nm.slice(0, 28) : ''); };
                         const noteFor = (r) => {
                             if (r.section === 'gaps') return 'לא מכוסה: ' + r.unmatched.join(', ');
@@ -22256,15 +22251,12 @@
                             return '';
                         };
                         const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
-                        const pill = (on, color) => ({ padding: '4px 12px', borderRadius: 16, border: '1px solid ' + (on ? color : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? color : 'transparent', color: on ? '#1a1a2e' : '#9fb0d0' });
                         const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                         const csv = () => {
                             const lines = [['סיווג', 'נכס', 'שם נכס', 'מצב מסירה', 'שימושים (ספר הנכסים)', 'תכניות מועמדות', 'הערה'].map(csvQ).join(',')];
-                            const SEC_HE = { gaps: 'פער לבדיקה', resolved: 'נפתר ע"י חפיפה', matched: 'תואם' };
-                            rows.forEach(r => lines.push([SEC_HE[r.section], r.a.asset_id, r.a.name, r.a.state, r.cats.join('; '), r.tabas.join('; '), noteFor(r)].map(csvQ).join(',')));
+                            shown.forEach(r => lines.push(['פער לבדיקה', r.a.asset_id, r.a.name, r.a.state, r.cats.join('; '), r.tabas.join('; '), noteFor(r)].map(csvQ).join(',')));
                             if (opRows.length) {
                                 lines.push('');
-                                lines.push([csvQ('פערי מפעיל'), '', '', '', '', '', ''].join(','));
                                 opRows.forEach(r => r.opGaps.forEach(g => lines.push(['פער מפעיל', r.a.asset_id, r.a.name, r.a.state, g.cat, r.tabas.join('; '), (g.org || '') + ' (' + (g.use || '') + ')'].map(csvQ).join(','))));
                             }
                             const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'use_gaps.csv'; document.body.appendChild(a); a.click(); a.remove();
@@ -22272,12 +22264,14 @@
                         const prnt = () => {
                             const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
                             let h = '<html dir="rtl"><head><meta charset="utf-8"><title>פערי שימוש — הפרשות מול ספר הנכסים</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}h2{font-size:15px;margin-top:18px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#5c4636;color:#fff}</style></head><body><h1>⚖️ פערי שימוש — הפרשות מול ספר הנכסים העירוני</h1>';
-                            SECTIONS.forEach(([k, he]) => {
-                                const rs = secOf(k); if (!rs.length) return;
-                                h += '<h2>' + he + ' (' + rs.length + ')</h2><table><thead><tr><th>נכס</th><th>שם</th><th>מצב</th><th>שימושים</th><th>תכניות</th><th>הערה</th></tr></thead><tbody>';
-                                rs.forEach(r => { h += '<tr><td>' + r.a.asset_id + '</td><td>' + e2(r.a.name) + '</td><td>' + e2(r.a.state) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td><td>' + e2(noteFor(r)) + '</td></tr>'; });
+                            h += '<h2>פערים לבדיקה (' + shown.length + ')</h2><table><thead><tr><th>נכס</th><th>שם</th><th>מצב</th><th>שימושים</th><th>תכניות</th><th>הערה</th></tr></thead><tbody>';
+                            shown.forEach(r => { h += '<tr><td>' + r.a.asset_id + '</td><td>' + e2(r.a.name) + '</td><td>' + e2(r.a.state) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td><td>' + e2(noteFor(r)) + '</td></tr>'; });
+                            h += '</tbody></table>';
+                            if (opRows.length) {
+                                h += '<h2>פערי מפעיל (' + opRows.length + ')</h2><table><thead><tr><th>נכס</th><th>מפעיל</th><th>שימוש בפועל</th><th>ייעוד הנכס</th><th>תכניות</th></tr></thead><tbody>';
+                                opRows.forEach(r => r.opGaps.forEach(g => { h += '<tr><td>' + e2(r.a.name) + '</td><td>' + e2(g.org) + '</td><td>' + e2((g.use || '') + ' → ' + g.cat) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td></tr>'; }));
                                 h += '</tbody></table>';
-                            });
+                            }
                             h += '</body></html>';
                             const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
                         };
@@ -22294,16 +22288,11 @@
                                             נכס שיושב תחת כמה תכניות חופפות נבדק מול <b>כולן</b> — פער נספר רק כשאף תכנית לא מכסה את השימוש.
                                         </div>
                                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-                                            {[['נכסים שנבדקו', rows.length, '#d8def0'], ['תואמים', secOf('matched').length, '#86b89a'], ['נפתרו ע"י חפיפה', secOf('resolved').length, '#ffb74d'], ['פערים לבדיקה', secOf('gaps').length, '#ef9a9a'], ['פערי מפעיל', opRows.length, '#ce93d8']].map((k, i) => (
+                                            {[['נכסים שנבדקו', rows.length, '#d8def0'], ['תקינים (כולל חפיפה)', nOk, '#86b89a'], ['פערים לבדיקה', shown.length, '#ef9a9a'], ['פערי מפעיל', opRows.length, '#ce93d8']].map((k, i) => (
                                                 <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
                                                     <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
                                                     <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
-                                            {SECTIONS.map(([k, he, color]) => (
-                                                <button key={k} onClick={() => setUseGapsSection(k)} style={pill(useGapsSection === k, color)}>{he} ({secOf(k).length})</button>
                                             ))}
                                         </div>
                                         <div style={{ fontSize: 11, color: '#8a9bc0', marginBottom: 8 }}>{secNote}</div>
@@ -22328,7 +22317,7 @@
                                                         <td style={{ ...td, fontSize: 11, color: r.section === 'gaps' ? '#ef9a9a' : '#9fb0d0' }}>{noteFor(r)}</td>
                                                     </tr>
                                                 ))}
-                                                {!shown.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#8a9bc0' }}>אין נכסים בסיווג זה</td></tr>}
+                                                {!shown.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#86b89a' }}>אין פערים לבדיקה — כל השימושים תואמים את הפרוגרמות 🎉</td></tr>}
                                             </tbody>
                                         </table>
                                         {opRows.length > 0 && (
