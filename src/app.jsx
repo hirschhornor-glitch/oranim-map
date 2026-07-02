@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-06-30-mp-floors';
+        const APP_VERSION = '2026-07-02-talpiot-palette';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -13704,8 +13704,8 @@
                     if (/דרך עם הנחיות מיוחדות/.test(text)) return '#7a7a7a';
                     if (/דרך לביטול/.test(text)) return '#e8e0d0';
                     if (/שטח לדרך/.test(text)) return '#a0a0a0';
-                    if (/^שביל$|^שביל\b|מיתון תנועה/.test(text)) return '#d0d0d0';
-                    if (/^דרך\b/.test(text)) return '#7a7a7a';
+                    if (/^שביל(\s|$)|מיתון תנועה/.test(text)) return '#d0d0d0';
+                    if (/^דרך(\s|$)/.test(text)) return '#7a7a7a';
                     if (/מסילה|טיפול נופי|רכבת/.test(text)) return '#5e4a3e';
 
                     // Public open space — strong green
@@ -13714,8 +13714,9 @@
                     if (/שטח פרטי פתוח/.test(text)) return '#9fd687';
                     if (/שטח נוף פתוח/.test(text)) return '#7ec070';
 
-                    // Public buildings — saddle brown (standard תשריט convention)
-                    if (/מבני ציבור|שב"?צ|מבנים ומוסדות ציבור|מוסדות חינוך|מוסדות/.test(text)) return '#a06030';
+                    // Public buildings — brown (thematic: חום=ציבור)
+                    if (/מבנים ומוסדות ציבור|מבני ציבור|שב"?צ|מוסדות חינוך|מוסדות/.test(text)) return '#8b4513';
+                    if (/מבנה קיים לשימור|מבנה לשימור/.test(text)) return '#5d3a1a';
 
                     // Cemetery
                     if (/בית עלמין/.test(text)) return '#3a3a3a';
@@ -13726,40 +13727,44 @@
                     if (/כיכר עירונית/.test(text)) return '#e8c878';
                     if (/עיצוב מיוחד|מדרחוב/.test(text)) return '#f0c060';
 
-                    // Mixed-use — pink/magenta range
-                    if (/מגורים מסחר ומבנים/.test(text)) return '#d65a8a';
+                    // Commerce — purple (thematic: סגול=מסחר)
+                    if (/חזית מסחר|חזית מסחרית/.test(text)) return '#6a1b9a';
+                    if (/^מסחר$|מסחר ומתקנים|^מסחר\b/.test(text)) return '#8e24aa';
+
+                    // Mixed-use (commerce+residential) — pink-purple bridge
+                    if (/מגורים מסחר ומבנים|מגורים ומסחר|מגורים מסחר ותעסוקה/.test(text)) return '#ab47bc';
                     if (/מגורים ומבנים/.test(text)) return '#c87858';
-                    if (/מגורים מסחר ותעסוקה/.test(text)) return '#a04088';
-                    if (/מגורים ומסחר/.test(text)) return '#e64570';
 
-                    // Commerce — vivid red (standard תשריט)
-                    if (/חזית מסחר/.test(text)) return '#a02020';
-                    if (/^מסחר$|מסחר ומתקנים/.test(text)) return '#d32f2f';
+                    // Employment / industrial — indigo (distinct from commerce purple)
+                    if (/מלאכה ותעסוקה|מלאכה \+ תעסוקה|^מלאכה\b/.test(text)) return '#4527a0';
+                    if (/תעסוקה ותעשייה/.test(text)) return '#5e35b1';
+                    if (/תעסוקה ומסחר|מסחר.*תעסוקה|תעסוקה.*מסחר/.test(text)) return '#6a1b9a';
+                    if (/^תעסוקה$|תעסוקה\b/.test(text)) return '#4527a0';
 
-                    // Employment / industrial — vivid purple
-                    if (/תעסוקה ותעשייה/.test(text)) return '#6a4d8a';
-                    if (/תעסוקה ומסחר|מסחר.*תעסוקה|תעסוקה.*מסחר/.test(text)) return '#7e3f9e';
-                    if (/^תעסוקה$|תעסוקה\b/.test(text)) return '#6e3a9a';
+                    // Residential — orange scale by intensity (thematic: כתום=מגורים)
+                    // Covers both jergisng ("אזור מגורים א/ב/ג/ד") and Talpiot DXF ("אזור עירוני מעורב א'/ב'/ג'/ד'")
+                    if (/אזור מגורים א\b|אזור מגורים א'|אזור עירוני מעורב א/.test(text)) return '#ffe0b2';   // light peach (low-density)
+                    if (/אזור מגורים ב|אזור עירוני מעורב ב/.test(text)) return '#ffb74d';                    // orange
+                    if (/אזור מגורים ג|אזור עירוני מעורב ג/.test(text)) return '#ff9800';                    // deep orange
+                    if (/אזור מגורים ד|אזור עירוני מעורב ד/.test(text)) return '#e65100';                    // darkest orange
+                    if (/מגורים מיוחד|דיור מיוחד/.test(text)) return '#ffcc80';
+                    if (/מגורים קיים/.test(text)) return '#ffd8a8';
 
-                    // Residential — yellow→orange→red scale by intensity
-                    if (/אזור מגורים א\b|אזור מגורים א'/.test(text)) return '#fff09c';     // light yellow (low-density)
-                    if (/אזור מגורים ב/.test(text)) return '#ffd400';                       // bright yellow
-                    if (/אזור מגורים ג/.test(text)) return '#ff8c1a';                       // orange (high)
-                    if (/אזור מגורים ד/.test(text)) return '#e64a19';                       // red-orange (highest)
-                    if (/מגורים מיוחד|דיור מיוחד/.test(text)) return '#ffb84d';
-
-                    // Urban renewal / housing complexes
+                    // Urban renewal / housing complexes — blue family (distinct from purple/commerce)
                     if (/אזור לא לציפוף/.test(text)) return '#7eb3e3';
-                    if (/שיכונים והתחדשות|שכונים והתחדשות/.test(text)) return '#9b59b6';
-                    if (/התחדשות עירונית באזור שימור/.test(text)) return '#bf6090';
-                    if (/התחדשות|פינוי[\s-]?בינוי|שיכונים/.test(text)) return '#7b1fa2';
+                    if (/אזור פינוי[\s-]?בינוי|פינוי[\s-]?בינוי/.test(text)) return '#42a5f5';
+                    if (/שיכונים והתחדשות|שכונים והתחדשות/.test(text)) return '#5c6bc0';
+                    if (/התחדשות עירונית באזור שימור/.test(text)) return '#7986cb';
+                    if (/התחדשות|שיכונים/.test(text)) return '#3f51b5';
+
+                    // Special guidelines — lavender
+                    if (/אזור הנחיות מיוחדות|הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ce93d8';
 
                     // Generic patterns
                     if (/אזורי ליבה|תכנית מאושרת|ללא תוספת/.test(text)) return '#9a9a9a';
                     if (/עד \d+ קומות|מתחם בנייה|מספר קומות/.test(text)) return '#80deea';
-                    if (/הנחיות מיוחדות|מתחם מיוחד/.test(text)) return '#ffea00';
                     if (/תוספת מתונה|עיבוי מרקם/.test(text)) return '#ffb74d';
-                    if (/מגורים/.test(text)) return '#ffe600';                              // residential default — pure yellow
+                    if (/מגורים/.test(text)) return '#ffb74d';                                // residential default — orange
 
                     return '#bdbdbd';
                 }
@@ -13826,6 +13831,12 @@
                                 // values are effectively invisible to the eye.
                                 return { color: '#000', weight: 1, opacity: 0.02, fillColor: '#000', fillOpacity: 0.02, interactive: true };
                             }
+                            if (ft === 'red_dot') {
+                                // L.geoJSON's style callback runs on ALL layers including circleMarkers,
+                                // overriding the fill/stroke set in pointToLayer. Repeat the red-dot
+                                // styling here so the dots don't fall through to the gray default.
+                                return { color: '#ffffff', weight: 4, fillColor: '#d50000', fillOpacity: 1 };
+                            }
                             const c = masterPlanThemeColor(f.properties);
                             return { color: c, weight: 1, fillColor: c, fillOpacity: 0.92 };
                         },
@@ -13834,14 +13845,15 @@
                             if (f.properties.feature_type === 'red_dot') {
                                 // Render in masterPlanTbaPane (z-index 350) so dots are above
                                 // landuse polygons, mtchm cells, AND any pajama/hatch overlay.
-                                // Bigger radius + thicker white border = highly visible at any zoom.
+                                // Bigger radius + thicker white border + CSS drop-shadow halo.
                                 return L.circleMarker(latlng, {
                                     pane: 'masterPlanTbaPane',
-                                    radius: 9,
+                                    radius: 13,
                                     color: '#ffffff',
-                                    weight: 3,
+                                    weight: 4,
                                     fillColor: '#d50000',
                                     fillOpacity: 1,
+                                    className: 'talpiot-red-dot',
                                     interactive: true,
                                 });
                             }
