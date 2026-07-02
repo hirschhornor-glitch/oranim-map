@@ -4272,6 +4272,21 @@
                     cols.push(cur.trim());
                     return cols;
                 }
+                // Split raw CSV text into records, respecting quoted fields that may
+                // contain embedded newlines (a multiline GS cell used to break the
+                // naive split('\n') and silently disable that plan's GS override).
+                function splitCSVRecords(csvText) {
+                    const records = []; let cur = '', inQ = false;
+                    for (let i = 0; i < csvText.length; i++) {
+                        const c = csvText[i];
+                        if (c === '"') { inQ = !inQ; cur += c; }
+                        else if (c === '\n' && !inQ) { records.push(cur); cur = ''; }
+                        else if (c === '\r' && !inQ) { /* drop CR outside quotes */ }
+                        else { cur += c; }
+                    }
+                    if (cur) records.push(cur);
+                    return records;
+                }
                 const GS_OVERRIDE_FIELDS = [
                     'units_total','units_in','units_add',
                     'shavatz_in_sqm','shavatz_in_prog','shavatz_out_sqm','shavatz_out_prog','shavatz_out_plot',
@@ -4438,7 +4453,7 @@
                 }
                 function applyCSVEnrichment(gd, csvText) {
                     if (!csvText || !gd.plans) return;
-                    const rows = csvText.split('\n');
+                    const rows = splitCSVRecords(csvText);
                     const headers = parseCSVRow(rows[0]);
                     const ptIdx = headers.findIndex(h => h === 'plan_type');
                     const nameIdx = headers.findIndex(h => h === 'plan_name');
