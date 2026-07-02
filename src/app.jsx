@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-hafrasha-delivery';
+        const APP_VERSION = '2026-07-02-dev-map-view';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2302,6 +2302,16 @@
             const [devRepMinahak, setDevRepMinahak] = useState('all');
             const [devRepQ, setDevRepQ] = useState('');
             const [devRepExpanded, setDevRepExpanded] = useState(null);
+            // הדגשת כל תכניות יזם על המפה: {name, plans, units} + שכבת Leaflet זמנית
+            const [devMapSel, setDevMapSel] = useState(null);
+            const devMapLayerRef = useRef(null);
+            const clearDevMapSel = () => {
+                if (devMapLayerRef.current && mapInstanceRef.current) {
+                    mapInstanceRef.current.removeLayer(devMapLayerRef.current);
+                }
+                devMapLayerRef.current = null;
+                setDevMapSel(null);
+            };
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
             const [showReportsMenu, setShowReportsMenu] = useState(false);
@@ -2728,6 +2738,7 @@
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
+                        [devMapSel, clearDevMapSel],
                         [showAnnotations, () => setShowAnnotations(false)],
                         [showAllocChooser, () => setShowAllocChooser(false)],
                         [showFilter, () => setShowFilter(false)],
@@ -2742,7 +2753,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, developersReport, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -27505,6 +27516,24 @@
                         </div>);
                     })()}
 
+                    {devMapSel && !developersReport && (
+                        <div style={{position:'fixed', bottom:18, right:'50%', transform:'translateX(50%)', zIndex:1200,
+                                     background:'#16162a', border:'1px solid #ff9100', borderRadius:10, padding:'8px 14px',
+                                     display:'flex', alignItems:'center', gap:10, boxShadow:'0 4px 16px rgba(0,0,0,.5)', direction:'rtl'}}>
+                            <span style={{color:'#ffb74d', fontSize:13, fontWeight:600}}>
+                                🗺️ {devMapSel.name} — {devMapSel.plans} תכניות · {Math.round(devMapSel.units).toLocaleString()} יח"ד
+                            </span>
+                            <button onClick={() => { setDevelopersReport(true); }}
+                                style={{background:'transparent', border:'1px solid #6b7aa0', borderRadius:6, color:'#c0c9e0', cursor:'pointer', fontSize:12, padding:'3px 10px'}}>
+                                חזרה לדוח
+                            </button>
+                            <button onClick={clearDevMapSel}
+                                style={{background:'transparent', border:'none', color:'#e94560', cursor:'pointer', fontSize:16, fontWeight:700, padding:'0 2px'}}>
+                                ✕
+                            </button>
+                        </div>
+                    )}
+
                     {developersReport && (() => {
                         const gd = geoDataRef.current;
                         if (!gd.plans) return null;
@@ -27640,6 +27669,45 @@
                             }, 100);
                         };
 
+                        // הצגת כל תכניות היזם על המפה: שכבת הדגשה זמנית + זום לגבולות
+                        const showDevOnMap = (r) => {
+                            if (!mapInstanceRef.current) return;
+                            const wanted = new Set(r.plans.map(pl => pl.pn));
+                            const feats = gd.plans.features.filter(f =>
+                                wanted.has((f.properties.plan_name || '').trim()) && f.geometry);
+                            if (!feats.length) { notifyToast('אין גיאומטריה לתכניות היזם'); return; }
+                            clearDevMapSel();
+                            const unitsByPn = {};
+                            r.plans.forEach(pl => { unitsByPn[pl.pn] = pl; });
+                            const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
+                                style: { color: '#ff9100', weight: 3, fillColor: '#ff9100', fillOpacity: 0.22, dashArray: '6 3' },
+                                onEachFeature: (feat, lyr) => {
+                                    const pn = (feat.properties.plan_name || '').trim();
+                                    const pl = unitsByPn[pn];
+                                    if (pl) lyr.bindTooltip(
+                                        `${pn} · ${Math.round(pl.units).toLocaleString()} יח"ד`,
+                                        { permanent: false, direction: 'top' });
+                                    // קליק פותח את פופאפ התכנית הרגיל
+                                    lyr.on('click', (ev) => {
+                                        const props = JSON.parse(JSON.stringify(feat.properties));
+                                        const mapped = mapPlanProps(props);
+                                        const popup = L.popup({ maxWidth: 340 }).setLatLng(ev.latlng)
+                                            .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                        popup.openOn(mapInstanceRef.current);
+                                        bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                    });
+                                },
+                            });
+                            layer.addTo(mapInstanceRef.current);
+                            devMapLayerRef.current = layer;
+                            setDevMapSel({ name: r.name, plans: r.plans.length, units: r.units });
+                            setDevelopersReport(false);
+                            setTimeout(() => {
+                                try { mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 16 }); }
+                                catch (e) { /* geometry edge case */ }
+                            }, 120);
+                        };
+
                         const printDevReport = () => {
                             const printWin = window.open('', '_blank');
                             const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -27714,6 +27782,11 @@
                                                         <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                         <td style={{padding:'4px',color:r.name==='לא ידוע'?'#9ca3af':'#e0e0e0',fontWeight:600}}>
                                                             {devRepExpanded===r.name?'▼ ':'◀ '}{r.name}{r.shared>0 && <span style={{color:'#888',fontWeight:400,fontSize:10}} title="חלק מהתכניות משותפות עם יזמים נוספים"> ⊕{r.shared}</span>}
+                                                            <button title="הצגת כל תכניות היזם על המפה"
+                                                                onClick={e => { e.stopPropagation(); showDevOnMap(r); }}
+                                                                style={{marginRight:6,background:'transparent',border:'1px solid #3a3a50',borderRadius:5,color:'#ffb74d',cursor:'pointer',fontSize:11,padding:'1px 6px',verticalAlign:'middle'}}>
+                                                                🗺️
+                                                            </button>
                                                         </td>
                                                         <td style={{textAlign:'center',padding:'4px',color:'#aaa'}}>{r.plans.length}</td>
                                                         <td style={{padding:'4px',color:'#ce93d8',fontSize:11,maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={Object.entries(r.minahaks).map(([m,u])=>`${m}: ${Math.round(u).toLocaleString()} יח"ד`).join(' · ')}>
