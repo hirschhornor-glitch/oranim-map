@@ -106,14 +106,14 @@ def load_plan_props():
             continue
         rec = out.setdefault(tb, {"taba": tb, "agam_id": None,
                                   "plan_name": "", "hafrash_prg": "",
-                                  "status_mavat": ""})
+                                  "status_mavat": "", "developer": ""})
         if rec["agam_id"] is None:
             ag = p.get("agam_id")
             try:
                 rec["agam_id"] = int(float(ag)) if ag not in (None, "") else None
             except (TypeError, ValueError):
                 pass
-        for k in ("plan_name", "hafrash_prg", "status_mavat"):
+        for k in ("plan_name", "hafrash_prg", "status_mavat", "developer"):
             v = p.get(k)
             if v not in (None, "") and not rec.get(k):
                 rec[k] = v
@@ -153,6 +153,27 @@ def ensure_horaot(taba, agam_id, allow_download):
     finally:
         os.unlink(tmp)
     return "downloaded" if has_horaot(taba) else "no_doc"
+
+
+def dev_needs_fill(current):
+    """True when the plan's developer field is empty or a known scrape artifact
+    (mirrors apply_developer_extract.GARBAGE)."""
+    v = (current or "").strip() if isinstance(current, str) else str(current or "")
+    if not v:
+        return True
+    return (v in {"כתובת", "זיהוי התכנית", "סמכות:", "מס' יח\"ד",
+                  "ניסיון", "אדריכלים ומתכנני ערים", "אדריכלים", "פרטי"}
+            or v.startswith(".4") or len(v) >= 60 or v.isdigit())
+
+
+def run_developer(taba):
+    """Extract developer/architect from horaot section 1.8 into the shared
+    results store. Returns 'ok'/'no data'/'fail'."""
+    ok, tail = run_py(["extract_developers_from_horaot.py",
+                       "--plan", pl_number(taba), "--save"], 180, "developer")
+    if not ok:
+        return "fail"
+    return "ok" if '"developer": "' in tail and '"developer": ""' not in tail else "no data"
 
 
 def run_staging(taba):
@@ -255,14 +276,14 @@ def send_email(rows, dry):
         return False
     head = ("<tr style='background:#37474f;color:#fff'>"
             "<th>תכנית</th><th>סיבה</th><th>סטטוס</th><th>שלביות</th>"
-            "<th>סוג הפרשה</th><th>קומות</th><th>הערה</th></tr>")
+            "<th>סוג הפרשה</th><th>קומות</th><th>יזם</th><th>הערה</th></tr>")
     trs = []
     for r in rows:
         trs.append(
             "<tr>"
             f"<td>{r['plan_name']}</td><td>{r['reason']}</td><td>{r['status']}</td>"
             f"<td>{r['staging']}</td><td>{r['hafrash_type']}</td>"
-            f"<td>{r['floors']}</td><td>{r['note']}</td></tr>")
+            f"<td>{r['floors']}</td><td>{r.get('developer', '—')}</td><td>{r['note']}</td></tr>")
     html = (
         "<div dir='rtl' style='font-family:Arial,sans-serif'>"
         f"<h3>העשרת תכניות חדשות / משנות-סטטוס — {datetime.now():%d/%m/%Y}</h3>"
@@ -292,7 +313,8 @@ def write_summary(rows):
     lines = [f"enrich_changed_plans  {_now()}", f"{len(rows)} plans processed", ""]
     for r in rows:
         lines.append(f"{r['plan_name']}  reason={r['reason']}  staging={r['staging']}  "
-                     f"type={r['hafrash_type']}  floors={r['floors']}  {r['note']}")
+                     f"type={r['hafrash_type']}  floors={r['floors']}  "
+                     f"developer={r.get('developer', '—')}  {r['note']}")
     io.open(SUMMARY_TXT, "w", encoding="utf-8").write("\n".join(lines))
 
 
@@ -356,6 +378,7 @@ def main():
 
     rows = []
     done_tabas = []        # safe to drop from the queue
+    any_developer_extracted = [False]   # set inside the loop; triggers apply at end
     for i, tb in enumerate(tabas, 1):
         meta = props.get(tb, {})
         q = queue.get(tb, {})
@@ -379,6 +402,18 @@ def main():
         else:
             staging = "✓" if run_staging(tb) else "—"
 
+        # 2b. developer/architect from horaot section 1.8 (only when the
+        # current value is missing or a known scrape artifact)
+        if h in ("missing", "no_doc", "no_agam"):
+            developer = "—"
+        elif not dev_needs_fill(meta.get("developer")):
+            developer = "קיים"
+        else:
+            d = run_developer(tb)
+            developer = {"ok": "✓", "no data": "—(אין בסעיף 1.8)", "fail": "שגיאה"}[d]
+            if d == "ok":
+                any_developer_extracted[0] = True
+
         # 3. type
         types = classify_type(tb, plan_name, hafrash_prg)
         hafrash_type = ", ".join(types) if types else "—"
@@ -400,6 +435,7 @@ def main():
         rows.append({
             "plan_name": plan_name, "reason": reason, "status": status,
             "staging": staging, "hafrash_type": hafrash_type, "floors": floors,
+            "developer": developer,
             "note": "; ".join(notes),
         })
         if not download_failed:
@@ -409,6 +445,14 @@ def main():
     if not args.single:
         remaining = eq.dequeue(done_tabas)
         print(f"\nQueue: removed {len(done_tabas)}, {remaining} remain (retry next run)")
+
+    # Write freshly-extracted developers/architects to GS + plans.geojson
+    # (single batched run; fill-only + statutory-yazam overwrite policy).
+    if any_developer_extracted[0]:
+        ok, tail = run_py(["apply_developer_extract.py"], 900, "apply-dev")
+        print(f"apply_developer_extract: {'ok' if ok else 'FAILED'}")
+        if not ok:
+            print(tail[-400:])
 
     write_summary(rows)
     send_email(rows, dry=args.no_email)
