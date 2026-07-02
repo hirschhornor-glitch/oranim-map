@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-developers-report-r5';
+        const APP_VERSION = '2026-07-02-developers-report-r6';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4745,6 +4745,10 @@
                             cur.permit_count = cur.permits.length;
                         }
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
+                        // re-render open reports that consume stage-2 globals
+                        // (e.g. developers report opened via deeplink reads
+                        // __devAliases before this batch lands)
+                        setDeferredTick(t => t + 1);
                     });
 
                     // === Stage 2c: deferred big GeoJSONs ===
