@@ -5848,7 +5848,9 @@ function App() {
     // Some layers render FROM landuse_xplan (filtered by mavat_code) rather than
     // their own file — so turning them on must trigger the landuse on-demand fetch
     // too, otherwise they'd render empty until landuse is separately loaded.
-    const LANDUSE_DEPENDENTS = ['future_shavaz', 'hafrashah_future'];
+    // Kayam public-building layers also need landuse_xplan loaded — not to render, but so
+    // _isUnderFutureBuild() can auto-flag existing buildings sitting under future construction.
+    const LANDUSE_DEPENDENTS = ['future_shavaz', 'hafrashah_future', 'education_shanaton', 'mosadot_moch_religion', 'mosadot_moch_sport', 'mosadot_moch_culture', 'mosadot_moch_welfare_health', 'mosadot_moch_emergency_municipal'];
     onDemand.forEach(key => {
       const wanted = layers[key] || key === 'landuse_xplan' && LANDUSE_DEPENDENTS.some(d => layers[d])
       // the "עתודה מול בנייה" + "% דירות מושכרות" + "דירות לא-מאוכלסות" layers render FROM the construction_yb file
