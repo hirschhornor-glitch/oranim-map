@@ -15229,6 +15229,40 @@
                     return [22, 30];
                 }
 
+                // Auto-demolition detection: an existing public building whose point falls inside a
+                // FUTURE construction polygon (new public building or new residential-with-hafrashah,
+                // from an active plan) is slated for demolition — the new build replaces it.
+                // Rings are computed once per layer rebuild (bbox-prefiltered for speed).
+                let _futureBuildRings = null;
+                function _computeFutureBuildRings() {
+                    const rings = [];
+                    const CODES = new Set([400, 410, 450, 460, 1670, 1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
+                    const gdx = gd.landuse_xplan;
+                    if (!gdx || !gdx.features) return rings;
+                    gdx.features.forEach(f => {
+                        const p = f.properties || {};
+                        if (!CODES.has(p.mavat_code)) return;
+                        if (!passesShavazStatusFilter(p.pl_number)) return;
+                        const g = f.geometry; if (!g) return;
+                        const polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+                        polys.forEach(poly => {
+                            const outer = poly[0]; if (!outer || outer.length < 3) return;
+                            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                            outer.forEach(c => { if (c[0]<minX)minX=c[0]; if (c[0]>maxX)maxX=c[0]; if (c[1]<minY)minY=c[1]; if (c[1]>maxY)maxY=c[1]; });
+                            rings.push({ ring: outer, minX, minY, maxX, maxY });
+                        });
+                    });
+                    return rings;
+                }
+                function _isUnderFutureBuild(lng, lat) {
+                    if (_futureBuildRings === null) _futureBuildRings = _computeFutureBuildRings();
+                    for (const r of _futureBuildRings) {
+                        if (lng < r.minX || lng > r.maxX || lat < r.minY || lat > r.maxY) continue;
+                        if (pointInPolygon([lng, lat], r.ring)) return true;
+                    }
+                    return false;
+                }
+
                 // Zoom handler for kayam (existing) pin layers — registered once, shared by mosadot_moch + shanaton.
                 function _ensureKayamZoomHandler() {
                     if (geoLayersRef.current._kayamZoomHandler) return; // already registered
@@ -16170,8 +16204,8 @@
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const domain = MOCH_CAT_TO_DOMAIN[p.category || ''] || null;
-                            const stroke = p.demolition_planned ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
-                            const isDashed = !!p.demolition_planned;
+                            const isDashed = !!p.demolition_planned || _isUnderFutureBuild(latlng.lng, latlng.lat);
+                            const stroke = isDashed ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
                             const [w, h] = mivneiIconSize(map.getZoom());
                             const svg = makeMivneiPinSVG('kayam', domain, stroke, isDashed, w, h);
                             const mk = L.marker(latlng, { icon: L.divIcon({ html: svg, className: '', iconSize: [w, h], iconAnchor: [Math.round(w/2), Math.round(h*12/35)], popupAnchor: [0, -h] }) });
@@ -16222,8 +16256,8 @@
                         pointToLayer: (f, latlng) => {
                             const p = f.properties;
                             const cnt = p.institutions_count || 1;
-                            const stroke = p.demolition_planned ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
-                            const isDashed = !!p.demolition_planned;
+                            const isDashed = !!p.demolition_planned || _isUnderFutureBuild(latlng.lng, latlng.lat);
+                            const stroke = isDashed ? PUBLIC_PALETTE.moch_demolition_stroke : PUBLIC_PALETTE.moch_kayam_stroke;
                             const [w, h] = mivneiIconSize(map.getZoom());
                             const svg = makeMivneiPinSVG('kayam', 'education', stroke, isDashed, w, h);
                             // Overlay institution count badge when >1
