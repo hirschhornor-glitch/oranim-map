@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-developers-report-r4';
+        const APP_VERSION = '2026-07-02-developers-report-r5';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -27472,8 +27472,10 @@
                         const GARB_DEV = ['כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד'];
                         const splitDevelopers = (raw) => {
                             let s = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
-                            if (!s || GARB_DEV.includes(s) || s.indexOf('.4') === 0 || s.length >= 60 || /^\d+$/.test(s)) return [];
-                            return s.split(' / ').map(x => x.trim()).filter(Boolean);
+                            if (!s || GARB_DEV.includes(s) || s.indexOf('.4') === 0 || /^\d+$/.test(s)) return [];
+                            // validate per partner — a 3-way JV string is legit even at 70+ chars
+                            return s.split(' / ').map(x => x.trim())
+                                .filter(x => x && x.length < 60 && !GARB_DEV.includes(x) && !/^\d+$/.test(x));
                         };
                         // canonical display name per norm-key: alias wins, else first raw seen
                         const canonSeen = {};
