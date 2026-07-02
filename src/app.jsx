@@ -2297,6 +2297,11 @@
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
             const [shavazReportFilter, setShavazReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
+            // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
+            const [developersReport, setDevelopersReport] = useState(false);
+            const [devRepMinahak, setDevRepMinahak] = useState('all');
+            const [devRepQ, setDevRepQ] = useState('');
+            const [devRepExpanded, setDevRepExpanded] = useState(null);
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
             const [showReportsMenu, setShowReportsMenu] = useState(false);
@@ -2722,6 +2727,7 @@
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
+                        [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
                         [showAnnotations, () => setShowAnnotations(false)],
                         [showAllocChooser, () => setShowAllocChooser(false)],
                         [showFilter, () => setShowFilter(false)],
@@ -2736,7 +2742,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, developersReport, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -4253,6 +4259,7 @@
                     ['__eduForecast', 'data/education_forecast_gonenim.json'],
                     ['__decisionSummaries', 'data/decision_summaries.json'],
                     ['__fieldObs', 'data/field_observations.json'],
+                    ['__devAliases', 'data/developer_aliases.json'],
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
@@ -4697,6 +4704,7 @@
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
+                            else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
@@ -4825,6 +4833,7 @@
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
                 meetingsReport, specialHousingReport, masterPlanReport,
+                developersReport, devRepMinahak, devRepQ,
                 showEduForecast, eduForecastChumash, eduForecastNb,
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
@@ -11987,6 +11996,9 @@
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
+                    { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
+                        ser: () => ({ min: devRepMinahak, q: devRepQ }),
+                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); } },
                     { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
                         ser: () => ({ mp: masterPlanReport }) },
                     { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
@@ -22802,6 +22814,13 @@
                                                     <span className="report-desc">יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5</span>
                                                 </div>
                                             </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setDevRepExpanded(null); setDevelopersReport(true); }}>
+                                                <span className="report-icon">🏗️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">דוח יזמים</span>
+                                                    <span className="report-desc">יח"ד מתוכננות לפי יזם, מינה"ק ושלב</span>
+                                                </div>
+                                            </button>
                                             <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setOverlapReport(true); }}>
                                                 <span className="report-icon">🔁</span>
                                                 <div className="report-text">
@@ -27421,6 +27440,251 @@
                                             printWin.document.close();
                                             printWin.focus();
                                         }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {developersReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+
+                        // --- developer name canonicalization (aliases file + auto-normalization) ---
+                        const autoNorm = (s) => s
+                            .replace(/["'״׳.,()\-–]/g, ' ')
+                            .replace(/\s+/g, ' ').trim()
+                            .replace(/\s*בע\s*מ\s*$/, '')
+                            .trim();
+                        const aliases = window.__devAliases || {};
+                        const aliasRev = {};
+                        Object.entries(aliases).forEach(([canon, list]) => {
+                            aliasRev[autoNorm(canon)] = canon;
+                            (list || []).forEach(a => { aliasRev[autoNorm(a)] = canon; });
+                        });
+                        const GARB_DEV = ['כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד'];
+                        const splitDevelopers = (raw) => {
+                            let s = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
+                            if (!s || GARB_DEV.includes(s) || s.indexOf('.4') === 0 || s.length >= 60 || /^\d+$/.test(s)) return [];
+                            return s.split(' / ').map(x => x.trim()).filter(Boolean);
+                        };
+                        // canonical display name per norm-key: alias wins, else first raw seen
+                        const canonSeen = {};
+                        const canonOf = (name) => {
+                            const k = autoNorm(name);
+                            if (!k) return null;
+                            if (aliasRev[k]) return aliasRev[k];
+                            if (!canonSeen[k]) canonSeen[k] = name;
+                            return canonSeen[k];
+                        };
+
+                        // --- stage bucketing ---
+                        const BUCKETS = ['בתכנון', 'בהפקדה', 'מאושרת', 'ברישוי/היתר', 'בבנייה', 'הושלמה'];
+                        const BUCKET_COLORS = { 'בתכנון': '#9ca3af', 'בהפקדה': '#ffd54f', 'מאושרת': '#50d25a', 'ברישוי/היתר': '#4ba1f0', 'בבנייה': '#f0824b', 'הושלמה': '#ce93d8' };
+                        const bucketOf = (p) => {
+                            const stg = (p.stage || '').replace(/\s+/g, ' ').trim();
+                            if (stg.indexOf('ו-גמר') === 0) return 'הושלמה';
+                            if (stg.indexOf('ה-בבנייה') === 0) return 'בבנייה';
+                            if (stg.indexOf('ד-היתר') === 0 || stg.indexOf('ג-רישוי') === 0) return 'ברישוי/היתר';
+                            const st = (p.status_mavat || '').trim();
+                            const grp = getFilterStatusGroup(st);
+                            if (grp === 'approved' || grp === 'in_approval') {
+                                const taba = String(p.taba || '');
+                                if (taba && getPermitsForTaba(taba).length > 0) return 'ברישוי/היתר';
+                                return 'מאושרת';
+                            }
+                            if (grp === 'deposit' || grp === 'objections') return 'בהפקדה';
+                            if (grp === 'conditions' || grp === 'review' || grp === 'open') return 'בתכנון';
+                            return null; // unknown status — skip
+                        };
+
+                        // --- collect rows: developer -> aggregates ---
+                        const seenPN = new Set();
+                        const devMap = {};
+                        const allMinahaks = new Set();
+                        for (const f of gd.plans.features) {
+                            const p = f.properties || {};
+                            const pn = (p.plan_name || '').trim();
+                            if (!pn || seenPN.has(pn)) continue;
+                            const st = (p.status_mavat || '').trim();
+                            if (/נדחתה|נגנזה|בטלה|מבוטל|ביטול|הבקשה נסגרה/.test(st)) continue;
+                            const units = num(p.units_add);
+                            if (units <= 0) continue;
+                            seenPN.add(pn);
+                            const minahak = (p.minahak || '').trim() || 'ללא שיוך';
+                            allMinahaks.add(minahak);
+                            if (devRepMinahak !== 'all' && minahak !== devRepMinahak) continue;
+                            const bucket = bucketOf(p);
+                            if (!bucket) continue;
+                            const devs = splitDevelopers(p.developer);
+                            const names = devs.length ? devs.map(canonOf).filter(Boolean) : ['לא ידוע'];
+                            const shared = names.length > 1;
+                            names.forEach(name => {
+                                const d = devMap[name] || (devMap[name] = { name, plans: [], units: 0, buckets: {}, minahaks: {}, shared: 0 });
+                                d.plans.push({ pn, summary: p.plan_summary || p.plan_name_he || '', minahak, status: st, bucket, units, shared });
+                                d.units += units;
+                                d.buckets[bucket] = (d.buckets[bucket] || 0) + units;
+                                d.minahaks[minahak] = (d.minahaks[minahak] || 0) + units;
+                                if (shared) d.shared++;
+                            });
+                        }
+                        let rows = Object.values(devMap);
+                        const q = devRepQ.trim();
+                        if (q) rows = rows.filter(r => r.name.indexOf(q) !== -1);
+                        rows.sort((a, b) => {
+                            if (a.name === 'לא ידוע') return 1;
+                            if (b.name === 'לא ידוע') return -1;
+                            return b.units - a.units || b.plans.length - a.plans.length;
+                        });
+
+                        const totals = { units: 0, plans: 0 };
+                        const bucketTotals = {};
+                        const totalPlanSet = new Set();
+                        rows.forEach(r => r.plans.forEach(pl => {
+                            if (totalPlanSet.has(pl.pn)) return;
+                            totalPlanSet.add(pl.pn);
+                            totals.units += pl.units; totals.plans++;
+                            bucketTotals[pl.bucket] = (bucketTotals[pl.bucket] || 0) + pl.units;
+                        }));
+                        const unknownRow = rows.find(r => r.name === 'לא ידוע');
+                        const fmt = (n) => n > 0 ? Math.round(n).toLocaleString() : '-';
+
+                        const zoomToPlan = (pnWanted) => {
+                            const feat = gd.plans.features.find(f => (f.properties.plan_name || '').trim() === pnWanted);
+                            if (!feat || !feat.geometry || !mapInstanceRef.current) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2);
+                            const props = JSON.parse(JSON.stringify(feat.properties));
+                            setDevelopersReport(false);
+                            setTimeout(() => {
+                                mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+                                setTimeout(() => {
+                                    const mapped = mapPlanProps(props);
+                                    const popup = L.popup({ maxWidth: 340 }).setLatLng(center).setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                    popup.openOn(mapInstanceRef.current);
+                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                }, 600);
+                            }, 100);
+                        };
+
+                        const printDevReport = () => {
+                            const printWin = window.open('', '_blank');
+                            const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const minLbl = devRepMinahak === 'all' ? 'כל המינה"קים' : devRepMinahak;
+                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח יזמים</title>');
+                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}th,td{padding:5px 6px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700;border-bottom:2px solid #333}tfoot td{border-top:2px solid #333;font-weight:700;background:#fafafa}.num{text-align:center}.subrow td{background:#fbfbfb;font-size:11px;color:#555}@media print{.no-print{display:none!important}body{padding:0}}</style>');
+                            printWin.document.write('</head><body>');
+                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                            printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF</button>');
+                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                            printWin.document.write('</div>');
+                            printWin.document.write('<h2>דוח יזמים — יח"ד מתוכננות לפי יזם ושלב</h2>');
+                            printWin.document.write('<p style="color:#666;font-size:13px">' + minLbl + ' · ' + rows.length + ' יזמים · ' + totals.plans + ' תכניות · ' + Math.round(totals.units).toLocaleString() + ' יח"ד</p>');
+                            printWin.document.write('<p style="color:#999;font-size:11px">מקור שם היזם: הוראות התכנית (סעיף 1.8) / אתר עיר-קדם. תכנית משותפת לכמה יזמים נספרת אצל כל שותף; שורת הסה"כ סופרת כל תכנית פעם אחת.</p>');
+                            printWin.document.write('<table><thead><tr><th>#</th><th>יזם</th><th class="num">תכניות</th><th>מינה"קים</th>' + BUCKETS.map(b => '<th class="num">' + b + '</th>').join('') + '<th class="num">סה"כ יח"ד</th></tr></thead><tbody>');
+                            rows.forEach((r, i) => {
+                                printWin.document.write('<tr><td>' + (i + 1) + '</td><td>' + esc(r.name) + '</td><td class="num">' + r.plans.length + '</td><td>' + esc(Object.keys(r.minahaks).join(', ')) + '</td>' +
+                                    BUCKETS.map(b => '<td class="num">' + (r.buckets[b] ? Math.round(r.buckets[b]).toLocaleString() : '-') + '</td>').join('') +
+                                    '<td class="num">' + Math.round(r.units).toLocaleString() + '</td></tr>');
+                                r.plans.forEach(pl => {
+                                    printWin.document.write('<tr class="subrow"><td></td><td colspan="3">' + esc(pl.pn) + ' — ' + esc(pl.summary || '') + (pl.shared ? ' (משותפת)' : '') + '</td><td colspan="' + BUCKETS.length + '">' + esc(pl.minahak) + ' · ' + esc(pl.status) + ' · ' + esc(pl.bucket) + '</td><td class="num">' + Math.round(pl.units).toLocaleString() + '</td></tr>');
+                                });
+                            });
+                            printWin.document.write('</tbody><tfoot><tr><td colspan="4">סה"כ (' + totals.plans + ' תכניות ייחודיות)</td>' +
+                                BUCKETS.map(b => '<td class="num">' + (bucketTotals[b] ? Math.round(bucketTotals[b]).toLocaleString() : '-') + '</td>').join('') +
+                                '<td class="num">' + Math.round(totals.units).toLocaleString() + '</td></tr></tfoot></table>');
+                            const csvHead = ['יזם', 'תכנית', 'שם תכנית', 'מינה"ק', 'סטטוס', 'שלב', 'יח"ד', 'משותפת'];
+                            const csvLines = [csvHead.map(h => '"' + h.replace(/"/g, '""') + '"').join(',')];
+                            rows.forEach(r => r.plans.forEach(pl => {
+                                const c = [r.name, pl.pn, pl.summary || '', pl.minahak, pl.status, pl.bucket, Math.round(pl.units), pl.shared ? 'כן' : ''];
+                                csvLines.push(c.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
+                            }));
+                            const csvContent = csvLines.join('\n');
+                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="דוח_יזמים.csv";a.click()});<\/script>');
+                            printWin.document.write('</body></html>');
+                            printWin.document.close();
+                            printWin.focus();
+                        };
+
+                        return (
+                        <div className="units-overlay" onClick={() => { setDevelopersReport(false); setDevRepExpanded(null); }}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(1100px, 96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => { setDevelopersReport(false); setDevRepExpanded(null); }}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏗️ דוח יזמים</h2>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{rows.length} יזמים · {totals.plans} תכניות · {Math.round(totals.units).toLocaleString()} יח"ד מתוכננות{unknownRow ? ` · מתוכן ${Math.round(unknownRow.units).toLocaleString()} ללא יזם ידוע` : ''}</p>
+                                    <p style={{color:'#888',fontSize:11,marginBottom:10}}>קליק על שורה פותח פירוט תכניות · קליק על תכנית פותח אותה במפה · תכנית משותפת נספרת אצל כל שותף (שורת הסה"כ סופרת פעם אחת)</p>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:10,alignItems:'center'}}>
+                                        <select value={devRepMinahak} onChange={e => { setDevRepMinahak(e.target.value); setDevRepExpanded(null); }}
+                                            style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12}}>
+                                            <option value="all">כל המינה"קים</option>
+                                            {[...allMinahaks].sort().map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                        <input value={devRepQ} onChange={e => setDevRepQ(e.target.value)} placeholder="חיפוש יזם..."
+                                            style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12,minWidth:160}} />
+                                    </div>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0,zIndex:1}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>יזם</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>תכניות</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"קים</th>
+                                            {BUCKETS.map(b => <th key={b} style={{textAlign:'center',padding:'6px 4px',color:BUCKET_COLORS[b]}}>{b}</th>)}
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>סה"כ יח"ד</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((r, i) => (
+                                                <React.Fragment key={r.name}>
+                                                    <tr style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer',background:devRepExpanded===r.name?'#1d1d35':(r.name==='לא ידוע'?'#1a1520':'transparent')}}
+                                                        onClick={() => setDevRepExpanded(devRepExpanded === r.name ? null : r.name)}>
+                                                        <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                        <td style={{padding:'4px',color:r.name==='לא ידוע'?'#9ca3af':'#e0e0e0',fontWeight:600}}>
+                                                            {devRepExpanded===r.name?'▼ ':'◀ '}{r.name}{r.shared>0 && <span style={{color:'#888',fontWeight:400,fontSize:10}} title="חלק מהתכניות משותפות עם יזמים נוספים"> ⊕{r.shared}</span>}
+                                                        </td>
+                                                        <td style={{textAlign:'center',padding:'4px',color:'#aaa'}}>{r.plans.length}</td>
+                                                        <td style={{padding:'4px',color:'#ce93d8',fontSize:11,maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={Object.entries(r.minahaks).map(([m,u])=>`${m}: ${Math.round(u).toLocaleString()} יח"ד`).join(' · ')}>
+                                                            {Object.keys(r.minahaks).join(', ')}
+                                                        </td>
+                                                        {BUCKETS.map(b => <td key={b} style={{textAlign:'center',padding:'4px',color:BUCKET_COLORS[b],fontWeight:r.buckets[b]>0?600:400}}>{fmt(r.buckets[b]||0)}</td>)}
+                                                        <td style={{textAlign:'center',padding:'4px',color:'#fff',fontWeight:700}}>{fmt(r.units)}</td>
+                                                    </tr>
+                                                    {devRepExpanded === r.name && r.plans.sort((a,b)=>b.units-a.units).map(pl => (
+                                                        <tr key={pl.pn} style={{borderBottom:'1px solid #14142a',background:'#13131f',cursor:'pointer'}}
+                                                            onClick={e => { e.stopPropagation(); zoomToPlan(pl.pn); }}>
+                                                            <td/>
+                                                            <td style={{padding:'3px 4px 3px 4px',fontSize:11}}>
+                                                                <span style={{color:'#64b5f6',textDecoration:'underline'}}>{pl.pn}</span>
+                                                                <span style={{color:'#bbb'}}> — {(pl.summary||'').slice(0,48)}{pl.shared?' ⊕':''}</span>
+                                                            </td>
+                                                            <td/>
+                                                            <td style={{padding:'3px 4px',color:'#ce93d8',fontSize:10}}>{pl.minahak}</td>
+                                                            {BUCKETS.map(b => <td key={b} style={{textAlign:'center',padding:'3px 4px',fontSize:10,color:BUCKET_COLORS[b]}}>{pl.bucket===b?fmt(pl.units):''}</td>)}
+                                                            <td style={{textAlign:'center',padding:'3px 4px',color:'#ddd',fontSize:11}}>{fmt(pl.units)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </React.Fragment>
+                                            ))}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style={{borderTop:'2px solid #2a2a4a',background:'#16162a',fontWeight:700}}>
+                                                <td colSpan={4} style={{padding:'6px 4px',color:'#fff'}}>סה"כ ({totals.plans} תכניות ייחודיות)</td>
+                                                {BUCKETS.map(b => <td key={b} style={{textAlign:'center',padding:'6px 4px',color:BUCKET_COLORS[b]}}>{fmt(bucketTotals[b]||0)}</td>)}
+                                                <td style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>{fmt(totals.units)}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={printDevReport} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
                                             &#128424; הדפסה / שמירה
                                         </button>
                                     </div>
