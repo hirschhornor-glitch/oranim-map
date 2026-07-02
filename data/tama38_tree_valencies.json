@@ -24,6 +24,28 @@
     "status": "partial",
     "file_number": "2004/0313.01"
   },
+  "15085": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 8,
+        "krita": 4
+      },
+      "14-16": {
+        "shimur": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 12,
+      "14-16": 2
+    },
+    "by_reco": {
+      "shimur": 10,
+      "krita": 4
+    },
+    "total_trees": 14,
+    "status": "ok",
+    "file_number": "2009/0061.02"
+  },
   "31/08/2022": {
     "by_bucket": {
       "7-13": {
@@ -176,6 +198,33 @@
     "status": "ok",
     "file_number": "2019/0169.00"
   },
+  "15194": {
+    "by_bucket": {
+      "14-16": {
+        "haataka": 1
+      },
+      "7-13": {
+        "krita": 4,
+        "shimur": 5
+      },
+      "0-6": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 1,
+      "7-13": 9,
+      "0-6": 1
+    },
+    "by_reco": {
+      "haataka": 1,
+      "krita": 4,
+      "shimur": 6
+    },
+    "total_trees": 11,
+    "status": "ok",
+    "file_number": "2020/0261.00"
+  },
   "2010/671": {
     "by_bucket": {
       "7-13": {
@@ -253,6 +302,33 @@
     "total_trees": 10,
     "status": "ok",
     "file_number": "2020/0739.00"
+  },
+  "15418": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 3
+      },
+      "0-6": {
+        "shimur": 1
+      },
+      "14-16": {
+        "shimur": 1,
+        "haataka": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 3,
+      "0-6": 1,
+      "14-16": 2
+    },
+    "by_reco": {
+      "krita": 3,
+      "shimur": 2,
+      "haataka": 1
+    },
+    "total_trees": 6,
+    "status": "ok",
+    "file_number": "2021/0168.00"
   },
   "15406": {
     "by_bucket": {
@@ -613,6 +689,54 @@
     "status": "ok",
     "file_number": "2023/0432.00"
   },
+  "15702": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 2
+      },
+      "7-13": {
+        "shimur": 3,
+        "krita": 7
+      },
+      "0-6": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 2,
+      "7-13": 10,
+      "0-6": 1
+    },
+    "by_reco": {
+      "shimur": 6,
+      "krita": 7
+    },
+    "total_trees": 13,
+    "status": "ok",
+    "file_number": "2023/0495.00"
+  },
+  "15654": {
+    "by_bucket": {
+      "14-16": {
+        "haataka": 1,
+        "krita": 2
+      },
+      "17-20": {
+        "krita": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 3,
+      "17-20": 1
+    },
+    "by_reco": {
+      "haataka": 1,
+      "krita": 3
+    },
+    "total_trees": 4,
+    "status": "ok",
+    "file_number": "2023/0497.00"
+  },
   "15672": {
     "by_bucket": {
       "7-13": {
@@ -691,6 +815,55 @@
     "total_trees": 15,
     "status": "ok",
     "file_number": "2023/0553.00"
+  },
+  "15416": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 8,
+        "krita": 1
+      },
+      "7-13": {
+        "shimur": 3,
+        "krita": 2
+      },
+      "0-6": {
+        "krita": 1
+      }
+    },
+    "bucket_totals": {
+      "14-16": 9,
+      "7-13": 5,
+      "0-6": 1
+    },
+    "by_reco": {
+      "shimur": 11,
+      "krita": 4
+    },
+    "total_trees": 15,
+    "status": "ok",
+    "file_number": "2023/0555.00"
+  },
+  "15688": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 4
+      },
+      "7-13": {
+        "krita": 5,
+        "shimur": 6
+      }
+    },
+    "bucket_totals": {
+      "14-16": 4,
+      "7-13": 11
+    },
+    "by_reco": {
+      "shimur": 10,
+      "krita": 5
+    },
+    "total_trees": 15,
+    "status": "ok",
+    "file_number": "2023/0569.00"
   },
   "15724": {
     "by_bucket": {
@@ -787,6 +960,31 @@
     "status": "partial",
     "file_number": "2024/0057.00"
   },
+  "15684": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 4,
+        "krita": 2
+      },
+      "7-13": {
+        "krita": 3,
+        "?": 3,
+        "shimur": 4
+      }
+    },
+    "bucket_totals": {
+      "14-16": 6,
+      "7-13": 10
+    },
+    "by_reco": {
+      "shimur": 8,
+      "krita": 5,
+      "?": 3
+    },
+    "total_trees": 16,
+    "status": "partial",
+    "file_number": "2024/0107.00"
+  },
   "15701": {
     "by_bucket": {
       "14-16": {
@@ -814,6 +1012,33 @@
     "total_trees": 29,
     "status": "ok",
     "file_number": "2024/0135.00"
+  },
+  "15673": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 7,
+        "krita": 1
+      },
+      "7-13": {
+        "shimur": 4,
+        "krita": 5
+      },
+      "0-6": {
+        "krita": 7
+      }
+    },
+    "bucket_totals": {
+      "14-16": 8,
+      "7-13": 9,
+      "0-6": 7
+    },
+    "by_reco": {
+      "shimur": 11,
+      "krita": 13
+    },
+    "total_trees": 24,
+    "status": "ok",
+    "file_number": "2024/0188.00"
   },
   "15619": {
     "by_bucket": {
