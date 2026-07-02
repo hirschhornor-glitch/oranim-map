@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-dev-sort-search';
+        const APP_VERSION = '2026-07-02-use-gaps-report';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -19670,6 +19670,7 @@
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
+                    { id: 'use_gaps',     title: 'פערי שימוש — ספר הנכסים',  desc: 'שימוש נכסי הפרשה בפועל מול טבלה 5 (כולל חפיפות)', icon: '⚖️' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
                 ];
                 // All toggleable layers
@@ -19787,6 +19788,7 @@
                     else if (id === 'tree_permits') setTreePermitsReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
+                    else if (id === 'use_gaps') setShowUseGaps(true);
                     else if (id === 'reports_menu') setShowReportsMenu(true);
                 }
             };
@@ -22202,6 +22204,161 @@
                         );
                     })()}
 
+                    {/* ── פערי שימוש — הפרשות מול ספר הנכסים (overlap-aware) ── */}
+                    {showUseGaps && (() => {
+                        const D = window.__hafrashaDelivery || {};
+                        const plansD = D.plans || {}, pcats = D.plan_cats || {};
+                        const nonPub = new Set(D.non_public_cats || []);
+                        // Invert plan→assets to asset→candidate plans: an asset sitting under
+                        // several overlapping plans appears ONCE, with all its candidates —
+                        // the overlap treatment (same idea as the tree-surveys suppression).
+                        const byAsset = {};
+                        Object.entries(plansD).forEach(([taba, assets]) => (assets || []).forEach(a => {
+                            if (!byAsset[a.asset_id]) byAsset[a.asset_id] = { a, tabas: [] };
+                            byAsset[a.asset_id].tabas.push(taba);
+                        }));
+                        // A plan covers a use-category if its program names it explicitly, or the
+                        // program is the generic "מבנים ומוסדות ציבור" wildcard — which covers any
+                        // PUBLIC use but not מסחר/דיור.
+                        const covers = (t, c) => { const pc = pcats[t] || {}; return (pc.cats || []).includes(c) || (!!pc.generic && !nonPub.has(c)); };
+                        const rows = [];
+                        Object.values(byAsset).forEach(({ a, tabas }) => {
+                            const cats = a.cats || [];
+                            if (!cats.length) return;
+                            const unmatched = cats.filter(c => !tabas.some(t => covers(t, c)));
+                            const winners = {}; cats.forEach(c => { winners[c] = tabas.filter(t => covers(t, c)); });
+                            // resolved-by-overlap: every use is covered, but not by every candidate —
+                            // a naive single-plan comparison would have flagged a false gap.
+                            const resolved = !unmatched.length && tabas.length > 1 && cats.some(c => winners[c].length < tabas.length);
+                            const opGaps = [];
+                            (a.allocations || []).forEach(al => {
+                                if (!al || al.active === 0 || al.active === '0') return;
+                                (al.cats || []).forEach(c => {
+                                    if (!cats.includes(c) && !tabas.some(t => covers(t, c))) opGaps.push({ org: al.org, use: al.use, cat: c });
+                                });
+                            });
+                            rows.push({ a, tabas, cats, unmatched, winners, resolved, opGaps,
+                                section: unmatched.length ? 'gaps' : (resolved ? 'resolved' : 'matched') });
+                        });
+                        const secOf = (s) => rows.filter(r => r.section === s);
+                        const opRows = rows.filter(r => r.opGaps.length);
+                        const SECTIONS = [['gaps', 'פערים לבדיקה', '#ef9a9a'], ['resolved', 'נפתרו ע"י חפיפה', '#ffb74d'], ['matched', 'תואמים', '#86b89a']];
+                        const shown = secOf(useGapsSection);
+                        const secNote = {
+                            gaps: 'שימוש בנכס העירוני שאף תכנית מועמדת (כולל חופפות) לא מכסה בפרוגרמה — לבירור מול טבלה 5 / העירייה.',
+                            resolved: 'נכסים שנראים כפער מול תכנית אחת, אבל תכנית חופפת אחרת במיקום כן מכסה את השימוש — שויכו אליה.',
+                            matched: 'השימוש בנכס תואם את הפרוגרמה של תכנית מכסה.',
+                        }[useGapsSection];
+                        const planDisp = (t) => { const nm = (pcats[t] || {}).name || ''; return t + (nm ? ' · ' + nm.slice(0, 28) : ''); };
+                        const noteFor = (r) => {
+                            if (r.section === 'gaps') return 'לא מכוסה: ' + r.unmatched.join(', ');
+                            if (r.section === 'resolved') { const ws = [...new Set(r.cats.flatMap(c => r.winners[c] || []))]; return 'שויך ל-' + ws.join(', '); }
+                            return '';
+                        };
+                        const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
+                        const pill = (on, color) => ({ padding: '4px 12px', borderRadius: 16, border: '1px solid ' + (on ? color : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? color : 'transparent', color: on ? '#1a1a2e' : '#9fb0d0' });
+                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                        const csv = () => {
+                            const lines = [['סיווג', 'נכס', 'שם נכס', 'מצב מסירה', 'שימושים (ספר הנכסים)', 'תכניות מועמדות', 'הערה'].map(csvQ).join(',')];
+                            const SEC_HE = { gaps: 'פער לבדיקה', resolved: 'נפתר ע"י חפיפה', matched: 'תואם' };
+                            rows.forEach(r => lines.push([SEC_HE[r.section], r.a.asset_id, r.a.name, r.a.state, r.cats.join('; '), r.tabas.join('; '), noteFor(r)].map(csvQ).join(',')));
+                            if (opRows.length) {
+                                lines.push('');
+                                lines.push([csvQ('פערי מפעיל'), '', '', '', '', '', ''].join(','));
+                                opRows.forEach(r => r.opGaps.forEach(g => lines.push(['פער מפעיל', r.a.asset_id, r.a.name, r.a.state, g.cat, r.tabas.join('; '), (g.org || '') + ' (' + (g.use || '') + ')'].map(csvQ).join(','))));
+                            }
+                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'use_gaps.csv'; document.body.appendChild(a); a.click(); a.remove();
+                        };
+                        const prnt = () => {
+                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>פערי שימוש — הפרשות מול ספר הנכסים</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}h2{font-size:15px;margin-top:18px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#5c4636;color:#fff}</style></head><body><h1>⚖️ פערי שימוש — הפרשות מול ספר הנכסים העירוני</h1>';
+                            SECTIONS.forEach(([k, he]) => {
+                                const rs = secOf(k); if (!rs.length) return;
+                                h += '<h2>' + he + ' (' + rs.length + ')</h2><table><thead><tr><th>נכס</th><th>שם</th><th>מצב</th><th>שימושים</th><th>תכניות</th><th>הערה</th></tr></thead><tbody>';
+                                rs.forEach(r => { h += '<tr><td>' + r.a.asset_id + '</td><td>' + e2(r.a.name) + '</td><td>' + e2(r.a.state) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td><td>' + e2(noteFor(r)) + '</td></tr>'; });
+                                h += '</tbody></table>';
+                            });
+                            h += '</body></html>';
+                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
+                        };
+                        return (
+                            <div className="units-overlay" onClick={() => setShowUseGaps(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
+                                    <div className="units-header" style={{ background: '#5c4636' }}>
+                                        <h2>⚖️ פערי שימוש — הפרשות מול ספר הנכסים</h2>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowUseGaps(false)}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
+                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
+                                            השוואת השימוש שנקבע לנכס בספר הנכסים העירוני מול הפרוגרמה הסטטוטורית (טבלה 5) של התכניות במיקום.
+                                            נכס שיושב תחת כמה תכניות חופפות נבדק מול <b>כולן</b> — פער נספר רק כשאף תכנית לא מכסה את השימוש.
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                                            {[['נכסים שנבדקו', rows.length, '#d8def0'], ['תואמים', secOf('matched').length, '#86b89a'], ['נפתרו ע"י חפיפה', secOf('resolved').length, '#ffb74d'], ['פערים לבדיקה', secOf('gaps').length, '#ef9a9a'], ['פערי מפעיל', opRows.length, '#ce93d8']].map((k, i) => (
+                                                <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
+                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
+                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
+                                            {SECTIONS.map(([k, he, color]) => (
+                                                <button key={k} onClick={() => setUseGapsSection(k)} style={pill(useGapsSection === k, color)}>{he} ({secOf(k).length})</button>
+                                            ))}
+                                        </div>
+                                        <div style={{ fontSize: 11, color: '#8a9bc0', marginBottom: 8 }}>{secNote}</div>
+                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
+                                            <thead><tr style={{ background: '#241c16', color: '#d4a373' }}>
+                                                <th style={td}>נכס</th><th style={td}>שם הנכס (ספר הנכסים)</th><th style={td}>מצב מסירה</th><th style={td}>שימושים</th><th style={td}>תכניות במיקום</th><th style={td}>הערה</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {shown.map((r, i) => (
+                                                    <tr key={i} style={{ background: r.section === 'gaps' ? '#2a1d1d' : (r.section === 'resolved' ? '#2a2418' : 'transparent') }}>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}>{r.a.asset_id}</td>
+                                                        <td style={td} title={r.a.status || ''}>{r.a.name}</td>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap', color: r.a.state === 'נמסר' ? '#86b89a' : '#e0c08a' }}>{r.a.state}{r.a.opened ? <span style={{ color: '#8a9bc0', fontSize: 10 }}> ({r.a.opened})</span> : null}</td>
+                                                        <td style={td}>{r.cats.map((c, j) => (
+                                                            <span key={j} style={{ display: 'inline-block', margin: '1px 0 1px 4px', padding: '1px 7px', borderRadius: 10, fontSize: 11, background: r.unmatched.includes(c) ? '#5c2a2a' : '#243524', color: r.unmatched.includes(c) ? '#ef9a9a' : '#a5d6a7' }}>{c}</span>
+                                                        ))}</td>
+                                                        <td style={{ ...td, fontSize: 11 }}>{r.tabas.map((t, j) => (
+                                                            <div key={j} style={{ whiteSpace: 'nowrap' }}>
+                                                                <span style={{ color: r.cats.every(c => (r.winners[c] || []).includes(t)) ? '#86b89a' : (r.cats.some(c => (r.winners[c] || []).includes(t)) ? '#e0c08a' : '#ef9a9a') }}>●</span> {planDisp(t)}
+                                                            </div>
+                                                        ))}{r.tabas.length > 1 ? <div style={{ color: '#ffb74d', fontSize: 10 }}>⚠ {r.tabas.length} תכניות חופפות</div> : null}</td>
+                                                        <td style={{ ...td, fontSize: 11, color: r.section === 'gaps' ? '#ef9a9a' : '#9fb0d0' }}>{noteFor(r)}</td>
+                                                    </tr>
+                                                ))}
+                                                {!shown.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#8a9bc0' }}>אין נכסים בסיווג זה</td></tr>}
+                                            </tbody>
+                                        </table>
+                                        {opRows.length > 0 && (
+                                            <div style={{ marginTop: 14 }}>
+                                                <div style={{ fontWeight: 700, color: '#ce93d8', fontSize: 13, marginBottom: 4 }}>פערי מפעיל — הקצאה בשימוש שונה מהייעוד ({opRows.length})</div>
+                                                <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
+                                                    <thead><tr style={{ background: '#241c16', color: '#ce93d8' }}><th style={td}>נכס</th><th style={td}>מפעיל</th><th style={td}>שימוש בפועל</th><th style={td}>ייעוד הנכס</th><th style={td}>תכניות</th></tr></thead>
+                                                    <tbody>{opRows.map((r, i) => r.opGaps.map((g, j) => (
+                                                        <tr key={i + '_' + j}>
+                                                            <td style={td}>{r.a.name}</td>
+                                                            <td style={td}>{g.org}</td>
+                                                            <td style={{ ...td, color: '#ce93d8' }}>{g.use} → {g.cat}</td>
+                                                            <td style={td}>{r.cats.join(', ')}</td>
+                                                            <td style={{ ...td, fontSize: 11 }}>{r.tabas.join(', ')}</td>
+                                                        </tr>
+                                                    )))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>מקור: ספר הנכסים וספר ההקצאות העירוניים (עדכון {(D.meta || {}).source_refresh || ''}) מול טבלה 5. הסיווג אוטומטי מטקסט חופשי — פער הוא מועמד לבירור, לא קביעה.</div>
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                            <button onClick={csv} style={{ background: '#5c4636', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
+                                            <button onClick={prnt} style={{ background: '#3a2e26', border: '1px solid #5c4636', color: '#e8d9c8', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── Education Forecast (Yotam per-חומש) vs current status ── */}
                     {showEduForecast && (() => {
                         const N = eduForecastChumash;
@@ -22529,6 +22686,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">קומות הפרשות מבונות</span>
                                                     <span className="report-desc">טבלת קומה לכל הפרשה + ייצוא</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowUseGaps(true); }}>
+                                                <span className="report-icon">⚖️</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">פערי שימוש — ספר הנכסים</span>
+                                                    <span className="report-desc">שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות</span>
                                                 </div>
                                             </button>
                                         </div>

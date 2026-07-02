@@ -24,11 +24,37 @@ are embedded per asset by מספר נכס.
 
 Run after fetch_muni_books.py. Idempotent.
 """
-import json, sys, io, os, datetime, collections
+import json, sys, io, os, re, datetime, collections
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# Use-category taxonomy shared by the popup refinement and the use-gaps
+# report. Classified here (single source of truth) so the app ships no regex
+# copy. Labels are what the UI shows. "generic" is the wildcard "מבנים
+# ומוסדות ציבור" designation — it covers every PUBLIC category below but NOT
+# commerce/housing (those are not public uses).
+USE_CATS = [
+    ("גן ילדים",           r'גן ילדים|גני ילדים|כיתות גן|כיתת גן|גנ"?י'),
+    ("מעון",               r"מעון|מעונות"),
+    ("בי\"ס/חינוך",        r'בי"?ס|בית ספר|חינוך'),
+    ("בית כנסת",           r'בית ה?כנסת|ביכ"?נ|בתי כנסת|\bדת\b'),
+    ("מקווה",              r"מקווה|מקוה"),
+    ("קהילה/רווחה/תרבות",  r'קהיל|רווחה|מתנ"?ס|תרבות|מועדון|פנאי|העצמה|שיקום|מינהל קהילתי|קשיש|גיל שלישי|גיל רך|נוער|חברה'),
+    ("ספורט",              r"ספורט|טניס"),
+    ("בריאות",             r"טיפת חלב|מרפאה|בריאות"),
+    ("דיור",               r"דירה|דיור מוגן|מוגבלויות"),
+    ("מסחר/תעסוקה",        r"מסחר|תעסוקה|משרדים"),
+]
+NON_PUBLIC = {"מסחר/תעסוקה", "דיור"}
+GENERIC_RE = re.compile(
+    r"מבני ציבור|מבנים ומוסדות ציבור|ומוסדות מבנים ציבור|שימוש ציבורי|לציבור|מוסדות ציבור")
+
+
+def classify_uses(text):
+    t = str(text or "")
+    return [label for label, rx in USE_CATS if re.search(rx, t)]
 
 try:
     from shapely.geometry import shape, Point
@@ -84,6 +110,8 @@ def main():
         alloc_by_asset[a["מספר נכס"]].append({
             "org": a.get("שם"),
             "use": a.get("שימוש"),
+            "cats": classify_uses(
+                str(a.get("שימוש") or "") + " " + str(a.get("שם") or "")),
             "active": a.get("פעיל"),
             "approved": _date(a.get("אישור מועצה אחרון")),
             "semel": a.get('סמל מוסד מנח"י') or None,
@@ -129,10 +157,18 @@ def main():
             aid = r["מספר נכס"]
             asset = out[taba].get(aid)
             if asset is None:
+                # Use categories: the descriptive asset NAME is the reliable
+                # signal; the שימוש עיקרי field is usually the catch-all
+                # "הפרשה מבונה - חברה/קהילה/רווחה" bucket, so it is only a
+                # fallback when the name says nothing specific.
+                cats = classify_uses(r.get("שם נכס"))
+                if not cats:
+                    cats = classify_uses(r.get("שימוש עיקרי"))
                 asset = out[taba][aid] = {
                     "asset_id": aid,
                     "name": r.get("שם נכס"),
                     "use": r.get("שימוש עיקרי"),
+                    "cats": cats,
                     "status": r.get("סטטוס"),
                     "state": delivery_state(r.get("סטטוס")),
                     "opened": _date(r.get("תאריך פתיחת נכס")),
@@ -147,6 +183,16 @@ def main():
     plans_out = {t: sorted(assets.values(), key=lambda a: a["asset_id"])
                  for t, assets in sorted(out.items())}
     n_assets = sum(len(v) for v in plans_out.values())
+    # Per-plan declared-use categories from the statutory program text, for
+    # the use-gaps report (asset cats vs plan cats, overlap-aware in-app).
+    plan_cats = {}
+    for t in plans_out:
+        p = next((pp for pp in props if str(pp.get("taba") or "") == t), {})
+        prg = " ; ".join(str(p.get(k) or "")
+                         for k in ("hafrash_prg", "shavatz_out_prog"))
+        plan_cats[t] = {"cats": classify_uses(prg),
+                        "generic": bool(GENERIC_RE.search(prg)),
+                        "name": p.get("plan_name_he") or ""}
     # Sanity floor for unattended runs: 85 plans / 134 assets on 2026-07-02.
     # A near-empty result means an input broke — abort, keep the committed file.
     if len(plans_out) < 20 or n_assets < 30:
@@ -161,6 +207,8 @@ def main():
             "assets": n_assets,
         },
         "plans": plans_out,
+        "plan_cats": plan_cats,
+        "non_public_cats": sorted(NON_PUBLIC),
     }
     dest = os.path.join(os.path.dirname(
         _find(["..", "data", "plans.geojson"])), "hafrasha_delivery.json")
@@ -168,7 +216,9 @@ def main():
     # cron doesn't produce a commit whose only diff is the meta dates.
     if os.path.exists(dest):
         try:
-            if _load(dest).get("plans") == plans_out:
+            old = _load(dest)
+            if (old.get("plans") == plans_out
+                    and old.get("plan_cats") == plan_cats):
                 print("no content change — keeping existing file")
                 return
         except Exception:
