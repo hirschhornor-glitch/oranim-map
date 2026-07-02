@@ -4272,7 +4272,11 @@
                     const cols = []; let cur = '', inQ = false;
                     for (let i = 0; i < row.length; i++) {
                         const c = row[i];
-                        if (c === '"') { inQ = !inQ; }
+                        if (c === '"') {
+                            // RFC 4180: doubled quote inside a quoted field is a literal "
+                            if (inQ && row[i + 1] === '"') { cur += '"'; i++; }
+                            else { inQ = !inQ; }
+                        }
                         else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
                         else { cur += c; }
                     }
