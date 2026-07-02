@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-developers-report-r7';
+        const APP_VERSION = '2026-07-02-hafrasha-delivery';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4243,6 +4243,7 @@
                 window.__extraPermits = {};
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
+                window.__hafrashaDelivery = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4263,6 +4264,7 @@
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
+                    ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4707,6 +4709,7 @@
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
+                            else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -8285,6 +8288,19 @@
                 function effectivePlanStatus(taba, status) {
                     return planHasPermit(taba) ? PERMIT_STATUS_LABEL : status;
                 }
+                // "מסירה בפועל" — delivery-evidence assets per plan from the muni
+                // property book join (data/hafrasha_delivery.json). A plan is "נמסר"
+                // when all its assets are registered in the city's name, partial when
+                // some are, otherwise "בתהליך".
+                const _dlvByTaba = (window.__hafrashaDelivery || {}).plans || {};
+                function deliveryLabel(taba) {
+                    const list = _dlvByTaba[String(taba || '').trim()];
+                    if (!Array.isArray(list) || !list.length) return '';
+                    const done = list.filter(a => a.state === 'נמסר').length;
+                    return done >= list.length ? 'נמסר (' + list.length + ')'
+                        : done > 0 ? 'נמסר חלקית (' + done + '/' + list.length + ')'
+                        : 'בתהליך (' + list.length + ')';
+                }
                 const propsByTaba = {};
                 if (gd.plans) gd.plans.features.forEach(f => {
                     const t = String((f.properties || {}).taba || '').trim();
@@ -8363,10 +8379,13 @@
                     const hasPermit = planHasPermit(r.taba);
                     const dispStatus = hasPermit ? PERMIT_STATUS_LABEL : r.status;
                     const statusStyle = hasPermit ? 'color:' + PERMIT_STATUS_COLOR + ';font-weight:bold' : 'color:#999';
+                    const dlv = deliveryLabel(r.taba);
+                    const dlvStyle = dlv.indexOf('נמסר (') === 0 ? 'color:#86b89a;font-weight:bold' : dlv ? 'color:#e0c08a' : 'color:#555';
                     return '<tr style="border-bottom:1px solid #222">' +
                     '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                     '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;' + statusStyle + '">' + esc(dispStatus) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="מסירה בפועל לפי ספר הנכסים העירוני">' + (dlv ? esc(dlv) : '—') + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
                     '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
@@ -8395,6 +8414,7 @@
                         kpi('שב"צ עתידי (מ"ר)', Math.round(totalOut).toLocaleString(), '#c9a227') +
                         kpi('הפרשה מבונה (מ"ר)', Math.round(totalHaf).toLocaleString(), '#b5651d') +
                         kpi('סה"כ שטח ציבור (מ"ר)', Math.round(totalOut + totalHaf).toLocaleString(), '#e8d9c8') +
+                        kpi('מסירה בפועל (תכניות)', rows.filter(r => deliveryLabel(r.taba)).length, '#86b89a') +
                     '</div>' +
                     (useRows
                         ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
@@ -8402,7 +8422,7 @@
                         : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') +
                     '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + detailRows.length + ')</h4>' +
                     (planRows
-                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>'
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>'
                         : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') +
                     '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' +
                         '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
@@ -8424,8 +8444,8 @@
                     lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
                     PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
                     lines.push('');
-                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
-                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(effectivePlanStatus(r.taba, r.status)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
+                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(effectivePlanStatus(r.taba, r.status)), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -19118,6 +19138,35 @@
                     } else if (_stgRec.single_phase) {
                         html += '<div style="font-size:10px;color:#86b89a;margin-top:6px;padding-top:5px;border-top:1px solid #444">מתקבלת במלואה — הבנייה בהינף אחד, ללא שלביות.</div>';
                     }
+                }
+                // ── מסירה בפועל (ספר הנכסים העירוני) ──
+                // Delivery-evidence assets joined from the muni property + allocation
+                // books (data/hafrasha_delivery.json): assets the city opened for this
+                // plan's hafrasha process, their registration state, and which עמותה
+                // already operates them.
+                const _dlvPlans = (window.__hafrashaDelivery || {}).plans || {};
+                const _dlvKey = String(parseInt(String(taba).replace(/^101-?/, '').replace(/[^\d]/g, ''), 10) || '');
+                const _dlv = _dlvPlans[taba] || _dlvPlans[_dlvKey];
+                if ((isHafrashah || hasLotEntries || isFuture) && Array.isArray(_dlv) && _dlv.length) {
+                    const _escD = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    const _nDone = _dlv.filter(a => a.state === 'נמסר').length;
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(134,184,154,0.10);border:1px solid rgba(134,184,154,0.35);border-radius:5px">';
+                    html += '<div style="font-weight:bold;color:#86b89a;font-size:11px;margin-bottom:3px">מסירה בפועל — ספר הנכסים העירוני</div>';
+                    html += '<div style="font-size:10px;color:#c4ccda;margin-bottom:3px">' + _dlv.length + ' נכסי הפרשה נפתחו בעירייה בתחום התכנית' + (_nDone ? ' (' + _nDone + ' נרשמו בבעלות העירייה)' : '') + ':</div>';
+                    _dlv.forEach(a => {
+                        const col = a.state === 'נמסר' ? '#86b89a' : '#e0c08a';
+                        html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0" title="' + _escD(a.status || '') + (a.parcels && a.parcels.length ? ' · גוש/חלקה ' + _escD(a.parcels.join(', ')) : '') + '">' +
+                            '<span style="color:' + col + '">●</span> ' + _escD(a.name || a.use) +
+                            ' — <span style="color:' + col + ';font-weight:bold">' + _escD(a.state) + '</span>' +
+                            (a.opened ? ' <span style="color:#8a8a9a">(' + _escD(a.opened) + ')</span>' : '') +
+                            '</div>';
+                        (a.allocations || []).forEach(al => {
+                            if (!al || al.active === 0 || al.active === '0') return;
+                            html += '<div style="font-size:9.5px;color:#bcc6d8;margin:0 12px 2px 0">↳ מופעל ע"י: ' + _escD(al.org || '') + (al.use ? ' · ' + _escD(al.use) : '') + (al.approved ? ' · אישור מועצה ' + _escD(al.approved) : '') + '</div>';
+                        });
+                    });
+                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר הנכסים וספר ההקצאות העירוניים · עדכון ' + _escD(((window.__hafrashaDelivery || {}).meta || {}).source_refresh || '') + '</div>';
+                    html += '</div>';
                 }
 
                 html += '</div>';

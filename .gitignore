@@ -36,3 +36,5 @@ __pycache__/
 data/execution_staging.json.done
 data/execution_staging.json.tmp
 data/execution_staging.json.cur
+scripts/sources/muni_property_book.json
+scripts/sources/muni_allocation_book.json

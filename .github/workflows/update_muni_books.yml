@@ -1,0 +1,62 @@
+name: Update Muni Books (מסירה בפועל)
+
+# Refreshes data/hafrasha_delivery.json from the city's public property +
+# allocation books (Power BI). The books refresh ~daily, but delivery states
+# (asset opened / ownership registered) move on a weeks-to-months scale, so a
+# weekly pull is plenty. Raw books land in scripts/sources/ (gitignored) —
+# only the slim join is committed.
+
+on:
+  schedule:
+    - cron: '15 3 * * 0'   # Weekly, Sunday 03:15 UTC (06:15 Israel)
+  workflow_dispatch:         # Manual trigger
+
+# Needed so the auto-commit step can push back to master.
+permissions:
+  contents: write
+
+# Avoid clashing with the app.js rebuild (deploy.yml) when both push to master.
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # Persist PAT credentials so `git push` works (the default GITHUB_TOKEN
+          # is read-only here — without this the push fails silently). Mirrors
+          # deploy.yml / update_tree_permits.yml.
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install shapely
+
+      - name: Fetch muni books (Power BI → scripts/sources/)
+        run: python scripts/fetch_muni_books.py
+
+      - name: Build delivery join (→ data/hafrasha_delivery.json)
+        run: python scripts/build_hafrasha_delivery.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/hafrasha_delivery.json
+          if git diff --cached --quiet; then
+            echo "No change in hafrasha_delivery.json — nothing to commit."
+            exit 0
+          fi
+          git commit -m "auto: update hafrasha delivery from muni books [skip ci]"
+          # Rebase onto any concurrent pushes (deploy bot, data cron) then push.
+          # No `|| true` — a real push failure should surface, not hide.
+          git pull --rebase --autostash origin master
+          git push
