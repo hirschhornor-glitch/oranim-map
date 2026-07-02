@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-dev-map-view';
+        const APP_VERSION = '2026-07-02-dev-sort-search';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2301,6 +2301,7 @@
             const [developersReport, setDevelopersReport] = useState(false);
             const [devRepMinahak, setDevRepMinahak] = useState('all');
             const [devRepQ, setDevRepQ] = useState('');
+            const [devRepSort, setDevRepSort] = useState('plans'); // 'plans' | 'units'
             const [devRepExpanded, setDevRepExpanded] = useState(null);
             // הדגשת כל תכניות יזם על המפה: {name, plans, units} + שכבת Leaflet זמנית
             const [devMapSel, setDevMapSel] = useState(null);
@@ -2320,6 +2321,9 @@
             const [flrFrom, setFlrFrom] = useState('');
             const [flrTo, setFlrTo] = useState('');
             const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
+            // Use-gaps report: asset uses (ספר הנכסים) vs plan program, overlap-aware.
+            const [showUseGaps, setShowUseGaps] = useState(false);
+            const [useGapsSection, setUseGapsSection] = useState('gaps'); // gaps | resolved | matched
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
@@ -4855,11 +4859,12 @@
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
                 meetingsReport, specialHousingReport, masterPlanReport,
-                developersReport, devRepMinahak, devRepQ,
+                developersReport, devRepMinahak, devRepQ, devRepSort,
                 showEduForecast, eduForecastChumash, eduForecastNb,
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
                 showFloorReport, flrFrom, flrTo, flrDoms,
+                showUseGaps, useGapsSection,
                 showPublicNeeds, publicNeedsMinahak, reportScope,
             ]);
 
@@ -8378,9 +8383,18 @@
                         // is dropped rather than shown as an empty "—" row.
                         if (!keys.length) {
                             const genericSqm = uncategorizedSqm || totalSqm || 0;
+                            // Refinement from the muni property book: when the statutory text is
+                            // generic ("מבנים ומוסדות ציבור"), the delivered assets say what the
+                            // space actually becomes (גן/בית כנסת/מעון…). הפרשה source only —
+                            // delivery evidence is by definition the hafrasha process.
+                            let use = 'מבני ציבור (כללי / לא מסווג)';
+                            if (source === 'הפרשה מבונה') {
+                                const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
+                                if (dlvCats.length) use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
+                            }
                             if (genericSqm > 0) detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use: 'מבני ציבור (כללי / לא מסווג)', count: 0, unit: '', sqm: genericSqm,
+                                use, count: 0, unit: '', sqm: genericSqm,
                             });
                         }
                     });
@@ -12036,8 +12050,8 @@
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
-                        ser: () => ({ min: devRepMinahak, q: devRepQ }),
-                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); } },
+                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
+                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
                     { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
                         ser: () => ({ mp: masterPlanReport }) },
                     { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
@@ -12052,6 +12066,9 @@
                     { key: 'floorReport', isOpen: () => showFloorReport, open: () => setShowFloorReport(true),
                         ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
+                    { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true),
+                        ser: () => ({ sec: useGapsSection }),
+                        apply: p => { if (p.sec) setUseGapsSection(p.sec); } },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
@@ -27626,11 +27643,15 @@
                         }
                         let rows = Object.values(devMap);
                         const q = devRepQ.trim();
-                        if (q) rows = rows.filter(r => r.name.indexOf(q) !== -1);
+                        // חיפוש לפי שם יזם או לפי תכנית (מספר / שם)
+                        if (q) rows = rows.filter(r =>
+                            r.name.indexOf(q) !== -1 ||
+                            r.plans.some(pl => pl.pn.indexOf(q) !== -1 || (pl.summary || '').indexOf(q) !== -1));
                         rows.sort((a, b) => {
                             if (a.name === 'לא ידוע') return 1;
                             if (b.name === 'לא ידוע') return -1;
-                            return b.units - a.units || b.plans.length - a.plans.length;
+                            if (devRepSort === 'units') return b.units - a.units || b.plans.length - a.plans.length;
+                            return b.plans.length - a.plans.length || b.units - a.units;
                         });
 
                         const totals = { units: 0, plans: 0 };
@@ -27762,8 +27783,13 @@
                                             <option value="all">כל המינה"קים</option>
                                             {[...allMinahaks].sort().map(m => <option key={m} value={m}>{m}</option>)}
                                         </select>
-                                        <input value={devRepQ} onChange={e => setDevRepQ(e.target.value)} placeholder="חיפוש יזם..."
+                                        <input value={devRepQ} onChange={e => setDevRepQ(e.target.value)} placeholder="חיפוש יזם / תכנית..."
                                             style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12,minWidth:160}} />
+                                        <select value={devRepSort} onChange={e => setDevRepSort(e.target.value)}
+                                            style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12}}>
+                                            <option value="plans">מיון: מס' תכניות</option>
+                                            <option value="units">מיון: סה"כ יח"ד</option>
+                                        </select>
                                     </div>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0,zIndex:1}}>
