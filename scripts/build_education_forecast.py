@@ -51,6 +51,14 @@ MANUAL_TABA_BY_ID = {
     "4": "1297548",   # מתחם לוריא — "בית הספר לוריא"
 }
 
+# Display-name corrections for facilities whose xlsx name is misleading.
+# Keyed by the raw xlsx name (col 6).  Value replaces it in the JSON output.
+NAME_OVERRIDES = {
+    # קדמת גונן is on בר יוחאי 5-15, NOT סן מרטין 5-15 (xlsx address is wrong).
+    "גן ילדים מתחם סן מרטין 5-15 (קדמת גונן)": "גן ילדים מתחם בר יוחאי 5-15 (קדמת גונן)",
+    "מעונות יום מתחם סן מרטין 5-15 (קדמת גונן)": "מעונות יום מתחם בר יוחאי 5-15 (קדמת גונן)",
+}
+
 
 def norm_tabas(v):
     """Yotam 'מספר תכנית' -> list of plan keys matching plans.geojson `taba`.
@@ -315,7 +323,7 @@ def main():
     manhi_hits = 0
     for r in ws.iter_rows(min_row=7, values_only=True):
         status = txt(r[C(4)])
-        name = txt(r[C(6)])
+        name = NAME_OVERRIDES.get(txt(r[C(6)]), txt(r[C(6)]))
         if not status and not name:
             continue  # blank spacer row
         tabas = norm_tabas(r[C(21)])
