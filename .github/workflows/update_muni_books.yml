@@ -46,16 +46,22 @@ jobs:
       - name: Build delivery join (→ data/hafrasha_delivery.json)
         run: python scripts/build_hafrasha_delivery.py
 
+      - name: Fetch excavation permits (muni GIS 232 → data/excavation_permits.json)
+        run: python scripts/fetch_excavation_permits.py
+
+      - name: Fetch permit GIS points (muni GIS 2110 → data/permit_gis_points.json)
+        run: python scripts/fetch_permit_gis_points.py
+
       - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hafrasha_delivery.json
+          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson
           if git diff --cached --quiet; then
-            echo "No change in hafrasha_delivery.json — nothing to commit."
+            echo "No data change — nothing to commit."
             exit 0
           fi
-          git commit -m "auto: update hafrasha delivery from muni books [skip ci]"
+          git commit -m "auto: update muni books + GIS layers data [skip ci]"
           # Rebase onto any concurrent pushes (deploy bot, data cron) then push.
           # No `|| true` — a real push failure should surface, not hide.
           git pull --rebase --autostash origin master

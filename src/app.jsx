@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-03-use-gaps-jump';
+        const APP_VERSION = '2026-07-03-excavation-gis';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2201,7 +2201,8 @@
                 consolidation: false,    // תכניות איחוד וחלוקה
                 rental: false,           // פרוייקטים עם דירות להשכרה
                 permit_objections: false, // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
-                tree_permits: false       // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
+                tree_permits: false,      // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
+                excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -4259,6 +4260,7 @@
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
                 window.__hafrashaDelivery = {};
+                window.__excavationPermits = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4281,6 +4283,7 @@
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
+                    ['__excavationPermits', 'data/excavation_permits.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4727,6 +4730,7 @@
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
+                            else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -16742,6 +16746,41 @@
                     geoLayersRef.current.treePermits = treeGroup;
                 }
 
+                // --- היתרי חפירה בתוקף (GIS עירוני, שכבה 232) — "עבודות בשטח" ---
+                if (planningTopics.excavation && window.__excavationPermits && window.__excavationPermits.permits) {
+                    const excGroup = L.layerGroup().addTo(map);
+                    const _escX = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const today = new Date().toISOString().slice(0, 10);
+                    window.__excavationPermits.permits.forEach(rec => {
+                        // The muni layer is nominally "בתוקף" but carries stale rows — hide
+                        // permits whose validity window already ended.
+                        if (rec.tokef_to && rec.tokef_to < today) return;
+                        const poly = L.geoJSON(rec.geometry, {
+                            style: { color: '#ff8f00', weight: 2, dashArray: '6,4', fillColor: '#ffb74d', fillOpacity: 0.18 },
+                        });
+                        poly.on('click', (e) => {
+                            let html = '<div class="plan-popup-inner" style="direction:rtl;min-width:230px">';
+                            html += '<div style="font-weight:bold;color:#ff8f00;font-size:13px;margin-bottom:4px">🚧 היתר חפירה ' + _escX(rec.tik || '') + '</div>';
+                            const row = (l, v) => v ? '<div class="popup-row"><span class="popup-row-label">' + l + '</span><span class="popup-row-value" style="font-size:11px;max-width:210px;word-wrap:break-word">' + _escX(v) + '</span></div>' : '';
+                            html += row('יזם', rec.yazam);
+                            html += row('מטרה', rec.matara);
+                            html += row('קבלן', rec.kablan);
+                            html += row('בתוקף', (rec.tokef_from && rec.tokef_to) ? rec.tokef_from + ' → ' + rec.tokef_to : '');
+                            html += row('שעות', rec.hours_day);
+                            html += row('סטטוס', rec.status);
+                            if (rec.mahut) html += '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:10.5px;color:#8899bb">מהות העבודה</summary><div style="font-size:10.5px;color:#c4ccda;margin-top:3px">' + _escX(rec.mahut) + '</div></details>';
+                            html += '<div style="font-size:9px;color:#8a8a9a;margin-top:4px">מקור: GIS עירוני — היתרי חפירה בתוקף</div>';
+                            html += '</div>';
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(e.latlng)
+                                .setContent(html)
+                                .openOn(map);
+                        });
+                        poly.addTo(excGroup);
+                    });
+                    geoLayersRef.current.excavationPermits = excGroup;
+                }
+
                 // --- Tama38 ---
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
@@ -20463,6 +20502,13 @@
                                 <button className="layer-legend-btn" title="דוח אישורי כריתת עצים פתוחים לערר"
                                     onClick={(e) => { e.stopPropagation(); setTreePermitsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='פוליגונים של היתרי חפירה / הגבלת שימוש בדרך בתוקף — יזם, קבלן, מהות ותקופת העבודה (מקור: GIS עירוני, מתעדכן בשליפה)'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, excavation: !prev.excavation}))}>
+                                <input type="checkbox" checked={planningTopics.excavation} onChange={() => {}} />
+                                <label style={{flex:1}}>🚧 היתרי חפירה בתוקף (עבודות בשטח)</label>
                             </div>
                             </div>)}
                         </div>
