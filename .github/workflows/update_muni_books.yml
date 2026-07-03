@@ -46,6 +46,9 @@ jobs:
       - name: Build delivery join (→ data/hafrasha_delivery.json)
         run: python scripts/build_hafrasha_delivery.py
 
+      - name: Build asset allocations join (→ data/asset_allocations.json)
+        run: python scripts/build_asset_allocations.py
+
       - name: Fetch excavation permits (muni GIS 232 → data/excavation_permits.json)
         run: python scripts/fetch_excavation_permits.py
 
@@ -59,7 +62,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson data/ortho_quarters.json
+          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson data/ortho_quarters.json data/asset_allocations.json
           if git diff --cached --quiet; then
             echo "No data change — nothing to commit."
             exit 0

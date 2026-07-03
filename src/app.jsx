@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-03-ortho-viewer';
+        const APP_VERSION = '2026-07-03-asset-allocations';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -964,6 +964,20 @@
                 desc: 'תצלום אוויר',
                 url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+            },
+            muniOrtho: {
+                name: 'תצ"א עירונית (רבעונית)',
+                desc: 'אורתופוטו עירוני עדכני לתחום אורנים (מראה של הרבעון האחרון); מחוץ לתחום — Esri',
+                // Base: Esri (city-wide context). Overlay: our Web-Mercator mirror of the
+                // muni quarterly ortho (repo oranim-ortho-tiles, rebuilt when a new
+                // quarter is published) — the muni serves ITM-only tiles, hence the mirror.
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '&copy; Esri · תצ"א עירונית: עיריית ירושלים',
+                overlayUrl: 'https://hirschhornor-glitch.github.io/oranim-ortho-tiles/tiles/{z}/{x}/{y}.jpg',
+                overlayOptions: {
+                    bounds: [[31.718685, 35.134465], [31.781668, 35.234807]],
+                    minNativeZoom: 12, maxNativeZoom: 18, maxZoom: 22,
+                },
             },
             none: {
                 name: 'ללא',
@@ -2804,6 +2818,7 @@
             const geoDataRef = useRef({});
             const geoLayersRef = useRef({});
             const baseTileRef = useRef(null);
+            const baseOverlayRef = useRef(null); // second tile layer for composite basemaps (muniOrtho)
             const layersRef = useRef(layers);
             // taba -> Set(other tabas this plan geometrically overlaps with).
             // Populated once when plans data arrives. Used by the "overlapping"
@@ -4267,6 +4282,7 @@
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
                 window.__orthoQuarters = {};
+                window.__assetAllocations = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4291,6 +4307,7 @@
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
+                    ['__assetAllocations', 'data/asset_allocations.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4739,6 +4756,7 @@
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
+                            else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -4829,6 +4847,10 @@
                     map.removeLayer(baseTileRef.current);
                     baseTileRef.current = null;
                 }
+                if (baseOverlayRef.current) {
+                    map.removeLayer(baseOverlayRef.current);
+                    baseOverlayRef.current = null;
+                }
 
                 const bm = BASEMAPS[basemap];
                 if (bm.url) {
@@ -4840,12 +4862,25 @@
                     }).addTo(map);
                     baseTileRef.current.bringToBack();
                 }
+                // Composite basemap: a second tile source drawn over the base within its
+                // bounds (muni quarterly ortho mirror over Esri). Same pane as the base —
+                // added after it, so it stacks above; both stay under all vector panes.
+                if (bm.overlayUrl) {
+                    baseOverlayRef.current = L.tileLayer(bm.overlayUrl, {
+                        ...(bm.overlayOptions || {}),
+                        opacity: basemapOpacity,
+                        crossOrigin: 'anonymous',
+                    }).addTo(map);
+                }
             }, [basemap]);
 
             // Update basemap opacity without recreating layer
             useEffect(() => {
                 if (baseTileRef.current) {
                     baseTileRef.current.setOpacity(basemapOpacity);
+                }
+                if (baseOverlayRef.current) {
+                    baseOverlayRef.current.setOpacity(basemapOpacity);
                 }
             }, [basemapOpacity]);
 
@@ -19283,12 +19318,41 @@
                             ' — <span style="color:' + col + ';font-weight:bold">' + _escD(a.state) + '</span>' +
                             (a.opened ? ' <span style="color:#8a8a9a">(' + _escD(a.opened) + ')</span>' : '') +
                             '</div>';
-                        (a.allocations || []).forEach(al => {
-                            if (!al || al.active === 0 || al.active === '0') return;
-                            html += '<div style="font-size:9.5px;color:#bcc6d8;margin:0 12px 2px 0">↳ מופעל ע"י: ' + _escD(al.org || '') + (al.use ? ' · ' + _escD(al.use) : '') + (al.approved ? ' · אישור מועצה ' + _escD(al.approved) : '') + '</div>';
+                        const _actAl = (a.allocations || []).filter(al => al && al.active !== 0 && al.active !== '0');
+                        _actAl.forEach(al => {
+                            html += '<div style="font-size:9.5px;color:#bcc6d8;margin:0 12px 2px 0">↳ מופעל ע"י: ' + _escD(al.org || '') + (al.use ? ' · <b>' + _escD(al.use) + '</b>' : '') + (al.approved ? ' · אישור מועצה ' + _escD(al.approved) : '') + '</div>';
                         });
+                        // The final USE choice is only made at allocation time — say so
+                        // explicitly while it hasn't happened (tracked by the weekly cron).
+                        if (!_actAl.length) {
+                            html += '<div style="font-size:9px;color:#8a8a9a;margin:0 12px 2px 0">↳ טרם הוקצה לעמותה — השימוש הסופי ייקבע בהקצאה (במעקב)</div>';
+                        }
                     });
                     html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר הנכסים וספר ההקצאות העירוניים · עדכון ' + _escD(((window.__hafrashaDelivery || {}).meta || {}).source_refresh || '') + '</div>';
+                    html += '</div>';
+                }
+                // ── ההקצאות בנכס (שב"צ קיים) — "מה נבחר בסוף" ──
+                // The plan's permitted envelope is broad; the allocation book records
+                // the actual fine-grained choice (תיאטרון/מעון/בית כנסת…) and operator.
+                // Joined offline by asset-centroid-in-polygon (build_asset_allocations).
+                const _aalRecs = !isFuture && props.fid != null
+                    ? (((window.__assetAllocations || {}).by_fid || {})[String(props.fid)] || [])
+                    : [];
+                if (_aalRecs.length) {
+                    const _escA = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const _actA = _aalRecs.filter(al => al.active !== 0 && al.active !== '0');
+                    const _shown = _actA.length ? _actA : _aalRecs;
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(206,147,216,0.10);border:1px solid rgba(206,147,216,0.35);border-radius:5px">';
+                    html += '<div style="font-weight:bold;color:#ce93d8;font-size:11px;margin-bottom:3px">הקצאות בנכס — השימוש שנבחר בפועל</div>';
+                    _shown.forEach(al => {
+                        html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0">' +
+                            '<b style="color:#ce93d8">' + _escA(al.use || '—') + '</b>' +
+                            (al.org ? ' — ' + _escA(al.org) : '') +
+                            (al.approved ? ' <span style="color:#8a8a9a">(אישור מועצה ' + _escA(al.approved) + ')</span>' : '') +
+                            ((al.active === 0 || al.active === '0') ? ' <span style="color:#e0c08a">· לא פעיל</span>' : '') +
+                            '</div>';
+                    });
+                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר ההקצאות העירוני (מתעדכן שבועית)</div>';
                     html += '</div>';
                 }
 
