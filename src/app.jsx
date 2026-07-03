@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-03-excavation-gis';
+        const APP_VERSION = '2026-07-03-ortho-viewer';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2254,6 +2254,11 @@
             // Marker-coords tool: capture coords for updating recommendations / polygons.
             const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'line' | 'polygon'
             const markerCoordsModeRef = useRef(null);
+            // תצ"א רבעונית — muni quarterly orthophoto viewer (ITM tile services)
+            const [orthoViewer, setOrthoViewer] = useState(false);
+            const [orthoQ, setOrthoQ] = useState(null);            // selected quarter id (null = newest)
+            const [orthoCompareQ, setOrthoCompareQ] = useState(null); // second pane quarter id (null = single pane)
+            const orthoMapsRef = useRef([]);
             const [markerCoordsPts, setMarkerCoordsPts] = useState(0);
             const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'line'|'polygon', points:[{lat,lng}] }
             const markerCoordsRef = useRef({ points: [], markers: [], polygon: null });
@@ -4261,6 +4266,7 @@
                 window.__floorAllocations = {};
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
+                window.__orthoQuarters = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4284,6 +4290,7 @@
                     ['__floorAllocations', 'data/floor_allocations.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
+                    ['__orthoQuarters', 'data/ortho_quarters.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4731,6 +4738,7 @@
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
+                            else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -6429,6 +6437,54 @@
                     r.corner1 = null;
                 };
             }, [printAreaMode]);
+
+            // ── תצ"א רבעונית: synced ITM viewer(s) over the muni quarterly ortho tiles ──
+            // The tile caches are EPSG:2039-only (no dynamic export), so they can't be
+            // overlaid on the main 3857 map; instead the modal hosts standalone Leaflet
+            // map(s) with a Proj4Leaflet CRS, opened at the main map's center.
+            useEffect(() => {
+                orthoMapsRef.current.forEach(m => { try { m.remove(); } catch (e) {} });
+                orthoMapsRef.current = [];
+                if (!orthoViewer) return;
+                const OQ = window.__orthoQuarters || {};
+                if (!OQ.quarters || !OQ.quarters.length || !OQ.tile || !window.L.Proj) return;
+                const q1 = orthoQ || OQ.quarters[0].id;
+                const panes = orthoCompareQ ? [[q1, 'ortho-pane-a'], [orthoCompareQ, 'ortho-pane-b']] : [[q1, 'ortho-pane-a']];
+                const maxLod = OQ.tile.resolutions.length - 1;
+                const main = mapInstanceRef.current;
+                const c = main ? main.getCenter() : L.latLng(31.75, 35.21);
+                // main-map zoom → nearest ortho LOD by ground resolution (m/px)
+                const mainRes = 156543.03392 * Math.cos(c.lat * Math.PI / 180) / Math.pow(2, main ? main.getZoom() : 15);
+                let z = 0; OQ.tile.resolutions.forEach((r, i) => { if (r >= mainRes) z = i; });
+                z = Math.min(z, maxLod);
+                const created = panes.map(([qid, elId]) => {
+                    const el = document.getElementById(elId);
+                    if (!el) return null;
+                    // A fresh CRS per map — Proj4Leaflet CRS instances hold no per-map state,
+                    // but sharing one across removed maps has bitten others; cheap to rebuild.
+                    // (proj4leaflet wants the def STRING, not proj4.defs()'s parsed object.)
+                    const crs = new L.Proj.CRS('EPSG:2039',
+                        '+proj=tmerc +lat_0=31.7343936111111 +lon_0=35.2045169444444 ' +
+                        '+k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 ' +
+                        '+towgs84=-24.0024,-17.1032,-17.8444,-0.33077,-1.85269,1.66969,5.4248 ' +
+                        '+units=m +no_defs',
+                        { origin: OQ.tile.origin, resolutions: OQ.tile.resolutions });
+                    const m = L.map(el, { crs, center: c, zoom: z, maxZoom: maxLod, attributionControl: true });
+                    m.attributionControl.setPrefix('');
+                    L.tileLayer('https://gisviewer.jerusalem.muni.il/arcgis/rest/services/' + qid + '/MapServer/tile/{z}/{y}/{x}', {
+                        minZoom: 0, maxZoom: maxLod, tileSize: 256, attribution: 'תצ"א: עיריית ירושלים',
+                    }).addTo(m);
+                    return m;
+                }).filter(Boolean);
+                if (created.length === 2) {
+                    let lock = false;
+                    const sync = (src, dst) => () => { if (lock) return; lock = true; dst.setView(src.getCenter(), src.getZoom(), { animate: false }); lock = false; };
+                    created[0].on('move', sync(created[0], created[1]));
+                    created[1].on('move', sync(created[1], created[0]));
+                }
+                orthoMapsRef.current = created;
+                return () => { orthoMapsRef.current.forEach(m => { try { m.remove(); } catch (e) {} }); orthoMapsRef.current = []; };
+            }, [orthoViewer, orthoQ, orthoCompareQ]);
 
             // ── Radius mode: click on map to set center ──────────────────────
             useEffect(() => {
@@ -20704,6 +20760,12 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                                         <span className="sub-label">שיתוף</span>
                                     </button>
+                                    <button className="toolbar-dropdown-item" data-tip='תצ"א רבעונית של העירייה — צפייה והשוואה בין רבעונים (נפתח במרכז המפה)' onClick={() => {
+                                        setOrthoViewer(true); setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
+                                        <span className="sub-label">תצ"א רבעונית</span>
+                                    </button>
                                     <button className="toolbar-dropdown-item" data-tip="ייצוא תכניות מסוננות ל-CSV או GeoJSON" onClick={() => {
                                         setActiveDropdown(null);
                                         const gd = geoDataRef.current;
@@ -22437,6 +22499,58 @@
                                             <button onClick={csv} style={{ background: '#5c4636', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
                                             <button onClick={prnt} style={{ background: '#3a2e26', border: '1px solid #5c4636', color: '#e8d9c8', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* ── תצ"א רבעונית — muni quarterly orthophoto, view + quarter compare ── */}
+                    {orthoViewer && (() => {
+                        const OQ = window.__orthoQuarters || {};
+                        const quarters = OQ.quarters || [];
+                        const cur = orthoQ || (quarters[0] && quarters[0].id);
+                        const qLabel = (id) => (quarters.find(q => q.id === id) || {}).label || '';
+                        const pill = (on) => ({ padding: '3px 12px', borderRadius: 16, border: '1px solid ' + (on ? '#7cb342' : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? '#33691e' : 'transparent', color: on ? '#fff' : '#9fb0d0' });
+                        const close = () => { setOrthoViewer(false); setOrthoCompareQ(null); };
+                        return (
+                            <div className="units-overlay" onClick={close}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: orthoCompareQ ? 1350 : 950, width: '97%' }}>
+                                    <div className="units-header" style={{ background: '#33691e' }}>
+                                        <h2>🛰️ תצ"א רבעונית — עיריית ירושלים</h2>
+                                        <button className="units-close" onClick={close}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 14px' }}>
+                                        {!quarters.length && <div style={{ color: '#ef9a9a', fontSize: 13, padding: 20 }}>רשימת הרבעונים לא נטענה (data/ortho_quarters.json)</div>}
+                                        {quarters.length > 0 && <React.Fragment>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>רבעון:</span>
+                                            {quarters.map(q => (
+                                                <button key={q.id} onClick={() => { setOrthoQ(q.id); if (orthoCompareQ === q.id) setOrthoCompareQ(null); }} style={pill(cur === q.id)}>{q.label}</button>
+                                            ))}
+                                            <span style={{ width: 14 }} />
+                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>השוואה מול:</span>
+                                            <button onClick={() => setOrthoCompareQ(null)} style={pill(!orthoCompareQ)}>ללא</button>
+                                            {quarters.filter(q => q.id !== cur).map(q => (
+                                                <button key={q.id} onClick={() => setOrthoCompareQ(q.id)} style={pill(orthoCompareQ === q.id)}>{q.label}</button>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: 11.5, color: '#c5e1a5', fontWeight: 700, marginBottom: 3 }}>{qLabel(cur)}</div>
+                                                <div id="ortho-pane-a" style={{ height: '62vh', borderRadius: 8, background: '#111' }} />
+                                            </div>
+                                            {orthoCompareQ && (
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontSize: 11.5, color: '#ffcc80', fontWeight: 700, marginBottom: 3 }}>{qLabel(orthoCompareQ)}</div>
+                                                    <div id="ortho-pane-b" style={{ height: '62vh', borderRadius: 8, background: '#111' }} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 8 }}>
+                                            נפתח במרכז המפה הראשית; בהשוואה — שתי המפות מסונכרנות. אריחים חיים משרת ה-GIS העירוני (רזולוציה עד ~3 ס"מ/פיקסל) — לא נשמר עותק אצלנו, ורבעון חדש מתווסף אוטומטית כשהעירייה מפרסמת.
+                                        </div>
+                                        </React.Fragment>}
                                     </div>
                                 </div>
                             </div>
