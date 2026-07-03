@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-02-use-gaps-lean';
+        const APP_VERSION = '2026-07-03-use-gaps-jump';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -22245,6 +22245,21 @@
                         const nOk = secOf('matched').length + secOf('resolved').length;
                         const secNote = 'שימוש בנכס העירוני שאף תכנית מועמדת (כולל חופפות) לא מכסה בפרוגרמה — לבירור מול טבלה 5 / העירייה.';
                         const planDisp = (t) => { const nm = (pcats[t] || {}).name || ''; return t + (nm ? ' · ' + nm.slice(0, 28) : ''); };
+                        // Click on a plan number → close the report and fly to the plan on the map
+                        // (same behavior as row-click in the commerce/master-plan reports).
+                        const goToPlan = (taba) => {
+                            const gd = geoDataRef.current || {};
+                            const map = mapInstanceRef.current;
+                            if (!gd.plans || !map) return;
+                            const f = gd.plans.features.find(ft => String(ft.properties.taba || ft.properties.TABA || '').trim() === String(taba));
+                            if (!f || !f.geometry) return;
+                            try {
+                                const bounds = L.geoJSON(f.geometry).getBounds();
+                                if (!bounds.isValid()) return;
+                                setShowUseGaps(false);
+                                map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 17, duration: 0.5 });
+                            } catch (e) { /* geometry edge case — stay in the report */ }
+                        };
                         const noteFor = (r) => {
                             if (r.section === 'gaps') return 'לא מכוסה: ' + r.unmatched.join(', ');
                             if (r.section === 'resolved') { const ws = [...new Set(r.cats.flatMap(c => r.winners[c] || []))]; return 'שויך ל-' + ws.join(', '); }
@@ -22311,7 +22326,8 @@
                                                         ))}</td>
                                                         <td style={{ ...td, fontSize: 11 }}>{r.tabas.map((t, j) => (
                                                             <div key={j} style={{ whiteSpace: 'nowrap' }}>
-                                                                <span style={{ color: r.cats.every(c => (r.winners[c] || []).includes(t)) ? '#86b89a' : (r.cats.some(c => (r.winners[c] || []).includes(t)) ? '#e0c08a' : '#ef9a9a') }}>●</span> {planDisp(t)}
+                                                                <span style={{ color: r.cats.every(c => (r.winners[c] || []).includes(t)) ? '#86b89a' : (r.cats.some(c => (r.winners[c] || []).includes(t)) ? '#e0c08a' : '#ef9a9a') }}>●</span>{' '}
+                                                                <a href="#" onClick={e => { e.preventDefault(); goToPlan(t); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{planDisp(t)}</a>
                                                             </div>
                                                         ))}{r.tabas.length > 1 ? <div style={{ color: '#ffb74d', fontSize: 10 }}>⚠ {r.tabas.length} תכניות חופפות</div> : null}</td>
                                                         <td style={{ ...td, fontSize: 11, color: r.section === 'gaps' ? '#ef9a9a' : '#9fb0d0' }}>{noteFor(r)}</td>
@@ -22331,7 +22347,9 @@
                                                             <td style={td}>{g.org}</td>
                                                             <td style={{ ...td, color: '#ce93d8' }}>{g.use} → {g.cat}</td>
                                                             <td style={td}>{r.cats.join(', ')}</td>
-                                                            <td style={{ ...td, fontSize: 11 }}>{r.tabas.join(', ')}</td>
+                                                            <td style={{ ...td, fontSize: 11 }}>{r.tabas.map((t, j) => (
+                                                                <span key={j}>{j > 0 ? ', ' : ''}<a href="#" onClick={e => { e.preventDefault(); goToPlan(t); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{t}</a></span>
+                                                            ))}</td>
                                                         </tr>
                                                     )))}</tbody>
                                                 </table>
