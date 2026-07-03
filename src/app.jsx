@@ -4248,6 +4248,7 @@
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
                 window.__treeValencies = {};
+                window.__tama38Valencies = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
                 window.__objectionsPermits = {};
@@ -4267,6 +4268,7 @@
                     ['__treeSurveys', 'data/tree_surveys.json'],
                     ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'],
                     ['__treeValencies', 'data/tree_valencies.json'],
+                    ['__tama38Valencies', 'data/tama38_tree_valencies.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
@@ -4717,6 +4719,7 @@
                             else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                             else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                             else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
+                            else if (key === '__tama38Valencies') { window.__tama38Valencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
@@ -19295,6 +19298,34 @@
                 const tama38Permits = getPermitsForTama38(fid);
                 if (tama38Permits.length > 0) {
                     html += buildPermitsSummaryHTML(tama38Permits, `data-fid='${fid}'`);
+                }
+
+                // ── Tree survey section (tama38, keyed by tik) — same format as the
+                //    תב"ע plan popup: count summary + a high-valency callout line. ──
+                const tamaTreeSurvey = (window.__tama38TreeSurveys || {})[tik];
+                if (tamaTreeSurvey && tamaTreeSurvey.total > 0) {
+                    const removed = (tamaTreeSurvey.krita || 0) + (tamaTreeSurvey.haataka || 0);
+                    const total = tamaTreeSurvey.total;
+                    const removedPct = total > 0 ? Math.round((removed / total) * 100) : 0;
+                    html += '<div class="popup-section-title">🌳 עצים</div>';
+                    html += '<div class="popup-pair">';
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${total}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">העתקה/כריתה</span><span class="popup-pair-value">${removed} <span style="color:#5dade2;font-size:11px">(${removedPct}%)</span></span></div>`;
+                    html += '</div>';
+
+                    const tamaValency = (window.__tama38Valencies || {})[tik];
+                    if (tamaValency && tamaValency.bucket_totals) {
+                        const highTotal = (tamaValency.bucket_totals['17-20'] || 0) + (tamaValency.bucket_totals['14-16'] || 0);
+                        if (highTotal > 0) {
+                            const hb1 = tamaValency.by_bucket['17-20'] || {};
+                            const hb2 = tamaValency.by_bucket['14-16'] || {};
+                            const highRemoved = (hb1.krita || 0) + (hb1.haataka || 0) + (hb2.krita || 0) + (hb2.haataka || 0);
+                            const highPct = Math.round(highRemoved / highTotal * 100);
+                            const pctColor = highPct >= 50 ? '#c0392b' : (highPct >= 25 ? '#e67e22' : '#27ae60');
+                            const partialNote = tamaValency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : '';
+                            html += `<div class="popup-sub-row" style="margin-top:4px">ערכיות גבוהה+: <span style="color:${pctColor};font-weight:700">${highRemoved} מתוך ${highTotal} (${highPct}%)</span> נעקרים/מועתקים${partialNote}</div>`;
+                        }
+                    }
                 }
                 html += '</div>';
                 html += '</div>';
