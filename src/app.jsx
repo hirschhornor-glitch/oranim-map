@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-03-asset-allocations';
+        const APP_VERSION = '2026-07-05-fuel-barriers';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2343,6 +2343,8 @@
             const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
             // Use-gaps report: asset uses (ספר הנכסים) vs plan program, overlap-aware.
             const [showUseGaps, setShowUseGaps] = useState(false);
+            // Fuel-barriers report: public-building lots within TAMA-18 distance of a fuel station.
+            const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
@@ -4308,6 +4310,7 @@
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
                     ['__assetAllocations', 'data/asset_allocations.json'],
+                    ['__fuelBarriers', 'data/fuel_barriers.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4757,6 +4760,7 @@
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
                             else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
+                            else if (key === '__fuelBarriers') { window.__fuelBarriers = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -12164,6 +12168,7 @@
                         ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
                     { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true) },
+                    { key: 'fuelBarriers', isOpen: () => showFuelBarriers, open: () => setShowFuelBarriers(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
@@ -19114,6 +19119,23 @@
                     html += '</div>';
                 }
                 html += '<div class="popup-body">';
+                // ⛽ תמ"א 18 — attention note when a fuel station sits within screening range of the
+                // lot (data/fuel_barriers.json, keyed taba|lot). critical = within the 80m the TAMA
+                // requires from education/health/elderly; watch = 80-150m (pump-island position unknown).
+                const fbRec = ((window.__fuelBarriers || {}).by_lot || {})[(taba || '') + '|' + (lotNum || '')];
+                if (fbRec) {
+                    const fbCrit = fbRec.band === 'critical';
+                    const fbCol = fbCrit ? '#ef9a9a' : '#e0c08a';
+                    const fbDist = fbRec.dist_m <= 1 ? 'בתוך תחום המגרש' : `במרחק כ-${Math.round(fbRec.dist_m)} מ'`;
+                    const fbKind = fbRec.station_kind === 'planned' ? ' (מתוכננת)' : fbRec.station_kind === 'zoned_lot' ? ' (מגרש בייעוד תחנת דלק)' : '';
+                    let fbHtml = `<b style="color:${fbCol}">⛽ נקודה לתשומת לב — תחנת דלק ${fbDist}</b><br>`;
+                    fbHtml += `${fbRec.station}${fbKind}. תמ"א 18 מחייבת 80 מ' ממוסדות חינוך, בריאות וקשישים (40 מ' ממגורים).`;
+                    const fbPlan = (fbRec.station_plans || [])[0];
+                    if (fbPlan) {
+                        fbHtml += `<br>התחנה בתחום תב"ע <b>${fbPlan.taba}</b> — ${fbPlan.name}${fbPlan.status ? ' (' + fbPlan.status + ')' : ''}; ייתכן שמימוש המבנה יותנה בפינוי התחנה.`;
+                    }
+                    html += `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${fbCol};background:${fbCrit ? 'rgba(229,115,115,0.12)' : 'rgba(224,192,138,0.10)'};font-size:11px;line-height:1.5">${fbHtml}</div>`;
+                }
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
                 }
@@ -19858,6 +19880,7 @@
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
                     { id: 'use_gaps',     title: 'פערי שימוש — ספר הנכסים',  desc: 'שימוש נכסי הפרשה בפועל מול טבלה 5 (כולל חפיפות)', icon: '⚖️' },
+                    { id: 'fuel_barriers', title: 'חסמים למבני ציבור',       desc: 'מגרשי ציבור בקרבת תחנת דלק (תמ"א 18)', icon: '⛽' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
                 ];
                 // All toggleable layers
@@ -19976,6 +19999,7 @@
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'use_gaps') setShowUseGaps(true);
+                    else if (id === 'fuel_barriers') setShowFuelBarriers(true);
                     else if (id === 'reports_menu') setShowReportsMenu(true);
                 }
             };
@@ -22569,6 +22593,108 @@
                         );
                     })()}
 
+                    {/* ── חסמים למבני ציבור — public lots blocked/delayed by a nearby fuel station (תמ"א 18) ── */}
+                    {showFuelBarriers && (() => {
+                        const FB = window.__fuelBarriers || {};
+                        const byLot = FB.by_lot || {};
+                        const rows = Object.entries(byLot).map(([key, r]) => {
+                            const [taba, lot] = key.split('|');
+                            return { key, taba, lot, ...r };
+                        }).sort((a, b) => a.dist_m - b.dist_m);
+                        const crit = rows.filter(r => r.band === 'critical');
+                        const watch = rows.filter(r => r.band === 'watch');
+                        const nStations = (FB.stations || []).length;
+                        const kindLabel = (k) => k === 'existing' ? 'תחנה קיימת' : k === 'zoned_lot' ? 'מגרש בייעוד תחנת דלק' : 'תחנה מתוכננת (תב"ע)';
+                        const distDisp = (d) => d <= 1 ? 'בתוך המגרש' : Math.round(d) + " מ'";
+                        const evacDisp = (r) => {
+                            const sp = (r.station_plans || [])[0];
+                            if (!sp) return '';
+                            return 'תב"ע ' + sp.taba + ' — ' + (sp.name || '').slice(0, 45) + (sp.status ? ' (' + sp.status + ')' : '');
+                        };
+                        const goToPlan = (taba) => {
+                            const gd = geoDataRef.current || {};
+                            const map = mapInstanceRef.current;
+                            if (!gd.plans || !map) return;
+                            const f = gd.plans.features.find(ft => String(ft.properties.taba || ft.properties.TABA || '').trim() === String(taba));
+                            if (!f || !f.geometry) return;
+                            try {
+                                const bounds = L.geoJSON(f.geometry).getBounds();
+                                if (!bounds.isValid()) return;
+                                setShowFuelBarriers(false);
+                                map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 17, duration: 0.5 });
+                            } catch (e) { /* geometry edge case — stay in the report */ }
+                        };
+                        const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
+                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                        const csv = () => {
+                            const lines = [['חסם', 'דרגה', 'תב"ע', 'מגרש', 'שם התכנית', 'שימושים מתוכננים', 'מרחק (מ\')', 'התחנה', 'סוג התחנה', 'תב"ע שמפנה את התחנה'].map(csvQ).join(',')];
+                            rows.forEach(r => lines.push(['קרבה לתחנת דלק', r.band === 'critical' ? 'בטווח תמ"א 18' : 'גבולי (80-150 מ\')', r.taba, r.lot, r.name, r.uses, r.dist_m, r.station, kindLabel(r.station_kind), evacDisp(r)].map(csvQ).join(',')));
+                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'fuel_barriers.csv'; document.body.appendChild(a); a.click(); a.remove();
+                        };
+                        const prnt = () => {
+                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>חסמים למבני ציבור — קרבה לתחנת דלק</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#7a4a1e;color:#fff}.crit{background:#fde8e8}</style></head><body><h1>⛽ חסמים למבני ציבור — קרבה לתחנת דלק (תמ"א 18)</h1>';
+                            h += '<p style="font-size:12px;color:#555">תמ"א 18/4: מרחק מינימלי מאי המשאבות — 80 מ\' ממוסדות חינוך, בריאות וקשישים; 40 מ\' ממגורים. המדידה כאן מגבול מגרש התחנה — סינון שמרני.</p>';
+                            h += '<table><thead><tr><th>מרחק</th><th>תב"ע / מגרש</th><th>שם התכנית</th><th>שימושים</th><th>התחנה</th><th>תב"ע שמפנה את התחנה</th></tr></thead><tbody>';
+                            rows.forEach(r => { h += '<tr' + (r.band === 'critical' ? ' class="crit"' : '') + '><td>' + e2(distDisp(r.dist_m)) + '</td><td>' + e2(r.taba + (r.lot ? ' / ' + r.lot : '')) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.uses) + '</td><td>' + e2(r.station + ' (' + kindLabel(r.station_kind) + ')') + '</td><td>' + e2(evacDisp(r)) + '</td></tr>'; });
+                            h += '</tbody></table></body></html>';
+                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
+                        };
+                        return (
+                            <div className="units-overlay" onClick={() => setShowFuelBarriers(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
+                                    <div className="units-header" style={{ background: '#7a4a1e' }}>
+                                        <h2>⛽ חסמים למבני ציבור — קרבה לתחנת דלק</h2>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowFuelBarriers(false)}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
+                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
+                                            תמ"א 18/4 קובעת מרחק מינימלי מאי המשאבות של תחנת דלק: <b>80 מ' ממוסדות חינוך, בריאות ומעונות לקשישים</b> ו-40 מ' מבנייני מגורים.
+                                            מגרש ציבור בטווח לא יוכל לאכלס גן/בי"ס/מעון — וכשהתחנה בתוך תב"ע עתידית, ייתכן שקבלת המבנה תתעכב עד פינוי התחנה.
+                                            המדידה מגבול מגרש התחנה (לא מאי המשאבות) — סינון שמרני; "גבולי" דורש בדיקה פרטנית.
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                                            {[['מגרשים עם חסם', rows.length, '#d8def0'], ['בטווח תמ"א 18 (עד 80 מ\')', crit.length, '#ef9a9a'], ['גבולי (80-150 מ\')', watch.length, '#e0c08a'], ['תחנות דלק באזור', nStations, '#9fb0d0']].map((k, i) => (
+                                                <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
+                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
+                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
+                                            <thead><tr style={{ background: '#241c16', color: '#e0a973' }}>
+                                                <th style={td}>מרחק</th><th style={td}>תב"ע / מגרש</th><th style={td}>שם התכנית</th><th style={td}>שימושים מתוכננים</th><th style={td}>התחנה</th><th style={td}>תב"ע שמפנה את התחנה</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {rows.map((r, i) => (
+                                                    <tr key={i} style={{ background: r.band === 'critical' ? '#2a1d1d' : 'transparent' }}>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 700, color: r.band === 'critical' ? '#ef9a9a' : '#e0c08a' }}>{distDisp(r.dist_m)}</td>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                                                            <a href="#" onClick={e => { e.preventDefault(); goToPlan(r.taba); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{r.taba}{r.lot ? ' / ' + r.lot : ''}</a>
+                                                        </td>
+                                                        <td style={td}>{(r.name || '').slice(0, 55)}</td>
+                                                        <td style={{ ...td, fontSize: 11 }}>{(r.uses || '').slice(0, 80)}</td>
+                                                        <td style={{ ...td, fontSize: 11 }}>{r.station}<div style={{ color: '#8a9bc0', fontSize: 10 }}>{kindLabel(r.station_kind)}</div></td>
+                                                        <td style={{ ...td, fontSize: 11, color: (r.station_plans || []).length ? '#a5d6a7' : '#667' }}>{evacDisp(r) || '—'}</td>
+                                                    </tr>
+                                                ))}
+                                                {!rows.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#86b89a' }}>אין מגרשי ציבור בקרבת תחנת דלק 🎉</td></tr>}
+                                            </tbody>
+                                        </table>
+                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>
+                                            מקורות תחנות: OSM (קיימות), ייעודי קרקע עירוניים 7410 ומבא"ת 910 (מאושרות/מתוכננות). עדכון: {FB.generated || ''}.
+                                            "תב"ע שמפנה את התחנה" = תכנית עתידית שהתחנה בתחומה — סימן שהפינוי מתוכנן אך גם שהמבנה הציבורי עשוי לחכות לו.
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                            <button onClick={csv} style={{ background: '#7a4a1e', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
+                                            <button onClick={prnt} style={{ background: '#3a2e26', border: '1px solid #7a4a1e', color: '#e8d9c8', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── תצ"א רבעונית — muni quarterly orthophoto, view + quarter compare ── */}
                     {orthoViewer && (() => {
                         const OQ = window.__orthoQuarters || {};
@@ -22955,6 +23081,13 @@
                                                 <div className="report-text">
                                                     <span className="report-title">פערי שימוש — ספר הנכסים</span>
                                                     <span className="report-desc">שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות</span>
+                                                </div>
+                                            </button>
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowFuelBarriers(true); }}>
+                                                <span className="report-icon">⛽</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">חסמים למבני ציבור</span>
+                                                    <span className="report-desc">מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ' ממוסדות חינוך)</span>
                                                 </div>
                                             </button>
                                         </div>
@@ -25280,6 +25413,9 @@
                                                                         {isPlOpen && (() => {
                                                                             const colSpanN = showFuture ? 6 : 4;
                                                                             const sorted = [...planList].sort((a,b) => (b.addedCounts[svc.key] - a.addedCounts[svc.key]));
+                                                                            // ⛽ תמ"א 18 — plans whose public lot sits near a fuel station may deliver late (station evacuation)
+                                                                            const fbByTaba = ((window.__fuelBarriers || {}).by_taba || {});
+                                                                            const anyFuel = sorted.some(p => fbByTaba[String(p.taba)]);
                                                                             return (
                                                                                 <tr>
                                                                                     <td colSpan={colSpanN} style={{padding:'8px 12px 14px 12px',background:'rgba(123,108,240,0.07)',borderBottom:'1px solid #222'}}>
@@ -25301,7 +25437,7 @@
                                                                                             <tbody>
                                                                                                 {sorted.map((p, idx) => (
                                                                                                     <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
-                                                                                                        <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{p.taba}</td>
+                                                                                                        <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{fbByTaba[String(p.taba)] ? <span title={'קרבה לתחנת דלק (תמ"א 18) — מגרש במרחק כ-' + Math.round(fbByTaba[String(p.taba)].min_dist) + ' מ\' מתחנה; ייתכן עיכוב במסירה. ראו דוח "חסמים למבני ציבור"'} style={{cursor:'help'}}>⛽ </span> : null}{p.taba}</td>
                                                                                                         <td style={{padding:'3px 6px',color:'#aaa'}}>{(p.plan_summary || '').slice(0, 60)}</td>
                                                                                                         <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{p.effectivePct}%</td>
                                                                                                         <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{p.estimatedYear}</td>
@@ -25314,6 +25450,7 @@
                                                                                             </tbody>
                                                                                         </table>
                                                                                         <div style={{marginTop:6,fontSize:10,color:'#777',fontStyle:'italic'}}>"+ מתוכנן (גולמי)" = הסכום הגולמי בתב"ע. בטבלה למעלה מוצג הסכום משוקלל לפי %מימוש.</div>
+                                                                                        {anyFuel && <div style={{marginTop:4,fontSize:10,color:'#e0c08a'}}>⛽ = מגרש ציבור בקרבת תחנת דלק (תמ"א 18: 80 מ' ממוסדות חינוך) — המסירה עשויה להתעכב עד פינוי התחנה. פירוט בדוח "חסמים למבני ציבור".</div>}
                                                                                     </td>
                                                                                 </tr>
                                                                             );
@@ -28043,7 +28180,8 @@
                             if (!pn || seenPN.has(pn) || excludePlans.has(pn)) continue;
                             const st = (p.status_mavat || '').trim();
                             if (/נדחתה|נגנזה|בטלה|מבוטל|ביטול|הבקשה נסגרה/.test(st)) continue;
-                            const units = num(p.units_add);
+                            // units_add לפעמים טרם מולא (תכניות שרק נקלטו) — ניפול ל-units_total
+                            const units = num(p.units_add) || num(p.units_total);
                             if (units <= 0) continue;
                             seenPN.add(pn);
                             const minahak = (p.minahak || '').trim() || 'ללא שיוך';
