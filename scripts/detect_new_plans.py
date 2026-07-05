@@ -595,6 +595,12 @@ def update_sheets(new_plans):
     sheet = get_sheet()
     all_data = sheet.get_all_values()
     headers = all_data[0] if all_data else []
+    if not headers or headers[0].strip() != 'agam_id':
+        raise RuntimeError(
+            f"Oranim_Taba row 1 is not the header row (got {headers[:4]}) — "
+            "refusing to add plans with a bogus header mapping. Restore the "
+            "53-column header first (see reference_gs_oranim_taba_columns)."
+        )
 
     # Build header index
     h_idx = {}
@@ -646,7 +652,17 @@ def update_sheets(new_plans):
         rows_to_append.append(row)
 
     if rows_to_append:
-        sheet.append_rows(rows_to_append, value_input_option='RAW', table_range='A1')
+        # INSERT_ROWS: values.append's table detection once resolved to A1 and
+        # its default OVERWRITE mode replaced the header row with a plan row
+        # (2026-07-05). INSERT_ROWS can only insert new rows, never overwrite.
+        sheet.append_rows(rows_to_append, value_input_option='RAW',
+                          insert_data_option='INSERT_ROWS', table_range='A1')
+        row1 = sheet.row_values(1)
+        if not row1 or row1[0].strip() != 'agam_id':
+            raise RuntimeError(
+                "Header row damaged by append (row 1 no longer starts with "
+                "'agam_id') — restore it before the next scheduled sync."
+            )
         print(f"  Added {len(rows_to_append)} rows to Sheets.")
 
     return len(rows_to_append)
