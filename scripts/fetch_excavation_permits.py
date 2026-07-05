@@ -15,7 +15,7 @@ What it does:
 
 Re-run periodically (permits expire in weeks-months). Idempotent.
 """
-import json, sys, io, os, re, datetime, urllib.parse, urllib.request
+import json, sys, io, os, re, time, datetime, urllib.parse, urllib.request
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -36,8 +36,19 @@ def _data_dir():
 def _get(params):
     url = LAYER + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read().decode("utf-8"))
+    # The gisviewer WAF sometimes 403s cloud (GitHub Actions) IPs outright —
+    # observed 2026-07-05, instant 403, fine from residential IPs. Retry with
+    # a long backoff in case the block is per-node/transient.
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception as e:
+            if attempt == 3:
+                raise
+            wait = 30 * (attempt + 1)
+            print(f'  query failed ({e}); retrying in {wait}s…')
+            time.sleep(wait)
 
 
 def fetch_features():

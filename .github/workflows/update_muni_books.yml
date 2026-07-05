@@ -49,16 +49,25 @@ jobs:
       - name: Build asset allocations join (→ data/asset_allocations.json)
         run: python scripts/build_asset_allocations.py
 
+      # The gisviewer steps below can 403 when the muni WAF blocks the runner
+      # IP (seen 2026-07-05; fine from residential IPs). Each source is
+      # independent and every script only writes after passing its own sanity
+      # floor, so keep going on failure and commit whatever did refresh — the
+      # job still ends red, so the failure is not silent.
       - name: Fetch excavation permits (muni GIS 232 → data/excavation_permits.json)
+        if: ${{ !cancelled() }}
         run: python scripts/fetch_excavation_permits.py
 
       - name: Fetch permit GIS points (muni GIS 2110 → data/permit_gis_points.json)
+        if: ${{ !cancelled() }}
         run: python scripts/fetch_permit_gis_points.py
 
       - name: Probe ortho quarters (→ data/ortho_quarters.json)
+        if: ${{ !cancelled() }}
         run: python scripts/fetch_ortho_quarters.py
 
       - name: Commit updated data
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
