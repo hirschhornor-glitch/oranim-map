@@ -10,7 +10,7 @@
     "house": "10",
     "schn": "גוננים",
     "deadline_publish": "09/07/2026",
-    "deadline_verified": "2026-06-28",
+    "deadline_verified": "2026-07-05",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
       35.19473,
@@ -33,7 +33,7 @@
     "house": "24",
     "schn": "רחביה",
     "deadline_publish": "10/07/2026",
-    "deadline_verified": "2026-06-28",
+    "deadline_verified": "2026-07-05",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
       35.214834,
@@ -45,27 +45,27 @@
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1996/0876.01&SystemCode=26400046&Page=BakashalInfo",
     "source": "official_activepublications"
   },
-  "2005/0292.02": {
-    "tik": "2005/0292.02",
+  "2010/0196.01": {
+    "tik": "2010/0196.01",
     "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "15/07/2025",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים",
-    "request_description": "תוספת חדר מחוזק על הגג, ריצוף מרפסת גג",
-    "address": "רחוב יהודה 14",
-    "street": "יהודה",
-    "house": "14",
-    "schn": "גאולים - בקעה",
-    "deadline_publish": "02/07/2026",
-    "deadline_verified": "2026-06-28",
+    "status_date": "21/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים, ממ\"ד, בניית מרפסת",
+    "request_description": "תוספת בניה עפ\"י תב\"ע, ממ\"ד, מחסן ומרפסת",
+    "address": "ניקנור 217",
+    "street": "ניקנור",
+    "house": "217",
+    "schn": "גוננים",
+    "deadline_publish": "12/07/2026",
+    "deadline_verified": "2026-07-05",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
-      35.21999,
-      31.757238
+      35.199588,
+      31.757387
     ],
     "subs": [],
     "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=1a92672b-babb-4e1d-a9ea-72cd98e9f672",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2005/0292.02&SystemCode=26400046&Page=BakashalInfo",
+    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=1a292818-8eb1-4f62-bb9d-9fc2a6da5490",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2010/0196.01&SystemCode=26400046&Page=BakashalInfo",
     "source": "official_activepublications"
   }
 }
