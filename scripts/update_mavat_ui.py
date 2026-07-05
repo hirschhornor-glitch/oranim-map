@@ -16,7 +16,7 @@ try:
 except Exception:
     pass
 sys.path.insert(0, r"C:\ORANIM")
-from git_sync import pull_before_read, commit_and_push_after_write
+from git_sync import pull_before_read, commit_and_push_after_write, update_json_and_push
 # Shared out-of-scope filter — same source detect_new_plans.py uses, so the whole
 # "בדיקת סטטוס מבאת" pipeline ignores the same out-of-scope plans (Gilo + blocklist).
 from scope_filter import is_blocklisted
@@ -685,26 +685,31 @@ def check_xplan_updates(changed_plans):
 
 
 def update_geojson_objections(results):
-    """Update plans.geojson with objection end dates."""
+    """Update plans.geojson with objection end dates.
+
+    Uses git_sync.update_json_and_push: the edit is re-applied on the fresh
+    remote tip if a concurrent push lands meanwhile, so the single-line
+    geojson never needs a textual merge.
+    """
     if not results:
         return
-    try:
-        with open(PLANS_GEOJSON, encoding='utf-8') as f:
-            geojson = json.load(f)
+
+    def _apply(geojson):
         updated = 0
         for feat in geojson['features']:
             taba = str(feat['properties'].get('taba', ''))
             if taba in results and results[taba].get('objection_end'):
-                feat['properties']['objection_end_date'] = results[taba]['objection_end']
-                updated += 1
-        with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(geojson, f, ensure_ascii=False)
+                if feat['properties'].get('objection_end_date') != results[taba]['objection_end']:
+                    feat['properties']['objection_end_date'] = results[taba]['objection_end']
+                    updated += 1
         log_msg(f"Updated {updated} features in plans.geojson with objection dates")
-        if updated:
-            commit_and_push_after_write(
-                'data/plans.geojson',
-                f'data: objection_end_date updates ({updated} plans) (update_mavat_ui)'
-            )
+        return updated
+
+    try:
+        update_json_and_push(
+            'data/plans.geojson', _apply,
+            f'data: objection_end_date updates ({len(results)} plans) (update_mavat_ui)'
+        )
     except Exception as e:
         log_msg(f"Failed to update GeoJSON objection dates: {e}")
 
