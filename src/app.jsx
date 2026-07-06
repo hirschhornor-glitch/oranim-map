@@ -17064,7 +17064,7 @@
                         // inside a plan boundary → red ring (permanent evacuation); bordering → white ring (temporary)
                         const insideAny = m.inside;
                         const mk = L.circleMarker(latlng, { pane: 'stationsPane', radius: insideAny ? 8 : 7, fillColor: bucket.color, color: insideAny ? '#d32f2f' : '#ffffff', weight: insideAny ? 3.5 : 2, fillOpacity: 1 });
-                        mk.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-renewal-label' });
+                        mk.bindTooltip(label, { permanent: true, direction: 'bottom', offset: [0, 8], className: 'edu-renewal-label' });
                         mk.on('click', (e) => {
                             if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
                             let html = '<div style="font-family:inherit">';
