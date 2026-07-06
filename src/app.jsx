@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-05-fuel-barriers';
+        const APP_VERSION = '2026-07-06-shavaz-fallback-label';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -15589,9 +15589,11 @@
                         const planProps = planByTabaFs[taba] || {};
                         // Only carry shavatz entries — hafrashah is a separate layer/marker.
                         const entries = parseShavatzProg(planProps.shavatz_out_prog);
+                        // _shavatz_fallback: the data below is שב"צ יוצא carried in hafrash_*-named
+                        // props (shared popup renderer) — the popup must label it שב"צ, not הפרשה.
                         const enrichedProps = entries.length
-                            ? { ...f.properties, _hafrash_lot_entries: entries, pl_name: planProps.plan_name_he || f.properties.pl_name }
-                            : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', pl_name: planProps.plan_name_he || f.properties.pl_name };
+                            ? { ...f.properties, _hafrash_lot_entries: entries, _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name }
+                            : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: c } };
                     });
                     const fallbackLayer = L.geoJSON({ type: 'FeatureCollection', features: fbPoints }, {
@@ -19044,7 +19046,8 @@
                     const PUBLIC_SHAVAZ_CODES = new Set([400, 410, 450, 460, 1670]);
                     const HAFRASHAH_LOT_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const code = parseInt(props.mavat_code);
-                    if (PUBLIC_SHAVAZ_CODES.has(code)) subtitle = 'שטח למבני ציבור';
+                    if (props._shavatz_fallback) subtitle = 'שב"צ עתידי';
+                    else if (PUBLIC_SHAVAZ_CODES.has(code)) subtitle = 'שטח למבני ציבור';
                     else if (HAFRASHAH_LOT_CODES.has(code)) subtitle = 'הפרשה מבונה';
                     else if (isHafrashah) subtitle = 'הפרשה מבונה';
                     else subtitle = cleanNull(props.mavat_name) || '';
@@ -19237,8 +19240,9 @@
                         // Guarded to single-lot plans so multi-lot plans don't double-count the field.
                         let _fieldUsed = false;
                         const _fieldProps = (window.__planByTaba || {})[taba] || {};
-                        const _fieldTotal = parseInt(String((isHafrashah ? _fieldProps.hafrash_sqm : _fieldProps.shavatz_out_sqm) || '').replace(/[^\d]/g, '')) || 0;
-                        const _lotLookup = isHafrashah ? (window.__hafrashByTabaLot || {}) : (window.__shavatzByTabaLot || {});
+                        const _dataIsHafrash = isHafrashah && !props._shavatz_fallback;
+                        const _fieldTotal = parseInt(String((_dataIsHafrash ? _fieldProps.hafrash_sqm : _fieldProps.shavatz_out_sqm) || '').replace(/[^\d]/g, '')) || 0;
+                        const _lotLookup = _dataIsHafrash ? (window.__hafrashByTabaLot || {}) : (window.__shavatzByTabaLot || {});
                         const _soleLot = _lotLookup[taba] ? Object.keys(_lotLookup[taba]).length <= 1 : false;
                         if (_soleLot && _fieldTotal > total) { total = _fieldTotal; _fieldUsed = true; }
                         const cntFoot = [];
@@ -19255,9 +19259,14 @@
                             `</table>`;
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
-                        const hfPrg = cleanNull(props.hafrash_prg);
+                        const hfPrgRaw = cleanNull(props.hafrash_prg);
+                        // A "| הערה: ..." tail is a plan-level remark, not part of the last use's
+                        // name — split it off and render it as its own muted row below the list.
+                        const _noteSplit = hfPrgRaw ? hfPrgRaw.split(/\s*\|\s*הערה:?\s*/) : [''];
+                        const hfPrg = _noteSplit[0].trim();
+                        const hfNote = (_noteSplit[1] || '').trim();
                         if (hfSqm || hfPrg) {
-                            html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (תכנית)</div>';
+                            html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">' + (props._shavatz_fallback ? 'שב"צ עתידי (תכנית)' : 'הפרשה מבונה (תכנית)') + '</div>';
                             if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
                             // Parse the free-text prg into a per-use list (handles comma-only formats with
                             // no "מגרש N -" prefix that parsePrgByLot skips); fall back to raw text if empty.
@@ -19272,6 +19281,7 @@
                             } else if (hfPrg) {
                                 html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
                             }
+                            if (hfNote) html += `<div style="font-size:10px;color:#8a8a9a;margin-top:4px;word-wrap:break-word">הערה: ${hfNote}</div>`;
                         }
                     }
                 }
