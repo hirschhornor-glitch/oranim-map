@@ -38,7 +38,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install shapely
+        run: pip install shapely pyproj
 
       - name: Fetch muni books (Power BI → scripts/sources/)
         run: python scripts/fetch_muni_books.py
@@ -66,12 +66,18 @@ jobs:
         if: ${{ !cancelled() }}
         run: python scripts/fetch_ortho_quarters.py
 
+      # תמ"א 18 — public lots near fuel stations. OSM Overpass + local landuse
+      # files; falls back to the committed stations list if Overpass is down.
+      - name: Build fuel barriers (→ data/fuel_barriers.json)
+        if: ${{ !cancelled() }}
+        run: python scripts/build_fuel_barriers.py
+
       - name: Commit updated data
         if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson data/ortho_quarters.json data/asset_allocations.json
+          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson data/ortho_quarters.json data/asset_allocations.json data/fuel_barriers.json
           if git diff --cached --quiet; then
             echo "No data change — nothing to commit."
             exit 0
