@@ -110,9 +110,11 @@ def apply(in_path=GEO, out_path=GEO):
     pos_name    = ovr.get('position_by_name', {})
     pos_addr    = ovr.get('position_by_address', {})
     type_semel  = {int(k): v for k, v in ovr.get('type_by_semel', {}).items()}
+    type_name   = ovr.get('type_by_name', {})
     addr_semel  = {int(k): v for k, v in ovr.get('address_by_semel', {}).items()}
     stud_semel  = {int(k): v for k, v in ovr.get('students_by_semel', {}).items()}
     stud_name   = ovr.get('students_by_name', {})
+    additions   = ovr.get('add_institutions', [])
 
     feats = gj['features']
 
@@ -156,14 +158,47 @@ def apply(in_path=GEO, out_path=GEO):
             p['_addr_renamed_from'] = p.get('address')
             p['address'] = next(iter(targets))
 
+    # --- (1c) institutions absent from the shanaton sources (e.g. Mitzpen
+    #     2026-07). Merge into the feature at the same normalized address,
+    #     else create a new feature at the entry's coords (jergisng point);
+    #     step (3) then snaps new features to the building when possible.
+    #     Idempotent: skipped when the same semel+name is already present. ---
+    by_addr = {}
+    for f in feats:
+        by_addr.setdefault(_norm(f['properties'].get('address', '')), f)
+    added = 0
+    for add in additions:
+        inst = dict(add['institution'])
+        f = by_addr.get(_norm(add['address']))
+        if f:
+            p = f['properties']
+            if any(i.get('semel_chinuch') == inst.get('semel_chinuch')
+                   and i.get('name') == inst.get('name') for i in p['institutions']):
+                continue
+            p['institutions'].append(inst)
+            p['institutions_count'] = len(p['institutions'])
+            p['primary_type'] = Counter(i['type'] for i in p['institutions']).most_common(1)[0][0]
+        else:
+            nf = {'type': 'Feature',
+                  'geometry': {'type': 'Point', 'coordinates': list(add['coords'])},
+                  'properties': {'address': add['address'], 'institutions_count': 1,
+                                 'total_students': inst.get('students') or 0,
+                                 'primary_type': inst['type'], 'institutions': [inst],
+                                 '_added_from_override': True}}
+            feats.append(nf)
+            by_addr[_norm(add['address'])] = nf
+        added += 1
+
     # --- (2) type + student-count overrides by semel/name ---
-    # (students_by_name wins over students_by_semel — duplicate-semel cases)
+    # (name-keyed overrides win over semel-keyed — duplicate-semel cases)
     for f in feats:
         for inst in f['properties']['institutions']:
             s = inst.get('semel_chinuch')
-            if s and int(s) in type_semel:
-                inst['type'] = type_semel[int(s)]
             nm = inst.get('name')
+            if nm in type_name:
+                inst['type'] = type_name[nm]
+            elif s and int(s) in type_semel:
+                inst['type'] = type_semel[int(s)]
             if nm in stud_name:
                 inst['students'] = stud_name[nm]
             elif s and int(s) in stud_semel:
@@ -193,8 +228,8 @@ def apply(in_path=GEO, out_path=GEO):
             p['_manual_position'] = True; p['_position_source'] = 'override'; frozen += 1
 
     json.dump(gj, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False)
-    print('apply_education_overrides: features=%d splits_carved=%d frozen=%d'
-          % (len(feats), len(new_feats), frozen))
+    print('apply_education_overrides: features=%d splits_carved=%d added=%d frozen=%d'
+          % (len(feats), len(new_feats), added, frozen))
     return gj
 
 if __name__ == '__main__':

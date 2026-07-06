@@ -300,7 +300,24 @@
   "454025": 6,
   "405712": 6,
   "405621": 7,
-  "534370": 6
+  "534370": 6,
+  "799445": 13,
+  "779710": 15,
+  "796086": 17,
+  "464883": 26,
+  "780841": 16,
+  "780866": 20,
+  "786376": 15,
+  "197731": 7,
+  "902023": 8,
+  "741934": 8,
+  "535997": 22,
+  "788034": 16,
+  "788026": 22,
+  "442657": 190,
+  "661595": 1,
+  "791681": 14,
+  "647396": 13
  },
  "students_by_name": {
   "מוכר הדמוקרטי": 47,
@@ -308,5 +325,282 @@
   "מים חיים מירושלים": 45,
   "מים חיים מירושלים (בנות)": 84
  },
- "_doc_students": "students_by_semel/students_by_name: מספרי תלמידים מנתוני מצפן 2026-07 (עדכני מהשנתון); applied by apply_education_overrides.py"
+ "_doc_students": "students_by_semel/students_by_name: מספרי תלמידים מנתוני מצפן 2026-07 (עדכני מהשנתון); applied by apply_education_overrides.py",
+ "add_institutions": [
+  {
+   "address": "דרך חברון 98",
+   "institution": {
+    "name": "חב\"ד-תלפ\"ז ארנונה דרך חברון 98",
+    "semel_chinuch": 779710,
+    "students": 15,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "גאולים בקעה גבעת חננ",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "דרך חברון 98",
+   "institution": {
+    "name": "חב\"ד-תלפ\"ז ארנונה דרך חברון 98",
+    "semel_chinuch": 796086,
+    "students": 17,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "גאולים בקעה גבעת חננ",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "הקרן הקיימת לישראל 15",
+   "institution": {
+    "name": "ש.חסד- גני נעמה -קק\"ל 15 חובה",
+    "semel_chinuch": 780841,
+    "students": 16,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "רחביה",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "הקרן הקיימת לישראל 15",
+   "institution": {
+    "name": "ש.חסד- גני נעמה -קק\"ל 15 גיל 4-5",
+    "semel_chinuch": 780866,
+    "students": 20,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "רחביה",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "יל דיסקין 17",
+   "institution": {
+    "name": "וראייטי 6",
+    "semel_chinuch": 197731,
+    "students": 7,
+    "type": "גן חינוך מיוחד",
+    "pikuach": "ממלכתי",
+    "shuna": "רחביה",
+    "maamad": "רשמי",
+    "herkev_minim": "מעורב כיתות נפרדות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "יל דיסקין 17",
+   "institution": {
+    "name": "אלשורוק 14",
+    "semel_chinuch": 902023,
+    "students": 8,
+    "type": "גן חינוך מיוחד",
+    "pikuach": "ערבי",
+    "shuna": "רחביה",
+    "maamad": "רשמי",
+    "herkev_minim": "מעורב כיתות נפרדות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "יצחק קצנלסון 5",
+   "institution": {
+    "name": "גבעת הוורדים, רח כצנלסון 5, גן קדמה",
+    "semel_chinuch": 791681,
+    "students": 14,
+    "type": "גן",
+    "pikuach": "ממלכתי דתי",
+    "shuna": "רסקו גבעת מרדכי",
+    "maamad": "רשמי",
+    "herkev_minim": "מעורב כיתות נפרדות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "יוסי בן יועזר 24",
+   "institution": {
+    "name": "עמל תורני-עמלנו",
+    "semel_chinuch": 442657,
+    "students": 190,
+    "type": "תיכון",
+    "pikuach": "חרדי",
+    "shuna": "גונן קטמון א'  - ט",
+    "maamad": "פטור",
+    "herkev_minim": "בנים",
+    "_added_from_mitzpen": true,
+    "kitot_regilot": 13
+   }
+  },
+  {
+   "address": "שד שי עגנון 24",
+   "institution": {
+    "name": "גן ילדים האמריקאי יר",
+    "semel_chinuch": 647396,
+    "students": 13,
+    "type": "גן",
+    "pikuach": "ממלכתי",
+    "shuna": "רסקו גבעת מרדכי",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "בן יפונה 3",
+   "coords": [
+    35.218651,
+    31.756878
+   ],
+   "institution": {
+    "name": "בקעה-דרכי ירושלים בן יפונה 3",
+    "semel_chinuch": 799445,
+    "students": 13,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "גאולים בקעה גבעת חננ",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "פלא יועץ 4",
+   "coords": [
+    35.225357,
+    31.77284
+   ],
+   "institution": {
+    "name": "שובך, ימין משה, רח פלא יועץ 4",
+    "semel_chinuch": 464883,
+    "students": 26,
+    "type": "גן",
+    "pikuach": "ממלכתי דתי",
+    "shuna": "גאולים בקעה גבעת חננ",
+    "maamad": "רשמי",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "י אלפסי 19",
+   "coords": [
+    35.212563,
+    31.772823
+   ],
+   "institution": {
+    "name": "ש.חסד-\"לקח טוב\" חובה",
+    "semel_chinuch": 786376,
+    "students": 15,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "רחביה",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "הקרן הקיימת לישראל 43",
+   "coords": [
+    35.211697,
+    31.776728
+   ],
+   "institution": {
+    "name": "גן קרית הילד אלחרזי",
+    "semel_chinuch": 741934,
+    "students": 8,
+    "type": "גן חינוך מיוחד",
+    "pikuach": "חרדי",
+    "shuna": "רחביה",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "שד בן צבי יצחק 39",
+   "coords": [
+    35.209311,
+    31.777766
+   ],
+   "institution": {
+    "name": "נחלאות בית בלב רח שד בן צבי 39",
+    "semel_chinuch": 535997,
+    "students": 22,
+    "type": "גן",
+    "pikuach": "ממלכתי דתי",
+    "shuna": "רחביה",
+    "maamad": "רשמי",
+    "herkev_minim": "מעורב כיתות נפרדות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "ריש לקיש 8",
+   "coords": [
+    35.213554,
+    31.760811
+   ],
+   "institution": {
+    "name": "חב\"ד-קטמון-שלהבות ריש לקיש 8",
+    "semel_chinuch": 788034,
+    "students": 16,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "גונן קטמון א'  - ט",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "ריש לקיש 8",
+   "coords": [
+    35.213554,
+    31.760811
+   ],
+   "institution": {
+    "name": "חב\"ד-קטמון-שלהבות ריש לקיש 8 גיל 4",
+    "semel_chinuch": 788026,
+    "students": 22,
+    "type": "גן",
+    "pikuach": "חרדי",
+    "shuna": "גונן קטמון א'  - ט",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  },
+  {
+   "address": "הפלמח 54",
+   "coords": [
+    35.207611,
+    31.765059
+   ],
+   "institution": {
+    "name": "קהילת שיר חדש",
+    "semel_chinuch": 661595,
+    "students": 1,
+    "type": "גן",
+    "pikuach": "ממלכתי דתי",
+    "shuna": "רסקו גבעת מרדכי",
+    "maamad": "מוכר",
+    "herkev_minim": "מעורב כיתות מעורבות",
+    "_added_from_mitzpen": true
+   }
+  }
+ ],
+ "_doc_additions": "add_institutions: מוסדות מנתוני מצפן 2026-07 שחסרים במקורות השנתון. ממוזגים לפיצ׳ר קיים באותה כתובת או נוצרים כפיצ׳ר חדש (coords=jergisng, ואז הצמדה לבניין). type_by_name גובר על type_by_semel (כפולי סמל).",
+ "type_by_name": {
+  "סאדברי ירושלים": "תיכון"
+ }
 }
