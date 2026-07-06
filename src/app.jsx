@@ -1174,12 +1174,42 @@
             return RENEWAL_PLAN_TYPES.includes(normalizePlanType(p.plan_type)) &&
                 RENEWAL_APPROVED_STATUSES.includes(normalizeStatus(p.status_mavat));
         }
+        // Returns the schn_nama of the sub_neighborhoods polygon containing [lng,lat], or ''.
+        function subNeighborhoodAt(lng, lat, subLayer) {
+            if (!subLayer || !subLayer.features) return '';
+            function ringHit(ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi)) inside = !inside;
+                }
+                return inside;
+            }
+            for (const f of subLayer.features) {
+                const g = f.geometry; if (!g) continue;
+                let hit = false;
+                if (g.type === 'Polygon') hit = ringHit(g.coordinates[0]);
+                else if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) { if (ringHit(poly[0])) { hit = true; break; } } }
+                if (hit) return (f.properties && f.properties.schn_nama || '').trim();
+            }
+            return '';
+        }
+
         // Education addresses within EDU_RENEWAL_RADIUS_M of an approved renewal plan boundary.
         // Memoized for the session — both datasets are static after initial load.
         function computeEduRenewalMatches(gd) {
             if (window.__eduRenewalMatches) return window.__eduRenewalMatches;
             if (!gd || !gd.plans || !gd.education_shanaton) return [];
             const padDeg = (EDU_RENEWAL_RADIUS_M + 10) / 111320 * 1.25; // covers the lng shrink at 31.7°N
+            // Authoritative minahak + sub-neighborhood are resolved by point-in-polygon on the
+            // institution's OWN location (the nearest plan's fields can disagree — a plan may
+            // straddle a boundary), falling back to the nearest plan only when PIP finds nothing.
+            const minahakPips = [
+                ['בית צפאפא', gd.minahak_beit_tzfafa], ['גוננים', gd.minahak_gonen],
+                ['בקעה רבתי', gd.minahak_baka], ['א.ת. תלפיות', gd.minahak_talpiot],
+                ['מינהל מוסדי מלחה', gd.minahak_malha], ['גינות העיר', gd.minahak_ganot],
+            ].filter(([, l]) => l && l.features);
+            const subLayer = gd.sub_neighborhoods;
             const candidates = [];
             for (const f of gd.plans.features) {
                 // Occupied plans (מאוכלס / טופס 4) are already built + inhabited → no construction
@@ -1201,17 +1231,15 @@
                 }
                 if (near.length) {
                     near.sort((a, b) => a.dist - b.dist);
-                    // minahak + sub-neighborhood are taken from the nearest matched plan (within 50m,
-                    // so a faithful proxy for the institution's own location) — used for the report
-                    // filter and the per-sub-neighborhood print maps.
                     const np = near[0].feat.properties || {};
-                    const rawSub = (np.sub_neighborhood || '').trim();
+                    const minahak = (minahakPips.find(([, l]) => pointInLayer(c, l)) || [])[0]
+                        || (np.minahak || '').trim() || 'לא ידוע';
+                    const rawSub = subNeighborhoodAt(c[0], c[1], subLayer) || (np.sub_neighborhood || '').trim();
                     // inside = the institution point falls within a plan boundary (dist 0) →
                     // permanent evacuation when demolished; else only bordering → temporary during works.
                     matches.push({
                         feat: ef, plans: near, minDist: near[0].dist, inside: near[0].dist === 0,
-                        minahak: (np.minahak || '').trim() || 'לא ידוע',
-                        subN: (SUB_NORMALIZE[rawSub] || rawSub) || 'לא ידוע',
+                        minahak, subN: (SUB_NORMALIZE[rawSub] || rawSub) || 'לא ידוע',
                     });
                 }
             }
@@ -2076,26 +2104,36 @@
                 return String((p.institutions && p.institutions[0] && p.institutions[0].name) || p.address || '').split(' - ').pop();
             };
 
-            function buildSvg(subset, w, h) {
+            function buildSvg(subset, w, h, maxHalfM) {
+                maxHalfM = maxHalfM || Infinity;
+                // Extent is centered on the institution points; plans are included too but the
+                // center is anchored to the institutions so they stay visible when capped.
                 let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                let iMinLat = 90, iMaxLat = -90, iMinLng = 180, iMaxLng = -180;
                 const ext = (lng, lat) => {
                     if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
                     if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
                 };
                 subset.forEach(m => {
                     const c = m.feat.geometry.coordinates; ext(c[0], c[1]);
+                    if (c[1] < iMinLat) iMinLat = c[1]; if (c[1] > iMaxLat) iMaxLat = c[1];
+                    if (c[0] < iMinLng) iMinLng = c[0]; if (c[0] > iMaxLng) iMaxLng = c[0];
                     m.plans.forEach(pl => { const bb = geomBBox(pl.feat.geometry); ext(bb[0], bb[1]); ext(bb[2], bb[3]); });
                 });
-                const midLat = (minLat + maxLat) / 2;
+                // center on the institutions (not the plan bboxes) so a large nearby plan can't push them out of frame
+                const midLat = (iMinLat + iMaxLat) / 2;
                 const mLat = 111320, mLng = 111320 * Math.cos(midLat * Math.PI / 180);
-                let latHalf = Math.max((maxLat - minLat) / 2 * 1.25, 150 / mLat);
-                let lngHalf = Math.max((maxLng - minLng) / 2 * 1.25, 150 / mLng);
+                let latHalf = Math.max((maxLat - minLat) / 2 * 1.25, 120 / mLat);
+                let lngHalf = Math.max((maxLng - minLng) / 2 * 1.25, 120 / mLng);
+                // cap zoom-out for readability (streets/buildings visible on the printed map)
+                latHalf = Math.min(latHalf, maxHalfM / mLat);
+                lngHalf = Math.min(lngHalf, maxHalfM / mLng);
                 // equalize meter-aspect to w:h so the map isn't distorted
                 const targetRatio = w / h;
                 const mX = lngHalf * mLng, mY = latHalf * mLat;
                 if (mX / mY > targetRatio) latHalf = mX / targetRatio / mLat;
                 else lngHalf = mY * targetRatio / mLng;
-                const cLng = (minLng + maxLng) / 2;
+                const cLng = (iMinLng + iMaxLng) / 2;
                 const bMinLat = midLat - latHalf, bMaxLat = midLat + latHalf;
                 const bMinLng = cLng - lngHalf, bMaxLng = cLng + lngHalf;
                 const scaleX = w / (bMaxLng - bMinLng), scaleY = h / (bMaxLat - bMinLat);
@@ -2219,8 +2257,10 @@
             const today = new Date().toLocaleDateString('he-IL');
 
             const overviewImg = toImg(buildSvg(matches, 700, 480));
+            // sub-neighborhood maps: cap the half-extent at 350m so streets/buildings stay legible
+            // (an over-wide auto-fit made single/spread clusters unreadable).
             const clusterImgs = shownClusters.map(cl => ({
-                img: toImg(buildSvg(cl.items, 340, 260)),
+                img: toImg(buildSvg(cl.items, 340, 260, 350)),
                 title: cl.sub + ' · ' + cl.items.length + ' כתובות',
             }));
 
