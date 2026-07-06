@@ -1158,7 +1158,9 @@
                 }
                 if (near.length) {
                     near.sort((a, b) => a.dist - b.dist);
-                    matches.push({ feat: ef, plans: near, minDist: near[0].dist });
+                    // inside = the institution point falls within a plan boundary (dist 0) →
+                    // permanent evacuation when demolished; else only bordering → temporary during works.
+                    matches.push({ feat: ef, plans: near, minDist: near[0].dist, inside: near[0].dist === 0 });
                 }
             }
             matches.sort((a, b) => a.minDist - b.minDist);
@@ -2072,8 +2074,11 @@
                 let dots = '', labels = '';
                 pts.forEach(({ m, p }) => {
                     const bucket = eduAgeBucket(m.feat.properties.primary_type);
+                    // inside a plan boundary → bold red outer ring (permanent evacuation); bordering → thin dark ring
                     dots += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="5" fill="' + bucket.color + '" stroke="#fff" stroke-width="1.5"/>' +
-                            '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="6.2" fill="none" stroke="#333" stroke-width="0.7"/>';
+                            (m.inside
+                                ? '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="7" fill="none" stroke="#d32f2f" stroke-width="1.8"/>'
+                                : '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="6.2" fill="none" stroke="#333" stroke-width="0.7"/>');
                     const name = shortInstName(m);
                     const fs = 9.5;
                     const tw = Math.max(24, name.length * fs * 0.55);
@@ -2129,6 +2134,7 @@
                     m.plans.forEach(pl => {
                         const pp = pl.feat.properties;
                         rows.push({
+                            secInside: m.inside, relation: pl.dist === 0 ? 'בתוך התחום' : 'גובל',
                             address: p.address || '', name: inst.name || '', bucket: b.label, bucketColor: b.color,
                             students: inst.students != null ? inst.students : '', classes: kls, dist: pl.dist,
                             plan_name: pp.plan_name || '', plan_he: pp.plan_summary || pp.plan_name_he || '',
@@ -2141,6 +2147,9 @@
 
             const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
             const nPlans = new Set(matches.flatMap(m => m.plans.map(pl => pl.feat.properties.plan_name))).size;
+            const insideM = matches.filter(m => m.inside), adjM = matches.filter(m => !m.inside);
+            const nInsideInst = insideM.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+            const nAdjInst = adjM.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
             const today = new Date().toLocaleDateString('he-IL');
 
             const overviewImg = toImg(buildSvg(matches, 700, 480));
@@ -2152,6 +2161,8 @@
             const legendHtml =
                 '<div class="legend">' +
                 EDU_AGE_BUCKETS.map(b => '<span class="leg-item"><span class="leg-dot" style="background:' + b.color + '"></span>' + b.label + '</span>').join('') +
+                '<span class="leg-item"><span class="leg-ring-in"></span>בתוך תחום תכנית (פינוי קבוע)</span>' +
+                '<span class="leg-item"><span class="leg-ring-adj"></span>בתכנית גובלת (זמני)</span>' +
                 '<span class="leg-item"><span class="leg-sq"></span>תב"ע מאושרת</span>' +
                 '<span class="leg-item"><span class="leg-circ"></span>רדיוס 50 מ\'</span>' +
                 '</div>';
@@ -2167,6 +2178,8 @@
                 '.legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 11px; margin-bottom: 10px; }' +
                 '.leg-item { display: inline-flex; align-items: center; gap: 5px; }' +
                 '.leg-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #555; display: inline-block; }' +
+                '.leg-ring-in { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 2.5px solid #d32f2f; display: inline-block; }' +
+                '.leg-ring-adj { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 1.5px solid #333; display: inline-block; }' +
                 '.leg-sq { width: 12px; height: 10px; background: rgba(142,36,170,0.3); border: 1.5px solid #6a1b9a; display: inline-block; }' +
                 '.leg-circ { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #8e24aa; display: inline-block; }' +
                 '.overview img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' +
@@ -2178,7 +2191,11 @@
                 'th { padding: 5px 4px; border-bottom: 2px solid #333; background: #f3e5f5; text-align: right; font-size: 10px; }' +
                 'td { padding: 4px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top; }' +
                 'tr.addr-row td { background: #ede7f6; font-weight: 700; border-top: 2px solid #9575cd; }' +
+                'h2.sec { font-size: 14px; margin: 18px 0 2px; padding-bottom: 3px; border-bottom: 2px solid currentColor; }' +
+                'h2.sec-in { color: #c62828; } h2.sec-adj { color: #e65100; }' +
+                '.sec-note { font-size: 10px; color: #888; margin: 0 0 4px; }' +
                 '.chip { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 9.5px; font-weight: 700; color: #333; border: 1px solid #999; }' +
+                '.rel-in { color: #c62828; font-weight: 700; } .rel-adj { color: #e65100; font-weight: 700; }' +
                 '.footnote { font-size: 9.5px; color: #777; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; }' +
                 '.no-print { margin-bottom: 12px; text-align: center; }' +
                 '@media print { .no-print { display: none !important; } body { padding: 0; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }' +
@@ -2188,45 +2205,57 @@
                 '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>' +
                 '</div>' +
                 '<h1>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h1>' +
-                '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '</div>' +
+                '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '<br>' +
+                '<b style="color:#c62828">' + insideM.length + ' כתובות בתוך תחום תכנית (' + nInsideInst + ' מוסדות — פינוי קבוע)</b> · ' +
+                '<b style="color:#e65100">' + adjM.length + ' כתובות בתכנית גובלת (' + nAdjInst + ' מוסדות — זמני בביצוע)</b></div>' +
                 legendHtml +
                 '<div class="overview"><img src="' + overviewImg + '"></div>' +
                 '<div class="clusters">' +
                 clusterImgs.map(c => '<div class="cluster-box"><img src="' + c.img + '"><div class="cluster-title">' + esc(c.title) + '</div></div>').join('') +
                 '</div>' +
-                (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '') +
-                '<table><thead><tr>' +
-                '<th>מוסד</th><th>שכבת גיל</th><th>תלמידים</th><th>כיתות</th><th>מרחק (מ\')</th><th>מס\' תכנית</th><th>שם תכנית</th><th>סוג</th><th>סטטוס</th><th>תאריך</th><th>היתר</th><th>יזם</th>' +
-                '</tr></thead><tbody>';
-            let lastAddr = null;
-            rows.forEach(r => {
-                if (r.address !== lastAddr) {
-                    lastAddr = r.address;
-                    html += '<tr class="addr-row"><td colspan="12">&#128205; ' + esc(r.address) + '</td></tr>';
-                }
-                html += '<tr>' +
-                    '<td>' + esc(r.name) + '</td>' +
-                    '<td><span class="chip" style="background:' + r.bucketColor + '">' + esc(r.bucket) + '</span></td>' +
-                    '<td>' + esc(r.students) + '</td>' +
-                    '<td>' + esc(r.classes) + '</td>' +
-                    '<td>' + r.dist + '</td>' +
-                    '<td style="white-space:nowrap">' + esc(r.plan_name) + '</td>' +
-                    '<td>' + esc(r.plan_he) + '</td>' +
-                    '<td>' + esc(r.ptype) + '</td>' +
-                    '<td>' + esc(r.status) + '</td>' +
-                    '<td style="white-space:nowrap">' + esc(r.sdate) + '</td>' +
-                    '<td>' + (r.permit ? '&#10003; ' + esc(r.permit) : '&#10007;') + '</td>' +
-                    '<td>' + esc(r.developer) + '</td>' +
-                    '</tr>';
-            });
-            html += '</tbody></table>' +
+                (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '');
+
+            const renderSection = (secRows, cls, icon, title, note) => {
+                if (!secRows.length) return '';
+                let s = '<h2 class="sec ' + cls + '">' + icon + ' ' + title + '</h2><p class="sec-note">' + note + '</p>' +
+                    '<table><thead><tr>' +
+                    '<th>יחס</th><th>מוסד</th><th>שכבת גיל</th><th>תלמידים</th><th>כיתות</th><th>מרחק (מ\')</th><th>מס\' תכנית</th><th>שם תכנית</th><th>סוג</th><th>סטטוס</th><th>תאריך</th><th>היתר</th><th>יזם</th>' +
+                    '</tr></thead><tbody>';
+                let lastAddr = null;
+                secRows.forEach(r => {
+                    if (r.address !== lastAddr) {
+                        lastAddr = r.address;
+                        s += '<tr class="addr-row"><td colspan="13">&#128205; ' + esc(r.address) + '</td></tr>';
+                    }
+                    const relCls = r.relation === 'גובל' ? 'rel-adj' : 'rel-in';
+                    s += '<tr>' +
+                        '<td class="' + relCls + '" style="white-space:nowrap">' + esc(r.relation) + '</td>' +
+                        '<td>' + esc(r.name) + '</td>' +
+                        '<td><span class="chip" style="background:' + r.bucketColor + '">' + esc(r.bucket) + '</span></td>' +
+                        '<td>' + esc(r.students) + '</td>' +
+                        '<td>' + esc(r.classes) + '</td>' +
+                        '<td>' + r.dist + '</td>' +
+                        '<td style="white-space:nowrap">' + esc(r.plan_name) + '</td>' +
+                        '<td>' + esc(r.plan_he) + '</td>' +
+                        '<td>' + esc(r.ptype) + '</td>' +
+                        '<td>' + esc(r.status) + '</td>' +
+                        '<td style="white-space:nowrap">' + esc(r.sdate) + '</td>' +
+                        '<td>' + (r.permit ? '&#10003; ' + esc(r.permit) : '&#10007;') + '</td>' +
+                        '<td>' + esc(r.developer) + '</td>' +
+                        '</tr>';
+                });
+                return s + '</tbody></table>';
+            };
+            html += renderSection(rows.filter(r => r.secInside), 'sec-in', '&#128308;', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה; נהרס בביצוע — נדרש פינוי קבוע ומענה חלופי.') +
+                renderSection(rows.filter(r => !r.secInside), 'sec-adj', '&#128992;', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה; יתכן צורך בהזזה זמנית בזמן העבודות, ואז חוזר.') +
                 '<div class="footnote">הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי, בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור), שגבולן עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' אווירי מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו: עיבוי שטחים חומים. מרחק 0 = המוסד בתוך תחום התכנית.</div>' +
                 '</body></html>';
             printWin.document.write(html);
-            const csvHead = ['כתובת','מוסד','שכבת גיל','תלמידים','כיתות','מרחק (מ\')','מס\' תכנית','שם תכנית','סוג תכנית','סטטוס','תאריך סטטוס','היתר קיים','מס\' תיק היתר','יזם'];
+            const csvHead = ['יחס למוסד','כתובת','מוסד','שכבת גיל','תלמידים','כיתות','מרחק (מ\')','מס\' תכנית','שם תכנית','סוג תכנית','סטטוס','תאריך סטטוס','היתר קיים','מס\' תיק היתר','יזם'];
             const csvLines = [csvHead.map(hh => '"' + hh.replace(/"/g, '""') + '"').join(',')];
-            rows.forEach(r => {
-                const c = [r.address, r.name, r.bucket, r.students, r.classes, r.dist, r.plan_name, r.plan_he, r.ptype, r.status, r.sdate, r.permit ? 'כן' : 'לא', r.permit, r.developer];
+            const csvOrdered = rows.filter(r => r.secInside).concat(rows.filter(r => !r.secInside));
+            csvOrdered.forEach(r => {
+                const c = [r.relation, r.address, r.name, r.bucket, r.students, r.classes, r.dist, r.plan_name, r.plan_he, r.ptype, r.status, r.sdate, r.permit ? 'כן' : 'לא', r.permit, r.developer];
                 csvLines.push(c.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','));
             });
             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvLines.join('\n')) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="חינוך_ליד_התחדשות_מאושרת.csv";a.click()});<\/script>');
@@ -16921,7 +16950,9 @@
                         const cnt = p.institutions_count || 1;
                         const shortName = String((p.institutions && p.institutions[0] && p.institutions[0].name) || p.address || '').split(' - ').pop();
                         const label = shortName + (cnt > 1 ? ' +' + (cnt - 1) : '');
-                        const mk = L.circleMarker(latlng, { pane: 'stationsPane', radius: 7, fillColor: bucket.color, color: '#fff', weight: 2, fillOpacity: 1 });
+                        // inside a plan boundary → red ring (permanent evacuation); bordering → white ring (temporary)
+                        const insideAny = m.inside;
+                        const mk = L.circleMarker(latlng, { pane: 'stationsPane', radius: insideAny ? 8 : 7, fillColor: bucket.color, color: insideAny ? '#d32f2f' : '#ffffff', weight: insideAny ? 3.5 : 2, fillOpacity: 1 });
                         mk.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-renewal-label' });
                         mk.on('click', (e) => {
                             if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
@@ -16937,10 +16968,11 @@
                                 if (kls) meta.push(`${kls} כיתות`);
                                 html += `<div style="padding:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.color};margin-left:6px"></span><b>${inst.name || ''}</b> · ${b.label}${meta.map(x => ' · ' + x).join('')}</div>`;
                             });
-                            html += '<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">תכניות מאושרות בקרבה:</div>';
+                            html += `<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">${m.inside ? '🔴 בתוך תחום תכנית — פינוי קבוע' : '🟠 בתכנית גובלת — הזזה זמנית בביצוע'}:</div>`;
                             m.plans.forEach(pl => {
                                 const pp = pl.feat.properties;
-                                html += `<div style="padding:2px 0">📐 ${pp.plan_name} · ${pl.dist} מ' · ${normalizeStatus(pp.status_mavat) || ''}${pp.building_permit ? ' · יש היתר' : ''}</div>`;
+                                const rel = pl.dist === 0 ? "🔴 בתוך התחום" : `🟠 גובל ${pl.dist} מ'`;
+                                html += `<div style="padding:2px 0">📐 ${pp.plan_name} · ${rel} · ${normalizeStatus(pp.status_mavat) || ''}${pp.building_permit ? ' · יש היתר' : ''}</div>`;
                             });
                             html += '</div></div>';
                             L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
@@ -28622,6 +28654,74 @@
                         };
                         const thS = { textAlign: 'right', padding: '4px 6px', color: '#bbb', fontSize: 11, borderBottom: '1px solid #2a2a4a' };
                         const tdS = { padding: '4px 6px', color: '#e0e0e0', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' };
+                        const insideMatches = matches.filter(m => m.inside);
+                        const adjacentMatches = matches.filter(m => !m.inside);
+                        const nInsideInst = insideMatches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+                        const nAdjInst = adjacentMatches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+                        const accent = m => m.inside ? '#ef5350' : '#ffb74d';
+                        const renderCard = (m, mi) => {
+                            const p = m.feat.properties;
+                            return (
+                            <div key={mi} style={{border:`1px solid ${accent(m)}44`, borderRadius:8, marginBottom:12, overflow:'hidden', background:'#14142a'}}>
+                                <div style={{background:'#1e1b33', padding:'6px 10px', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', borderRight:`4px solid ${accent(m)}`}}>
+                                    <span style={{color:'#ce93d8', fontWeight:700, fontSize:13}}>📍 {p.address || '(ללא כתובת)'}</span>
+                                    <span style={{color:'#888', fontSize:11}}>{(p.institutions || []).length} מוסדות · תכנית קרובה: {m.minDist} מ'</span>
+                                </div>
+                                <table style={{width:'100%', borderCollapse:'collapse'}}>
+                                    <thead><tr>
+                                        <th style={thS}>מוסד</th><th style={thS}>שכבת גיל</th><th style={thS}>פיקוח</th>
+                                        <th style={{...thS, textAlign:'center'}}>תלמידים</th><th style={{...thS, textAlign:'center'}}>כיתות</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {(p.institutions || []).map((inst, ii) => {
+                                            const b = eduAgeBucket(inst.type);
+                                            const kls = ((inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0)) || inst.classes || 0;
+                                            return (
+                                            <tr key={ii}>
+                                                <td style={tdS}>{inst.name || '-'}</td>
+                                                <td style={tdS}><span style={{display:'inline-block', padding:'1px 8px', borderRadius:8, background:b.color, color:'#222', fontSize:11, fontWeight:700}}>{b.label}</span></td>
+                                                <td style={{...tdS, fontSize:11, color:'#aaa'}}>{inst.pikuach || '-'}</td>
+                                                <td style={{...tdS, textAlign:'center'}}>{inst.students != null ? inst.students : '-'}</td>
+                                                <td style={{...tdS, textAlign:'center'}}>{kls || '-'}</td>
+                                            </tr>);
+                                        })}
+                                    </tbody>
+                                </table>
+                                <div style={{background:'rgba(142,36,170,0.12)', padding:'4px 10px', color:'#ce93d8', fontSize:11, fontWeight:600}}>תכניות מאושרות בקרבה:</div>
+                                <table style={{width:'100%', borderCollapse:'collapse'}}>
+                                    <thead><tr>
+                                        <th style={thS}>יחס</th><th style={thS}>מס' תכנית</th><th style={thS}>שם תכנית</th><th style={thS}>סוג</th><th style={thS}>סטטוס</th><th style={thS}>תאריך</th>
+                                        <th style={{...thS, textAlign:'center'}}>היתר</th><th style={thS}>יזם</th><th style={{...thS, textAlign:'center'}}>מרחק (מ')</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {m.plans.map((pl, pi) => {
+                                            const pp = pl.feat.properties;
+                                            const isIn = pl.dist === 0;
+                                            return (
+                                            <tr key={pi} style={{cursor:'pointer'}} onClick={() => flyToPlan(pp.plan_name)}>
+                                                <td style={{...tdS, whiteSpace:'nowrap'}}><span style={{color: isIn ? '#ef5350' : '#ffb74d', fontSize:11, fontWeight:700}}>{isIn ? '🔴 בתוך' : '🟠 גובל'}</span></td>
+                                                <td style={{...tdS, color:'#64b5f6', textDecoration:'underline', whiteSpace:'nowrap'}}>{pp.plan_name}</td>
+                                                <td style={{...tdS, maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.plan_name_he || ''}>{pp.plan_summary || pp.plan_name_he || '-'}</td>
+                                                <td style={{...tdS, fontSize:11}}>{normalizePlanType(pp.plan_type) || '-'}</td>
+                                                <td style={{...tdS, color:'#81c784', fontSize:11}}>{normalizeStatus(pp.status_mavat) || '-'}</td>
+                                                <td style={{...tdS, fontSize:11, whiteSpace:'nowrap'}}>{pp.mavat_date || '-'}</td>
+                                                <td style={{...tdS, textAlign:'center'}}>{pp.building_permit
+                                                    ? <span style={{color:'#4fc3f7'}} title={(pp.permit_status || '') + (pp.permit_date ? ' · ' + pp.permit_date : '')}>✓ {pp.building_permit}</span>
+                                                    : <span style={{color:'#777'}}>✗</span>}</td>
+                                                <td style={{...tdS, fontSize:11, maxWidth:170, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.developer || ''}>{pp.developer || '-'}</td>
+                                                <td style={{...tdS, textAlign:'center', fontWeight:700, color: isIn ? '#ef5350' : '#ffb74d'}}>{pl.dist}</td>
+                                            </tr>);
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>);
+                        };
+                        const sectionHead = (color, icon, title, sub) => (
+                            <div style={{margin:'16px 0 8px', paddingBottom:4, borderBottom:`2px solid ${color}`}}>
+                                <span style={{color, fontSize:15, fontWeight:800}}>{icon} {title}</span>
+                                <span style={{color:'#999', fontSize:11, marginRight:8}}>{sub}</span>
+                            </div>
+                        );
                         return (
                         <div className="units-overlay" onClick={() => setEduRenewalReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(1050px, 96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
@@ -28629,63 +28729,16 @@
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏫 מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h2>
                                     <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{matches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ'</p>
-                                    <p style={{color:'#888',fontSize:11,marginBottom:12}}>הערכת הפרעה לתפקוד המוסד בשלב הביצוע · קליק על תכנית פותח אותה במפה · מרחק 0 = המוסד בתוך תחום התכנית</p>
-                                    {matches.map((m, mi) => {
-                                        const p = m.feat.properties;
-                                        return (
-                                        <div key={mi} style={{border:'1px solid #2a2a4a', borderRadius:8, marginBottom:12, overflow:'hidden', background:'#14142a'}}>
-                                            <div style={{background:'#1e1b33', padding:'6px 10px', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
-                                                <span style={{color:'#ce93d8', fontWeight:700, fontSize:13}}>📍 {p.address || '(ללא כתובת)'}</span>
-                                                <span style={{color:'#888', fontSize:11}}>{(p.institutions || []).length} מוסדות · תכנית קרובה: {m.minDist} מ'</span>
-                                            </div>
-                                            <table style={{width:'100%', borderCollapse:'collapse'}}>
-                                                <thead><tr>
-                                                    <th style={thS}>מוסד</th><th style={thS}>שכבת גיל</th><th style={thS}>פיקוח</th>
-                                                    <th style={{...thS, textAlign:'center'}}>תלמידים</th><th style={{...thS, textAlign:'center'}}>כיתות</th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {(p.institutions || []).map((inst, ii) => {
-                                                        const b = eduAgeBucket(inst.type);
-                                                        const kls = ((inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0)) || inst.classes || 0;
-                                                        return (
-                                                        <tr key={ii}>
-                                                            <td style={tdS}>{inst.name || '-'}</td>
-                                                            <td style={tdS}><span style={{display:'inline-block', padding:'1px 8px', borderRadius:8, background:b.color, color:'#222', fontSize:11, fontWeight:700}}>{b.label}</span></td>
-                                                            <td style={{...tdS, fontSize:11, color:'#aaa'}}>{inst.pikuach || '-'}</td>
-                                                            <td style={{...tdS, textAlign:'center'}}>{inst.students != null ? inst.students : '-'}</td>
-                                                            <td style={{...tdS, textAlign:'center'}}>{kls || '-'}</td>
-                                                        </tr>);
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                            <div style={{background:'rgba(142,36,170,0.12)', padding:'4px 10px', color:'#ce93d8', fontSize:11, fontWeight:600}}>תכניות מאושרות בקרבה:</div>
-                                            <table style={{width:'100%', borderCollapse:'collapse'}}>
-                                                <thead><tr>
-                                                    <th style={thS}>מס' תכנית</th><th style={thS}>שם תכנית</th><th style={thS}>סוג</th><th style={thS}>סטטוס</th><th style={thS}>תאריך</th>
-                                                    <th style={{...thS, textAlign:'center'}}>היתר</th><th style={thS}>יזם</th><th style={{...thS, textAlign:'center'}}>מרחק (מ')</th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {m.plans.map((pl, pi) => {
-                                                        const pp = pl.feat.properties;
-                                                        return (
-                                                        <tr key={pi} style={{cursor:'pointer'}} onClick={() => flyToPlan(pp.plan_name)}>
-                                                            <td style={{...tdS, color:'#64b5f6', textDecoration:'underline', whiteSpace:'nowrap'}}>{pp.plan_name}</td>
-                                                            <td style={{...tdS, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.plan_name_he || ''}>{pp.plan_summary || pp.plan_name_he || '-'}</td>
-                                                            <td style={{...tdS, fontSize:11}}>{normalizePlanType(pp.plan_type) || '-'}</td>
-                                                            <td style={{...tdS, color:'#81c784', fontSize:11}}>{normalizeStatus(pp.status_mavat) || '-'}</td>
-                                                            <td style={{...tdS, fontSize:11, whiteSpace:'nowrap'}}>{pp.mavat_date || '-'}</td>
-                                                            <td style={{...tdS, textAlign:'center'}}>{pp.building_permit
-                                                                ? <span style={{color:'#4fc3f7'}} title={(pp.permit_status || '') + (pp.permit_date ? ' · ' + pp.permit_date : '')}>✓ {pp.building_permit}</span>
-                                                                : <span style={{color:'#777'}}>✗</span>}</td>
-                                                            <td style={{...tdS, fontSize:11, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.developer || ''}>{pp.developer || '-'}</td>
-                                                            <td style={{...tdS, textAlign:'center', fontWeight:700, color: pl.dist <= 15 ? '#ef5350' : '#ffb74d'}}>{pl.dist}</td>
-                                                        </tr>);
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>);
-                                    })}
-                                    <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:4}}>
+                                    <p style={{color:'#888',fontSize:11,marginBottom:6}}>קליק על תכנית פותח אותה במפה. שתי רמות השפעה:</p>
+                                    <div style={{display:'flex', gap:16, flexWrap:'wrap', fontSize:11.5, marginBottom:10}}>
+                                        <span style={{color:'#ef5350'}}>🔴 <b>בתוך תחום תכנית</b> ({insideMatches.length} כתובות · {nInsideInst} מוסדות) — נהרס בביצוע, צריך <b>פינוי קבוע / מענה חלופי</b></span>
+                                        <span style={{color:'#ffb74d'}}>🟠 <b>בתכנית גובלת</b> ({adjacentMatches.length} כתובות · {nAdjInst} מוסדות) — יתכן <b>הזזה זמנית בזמן הבנייה</b>, ואז חוזר</span>
+                                    </div>
+                                    {insideMatches.length > 0 && sectionHead('#ef5350', '🔴', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה')}
+                                    {insideMatches.map((m, mi) => renderCard(m, 'in' + mi))}
+                                    {adjacentMatches.length > 0 && sectionHead('#ffb74d', '🟠', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה')}
+                                    {adjacentMatches.map((m, mi) => renderCard(m, 'adj' + mi))}
+                                    <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:16}}>
                                         <button onClick={() => openEduRenewalPrint(matches, gd)}
                                             style={{background:'#e94560', color:'#fff', border:'none', borderRadius:6, padding:'8px 20px', cursor:'pointer', fontSize:13, fontWeight:600}}>
                                             &#128424; הדפסה / שמירה (מפה + טבלה + CSV)
