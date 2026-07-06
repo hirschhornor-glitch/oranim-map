@@ -111,6 +111,8 @@ def apply(in_path=GEO, out_path=GEO):
     pos_addr    = ovr.get('position_by_address', {})
     type_semel  = {int(k): v for k, v in ovr.get('type_by_semel', {}).items()}
     addr_semel  = {int(k): v for k, v in ovr.get('address_by_semel', {}).items()}
+    stud_semel  = {int(k): v for k, v in ovr.get('students_by_semel', {}).items()}
+    stud_name   = ovr.get('students_by_name', {})
 
     feats = gj['features']
 
@@ -154,14 +156,21 @@ def apply(in_path=GEO, out_path=GEO):
             p['_addr_renamed_from'] = p.get('address')
             p['address'] = next(iter(targets))
 
-    # --- (2) type overrides by semel ---
+    # --- (2) type + student-count overrides by semel/name ---
+    # (students_by_name wins over students_by_semel — duplicate-semel cases)
     for f in feats:
         for inst in f['properties']['institutions']:
             s = inst.get('semel_chinuch')
             if s and int(s) in type_semel:
                 inst['type'] = type_semel[int(s)]
+            nm = inst.get('name')
+            if nm in stud_name:
+                inst['students'] = stud_name[nm]
+            elif s and int(s) in stud_semel:
+                inst['students'] = stud_semel[int(s)]
         if f['properties']['institutions_count'] == 1:
             f['properties']['primary_type'] = f['properties']['institutions'][0]['type']
+        f['properties']['total_students'] = sum((i.get('students') or 0) for i in f['properties']['institutions'])
 
     # --- (3) deterministic building-level repositioning ---
     for f in feats:
