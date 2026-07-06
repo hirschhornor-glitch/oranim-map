@@ -757,6 +757,64 @@
             return sum;
         }
 
+        // Aerial distance (meters) from a [lng,lat] point to a Polygon/MultiPolygon boundary.
+        // Returns 0 when the point is inside the polygon (outer ring minus holes).
+        // Planar equirectangular approximation — millimetric error at <100m scales in Jerusalem.
+        function distPointToGeomMeters(lng, lat, geom) {
+            if (!geom || !geom.coordinates) return Infinity;
+            const polys = geom.type === 'Polygon' ? [geom.coordinates]
+                : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+            if (!polys.length) return Infinity;
+            const mLat = 111320;
+            const mLng = 111320 * Math.cos(lat * Math.PI / 180);
+            function ringHit(ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0], yi = ring[i][1];
+                    const xj = ring[j][0], yj = ring[j][1];
+                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi))
+                        inside = !inside;
+                }
+                return inside;
+            }
+            let minD2 = Infinity;
+            for (const poly of polys) {
+                if (poly[0] && ringHit(poly[0])) {
+                    let inHole = false;
+                    for (let h = 1; h < poly.length; h++) { if (ringHit(poly[h])) { inHole = true; break; } }
+                    if (!inHole) return 0;
+                }
+                for (const ring of poly) {
+                    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                        const ax = (ring[j][0] - lng) * mLng, ay = (ring[j][1] - lat) * mLat;
+                        const bx = (ring[i][0] - lng) * mLng, by = (ring[i][1] - lat) * mLat;
+                        const dx = bx - ax, dy = by - ay;
+                        const len2 = dx * dx + dy * dy;
+                        let t = len2 > 0 ? -(ax * dx + ay * dy) / len2 : 0;
+                        t = Math.max(0, Math.min(1, t));
+                        const px = ax + t * dx, py = ay + t * dy;
+                        const d2 = px * px + py * py;
+                        if (d2 < minD2) minD2 = d2;
+                    }
+                }
+            }
+            return Math.sqrt(minD2);
+        }
+
+        // bbox [minLng,minLat,maxLng,maxLat] over all rings (incl. holes) of a Polygon/MultiPolygon
+        function geomBBox(geom) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const polys = geom.type === 'Polygon' ? [geom.coordinates]
+                : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+            for (const poly of polys) for (const ring of poly) for (const p of ring) {
+                if (p[0] < minX) minX = p[0];
+                if (p[0] > maxX) maxX = p[0];
+                if (p[1] < minY) minY = p[1];
+                if (p[1] > maxY) maxY = p[1];
+            }
+            return [minX, minY, maxX, maxY];
+        }
+
         // Map Hebrew property names to English aliases used by popup builders
         // Point-in-polygon: ray casting on a Leaflet polygon layer
         function leafletPip(layer, latlng) {
@@ -874,7 +932,8 @@
             shavaz_kayam_group: {
                 title: 'מבני ציבור — קיים',
                 layers: [
-                    { id: 'education_shanaton', name: 'חינוך', desc: 'מסגרות חינוך — שנתון מנח"י (262 מוסדות ב-156 כתובות, מועשר עם פיקוח/כיתות/תלמידים)', on: false },
+                    { id: 'education_shanaton', name: 'חינוך', desc: 'מסגרות חינוך — שנתון מנח"י (320 מוסדות ב-181 כתובות, מועשר עם פיקוח/כיתות/תלמידים)', on: false },
+                    { id: 'edu_renewal_proximity', name: 'חינוך ליד התחדשות מאושרת', desc: 'מוסדות חינוך עד 50 מ\' מתב"ע התחדשות עירונית/פינוי-בינוי/עיבוי מאושרת — פוליגונים, מעגלי 50 מ\' ותוויות שם לפי שכבת גיל', on: false },
                     { id: 'mosadot_moch_religion', name: 'דת', desc: 'בית כנסת/מקווה/כנסייה/מנזר/מסגד (משב"ש 2021)', on: false },
                     { id: 'mosadot_moch_sport', name: 'ספורט', desc: 'מגרש/אולם ספורט/בריכה/איצטדיון (משב"ש 2021)', on: false },
                     { id: 'mosadot_moch_culture', name: 'תרבות וקהילה', desc: 'מתנ"ס/מועדון נוער/אולם מופעים/ספרייה (משב"ש 2021)', on: false },
@@ -1052,6 +1111,60 @@
             'תוספתזכויותתבעהתחדשותעירונית': 'תוספת זכויות תבע התחדשות עירונית',
         };
         function normalizePlanType(s) { return PLAN_TYPE_NORMALIZE[s] || s; }
+
+        // ---- מוסדות חינוך בקרבת התחדשות עירונית מאושרת (edu_renewal_proximity) ----
+        const RENEWAL_PLAN_TYPES = ['התחדשות עירונית', 'פינוי בינוי', 'עיבוי'];
+        const RENEWAL_APPROVED_STATUSES = ['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף', 'הכרעה בהתנגדויות / אישור'];
+        const EDU_RENEWAL_RADIUS_M = 50;
+        const EDU_AGE_BUCKETS = [
+            { key: 'maon', label: 'מעון יום', color: '#ce93d8', types: ['מעון', 'מעון יום'] },
+            { key: 'gan', label: 'גן ילדים', color: '#4fc3f7', types: ['גן', 'גן ילדים', 'גן חינוך מיוחד'] },
+            { key: 'yesodi', label: 'יסודי', color: '#66bb6a', types: ['יסודי', 'תלמוד תורה'] },
+            { key: 'al_yesodi', label: 'על-יסודי', color: '#ff8a65', types: ['תיכון', 'יסודי/תיכון', 'חטיבה', 'אולפנה', 'מדרשייה', 'ישיבה', 'על יסודי'] },
+        ];
+        const EDU_BUCKET_OTHER = { key: 'other', label: 'אחר', color: '#b0bec5', types: [] };
+        function eduAgeBucket(type) {
+            const t = String(type || '').trim();
+            for (const b of EDU_AGE_BUCKETS) { if (b.types.includes(t)) return b; }
+            return EDU_BUCKET_OTHER;
+        }
+        function isApprovedRenewalPlan(p) {
+            if (!p) return false;
+            return RENEWAL_PLAN_TYPES.includes(normalizePlanType(p.plan_type)) &&
+                RENEWAL_APPROVED_STATUSES.includes(normalizeStatus(p.status_mavat));
+        }
+        // Education addresses within EDU_RENEWAL_RADIUS_M of an approved renewal plan boundary.
+        // Memoized for the session — both datasets are static after initial load.
+        function computeEduRenewalMatches(gd) {
+            if (window.__eduRenewalMatches) return window.__eduRenewalMatches;
+            if (!gd || !gd.plans || !gd.education_shanaton) return [];
+            const padDeg = (EDU_RENEWAL_RADIUS_M + 10) / 111320 * 1.25; // covers the lng shrink at 31.7°N
+            const candidates = [];
+            for (const f of gd.plans.features) {
+                if (!f.geometry || !isApprovedRenewalPlan(f.properties)) continue;
+                const bb = geomBBox(f.geometry);
+                candidates.push({ feat: f, bbox: [bb[0] - padDeg, bb[1] - padDeg, bb[2] + padDeg, bb[3] + padDeg] });
+            }
+            const matches = [];
+            for (const ef of gd.education_shanaton.features) {
+                const c = ef.geometry && ef.geometry.coordinates;
+                if (!c) continue;
+                const near = [];
+                for (const cand of candidates) {
+                    const bb = cand.bbox;
+                    if (c[0] < bb[0] || c[0] > bb[2] || c[1] < bb[1] || c[1] > bb[3]) continue;
+                    const d = distPointToGeomMeters(c[0], c[1], cand.feat.geometry);
+                    if (d <= EDU_RENEWAL_RADIUS_M) near.push({ feat: cand.feat, dist: Math.round(d) });
+                }
+                if (near.length) {
+                    near.sort((a, b) => a.dist - b.dist);
+                    matches.push({ feat: ef, plans: near, minDist: near[0].dist });
+                }
+            }
+            matches.sort((a, b) => a.minDist - b.minDist);
+            window.__eduRenewalMatches = matches;
+            return matches;
+        }
 
         // Filter status group lookup (used by advanced filter)
         const FILTER_STATUS_MAP = {
@@ -1876,6 +1989,251 @@
             });
         }
 
+        // חלון הדפסה ייעודי: מוסדות חינוך בקרבת התחדשות עירונית מאושרת.
+        // מפות SVG הנבנות ישירות מ-GeoJSON (דפוס דוח ייעודי-קרקע) + טבלה + CSV.
+        function openEduRenewalPrint(matches, gd) {
+            const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const shortInstName = (m) => {
+                const p = m.feat.properties;
+                return String((p.institutions && p.institutions[0] && p.institutions[0].name) || p.address || '').split(' - ').pop();
+            };
+
+            function buildSvg(subset, w, h) {
+                let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                const ext = (lng, lat) => {
+                    if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+                    if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
+                };
+                subset.forEach(m => {
+                    const c = m.feat.geometry.coordinates; ext(c[0], c[1]);
+                    m.plans.forEach(pl => { const bb = geomBBox(pl.feat.geometry); ext(bb[0], bb[1]); ext(bb[2], bb[3]); });
+                });
+                const midLat = (minLat + maxLat) / 2;
+                const mLat = 111320, mLng = 111320 * Math.cos(midLat * Math.PI / 180);
+                let latHalf = Math.max((maxLat - minLat) / 2 * 1.25, 150 / mLat);
+                let lngHalf = Math.max((maxLng - minLng) / 2 * 1.25, 150 / mLng);
+                // equalize meter-aspect to w:h so the map isn't distorted
+                const targetRatio = w / h;
+                const mX = lngHalf * mLng, mY = latHalf * mLat;
+                if (mX / mY > targetRatio) latHalf = mX / targetRatio / mLat;
+                else lngHalf = mY * targetRatio / mLng;
+                const cLng = (minLng + maxLng) / 2;
+                const bMinLat = midLat - latHalf, bMaxLat = midLat + latHalf;
+                const bMinLng = cLng - lngHalf, bMaxLng = cLng + lngHalf;
+                const scaleX = w / (bMaxLng - bMinLng), scaleY = h / (bMaxLat - bMinLat);
+                const toPt = (lng, lat) => [(lng - bMinLng) * scaleX, (bMaxLat - lat) * scaleY];
+                const inB = (lng, lat) => lng >= bMinLng && lng <= bMaxLng && lat >= bMinLat && lat <= bMaxLat;
+
+                let svg = '<rect width="' + w + '" height="' + h + '" fill="#fafafa"/>';
+                if (gd.roads && gd.roads.features) {
+                    gd.roads.features.forEach(f => {
+                        const g = f.geometry; if (!g) return;
+                        const lines = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+                        lines.forEach(line => {
+                            if (!line.some(c => inB(c[0], c[1]))) return;
+                            svg += '<path d="M' + line.map(c => { const p = toPt(c[0], c[1]); return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join('L') + '" fill="none" stroke="#d5d5d5" stroke-width="1.2"/>';
+                        });
+                    });
+                }
+                // matched plan polygons (all rings, evenodd for holes) + plan-number labels
+                const seenPl = new Set();
+                subset.forEach(m => m.plans.forEach(pl => {
+                    const pn = pl.feat.properties.plan_name;
+                    if (seenPl.has(pn)) return; seenPl.add(pn);
+                    const g = pl.feat.geometry;
+                    const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
+                    let d = '';
+                    polys.forEach(poly => poly.forEach(ring => {
+                        d += 'M' + ring.map(c => { const p = toPt(c[0], c[1]); return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join('L') + 'Z';
+                    }));
+                    if (d) svg += '<path d="' + d + '" fill="#8e24aa" fill-opacity="0.3" stroke="#6a1b9a" stroke-width="1.2" fill-rule="evenodd"/>';
+                    const ring0 = polys[0] && polys[0][0];
+                    if (ring0) {
+                        let cx = 0, cy = 0;
+                        ring0.forEach(c => { cx += c[0]; cy += c[1]; });
+                        cx /= ring0.length; cy /= ring0.length;
+                        if (inB(cx, cy)) {
+                            const p = toPt(cx, cy);
+                            svg += '<text x="' + p[0].toFixed(1) + '" y="' + p[1].toFixed(1) + '" font-size="8" fill="#4a148c" text-anchor="middle" font-family="Assistant,Arial" style="paint-order:stroke;stroke:#ffffff;stroke-width:2.5">' + esc(pn) + '</text>';
+                        }
+                    }
+                }));
+                // dashed 50m circles
+                const rPx = EDU_RENEWAL_RADIUS_M / mLng * scaleX;
+                subset.forEach(m => {
+                    const c = m.feat.geometry.coordinates;
+                    const p = toPt(c[0], c[1]);
+                    svg += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + rPx.toFixed(1) + '" fill="#8e24aa" fill-opacity="0.05" stroke="#8e24aa" stroke-width="0.8" stroke-dasharray="4,3"/>';
+                });
+                // institution dots + name labels with greedy collision avoidance
+                const placed = [];
+                const overlapsBox = (b) => placed.some(o => !(b.x2 < o.x1 || o.x2 < b.x1 || b.y2 < o.y1 || o.y2 < b.y1));
+                const pts = subset.map(m => { const c = m.feat.geometry.coordinates; return { m, p: toPt(c[0], c[1]) }; }).sort((a, b) => a.p[1] - b.p[1]);
+                let dots = '', labels = '';
+                pts.forEach(({ m, p }) => {
+                    const bucket = eduAgeBucket(m.feat.properties.primary_type);
+                    dots += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="5" fill="' + bucket.color + '" stroke="#fff" stroke-width="1.5"/>' +
+                            '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="6.2" fill="none" stroke="#333" stroke-width="0.7"/>';
+                    const name = shortInstName(m);
+                    const fs = 9.5;
+                    const tw = Math.max(24, name.length * fs * 0.55);
+                    const cands = [[0, -10], [0, 16], [tw / 2 + 10, 4], [-(tw / 2 + 10), 4], [0, -24], [0, 30], [0, -38], [0, 44]];
+                    let pos = null;
+                    for (const [dx, dy] of cands) {
+                        const bx = { x1: p[0] + dx - tw / 2, x2: p[0] + dx + tw / 2, y1: p[1] + dy - fs, y2: p[1] + dy + 2 };
+                        if (bx.x1 < 2 || bx.x2 > w - 2 || bx.y1 < 2 || bx.y2 > h - 2) continue;
+                        if (!overlapsBox(bx)) { pos = { dx, dy, bx }; break; }
+                    }
+                    if (!pos) pos = { dx: 0, dy: 44, bx: { x1: p[0] - tw / 2, x2: p[0] + tw / 2, y1: p[1] + 44 - fs, y2: p[1] + 46 } };
+                    placed.push(pos.bx);
+                    if (Math.abs(pos.dy) > 18 || Math.abs(pos.dx) > 18) {
+                        labels += '<line x1="' + p[0].toFixed(1) + '" y1="' + p[1].toFixed(1) + '" x2="' + (p[0] + pos.dx).toFixed(1) + '" y2="' + (p[1] + pos.dy - (pos.dy > 0 ? fs / 2 : -2)).toFixed(1) + '" stroke="#999" stroke-width="0.6"/>';
+                    }
+                    labels += '<text x="' + (p[0] + pos.dx).toFixed(1) + '" y="' + (p[1] + pos.dy).toFixed(1) + '" font-size="' + fs + '" font-weight="bold" fill="#222" text-anchor="middle" font-family="Assistant,Arial" style="paint-order:stroke;stroke:#ffffff;stroke-width:3">' + esc(name) + '</text>';
+                });
+                svg += dots + labels;
+                // 100m scale bar
+                const barPx = 100 / mLng * scaleX;
+                svg += '<rect x="10" y="' + (h - 16) + '" width="' + barPx.toFixed(0) + '" height="3" fill="#333"/>' +
+                       '<text x="' + (10 + barPx / 2).toFixed(0) + '" y="' + (h - 20) + '" font-size="8" fill="#333" text-anchor="middle" font-family="Arial">100 מ\'</text>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + svg + '</svg>';
+            }
+            const toImg = (svg) => 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+
+            // greedy clustering: addresses within 300m share a zoom map
+            const clusters = [];
+            matches.forEach(m => {
+                const c = m.feat.geometry.coordinates;
+                let hit = null;
+                for (const cl of clusters) {
+                    for (const other of cl) {
+                        const oc = other.feat.geometry.coordinates;
+                        const dx = (c[0] - oc[0]) * 94500, dy = (c[1] - oc[1]) * 111320;
+                        if (Math.sqrt(dx * dx + dy * dy) <= 300) { hit = cl; break; }
+                    }
+                    if (hit) break;
+                }
+                if (hit) hit.push(m); else clusters.push([m]);
+            });
+            clusters.sort((a, b) => b.length - a.length);
+            const MAX_CLUSTER_MAPS = 8;
+            const shownClusters = clusters.slice(0, MAX_CLUSTER_MAPS);
+
+            // flat table rows: institution × plan
+            const rows = [];
+            matches.forEach(m => {
+                const p = m.feat.properties;
+                (p.institutions || []).forEach(inst => {
+                    const b = eduAgeBucket(inst.type);
+                    const kls = ((inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0)) || inst.classes || '';
+                    m.plans.forEach(pl => {
+                        const pp = pl.feat.properties;
+                        rows.push({
+                            address: p.address || '', name: inst.name || '', bucket: b.label, bucketColor: b.color,
+                            students: inst.students != null ? inst.students : '', classes: kls, dist: pl.dist,
+                            plan_name: pp.plan_name || '', plan_he: pp.plan_summary || pp.plan_name_he || '',
+                            ptype: normalizePlanType(pp.plan_type) || '', status: normalizeStatus(pp.status_mavat) || '',
+                            sdate: pp.mavat_date || '', permit: pp.building_permit || '', developer: pp.developer || '',
+                        });
+                    });
+                });
+            });
+
+            const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+            const nPlans = new Set(matches.flatMap(m => m.plans.map(pl => pl.feat.properties.plan_name))).size;
+            const today = new Date().toLocaleDateString('he-IL');
+
+            const overviewImg = toImg(buildSvg(matches, 700, 480));
+            const clusterImgs = shownClusters.map(cl => ({
+                img: toImg(buildSvg(cl, 340, 260)),
+                title: cl.map(m => m.feat.properties.address).filter(Boolean).slice(0, 2).join(' · ') + (cl.length > 2 ? ` (+${cl.length - 2})` : ''),
+            }));
+
+            const legendHtml =
+                '<div class="legend">' +
+                EDU_AGE_BUCKETS.map(b => '<span class="leg-item"><span class="leg-dot" style="background:' + b.color + '"></span>' + b.label + '</span>').join('') +
+                '<span class="leg-item"><span class="leg-sq"></span>תב"ע מאושרת</span>' +
+                '<span class="leg-item"><span class="leg-circ"></span>רדיוס 50 מ\'</span>' +
+                '</div>';
+
+            const printWin = window.open('', '_blank');
+            let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">' +
+                '<title>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</title>' +
+                '<style>' +
+                '@page { size: A4 portrait; margin: 12mm; }' +
+                'body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 720px; margin: 0 auto; }' +
+                'h1 { color: #6a1b9a; font-size: 18px; margin-bottom: 2px; text-align: center; }' +
+                '.subtitle { color: #666; font-size: 12px; margin-bottom: 10px; text-align: center; }' +
+                '.legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 11px; margin-bottom: 10px; }' +
+                '.leg-item { display: inline-flex; align-items: center; gap: 5px; }' +
+                '.leg-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #555; display: inline-block; }' +
+                '.leg-sq { width: 12px; height: 10px; background: rgba(142,36,170,0.3); border: 1.5px solid #6a1b9a; display: inline-block; }' +
+                '.leg-circ { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #8e24aa; display: inline-block; }' +
+                '.overview img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' +
+                '.clusters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }' +
+                '.cluster-box { width: calc(50% - 4px); box-sizing: border-box; page-break-inside: avoid; }' +
+                '.cluster-box img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' +
+                '.cluster-title { font-size: 10px; color: #555; text-align: center; margin-top: 1px; font-weight: bold; }' +
+                'table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 14px; }' +
+                'th { padding: 5px 4px; border-bottom: 2px solid #333; background: #f3e5f5; text-align: right; font-size: 10px; }' +
+                'td { padding: 4px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top; }' +
+                'tr.addr-row td { background: #ede7f6; font-weight: 700; border-top: 2px solid #9575cd; }' +
+                '.chip { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 9.5px; font-weight: 700; color: #333; border: 1px solid #999; }' +
+                '.footnote { font-size: 9.5px; color: #777; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; }' +
+                '.no-print { margin-bottom: 12px; text-align: center; }' +
+                '@media print { .no-print { display: none !important; } body { padding: 0; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }' +
+                '</style></head><body>' +
+                '<div class="no-print">' +
+                '<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה / שמירת PDF</button> ' +
+                '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>' +
+                '</div>' +
+                '<h1>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h1>' +
+                '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '</div>' +
+                legendHtml +
+                '<div class="overview"><img src="' + overviewImg + '"></div>' +
+                '<div class="clusters">' +
+                clusterImgs.map(c => '<div class="cluster-box"><img src="' + c.img + '"><div class="cluster-title">' + esc(c.title) + '</div></div>').join('') +
+                '</div>' +
+                (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '') +
+                '<table><thead><tr>' +
+                '<th>מוסד</th><th>שכבת גיל</th><th>תלמידים</th><th>כיתות</th><th>מרחק (מ\')</th><th>מס\' תכנית</th><th>שם תכנית</th><th>סוג</th><th>סטטוס</th><th>תאריך</th><th>היתר</th><th>יזם</th>' +
+                '</tr></thead><tbody>';
+            let lastAddr = null;
+            rows.forEach(r => {
+                if (r.address !== lastAddr) {
+                    lastAddr = r.address;
+                    html += '<tr class="addr-row"><td colspan="12">&#128205; ' + esc(r.address) + '</td></tr>';
+                }
+                html += '<tr>' +
+                    '<td>' + esc(r.name) + '</td>' +
+                    '<td><span class="chip" style="background:' + r.bucketColor + '">' + esc(r.bucket) + '</span></td>' +
+                    '<td>' + esc(r.students) + '</td>' +
+                    '<td>' + esc(r.classes) + '</td>' +
+                    '<td>' + r.dist + '</td>' +
+                    '<td style="white-space:nowrap">' + esc(r.plan_name) + '</td>' +
+                    '<td>' + esc(r.plan_he) + '</td>' +
+                    '<td>' + esc(r.ptype) + '</td>' +
+                    '<td>' + esc(r.status) + '</td>' +
+                    '<td style="white-space:nowrap">' + esc(r.sdate) + '</td>' +
+                    '<td>' + (r.permit ? '&#10003; ' + esc(r.permit) : '&#10007;') + '</td>' +
+                    '<td>' + esc(r.developer) + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>' +
+                '<div class="footnote">הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי, בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור), שגבולן עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' אווירי מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו: עיבוי שטחים חומים. מרחק 0 = המוסד בתוך תחום התכנית.</div>' +
+                '</body></html>';
+            printWin.document.write(html);
+            const csvHead = ['כתובת','מוסד','שכבת גיל','תלמידים','כיתות','מרחק (מ\')','מס\' תכנית','שם תכנית','סוג תכנית','סטטוס','תאריך סטטוס','היתר קיים','מס\' תיק היתר','יזם'];
+            const csvLines = [csvHead.map(hh => '"' + hh.replace(/"/g, '""') + '"').join(',')];
+            rows.forEach(r => {
+                const c = [r.address, r.name, r.bucket, r.students, r.classes, r.dist, r.plan_name, r.plan_he, r.ptype, r.status, r.sdate, r.permit ? 'כן' : 'לא', r.permit, r.developer];
+                csvLines.push(c.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','));
+            });
+            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvLines.join('\n')) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="חינוך_ליד_התחדשות_מאושרת.csv";a.click()});<\/script>');
+            printWin.document.close();
+            printWin.focus();
+        }
+
         const STAGE_COLORS = {
             'ג-רישוי בתהליך': PERMITS_PALETTE.pre_licensing,
             'ג-רישוי  בתהליך': PERMITS_PALETTE.pre_licensing,
@@ -2339,6 +2697,8 @@
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
             const [shavazReportFilter, setShavazReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
+            // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
+            const [eduRenewalReport, setEduRenewalReport] = useState(false);
             // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
             const [developersReport, setDevelopersReport] = useState(false);
             const [devRepMinahak, setDevRepMinahak] = useState('all');
@@ -2784,6 +3144,7 @@
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
+                        [eduRenewalReport, () => setEduRenewalReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
                         [devMapSel, clearDevMapSel],
                         [showAnnotations, () => setShowAnnotations(false)],
@@ -2800,7 +3161,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, eduRenewalReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -12172,6 +12533,7 @@
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
+                    { key: 'eduRenewal', isOpen: () => eduRenewalReport, open: () => setEduRenewalReport(true) },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
                         ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
                         apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
@@ -16513,6 +16875,80 @@
                     }).addTo(map);
                     geoLayersRef.current.education_shanaton = shanatonLayer;
                     _ensureKayamZoomHandler();
+                }
+
+                // --- חינוך ליד התחדשות מאושרת (computed: plans × education_shanaton, 50m) ---
+                if (layers['edu_renewal_proximity'] && gd.plans && gd.education_shanaton) {
+                    const eduRenewalMatches = computeEduRenewalMatches(gd);
+                    const eduRenewalGrp = L.layerGroup();
+                    // 1. Matched plan polygons (unique), purple
+                    const _seenRenewalPlans = new Set();
+                    eduRenewalMatches.forEach(m => m.plans.forEach(pl => {
+                        const pn = pl.feat.properties.plan_name;
+                        if (_seenRenewalPlans.has(pn)) return;
+                        _seenRenewalPlans.add(pn);
+                        eduRenewalGrp.addLayer(L.geoJSON(pl.feat, {
+                            pane: 'plansPane',
+                            style: { color: '#8e24aa', weight: 2, fillColor: '#8e24aa', fillOpacity: 0.25 },
+                            onEachFeature: (f, lyr) => {
+                                lyr.on('click', (e) => {
+                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                    const p = f.properties;
+                                    let html = '<div style="font-family:inherit">';
+                                    html += `<div class="popup-header" style="border-bottom:3px solid #8e24aa"><div class="popup-header-title">${p.plan_name_he || p.plan_name}</div>`;
+                                    html += `<div class="popup-header-subtitle" style="opacity:0.85">${p.plan_name || ''} · ${normalizePlanType(p.plan_type) || ''}</div></div>`;
+                                    html += '<div style="padding:8px 14px;font-size:12px;line-height:1.7">';
+                                    html += `<div>סטטוס: <b>${normalizeStatus(p.status_mavat) || '-'}</b>${p.mavat_date ? ' · ' + p.mavat_date : ''}</div>`;
+                                    html += `<div>היתר בנייה: ${p.building_permit ? '✓ ' + p.building_permit + (p.permit_status ? ' · ' + p.permit_status : '') : '✗ טרם'}</div>`;
+                                    if (p.developer) html += `<div>יזם: ${p.developer}</div>`;
+                                    if (p.units_total) html += `<div>יח"ד: ${p.units_total}${p.units_add ? ' (תוספת ' + p.units_add + ')' : ''}</div>`;
+                                    html += '</div></div>';
+                                    L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                                });
+                            }
+                        }));
+                    }));
+                    // 2+3. Dashed 50m circles + institution markers with permanent name labels
+                    eduRenewalMatches.forEach(m => {
+                        const c = m.feat.geometry.coordinates;
+                        const latlng = L.latLng(c[1], c[0]);
+                        const p = m.feat.properties;
+                        eduRenewalGrp.addLayer(L.circle(latlng, {
+                            radius: EDU_RENEWAL_RADIUS_M, pane: 'plansPane', color: '#8e24aa',
+                            dashArray: '4,4', weight: 1, fillColor: '#8e24aa', fillOpacity: 0.04, interactive: false
+                        }));
+                        const bucket = eduAgeBucket(p.primary_type);
+                        const cnt = p.institutions_count || 1;
+                        const shortName = String((p.institutions && p.institutions[0] && p.institutions[0].name) || p.address || '').split(' - ').pop();
+                        const label = shortName + (cnt > 1 ? ' +' + (cnt - 1) : '');
+                        const mk = L.circleMarker(latlng, { pane: 'stationsPane', radius: 7, fillColor: bucket.color, color: '#fff', weight: 2, fillOpacity: 1 });
+                        mk.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'edu-renewal-label' });
+                        mk.on('click', (e) => {
+                            if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                            let html = '<div style="font-family:inherit">';
+                            html += `<div class="popup-header" style="border-bottom:3px solid ${bucket.color}"><div class="popup-header-title">${cnt > 1 ? cnt + ' מסגרות חינוך' : shortName}</div>`;
+                            html += `<div class="popup-header-subtitle" style="opacity:0.85">${p.address || ''}</div></div>`;
+                            html += '<div style="max-height:320px;overflow-y:auto;padding:6px 14px;font-size:12px;line-height:1.6">';
+                            (p.institutions || []).forEach(inst => {
+                                const b = eduAgeBucket(inst.type);
+                                const meta = [];
+                                if (inst.students != null) meta.push(`${inst.students} תלמידים`);
+                                const kls = (inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0) || inst.classes || 0;
+                                if (kls) meta.push(`${kls} כיתות`);
+                                html += `<div style="padding:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.color};margin-left:6px"></span><b>${inst.name || ''}</b> · ${b.label}${meta.map(x => ' · ' + x).join('')}</div>`;
+                            });
+                            html += '<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">תכניות מאושרות בקרבה:</div>';
+                            m.plans.forEach(pl => {
+                                const pp = pl.feat.properties;
+                                html += `<div style="padding:2px 0">📐 ${pp.plan_name} · ${pl.dist} מ' · ${normalizeStatus(pp.status_mavat) || ''}${pp.building_permit ? ' · יש היתר' : ''}</div>`;
+                            });
+                            html += '</div></div>';
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                        });
+                        eduRenewalGrp.addLayer(mk);
+                    });
+                    eduRenewalGrp.addTo(map);
+                    geoLayersRef.current.edu_renewal_proximity = eduRenewalGrp;
                 }
 
                 // --- Yiud Karka Kayam (existing land use - Jerusalem municipality) ---
@@ -23337,6 +23773,20 @@
                                         </div>
                                     </div>
 
+                                    {/* קטגוריה: התחדשות עירונית וחינוך */}
+                                    <div className="reports-category" style={{border:'1px dashed #8e24aa', background:'rgba(142,36,170,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                        <h3 style={{color:'#ab47bc'}}>🏫 התחדשות עירונית וחינוך</h3>
+                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>מוסדות חינוך קיימים עד 50 מ' מתב"ע התחדשות עירונית/פינוי-בינוי/עיבוי מאושרת — הערכת הפרעה לתפקוד המוסד בשלב הביצוע. כולל מפה להדפסה ו-CSV.</div>
+                                        <div className="reports-menu-grid">
+                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setEduRenewalReport(true); }}>
+                                                <span className="report-icon">🏫</span>
+                                                <div className="report-text">
+                                                    <span className="report-title">תב"ע מאושרת ליד מוסד חינוך</span>
+                                                    <span className="report-desc">שם, שכבת גיל, תלמידים/כיתות + תכניות סמוכות (סטטוס, היתר, יזם)</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
                                     {/* קטגוריה: דוחות אזוריים */}
                                     <div className="reports-category">
                                         <h3>🏘️ דוחות אזוריים</h3>
@@ -28123,6 +28573,132 @@
                                             &#128424; הדפסה / שמירה
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {eduRenewalReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans || !gd.education_shanaton) return null;
+                        const matches = computeEduRenewalMatches(gd);
+                        const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+                        const planSet = new Set();
+                        matches.forEach(m => m.plans.forEach(pl => planSet.add(pl.feat.properties.plan_name)));
+                        const flyToPlan = (planName) => {
+                            if (!gd.plans || !mapInstanceRef.current) return;
+                            const feat = gd.plans.features.find(f => f.properties.plan_name === planName);
+                            if (!feat || !feat.geometry) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2);
+                            const props = JSON.parse(JSON.stringify(feat.properties));
+                            setEduRenewalReport(false);
+                            setTimeout(() => {
+                                mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+                                setTimeout(() => {
+                                    const mapped = mapPlanProps(props);
+                                    const popup = L.popup({ maxWidth: 340 }).setLatLng(center).setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
+                                    popup.openOn(mapInstanceRef.current);
+                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                }, 600);
+                            }, 100);
+                        };
+                        const showOnMap = () => {
+                            setEduRenewalReport(false);
+                            setLayers(prev => ({ ...prev, edu_renewal_proximity: true }));
+                            if (mapInstanceRef.current && matches.length) {
+                                const lats = matches.map(m => m.feat.geometry.coordinates[1]);
+                                const lngs = matches.map(m => m.feat.geometry.coordinates[0]);
+                                setTimeout(() => mapInstanceRef.current.fitBounds(
+                                    [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]],
+                                    { padding: [40, 40] }), 150);
+                            }
+                        };
+                        const thS = { textAlign: 'right', padding: '4px 6px', color: '#bbb', fontSize: 11, borderBottom: '1px solid #2a2a4a' };
+                        const tdS = { padding: '4px 6px', color: '#e0e0e0', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' };
+                        return (
+                        <div className="units-overlay" onClick={() => setEduRenewalReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(1050px, 96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setEduRenewalReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏫 מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h2>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{matches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ'</p>
+                                    <p style={{color:'#888',fontSize:11,marginBottom:12}}>הערכת הפרעה לתפקוד המוסד בשלב הביצוע · קליק על תכנית פותח אותה במפה · מרחק 0 = המוסד בתוך תחום התכנית</p>
+                                    {matches.map((m, mi) => {
+                                        const p = m.feat.properties;
+                                        return (
+                                        <div key={mi} style={{border:'1px solid #2a2a4a', borderRadius:8, marginBottom:12, overflow:'hidden', background:'#14142a'}}>
+                                            <div style={{background:'#1e1b33', padding:'6px 10px', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
+                                                <span style={{color:'#ce93d8', fontWeight:700, fontSize:13}}>📍 {p.address || '(ללא כתובת)'}</span>
+                                                <span style={{color:'#888', fontSize:11}}>{(p.institutions || []).length} מוסדות · תכנית קרובה: {m.minDist} מ'</span>
+                                            </div>
+                                            <table style={{width:'100%', borderCollapse:'collapse'}}>
+                                                <thead><tr>
+                                                    <th style={thS}>מוסד</th><th style={thS}>שכבת גיל</th><th style={thS}>פיקוח</th>
+                                                    <th style={{...thS, textAlign:'center'}}>תלמידים</th><th style={{...thS, textAlign:'center'}}>כיתות</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {(p.institutions || []).map((inst, ii) => {
+                                                        const b = eduAgeBucket(inst.type);
+                                                        const kls = ((inst.kitot_regilot || 0) + (inst.kitot_mekadmot || 0)) || inst.classes || 0;
+                                                        return (
+                                                        <tr key={ii}>
+                                                            <td style={tdS}>{inst.name || '-'}</td>
+                                                            <td style={tdS}><span style={{display:'inline-block', padding:'1px 8px', borderRadius:8, background:b.color, color:'#222', fontSize:11, fontWeight:700}}>{b.label}</span></td>
+                                                            <td style={{...tdS, fontSize:11, color:'#aaa'}}>{inst.pikuach || '-'}</td>
+                                                            <td style={{...tdS, textAlign:'center'}}>{inst.students != null ? inst.students : '-'}</td>
+                                                            <td style={{...tdS, textAlign:'center'}}>{kls || '-'}</td>
+                                                        </tr>);
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                            <div style={{background:'rgba(142,36,170,0.12)', padding:'4px 10px', color:'#ce93d8', fontSize:11, fontWeight:600}}>תכניות מאושרות בקרבה:</div>
+                                            <table style={{width:'100%', borderCollapse:'collapse'}}>
+                                                <thead><tr>
+                                                    <th style={thS}>מס' תכנית</th><th style={thS}>שם תכנית</th><th style={thS}>סוג</th><th style={thS}>סטטוס</th><th style={thS}>תאריך</th>
+                                                    <th style={{...thS, textAlign:'center'}}>היתר</th><th style={thS}>יזם</th><th style={{...thS, textAlign:'center'}}>מרחק (מ')</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {m.plans.map((pl, pi) => {
+                                                        const pp = pl.feat.properties;
+                                                        return (
+                                                        <tr key={pi} style={{cursor:'pointer'}} onClick={() => flyToPlan(pp.plan_name)}>
+                                                            <td style={{...tdS, color:'#64b5f6', textDecoration:'underline', whiteSpace:'nowrap'}}>{pp.plan_name}</td>
+                                                            <td style={{...tdS, maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.plan_name_he || ''}>{pp.plan_summary || pp.plan_name_he || '-'}</td>
+                                                            <td style={{...tdS, fontSize:11}}>{normalizePlanType(pp.plan_type) || '-'}</td>
+                                                            <td style={{...tdS, color:'#81c784', fontSize:11}}>{normalizeStatus(pp.status_mavat) || '-'}</td>
+                                                            <td style={{...tdS, fontSize:11, whiteSpace:'nowrap'}}>{pp.mavat_date || '-'}</td>
+                                                            <td style={{...tdS, textAlign:'center'}}>{pp.building_permit
+                                                                ? <span style={{color:'#4fc3f7'}} title={(pp.permit_status || '') + (pp.permit_date ? ' · ' + pp.permit_date : '')}>✓ {pp.building_permit}</span>
+                                                                : <span style={{color:'#777'}}>✗</span>}</td>
+                                                            <td style={{...tdS, fontSize:11, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={pp.developer || ''}>{pp.developer || '-'}</td>
+                                                            <td style={{...tdS, textAlign:'center', fontWeight:700, color: pl.dist <= 15 ? '#ef5350' : '#ffb74d'}}>{pl.dist}</td>
+                                                        </tr>);
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>);
+                                    })}
+                                    <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:4}}>
+                                        <button onClick={() => openEduRenewalPrint(matches, gd)}
+                                            style={{background:'#e94560', color:'#fff', border:'none', borderRadius:6, padding:'8px 20px', cursor:'pointer', fontSize:13, fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה (מפה + טבלה + CSV)
+                                        </button>
+                                        <button onClick={showOnMap}
+                                            style={{background:'#8e24aa', color:'#fff', border:'none', borderRadius:6, padding:'8px 20px', cursor:'pointer', fontSize:13, fontWeight:600}}>
+                                            🗺️ הצג במפה
+                                        </button>
+                                    </div>
+                                    <p style={{color:'#666', fontSize:10.5, marginTop:10}}>
+                                        הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור),
+                                        שגבולן במרחק אווירי של עד {EDU_RENEWAL_RADIUS_M} מ' מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו תכניות מסוג עיבוי שטחים חומים.
+                                    </p>
                                 </div>
                             </div>
                         </div>);
