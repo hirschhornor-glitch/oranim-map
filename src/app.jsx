@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-06-binui-plans';
+        const APP_VERSION = '2026-07-06-binui-plans2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1118,6 +1118,32 @@
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
+        // מאוכלס rendering: green outline + subtle diagonal hatch fill. The pattern is injected
+        // once into a hidden svg; plan paths reference it via fill:url(#occHatch) (SVG fragment
+        // refs resolve document-wide, so it works across Leaflet pane svgs).
+        const OCC_LINE_COLOR = '#1e8449';
+        function ensureOccHatchDefs() {
+            if (typeof document === 'undefined' || document.getElementById('occHatch')) return;
+            const NS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(NS, 'svg');
+            svg.setAttribute('aria-hidden', 'true');
+            svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+            const defs = document.createElementNS(NS, 'defs');
+            const pat = document.createElementNS(NS, 'pattern');
+            pat.setAttribute('id', 'occHatch');
+            pat.setAttribute('patternUnits', 'userSpaceOnUse');
+            pat.setAttribute('width', '6'); pat.setAttribute('height', '6');
+            pat.setAttribute('patternTransform', 'rotate(45)');
+            const line = document.createElementNS(NS, 'line');
+            line.setAttribute('x1', '0'); line.setAttribute('y1', '0');
+            line.setAttribute('x2', '0'); line.setAttribute('y2', '6');
+            line.setAttribute('stroke', OCC_LINE_COLOR);
+            line.setAttribute('stroke-width', '1.1');
+            line.setAttribute('stroke-opacity', '0.55');
+            pat.appendChild(line); defs.appendChild(pat); svg.appendChild(defs);
+            document.body.appendChild(svg);
+        }
+        function occPlanStyle() { ensureOccHatchDefs(); return { color: OCC_LINE_COLOR, weight: 1.6, fillColor: 'url(#occHatch)', fillOpacity: 1, dashArray: '' }; }
 
         const PLAN_TYPE_NORMALIZE = {
             'איחודוחלוקה': 'איחוד וחלוקה',
@@ -1225,7 +1251,7 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
-            'מאוכלס': '#0d9488',
+            'מאוכלס': '#1e8449',
         };
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
@@ -6114,7 +6140,7 @@
                             '<span style="font-size:11px;color:#aaa;margin-left:4px">אופק:</span>' + horizonButtonsHtml +
                         '</div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + existingUnitsScope.toLocaleString() + '</b>' +
-                            (occupiedUnitsScope > 0 ? ' <span style="font-size:10px;color:#5eead4">(כולל ' + occupiedUnitsScope.toLocaleString() + ' מאוכלס)</span>' : '') + '</div>' +
+                            (occupiedUnitsScope > 0 ? ' <span style="font-size:10px;color:#86efac">(כולל ' + occupiedUnitsScope.toLocaleString() + ' מאוכלס)</span>' : '') + '</div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד מתוכננות (' + horizonLabel(targetYear) + '): <b>' + plannedUnitsWeighted.toLocaleString() + '</b>' +
                             (targetYear !== 'existing' && totalUnitsAddPotential > 0 ? ' <span style="font-size:10px;color:#888">(מתוך ' + totalUnitsAddPotential.toLocaleString() + ' פוטנציאל)</span>' : '') +
                         '</div>' +
@@ -13083,6 +13109,8 @@
                             const landuseActive = layers['landuse_xplan'];
                             const projectorActive = layers['projector_gonenim'] || layers['projector_gonenim_tzatal'];
                             const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
+                            // מאוכלס (טופס 4): green outline + subtle hatch fill, in every view mode.
+                            if (isOccupied(f.properties)) return occPlanStyle();
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
                             const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].filter(k => layers[k]);
@@ -13216,6 +13244,7 @@
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 const landuseOn = layersRef.current['landuse_xplan'];
                                 const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
+                                if (isOccupied(f.properties)) { layer.setStyle(occPlanStyle()); return; }
                                 if (landuseOn) {
                                     layer.setStyle({ weight: 2.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
                                 } else if (shavazOn) {
@@ -19094,7 +19123,7 @@
                     '#f56e05': 'linear-gradient(135deg, #3d2510, #0f3460)', // orange - conditions
                     '#eb0000': 'linear-gradient(135deg, #3d1515, #0f3460)', // red - review
                     '#888888': 'linear-gradient(135deg, #2a2a2a, #1a1a2e)', // gray - rejected
-                    '#0d9488': 'linear-gradient(135deg, #0b3d3a, #0f3460)', // teal - occupied (מאוכלס)
+                    '#1e8449': 'linear-gradient(135deg, #103a22, #0f3460)', // green - occupied (מאוכלס)
                 };
                 const headerBg = headerGradients[statusColor] || 'linear-gradient(135deg, #16213e, #0f3460)';
                 html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:2px solid ${statusColor}">`;
@@ -19115,7 +19144,7 @@
                     const bits = ['טופס 4 / אוכלס'];
                     if (occ.form4_date) bits.push(occ.form4_date);
                     if (occ.source) bits.push(occ.source);
-                    html += `<div style="text-align:center;margin-top:4px;font-size:11px;color:#5eead4">${bits.join(' · ')}</div>`;
+                    html += `<div style="text-align:center;margin-top:4px;font-size:11px;color:#86efac">${bits.join(' · ')}</div>`;
                     const planStat = normalizeStatus(props.status_mavat || '');
                     if (planStat) html += `<div style="text-align:center;font-size:10px;color:#8899bb">סטטוס תכנוני: ${planStat}</div>`;
                 }
