@@ -114,14 +114,6 @@ def apply(in_path=GEO, out_path=GEO):
 
     feats = gj['features']
 
-    # --- (0) address corrections by semel (do before splits/regroup) ---
-    for f in feats:
-        for inst in f['properties']['institutions']:
-            s = inst.get('semel_chinuch')
-            if s and int(s) in addr_semel:
-                f['properties']['_addr_renamed_from'] = f['properties'].get('address')
-                f['properties']['address'] = addr_semel[int(s)]
-
     # --- (1) carve split institutions into their own features ---
     new_feats = []
     for f in feats:
@@ -145,6 +137,22 @@ def apply(in_path=GEO, out_path=GEO):
                         '_split_from': p['address']}})
         # if carved and not keep -> the group WAS only this institution; leave as-is
     feats.extend(new_feats)
+
+    # --- (1b) address corrections by semel. AFTER splits, so a carved
+    #     institution's new address never renames the group it came from.
+    #     Rename only when every institution in the feature agrees on the
+    #     same override address (single-inst features trivially qualify). ---
+    for f in feats:
+        p = f['properties']
+        targets = set()
+        for inst in p['institutions']:
+            s = inst.get('semel_chinuch')
+            if not (s and int(s) in addr_semel):
+                targets = set(); break
+            targets.add(addr_semel[int(s)])
+        if len(targets) == 1 and p.get('address') != next(iter(targets)):
+            p['_addr_renamed_from'] = p.get('address')
+            p['address'] = next(iter(targets))
 
     # --- (2) type overrides by semel ---
     for f in feats:
