@@ -28,6 +28,9 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 API = "https://api.meirim.org/api/tree/"
 PLACE = "ירושלים"
 GRACE_DAYS = 0           # only permits whose objection window is still open (deadline >= today)
+STALE_DAYS = 21           # alert if Meirim's newest permit is older than this — its Jerusalem
+                          # feed silently dried up on 2026-05-31 (יעל"ה migration) and the empty
+                          # report went unnoticed for ~5 weeks. Fail loud instead of showing 0.
 MAX_OBJECTION_DAYS = 120  # drop records whose deadline is implausibly far from the issue date —
                           # Meirim's synthetic muni records ("meirim-jer-…") carry a bogus
                           # deadline = start + 3 years, which keeps a 2024 permit "open" for years.
@@ -56,31 +59,53 @@ OUT = os.path.join(DATA_DIR, "tree_permits.json")
 UA = {"User-Agent": "Mozilla/5.0 (oranim-tree-permits-fetch)"}
 
 
-def fetch_page(page):
+def fetch_page(page, attempts=4):
+    # Retry EVERY page (incl. page 1) — Meirim intermittently sends a truncated /
+    # corrupted body (http.client.IncompleteRead) or times out. Previously only
+    # pages 2+ were retried, so a transient hiccup on page 1 crashed the whole
+    # run (CI failure 2026-07-06). Returns None if all attempts fail (caller
+    # decides whether that page is fatal).
     qs = urllib.parse.urlencode({"PLACE": PLACE, "page": page})
-    req = urllib.request.Request(API + "?" + qs, headers=UA)
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+    last = None
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(API + "?" + qs, headers=UA)
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except Exception as e:
+            last = e
+            print(f"  page {page} retry {i + 1}/{attempts}: {e}")
+            time.sleep(2 * (i + 1))
+    print(f"  ⚠️ page {page} FAILED after {attempts} attempts: {last}")
+    return None
 
 
 def fetch_all():
+    # Page 1 is fatal if unfetchable (it carries the pagination). A later page
+    # that stays broken across all retries (a corrupted Meirim response, seen
+    # 2026-07-06) is SKIPPED with a loud warning rather than failing the whole
+    # daily run — the ~14-day objection window + daily cadence means the next
+    # run recovers anything missed.
     first = fetch_page(1)
+    if first is None:
+        raise SystemExit("could not fetch page 1 (pagination) — Meirim API unavailable")
     pag = first.get("pagination", {})
     pages = pag.get("pageCount", 1)
     rows = list(first["data"])
     print(f"rowCount={pag.get('rowCount')} pages={pages}")
+    skipped = []
     for p in range(2, pages + 1):
-        for attempt in range(3):
-            try:
-                rows.extend(fetch_page(p)["data"])
-                break
-            except Exception as e:
-                print(f"  page {p} retry {attempt+1}: {e}")
-                time.sleep(2)
+        page = fetch_page(p)
+        if page is None:
+            skipped.append(p)
+            continue
+        rows.extend(page["data"])
         if p % 20 == 0:
             print(f"  ...fetched page {p}/{pages}")
         time.sleep(0.15)
-    print(f"total rows fetched: {len(rows)}")
+    if skipped:
+        print(f"  ⚠️ WARNING: skipped {len(skipped)} unreadable pages {skipped} — data may miss some permits")
+    print(f"total rows fetched: {len(rows)} (of ~{pag.get('rowCount')})")
     return rows
 
 
@@ -320,6 +345,21 @@ def main():
     print(f"skipped: deadline={skipped_deadline}  bogus-window={skipped_bogus}  outside-area={skipped_outside}  no-location={skipped_noloc}")
     print(f"geo_approx (unresolved shared default): {approx}")
     print(f"wrote {OUT}  ({os.path.getsize(OUT)} bytes)")
+
+    # Staleness guard — if the newest permit Meirim serves is older than
+    # STALE_DAYS, the source has likely stopped updating (as happened 2026-05-31).
+    # Exit non-zero AFTER writing so the workflow goes red and we notice, instead
+    # of silently emptying the layer for weeks.
+    issue_dates = [iso_date(r.get("permit_issue_date")) for r in rows if r.get("permit_issue_date")]
+    newest = max(issue_dates) if issue_dates else ""
+    if newest:
+        age = (today - datetime.date.fromisoformat(newest)).days
+        print(f"freshness: newest Meirim permit issued {newest} ({age}d ago)")
+        if age > STALE_DAYS:
+            raise SystemExit(
+                f"STALE SOURCE: newest Meirim permit is {age}d old (>{STALE_DAYS}). "
+                f"Meirim's Jerusalem feed likely stopped — the real data moved to יעל\"ה "
+                f"(yeela-trees.moag.gov.il). See project_tree_cutting_permits_layer memory.")
 
 
 if __name__ == "__main__":
