@@ -1182,7 +1182,9 @@
             const padDeg = (EDU_RENEWAL_RADIUS_M + 10) / 111320 * 1.25; // covers the lng shrink at 31.7°N
             const candidates = [];
             for (const f of gd.plans.features) {
-                if (!f.geometry || !isApprovedRenewalPlan(f.properties)) continue;
+                // Occupied plans (מאוכלס / טופס 4) are already built + inhabited → no construction
+                // noise/nuisance risk to nearby institutions, so they are excluded here.
+                if (!f.geometry || !isApprovedRenewalPlan(f.properties) || isOccupied(f.properties)) continue;
                 const bb = geomBBox(f.geometry);
                 candidates.push({ feat: f, bbox: [bb[0] - padDeg, bb[1] - padDeg, bb[2] + padDeg, bb[3] + padDeg] });
             }
@@ -1199,9 +1201,18 @@
                 }
                 if (near.length) {
                     near.sort((a, b) => a.dist - b.dist);
+                    // minahak + sub-neighborhood are taken from the nearest matched plan (within 50m,
+                    // so a faithful proxy for the institution's own location) — used for the report
+                    // filter and the per-sub-neighborhood print maps.
+                    const np = near[0].feat.properties || {};
+                    const rawSub = (np.sub_neighborhood || '').trim();
                     // inside = the institution point falls within a plan boundary (dist 0) →
                     // permanent evacuation when demolished; else only bordering → temporary during works.
-                    matches.push({ feat: ef, plans: near, minDist: near[0].dist, inside: near[0].dist === 0 });
+                    matches.push({
+                        feat: ef, plans: near, minDist: near[0].dist, inside: near[0].dist === 0,
+                        minahak: (np.minahak || '').trim() || 'לא ידוע',
+                        subN: (SUB_NORMALIZE[rawSub] || rawSub) || 'לא ידוע',
+                    });
                 }
             }
             matches.sort((a, b) => a.minDist - b.minDist);
@@ -2170,24 +2181,14 @@
             }
             const toImg = (svg) => 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
-            // greedy clustering: addresses within 300m share a zoom map
-            const clusters = [];
-            matches.forEach(m => {
-                const c = m.feat.geometry.coordinates;
-                let hit = null;
-                for (const cl of clusters) {
-                    for (const other of cl) {
-                        const oc = other.feat.geometry.coordinates;
-                        const dx = (c[0] - oc[0]) * 94500, dy = (c[1] - oc[1]) * 111320;
-                        if (Math.sqrt(dx * dx + dy * dy) <= 300) { hit = cl; break; }
-                    }
-                    if (hit) break;
-                }
-                if (hit) hit.push(m); else clusters.push([m]);
-            });
-            clusters.sort((a, b) => b.length - a.length);
-            const MAX_CLUSTER_MAPS = 8;
-            const shownClusters = clusters.slice(0, MAX_CLUSTER_MAPS);
+            // one titled zoom map per sub-neighborhood (תת-שכונה)
+            const bySub = {};
+            matches.forEach(m => { (bySub[m.subN] = bySub[m.subN] || []).push(m); });
+            const subClusters = Object.keys(bySub)
+                .sort((a, b) => bySub[b].length - bySub[a].length)
+                .map(sub => ({ sub, items: bySub[sub] }));
+            const MAX_CLUSTER_MAPS = 12;
+            const shownClusters = subClusters.slice(0, MAX_CLUSTER_MAPS);
 
             // flat table rows: institution × plan
             const rows = [];
@@ -2219,8 +2220,8 @@
 
             const overviewImg = toImg(buildSvg(matches, 700, 480));
             const clusterImgs = shownClusters.map(cl => ({
-                img: toImg(buildSvg(cl, 340, 260)),
-                title: cl.map(m => m.feat.properties.address).filter(Boolean).slice(0, 2).join(' · ') + (cl.length > 2 ? ` (+${cl.length - 2})` : ''),
+                img: toImg(buildSvg(cl.items, 340, 260)),
+                title: cl.sub + ' · ' + cl.items.length + ' כתובות',
             }));
 
             const legendHtml =
@@ -2251,7 +2252,7 @@
                 '.clusters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }' +
                 '.cluster-box { width: calc(50% - 4px); box-sizing: border-box; page-break-inside: avoid; }' +
                 '.cluster-box img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' +
-                '.cluster-title { font-size: 10px; color: #555; text-align: center; margin-top: 1px; font-weight: bold; }' +
+                '.cluster-title { font-size: 12px; color: #4a148c; background: #f3e5f5; border-radius: 3px; text-align: center; margin-top: 2px; padding: 2px 4px; font-weight: bold; }' +
                 'table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 14px; }' +
                 'th { padding: 5px 4px; border-bottom: 2px solid #333; background: #f3e5f5; text-align: right; font-size: 10px; }' +
                 'td { padding: 4px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top; }' +
@@ -2278,7 +2279,7 @@
                 '<div class="clusters">' +
                 clusterImgs.map(c => '<div class="cluster-box"><img src="' + c.img + '"><div class="cluster-title">' + esc(c.title) + '</div></div>').join('') +
                 '</div>' +
-                (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '');
+                (subClusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' תת-שכונות מתוך ' + subClusters.length + ' — היתר מופיעים במפת המבט-על ובטבלה</div>' : '');
 
             const renderSection = (secRows, cls, icon, title, note) => {
                 if (!secRows.length) return '';
@@ -2794,6 +2795,7 @@
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
             const [eduRenewalFilter, setEduRenewalFilter] = useState('all'); // all | inside | adjacent
+            const [eduRenewalMinahak, setEduRenewalMinahak] = useState('all'); // 'all' | minahak name
             const [reportSearchQ, setReportSearchQ] = useState(''); // live search in the reports menu
             // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
             const [developersReport, setDevelopersReport] = useState(false);
@@ -12910,8 +12912,8 @@
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
                     { key: 'eduRenewal', isOpen: () => eduRenewalReport, open: () => setEduRenewalReport(true),
-                        ser: () => ({ f: eduRenewalFilter }),
-                        apply: p => { if (p.f) setEduRenewalFilter(p.f); } },
+                        ser: () => ({ f: eduRenewalFilter, mnk: eduRenewalMinahak }),
+                        apply: p => { if (p.f) setEduRenewalFilter(p.f); if (p.mnk) setEduRenewalMinahak(p.mnk); } },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
                         ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
                         apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
@@ -28714,12 +28716,17 @@
                         const gd = geoDataRef.current;
                         if (!gd.plans || !gd.education_shanaton) return null;
                         const matches = computeEduRenewalMatches(gd);
+                        // distinct minahaks (over all matches) for the filter dropdown, ranked by frequency
+                        const minahakCounts = {};
+                        matches.forEach(m => { minahakCounts[m.minahak] = (minahakCounts[m.minahak] || 0) + 1; });
+                        const minahakOptions = Object.keys(minahakCounts).sort((a, b) => minahakCounts[b] - minahakCounts[a]);
+                        const baseMatches = eduRenewalMinahak === 'all' ? matches : matches.filter(m => m.minahak === eduRenewalMinahak);
                         const fInside = eduRenewalFilter !== 'adjacent';
                         const fAdj = eduRenewalFilter !== 'inside';
-                        const shownMatches = matches.filter(m => m.inside ? fInside : fAdj);
-                        const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
+                        const shownMatches = baseMatches.filter(m => m.inside ? fInside : fAdj);
+                        const nInst = baseMatches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
                         const planSet = new Set();
-                        matches.forEach(m => m.plans.forEach(pl => planSet.add(pl.feat.properties.plan_name)));
+                        baseMatches.forEach(m => m.plans.forEach(pl => planSet.add(pl.feat.properties.plan_name)));
                         const flyToPlan = (planName) => {
                             if (!gd.plans || !mapInstanceRef.current) return;
                             const feat = gd.plans.features.find(f => f.properties.plan_name === planName);
@@ -28757,8 +28764,8 @@
                         };
                         const thS = { textAlign: 'right', padding: '4px 6px', color: '#bbb', fontSize: 11, borderBottom: '1px solid #2a2a4a' };
                         const tdS = { padding: '4px 6px', color: '#e0e0e0', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' };
-                        const insideMatches = matches.filter(m => m.inside);
-                        const adjacentMatches = matches.filter(m => !m.inside);
+                        const insideMatches = baseMatches.filter(m => m.inside);
+                        const adjacentMatches = baseMatches.filter(m => !m.inside);
                         const nInsideInst = insideMatches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
                         const nAdjInst = adjacentMatches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
                         const accent = m => m.inside ? '#ef5350' : '#ffb74d';
@@ -28831,9 +28838,17 @@
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setEduRenewalReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏫 מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h2>
-                                    <p style={{color:'#aaa',fontSize:12,marginBottom:8}}>{matches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ' · קליק על תכנית פותח אותה במפה</p>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:8}}>{baseMatches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ' · קליק על תכנית פותח אותה במפה</p>
+                                    <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', marginBottom:10}}>
+                                        <label style={{color:'#bbb', fontSize:12, fontWeight:600}}>מינה"ק:</label>
+                                        <select value={eduRenewalMinahak} onChange={e => setEduRenewalMinahak(e.target.value)}
+                                            style={{background:'#16162a', color:'#e0e0e0', border:'1px solid #3a3a50', borderRadius:6, padding:'4px 8px', fontSize:12}}>
+                                            <option value="all">כל המינהקים ({matches.length})</option>
+                                            {minahakOptions.map(mk => <option key={mk} value={mk}>{mk} ({minahakCounts[mk]})</option>)}
+                                        </select>
+                                    </div>
                                     <div style={{display:'flex', gap:6, flexWrap:'wrap', marginBottom:12}}>
-                                        {[['all', 'הכל', matches.length], ['inside', '🔴 בתוך התחום', insideMatches.length], ['adjacent', '🟠 גובל', adjacentMatches.length]].map(([val, lbl, cnt]) => (
+                                        {[['all', 'הכל', baseMatches.length], ['inside', '🔴 בתוך התחום', insideMatches.length], ['adjacent', '🟠 גובל', adjacentMatches.length]].map(([val, lbl, cnt]) => (
                                             <button key={val} onClick={() => setEduRenewalFilter(val)}
                                                 style={{background: eduRenewalFilter === val ? '#8e24aa' : '#20203a', color: eduRenewalFilter === val ? '#fff' : '#bbb',
                                                     border: '1px solid ' + (eduRenewalFilter === val ? '#ab47bc' : '#33335a'), borderRadius: 16, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600}}>
