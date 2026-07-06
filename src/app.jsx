@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-06-binui-plans2';
+        const APP_VERSION = '2026-07-06-binui-plans3';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -5707,6 +5707,39 @@
                         });
                     }
 
+                    // מבני ציבור (400-460) credit — מדריך הקצאת שטחי ציבור 2018, עמ' 129: החלק הפונה-לציבור
+                    // (רחבה/כיכר/גינת ישיבה) של מגרש מוסד ציבור נספר כחלק מהמרחב הפתוח "עירוני". קירוב ברמת
+                    // המגרש השלם (אין שכבת תת-מגרש): 20% משטח כל מגרש "מוסדות ציבור" מעל 4 דונם, בתוך גבול התכנית.
+                    const PUBLIC_INST_CREDIT_PCT = 0.20, PUBLIC_INST_MIN_AREA_SQM = 4000;
+                    let publicInstCreditArea = 0;
+                    const publicInstSources = gd.landuse_xplan ? [gd.landuse_xplan] : [];
+                    if (gd.yiud_karka_kayam) publicInstSources.push(gd.yiud_karka_kayam);
+                    publicInstSources.forEach(fc => {
+                        fc.features.forEach(f => {
+                            const name = (f.properties.mavat_name || f.properties.Descr || '').trim();
+                            if (!name || getLanduseGroup(name) !== 'מוסדות ציבור') return;
+                            const area = getFeatureArea(f);
+                            if (area <= PUBLIC_INST_MIN_AREA_SQM) return;
+                            try {
+                                let fCoords;
+                                if (f.geometry.type === 'Polygon') fCoords = f.geometry.coordinates[0];
+                                else if (f.geometry.type === 'MultiPolygon') fCoords = f.geometry.coordinates[0][0];
+                                else return;
+                                let cx = 0, cy = 0, n = 0;
+                                for (const c of fCoords) { cx += c[0]; cy += c[1]; n++; }
+                                cx /= n; cy /= n;
+                                let inside = false;
+                                for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+                                    const [xi, yi] = planCoords[i], [xj, yj] = planCoords[j];
+                                    if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi)
+                                        inside = !inside;
+                                }
+                                if (inside) publicInstCreditArea += area * PUBLIC_INST_CREDIT_PCT;
+                            } catch(ex) {}
+                        });
+                    });
+                    openSpaceArea += publicInstCreditArea;
+
                     shatzafModeRef.current = null;
                     setShatzafMode(false);
                     mapInstanceRef.current?.getContainer().classList.remove('measuring');
@@ -5746,6 +5779,7 @@
                         (subNeighName ? '<div style="font-size:11px;margin-bottom:6px;color:#888">שכונה: ' + subNeighName + '</div>' : '') +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
+                        (publicInstCreditArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏛️ כולל 20% ממגרשי מבני ציבור (מעל 4 דונם): ' + (publicInstCreditArea/1000).toFixed(1) + ' דונם</div>' : '') +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
                         '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' +
                             (typeof censusHH === 'number' && censusHH > 0
@@ -6207,12 +6241,70 @@
                                 if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
                             });
                         }
+
+                        // מבני ציבור (400-460) credit — מדריך הקצאת שטחי ציבור 2018, עמ' 129: החלק הפונה-לציבור
+                        // (רחבה/כיכר/גינת ישיבה) של מגרש מוסד ציבור נספר כחלק מהמרחב הפתוח "עירוני" (עד 20% קשיח).
+                        // אין שכבת תת-מגרש שמבחינה בין רחבה לבניין, אז מיושם כקירוב ברמת המגרש השלם: 20% משטח
+                        // כל מגרש בייעוד "מוסדות ציבור" שגודלו מעל 4 דונם (מגרשים קטנים כנראה חסרי רחבה משמעותית).
+                        const PUBLIC_INST_CREDIT_PCT = 0.20;
+                        const PUBLIC_INST_MIN_AREA_SQM = 4000;
+                        let publicInstCreditArea = 0;
+                        if (gd.landuse_xplan) {
+                            gd.landuse_xplan.features.forEach(f => {
+                                const planRef = (f.properties.pl_number || '').trim();
+                                if (!planMimushMap.has(planRef)) return;
+                                const name = (f.properties.mavat_name || '').trim();
+                                if (!name || getLanduseGroup(name) !== 'מוסדות ציבור') return;
+                                const area = getFeatureArea(f);
+                                if (area <= PUBLIC_INST_MIN_AREA_SQM) return;
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                const pct = planMimushMap.get(planRef) / 100;
+                                publicInstCreditArea += area * PUBLIC_INST_CREDIT_PCT * pct;
+                            });
+                        }
+                        if (gd.yiud_karka_kayam) {
+                            gd.yiud_karka_kayam.features.forEach(f => {
+                                const name = (f.properties.Descr || '').trim();
+                                if (!name || getLanduseGroup(name) !== 'מוסדות ציבור') return;
+                                const area = getFeatureArea(f);
+                                if (area <= PUBLIC_INST_MIN_AREA_SQM) return;
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                let coveredByXplan = false;
+                                if (planMimushMap.size > 0 && gd.landuse_xplan) {
+                                    gd.landuse_xplan.features.forEach(xf => {
+                                        if (coveredByXplan) return;
+                                        const xRef = (xf.properties.pl_number || '').trim();
+                                        if (!planMimushMap.has(xRef)) return;
+                                        try {
+                                            let xCoords;
+                                            if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];
+                                            else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];
+                                            else return;
+                                            let xInside = false;
+                                            for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
+                                                const xi = xCoords[i][0], yi = xCoords[i][1];
+                                                const xj = xCoords[j][0], yj = xCoords[j][1];
+                                                if ((yi > c[1]) !== (yj > c[1]) && c[0] < (xj - xi) * (c[1] - yi) / (yj - yi) + xi)
+                                                    xInside = !xInside;
+                                            }
+                                            if (xInside) coveredByXplan = true;
+                                        } catch(ex) {}
+                                    });
+                                }
+                                if (coveredByXplan) return;
+                                publicInstCreditArea += area * PUBLIC_INST_CREDIT_PCT;
+                            });
+                        }
+                        openSpaceArea += publicInstCreditArea;
+
                         const totalPeople = grandTotalUnits * hh;
                         const sqmPerPerson = totalPeople > 0 ? openSpaceArea / totalPeople : 0;
                         const sqmPerHH = grandTotalUnits > 0 ? openSpaceArea / grandTotalUnits : 0;
                         return { occupiedUnitsScope, plannedUnitsWeighted, totalUnitsAddPotential, activePlanCount,
                                  existingUnitsScope, grandTotalUnits, openSpaceArea, xplanWeightedArea, openSpaceNames,
-                                 totalPeople, sqmPerPerson, sqmPerHH };
+                                 publicInstCreditArea, totalPeople, sqmPerPerson, sqmPerHH };
                     }
 
                     // Current-horizon metrics (open space + units are hh-independent; hh only scales people).
@@ -6227,6 +6319,7 @@
                     const openSpaceArea = cur.openSpaceArea;
                     const xplanWeightedArea = cur.xplanWeightedArea;
                     const openSpaceNames = cur.openSpaceNames;
+                    const publicInstCreditArea = cur.publicInstCreditArea;
 
                     // 3) Render modal
                     const existingPanel = document.getElementById('shatzaf-panel');
@@ -6265,6 +6358,7 @@
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">סה"כ יח"ד: <b>' + grandTotalUnits.toLocaleString() + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
                         (targetYear !== 'existing' && xplanWeightedArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🌳 שצ"פ עתידי משוקלל: ' + (xplanWeightedArea/1000).toFixed(1) + ' דונם (מתוך ה-' + (openSpaceArea/1000).toFixed(1) + ' דונם)</div>' : '') +
+                        (publicInstCreditArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏛️ כולל 20% ממגרשי מבני ציבור (מעל 4 דונם): ' + (publicInstCreditArea/1000).toFixed(1) + ' דונם</div>' : '') +
                         (targetYear !== 'existing' && activePlanCount > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏗️ תורמות לאופק: ' + activePlanCount + ' תכניות</div>' : '') +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
                         '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' +
@@ -14037,6 +14131,34 @@
                         },
                     }).addTo(map);
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
+
+                    // Standalone תכניות בינוי that DON'T sit on an existing שב"צ מגרש (parent_taba/migrash
+                    // null, e.g. 410ב whose parcel is מבוטלת) — drop an approximate marker from the
+                    // binui_plans.json .location (govmap). Stored as an array so the layer-clear at the top
+                    // of this build (Array.isArray branch) removes them when the שב"צ layer is toggled off.
+                    const _binuiMarkers = [];
+                    (window.__binuiPlans || []).forEach(b => {
+                        if ((b.parent_taba && b.migrash) || !b.location || b.location.lat == null) return;
+                        const _canceled = normalizeStatus(b.status || '') === 'נגנזה';
+                        const _col = _canceled ? '#888888' : '#8B4513';
+                        const _icon = L.divIcon({ className: 'binui-pin', iconSize: [22, 22], iconAnchor: [11, 11],
+                            html: `<div style="width:22px;height:22px;border-radius:50%;background:${_col};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:12px${_canceled ? ';opacity:.7' : ''}">🏗️</div>` });
+                        const mk = L.marker([b.location.lat, b.location.lng], { pane: 'shavazPane', icon: _icon });
+                        mk.on('click', () => {
+                            let h = '<div>';
+                            h += `<div class="popup-header" style="border-bottom:3px solid ${_col}"><div class="popup-header-title">תכנית בינוי ${b.binui_no}</div></div>`;
+                            h += '<div class="popup-body">';
+                            h += buildBinuiHtml(b);
+                            const _prec = b.location.precision;
+                            if (_prec && _prec !== 'exact') h += `<div style="font-size:10px;opacity:0.65;margin-top:2px">📍 מיקום מקורב (${_prec === 'street' ? 'רמת רחוב' : 'לפי חלקות סמוכות'})</div>`;
+                            h += '</div></div>';
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup shavaz-popup shavaz-kayam-popup' })
+                                .setLatLng([b.location.lat, b.location.lng]).setContent(h).openOn(map);
+                        });
+                        mk.addTo(map);
+                        _binuiMarkers.push(mk);
+                    });
+                    if (_binuiMarkers.length) geoLayersRef.current.binui_markers = _binuiMarkers;
                 }
 
                 // All four yearbook choropleths share one in-district filter (same scope as the
@@ -19821,6 +19943,34 @@
             // Build shavaz (public buildings) popup HTML
             function cleanNull(v) { return (v == null || v === 'NULL' || v === 'null' || v === 'None') ? '' : v; }
 
+            // Renders the 🏗️ תכנית בינוי block for one binui_plans.json record. Shared by the
+            // shavaz popup (enriched מגרש, via (TABA,מגרש)) and the standalone binui marker (unlinked plans).
+            function buildBinuiHtml(_binui) {
+                const _bs = normalizeStatus(_binui.status || '');
+                const _bc = getStatusColor(_bs) || '#8B4513';
+                const _bnDate = _binui.status_date ? String(_binui.status_date).split('-').reverse().join('/') : '';
+                let bh = `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${_bc};background:${_bc}14;font-size:11px;line-height:1.6">`;
+                bh += `<div style="font-weight:700;margin-bottom:2px">🏗️ תכנית בינוי: ${_binui.binui_no}`;
+                if (_bs) bh += ` <span style="color:${_bc}">— ${_bs}${_bnDate ? ' (' + _bnDate + ')' : ''}</span>`;
+                bh += `</div>`;
+                if (_binui.name) bh += `<div>${_binui.name}</div>`;
+                const _prog = Array.isArray(_binui.program) ? _binui.program.filter(p => p && p.use) : [];
+                _prog.forEach(p => {
+                    const bits = [];
+                    if (p.count != null) bits.push(p.count + (p.unit ? ' ' + p.unit : ''));
+                    if (p.sqm != null) bits.push(parseInt(p.sqm).toLocaleString() + ' מ"ר');
+                    bh += `<div>• ${p.use}${bits.length ? ' — ' + bits.join(', ') : ''}</div>`;
+                });
+                const _meta = [];
+                if (_binui.land_sqm) _meta.push('קרקע ' + parseInt(_binui.land_sqm).toLocaleString() + ' מ"ר');
+                if (_binui.address) _meta.push('כתובת: ' + _binui.address);
+                if (_binui.submitter) _meta.push('מגיש: ' + _binui.submitter);
+                if (_binui.architect) _meta.push('עורך: ' + _binui.architect);
+                if (_meta.length) bh += `<div style="margin-top:2px;opacity:0.75">${_meta.join(' · ')}</div>`;
+                if (_binui.note) bh += `<div style="margin-top:2px;font-style:italic;opacity:0.7">${_binui.note}</div>`;
+                bh += '</div>';
+                return bh;
+            }
             function buildShavazPopup(props, isFuture, hasOriginPlan, navInfo, isHafrashah) {
                 // Support both landuse_xplan properties (future) and shavaz_kayam properties (existing)
                 const isXplan = !!props.pl_number;
@@ -19936,31 +20086,7 @@
                 const _bnKeyT = String(parseInt(String(taba || '').replace(/\D+/g, ''), 10) || '');
                 const _binui = ((window.__binuiByTabaMigrash || {})[_bnKeyT] || {})[String(lotNum || '').trim()];
                 if (_binui) {
-                    const _bs = normalizeStatus(_binui.status || '');
-                    const _bc = getStatusColor(_bs) || '#8B4513';
-                    const _bnDate = _binui.status_date ? String(_binui.status_date).split('-').reverse().join('/') : '';
-                    let bh = `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${_bc};background:${_bc}14;font-size:11px;line-height:1.6">`;
-                    bh += `<div style="font-weight:700;margin-bottom:2px">🏗️ תכנית בינוי: ${_binui.binui_no}`;
-                    if (_bs) bh += ` <span style="color:${_bc}">— ${_bs}${_bnDate ? ' (' + _bnDate + ')' : ''}</span>`;
-                    bh += `</div>`;
-                    if (_binui.name) bh += `<div>${_binui.name}</div>`;
-                    const _prog = Array.isArray(_binui.program) ? _binui.program.filter(p => p && p.use) : [];
-                    if (_prog.length) {
-                        _prog.forEach(p => {
-                            const bits = [];
-                            if (p.count != null) bits.push(p.count + (p.unit ? ' ' + p.unit : ''));
-                            if (p.sqm != null) bits.push(parseInt(p.sqm).toLocaleString() + ' מ"ר');
-                            bh += `<div>• ${p.use}${bits.length ? ' — ' + bits.join(', ') : ''}</div>`;
-                        });
-                    }
-                    const _meta = [];
-                    if (_binui.land_sqm) _meta.push('קרקע ' + parseInt(_binui.land_sqm).toLocaleString() + ' מ"ר');
-                    if (_binui.submitter) _meta.push('מגיש: ' + _binui.submitter);
-                    if (_binui.architect) _meta.push('עורך: ' + _binui.architect);
-                    if (_meta.length) bh += `<div style="margin-top:2px;opacity:0.75">${_meta.join(' · ')}</div>`;
-                    if (_binui.note) bh += `<div style="margin-top:2px;font-style:italic;opacity:0.7">${_binui.note}</div>`;
-                    bh += '</div>';
-                    html += bh;
+                    html += buildBinuiHtml(_binui);
                 }
                 // מבצ projector recommendations — moved up (below מגרש, above uses) as a plain
                 // clickable row that opens the "המלצות הפרוייקטור" layer. P10 (placement) + P12 (link).
