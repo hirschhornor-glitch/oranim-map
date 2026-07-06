@@ -172,6 +172,57 @@ def update_geojson(updates):
         log_msg(f"Failed to update GeoJSON: {e}")
 
 
+def update_future_shavaz_status(updates):
+    """Sync Mavat_Status on future_shavaz.geojson features whose plan changed status.
+
+    A feature's Mavat_Status is stamped once at creation (from XPLAN station_desc)
+    and never refreshed, so it goes stale on later status changes — and the shavaz
+    popup displays it directly (e.g. plan 101-1252998 kept showing a pre-deposit
+    status after the plan moved to הפקדה להתנגדויות)."""
+    if not updates:
+        return
+    try:
+        with open(SHAVAZ_GEOJSON, encoding='utf-8') as f:
+            shavaz_gj = json.load(f)
+
+        def bare_taba(val):
+            """Normalize '101-1252998' / '1252998' / '0095612' → '1252998' / '95612'."""
+            s = str(val).strip()
+            m = re.match(r'^\d+-(\d+)$', s)
+            if m:
+                return str(int(m.group(1)))
+            return str(int(s)) if s.isdigit() else None
+
+        status_by_taba = {}
+        for u in updates:
+            bt = bare_taba(u.get('plan_name', ''))
+            if bt and u.get('new_status'):
+                status_by_taba[bt] = u['new_status']
+        if not status_by_taba:
+            return
+
+        updated = 0
+        for feat in shavaz_gj['features']:
+            bt = bare_taba(feat['properties'].get('TABA', ''))
+            if not bt or bt not in status_by_taba:
+                continue
+            new_status = status_by_taba[bt]
+            if feat['properties'].get('Mavat_Status') != new_status:
+                feat['properties']['Mavat_Status'] = new_status
+                updated += 1
+
+        if updated:
+            with open(SHAVAZ_GEOJSON, 'w', encoding='utf-8') as f:
+                json.dump(shavaz_gj, f, ensure_ascii=False)
+            log_msg(f"Updated Mavat_Status on {updated} future_shavaz feature(s)")
+            commit_and_push_after_write(
+                'data/future_shavaz.geojson',
+                f'data: shavaz status sync ({updated} parcels) (update_mavat_ui)'
+            )
+    except Exception as e:
+        log_msg(f"Failed to update future_shavaz statuses: {e}")
+
+
 # ─── XPLAN geometry check ─────────────────────────────────────────
 class _LegacySSLAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
@@ -1473,6 +1524,7 @@ async def main():
             log_msg(f"\n✓ Successfully updated {len(updates)} rows in Google Sheets!")
 
         update_geojson(updates)
+        update_future_shavaz_status(updates)
 
     # ── Check XPLAN for geometry/landuse/shavaz changes ──
     xplan_report = []
