@@ -2687,9 +2687,9 @@ function openEduRenewalPrint(matches, gd) {
     img: toImg(buildSvg(cl, 340, 260)),
     title: cl.map(m => m.feat.properties.address).filter(Boolean).slice(0, 2).join(' · ') + (cl.length > 2 ? ` (+${cl.length - 2})` : '')
   }));
-  const legendHtml = '<div class="legend">' + EDU_AGE_BUCKETS.map(b => '<span class="leg-item"><span class="leg-dot" style="background:' + b.color + '"></span>' + b.label + '</span>').join('') + '<span class="leg-item"><span class="leg-ring-in"></span>בתוך תחום תכנית (פינוי קבוע)</span>' + '<span class="leg-item"><span class="leg-ring-adj"></span>בתכנית גובלת (זמני)</span>' + '<span class="leg-item"><span class="leg-sq"></span>תב"ע מאושרת</span>' + '<span class="leg-item"><span class="leg-circ"></span>רדיוס 50 מ\'</span>' + '</div>';
+  const legendHtml = '<div class="legend">' + EDU_AGE_BUCKETS.map(b => '<span class="leg-item"><span class="leg-dot" style="background:' + b.color + '"></span>' + b.label + '</span>').join('') + '<span class="leg-item"><span class="leg-ring-in"></span>בתוך תחום תכנית</span>' + '<span class="leg-item"><span class="leg-ring-adj"></span>בתכנית גובלת</span>' + '<span class="leg-item"><span class="leg-sq"></span>תב"ע מאושרת</span>' + '<span class="leg-item"><span class="leg-circ"></span>רדיוס 50 מ\'</span>' + '</div>';
   const printWin = window.open('', '_blank');
-  let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">' + '<title>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</title>' + '<style>' + '@page { size: A4 portrait; margin: 12mm; }' + 'body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 720px; margin: 0 auto; }' + 'h1 { color: #6a1b9a; font-size: 18px; margin-bottom: 2px; text-align: center; }' + '.subtitle { color: #666; font-size: 12px; margin-bottom: 10px; text-align: center; }' + '.legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 11px; margin-bottom: 10px; }' + '.leg-item { display: inline-flex; align-items: center; gap: 5px; }' + '.leg-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #555; display: inline-block; }' + '.leg-ring-in { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 2.5px solid #d32f2f; display: inline-block; }' + '.leg-ring-adj { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 1.5px solid #333; display: inline-block; }' + '.leg-sq { width: 12px; height: 10px; background: rgba(142,36,170,0.3); border: 1.5px solid #6a1b9a; display: inline-block; }' + '.leg-circ { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #8e24aa; display: inline-block; }' + '.overview img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' + '.clusters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }' + '.cluster-box { width: calc(50% - 4px); box-sizing: border-box; page-break-inside: avoid; }' + '.cluster-box img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' + '.cluster-title { font-size: 10px; color: #555; text-align: center; margin-top: 1px; font-weight: bold; }' + 'table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 14px; }' + 'th { padding: 5px 4px; border-bottom: 2px solid #333; background: #f3e5f5; text-align: right; font-size: 10px; }' + 'td { padding: 4px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top; }' + 'tr.addr-row td { background: #ede7f6; font-weight: 700; border-top: 2px solid #9575cd; }' + 'h2.sec { font-size: 14px; margin: 18px 0 2px; padding-bottom: 3px; border-bottom: 2px solid currentColor; }' + 'h2.sec-in { color: #c62828; } h2.sec-adj { color: #e65100; }' + '.sec-note { font-size: 10px; color: #888; margin: 0 0 4px; }' + '.chip { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 9.5px; font-weight: 700; color: #333; border: 1px solid #999; }' + '.rel-in { color: #c62828; font-weight: 700; } .rel-adj { color: #e65100; font-weight: 700; }' + '.footnote { font-size: 9.5px; color: #777; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; }' + '.no-print { margin-bottom: 12px; text-align: center; }' + '@media print { .no-print { display: none !important; } body { padding: 0; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }' + '</style></head><body>' + '<div class="no-print">' + '<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה / שמירת PDF</button> ' + '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>' + '</div>' + '<h1>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h1>' + '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '<br>' + '<b style="color:#c62828">' + insideM.length + ' כתובות בתוך תחום תכנית (' + nInsideInst + ' מוסדות — פינוי קבוע)</b> · ' + '<b style="color:#e65100">' + adjM.length + ' כתובות בתכנית גובלת (' + nAdjInst + ' מוסדות — זמני בביצוע)</b></div>' + legendHtml + '<div class="overview"><img src="' + overviewImg + '"></div>' + '<div class="clusters">' + clusterImgs.map(c => '<div class="cluster-box"><img src="' + c.img + '"><div class="cluster-title">' + esc(c.title) + '</div></div>').join('') + '</div>' + (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '');
+  let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">' + '<title>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</title>' + '<style>' + '@page { size: A4 portrait; margin: 12mm; }' + 'body { font-family: Assistant, Arial, sans-serif; padding: 10px; color: #222; direction: rtl; max-width: 720px; margin: 0 auto; }' + 'h1 { color: #6a1b9a; font-size: 18px; margin-bottom: 2px; text-align: center; }' + '.subtitle { color: #666; font-size: 12px; margin-bottom: 10px; text-align: center; }' + '.legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 11px; margin-bottom: 10px; }' + '.leg-item { display: inline-flex; align-items: center; gap: 5px; }' + '.leg-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #555; display: inline-block; }' + '.leg-ring-in { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 2.5px solid #d32f2f; display: inline-block; }' + '.leg-ring-adj { width: 11px; height: 11px; border-radius: 50%; background: #ccc; border: 1.5px solid #333; display: inline-block; }' + '.leg-sq { width: 12px; height: 10px; background: rgba(142,36,170,0.3); border: 1.5px solid #6a1b9a; display: inline-block; }' + '.leg-circ { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #8e24aa; display: inline-block; }' + '.overview img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' + '.clusters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }' + '.cluster-box { width: calc(50% - 4px); box-sizing: border-box; page-break-inside: avoid; }' + '.cluster-box img { width: 100%; border: 1px solid #bbb; border-radius: 4px; }' + '.cluster-title { font-size: 10px; color: #555; text-align: center; margin-top: 1px; font-weight: bold; }' + 'table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 14px; }' + 'th { padding: 5px 4px; border-bottom: 2px solid #333; background: #f3e5f5; text-align: right; font-size: 10px; }' + 'td { padding: 4px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top; }' + 'tr.addr-row td { background: #ede7f6; font-weight: 700; border-top: 2px solid #9575cd; }' + 'h2.sec { font-size: 14px; margin: 18px 0 2px; padding-bottom: 3px; border-bottom: 2px solid currentColor; }' + 'h2.sec-in { color: #c62828; } h2.sec-adj { color: #e65100; }' + '.sec-note { font-size: 10px; color: #888; margin: 0 0 4px; }' + '.chip { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 9.5px; font-weight: 700; color: #333; border: 1px solid #999; }' + '.rel-in { color: #c62828; font-weight: 700; } .rel-adj { color: #e65100; font-weight: 700; }' + '.footnote { font-size: 9.5px; color: #777; margin-top: 12px; border-top: 1px solid #ccc; padding-top: 6px; }' + '.no-print { margin-bottom: 12px; text-align: center; }' + '@media print { .no-print { display: none !important; } body { padding: 0; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }' + '</style></head><body>' + '<div class="no-print">' + '<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה / שמירת PDF</button> ' + '<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>' + '</div>' + '<h1>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h1>' + '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '<br>' + '<b style="color:#c62828">' + insideM.length + ' כתובות בתוך תחום תכנית (' + nInsideInst + ' מוסדות)</b> · ' + '<b style="color:#e65100">' + adjM.length + ' כתובות בתכנית גובלת (' + nAdjInst + ' מוסדות)</b></div>' + legendHtml + '<div class="overview"><img src="' + overviewImg + '"></div>' + '<div class="clusters">' + clusterImgs.map(c => '<div class="cluster-box"><img src="' + c.img + '"><div class="cluster-title">' + esc(c.title) + '</div></div>').join('') + '</div>' + (clusters.length > MAX_CLUSTER_MAPS ? '<div style="font-size:10px;color:#888;text-align:center;margin-top:4px">מוצגות ' + MAX_CLUSTER_MAPS + ' מפות מיקוד מתוך ' + clusters.length + ' מקבצים — היתר מופיעים במפת המבט-על ובטבלה</div>' : '');
   const renderSection = (secRows, cls, icon, title, note) => {
     if (!secRows.length) return '';
     let s = '<h2 class="sec ' + cls + '">' + icon + ' ' + title + '</h2><p class="sec-note">' + note + '</p>' + '<table><thead><tr>' + '<th>יחס</th><th>מוסד</th><th>שכבת גיל</th><th>תלמידים</th><th>כיתות</th><th>מרחק (מ\')</th><th>מס\' תכנית</th><th>שם תכנית</th><th>סוג</th><th>סטטוס</th><th>תאריך</th><th>היתר</th><th>יזם</th>' + '</tr></thead><tbody>';
@@ -2704,7 +2704,7 @@ function openEduRenewalPrint(matches, gd) {
     });
     return s + '</tbody></table>';
   };
-  html += renderSection(rows.filter(r => r.secInside), 'sec-in', '&#128308;', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה; נהרס בביצוע — נדרש פינוי קבוע ומענה חלופי.') + renderSection(rows.filter(r => !r.secInside), 'sec-adj', '&#128992;', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה; יתכן צורך בהזזה זמנית בזמן העבודות, ואז חוזר.') + '<div class="footnote">הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי, בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור), שגבולן עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' אווירי מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו: עיבוי שטחים חומים. מרחק 0 = המוסד בתוך תחום התכנית.</div>' + '</body></html>';
+  html += renderSection(rows.filter(r => r.secInside), 'sec-in', '&#128308;', 'בתוך תחום תכנית', insideM.length + ' כתובות · ' + nInsideInst + ' מוסדות') + renderSection(rows.filter(r => !r.secInside), 'sec-adj', '&#128992;', 'בתכנית גובלת', adjM.length + ' כתובות · ' + nAdjInst + ' מוסדות') + '<div class="footnote">הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי, בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור), שגבולן עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' אווירי מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו: עיבוי שטחים חומים. מרחק 0 = המוסד בתוך תחום התכנית.</div>' + '</body></html>';
   printWin.document.write(html);
   const csvHead = ['יחס למוסד', 'כתובת', 'מוסד', 'שכבת גיל', 'תלמידים', 'כיתות', 'מרחק (מ\')', 'מס\' תכנית', 'שם תכנית', 'סוג תכנית', 'סטטוס', 'תאריך סטטוס', 'היתר קיים', 'מס\' תיק היתר', 'יזם'];
   const csvLines = [csvHead.map(hh => '"' + hh.replace(/"/g, '""') + '"').join(',')];
@@ -3386,6 +3386,7 @@ function App() {
   const [specialHousingReport, setSpecialHousingReport] = useState(false);
   // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
   const [eduRenewalReport, setEduRenewalReport] = useState(false);
+  const [eduRenewalFilter, setEduRenewalFilter] = useState('all'); // all | inside | adjacent
   // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
   const [developersReport, setDevelopersReport] = useState(false);
   const [devRepMinahak, setDevRepMinahak] = useState('all');
@@ -15206,7 +15207,13 @@ function App() {
     }, {
       key: 'eduRenewal',
       isOpen: () => eduRenewalReport,
-      open: () => setEduRenewalReport(true)
+      open: () => setEduRenewalReport(true),
+      ser: () => ({
+        f: eduRenewalFilter
+      }),
+      apply: p => {
+        if (p.f) setEduRenewalFilter(p.f);
+      }
     }, {
       key: 'developers',
       isOpen: () => developersReport,
@@ -20536,7 +20543,7 @@ function App() {
             if (kls) meta.push(`${kls} כיתות`);
             html += `<div style="padding:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.color};margin-left:6px"></span><b>${inst.name || ''}</b> · ${b.label}${meta.map(x => ' · ' + x).join('')}</div>`;
           });
-          html += `<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">${m.inside ? '🔴 בתוך תחום תכנית — פינוי קבוע' : '🟠 בתכנית גובלת — הזזה זמנית בביצוע'}:</div>`;
+          html += `<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">${m.inside ? '🔴 בתוך תחום תכנית' : '🟠 בתכנית גובלת'}:</div>`;
           m.plans.forEach(pl => {
             const pp = pl.feat.properties;
             const rel = pl.dist === 0 ? "🔴 בתוך התחום" : `🟠 גובל ${pl.dist} מ'`;
@@ -41471,6 +41478,9 @@ function App() {
     const gd = geoDataRef.current;
     if (!gd.plans || !gd.education_shanaton) return null;
     const matches = computeEduRenewalMatches(gd);
+    const fInside = eduRenewalFilter !== 'adjacent';
+    const fAdj = eduRenewalFilter !== 'inside';
+    const shownMatches = matches.filter(m => m.inside ? fInside : fAdj);
     const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
     const planSet = new Set();
     matches.forEach(m => m.plans.forEach(pl => planSet.add(pl.feat.properties.plan_name)));
@@ -41515,9 +41525,9 @@ function App() {
         ...prev,
         edu_renewal_proximity: true
       }));
-      if (mapInstanceRef.current && matches.length) {
-        const lats = matches.map(m => m.feat.geometry.coordinates[1]);
-        const lngs = matches.map(m => m.feat.geometry.coordinates[0]);
+      if (mapInstanceRef.current && shownMatches.length) {
+        const lats = shownMatches.map(m => m.feat.geometry.coordinates[1]);
+        const lngs = shownMatches.map(m => m.feat.geometry.coordinates[0]);
         setTimeout(() => mapInstanceRef.current.fitBounds([[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]], {
           padding: [40, 40]
         }), 150);
@@ -41804,31 +41814,39 @@ function App() {
       style: {
         color: '#aaa',
         fontSize: 12,
-        marginBottom: 4
+        marginBottom: 8
       }
-    }, matches.length, " \u05DB\u05EA\u05D5\u05D1\u05D5\u05EA \xB7 ", nInst, " \u05DE\u05D5\u05E1\u05D3\u05D5\u05EA \xB7 ", planSet.size, " \u05EA\u05DB\u05E0\u05D9\u05D5\u05EA \u05DE\u05D0\u05D5\u05E9\u05E8\u05D5\u05EA \u05D1\u05DE\u05E8\u05D7\u05E7 \u05E2\u05D3 ", EDU_RENEWAL_RADIUS_M, " \u05DE'"), /*#__PURE__*/React.createElement("p", {
-      style: {
-        color: '#888',
-        fontSize: 11,
-        marginBottom: 6
-      }
-    }, "\u05E7\u05DC\u05D9\u05E7 \u05E2\u05DC \u05EA\u05DB\u05E0\u05D9\u05EA \u05E4\u05D5\u05EA\u05D7 \u05D0\u05D5\u05EA\u05D4 \u05D1\u05DE\u05E4\u05D4. \u05E9\u05EA\u05D9 \u05E8\u05DE\u05D5\u05EA \u05D4\u05E9\u05E4\u05E2\u05D4:"), /*#__PURE__*/React.createElement("div", {
+    }, matches.length, " \u05DB\u05EA\u05D5\u05D1\u05D5\u05EA \xB7 ", nInst, " \u05DE\u05D5\u05E1\u05D3\u05D5\u05EA \xB7 ", planSet.size, " \u05EA\u05DB\u05E0\u05D9\u05D5\u05EA \u05DE\u05D0\u05D5\u05E9\u05E8\u05D5\u05EA \u05D1\u05DE\u05E8\u05D7\u05E7 \u05E2\u05D3 ", EDU_RENEWAL_RADIUS_M, " \u05DE' \xB7 \u05E7\u05DC\u05D9\u05E7 \u05E2\u05DC \u05EA\u05DB\u05E0\u05D9\u05EA \u05E4\u05D5\u05EA\u05D7 \u05D0\u05D5\u05EA\u05D4 \u05D1\u05DE\u05E4\u05D4"), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 16,
+        gap: 6,
         flexWrap: 'wrap',
-        fontSize: 11.5,
-        marginBottom: 10
+        marginBottom: 12
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, [['all', 'הכל', matches.length], ['inside', '🔴 בתוך התחום', insideMatches.length], ['adjacent', '🟠 גובל', adjacentMatches.length]].map(([val, lbl, cnt]) => /*#__PURE__*/React.createElement("button", {
+      key: val,
+      onClick: () => setEduRenewalFilter(val),
       style: {
-        color: '#ef5350'
+        background: eduRenewalFilter === val ? '#8e24aa' : '#20203a',
+        color: eduRenewalFilter === val ? '#fff' : '#bbb',
+        border: '1px solid ' + (eduRenewalFilter === val ? '#ab47bc' : '#33335a'),
+        borderRadius: 16,
+        padding: '4px 14px',
+        cursor: 'pointer',
+        fontSize: 12,
+        fontWeight: 600
       }
-    }, "\uD83D\uDD34 ", /*#__PURE__*/React.createElement("b", null, "\u05D1\u05EA\u05D5\u05DA \u05EA\u05D7\u05D5\u05DD \u05EA\u05DB\u05E0\u05D9\u05EA"), " (", insideMatches.length, " \u05DB\u05EA\u05D5\u05D1\u05D5\u05EA \xB7 ", nInsideInst, " \u05DE\u05D5\u05E1\u05D3\u05D5\u05EA) \u2014 \u05E0\u05D4\u05E8\u05E1 \u05D1\u05D1\u05D9\u05E6\u05D5\u05E2, \u05E6\u05E8\u05D9\u05DA ", /*#__PURE__*/React.createElement("b", null, "\u05E4\u05D9\u05E0\u05D5\u05D9 \u05E7\u05D1\u05D5\u05E2 / \u05DE\u05E2\u05E0\u05D4 \u05D7\u05DC\u05D5\u05E4\u05D9")), /*#__PURE__*/React.createElement("span", {
+    }, lbl, " ", /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#ffb74d'
+        opacity: 0.7
       }
-    }, "\uD83D\uDFE0 ", /*#__PURE__*/React.createElement("b", null, "\u05D1\u05EA\u05DB\u05E0\u05D9\u05EA \u05D2\u05D5\u05D1\u05DC\u05EA"), " (", adjacentMatches.length, " \u05DB\u05EA\u05D5\u05D1\u05D5\u05EA \xB7 ", nAdjInst, " \u05DE\u05D5\u05E1\u05D3\u05D5\u05EA) \u2014 \u05D9\u05EA\u05DB\u05DF ", /*#__PURE__*/React.createElement("b", null, "\u05D4\u05D6\u05D6\u05D4 \u05D6\u05DE\u05E0\u05D9\u05EA \u05D1\u05D6\u05DE\u05DF \u05D4\u05D1\u05E0\u05D9\u05D9\u05D4"), ", \u05D5\u05D0\u05D6 \u05D7\u05D5\u05D6\u05E8")), insideMatches.length > 0 && sectionHead('#ef5350', '🔴', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה'), insideMatches.map((m, mi) => renderCard(m, 'in' + mi)), adjacentMatches.length > 0 && sectionHead('#ffb74d', '🟠', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה'), adjacentMatches.map((m, mi) => renderCard(m, 'adj' + mi)), /*#__PURE__*/React.createElement("div", {
+    }, "(", cnt, ")")))), fInside && insideMatches.length > 0 && sectionHead('#ef5350', '🔴', 'בתוך תחום תכנית', `${insideMatches.length} כתובות · ${nInsideInst} מוסדות`), fInside && insideMatches.map((m, mi) => renderCard(m, 'in' + mi)), fAdj && adjacentMatches.length > 0 && sectionHead('#ffb74d', '🟠', 'בתכנית גובלת', `${adjacentMatches.length} כתובות · ${nAdjInst} מוסדות`), fAdj && adjacentMatches.map((m, mi) => renderCard(m, 'adj' + mi)), shownMatches.length === 0 && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: '#777',
+        fontSize: 13,
+        padding: '12px 0'
+      }
+    }, "\u05D0\u05D9\u05DF \u05EA\u05D5\u05E6\u05D0\u05D5\u05EA \u05DC\u05E1\u05D9\u05E0\u05D5\u05DF \u05D4\u05E0\u05D1\u05D7\u05E8."), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
@@ -41836,7 +41854,7 @@ function App() {
         marginTop: 16
       }
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => openEduRenewalPrint(matches, gd),
+      onClick: () => openEduRenewalPrint(shownMatches, gd),
       style: {
         background: '#e94560',
         color: '#fff',

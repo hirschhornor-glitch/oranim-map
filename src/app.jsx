@@ -2161,8 +2161,8 @@
             const legendHtml =
                 '<div class="legend">' +
                 EDU_AGE_BUCKETS.map(b => '<span class="leg-item"><span class="leg-dot" style="background:' + b.color + '"></span>' + b.label + '</span>').join('') +
-                '<span class="leg-item"><span class="leg-ring-in"></span>בתוך תחום תכנית (פינוי קבוע)</span>' +
-                '<span class="leg-item"><span class="leg-ring-adj"></span>בתכנית גובלת (זמני)</span>' +
+                '<span class="leg-item"><span class="leg-ring-in"></span>בתוך תחום תכנית</span>' +
+                '<span class="leg-item"><span class="leg-ring-adj"></span>בתכנית גובלת</span>' +
                 '<span class="leg-item"><span class="leg-sq"></span>תב"ע מאושרת</span>' +
                 '<span class="leg-item"><span class="leg-circ"></span>רדיוס 50 מ\'</span>' +
                 '</div>';
@@ -2206,8 +2206,8 @@
                 '</div>' +
                 '<h1>מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h1>' +
                 '<div class="subtitle">' + matches.length + ' כתובות · ' + nInst + ' מוסדות · ' + nPlans + ' תכניות מאושרות עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' · ' + today + '<br>' +
-                '<b style="color:#c62828">' + insideM.length + ' כתובות בתוך תחום תכנית (' + nInsideInst + ' מוסדות — פינוי קבוע)</b> · ' +
-                '<b style="color:#e65100">' + adjM.length + ' כתובות בתכנית גובלת (' + nAdjInst + ' מוסדות — זמני בביצוע)</b></div>' +
+                '<b style="color:#c62828">' + insideM.length + ' כתובות בתוך תחום תכנית (' + nInsideInst + ' מוסדות)</b> · ' +
+                '<b style="color:#e65100">' + adjM.length + ' כתובות בתכנית גובלת (' + nAdjInst + ' מוסדות)</b></div>' +
                 legendHtml +
                 '<div class="overview"><img src="' + overviewImg + '"></div>' +
                 '<div class="clusters">' +
@@ -2246,8 +2246,8 @@
                 });
                 return s + '</tbody></table>';
             };
-            html += renderSection(rows.filter(r => r.secInside), 'sec-in', '&#128308;', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה; נהרס בביצוע — נדרש פינוי קבוע ומענה חלופי.') +
-                renderSection(rows.filter(r => !r.secInside), 'sec-adj', '&#128992;', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה; יתכן צורך בהזזה זמנית בזמן העבודות, ואז חוזר.') +
+            html += renderSection(rows.filter(r => r.secInside), 'sec-in', '&#128308;', 'בתוך תחום תכנית', insideM.length + ' כתובות · ' + nInsideInst + ' מוסדות') +
+                renderSection(rows.filter(r => !r.secInside), 'sec-adj', '&#128992;', 'בתכנית גובלת', adjM.length + ' כתובות · ' + nAdjInst + ' מוסדות') +
                 '<div class="footnote">הגדרת הסינון: תכניות בסוג התחדשות עירונית / פינוי בינוי / עיבוי, בסטטוס מאושר (אישור, מאושרת, תבע מאושרת, תחילת תוקף, הכרעה בהתנגדויות/אישור), שגבולן עד ' + EDU_RENEWAL_RADIUS_M + ' מ\' אווירי מנקודת מוסד חינוך (שנתון מנח"י). לא נכללו: עיבוי שטחים חומים. מרחק 0 = המוסד בתוך תחום התכנית.</div>' +
                 '</body></html>';
             printWin.document.write(html);
@@ -2728,6 +2728,7 @@
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
+            const [eduRenewalFilter, setEduRenewalFilter] = useState('all'); // all | inside | adjacent
             // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
             const [developersReport, setDevelopersReport] = useState(false);
             const [devRepMinahak, setDevRepMinahak] = useState('all');
@@ -12562,7 +12563,9 @@
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
-                    { key: 'eduRenewal', isOpen: () => eduRenewalReport, open: () => setEduRenewalReport(true) },
+                    { key: 'eduRenewal', isOpen: () => eduRenewalReport, open: () => setEduRenewalReport(true),
+                        ser: () => ({ f: eduRenewalFilter }),
+                        apply: p => { if (p.f) setEduRenewalFilter(p.f); } },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
                         ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
                         apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
@@ -16968,7 +16971,7 @@
                                 if (kls) meta.push(`${kls} כיתות`);
                                 html += `<div style="padding:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.color};margin-left:6px"></span><b>${inst.name || ''}</b> · ${b.label}${meta.map(x => ' · ' + x).join('')}</div>`;
                             });
-                            html += `<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">${m.inside ? '🔴 בתוך תחום תכנית — פינוי קבוע' : '🟠 בתכנית גובלת — הזזה זמנית בביצוע'}:</div>`;
+                            html += `<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:6px;padding-top:6px;font-weight:600">${m.inside ? '🔴 בתוך תחום תכנית' : '🟠 בתכנית גובלת'}:</div>`;
                             m.plans.forEach(pl => {
                                 const pp = pl.feat.properties;
                                 const rel = pl.dist === 0 ? "🔴 בתוך התחום" : `🟠 גובל ${pl.dist} מ'`;
@@ -28614,6 +28617,9 @@
                         const gd = geoDataRef.current;
                         if (!gd.plans || !gd.education_shanaton) return null;
                         const matches = computeEduRenewalMatches(gd);
+                        const fInside = eduRenewalFilter !== 'adjacent';
+                        const fAdj = eduRenewalFilter !== 'inside';
+                        const shownMatches = matches.filter(m => m.inside ? fInside : fAdj);
                         const nInst = matches.reduce((s, m) => s + ((m.feat.properties.institutions || []).length || 1), 0);
                         const planSet = new Set();
                         matches.forEach(m => m.plans.forEach(pl => planSet.add(pl.feat.properties.plan_name)));
@@ -28644,9 +28650,9 @@
                         const showOnMap = () => {
                             setEduRenewalReport(false);
                             setLayers(prev => ({ ...prev, edu_renewal_proximity: true }));
-                            if (mapInstanceRef.current && matches.length) {
-                                const lats = matches.map(m => m.feat.geometry.coordinates[1]);
-                                const lngs = matches.map(m => m.feat.geometry.coordinates[0]);
+                            if (mapInstanceRef.current && shownMatches.length) {
+                                const lats = shownMatches.map(m => m.feat.geometry.coordinates[1]);
+                                const lngs = shownMatches.map(m => m.feat.geometry.coordinates[0]);
                                 setTimeout(() => mapInstanceRef.current.fitBounds(
                                     [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]],
                                     { padding: [40, 40] }), 150);
@@ -28728,18 +28734,23 @@
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setEduRenewalReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏫 מוסדות חינוך בקרבת התחדשות עירונית מאושרת</h2>
-                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{matches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ'</p>
-                                    <p style={{color:'#888',fontSize:11,marginBottom:6}}>קליק על תכנית פותח אותה במפה. שתי רמות השפעה:</p>
-                                    <div style={{display:'flex', gap:16, flexWrap:'wrap', fontSize:11.5, marginBottom:10}}>
-                                        <span style={{color:'#ef5350'}}>🔴 <b>בתוך תחום תכנית</b> ({insideMatches.length} כתובות · {nInsideInst} מוסדות) — נהרס בביצוע, צריך <b>פינוי קבוע / מענה חלופי</b></span>
-                                        <span style={{color:'#ffb74d'}}>🟠 <b>בתכנית גובלת</b> ({adjacentMatches.length} כתובות · {nAdjInst} מוסדות) — יתכן <b>הזזה זמנית בזמן הבנייה</b>, ואז חוזר</span>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:8}}>{matches.length} כתובות · {nInst} מוסדות · {planSet.size} תכניות מאושרות במרחק עד {EDU_RENEWAL_RADIUS_M} מ' · קליק על תכנית פותח אותה במפה</p>
+                                    <div style={{display:'flex', gap:6, flexWrap:'wrap', marginBottom:12}}>
+                                        {[['all', 'הכל', matches.length], ['inside', '🔴 בתוך התחום', insideMatches.length], ['adjacent', '🟠 גובל', adjacentMatches.length]].map(([val, lbl, cnt]) => (
+                                            <button key={val} onClick={() => setEduRenewalFilter(val)}
+                                                style={{background: eduRenewalFilter === val ? '#8e24aa' : '#20203a', color: eduRenewalFilter === val ? '#fff' : '#bbb',
+                                                    border: '1px solid ' + (eduRenewalFilter === val ? '#ab47bc' : '#33335a'), borderRadius: 16, padding: '4px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600}}>
+                                                {lbl} <span style={{opacity:0.7}}>({cnt})</span>
+                                            </button>
+                                        ))}
                                     </div>
-                                    {insideMatches.length > 0 && sectionHead('#ef5350', '🔴', 'מוסדות בתוך תחום תכנית — פינוי קבוע', 'המוסד נמצא בגזרת הבנייה עצמה')}
-                                    {insideMatches.map((m, mi) => renderCard(m, 'in' + mi))}
-                                    {adjacentMatches.length > 0 && sectionHead('#ffb74d', '🟠', 'מוסדות בתכנית גובלת — הזזה זמנית בביצוע', 'המוסד סמוך אך מחוץ לתחום הבנייה')}
-                                    {adjacentMatches.map((m, mi) => renderCard(m, 'adj' + mi))}
+                                    {fInside && insideMatches.length > 0 && sectionHead('#ef5350', '🔴', 'בתוך תחום תכנית', `${insideMatches.length} כתובות · ${nInsideInst} מוסדות`)}
+                                    {fInside && insideMatches.map((m, mi) => renderCard(m, 'in' + mi))}
+                                    {fAdj && adjacentMatches.length > 0 && sectionHead('#ffb74d', '🟠', 'בתכנית גובלת', `${adjacentMatches.length} כתובות · ${nAdjInst} מוסדות`)}
+                                    {fAdj && adjacentMatches.map((m, mi) => renderCard(m, 'adj' + mi))}
+                                    {shownMatches.length === 0 && <p style={{color:'#777', fontSize:13, padding:'12px 0'}}>אין תוצאות לסינון הנבחר.</p>}
                                     <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:16}}>
-                                        <button onClick={() => openEduRenewalPrint(matches, gd)}
+                                        <button onClick={() => openEduRenewalPrint(shownMatches, gd)}
                                             style={{background:'#e94560', color:'#fff', border:'none', borderRadius:6, padding:'8px 20px', cursor:'pointer', fontSize:13, fontWeight:600}}>
                                             &#128424; הדפסה / שמירה (מפה + טבלה + CSV)
                                         </button>
