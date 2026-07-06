@@ -7,8 +7,10 @@ build_fuel_barriers.py — חסמי תחנות דלק למבני ציבור (ת�
 
 מקורות תחנות:
   1. OSM Overpass amenity=fuel בתחום אורנים + שוליים (תחנות קיימות בפועל).
-  2. yiud_karka_kayam — ייעוד עירוני 7410 "שטח לתחנת דלק" / Descr עם "דלק".
-  3. landuse_xplan — קוד מבא"ת 910 "תחנת תדלוק" (תחנות בתכניות עתידיות).
+  2. data/govmap_fuel_stations.json — POI תחנות תדלוק מ-govmap (snapshot; govmap
+     נגיש רק מדפדפן המשתמש — לרענון ראו ההערה בקובץ). תופס עצמאיות שאין ב-OSM.
+  3. yiud_karka_kayam — ייעוד עירוני 7410 "שטח לתחנת דלק" / Descr עם "דלק".
+  4. landuse_xplan — קוד מבא"ת 910 "תחנת תדלוק" (תחנות בתכניות עתידיות).
 
 יעדים (השטחים החומים):
   - future_shavaz.geojson — מפתח TABA|MIGRASH.
@@ -42,6 +44,12 @@ HAFRASHAH_CODES = {1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604}
 # xplan lots rendered as the שב"צ עתידי polygons in-app — lot numbering differs from
 # future_shavaz.geojson MIGRASH, so both keyspaces must be present in by_lot
 SHAVAZ_XPLAN_CODES = {400, 410, 450, 460, 1670}
+# mirror of the app's hafrashah_future selection (src/app.jsx):
+# a plan with hafrash_sqm but no per-lot data and no HAFRASHAH-coded lot gets its
+# marker on the largest residential/mixed lot — that lot must be screened too
+RESIDENTIAL_MIXED_CODES = {10, 20, 60, 100, 140, 145, 290, 1000, 1050, 1311, 1321, 1420, 1470}
+import re
+HAFRASH_LOT_PREFIX_RE = re.compile(r'^מגרש\s+([\dא-תA-Za-z/+]+)\s*[-–]\s*')
 
 to_itm = pyproj.Transformer.from_crs(4326, 2039, always_xy=True).transform
 
@@ -125,6 +133,21 @@ def main():
     for s in osm:
         stations.append({**s, 'geom': transform(to_itm, Point(s['lon'], s['lat']))})
 
+    # govmap POI snapshot — dedup against OSM: within 40m = the same station twice
+    try:
+        gm = load('govmap_fuel_stations.json')['stations']
+    except FileNotFoundError:
+        gm = []
+    gm_added = 0
+    for s in gm:
+        g = transform(to_itm, Point(s['lon'], s['lat']))
+        if any(g.distance(t['geom']) < 40 for t in stations):
+            continue
+        stations.append({'id': 'govmap_' + s['id'].split('|')[-1], 'label': s['text'],
+                         'kind': 'existing', 'lat': s['lat'], 'lon': s['lon'], 'geom': g})
+        gm_added += 1
+    print(f'govmap stations added (not in OSM): {gm_added}/{len(gm)}')
+
     kayam = load('yiud_karka_kayam.geojson')
     for f in kayam['features']:
         p = f['properties']
@@ -207,19 +230,57 @@ def main():
                         'name': p.get('plan_name_he') or p.get('NAME') or '',
                         'uses': p.get('uses') or '',
                         'geom': transform(to_itm, shape(f['geometry']))})
+    # per-lot hafrasha breakdown from hafrash_prg ("מגרש 12 - ..."), like the app's
+    # __hafrashByTabaLot; plans without lot prefixes fall back to the largest
+    # residential/mixed lot (the app puts the hafrashah marker there)
+    hafrash_lots = {}   # taba -> set of lot nums named in hafrash_prg
+    hafrash_sqm = {}    # taba -> hafrash_sqm > 0
+    for f in plans['features']:
+        p = f['properties']
+        taba = str(p.get('taba') or '')
+        try:
+            if float(p.get('hafrash_sqm') or 0) > 0:
+                hafrash_sqm[taba] = True
+        except ValueError:
+            pass
+        for part in str(p.get('hafrash_prg') or '').split(';'):
+            m = HAFRASH_LOT_PREFIX_RE.match(part.strip())
+            if m:
+                hafrash_lots.setdefault(taba, set()).add(m.group(1))
+
+    covered = set()
+    fallback_candidates = {}  # taba -> (shape_area, target dict)
     for f in xplan['features']:
         p = f['properties']
-        if p.get('mavat_code') not in (HAFRASHAH_CODES | SHAVAZ_XPLAN_CODES) or not f.get('geometry'):
+        code = p.get('mavat_code')
+        if not f.get('geometry'):
             continue
         taba = taba_from_pl_number(p.get('pl_number'))
         if plan_dead(taba):
             continue
         lot = str(p.get('num') or '').strip()
-        targets.append({'key': f'{taba}|{lot}', 'taba': taba, 'lot': lot,
-                        'name': p.get('pl_name') or '',
-                        'uses': p.get('mavat_name') or '',
-                        'geom': transform(to_itm, shape(f['geometry']))})
-    print(f'targets: {len(targets)}')
+        tgt = {'key': f'{taba}|{lot}', 'taba': taba, 'lot': lot,
+               'name': p.get('pl_name') or '',
+               'uses': p.get('mavat_name') or '',
+               'geom': transform(to_itm, shape(f['geometry']))}
+        if code in SHAVAZ_XPLAN_CODES:
+            targets.append(tgt)
+            covered.add(taba)
+        elif taba in hafrash_lots:
+            if lot in hafrash_lots[taba]:
+                targets.append(tgt)
+                covered.add(taba)
+        elif code in HAFRASHAH_CODES:
+            targets.append(tgt)
+            covered.add(taba)
+        elif code in RESIDENTIAL_MIXED_CODES and hafrash_sqm.get(taba):
+            area = p.get('shape_area') or 0
+            if taba not in fallback_candidates or fallback_candidates[taba][0] < area:
+                fallback_candidates[taba] = (area, tgt)
+    for taba, (_, tgt) in fallback_candidates.items():
+        if taba not in covered:
+            targets.append(tgt)
+    print(f'targets: {len(targets)} (incl. {sum(1 for t, c in fallback_candidates.items() if t not in covered)} hafrash fallback lots)')
 
     # --- 4. proximity ---
     by_lot = {}
