@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-06-shavaz-fallback-label';
+        const APP_VERSION = '2026-07-02-developers-report-r6';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -628,28 +628,6 @@
         // use entries (preferred) or the free-text hafrash_prg fallback. Features with no recognized
         // domain (sqm-only, "מבנים ומוסדות ציבור", "בתיאום…", noise) collapse to the 'other' bucket.
         function hafrashahFeatureDomains(props) {
-            // Resolution override: once the muni property book opened concrete assets
-            // for this plan's hafrasha, THEIR specific use decides the symbology —
-            // "דירות לבעלי מוגבלויות" is רווחה, not the plan's broad קהילה/רווחה/תרבות
-            // envelope. Only for single-lot plans: with several hafrasha lots the
-            // asset↔lot attribution is ambiguous, so the statutory icon stays.
-            const CAT2DOMAIN = {
-                'גן ילדים': 'education', 'מעון': 'education', 'בי"ס/חינוך': 'education',
-                'בית כנסת': 'religion', 'מקווה': 'religion', 'ספורט': 'sport',
-                'בריאות': 'health', 'דיור': 'welfare',
-            };
-            try {
-                const rawT = String(props.taba || props.TABA || props.pl_number || '');
-                const key = String(parseInt(rawT.replace(/^101-?/, '').replace(/[^\d]/g, ''), 10) || '');
-                const dlv = ((window.__hafrashaDelivery || {}).plans || {})[key];
-                const lots = (window.__hafrashByTabaLot || {})[key];
-                const soleLot = !lots || Object.keys(lots).length <= 1;
-                if (Array.isArray(dlv) && dlv.length && soleLot) {
-                    const doms = new Set();
-                    dlv.forEach(a => (a.cats || []).forEach(c => { if (CAT2DOMAIN[c]) doms.add(CAT2DOMAIN[c]); }));
-                    if (doms.size) return doms;
-                }
-            } catch (e) { /* fall through to the statutory classification */ }
             const domains = new Set();
             let uses = [];
             if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) {
@@ -986,20 +964,6 @@
                 desc: 'תצלום אוויר',
                 url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 attribution: '&copy; Esri, Maxar, Earthstar Geographics'
-            },
-            muniOrtho: {
-                name: 'תצ"א עירונית (רבעונית)',
-                desc: 'אורתופוטו עירוני עדכני לתחום אורנים (מראה של הרבעון האחרון); מחוץ לתחום — Esri',
-                // Base: Esri (city-wide context). Overlay: our Web-Mercator mirror of the
-                // muni quarterly ortho (repo oranim-ortho-tiles, rebuilt when a new
-                // quarter is published) — the muni serves ITM-only tiles, hence the mirror.
-                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                attribution: '&copy; Esri · תצ"א עירונית: עיריית ירושלים',
-                overlayUrl: 'https://hirschhornor-glitch.github.io/oranim-ortho-tiles/tiles/{z}/{x}/{y}.jpg',
-                overlayOptions: {
-                    bounds: [[31.718685, 35.134465], [31.781668, 35.234807]],
-                    minNativeZoom: 12, maxNativeZoom: 18, maxZoom: 22,
-                },
             },
             none: {
                 name: 'ללא',
@@ -2237,8 +2201,7 @@
                 consolidation: false,    // תכניות איחוד וחלוקה
                 rental: false,           // פרוייקטים עם דירות להשכרה
                 permit_objections: false, // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
-                tree_permits: false,      // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
-                excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
+                tree_permits: false       // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
             const [mapScale, setMapScale] = useState('');
@@ -2290,11 +2253,6 @@
             // Marker-coords tool: capture coords for updating recommendations / polygons.
             const [markerCoordsMode, setMarkerCoordsMode] = useState(null); // null | 'point' | 'line' | 'polygon'
             const markerCoordsModeRef = useRef(null);
-            // תצ"א רבעונית — muni quarterly orthophoto viewer (ITM tile services)
-            const [orthoViewer, setOrthoViewer] = useState(false);
-            const [orthoQ, setOrthoQ] = useState(null);            // selected quarter id (null = newest)
-            const [orthoCompareQ, setOrthoCompareQ] = useState(null); // second pane quarter id (null = single pane)
-            const orthoMapsRef = useRef([]);
             const [markerCoordsPts, setMarkerCoordsPts] = useState(0);
             const [markerCoordsResult, setMarkerCoordsResult] = useState(null); // { type:'point'|'line'|'polygon', points:[{lat,lng}] }
             const markerCoordsRef = useRef({ points: [], markers: [], polygon: null });
@@ -2343,18 +2301,7 @@
             const [developersReport, setDevelopersReport] = useState(false);
             const [devRepMinahak, setDevRepMinahak] = useState('all');
             const [devRepQ, setDevRepQ] = useState('');
-            const [devRepSort, setDevRepSort] = useState('plans'); // 'plans' | 'units'
             const [devRepExpanded, setDevRepExpanded] = useState(null);
-            // הדגשת כל תכניות יזם על המפה: {name, plans, units} + שכבת Leaflet זמנית
-            const [devMapSel, setDevMapSel] = useState(null);
-            const devMapLayerRef = useRef(null);
-            const clearDevMapSel = () => {
-                if (devMapLayerRef.current && mapInstanceRef.current) {
-                    mapInstanceRef.current.removeLayer(devMapLayerRef.current);
-                }
-                devMapLayerRef.current = null;
-                setDevMapSel(null);
-            };
             // Master-plan summary report: set to one of 'מושבות'|'רסקו'|'בקעה'|'ארנונה'|'תמ"א 38'
             const [masterPlanReport, setMasterPlanReport] = useState(null);
             const [showReportsMenu, setShowReportsMenu] = useState(false);
@@ -2363,10 +2310,6 @@
             const [flrFrom, setFlrFrom] = useState('');
             const [flrTo, setFlrTo] = useState('');
             const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
-            // Use-gaps report: asset uses (ספר הנכסים) vs plan program, overlap-aware.
-            const [showUseGaps, setShowUseGaps] = useState(false);
-            // Fuel-barriers report: public-building lots within TAMA-18 distance of a fuel station.
-            const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
@@ -2785,7 +2728,6 @@
                         [shavazKayamReport, () => setShavazKayamReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
-                        [devMapSel, clearDevMapSel],
                         [showAnnotations, () => setShowAnnotations(false)],
                         [showAllocChooser, () => setShowAllocChooser(false)],
                         [showFilter, () => setShowFilter(false)],
@@ -2800,7 +2742,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, developersReport, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -2842,7 +2784,6 @@
             const geoDataRef = useRef({});
             const geoLayersRef = useRef({});
             const baseTileRef = useRef(null);
-            const baseOverlayRef = useRef(null); // second tile layer for composite basemaps (muniOrtho)
             const layersRef = useRef(layers);
             // taba -> Set(other tabas this plan geometrically overlaps with).
             // Populated once when plans data arrives. Used by the "overlapping"
@@ -4293,7 +4234,6 @@
                 window.__treeSurveys = {};
                 window.__tama38TreeSurveys = {};
                 window.__treeValencies = {};
-                window.__tama38Valencies = {};
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
                 window.__objectionsPermits = {};
@@ -4303,10 +4243,6 @@
                 window.__extraPermits = {};
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
-                window.__hafrashaDelivery = {};
-                window.__excavationPermits = {};
-                window.__orthoQuarters = {};
-                window.__assetAllocations = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4316,7 +4252,6 @@
                     ['__treeSurveys', 'data/tree_surveys.json'],
                     ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'],
                     ['__treeValencies', 'data/tree_valencies.json'],
-                    ['__tama38Valencies', 'data/tama38_tree_valencies.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
@@ -4328,11 +4263,6 @@
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
-                    ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
-                    ['__excavationPermits', 'data/excavation_permits.json'],
-                    ['__orthoQuarters', 'data/ortho_quarters.json'],
-                    ['__assetAllocations', 'data/asset_allocations.json'],
-                    ['__fuelBarriers', 'data/fuel_barriers.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -4771,20 +4701,14 @@
                             else if (key === '__treeSurveys') { window.__treeSurveys = data || {}; }
                             else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                             else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
-                            else if (key === '__tama38Valencies') { window.__tama38Valencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
-                            else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
-                            else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
-                            else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
-                            else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
-                            else if (key === '__fuelBarriers') { window.__fuelBarriers = data || {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
-                            else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
+                            else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
                             else if (key === '__meetings') {
@@ -4873,10 +4797,6 @@
                     map.removeLayer(baseTileRef.current);
                     baseTileRef.current = null;
                 }
-                if (baseOverlayRef.current) {
-                    map.removeLayer(baseOverlayRef.current);
-                    baseOverlayRef.current = null;
-                }
 
                 const bm = BASEMAPS[basemap];
                 if (bm.url) {
@@ -4888,25 +4808,12 @@
                     }).addTo(map);
                     baseTileRef.current.bringToBack();
                 }
-                // Composite basemap: a second tile source drawn over the base within its
-                // bounds (muni quarterly ortho mirror over Esri). Same pane as the base —
-                // added after it, so it stacks above; both stay under all vector panes.
-                if (bm.overlayUrl) {
-                    baseOverlayRef.current = L.tileLayer(bm.overlayUrl, {
-                        ...(bm.overlayOptions || {}),
-                        opacity: basemapOpacity,
-                        crossOrigin: 'anonymous',
-                    }).addTo(map);
-                }
             }, [basemap]);
 
             // Update basemap opacity without recreating layer
             useEffect(() => {
                 if (baseTileRef.current) {
                     baseTileRef.current.setOpacity(basemapOpacity);
-                }
-                if (baseOverlayRef.current) {
-                    baseOverlayRef.current.setOpacity(basemapOpacity);
                 }
             }, [basemapOpacity]);
 
@@ -4934,12 +4841,11 @@
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
                 meetingsReport, specialHousingReport, masterPlanReport,
-                developersReport, devRepMinahak, devRepQ, devRepSort,
+                developersReport, devRepMinahak, devRepQ,
                 showEduForecast, eduForecastChumash, eduForecastNb,
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
                 showFloorReport, flrFrom, flrTo, flrDoms,
-                showUseGaps,
                 showPublicNeeds, publicNeedsMinahak, reportScope,
             ]);
 
@@ -6498,54 +6404,6 @@
                     r.corner1 = null;
                 };
             }, [printAreaMode]);
-
-            // ── תצ"א רבעונית: synced ITM viewer(s) over the muni quarterly ortho tiles ──
-            // The tile caches are EPSG:2039-only (no dynamic export), so they can't be
-            // overlaid on the main 3857 map; instead the modal hosts standalone Leaflet
-            // map(s) with a Proj4Leaflet CRS, opened at the main map's center.
-            useEffect(() => {
-                orthoMapsRef.current.forEach(m => { try { m.remove(); } catch (e) {} });
-                orthoMapsRef.current = [];
-                if (!orthoViewer) return;
-                const OQ = window.__orthoQuarters || {};
-                if (!OQ.quarters || !OQ.quarters.length || !OQ.tile || !window.L.Proj) return;
-                const q1 = orthoQ || OQ.quarters[0].id;
-                const panes = orthoCompareQ ? [[q1, 'ortho-pane-a'], [orthoCompareQ, 'ortho-pane-b']] : [[q1, 'ortho-pane-a']];
-                const maxLod = OQ.tile.resolutions.length - 1;
-                const main = mapInstanceRef.current;
-                const c = main ? main.getCenter() : L.latLng(31.75, 35.21);
-                // main-map zoom → nearest ortho LOD by ground resolution (m/px)
-                const mainRes = 156543.03392 * Math.cos(c.lat * Math.PI / 180) / Math.pow(2, main ? main.getZoom() : 15);
-                let z = 0; OQ.tile.resolutions.forEach((r, i) => { if (r >= mainRes) z = i; });
-                z = Math.min(z, maxLod);
-                const created = panes.map(([qid, elId]) => {
-                    const el = document.getElementById(elId);
-                    if (!el) return null;
-                    // A fresh CRS per map — Proj4Leaflet CRS instances hold no per-map state,
-                    // but sharing one across removed maps has bitten others; cheap to rebuild.
-                    // (proj4leaflet wants the def STRING, not proj4.defs()'s parsed object.)
-                    const crs = new L.Proj.CRS('EPSG:2039',
-                        '+proj=tmerc +lat_0=31.7343936111111 +lon_0=35.2045169444444 ' +
-                        '+k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 ' +
-                        '+towgs84=-24.0024,-17.1032,-17.8444,-0.33077,-1.85269,1.66969,5.4248 ' +
-                        '+units=m +no_defs',
-                        { origin: OQ.tile.origin, resolutions: OQ.tile.resolutions });
-                    const m = L.map(el, { crs, center: c, zoom: z, maxZoom: maxLod, attributionControl: true });
-                    m.attributionControl.setPrefix('');
-                    L.tileLayer('https://gisviewer.jerusalem.muni.il/arcgis/rest/services/' + qid + '/MapServer/tile/{z}/{y}/{x}', {
-                        minZoom: 0, maxZoom: maxLod, tileSize: 256, attribution: 'תצ"א: עיריית ירושלים',
-                    }).addTo(m);
-                    return m;
-                }).filter(Boolean);
-                if (created.length === 2) {
-                    let lock = false;
-                    const sync = (src, dst) => () => { if (lock) return; lock = true; dst.setView(src.getCenter(), src.getZoom(), { animate: false }); lock = false; };
-                    created[0].on('move', sync(created[0], created[1]));
-                    created[1].on('move', sync(created[1], created[0]));
-                }
-                orthoMapsRef.current = created;
-                return () => { orthoMapsRef.current.forEach(m => { try { m.remove(); } catch (e) {} }); orthoMapsRef.current = []; };
-            }, [orthoViewer, orthoQ, orthoCompareQ]);
 
             // ── Radius mode: click on map to set center ──────────────────────
             useEffect(() => {
@@ -8427,19 +8285,6 @@
                 function effectivePlanStatus(taba, status) {
                     return planHasPermit(taba) ? PERMIT_STATUS_LABEL : status;
                 }
-                // "מסירה בפועל" — delivery-evidence assets per plan from the muni
-                // property book join (data/hafrasha_delivery.json). A plan is "נמסר"
-                // when all its assets are registered in the city's name, partial when
-                // some are, otherwise "בתהליך".
-                const _dlvByTaba = (window.__hafrashaDelivery || {}).plans || {};
-                function deliveryLabel(taba) {
-                    const list = _dlvByTaba[String(taba || '').trim()];
-                    if (!Array.isArray(list) || !list.length) return '';
-                    const done = list.filter(a => a.state === 'נמסר').length;
-                    return done >= list.length ? 'נמסר (' + list.length + ')'
-                        : done > 0 ? 'נמסר חלקית (' + done + '/' + list.length + ')'
-                        : 'בתהליך (' + list.length + ')';
-                }
                 const propsByTaba = {};
                 if (gd.plans) gd.plans.features.forEach(f => {
                     const t = String((f.properties || {}).taba || '').trim();
@@ -8506,18 +8351,9 @@
                         // is dropped rather than shown as an empty "—" row.
                         if (!keys.length) {
                             const genericSqm = uncategorizedSqm || totalSqm || 0;
-                            // Refinement from the muni property book: when the statutory text is
-                            // generic ("מבנים ומוסדות ציבור"), the delivered assets say what the
-                            // space actually becomes (גן/בית כנסת/מעון…). הפרשה source only —
-                            // delivery evidence is by definition the hafrasha process.
-                            let use = 'מבני ציבור (כללי / לא מסווג)';
-                            if (source === 'הפרשה מבונה') {
-                                const dlvCats = [...new Set((_dlvByTaba[r.taba] || []).flatMap(a => a.cats || []))];
-                                if (dlvCats.length) use = 'מבני ציבור — לפי ספר הנכסים: ' + dlvCats.join(', ');
-                            }
                             if (genericSqm > 0) detailRows.push({
                                 taba: r.taba, name: r.name, status: r.status, sub: r.sub, source,
-                                use, count: 0, unit: '', sqm: genericSqm,
+                                use: 'מבני ציבור (כללי / לא מסווג)', count: 0, unit: '', sqm: genericSqm,
                             });
                         }
                     });
@@ -8527,13 +8363,10 @@
                     const hasPermit = planHasPermit(r.taba);
                     const dispStatus = hasPermit ? PERMIT_STATUS_LABEL : r.status;
                     const statusStyle = hasPermit ? 'color:' + PERMIT_STATUS_COLOR + ';font-weight:bold' : 'color:#999';
-                    const dlv = deliveryLabel(r.taba);
-                    const dlvStyle = dlv.indexOf('נמסר (') === 0 ? 'color:#86b89a;font-weight:bold' : dlv ? 'color:#e0c08a' : 'color:#555';
                     return '<tr style="border-bottom:1px solid #222">' +
                     '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#d4a373">' + esc(r.taba) + '</td>' +
                     '<td style="padding:5px 6px;color:#e8d9c8">' + esc(r.name) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;' + statusStyle + '">' + esc(dispStatus) + '</td>' +
-                    '<td style="padding:5px 6px;font-size:11px;white-space:nowrap;' + dlvStyle + '" title="מסירה בפועל לפי ספר הנכסים העירוני">' + (dlv ? esc(dlv) : '—') + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#999">' + esc(r.sub) + '</td>' +
                     '<td style="padding:5px 6px;font-size:11px;color:#aaa">' + esc(r.source) + '</td>' +
                     '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#d4a373">' + (r.count ? r.count + ' ' + r.unit : '—') + '</td>' +
@@ -8562,7 +8395,6 @@
                         kpi('שב"צ עתידי (מ"ר)', Math.round(totalOut).toLocaleString(), '#c9a227') +
                         kpi('הפרשה מבונה (מ"ר)', Math.round(totalHaf).toLocaleString(), '#b5651d') +
                         kpi('סה"כ שטח ציבור (מ"ר)', Math.round(totalOut + totalHaf).toLocaleString(), '#e8d9c8') +
-                        kpi('מסירה בפועל (תכניות)', rows.filter(r => deliveryLabel(r.taba)).length, '#86b89a') +
                     '</div>' +
                     (useRows
                         ? '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">מבני ציבור לפי שימוש (מתוך תיאור התכנית)</h4>' +
@@ -8570,7 +8402,7 @@
                         : '<div style="color:#999;font-size:12px;margin-bottom:12px">לא זוהו מתקנים מסווגים בתיאור התכניות בתחום זה.</div>') +
                     '<h4 style="color:#d4a373;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית ושימוש (' + detailRows.length + ')</h4>' +
                     (planRows
-                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373" title="הצלבה מול ספר הנכסים העירוני">מסירה בפועל</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>'
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#241c16"><th style="padding:6px;text-align:left;color:#d4a373">תב"ע</th><th style="padding:6px;text-align:right;color:#d4a373">שם התכנית</th><th style="padding:6px;color:#d4a373">סטטוס</th><th style="padding:6px;color:#d4a373">תת-שכונה</th><th style="padding:6px;color:#d4a373">מקור</th><th style="padding:6px;color:#d4a373">כמות</th><th style="padding:6px;color:#d4a373">מ"ר</th><th style="padding:6px;text-align:right;color:#d4a373">שימוש</th></tr></thead><tbody>' + planRows + '</tbody></table>'
                         : '<div style="color:#999;font-size:13px;padding:10px">לא נמצאו הפרשות / שב"צ עתידי בתחום הנבחר.</div>') +
                     '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' +
                         '<button id="alloc-csv" style="background:#5c4636;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא CSV</button>' +
@@ -8592,8 +8424,8 @@
                     lines.push([q('שימוש'), q('מספר מתקנים')].join(','));
                     PARSER_KEYS.filter(k => useCounts[k] > 0).forEach(k => lines.push([q(ALLOC_LBLS[k]), useCounts[k]].join(',')));
                     lines.push('');
-                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('מסירה בפועל'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
-                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(effectivePlanStatus(r.taba, r.status)), q(deliveryLabel(r.taba)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('תת-שכונה'), q('מקור'), q('כמות'), q('יחידה'), q('מ"ר'), q('שימוש')].join(','));
+                    detailRows.forEach(r => lines.push([q(r.taba), q(r.name), q(effectivePlanStatus(r.taba, r.status)), q(r.sub), q(r.source), r.count || '', q(r.unit), r.sqm ? Math.round(r.sqm) : '', q(r.use)].join(',')));
                     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -12173,8 +12005,8 @@
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
-                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
-                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
+                        ser: () => ({ min: devRepMinahak, q: devRepQ }),
+                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); } },
                     { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
                         ser: () => ({ mp: masterPlanReport }) },
                     { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
@@ -12189,8 +12021,6 @@
                     { key: 'floorReport', isOpen: () => showFloorReport, open: () => setShowFloorReport(true),
                         ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
-                    { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true) },
-                    { key: 'fuelBarriers', isOpen: () => showFuelBarriers, open: () => setShowFuelBarriers(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
                         apply: p => { if (p.min) setTimeout(() => setPublicNeedsMinahak(p.min), 300); } },
@@ -15611,11 +15441,9 @@
                         const planProps = planByTabaFs[taba] || {};
                         // Only carry shavatz entries — hafrashah is a separate layer/marker.
                         const entries = parseShavatzProg(planProps.shavatz_out_prog);
-                        // _shavatz_fallback: the data below is שב"צ יוצא carried in hafrash_*-named
-                        // props (shared popup renderer) — the popup must label it שב"צ, not הפרשה.
                         const enrichedProps = entries.length
-                            ? { ...f.properties, _hafrash_lot_entries: entries, _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name }
-                            : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name };
+                            ? { ...f.properties, _hafrash_lot_entries: entries, pl_name: planProps.plan_name_he || f.properties.pl_name }
+                            : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', pl_name: planProps.plan_name_he || f.properties.pl_name };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: c } };
                     });
                     const fallbackLayer = L.geoJSON({ type: 'FeatureCollection', features: fbPoints }, {
@@ -16864,41 +16692,6 @@
                         marker.addTo(treeGroup);
                     });
                     geoLayersRef.current.treePermits = treeGroup;
-                }
-
-                // --- היתרי חפירה בתוקף (GIS עירוני, שכבה 232) — "עבודות בשטח" ---
-                if (planningTopics.excavation && window.__excavationPermits && window.__excavationPermits.permits) {
-                    const excGroup = L.layerGroup().addTo(map);
-                    const _escX = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const today = new Date().toISOString().slice(0, 10);
-                    window.__excavationPermits.permits.forEach(rec => {
-                        // The muni layer is nominally "בתוקף" but carries stale rows — hide
-                        // permits whose validity window already ended.
-                        if (rec.tokef_to && rec.tokef_to < today) return;
-                        const poly = L.geoJSON(rec.geometry, {
-                            style: { color: '#ff8f00', weight: 2, dashArray: '6,4', fillColor: '#ffb74d', fillOpacity: 0.18 },
-                        });
-                        poly.on('click', (e) => {
-                            let html = '<div class="plan-popup-inner" style="direction:rtl;min-width:230px">';
-                            html += '<div style="font-weight:bold;color:#ff8f00;font-size:13px;margin-bottom:4px">🚧 היתר חפירה ' + _escX(rec.tik || '') + '</div>';
-                            const row = (l, v) => v ? '<div class="popup-row"><span class="popup-row-label">' + l + '</span><span class="popup-row-value" style="font-size:11px;max-width:210px;word-wrap:break-word">' + _escX(v) + '</span></div>' : '';
-                            html += row('יזם', rec.yazam);
-                            html += row('מטרה', rec.matara);
-                            html += row('קבלן', rec.kablan);
-                            html += row('בתוקף', (rec.tokef_from && rec.tokef_to) ? rec.tokef_from + ' → ' + rec.tokef_to : '');
-                            html += row('שעות', rec.hours_day);
-                            html += row('סטטוס', rec.status);
-                            if (rec.mahut) html += '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:10.5px;color:#8899bb">מהות העבודה</summary><div style="font-size:10.5px;color:#c4ccda;margin-top:3px">' + _escX(rec.mahut) + '</div></details>';
-                            html += '<div style="font-size:9px;color:#8a8a9a;margin-top:4px">מקור: GIS עירוני — היתרי חפירה בתוקף</div>';
-                            html += '</div>';
-                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
-                                .setLatLng(e.latlng)
-                                .setContent(html)
-                                .openOn(map);
-                        });
-                        poly.addTo(excGroup);
-                    });
-                    geoLayersRef.current.excavationPermits = excGroup;
                 }
 
                 // --- Tama38 ---
@@ -19068,8 +18861,7 @@
                     const PUBLIC_SHAVAZ_CODES = new Set([400, 410, 450, 460, 1670]);
                     const HAFRASHAH_LOT_CODES = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const code = parseInt(props.mavat_code);
-                    if (props._shavatz_fallback) subtitle = 'שב"צ עתידי';
-                    else if (PUBLIC_SHAVAZ_CODES.has(code)) subtitle = 'שטח למבני ציבור';
+                    if (PUBLIC_SHAVAZ_CODES.has(code)) subtitle = 'שטח למבני ציבור';
                     else if (HAFRASHAH_LOT_CODES.has(code)) subtitle = 'הפרשה מבונה';
                     else if (isHafrashah) subtitle = 'הפרשה מבונה';
                     else subtitle = cleanNull(props.mavat_name) || '';
@@ -19144,23 +18936,6 @@
                     html += '</div>';
                 }
                 html += '<div class="popup-body">';
-                // ⛽ תמ"א 18 — attention note when a fuel station sits within screening range of the
-                // lot (data/fuel_barriers.json, keyed taba|lot). critical = within the 80m the TAMA
-                // requires from education/health/elderly; watch = 80-150m (pump-island position unknown).
-                const fbRec = ((window.__fuelBarriers || {}).by_lot || {})[(taba || '') + '|' + (lotNum || '')];
-                if (fbRec) {
-                    const fbCrit = fbRec.band === 'critical';
-                    const fbCol = fbCrit ? '#ef9a9a' : '#e0c08a';
-                    const fbDist = fbRec.dist_m <= 1 ? 'בתוך תחום המגרש' : `במרחק כ-${Math.round(fbRec.dist_m)} מ'`;
-                    const fbKind = fbRec.station_kind === 'planned' ? ' (מתוכננת)' : fbRec.station_kind === 'zoned_lot' ? ' (מגרש בייעוד תחנת דלק)' : '';
-                    let fbHtml = `<b style="color:${fbCol}">⛽ נקודה לתשומת לב — תחנת דלק ${fbDist}</b><br>`;
-                    fbHtml += `${fbRec.station}${fbKind}. תמ"א 18 מחייבת 80 מ' ממוסדות חינוך, בריאות וקשישים (40 מ' ממגורים).`;
-                    const fbPlan = (fbRec.station_plans || [])[0];
-                    if (fbPlan) {
-                        fbHtml += `<br>התחנה בתחום תב"ע <b>${fbPlan.taba}</b> — ${fbPlan.name}${fbPlan.status ? ' (' + fbPlan.status + ')' : ''}; ייתכן שמימוש המבנה יותנה בפינוי התחנה.`;
-                    }
-                    html += `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${fbCol};background:${fbCrit ? 'rgba(229,115,115,0.12)' : 'rgba(224,192,138,0.10)'};font-size:11px;line-height:1.5">${fbHtml}</div>`;
-                }
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
                 }
@@ -19262,9 +19037,8 @@
                         // Guarded to single-lot plans so multi-lot plans don't double-count the field.
                         let _fieldUsed = false;
                         const _fieldProps = (window.__planByTaba || {})[taba] || {};
-                        const _dataIsHafrash = isHafrashah && !props._shavatz_fallback;
-                        const _fieldTotal = parseInt(String((_dataIsHafrash ? _fieldProps.hafrash_sqm : _fieldProps.shavatz_out_sqm) || '').replace(/[^\d]/g, '')) || 0;
-                        const _lotLookup = _dataIsHafrash ? (window.__hafrashByTabaLot || {}) : (window.__shavatzByTabaLot || {});
+                        const _fieldTotal = parseInt(String((isHafrashah ? _fieldProps.hafrash_sqm : _fieldProps.shavatz_out_sqm) || '').replace(/[^\d]/g, '')) || 0;
+                        const _lotLookup = isHafrashah ? (window.__hafrashByTabaLot || {}) : (window.__shavatzByTabaLot || {});
                         const _soleLot = _lotLookup[taba] ? Object.keys(_lotLookup[taba]).length <= 1 : false;
                         if (_soleLot && _fieldTotal > total) { total = _fieldTotal; _fieldUsed = true; }
                         const cntFoot = [];
@@ -19281,14 +19055,9 @@
                             `</table>`;
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
-                        const hfPrgRaw = cleanNull(props.hafrash_prg);
-                        // A "| הערה: ..." tail is a plan-level remark, not part of the last use's
-                        // name — split it off and render it as its own muted row below the list.
-                        const _noteSplit = hfPrgRaw ? hfPrgRaw.split(/\s*\|\s*הערה:?\s*/) : [''];
-                        const hfPrg = _noteSplit[0].trim();
-                        const hfNote = (_noteSplit[1] || '').trim();
+                        const hfPrg = cleanNull(props.hafrash_prg);
                         if (hfSqm || hfPrg) {
-                            html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">' + (props._shavatz_fallback ? 'שב"צ עתידי (תכנית)' : 'הפרשה מבונה (תכנית)') + '</div>';
+                            html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">הפרשה מבונה (תכנית)</div>';
                             if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
                             // Parse the free-text prg into a per-use list (handles comma-only formats with
                             // no "מגרש N -" prefix that parsePrgByLot skips); fall back to raw text if empty.
@@ -19303,7 +19072,6 @@
                             } else if (hfPrg) {
                                 html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
                             }
-                            if (hfNote) html += `<div style="font-size:10px;color:#8a8a9a;margin-top:4px;word-wrap:break-word">הערה: ${hfNote}</div>`;
                         }
                     }
                 }
@@ -19350,64 +19118,6 @@
                     } else if (_stgRec.single_phase) {
                         html += '<div style="font-size:10px;color:#86b89a;margin-top:6px;padding-top:5px;border-top:1px solid #444">מתקבלת במלואה — הבנייה בהינף אחד, ללא שלביות.</div>';
                     }
-                }
-                // ── מסירה בפועל (ספר הנכסים העירוני) ──
-                // Delivery-evidence assets joined from the muni property + allocation
-                // books (data/hafrasha_delivery.json): assets the city opened for this
-                // plan's hafrasha process, their registration state, and which עמותה
-                // already operates them.
-                const _dlvPlans = (window.__hafrashaDelivery || {}).plans || {};
-                const _dlvKey = String(parseInt(String(taba).replace(/^101-?/, '').replace(/[^\d]/g, ''), 10) || '');
-                const _dlv = _dlvPlans[taba] || _dlvPlans[_dlvKey];
-                if ((isHafrashah || hasLotEntries || isFuture) && Array.isArray(_dlv) && _dlv.length) {
-                    const _escD = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                    const _nDone = _dlv.filter(a => a.state === 'נמסר').length;
-                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(134,184,154,0.10);border:1px solid rgba(134,184,154,0.35);border-radius:5px">';
-                    html += '<div style="font-weight:bold;color:#86b89a;font-size:11px;margin-bottom:3px">מסירה בפועל — ספר הנכסים העירוני</div>';
-                    html += '<div style="font-size:10px;color:#c4ccda;margin-bottom:3px">' + _dlv.length + ' נכסי הפרשה נפתחו בעירייה בתחום התכנית' + (_nDone ? ' (' + _nDone + ' נרשמו בבעלות העירייה)' : '') + ':</div>';
-                    _dlv.forEach(a => {
-                        const col = a.state === 'נמסר' ? '#86b89a' : '#e0c08a';
-                        html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0" title="' + _escD(a.status || '') + (a.parcels && a.parcels.length ? ' · גוש/חלקה ' + _escD(a.parcels.join(', ')) : '') + '">' +
-                            '<span style="color:' + col + '">●</span> ' + _escD(a.name || a.use) +
-                            ' — <span style="color:' + col + ';font-weight:bold">' + _escD(a.state) + '</span>' +
-                            (a.opened ? ' <span style="color:#8a8a9a">(' + _escD(a.opened) + ')</span>' : '') +
-                            '</div>';
-                        const _actAl = (a.allocations || []).filter(al => al && al.active !== 0 && al.active !== '0');
-                        _actAl.forEach(al => {
-                            html += '<div style="font-size:9.5px;color:#bcc6d8;margin:0 12px 2px 0">↳ מופעל ע"י: ' + _escD(al.org || '') + (al.use ? ' · <b>' + _escD(al.use) + '</b>' : '') + (al.approved ? ' · אישור מועצה ' + _escD(al.approved) : '') + '</div>';
-                        });
-                        // The final USE choice is only made at allocation time — say so
-                        // explicitly while it hasn't happened (tracked by the weekly cron).
-                        if (!_actAl.length) {
-                            html += '<div style="font-size:9px;color:#8a8a9a;margin:0 12px 2px 0">↳ טרם הוקצה לעמותה — השימוש הסופי ייקבע בהקצאה (במעקב)</div>';
-                        }
-                    });
-                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר הנכסים וספר ההקצאות העירוניים · עדכון ' + _escD(((window.__hafrashaDelivery || {}).meta || {}).source_refresh || '') + '</div>';
-                    html += '</div>';
-                }
-                // ── ההקצאות בנכס (שב"צ קיים) — "מה נבחר בסוף" ──
-                // The plan's permitted envelope is broad; the allocation book records
-                // the actual fine-grained choice (תיאטרון/מעון/בית כנסת…) and operator.
-                // Joined offline by asset-centroid-in-polygon (build_asset_allocations).
-                const _aalRecs = !isFuture && props.fid != null
-                    ? (((window.__assetAllocations || {}).by_fid || {})[String(props.fid)] || [])
-                    : [];
-                if (_aalRecs.length) {
-                    const _escA = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    const _actA = _aalRecs.filter(al => al.active !== 0 && al.active !== '0');
-                    const _shown = _actA.length ? _actA : _aalRecs;
-                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(206,147,216,0.10);border:1px solid rgba(206,147,216,0.35);border-radius:5px">';
-                    html += '<div style="font-weight:bold;color:#ce93d8;font-size:11px;margin-bottom:3px">הקצאות בנכס — השימוש שנבחר בפועל</div>';
-                    _shown.forEach(al => {
-                        html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0">' +
-                            '<b style="color:#ce93d8">' + _escA(al.use || '—') + '</b>' +
-                            (al.org ? ' — ' + _escA(al.org) : '') +
-                            (al.approved ? ' <span style="color:#8a8a9a">(אישור מועצה ' + _escA(al.approved) + ')</span>' : '') +
-                            ((al.active === 0 || al.active === '0') ? ' <span style="color:#e0c08a">· לא פעיל</span>' : '') +
-                            '</div>';
-                    });
-                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר ההקצאות העירוני (מתעדכן שבועית)</div>';
-                    html += '</div>';
                 }
 
                 html += '</div>';
@@ -19511,34 +19221,6 @@
                 const tama38Permits = getPermitsForTama38(fid);
                 if (tama38Permits.length > 0) {
                     html += buildPermitsSummaryHTML(tama38Permits, `data-fid='${fid}'`);
-                }
-
-                // ── Tree survey section (tama38, keyed by tik) — same format as the
-                //    תב"ע plan popup: count summary + a high-valency callout line. ──
-                const tamaTreeSurvey = (window.__tama38TreeSurveys || {})[tik];
-                if (tamaTreeSurvey && tamaTreeSurvey.total > 0) {
-                    const removed = (tamaTreeSurvey.krita || 0) + (tamaTreeSurvey.haataka || 0);
-                    const total = tamaTreeSurvey.total;
-                    const removedPct = total > 0 ? Math.round((removed / total) * 100) : 0;
-                    html += '<div class="popup-section-title">🌳 עצים</div>';
-                    html += '<div class="popup-pair">';
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">${total}</span></div>`;
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">העתקה/כריתה</span><span class="popup-pair-value">${removed} <span style="color:#5dade2;font-size:11px">(${removedPct}%)</span></span></div>`;
-                    html += '</div>';
-
-                    const tamaValency = (window.__tama38Valencies || {})[tik];
-                    if (tamaValency && tamaValency.bucket_totals) {
-                        const highTotal = (tamaValency.bucket_totals['17-20'] || 0) + (tamaValency.bucket_totals['14-16'] || 0);
-                        if (highTotal > 0) {
-                            const hb1 = tamaValency.by_bucket['17-20'] || {};
-                            const hb2 = tamaValency.by_bucket['14-16'] || {};
-                            const highRemoved = (hb1.krita || 0) + (hb1.haataka || 0) + (hb2.krita || 0) + (hb2.haataka || 0);
-                            const highPct = Math.round(highRemoved / highTotal * 100);
-                            const pctColor = highPct >= 50 ? '#c0392b' : (highPct >= 25 ? '#e67e22' : '#27ae60');
-                            const partialNote = tamaValency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : '';
-                            html += `<div class="popup-sub-row" style="margin-top:4px">ערכיות גבוהה+: <span style="color:${pctColor};font-weight:700">${highRemoved} מתוך ${highTotal} (${highPct}%)</span> נעקרים/מועתקים${partialNote}</div>`;
-                        }
-                    }
                 }
                 html += '</div>';
                 html += '</div>';
@@ -19911,8 +19593,6 @@
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
-                    { id: 'use_gaps',     title: 'פערי שימוש — ספר הנכסים',  desc: 'שימוש נכסי הפרשה בפועל מול טבלה 5 (כולל חפיפות)', icon: '⚖️' },
-                    { id: 'fuel_barriers', title: 'חסמים למבני ציבור',       desc: 'מגרשי ציבור בקרבת תחנת דלק (תמ"א 18)', icon: '⛽' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
                 ];
                 // All toggleable layers
@@ -20030,8 +19710,6 @@
                     else if (id === 'tree_permits') setTreePermitsReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
-                    else if (id === 'use_gaps') setShowUseGaps(true);
-                    else if (id === 'fuel_barriers') setShowFuelBarriers(true);
                     else if (id === 'reports_menu') setShowReportsMenu(true);
                 }
             };
@@ -20679,13 +20357,6 @@
                                     onClick={(e) => { e.stopPropagation(); setTreePermitsReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
-                            <div className="layer-item"
-                                 title='פוליגונים של היתרי חפירה / הגבלת שימוש בדרך בתוקף — יזם, קבלן, מהות ותקופת העבודה (מקור: GIS עירוני, מתעדכן בשליפה)'
-                                 style={{display:'flex',alignItems:'center'}}
-                                 onClick={() => setPlanningTopics(prev => ({...prev, excavation: !prev.excavation}))}>
-                                <input type="checkbox" checked={planningTopics.excavation} onChange={() => {}} />
-                                <label style={{flex:1}}>🚧 היתרי חפירה בתוקף (עבודות בשטח)</label>
-                            </div>
                             </div>)}
                         </div>
 
@@ -20879,12 +20550,6 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                                         <span className="sub-label">שיתוף</span>
-                                    </button>
-                                    <button className="toolbar-dropdown-item" data-tip='תצ"א רבעונית של העירייה — צפייה והשוואה בין רבעונים (נפתח במרכז המפה)' onClick={() => {
-                                        setOrthoViewer(true); setActiveDropdown(null);
-                                    }}>
-                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
-                                        <span className="sub-label">תצ"א רבעונית</span>
                                     </button>
                                     <button className="toolbar-dropdown-item" data-tip="ייצוא תכניות מסוננות ל-CSV או GeoJSON" onClick={() => {
                                         setActiveDropdown(null);
@@ -22460,325 +22125,6 @@
                         );
                     })()}
 
-                    {/* ── פערי שימוש — הפרשות מול ספר הנכסים (overlap-aware) ── */}
-                    {showUseGaps && (() => {
-                        const D = window.__hafrashaDelivery || {};
-                        const plansD = D.plans || {}, pcats = D.plan_cats || {};
-                        const nonPub = new Set(D.non_public_cats || []);
-                        // Invert plan→assets to asset→candidate plans: an asset sitting under
-                        // several overlapping plans appears ONCE, with all its candidates —
-                        // the overlap treatment (same idea as the tree-surveys suppression).
-                        const byAsset = {};
-                        Object.entries(plansD).forEach(([taba, assets]) => (assets || []).forEach(a => {
-                            if (!byAsset[a.asset_id]) byAsset[a.asset_id] = { a, tabas: [] };
-                            byAsset[a.asset_id].tabas.push(taba);
-                        }));
-                        // A plan covers a use-category if its program names it explicitly, or the
-                        // program is the generic "מבנים ומוסדות ציבור" wildcard — which covers any
-                        // PUBLIC use but not מסחר/דיור.
-                        const covers = (t, c) => { const pc = pcats[t] || {}; return (pc.cats || []).includes(c) || (!!pc.generic && !nonPub.has(c)); };
-                        const rows = [];
-                        Object.values(byAsset).forEach(({ a, tabas }) => {
-                            const cats = a.cats || [];
-                            if (!cats.length) return;
-                            const unmatched = cats.filter(c => !tabas.some(t => covers(t, c)));
-                            const winners = {}; cats.forEach(c => { winners[c] = tabas.filter(t => covers(t, c)); });
-                            // resolved-by-overlap: every use is covered, but not by every candidate —
-                            // a naive single-plan comparison would have flagged a false gap.
-                            const resolved = !unmatched.length && tabas.length > 1 && cats.some(c => winners[c].length < tabas.length);
-                            const opGaps = [];
-                            (a.allocations || []).forEach(al => {
-                                if (!al || al.active === 0 || al.active === '0') return;
-                                (al.cats || []).forEach(c => {
-                                    if (!cats.includes(c) && !tabas.some(t => covers(t, c))) opGaps.push({ org: al.org, use: al.use, cat: c });
-                                });
-                            });
-                            rows.push({ a, tabas, cats, unmatched, winners, resolved, opGaps,
-                                section: unmatched.length ? 'gaps' : (resolved ? 'resolved' : 'matched') });
-                        });
-                        const secOf = (s) => rows.filter(r => r.section === s);
-                        const opRows = rows.filter(r => r.opGaps.length);
-                        // Only questionable items are shown — assets whose use matches a covering
-                        // plan (incl. via an overlapping one) are counted in the KPI but not listed.
-                        const shown = secOf('gaps');
-                        const nOk = secOf('matched').length + secOf('resolved').length;
-                        const secNote = 'שימוש בנכס העירוני שאף תכנית מועמדת (כולל חופפות) לא מכסה בפרוגרמה — לבירור מול טבלה 5 / העירייה.';
-                        const planDisp = (t) => { const nm = (pcats[t] || {}).name || ''; return t + (nm ? ' · ' + nm.slice(0, 28) : ''); };
-                        // Click on a plan number → close the report and fly to the plan on the map
-                        // (same behavior as row-click in the commerce/master-plan reports).
-                        const goToPlan = (taba) => {
-                            const gd = geoDataRef.current || {};
-                            const map = mapInstanceRef.current;
-                            if (!gd.plans || !map) return;
-                            const f = gd.plans.features.find(ft => String(ft.properties.taba || ft.properties.TABA || '').trim() === String(taba));
-                            if (!f || !f.geometry) return;
-                            try {
-                                const bounds = L.geoJSON(f.geometry).getBounds();
-                                if (!bounds.isValid()) return;
-                                setShowUseGaps(false);
-                                map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 17, duration: 0.5 });
-                            } catch (e) { /* geometry edge case — stay in the report */ }
-                        };
-                        const noteFor = (r) => {
-                            if (r.section === 'gaps') return 'לא מכוסה: ' + r.unmatched.join(', ');
-                            if (r.section === 'resolved') { const ws = [...new Set(r.cats.flatMap(c => r.winners[c] || []))]; return 'שויך ל-' + ws.join(', '); }
-                            return '';
-                        };
-                        const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
-                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-                        const csv = () => {
-                            const lines = [['סיווג', 'נכס', 'שם נכס', 'מצב מסירה', 'שימושים (ספר הנכסים)', 'תכניות מועמדות', 'הערה'].map(csvQ).join(',')];
-                            shown.forEach(r => lines.push(['פער לבדיקה', r.a.asset_id, r.a.name, r.a.state, r.cats.join('; '), r.tabas.join('; '), noteFor(r)].map(csvQ).join(',')));
-                            if (opRows.length) {
-                                lines.push('');
-                                opRows.forEach(r => r.opGaps.forEach(g => lines.push(['פער מפעיל', r.a.asset_id, r.a.name, r.a.state, g.cat, r.tabas.join('; '), (g.org || '') + ' (' + (g.use || '') + ')'].map(csvQ).join(','))));
-                            }
-                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'use_gaps.csv'; document.body.appendChild(a); a.click(); a.remove();
-                        };
-                        const prnt = () => {
-                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>פערי שימוש — הפרשות מול ספר הנכסים</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}h2{font-size:15px;margin-top:18px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#5c4636;color:#fff}</style></head><body><h1>⚖️ פערי שימוש — הפרשות מול ספר הנכסים העירוני</h1>';
-                            h += '<h2>פערים לבדיקה (' + shown.length + ')</h2><table><thead><tr><th>נכס</th><th>שם</th><th>מצב</th><th>שימושים</th><th>תכניות</th><th>הערה</th></tr></thead><tbody>';
-                            shown.forEach(r => { h += '<tr><td>' + r.a.asset_id + '</td><td>' + e2(r.a.name) + '</td><td>' + e2(r.a.state) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td><td>' + e2(noteFor(r)) + '</td></tr>'; });
-                            h += '</tbody></table>';
-                            if (opRows.length) {
-                                h += '<h2>פערי מפעיל (' + opRows.length + ')</h2><table><thead><tr><th>נכס</th><th>מפעיל</th><th>שימוש בפועל</th><th>ייעוד הנכס</th><th>תכניות</th></tr></thead><tbody>';
-                                opRows.forEach(r => r.opGaps.forEach(g => { h += '<tr><td>' + e2(r.a.name) + '</td><td>' + e2(g.org) + '</td><td>' + e2((g.use || '') + ' → ' + g.cat) + '</td><td>' + e2(r.cats.join(', ')) + '</td><td>' + e2(r.tabas.join(', ')) + '</td></tr>'; }));
-                                h += '</tbody></table>';
-                            }
-                            h += '</body></html>';
-                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
-                        };
-                        return (
-                            <div className="units-overlay" onClick={() => setShowUseGaps(false)}>
-                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
-                                    <div className="units-header" style={{ background: '#5c4636' }}>
-                                        <h2>⚖️ פערי שימוש — הפרשות מול ספר הנכסים</h2>
-                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowUseGaps(false)}>&times;</button>
-                                    </div>
-                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
-                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
-                                            השוואת השימוש שנקבע לנכס בספר הנכסים העירוני מול הפרוגרמה הסטטוטורית (טבלה 5) של התכניות במיקום.
-                                            נכס שיושב תחת כמה תכניות חופפות נבדק מול <b>כולן</b> — פער נספר רק כשאף תכנית לא מכסה את השימוש.
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-                                            {[['נכסים שנבדקו', rows.length, '#d8def0'], ['תקינים (כולל חפיפה)', nOk, '#86b89a'], ['פערים לבדיקה', shown.length, '#ef9a9a'], ['פערי מפעיל', opRows.length, '#ce93d8']].map((k, i) => (
-                                                <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
-                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
-                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div style={{ fontSize: 11, color: '#8a9bc0', marginBottom: 8 }}>{secNote}</div>
-                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
-                                            <thead><tr style={{ background: '#241c16', color: '#d4a373' }}>
-                                                <th style={td}>נכס</th><th style={td}>שם הנכס (ספר הנכסים)</th><th style={td}>מצב מסירה</th><th style={td}>שימושים</th><th style={td}>תכניות במיקום</th><th style={td}>הערה</th>
-                                            </tr></thead>
-                                            <tbody>
-                                                {shown.map((r, i) => (
-                                                    <tr key={i} style={{ background: r.section === 'gaps' ? '#2a1d1d' : (r.section === 'resolved' ? '#2a2418' : 'transparent') }}>
-                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}>{r.a.asset_id}</td>
-                                                        <td style={td} title={r.a.status || ''}>{r.a.name}</td>
-                                                        <td style={{ ...td, whiteSpace: 'nowrap', color: r.a.state === 'נמסר' ? '#86b89a' : '#e0c08a' }}>{r.a.state}{r.a.opened ? <span style={{ color: '#8a9bc0', fontSize: 10 }}> ({r.a.opened})</span> : null}</td>
-                                                        <td style={td}>{r.cats.map((c, j) => (
-                                                            <span key={j} style={{ display: 'inline-block', margin: '1px 0 1px 4px', padding: '1px 7px', borderRadius: 10, fontSize: 11, background: r.unmatched.includes(c) ? '#5c2a2a' : '#243524', color: r.unmatched.includes(c) ? '#ef9a9a' : '#a5d6a7' }}>{c}</span>
-                                                        ))}</td>
-                                                        <td style={{ ...td, fontSize: 11 }}>{r.tabas.map((t, j) => (
-                                                            <div key={j} style={{ whiteSpace: 'nowrap' }}>
-                                                                <span style={{ color: r.cats.every(c => (r.winners[c] || []).includes(t)) ? '#86b89a' : (r.cats.some(c => (r.winners[c] || []).includes(t)) ? '#e0c08a' : '#ef9a9a') }}>●</span>{' '}
-                                                                <a href="#" onClick={e => { e.preventDefault(); goToPlan(t); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{planDisp(t)}</a>
-                                                            </div>
-                                                        ))}{r.tabas.length > 1 ? <div style={{ color: '#ffb74d', fontSize: 10 }}>⚠ {r.tabas.length} תכניות חופפות</div> : null}</td>
-                                                        <td style={{ ...td, fontSize: 11, color: r.section === 'gaps' ? '#ef9a9a' : '#9fb0d0' }}>{noteFor(r)}</td>
-                                                    </tr>
-                                                ))}
-                                                {!shown.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#86b89a' }}>אין פערים לבדיקה — כל השימושים תואמים את הפרוגרמות 🎉</td></tr>}
-                                            </tbody>
-                                        </table>
-                                        {opRows.length > 0 && (
-                                            <div style={{ marginTop: 14 }}>
-                                                <div style={{ fontWeight: 700, color: '#ce93d8', fontSize: 13, marginBottom: 4 }}>פערי מפעיל — הקצאה בשימוש שונה מהייעוד ({opRows.length})</div>
-                                                <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
-                                                    <thead><tr style={{ background: '#241c16', color: '#ce93d8' }}><th style={td}>נכס</th><th style={td}>מפעיל</th><th style={td}>שימוש בפועל</th><th style={td}>ייעוד הנכס</th><th style={td}>תכניות</th></tr></thead>
-                                                    <tbody>{opRows.map((r, i) => r.opGaps.map((g, j) => (
-                                                        <tr key={i + '_' + j}>
-                                                            <td style={td}>{r.a.name}</td>
-                                                            <td style={td}>{g.org}</td>
-                                                            <td style={{ ...td, color: '#ce93d8' }}>{g.use} → {g.cat}</td>
-                                                            <td style={td}>{r.cats.join(', ')}</td>
-                                                            <td style={{ ...td, fontSize: 11 }}>{r.tabas.map((t, j) => (
-                                                                <span key={j}>{j > 0 ? ', ' : ''}<a href="#" onClick={e => { e.preventDefault(); goToPlan(t); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{t}</a></span>
-                                                            ))}</td>
-                                                        </tr>
-                                                    )))}</tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>מקור: ספר הנכסים וספר ההקצאות העירוניים (עדכון {(D.meta || {}).source_refresh || ''}) מול טבלה 5. הסיווג אוטומטי מטקסט חופשי — פער הוא מועמד לבירור, לא קביעה.</div>
-                                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                                            <button onClick={csv} style={{ background: '#5c4636', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
-                                            <button onClick={prnt} style={{ background: '#3a2e26', border: '1px solid #5c4636', color: '#e8d9c8', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
-
-                    {/* ── חסמים למבני ציבור — public lots blocked/delayed by a nearby fuel station (תמ"א 18) ── */}
-                    {showFuelBarriers && (() => {
-                        const FB = window.__fuelBarriers || {};
-                        const byLot = FB.by_lot || {};
-                        const rows = Object.entries(byLot).map(([key, r]) => {
-                            const [taba, lot] = key.split('|');
-                            return { key, taba, lot, ...r };
-                        }).sort((a, b) => a.dist_m - b.dist_m);
-                        const crit = rows.filter(r => r.band === 'critical');
-                        const watch = rows.filter(r => r.band === 'watch');
-                        const nStations = (FB.stations || []).length;
-                        const kindLabel = (k) => k === 'existing' ? 'תחנה קיימת' : k === 'zoned_lot' ? 'מגרש בייעוד תחנת דלק' : 'תחנה מתוכננת (תב"ע)';
-                        const distDisp = (d) => d <= 1 ? 'בתוך המגרש' : Math.round(d) + " מ'";
-                        const evacDisp = (r) => {
-                            const sp = (r.station_plans || [])[0];
-                            if (!sp) return '';
-                            return 'תב"ע ' + sp.taba + ' — ' + (sp.name || '').slice(0, 45) + (sp.status ? ' (' + sp.status + ')' : '');
-                        };
-                        const goToPlan = (taba) => {
-                            const gd = geoDataRef.current || {};
-                            const map = mapInstanceRef.current;
-                            if (!gd.plans || !map) return;
-                            const f = gd.plans.features.find(ft => String(ft.properties.taba || ft.properties.TABA || '').trim() === String(taba));
-                            if (!f || !f.geometry) return;
-                            try {
-                                const bounds = L.geoJSON(f.geometry).getBounds();
-                                if (!bounds.isValid()) return;
-                                setShowFuelBarriers(false);
-                                map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 17, duration: 0.5 });
-                            } catch (e) { /* geometry edge case — stay in the report */ }
-                        };
-                        const td = { border: '1px solid #2a3a5e', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
-                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-                        const csv = () => {
-                            const lines = [['חסם', 'דרגה', 'תב"ע', 'מגרש', 'שם התכנית', 'שימושים מתוכננים', 'מרחק (מ\')', 'התחנה', 'סוג התחנה', 'תב"ע שמפנה את התחנה'].map(csvQ).join(',')];
-                            rows.forEach(r => lines.push(['קרבה לתחנת דלק', r.band === 'critical' ? 'בטווח תמ"א 18' : 'גבולי (80-150 מ\')', r.taba, r.lot, r.name, r.uses, r.dist_m, r.station, kindLabel(r.station_kind), evacDisp(r)].map(csvQ).join(',')));
-                            const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); a.download = 'fuel_barriers.csv'; document.body.appendChild(a); a.click(); a.remove();
-                        };
-                        const prnt = () => {
-                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>חסמים למבני ציבור — קרבה לתחנת דלק</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#7a4a1e;color:#fff}.crit{background:#fde8e8}</style></head><body><h1>⛽ חסמים למבני ציבור — קרבה לתחנת דלק (תמ"א 18)</h1>';
-                            h += '<p style="font-size:12px;color:#555">תמ"א 18/4: מרחק מינימלי מאי המשאבות — 80 מ\' ממוסדות חינוך, בריאות וקשישים; 40 מ\' ממגורים. המדידה כאן מגבול מגרש התחנה — סינון שמרני.</p>';
-                            h += '<table><thead><tr><th>מרחק</th><th>תב"ע / מגרש</th><th>שם התכנית</th><th>שימושים</th><th>התחנה</th><th>תב"ע שמפנה את התחנה</th></tr></thead><tbody>';
-                            rows.forEach(r => { h += '<tr' + (r.band === 'critical' ? ' class="crit"' : '') + '><td>' + e2(distDisp(r.dist_m)) + '</td><td>' + e2(r.taba + (r.lot ? ' / ' + r.lot : '')) + '</td><td>' + e2(r.name) + '</td><td>' + e2(r.uses) + '</td><td>' + e2(r.station + ' (' + kindLabel(r.station_kind) + ')') + '</td><td>' + e2(evacDisp(r)) + '</td></tr>'; });
-                            h += '</tbody></table></body></html>';
-                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
-                        };
-                        return (
-                            <div className="units-overlay" onClick={() => setShowFuelBarriers(false)}>
-                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1150, width: '96%' }}>
-                                    <div className="units-header" style={{ background: '#7a4a1e' }}>
-                                        <h2>⛽ חסמים למבני ציבור — קרבה לתחנת דלק</h2>
-                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowFuelBarriers(false)}>&times;</button>
-                                    </div>
-                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
-                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
-                                            תמ"א 18/4 קובעת מרחק מינימלי מאי המשאבות של תחנת דלק: <b>80 מ' ממוסדות חינוך, בריאות ומעונות לקשישים</b> ו-40 מ' מבנייני מגורים.
-                                            מגרש ציבור בטווח לא יוכל לאכלס גן/בי"ס/מעון — וכשהתחנה בתוך תב"ע עתידית, ייתכן שקבלת המבנה תתעכב עד פינוי התחנה.
-                                            המדידה מגבול מגרש התחנה (לא מאי המשאבות) — סינון שמרני; "גבולי" דורש בדיקה פרטנית.
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-                                            {[['מגרשים עם חסם', rows.length, '#d8def0'], ['בטווח תמ"א 18 (עד 80 מ\')', crit.length, '#ef9a9a'], ['גבולי (80-150 מ\')', watch.length, '#e0c08a'], ['תחנות דלק באזור', nStations, '#9fb0d0']].map((k, i) => (
-                                                <div key={i} style={{ border: '1px solid #2a3a5e', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
-                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
-                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
-                                            <thead><tr style={{ background: '#241c16', color: '#e0a973' }}>
-                                                <th style={td}>מרחק</th><th style={td}>תב"ע / מגרש</th><th style={td}>שם התכנית</th><th style={td}>שימושים מתוכננים</th><th style={td}>התחנה</th><th style={td}>תב"ע שמפנה את התחנה</th>
-                                            </tr></thead>
-                                            <tbody>
-                                                {rows.map((r, i) => (
-                                                    <tr key={i} style={{ background: r.band === 'critical' ? '#2a1d1d' : 'transparent' }}>
-                                                        <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 700, color: r.band === 'critical' ? '#ef9a9a' : '#e0c08a' }}>{distDisp(r.dist_m)}</td>
-                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                                                            <a href="#" onClick={e => { e.preventDefault(); goToPlan(r.taba); }} title="קפיצה לתכנית במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{r.taba}{r.lot ? ' / ' + r.lot : ''}</a>
-                                                        </td>
-                                                        <td style={td}>{(r.name || '').slice(0, 55)}</td>
-                                                        <td style={{ ...td, fontSize: 11 }}>{(r.uses || '').slice(0, 80)}</td>
-                                                        <td style={{ ...td, fontSize: 11 }}>{r.station}<div style={{ color: '#8a9bc0', fontSize: 10 }}>{kindLabel(r.station_kind)}</div></td>
-                                                        <td style={{ ...td, fontSize: 11, color: (r.station_plans || []).length ? '#a5d6a7' : '#667' }}>{evacDisp(r) || '—'}</td>
-                                                    </tr>
-                                                ))}
-                                                {!rows.length && <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#86b89a' }}>אין מגרשי ציבור בקרבת תחנת דלק 🎉</td></tr>}
-                                            </tbody>
-                                        </table>
-                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>
-                                            מקורות תחנות: OSM (קיימות), ייעודי קרקע עירוניים 7410 ומבא"ת 910 (מאושרות/מתוכננות). עדכון: {FB.generated || ''}.
-                                            "תב"ע שמפנה את התחנה" = תכנית עתידית שהתחנה בתחומה — סימן שהפינוי מתוכנן אך גם שהמבנה הציבורי עשוי לחכות לו.
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                                            <button onClick={csv} style={{ background: '#7a4a1e', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
-                                            <button onClick={prnt} style={{ background: '#3a2e26', border: '1px solid #7a4a1e', color: '#e8d9c8', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
-
-                    {/* ── תצ"א רבעונית — muni quarterly orthophoto, view + quarter compare ── */}
-                    {orthoViewer && (() => {
-                        const OQ = window.__orthoQuarters || {};
-                        const quarters = OQ.quarters || [];
-                        const cur = orthoQ || (quarters[0] && quarters[0].id);
-                        const qLabel = (id) => (quarters.find(q => q.id === id) || {}).label || '';
-                        const pill = (on) => ({ padding: '3px 12px', borderRadius: 16, border: '1px solid ' + (on ? '#7cb342' : '#2a3a5e'), cursor: 'pointer', fontSize: 12, fontWeight: on ? 700 : 400, background: on ? '#33691e' : 'transparent', color: on ? '#fff' : '#9fb0d0' });
-                        const close = () => { setOrthoViewer(false); setOrthoCompareQ(null); };
-                        return (
-                            <div className="units-overlay" onClick={close}>
-                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: orthoCompareQ ? 1350 : 950, width: '97%' }}>
-                                    <div className="units-header" style={{ background: '#33691e' }}>
-                                        <h2>🛰️ תצ"א רבעונית — עיריית ירושלים</h2>
-                                        <button className="units-close" onClick={close}>&times;</button>
-                                    </div>
-                                    <div style={{ padding: '10px 14px' }}>
-                                        {!quarters.length && <div style={{ color: '#ef9a9a', fontSize: 13, padding: 20 }}>רשימת הרבעונים לא נטענה (data/ortho_quarters.json)</div>}
-                                        {quarters.length > 0 && <React.Fragment>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
-                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>רבעון:</span>
-                                            {quarters.map(q => (
-                                                <button key={q.id} onClick={() => { setOrthoQ(q.id); if (orthoCompareQ === q.id) setOrthoCompareQ(null); }} style={pill(cur === q.id)}>{q.label}</button>
-                                            ))}
-                                            <span style={{ width: 14 }} />
-                                            <span style={{ fontSize: 12, color: '#9fb0d0' }}>השוואה מול:</span>
-                                            <button onClick={() => setOrthoCompareQ(null)} style={pill(!orthoCompareQ)}>ללא</button>
-                                            {quarters.filter(q => q.id !== cur).map(q => (
-                                                <button key={q.id} onClick={() => setOrthoCompareQ(q.id)} style={pill(orthoCompareQ === q.id)}>{q.label}</button>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: 11.5, color: '#c5e1a5', fontWeight: 700, marginBottom: 3 }}>{qLabel(cur)}</div>
-                                                <div id="ortho-pane-a" style={{ height: '62vh', borderRadius: 8, background: '#111' }} />
-                                            </div>
-                                            {orthoCompareQ && (
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: 11.5, color: '#ffcc80', fontWeight: 700, marginBottom: 3 }}>{qLabel(orthoCompareQ)}</div>
-                                                    <div id="ortho-pane-b" style={{ height: '62vh', borderRadius: 8, background: '#111' }} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 8 }}>
-                                            נפתח במרכז המפה הראשית; בהשוואה — שתי המפות מסונכרנות. אריחים חיים משרת ה-GIS העירוני (רזולוציה עד ~3 ס"מ/פיקסל) — לא נשמר עותק אצלנו, ורבעון חדש מתווסף אוטומטית כשהעירייה מפרסמת.
-                                        </div>
-                                        </React.Fragment>}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
-
                     {/* ── Education Forecast (Yotam per-חומש) vs current status ── */}
                     {showEduForecast && (() => {
                         const N = eduForecastChumash;
@@ -23106,20 +22452,6 @@
                                                 <div className="report-text">
                                                     <span className="report-title">קומות הפרשות מבונות</span>
                                                     <span className="report-desc">טבלת קומה לכל הפרשה + ייצוא</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowUseGaps(true); }}>
-                                                <span className="report-icon">⚖️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">פערי שימוש — ספר הנכסים</span>
-                                                    <span className="report-desc">שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowFuelBarriers(true); }}>
-                                                <span className="report-icon">⛽</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">חסמים למבני ציבור</span>
-                                                    <span className="report-desc">מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ' ממוסדות חינוך)</span>
                                                 </div>
                                             </button>
                                         </div>
@@ -25445,9 +24777,6 @@
                                                                         {isPlOpen && (() => {
                                                                             const colSpanN = showFuture ? 6 : 4;
                                                                             const sorted = [...planList].sort((a,b) => (b.addedCounts[svc.key] - a.addedCounts[svc.key]));
-                                                                            // ⛽ תמ"א 18 — plans whose public lot sits near a fuel station may deliver late (station evacuation)
-                                                                            const fbByTaba = ((window.__fuelBarriers || {}).by_taba || {});
-                                                                            const anyFuel = sorted.some(p => fbByTaba[String(p.taba)]);
                                                                             return (
                                                                                 <tr>
                                                                                     <td colSpan={colSpanN} style={{padding:'8px 12px 14px 12px',background:'rgba(123,108,240,0.07)',borderBottom:'1px solid #222'}}>
@@ -25469,7 +24798,7 @@
                                                                                             <tbody>
                                                                                                 {sorted.map((p, idx) => (
                                                                                                     <tr key={idx} style={{borderBottom:'1px solid #1a1a2a'}}>
-                                                                                                        <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{fbByTaba[String(p.taba)] ? <span title={'קרבה לתחנת דלק (תמ"א 18) — מגרש במרחק כ-' + Math.round(fbByTaba[String(p.taba)].min_dist) + ' מ\' מתחנה; ייתכן עיכוב במסירה. ראו דוח "חסמים למבני ציבור"'} style={{cursor:'help'}}>⛽ </span> : null}{p.taba}</td>
+                                                                                                        <td style={{padding:'3px 6px',direction:'ltr',textAlign:'right',color:'#bdb6e8'}}>{p.taba}</td>
                                                                                                         <td style={{padding:'3px 6px',color:'#aaa'}}>{(p.plan_summary || '').slice(0, 60)}</td>
                                                                                                         <td style={{padding:'3px 6px',textAlign:'center',color:'#f59e0b'}}>{p.effectivePct}%</td>
                                                                                                         <td style={{padding:'3px 6px',textAlign:'center',color:'#aaa'}}>{p.estimatedYear}</td>
@@ -25482,7 +24811,6 @@
                                                                                             </tbody>
                                                                                         </table>
                                                                                         <div style={{marginTop:6,fontSize:10,color:'#777',fontStyle:'italic'}}>"+ מתוכנן (גולמי)" = הסכום הגולמי בתב"ע. בטבלה למעלה מוצג הסכום משוקלל לפי %מימוש.</div>
-                                                                                        {anyFuel && <div style={{marginTop:4,fontSize:10,color:'#e0c08a'}}>⛽ = מגרש ציבור בקרבת תחנת דלק (תמ"א 18: 80 מ' ממוסדות חינוך) — המסירה עשויה להתעכב עד פינוי התחנה. פירוט בדוח "חסמים למבני ציבור".</div>}
                                                                                     </td>
                                                                                 </tr>
                                                                             );
@@ -28128,24 +27456,6 @@
                         </div>);
                     })()}
 
-                    {devMapSel && !developersReport && (
-                        <div style={{position:'fixed', bottom:18, right:'50%', transform:'translateX(50%)', zIndex:1200,
-                                     background:'#16162a', border:'1px solid #ff9100', borderRadius:10, padding:'8px 14px',
-                                     display:'flex', alignItems:'center', gap:10, boxShadow:'0 4px 16px rgba(0,0,0,.5)', direction:'rtl'}}>
-                            <span style={{color:'#ffb74d', fontSize:13, fontWeight:600}}>
-                                🗺️ {devMapSel.name} — {devMapSel.plans} תכניות · {Math.round(devMapSel.units).toLocaleString()} יח"ד
-                            </span>
-                            <button onClick={() => { setDevelopersReport(true); }}
-                                style={{background:'transparent', border:'1px solid #6b7aa0', borderRadius:6, color:'#c0c9e0', cursor:'pointer', fontSize:12, padding:'3px 10px'}}>
-                                חזרה לדוח
-                            </button>
-                            <button onClick={clearDevMapSel}
-                                style={{background:'transparent', border:'none', color:'#e94560', cursor:'pointer', fontSize:16, fontWeight:700, padding:'0 2px'}}>
-                                ✕
-                            </button>
-                        </div>
-                    )}
-
                     {developersReport && (() => {
                         const gd = geoDataRef.current;
                         if (!gd.plans) return null;
@@ -28205,15 +27515,13 @@
                         const seenPN = new Set();
                         const devMap = {};
                         const allMinahaks = new Set();
-                        const excludePlans = new Set(window.__devExcludePlans || []);
                         for (const f of gd.plans.features) {
                             const p = f.properties || {};
                             const pn = (p.plan_name || '').trim();
-                            if (!pn || seenPN.has(pn) || excludePlans.has(pn)) continue;
+                            if (!pn || seenPN.has(pn)) continue;
                             const st = (p.status_mavat || '').trim();
                             if (/נדחתה|נגנזה|בטלה|מבוטל|ביטול|הבקשה נסגרה/.test(st)) continue;
-                            // units_add לפעמים טרם מולא (תכניות שרק נקלטו) — ניפול ל-units_total
-                            const units = num(p.units_add) || num(p.units_total);
+                            const units = num(p.units_add);
                             if (units <= 0) continue;
                             seenPN.add(pn);
                             const minahak = (p.minahak || '').trim() || 'ללא שיוך';
@@ -28239,15 +27547,11 @@
                         }
                         let rows = Object.values(devMap);
                         const q = devRepQ.trim();
-                        // חיפוש לפי שם יזם או לפי תכנית (מספר / שם)
-                        if (q) rows = rows.filter(r =>
-                            r.name.indexOf(q) !== -1 ||
-                            r.plans.some(pl => pl.pn.indexOf(q) !== -1 || (pl.summary || '').indexOf(q) !== -1));
+                        if (q) rows = rows.filter(r => r.name.indexOf(q) !== -1);
                         rows.sort((a, b) => {
                             if (a.name === 'לא ידוע') return 1;
                             if (b.name === 'לא ידוע') return -1;
-                            if (devRepSort === 'units') return b.units - a.units || b.plans.length - a.plans.length;
-                            return b.plans.length - a.plans.length || b.units - a.units;
+                            return b.units - a.units || b.plans.length - a.plans.length;
                         });
 
                         const totals = { units: 0, plans: 0 };
@@ -28284,45 +27588,6 @@
                                     bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
                                 }, 600);
                             }, 100);
-                        };
-
-                        // הצגת כל תכניות היזם על המפה: שכבת הדגשה זמנית + זום לגבולות
-                        const showDevOnMap = (r) => {
-                            if (!mapInstanceRef.current) return;
-                            const wanted = new Set(r.plans.map(pl => pl.pn));
-                            const feats = gd.plans.features.filter(f =>
-                                wanted.has((f.properties.plan_name || '').trim()) && f.geometry);
-                            if (!feats.length) { notifyToast('אין גיאומטריה לתכניות היזם'); return; }
-                            clearDevMapSel();
-                            const unitsByPn = {};
-                            r.plans.forEach(pl => { unitsByPn[pl.pn] = pl; });
-                            const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
-                                style: { color: '#ff9100', weight: 3, fillColor: '#ff9100', fillOpacity: 0.22, dashArray: '6 3' },
-                                onEachFeature: (feat, lyr) => {
-                                    const pn = (feat.properties.plan_name || '').trim();
-                                    const pl = unitsByPn[pn];
-                                    if (pl) lyr.bindTooltip(
-                                        `${pn} · ${Math.round(pl.units).toLocaleString()} יח"ד`,
-                                        { permanent: false, direction: 'top' });
-                                    // קליק פותח את פופאפ התכנית הרגיל
-                                    lyr.on('click', (ev) => {
-                                        const props = JSON.parse(JSON.stringify(feat.properties));
-                                        const mapped = mapPlanProps(props);
-                                        const popup = L.popup({ maxWidth: 340 }).setLatLng(ev.latlng)
-                                            .setContent(buildPlanPopup(mapped, { properties: mapped, type: 'plan' }));
-                                        popup.openOn(mapInstanceRef.current);
-                                        bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
-                                    });
-                                },
-                            });
-                            layer.addTo(mapInstanceRef.current);
-                            devMapLayerRef.current = layer;
-                            setDevMapSel({ name: r.name, plans: r.plans.length, units: r.units });
-                            setDevelopersReport(false);
-                            setTimeout(() => {
-                                try { mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 16 }); }
-                                catch (e) { /* geometry edge case */ }
-                            }, 120);
                         };
 
                         const printDevReport = () => {
@@ -28379,13 +27644,8 @@
                                             <option value="all">כל המינה"קים</option>
                                             {[...allMinahaks].sort().map(m => <option key={m} value={m}>{m}</option>)}
                                         </select>
-                                        <input value={devRepQ} onChange={e => setDevRepQ(e.target.value)} placeholder="חיפוש יזם / תכנית..."
+                                        <input value={devRepQ} onChange={e => setDevRepQ(e.target.value)} placeholder="חיפוש יזם..."
                                             style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12,minWidth:160}} />
-                                        <select value={devRepSort} onChange={e => setDevRepSort(e.target.value)}
-                                            style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12}}>
-                                            <option value="plans">מיון: מס' תכניות</option>
-                                            <option value="units">מיון: סה"כ יח"ד</option>
-                                        </select>
                                     </div>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0,zIndex:1}}>
@@ -28404,11 +27664,6 @@
                                                         <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
                                                         <td style={{padding:'4px',color:r.name==='לא ידוע'?'#9ca3af':'#e0e0e0',fontWeight:600}}>
                                                             {devRepExpanded===r.name?'▼ ':'◀ '}{r.name}{r.shared>0 && <span style={{color:'#888',fontWeight:400,fontSize:10}} title="חלק מהתכניות משותפות עם יזמים נוספים"> ⊕{r.shared}</span>}
-                                                            <button title="הצגת כל תכניות היזם על המפה"
-                                                                onClick={e => { e.stopPropagation(); showDevOnMap(r); }}
-                                                                style={{marginRight:6,background:'transparent',border:'1px solid #3a3a50',borderRadius:5,color:'#ffb74d',cursor:'pointer',fontSize:11,padding:'1px 6px',verticalAlign:'middle'}}>
-                                                                🗺️
-                                                            </button>
                                                         </td>
                                                         <td style={{textAlign:'center',padding:'4px',color:'#aaa'}}>{r.plans.length}</td>
                                                         <td style={{padding:'4px',color:'#ce93d8',fontSize:11,maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={Object.entries(r.minahaks).map(([m,u])=>`${m}: ${Math.round(u).toLocaleString()} יח"ד`).join(' · ')}>
