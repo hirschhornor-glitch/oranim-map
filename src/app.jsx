@@ -1632,6 +1632,28 @@
             }));
         }
 
+        // stat_areas (CBS census 2022) is the source for the average household size used by the
+        // שצ"פ-לנפש tool. It may not be loaded yet when the tool is opened standalone; force-fetch it
+        // into both the landuse dict (read by the tool) and geoDataRef (read by the demography engine).
+        function ensureStatAreasLoaded() {
+            const filesMap = window.__geojsonFilesMap || GEOJSON_FILES || {};
+            const gd = window.__geoDataForLanduse || {};
+            const already = (gd.stat_areas && gd.stat_areas.features)
+                         || (geoDataRef.current && geoDataRef.current.stat_areas && geoDataRef.current.stat_areas.features);
+            if (already || !filesMap.stat_areas) return Promise.resolve();
+            return fetch(filesMap.stat_areas + '?v=' + APP_VERSION)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || !data.features) return;
+                    const g = window.__geoDataForLanduse || {};
+                    g.stat_areas = data;
+                    window.__geoDataForLanduse = g;
+                    if (geoDataRef.current) geoDataRef.current.stat_areas = data;
+                    console.log(`[Shatzaf] ensure-loaded stat_areas (${data.features.length} areas)`);
+                })
+                .catch(e => console.warn('[Shatzaf] stat_areas load failed', e));
+        }
+
         function analyzeLanduseComparison(polyCoords, planNames) {
             window.__landuseComparePolyCoords = polyCoords;
             const gd = window.__geoDataForLanduse || {};
@@ -5564,14 +5586,25 @@
                     processShatzafFeature(clickedFeature);
                 }
 
-                function processShatzafFeature(clickedFeature) {
+                function processShatzafFeature(clickedFeature, _retried) {
+                    // Same ON_DEMAND guard as renderShatzafForScope: yiud_karka_kayam / landuse_xplan feed
+                    // open space (0 without them), stat_areas feeds the CBS household size. Fetch, then re-run.
+                    const gdChk = window.__geoDataForLanduse || {};
+                    const dataMissing = !(gdChk.yiud_karka_kayam && gdChk.yiud_karka_kayam.features)
+                                     || !(gdChk.landuse_xplan && gdChk.landuse_xplan.features)
+                                     || !(gdChk.stat_areas && gdChk.stat_areas.features);
+                    if (dataMissing && !_retried && typeof ensureLanduseDataLoaded === 'function') {
+                        Promise.all([ensureLanduseDataLoaded(), ensureStatAreasLoaded()])
+                            .then(() => processShatzafFeature(clickedFeature, true));
+                        return;
+                    }
                     const p = clickedFeature.properties;
                     const planId = p.plan_name || p.pl_number || p.TABA || '';
                     const planSummary = p.plan_summary || p.plan_name_he || '';
                     const planDisplay = planSummary ? planId + ' - ' + planSummary : planId;
                     const unitsTotal = parseInt(p.units_total) || 0;
                     const planMinahak = (p.minahak || '').trim();
-                    const presetHH = (PN_MINAHAK_PRESETS[planMinahak] && PN_MINAHAK_PRESETS[planMinahak].householdSize) || 3.5;
+                    const presetFallbackHH = (PN_MINAHAK_PRESETS[planMinahak] && PN_MINAHAK_PRESETS[planMinahak].householdSize) || 3.5;
 
                     // Calculate open space from xplan within plan boundary
                     const geo = clickedFeature.geometry;
@@ -5581,6 +5614,35 @@
                         else if (geo.type === 'MultiPolygon') planCoords = geo.coordinates[0][0];
                     } catch(ex) { return; }
                     if (!planCoords) return;
+
+                    // CBS census 2022 household size over the plan boundary (Σpop / Σhouseholds of stat areas
+                    // whose centroid falls in the plan); fall back to the preset if no census coverage.
+                    let censusHH = null;
+                    {
+                        const gdS = window.__geoDataForLanduse || {};
+                        if (gdS.stat_areas && gdS.stat_areas.features) {
+                            let sPop = 0, sHH = 0;
+                            gdS.stat_areas.features.forEach(f => {
+                                try {
+                                    const g = f.geometry;
+                                    let cc = g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiPolygon' ? g.coordinates[0][0] : null;
+                                    if (!cc) return;
+                                    let cx = 0, cy = 0, n = 0; for (const c of cc) { cx += c[0]; cy += c[1]; n++; }
+                                    cx /= n; cy /= n;
+                                    let inside = false;
+                                    for (let i = 0, j = planCoords.length - 1; i < planCoords.length; j = i++) {
+                                        const xi = planCoords[i][0], yi = planCoords[i][1], xj = planCoords[j][0], yj = planCoords[j][1];
+                                        if ((yi > cy) !== (yj > cy) && cx < (xj - xi) * (cy - yi) / (yj - yi) + xi) inside = !inside;
+                                    }
+                                    if (!inside) return;
+                                    sPop += parseFloat(f.properties.pop_approx) || 0;
+                                    sHH  += parseFloat(f.properties.hh_total) || 0;
+                                } catch(ex) {}
+                            });
+                            if (sPop > 0 && sHH > 0) censusHH = Math.round((sPop / sHH) * 10) / 10;
+                        }
+                    }
+                    const presetHH = (typeof censusHH === 'number' && censusHH > 0) ? censusHH : presetFallbackHH;
 
                     // Find xplan features inside this plan that are שטחים פתוחים
                     const gd = window.__geoDataForLanduse || {};
@@ -5685,7 +5747,10 @@
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד בתכנית: <b>' + (unitsTotal > 0 ? unitsTotal.toLocaleString() : 'לא זמין') + '</b></div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">שצ"פ בתכנית: <b>' + (openSpaceArea > 0 ? Math.round(openSpaceArea).toLocaleString() + ' מ"ר (' + (openSpaceArea/1000).toFixed(1) + ' דונם)' : 'לא נמצא') + '</b></div>' +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
-                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (planMinahak && PN_MINAHAK_PRESETS[planMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + planMinahak + ')</span>' : '') + '</div>' +
+                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' +
+                            (typeof censusHH === 'number' && censusHH > 0
+                                ? ' <span style="font-size:10px;color:#666">(ממוצע למ"ס 2022)</span>'
+                                : (planMinahak && PN_MINAHAK_PRESETS[planMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + planMinahak + ')</span>' : '')) + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
                         '<input id="shatzaf-household" type="number" value="' + presetHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
                         '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
@@ -5981,7 +6046,21 @@
                 //   subMinahak: string|null,              for "default to" hint label
                 //   onClose: () => void                   cleanup callback
                 // }
-                function renderShatzafForScope(scope) {
+                function renderShatzafForScope(scope, _retried) {
+                    // yiud_karka_kayam + landuse_xplan are ON_DEMAND layers. If the user opens the
+                    // שצ"פ-לנפש tool without having toggled "ייעודי קרקע מצב קיים" on, they're missing
+                    // and open space silently reads as 0 ("לא נמצא שצ"פ"). Force-fetch once, then re-run.
+                    // yiud_karka_kayam + landuse_xplan supply the open space; stat_areas (CBS census 2022)
+                    // supplies the default household size. All are ON_DEMAND — force-fetch, then re-run.
+                    const gdChk = window.__geoDataForLanduse || {};
+                    const dataMissing = !(gdChk.yiud_karka_kayam && gdChk.yiud_karka_kayam.features)
+                                     || !(gdChk.landuse_xplan && gdChk.landuse_xplan.features)
+                                     || !(gdChk.stat_areas && gdChk.stat_areas.features);
+                    if (dataMissing && !_retried && typeof ensureLanduseDataLoaded === 'function') {
+                        Promise.all([ensureLanduseDataLoaded(), ensureStatAreasLoaded()])
+                            .then(() => renderShatzafForScope(scope, true));
+                        return;
+                    }
                     const gd = window.__geoDataForLanduse || {};
                     const polyCoords = scope.polyCoords;
                     if (!polyCoords || polyCoords.length < 3) return;
@@ -5989,7 +6068,6 @@
                     if (!window.__shatzafAssumptions) window.__shatzafAssumptions = { targetYear: 'existing' };
                     const assumpt = window.__shatzafAssumptions;
                     const targetYear = assumpt.targetYear;
-                    const isFull = (targetYear === 'full');
 
                     function pip(cx, cy) {
                         let inside = false;
@@ -6013,102 +6091,142 @@
                         } catch(ex) { return null; }
                     }
 
-                    // 1) Plans + planMimushMap (centroid PIP)
-                    const planMimushMap = new Map();
-                    let plannedUnitsWeighted = 0;
-                    let totalUnitsAddPotential = 0;
-                    let activePlanCount = 0;
-                    // Occupied (טופס 4) plans are realized stock — count as existing, never as
-                    // planned/pipeline, in every horizon (Stage ב').
-                    let occupiedUnitsScope = 0;
-                    if (gd.plans && gd.plans.features) {
-                        gd.plans.features.forEach(f => {
-                            if (!isOccupied(f.properties || {})) return;
+                    // CBS census 2022 household size for THIS scope = Σ population / Σ households over the
+                    // stat areas whose centroid falls in the scope polygon (same source as the אוכלוסייה
+                    // dashboard). Scope-accurate; falls back to the hand-tuned preset only if no census
+                    // coverage. Seed it as the default when the scope changes; keep manual edits within a scope.
+                    let censusHH = null;
+                    if (gd.stat_areas && gd.stat_areas.features) {
+                        let sPop = 0, sHH = 0;
+                        gd.stat_areas.features.forEach(f => {
                             const c = centroidOf(f.geometry);
                             if (!c || !pip(c[0], c[1])) return;
-                            occupiedUnitsScope += parseInt(f.properties.units_total) || parseInt(f.properties.units_add) || 0;
+                            sPop += parseFloat(f.properties.pop_approx) || 0;
+                            sHH  += parseFloat(f.properties.hh_total) || 0;
                         });
+                        if (sPop > 0 && sHH > 0) censusHH = Math.round((sPop / sHH) * 10) / 10;
                     }
-                    if (targetYear !== 'existing' && gd.plans && gd.plans.features) {
-                        gd.plans.features.forEach(f => {
-                            const c = centroidOf(f.geometry);
-                            if (!c || !pip(c[0], c[1])) return;
-                            const props = f.properties || {};
-                            if (isOccupied(props)) return; // realized — added to existing above
-                            const m = calcMimush(props);
-                            if (!m) return;
-                            const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
-                            if (u <= 0) return;
-                            totalUnitsAddPotential += u;
-                            if (!isFull && m.estimatedYear > targetYear) return;
-                            const pct = isFull ? 100 : m.mimushPct;
-                            plannedUnitsWeighted += u * pct / 100;
-                            const planName = (props.plan_name || '').trim();
-                            if (planName) planMimushMap.set(planName, pct);
-                            activePlanCount++;
-                        });
+                    const scopeId = (scope.scopeKey || '') + '|' + (scope.label || '');
+                    if (assumpt.__hhScopeId !== scopeId) {
+                        assumpt.__hhScopeId = scopeId;
+                        assumpt.householdSize = (typeof censusHH === 'number' && censusHH > 0) ? censusHH : scope.defaultHH;
                     }
-                    plannedUnitsWeighted = Math.round(plannedUnitsWeighted);
-                    const existingUnitsScope = scope.existingUnits + occupiedUnitsScope;
-                    const grandTotalUnits = existingUnitsScope + plannedUnitsWeighted;
 
-                    // 2) Open space supply: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
-                    let openSpaceArea = 0;
-                    let xplanWeightedArea = 0;
-                    const openSpaceNames = [];
-                    if (gd.landuse_xplan) {
-                        gd.landuse_xplan.features.forEach(f => {
-                            const planRef = (f.properties.pl_number || '').trim();
-                            if (!planMimushMap.has(planRef)) return;
-                            const name = (f.properties.mavat_name || '').trim();
-                            if (!name) return;
-                            const group = getLanduseGroup(name);
-                            if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                            const c = centroidOf(f.geometry);
-                            if (!c || !pip(c[0], c[1])) return;
-                            const pct = planMimushMap.get(planRef) / 100;
-                            const weighted = getFeatureArea(f) * pct;
-                            openSpaceArea += weighted;
-                            xplanWeightedArea += weighted;
-                            if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
-                        });
+                    // Per-horizon metrics (units + open space). Extracted so the current horizon AND
+                    // the all-horizons comparison table below share one code path (identical math).
+                    function computeMetrics(tYear, hh) {
+                        const isFullY = (tYear === 'full');
+                        // Occupied (טופס 4) plans are realized stock — count as existing in every horizon (Stage ב').
+                        let occupiedUnitsScope = 0;
+                        if (gd.plans && gd.plans.features) {
+                            gd.plans.features.forEach(f => {
+                                if (!isOccupied(f.properties || {})) return;
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                occupiedUnitsScope += parseInt(f.properties.units_total) || parseInt(f.properties.units_add) || 0;
+                            });
+                        }
+                        const planMimushMap = new Map();
+                        let plannedUnitsWeighted = 0, totalUnitsAddPotential = 0, activePlanCount = 0;
+                        if (tYear !== 'existing' && gd.plans && gd.plans.features) {
+                            gd.plans.features.forEach(f => {
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                const props = f.properties || {};
+                                if (isOccupied(props)) return; // realized — added to existing above
+                                const m = calcMimush(props);
+                                if (!m) return;
+                                const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
+                                if (u <= 0) return;
+                                totalUnitsAddPotential += u;
+                                if (!isFullY && m.estimatedYear > tYear) return;
+                                const pct = isFullY ? 100 : m.mimushPct;
+                                plannedUnitsWeighted += u * pct / 100;
+                                const planName = (props.plan_name || '').trim();
+                                if (planName) planMimushMap.set(planName, pct);
+                                activePlanCount++;
+                            });
+                        }
+                        plannedUnitsWeighted = Math.round(plannedUnitsWeighted);
+                        const existingUnitsScope = scope.existingUnits + occupiedUnitsScope;
+                        const grandTotalUnits = existingUnitsScope + plannedUnitsWeighted;
+
+                        // Open space: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
+                        let openSpaceArea = 0, xplanWeightedArea = 0;
+                        const openSpaceNames = [];
+                        if (gd.landuse_xplan) {
+                            gd.landuse_xplan.features.forEach(f => {
+                                const planRef = (f.properties.pl_number || '').trim();
+                                if (!planMimushMap.has(planRef)) return;
+                                const name = (f.properties.mavat_name || '').trim();
+                                if (!name) return;
+                                const group = getLanduseGroup(name);
+                                if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                const pct = planMimushMap.get(planRef) / 100;
+                                const weighted = getFeatureArea(f) * pct;
+                                openSpaceArea += weighted;
+                                xplanWeightedArea += weighted;
+                                if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+                            });
+                        }
+                        if (gd.yiud_karka_kayam) {
+                            gd.yiud_karka_kayam.features.forEach(f => {
+                                const name = (f.properties.Descr || '').trim();
+                                if (!name) return;
+                                const group = getLanduseGroup(name);
+                                if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
+                                const c = centroidOf(f.geometry);
+                                if (!c || !pip(c[0], c[1])) return;
+                                // kayam blocked only by ACTIVE xplan (existing → no blocks; future → only active plans)
+                                let coveredByXplan = false;
+                                if (planMimushMap.size > 0 && gd.landuse_xplan) {
+                                    gd.landuse_xplan.features.forEach(xf => {
+                                        if (coveredByXplan) return;
+                                        const xRef = (xf.properties.pl_number || '').trim();
+                                        if (!planMimushMap.has(xRef)) return;
+                                        try {
+                                            let xCoords;
+                                            if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];
+                                            else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];
+                                            else return;
+                                            let xInside = false;
+                                            for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
+                                                const xi = xCoords[i][0], yi = xCoords[i][1];
+                                                const xj = xCoords[j][0], yj = xCoords[j][1];
+                                                if ((yi > c[1]) !== (yj > c[1]) && c[0] < (xj - xi) * (c[1] - yi) / (yj - yi) + xi)
+                                                    xInside = !xInside;
+                                            }
+                                            if (xInside) coveredByXplan = true;
+                                        } catch(ex) {}
+                                    });
+                                }
+                                if (coveredByXplan) return;
+                                openSpaceArea += getFeatureArea(f);
+                                if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
+                            });
+                        }
+                        const totalPeople = grandTotalUnits * hh;
+                        const sqmPerPerson = totalPeople > 0 ? openSpaceArea / totalPeople : 0;
+                        const sqmPerHH = grandTotalUnits > 0 ? openSpaceArea / grandTotalUnits : 0;
+                        return { occupiedUnitsScope, plannedUnitsWeighted, totalUnitsAddPotential, activePlanCount,
+                                 existingUnitsScope, grandTotalUnits, openSpaceArea, xplanWeightedArea, openSpaceNames,
+                                 totalPeople, sqmPerPerson, sqmPerHH };
                     }
-                    if (gd.yiud_karka_kayam) {
-                        gd.yiud_karka_kayam.features.forEach(f => {
-                            const name = (f.properties.Descr || '').trim();
-                            if (!name) return;
-                            const group = getLanduseGroup(name);
-                            if (group !== 'שטחים פתוחים' && group !== 'יער/חקלאי') return;
-                            const c = centroidOf(f.geometry);
-                            if (!c || !pip(c[0], c[1])) return;
-                            // kayam blocked only by ACTIVE xplan (existing → no blocks; future → only active plans)
-                            let coveredByXplan = false;
-                            if (planMimushMap.size > 0 && gd.landuse_xplan) {
-                                gd.landuse_xplan.features.forEach(xf => {
-                                    if (coveredByXplan) return;
-                                    const xRef = (xf.properties.pl_number || '').trim();
-                                    if (!planMimushMap.has(xRef)) return;
-                                    try {
-                                        let xCoords;
-                                        if (xf.geometry.type === 'Polygon') xCoords = xf.geometry.coordinates[0];
-                                        else if (xf.geometry.type === 'MultiPolygon') xCoords = xf.geometry.coordinates[0][0];
-                                        else return;
-                                        let xInside = false;
-                                        for (let i = 0, j = xCoords.length - 1; i < xCoords.length; j = i++) {
-                                            const xi = xCoords[i][0], yi = xCoords[i][1];
-                                            const xj = xCoords[j][0], yj = xCoords[j][1];
-                                            if ((yi > c[1]) !== (yj > c[1]) && c[0] < (xj - xi) * (c[1] - yi) / (yj - yi) + xi)
-                                                xInside = !xInside;
-                                        }
-                                        if (xInside) coveredByXplan = true;
-                                    } catch(ex) {}
-                                });
-                            }
-                            if (coveredByXplan) return;
-                            openSpaceArea += getFeatureArea(f);
-                            if (!openSpaceNames.includes(name)) openSpaceNames.push(name);
-                        });
-                    }
+
+                    // Current-horizon metrics (open space + units are hh-independent; hh only scales people).
+                    const curHH0 = (typeof assumpt.householdSize === 'number') ? assumpt.householdSize : scope.defaultHH;
+                    const cur = computeMetrics(targetYear, curHH0);
+                    const occupiedUnitsScope = cur.occupiedUnitsScope;
+                    const plannedUnitsWeighted = cur.plannedUnitsWeighted;
+                    const totalUnitsAddPotential = cur.totalUnitsAddPotential;
+                    const activePlanCount = cur.activePlanCount;
+                    const existingUnitsScope = cur.existingUnitsScope;
+                    const grandTotalUnits = cur.grandTotalUnits;
+                    const openSpaceArea = cur.openSpaceArea;
+                    const xplanWeightedArea = cur.xplanWeightedArea;
+                    const openSpaceNames = cur.openSpaceNames;
 
                     // 3) Render modal
                     const existingPanel = document.getElementById('shatzaf-panel');
@@ -6149,7 +6267,10 @@
                         (targetYear !== 'existing' && xplanWeightedArea > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🌳 שצ"פ עתידי משוקלל: ' + (xplanWeightedArea/1000).toFixed(1) + ' דונם (מתוך ה-' + (openSpaceArea/1000).toFixed(1) + ' דונם)</div>' : '') +
                         (targetYear !== 'existing' && activePlanCount > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:4px">🏗️ תורמות לאופק: ' + activePlanCount + ' תכניות</div>' : '') +
                         (openSpaceNames.length > 0 ? '<div style="font-size:10px;color:#888;margin-bottom:8px">ייעודים: ' + openSpaceNames.join(', ') + '</div>' : '') +
-                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' + (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '') + '</div>' +
+                        '<div style="margin-top:12px;margin-bottom:8px;font-size:13px">גודל משק בית ממוצע (נפשות):' +
+                            (typeof censusHH === 'number' && censusHH > 0
+                                ? ' <span style="font-size:10px;color:#666">(ממוצע למ"ס 2022' + (subMinahak ? ' · ' + subMinahak : '') + ')</span>'
+                                : (subMinahak && PN_MINAHAK_PRESETS[subMinahak] ? ' <span style="font-size:10px;color:#666">(ברירת מחדל ל' + subMinahak + ')</span>' : '')) + '</div>' +
                         '<div style="display:flex;gap:8px;align-items:center">' +
                         '<input id="shatzaf-household" type="number" value="' + savedHH + '" min="1" max="10" step="0.1" style="width:70px;padding:6px;border-radius:6px;border:1px solid #555;background:#1a1a2e;color:#fff;font-size:14px;text-align:center" />' +
                         '<button id="shatzaf-calc" style="flex:1;padding:8px;background:' + OPEN_SPACE_PALETTE.shatzaf_button + ';color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit">חשב</button></div>' +
@@ -6197,8 +6318,34 @@
                                 '</div>';
                         }
 
+                        // ── All-horizons comparison: שצ"פ/נפש at existing, each חומש (weighted by mimush%), and 100% ──
+                        const horizonRows = horizonOpts.map(y => {
+                            const mm = computeMetrics(y, hh);
+                            const st = mm.sqmPerHH >= 30 ? OPEN_SPACE_PALETTE.status_adequate : OPEN_SPACE_PALETTE.status_deficit;
+                            const isSel = (y === targetYear);
+                            return '<tr style="' + (isSel ? 'background:rgba(56,142,60,0.18);' : '') + '">' +
+                                '<td style="padding:5px 6px;text-align:right;' + (isSel ? 'font-weight:bold;color:#fff' : 'color:#ccc') + '">' + horizonLabel(y) + '</td>' +
+                                '<td style="padding:5px 6px;text-align:center;color:#bbb">' + mm.grandTotalUnits.toLocaleString() + '</td>' +
+                                '<td style="padding:5px 6px;text-align:center;color:#bbb">' + (mm.openSpaceArea > 0 ? (mm.openSpaceArea/1000).toFixed(1) : '—') + '</td>' +
+                                '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:' + st + '">' + mm.sqmPerPerson.toFixed(1) + '</td>' +
+                                '</tr>';
+                        }).join('');
+                        const compareTableHtml =
+                            '<div style="border-top:1px solid #333;padding-top:12px;margin-bottom:6px;font-size:12px;color:#ccc;font-weight:bold">📊 שצ"פ לנפש לפי אופק</div>' +
+                            '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+                            '<thead><tr style="color:#888;font-size:10px;border-bottom:1px solid #333">' +
+                            '<th style="padding:4px 6px;text-align:right;font-weight:normal">אופק</th>' +
+                            '<th style="padding:4px 6px;text-align:center;font-weight:normal">יח"ד</th>' +
+                            '<th style="padding:4px 6px;text-align:center;font-weight:normal">שצ"פ (דונם)</th>' +
+                            '<th style="padding:4px 6px;text-align:center;font-weight:normal">מ"ר/נפש</th>' +
+                            '</tr></thead><tbody>' + horizonRows + '</tbody></table>' +
+                            '<div style="font-size:9px;color:#666;margin-top:4px">תקן מדריך 2018 (טיפוס C): 30–70 מ"ר ליח"ד ≈ ' + (30/hh).toFixed(1) + '–' + (70/hh).toFixed(1) + ' מ"ר/נפש · ' +
+                            '<span style="color:' + OPEN_SPACE_PALETTE.status_adequate + '">ירוק=תקין</span> / <span style="color:' + OPEN_SPACE_PALETTE.status_deficit + '">אדום=מתחת למינימום</span></div>';
+
                         resultDiv.innerHTML =
-                            '<div style="border-top:1px solid #333;padding-top:12px">' +
+                            compareTableHtml +
+                            '<div style="border-top:1px solid #333;padding-top:12px;margin-top:12px">' +
+                            '<div style="font-size:11px;color:#888;margin-bottom:6px">פירוט לאופק הנבחר (' + horizonLabel(targetYear) + '):</div>' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>אוכלוסייה מוערכת:</span><b>' + Math.round(totalPeople).toLocaleString() + ' נפשות</b></div>' +
                             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span>(' + grandTotalUnits.toLocaleString() + ' יח"ד × ' + hh + ' נפשות)</span></div>' +
                             '<div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px">' +
@@ -22034,6 +22181,7 @@
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'plan' ? 'sub-active' : ''}`} data-tip="לחצו על תכנית במפה לחישוב שצ&quot;פ לנפש" onClick={() => {
                                         cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'plan'; setShatzafMode('plan'); setActiveDropdown(null);
+                                        ensureLanduseDataLoaded();
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
@@ -22042,6 +22190,7 @@
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'sub' ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה לחישוב שצ&quot;פ ממוצע" onClick={() => {
                                         cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'sub'; setShatzafMode('sub'); setActiveDropdown(null);
+                                        ensureLanduseDataLoaded();
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l5-4 5 4v14"/><path d="M19 21V11l-4-3"/></svg>
@@ -22050,6 +22199,7 @@
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'radius' ? 'sub-active' : ''}`} data-tip="לחיצה על המפה תקבע מרכז עיגול ברדיוס 500מ׳ לחישוב שצ&quot;פ" onClick={() => {
                                         cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'radius'; setShatzafMode('radius'); setActiveDropdown(null);
+                                        ensureLanduseDataLoaded();
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2" fill="currentColor"/><line x1="12" y1="12" x2="21" y2="12"/></svg>
@@ -22058,6 +22208,7 @@
                                     <button className={`toolbar-dropdown-item ${shatzafMode === 'area' ? 'sub-active' : ''}`} data-tip="ציור פוליגון על המפה לחישוב שצ&quot;פ באזור (קליק לקודקוד, דאבל-קליק לסיום)" onClick={() => {
                                         cancelAllModes('shatzaf');
                                         shatzafModeRef.current = 'area'; setShatzafMode('area'); setActiveDropdown(null);
+                                        ensureLanduseDataLoaded();
                                         mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2 L22 8 L19 20 L5 20 L2 8 Z"/><circle cx="12" cy="2" r="1.5" fill="currentColor"/><circle cx="22" cy="8" r="1.5" fill="currentColor"/><circle cx="19" cy="20" r="1.5" fill="currentColor"/><circle cx="5" cy="20" r="1.5" fill="currentColor"/><circle cx="2" cy="8" r="1.5" fill="currentColor"/></svg>
