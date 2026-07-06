@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-06-shavaz-fallback-label';
+        const APP_VERSION = '2026-07-06-binui-plans';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1104,6 +1104,21 @@
             return trimmed;
         }
 
+        // ── Occupancy (טופס 4 / מאוכלס) ─────────────────────────────────────
+        // status_mavat is the true PLANNING status (from Mavat) and never advances
+        // past approval. occupancy_status.json (window.__occupancy, keyed by plan_name)
+        // carries the orthogonal built/occupied fact. effectiveStatus() is what the
+        // map color, filter and popup use for DISPLAY — occupied plans read "מאוכלס".
+        function planOccupancy(props) {
+            const o = window.__occupancy || {};
+            const k = String((props && props.plan_name) || '').trim();
+            return (k && o[k]) ? o[k] : null;
+        }
+        function isOccupied(props) { return !!planOccupancy(props); }
+        function effectiveStatus(props) {
+            return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
+        }
+
         const PLAN_TYPE_NORMALIZE = {
             'איחודוחלוקה': 'איחוד וחלוקה',
             'התחדשותעירונית': 'התחדשות עירונית',
@@ -1178,6 +1193,7 @@
             'במילוי תנאים להפקדה': 'conditions', 'תכנית עומדת בתנאי סף': 'conditions',
             'נפתח תיק למתכנן': 'open', 'נפתח תיק תבע': 'open', 'נקלטה מקובץ מבאת': 'open',
             'בבדיקה תכנונית': 'review',
+            'מאוכלס': 'occupied',
         };
         function getFilterStatusGroup(status) {
             if (FILTER_STATUS_MAP[status]) return FILTER_STATUS_MAP[status];
@@ -1209,6 +1225,7 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
+            'מאוכלס': '#0d9488',
         };
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
@@ -2729,6 +2746,7 @@
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
             const [eduRenewalFilter, setEduRenewalFilter] = useState('all'); // all | inside | adjacent
+            const [reportSearchQ, setReportSearchQ] = useState(''); // live search in the reports menu
             // דוח יזמים: יח"ד מתוכננות לפי יזם, מינה"ק ושלב
             const [developersReport, setDevelopersReport] = useState(false);
             const [devRepMinahak, setDevRepMinahak] = useState('all');
@@ -2989,6 +3007,7 @@
             const [hafrashDomainFilter, setHafrashDomainFilter] = useState([]);
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
+                { key: 'occupied', label: 'מאוכלס (טופס 4)' },
                 { key: 'approved', label: 'אישור / מאושרת' },
                 { key: 'in_approval', label: 'בהליך אישור' },
                 { key: 'objections', label: 'התנגדויות' },
@@ -4698,6 +4717,8 @@
                 window.__excavationPermits = {};
                 window.__orthoQuarters = {};
                 window.__assetAllocations = {};
+                window.__binuiPlans = [];
+                window.__binuiByTabaMigrash = {};
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4715,6 +4736,7 @@
                     ['__eduForecast', 'data/education_forecast_gonenim.json'],
                     ['__decisionSummaries', 'data/decision_summaries.json'],
                     ['__fieldObs', 'data/field_observations.json'],
+                    ['__occupancy', 'data/occupancy_status.json'],
                     ['__devAliases', 'data/developer_aliases.json'],
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
@@ -4724,6 +4746,7 @@
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
                     ['__assetAllocations', 'data/asset_allocations.json'],
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
+                    ['__binuiPlans', 'data/binui_plans.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5174,7 +5197,22 @@
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
                             else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
                             else if (key === '__fuelBarriers') { window.__fuelBarriers = data || {}; }
+                            else if (key === '__binuiPlans') {
+                                // תכניות בינוי — design plans for public מגרשים inside an approved תב"ע.
+                                // Not statutory plans; indexed by (parent_taba, מגרש) so buildShavazPopup
+                                // can enrich the matching shavaz_kayam record at popup time.
+                                const arr = Array.isArray(data) ? data : [];
+                                window.__binuiPlans = arr;
+                                window.__binuiByTabaMigrash = {};
+                                arr.forEach(b => {
+                                    const t = String(parseInt(String(b.parent_taba || '').replace(/\D+/g, ''), 10) || '');
+                                    const m = String(b.migrash || '').trim();
+                                    if (!t || !m) return;
+                                    (window.__binuiByTabaMigrash[t] = window.__binuiByTabaMigrash[t] || {})[m] = b;
+                                });
+                            }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
+                            else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
@@ -5954,11 +5992,23 @@
                     let plannedUnitsWeighted = 0;
                     let totalUnitsAddPotential = 0;
                     let activePlanCount = 0;
+                    // Occupied (טופס 4) plans are realized stock — count as existing, never as
+                    // planned/pipeline, in every horizon (Stage ב').
+                    let occupiedUnitsScope = 0;
+                    if (gd.plans && gd.plans.features) {
+                        gd.plans.features.forEach(f => {
+                            if (!isOccupied(f.properties || {})) return;
+                            const c = centroidOf(f.geometry);
+                            if (!c || !pip(c[0], c[1])) return;
+                            occupiedUnitsScope += parseInt(f.properties.units_total) || parseInt(f.properties.units_add) || 0;
+                        });
+                    }
                     if (targetYear !== 'existing' && gd.plans && gd.plans.features) {
                         gd.plans.features.forEach(f => {
                             const c = centroidOf(f.geometry);
                             if (!c || !pip(c[0], c[1])) return;
                             const props = f.properties || {};
+                            if (isOccupied(props)) return; // realized — added to existing above
                             const m = calcMimush(props);
                             if (!m) return;
                             const u = parseInt(props.units_total) || parseInt(props.units_add) || 0;
@@ -5973,7 +6023,8 @@
                         });
                     }
                     plannedUnitsWeighted = Math.round(plannedUnitsWeighted);
-                    const grandTotalUnits = scope.existingUnits + plannedUnitsWeighted;
+                    const existingUnitsScope = scope.existingUnits + occupiedUnitsScope;
+                    const grandTotalUnits = existingUnitsScope + plannedUnitsWeighted;
 
                     // 2) Open space supply: xplan (active plans only, weighted by mimush%) + kayam (outside active xplan zones)
                     let openSpaceArea = 0;
@@ -6062,7 +6113,8 @@
                         '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px;padding:6px 8px;background:#16162a;border-radius:6px">' +
                             '<span style="font-size:11px;color:#aaa;margin-left:4px">אופק:</span>' + horizonButtonsHtml +
                         '</div>' +
-                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + scope.existingUnits.toLocaleString() + '</b></div>' +
+                        '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד קיימות: <b>' + existingUnitsScope.toLocaleString() + '</b>' +
+                            (occupiedUnitsScope > 0 ? ' <span style="font-size:10px;color:#5eead4">(כולל ' + occupiedUnitsScope.toLocaleString() + ' מאוכלס)</span>' : '') + '</div>' +
                         '<div style="font-size:12px;margin-bottom:4px;color:#ccc">יח"ד מתוכננות (' + horizonLabel(targetYear) + '): <b>' + plannedUnitsWeighted.toLocaleString() + '</b>' +
                             (targetYear !== 'existing' && totalUnitsAddPotential > 0 ? ' <span style="font-size:10px;color:#888">(מתוך ' + totalUnitsAddPotential.toLocaleString() + ' פוטנציאל)</span>' : '') +
                         '</div>' +
@@ -8499,12 +8551,18 @@
                     });
                     // Sort by raw contribution desc
                     items.sort((a, b) => (b.rawAdd + b.rawDem) - (a.rawAdd + a.rawDem));
-                    // Per-horizon totals (weighted, rounded to integer)
+                    // Existing baseline (from שנתון מנח"י). Only edu categories carry a "קיים" figure.
+                    // The balance defines מוצע = קיים + מתוכנן − הריסה, so this drilldown must surface the
+                    // existing baseline; without it a cell whose מוצע is driven by existing institutions
+                    // opens an all-zero "0 תכניות" table that doesn't reconcile with the balance cell.
+                    const EDU_SVC_KEYS = ['maon', 'gan', 'yesodi', 'al_yesodi'];
+                    const existingGross = (!isUncat && EDU_SVC_KEYS.includes(svcKey)) ? (existingByKey[svcKey] || 0) : 0;
+                    // Per-horizon totals (weighted, rounded to integer). Existing is present in full at every horizon.
                     const horTotals = {};
                     HORIZONS.forEach(h => {
                         const sumA = items.reduce((s, it) => s + it.perH[h].add, 0);
                         const sumD = items.reduce((s, it) => s + it.perH[h].dem, 0);
-                        horTotals[h] = { add: Math.round(sumA), dem: Math.round(sumD) };
+                        horTotals[h] = { add: Math.round(sumA) + existingGross, dem: Math.round(sumD) };
                     });
                     const isCurrent = (h) => (h === tY) || (h === 'full' && tY === 'full');
                     const horHeaderCol = (h) => {
@@ -8539,10 +8597,20 @@
                             HORIZONS.map(h => cellPair(it.perH[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(it.perH[h].dem, '#e57373', h))).join('') +
                             '</tr>';
                     }).join('');
+                    // Baseline row for the existing (שנתון) stock — full weight at every horizon.
+                    const existingRow = existingGross > 0 ?
+                        '<tr style="border-bottom:1px solid #222;background:rgba(120,160,120,0.08)">' +
+                            '<td style="padding:5px 6px;color:#8fbf8f;font-weight:bold;vertical-align:top">קיים</td>' +
+                            '<td style="padding:5px 6px;color:#cfcfdf;font-size:10px;vertical-align:top">מוסדות קיימים בפועל<div style="color:#666;margin-top:2px">שנתון מנח"י</div></td>' +
+                            '<td style="padding:5px 6px;color:#8fbf8f;font-size:9px;vertical-align:top">בסיס קיים — לא מתב"ע</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#8fbf8f;font-weight:bold">+' + existingGross.toLocaleString() + '</td>' +
+                            (isUncat ? '' : '<td style="padding:5px 6px;text-align:center;color:#444">—</td>') +
+                            HORIZONS.map(h => cellPair(existingGross, '#8fbf8f', h) + (isUncat ? '' : cellPair(0, '#e57373', h))).join('') +
+                        '</tr>' : '';
                     const totalRow =
                         '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #7b6cf0">' +
                             '<td colspan="3" style="padding:6px;color:#fff">סה"כ משוקלל</td>' +
-                            '<td style="padding:6px;text-align:center;color:#7b6cf0">+' + items.reduce((s, it) => s + it.rawAdd, 0).toLocaleString() + '</td>' +
+                            '<td style="padding:6px;text-align:center;color:#7b6cf0">+' + (items.reduce((s, it) => s + it.rawAdd, 0) + existingGross).toLocaleString() + '</td>' +
                             (isUncat ? '' : '<td style="padding:6px;text-align:center;color:#e57373">−' + items.reduce((s, it) => s + it.rawDem, 0) + '</td>') +
                             HORIZONS.map(h => cellPair(horTotals[h].add, '#7b6cf0', h) + (isUncat ? '' : cellPair(horTotals[h].dem, '#e57373', h))).join('') +
                         '</tr>';
@@ -8551,7 +8619,7 @@
                     drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #7b6cf0;direction:rtl;width:min(1300px,98vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
                     drill.innerHTML =
                         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333;gap:10px">' +
-                            '<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text;flex:1">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' +
+                            '<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text;flex:1">📋 פירוט מוצע — ' + svcLabel + ' <span style="color:#888;font-size:11px;font-weight:normal">(' + items.length + ' תכניות תורמות' + (existingGross > 0 ? ' + ' + existingGross + ' קיים' : '') + ' · יחידה: ' + unit + ' · אופק נוכחי מסומן ✓)</span></h3>' +
                             '<button id="drill-csv" title="ייצוא ל-CSV" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 CSV</button>' +
                             '<button id="drill-print" title="הדפסה" style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">🖨️ הדפסה</button>' +
                             '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
@@ -8568,8 +8636,8 @@
                                 '<th style="padding:4px;text-align:center;color:#7b6cf0;font-size:10px">+ תוספת</th>' +
                                 (isUncat ? '' : '<th style="padding:4px;text-align:center;color:#e57373;font-size:10px">− להריסה</th>') +
                                 HORIZONS.map(horSubHeader).join('') +
-                            '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>' +
-                            '<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.</div>';
+                            '</tr></thead><tbody>' + existingRow + rows + totalRow + '</tbody></table></div>' +
+                            '<div style="font-size:10px;color:#888;margin-top:10px">בכל אופק: התרומה המשוקללת לפי %מימוש של התכנית. תכנית עם estimatedYear מאוחר מהאופק תורמת 0. ב-100% מימוש כל התכניות נכללות עם 100% משקל.' + (existingGross > 0 ? ' ה"מוצע" בטבלת המאזן = תוספת + קיים (' + existingGross + ') − הריסה.' : '') + '</div>';
                     document.body.appendChild(drill);
                     document.getElementById('drill-close').addEventListener('click', () => drill.remove());
 
@@ -8585,6 +8653,12 @@
                             if (!isUncat) hdrCols.push(hl + ' − להריסה');
                         });
                         lines.push(hdrCols.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        if (existingGross > 0) {
+                            const erow = ['קיים (שנתון מנח"י)','מוסדות קיימים בפועל','','','','',existingGross];
+                            if (!isUncat) erow.push(0);
+                            HORIZONS.forEach(() => { erow.push(existingGross); if (!isUncat) erow.push(0); });
+                            lines.push(erow.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+                        }
                         items.forEach(it => {
                             const p = it.p;
                             const row = [p.taba, p.plan_summary || '', p.realMimushPct || 0, p.estimatedYear || '', p.shavatz_out_prog || '', p.hafrash_prg || '', it.rawAdd];
@@ -8592,7 +8666,7 @@
                             HORIZONS.forEach(h => { row.push(it.perH[h].add); if (!isUncat) row.push(it.perH[h].dem); });
                             lines.push(row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                         });
-                        const totRow = ['סה"כ משוקלל','','','','','',items.reduce((s,it)=>s+it.rawAdd,0)];
+                        const totRow = ['סה"כ משוקלל','','','','','',items.reduce((s,it)=>s+it.rawAdd,0) + existingGross];
                         if (!isUncat) totRow.push(items.reduce((s,it)=>s+it.rawDem,0));
                         HORIZONS.forEach(h => { totRow.push(horTotals[h].add); if (!isUncat) totRow.push(horTotals[h].dem); });
                         lines.push(totRow.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
@@ -9765,6 +9839,7 @@
                     const s = normalizeStatus((p.status_mavat || '').trim());
                     if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
                     if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                    if (isOccupied(p)) return;            // occupied (טופס 4) = built, not planning reserve
                     const ua = parseFloat(p.units_add) || 0;
                     if (ua <= 0) return;                 // only plans that add homes
                     if (taba) seenTaba.add(taba);        // dedup once, regardless of location
@@ -10515,11 +10590,14 @@
                     if (pn && seenPlan.has(pn)) return; if (pn) seenPlan.add(pn);
                     plansInside.push({ props: p, feat: f });
                 });
-                const planUnitsAdd = plansInside.reduce((s, x) => s + (parseFloat(x.props.units_add) || 0), 0);
+                // Occupied (טופס 4) plans are built stock, not pipeline: exclude their units
+                // from the future total (planUnitsAdd) and roll units_total into existing (Stage ב').
+                const planUnitsAdd = plansInside.reduce((s, x) => s + (isOccupied(x.props) ? 0 : (parseFloat(x.props.units_add) || 0)), 0);
+                const occupiedUnits = plansInside.reduce((s, x) => s + (isOccupied(x.props) ? (parseInt(x.props.units_total) || parseInt(x.props.units_add) || 0) : 0), 0);
                 const planByStatus = {};
-                plansInside.forEach(x => { const st = groupStatus(normalizeStatus(x.props.status_mavat || '')); planByStatus[st] = (planByStatus[st] || 0) + 1; });
+                plansInside.forEach(x => { const st = groupStatus(effectiveStatus(x.props)); planByStatus[st] = (planByStatus[st] || 0) + 1; });
                 const planRowsAll = [...plansInside].sort((a, b) => (parseFloat(b.props.units_add) || 0) - (parseFloat(a.props.units_add) || 0))
-                    .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: normalizeStatus(x.props.status_mavat || ''), minahak: x.props.minahak || '', feat: x.feat }));
+                    .map(x => ({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', unitsAdd: parseFloat(x.props.units_add) || 0, status: effectiveStatus(x.props), minahak: x.props.minahak || '', feat: x.feat }));
                 const topPlans = planRowsAll.slice(0, 8);
                 // יח"ד להשכרה (rental) — per plan + total. Raw count from _rental_raw (pre-fold) or rental.
                 let rentalTotal = 0;
@@ -10708,7 +10786,8 @@
                     title: 'סיכום אזור נבחר', areaSqm, streets,
                     plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll, rental: rentalTotal, rentalRows },
                     tama: { count: tamaCount, units: tamaUnits, rows: tamaRows },
-                    existingUnits,
+                    existingUnits: existingUnits + occupiedUnits,
+                    occupiedUnits,
                     permits: { totalPermits, totalIncludedUnits, stageAgg, catAgg, rows: permitRows },
                     projector: { count: projCount, byDomain: projector },
                     masterPlans,
@@ -12779,7 +12858,7 @@
                         if (!af.planTypes.includes(pt)) return false;
                     }
                     if (af.statuses.length > 0) {
-                        const sg = getFilterStatusGroup(s);
+                        const sg = getFilterStatusGroup(effectiveStatus(props));
                         const stageVal = (props.stage || '').trim();
                         const sgStage = getFilterStatusGroup(stageVal);
                         if ((!sg || !af.statuses.includes(sg)) && (!sgStage || !af.statuses.includes(sgStage))) return false;
@@ -12995,7 +13074,7 @@
                             return true;
                         },
                         style: f => {
-                            const status = normalizeStatus(f.properties.status_mavat || '');
+                            const status = effectiveStatus(f.properties);
                             const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                             const statusColor = STATUS_COLORS[status] || '#888';
                             const isSatellite = basemap === 'satellite';
@@ -13130,7 +13209,7 @@
                                 }
                             });
                             layer.on('mouseout', () => {
-                                const status = normalizeStatus(f.properties.status_mavat || '');
+                                const status = effectiveStatus(f.properties);
                                 const fillColor = STATUS_COLORS[status] || '#f0e0d0';
                                 const statusColor = STATUS_COLORS[status] || '#888';
                                 const isSat = basemap === 'satellite';
@@ -13746,11 +13825,40 @@
                 }
 
                 // --- Shavaz Kayam (existing public buildings — background fill only) ---
+                // Most polygons are non-interactive background. Exception: a מגרש that has a תכנית בינוי
+                // (design plan) match in window.__binuiByTabaMigrash is drawn with a stronger dashed
+                // outline and made clickable, so its buildShavazPopup (with the תכנית בינוי block) is
+                // reachable even though no statutory plan polygon overlaps it (תב"ע 3045 isn't in plans).
                 if (layers['shavaz_kayam'] && gd.shavaz_kayam) {
+                    const _binuiIdx = window.__binuiByTabaMigrash || {};
+                    const _binuiOf = (p) => {
+                        const t = String(parseInt(String((p && p.TABA) || '').replace(/\D+/g, ''), 10) || '');
+                        const m = String((p && p.MIGRASH) || '').trim();
+                        return (t && m && _binuiIdx[t] && _binuiIdx[t][m]) ? _binuiIdx[t][m] : null;
+                    };
                     const shavazKayamLayer = L.geoJSON(gd.shavaz_kayam, {
                         pane: 'shavazPane',
-                        style: () => ({ fillColor: '#8B4513', fillOpacity: 0.22, color: '#5C2E0A', weight: 0.5, opacity: 0.5 }),
+                        style: (f) => _binuiOf(f.properties)
+                            ? ({ fillColor: '#8B4513', fillOpacity: 0.30, color: '#5C2E0A', weight: 2, opacity: 0.95, dashArray: '5 3' })
+                            : ({ fillColor: '#8B4513', fillOpacity: 0.22, color: '#5C2E0A', weight: 0.5, opacity: 0.5 }),
                         interactive: false,
+                        onEachFeature: (f, layer) => {
+                            if (!_binuiOf(f.properties)) return; // background polygons stay click-through
+                            const wire = () => {
+                                const el = layer.getElement && layer.getElement();
+                                if (!el || el._binuiWired) return;
+                                el._binuiWired = true;
+                                el.style.pointerEvents = 'auto';
+                                el.style.cursor = 'pointer';
+                                el.addEventListener('click', (ev) => {
+                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                    ev.stopPropagation();
+                                    const latlng = map.mouseEventToLatLng ? map.mouseEventToLatLng(ev) : layer.getBounds().getCenter();
+                                    openShavazPopup([{ properties: f.properties, isFuture: false }], latlng, 0);
+                                });
+                            };
+                            layer.on('add', wire); wire();
+                        },
                     }).addTo(map);
                     geoLayersRef.current.shavaz_kayam = shavazKayamLayer;
                 }
@@ -18965,7 +19073,8 @@
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
                 const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const subtitle = props.plan_name || props.taba || '';
-                const status = props.status_mavat || '';
+                const occ = planOccupancy(props);
+                const status = occ ? 'מאוכלס' : (props.status_mavat || '');
                 const statusColor = getStatusColor(status);
                 const mavatUrl = props.mavat_url || '';
                 const hasPermit = props.stage && props.stage.trim() !== '';
@@ -18985,6 +19094,7 @@
                     '#f56e05': 'linear-gradient(135deg, #3d2510, #0f3460)', // orange - conditions
                     '#eb0000': 'linear-gradient(135deg, #3d1515, #0f3460)', // red - review
                     '#888888': 'linear-gradient(135deg, #2a2a2a, #1a1a2e)', // gray - rejected
+                    '#0d9488': 'linear-gradient(135deg, #0b3d3a, #0f3460)', // teal - occupied (מאוכלס)
                 };
                 const headerBg = headerGradients[statusColor] || 'linear-gradient(135deg, #16213e, #0f3460)';
                 html += `<div class="popup-header" style="position:relative;background:${headerBg};border-bottom:2px solid ${statusColor}">`;
@@ -19000,6 +19110,15 @@
                 html += `<span class="popup-status-badge" style="background:${statusColor}33;color:${statusColor};border:1px solid ${statusColor}">${status || '-'}</span>`;
                 if (mavatDate) html += `<span style="font-size:11px;color:#8899bb">${mavatDate}</span>`;
                 html += '</div>';
+                // Occupancy line — plan reached טופס 4 / אוכלס; keep the true planning status visible
+                if (occ) {
+                    const bits = ['טופס 4 / אוכלס'];
+                    if (occ.form4_date) bits.push(occ.form4_date);
+                    if (occ.source) bits.push(occ.source);
+                    html += `<div style="text-align:center;margin-top:4px;font-size:11px;color:#5eead4">${bits.join(' · ')}</div>`;
+                    const planStat = normalizeStatus(props.status_mavat || '');
+                    if (planStat) html += `<div style="text-align:center;font-size:10px;color:#8899bb">סטטוס תכנוני: ${planStat}</div>`;
+                }
                 // Developer / Architect row
                 const dev = (props.developer || '').trim();
                 const arch = (props.architect || '').trim();
@@ -19634,6 +19753,38 @@
                 }
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
+                }
+                // תכנית בינוי — a design/building plan detailing this public מגרש. It is NOT a statutory
+                // תב"ע (no MAVAT code / blue line); it lives in data/binui_plans.json and is matched to
+                // this existing שב"צ record by (parent_taba, מגרש). Shows its own file no., status, and program.
+                const _bnKeyT = String(parseInt(String(taba || '').replace(/\D+/g, ''), 10) || '');
+                const _binui = ((window.__binuiByTabaMigrash || {})[_bnKeyT] || {})[String(lotNum || '').trim()];
+                if (_binui) {
+                    const _bs = normalizeStatus(_binui.status || '');
+                    const _bc = getStatusColor(_bs) || '#8B4513';
+                    const _bnDate = _binui.status_date ? String(_binui.status_date).split('-').reverse().join('/') : '';
+                    let bh = `<div style="margin:6px 0;padding:6px 8px;border-radius:6px;border:1px solid ${_bc};background:${_bc}14;font-size:11px;line-height:1.6">`;
+                    bh += `<div style="font-weight:700;margin-bottom:2px">🏗️ תכנית בינוי: ${_binui.binui_no}`;
+                    if (_bs) bh += ` <span style="color:${_bc}">— ${_bs}${_bnDate ? ' (' + _bnDate + ')' : ''}</span>`;
+                    bh += `</div>`;
+                    if (_binui.name) bh += `<div>${_binui.name}</div>`;
+                    const _prog = Array.isArray(_binui.program) ? _binui.program.filter(p => p && p.use) : [];
+                    if (_prog.length) {
+                        _prog.forEach(p => {
+                            const bits = [];
+                            if (p.count != null) bits.push(p.count + (p.unit ? ' ' + p.unit : ''));
+                            if (p.sqm != null) bits.push(parseInt(p.sqm).toLocaleString() + ' מ"ר');
+                            bh += `<div>• ${p.use}${bits.length ? ' — ' + bits.join(', ') : ''}</div>`;
+                        });
+                    }
+                    const _meta = [];
+                    if (_binui.land_sqm) _meta.push('קרקע ' + parseInt(_binui.land_sqm).toLocaleString() + ' מ"ר');
+                    if (_binui.submitter) _meta.push('מגיש: ' + _binui.submitter);
+                    if (_binui.architect) _meta.push('עורך: ' + _binui.architect);
+                    if (_meta.length) bh += `<div style="margin-top:2px;opacity:0.75">${_meta.join(' · ')}</div>`;
+                    if (_binui.note) bh += `<div style="margin-top:2px;font-style:italic;opacity:0.7">${_binui.note}</div>`;
+                    bh += '</div>';
+                    html += bh;
                 }
                 // מבצ projector recommendations — moved up (below מגרש, above uses) as a plain
                 // clickable row that opens the "המלצות הפרוייקטור" layer. P10 (placement) + P12 (link).
@@ -23537,529 +23688,169 @@
                         );
                     })()}
 
-                    {/* ── Reports Menu Modal ── */}
-                    {showReportsMenu && (
-                        <div className="units-overlay" onClick={() => setShowReportsMenu(false)}>
+                    {/* ── Reports Menu Modal (topic-organized + live search) ── */}
+                    {showReportsMenu && (() => {
+                        const closeMenu = () => { setShowReportsMenu(false); setReportSearchQ(''); };
+                        const go = (fn) => { setShowReportsMenu(false); setReportSearchQ(''); fn(); };
+                        const projT = (fn) => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); setReportSearchQ(''); fn(); };
+                        const openGonenim = (tab) => {
+                            setShowReportsMenu(false); setReportSearchQ('');
+                            setLayers(prev => ({ ...prev, projector_gonenim: true }));
+                            let tries = 0;
+                            const tick = () => {
+                                const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
+                                if (ready || tries > 100) {
+                                    if (typeof window.__openProjectorSummary === 'function') {
+                                        window.__openProjectorSummary();
+                                        if (tab) setTimeout(() => { const btn = document.querySelector('#pf-summary-modal [data-tab-btn="' + tab + '"]'); if (btn) btn.click(); }, 50);
+                                    }
+                                    return;
+                                }
+                                tries++; setTimeout(tick, 100);
+                            };
+                            tick();
+                        };
+                        const CATS = [
+                            { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
+                                { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
+                                { icon:'🏘️', title:'דיור להשכרה ומותנה', desc:'יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5', onClick:() => go(() => setSpecialHousingReport(true)) },
+                                { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
+                            ]},
+                            { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
+                                { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
+                                { icon:'🏗️', title:'הפרשות מבונות ומבני ציבור עתידיים', desc:'שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל', onClick:() => go(() => setShowAllocChooser(true)) },
+                                { icon:'🏛️', title:'שב"צ קיים לפי תת-שכונה', desc:'מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל', onClick:() => go(() => { setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }) },
+                                { icon:'📋', title:'תנאים והפרשות ציבוריות', desc:'תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)', onClick:() => go(() => setConditionsReport(true)) },
+                                { icon:'⚖️', title:'פערי שימוש — ספר הנכסים', desc:'שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות', onClick:() => go(() => setShowUseGaps(true)) },
+                                { icon:'🏘️', title:'פרוגרמה שכונתית', desc:'חישוב כיתות ושירותים קהילתיים לפי מינהל', onClick:() => go(() => openPublicNeedsModal()) },
+                                { icon:'⛽', title:'חסמים למבני ציבור', desc:'מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ\' ממוסדות חינוך)', onClick:() => go(() => setShowFuelBarriers(true)) },
+                            ]},
+                            { key:'edu', title:'🏫 חינוך', color:'#ab47bc', bg:'rgba(171,71,188,0.06)', items:[
+                                { icon:'🏫', title:'תב"ע מאושרת ליד מוסד חינוך', desc:'שם, שכבת גיל, תלמידים/כיתות + תכניות סמוכות (סטטוס, היתר, יזם)', onClick:() => go(() => setEduRenewalReport(true)) },
+                                { icon:'🎓', title:'תחזית חינוך לפי חומש מול סטטוס', desc:'צורך מול מתוכנן (פרויקטור) מול מצב בפועל — 4 תחומים, לפי חומש', onClick:() => go(() => { setEduForecastChumash(1); setShowEduForecast(true); }) },
+                            ]},
+                            { key:'permits', title:'🔵 היתרים', color:'#1e88e5', bg:'rgba(30,136,229,0.06)', items:[
+                                { icon:'🏘️', title:'היתרים לפי תת-שכונה', desc:'פילוח שלב + יח"ד לכל תת-שכונה', onClick:() => go(() => { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }) },
+                                { icon:'📑', title:'היתרים מול תב"ע', desc:'פערים בין יח"ד מאושרות ליח"ד בהיתרים', onClick:() => go(() => { setPermitsGapDrilldown(null); setShowPermitsGap(true); }) },
+                                { icon:'⚖️', title:'היתרים פתוחים להתנגדויות', desc:'בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון', onClick:() => go(() => setPermitObjectionsReport(true)) },
+                            ]},
+                            { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
+                                { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => setShowCommerceTable(true)) },
+                            ]},
+                            { key:'status', title:'📋 סטטוס ותהליך תכנוני', color:'#78909c', bg:'rgba(120,144,156,0.06)', items:[
+                                { icon:'🚧', title:'דוח מימוש', desc:'שלביות ביצוע לפי מינהל ותכנית', onClick:() => go(() => openMimushModal()) },
+                                { icon:'📊', title:'שלביות ביצוע', desc:'מתי מתקבלות ההפרשות הציבוריות (מסירה בשלבים) ומשך התכנית', onClick:() => go(() => setStagingReport(true)) },
+                                { icon:'📝', title:'הפקדות להתנגדויות', desc:'תכניות מופקדות לפי סמכות', onClick:() => go(() => setObjectionsReport(true)) },
+                                { icon:'📅', title:'ישיבות קרובות', desc:'תכניות בדיון בוועדות הקרובות', onClick:() => go(() => setMeetingsReport(true)) },
+                                { icon:'🔁', title:'תב"עות כפולות', desc:'תכניות חופפות באותו מרחב', onClick:() => go(() => setOverlapReport(true)) },
+                            ]},
+                            { key:'population', title:'👥 אוכלוסייה ובנייה', color:'#00897b', bg:'rgba(0,137,123,0.06)', items:[
+                                { icon:'👥', title:'אוכלוסייה קיימת', desc:'פרופיל דמוגרפי לפי מינהל/תת-שכונה: גיל, אורח חיים, דיור (מפקד 2022)', onClick:() => go(() => openPopulationDashboard()) },
+                                { icon:'🏗️', title:'התחלות בנייה לפי תת-רובע', desc:'התחלות וגמר בנייה 2022–2025 לפי תת-רובע (שנתון ירושלים 2026, ט/7)', onClick:() => go(() => openConstructionDashboard()) },
+                                { icon:'📋', title:'דשבורד שכונתי', desc:'פרופיל מרוכז לתת-שכונה: יח"ד, מימוש, ציבור, מסחר, עצים', dropdown:{
+                                    value:dashSub, onChange:v => setDashSub(v),
+                                    options:Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => ({ value:sn, label:sn })),
+                                    onOpen:() => go(() => renderSubDashboard(dashSub)) } },
+                            ]},
+                            { key:'master', title:'🗺️ תכניות אב ומינהלים', color:'#6d4c41', bg:'rgba(109,76,65,0.06)', items:[
+                                { icon:'🗺️', title:'דוח תכנית אב', desc:'KPI, מימוש, ותכניות לפי תת מתחם', dropdown:{
+                                    value:reportsMenuMP, onChange:v => setReportsMenuMP(v),
+                                    options:[{value:'מושבות',label:'מושבות'},{value:'רסקו',label:'רסקו'},{value:'בקעה',label:'בקעה'},{value:'ארנונה',label:'ארנונה'}],
+                                    onOpen:() => go(() => setMasterPlanReport(reportsMenuMP)) } },
+                                { icon:'🏛️', title:'דוח מינהל קהילתי', desc:'פירוט תכניות לפי סטטוס במינהל', dropdown:{
+                                    value:reportsMenuMinahak, onChange:v => setReportsMenuMinahak(v),
+                                    options:[{value:'גינות העיר',label:'גינות העיר'},{value:'בית צפאפא',label:'בית צפאפא'},{value:'גוננים',label:'גוננים'},{value:'בקעה רבתי',label:'בקעה רבתי'},{value:'מינהל מוסדי מלחה',label:'מינהל מוסדי מלחה'},{value:'א.ת. תלפיות',label:'א.ת. תלפיות'},{value:'גבעת המטוס',label:'גבעת המטוס'}],
+                                    onOpen:() => go(() => renderMinhakDashboard(reportsMenuMinahak)) } },
+                            ]},
+                            { key:'spatial', title:'✏️ ניתוח מרחבי (ציור על המפה)', color:'#e94560', bg:'rgba(233,69,96,0.06)', desc:'כלים אינטראקטיביים — צייר או לחץ על המפה כדי לקבל סיכום', items:[
+                                { icon:'🗺️', title:'דוח אזור מקיף', desc:'צייר אזור וקבל סיכום מלא: תב"ע, היתרים, המלצות פרויקטור ותכניות אב (דאבל-קליק לסיום)', onClick:() => go(() => { cancelAllModes('area'); setAreaFinished(null); fullReportAreaActiveRef.current = true; setFullAreaReport(null); setAreaMode(true); }) },
+                                { icon:'🎨', title:'ייעודי קרקע נכנס-יוצא', desc:'השוואת מצב קיים מול מוצע בתכנית', onClick:() => go(() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('plan'); }) },
+                                { icon:'⊙', title:'היתרים ברדיוס', desc:'קליק על נקודה — סיכום היתרים ויח"ד ברדיוס נבחר', onClick:() => go(() => { cancelAllModes('radius'); setRadiusMode(true); }) },
+                            ]},
+                            { key:'projTalpiot', title:'📐 פרוייקטור תלפיות', color:'#e65100', bg:'rgba(230,81,0,0.06)', desc:'הדוחות מסוננים לתב"עות בתוך גבול הפרוייקטור — שורה אחת עם פירוק ל-5 תת-שכונות', items:[
+                                { icon:'🚧', title:'אחוזי מימוש', desc:'שלביות ביצוע בתחום הפרוייקטור', onClick:() => projT(() => openMimushModal()) },
+                                { icon:'🏘️', title:'פרוגרמה', desc:'צרכי ציבור בתחום הפרוייקטור', onClick:() => projT(() => { window.__unitsData = null; window.__unitsFetching = false; setUnitsData(null); openPublicNeedsModal(); }) },
+                                { icon:'🏠', title:'סיכום יח"ד', desc:'יחידות דיור בתחום הפרוייקטור', onClick:() => projT(() => { window.__unitsData = null; window.__unitsFetching = false; setUnitsData(null); setUnitsLoading(true); setShowUnits(true); fetchUnitsDataInternal(); }) },
+                                { icon:'🏪', title:'מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה בתחום הפרוייקטור', onClick:() => projT(() => { setCommerceData(null); setCommerceLoading(true); setShowCommerceTable(true); fetchCommerceDataInternal(); }) },
+                                { icon:'🏘️', title:'היתרים לפי תת-שכונה', desc:'פילוח שלב + יח"ד בתחום הפרוייקטור', onClick:() => projT(() => { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }) },
+                                { icon:'📑', title:'היתרים מול תב"ע', desc:'פערי יח"ד בתחום הפרוייקטור', onClick:() => projT(() => { setPermitsGapDrilldown(null); setShowPermitsGap(true); }) },
+                            ]},
+                            { key:'projGonenim', title:'📋 פרוייקטור גוננים', color:'#1976d2', bg:'rgba(25,118,210,0.06)', desc:'סיכום ההמלצות: פיזור לפי תת-שכונה/חומש/תחום, גורם מנהל ואומדן, ורשימת חסמים', items:[
+                                { icon:'📊', title:'סיכום + ציר זמן', desc:'פיזור תת-שכונה × תחום × חומש + ציר זמן שנתי', onClick:() => openGonenim(null) },
+                                { icon:'🏛️', title:'לפי גורם מנהל', desc:'פילוח אחריות + אומדן כספי לפי גוף', onClick:() => openGonenim('body') },
+                                { icon:'🚧', title:'רשימת חסמים', desc:'כל ההמלצות עם חסמים — לחיצה מעבירה למפה', onClick:() => openGonenim('obstacles') },
+                                { icon:'🔗', title:'חפיפת תב״עות', desc:'המלצות שכבר בתב״ע מאושרת/בהפקדה — סיכוי מימוש', onClick:() => openGonenim('overlap') },
+                                { icon:'📈', title:'מנורמל ליח״ד', desc:'השוואה לפי המלצות + תקציב לכל 1,000 יח״ד', onClick:() => openGonenim('normalized') },
+                            ]},
+                        ];
+                        const q = (reportSearchQ || '').trim().toLowerCase();
+                        const mq = (t, d) => !q || ((t + ' ' + (d || '')).toLowerCase().includes(q));
+                        const catsToShow = CATS.map(c => ({ ...c, vis: c.items.filter(it => mq(it.title, it.desc)) })).filter(c => c.vis.length > 0);
+                        const renderItem = (it, i) => {
+                            if (it.dropdown) {
+                                return (
+                                    <div className="reports-menu-item" key={i} onClick={(e) => { if (e.target.tagName === 'SELECT') return; it.dropdown.onOpen(); }}>
+                                        <span className="report-icon">{it.icon}</span>
+                                        <div className="report-text">
+                                            <span className="report-title">{it.title}</span>
+                                            <span className="report-desc">{it.desc}</span>
+                                            <select value={it.dropdown.value} onClick={e => e.stopPropagation()} onChange={e => it.dropdown.onChange(e.target.value)}>
+                                                {it.dropdown.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return (
+                                <button className="reports-menu-item" key={i} onClick={it.onClick}>
+                                    <span className="report-icon">{it.icon}</span>
+                                    <div className="report-text">
+                                        <span className="report-title">{it.title}</span>
+                                        <span className="report-desc">{it.desc}</span>
+                                    </div>
+                                </button>
+                            );
+                        };
+                        return (
+                        <div className="units-overlay" onClick={closeMenu}>
                             <div className="units-modal reports-menu-modal" onClick={e => e.stopPropagation()}>
                                 <div className="units-header">
                                     <h2>📊 דוחות</h2>
-                                    <button className="units-close" onClick={() => setShowReportsMenu(false)}>&times;</button>
+                                    <button className="units-close" onClick={closeMenu}>&times;</button>
                                 </div>
                                 <div className="reports-menu-body">
-                                    {/* קטגוריה: בחירת אזור — דוח מסכם מלא */}
-                                    <div className="reports-category" style={{border:'1px dashed #e94560', background:'rgba(233,69,96,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
-                                        <h3 style={{color:'#e94560'}}>📋 בחירת אזור</h3>
-                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>ציור פוליגון חופשי על המפה → דוח מסכם של כל מה שידוע על האזור: תב"ע מקודמות, היתרים, המלצות פרויקטור ותכניות אב</div>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                cancelAllModes('area');
-                                                setAreaFinished(null);
-                                                fullReportAreaActiveRef.current = true;
-                                                setFullAreaReport(null);
-                                                setAreaMode(true);
-                                            }}>
-                                                <span className="report-icon">🗺️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דוח אזור מקיף</span>
-                                                    <span className="report-desc">צייר אזור וקבל סיכום מלא (דאבל-קליק לסיום)</span>
-                                                </div>
-                                            </button>
-                                        </div>
+                                    <div style={{position:'sticky', top:0, zIndex:5, background:'#12121f', paddingBottom:12, marginBottom:6}}>
+                                        <input
+                                            autoFocus
+                                            value={reportSearchQ}
+                                            onChange={e => setReportSearchQ(e.target.value)}
+                                            placeholder="🔍 חיפוש דוח לפי שם או תיאור..."
+                                            style={{width:'100%', boxSizing:'border-box', background:'#16162a', color:'#e0e0e0', border:'1px solid #3a3a50', borderRadius:6, padding:'8px 10px', fontSize:13, direction:'rtl'}}
+                                        />
                                     </div>
-                                    {/* קטגוריה: קומות הפרשות מבונות */}
-                                    <div className="reports-category" style={{border:'1px dashed #b5651d', background:'rgba(181,101,29,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
-                                        <h3 style={{color:'#b5651d'}}>🏢 קומות הפרשות מבונות</h3>
-                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>באיזו קומה יושבת כל הפרשה מבונה (גן/מעון/מבנה ציבור/בית כנסת) — נקרא מחתכי נספחי הבינוי. כולל ייצוא CSV והדפסה.</div>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowFloorReport(true); }}>
-                                                <span className="report-icon">🏢</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">קומות הפרשות מבונות</span>
-                                                    <span className="report-desc">טבלת קומה לכל הפרשה + ייצוא</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowUseGaps(true); }}>
-                                                <span className="report-icon">⚖️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">פערי שימוש — ספר הנכסים</span>
-                                                    <span className="report-desc">שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowFuelBarriers(true); }}>
-                                                <span className="report-icon">⛽</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">חסמים למבני ציבור</span>
-                                                    <span className="report-desc">מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ' ממוסדות חינוך)</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {/* קטגוריה: פרוייקטור תלפיות — סינון מרחבי */}
-                                    <div className="reports-category" style={{border:'1px dashed #e65100', background:'rgba(255,152,0,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
-                                        <h3 style={{color:'#e65100'}}>📐 פרוייקטור תלפיות</h3>
-                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>הדוחות מסוננים לתב"עות בתוך גבול הפרוייקטור — שורה אחת ("פרוייקטור תלפיות") עם פירוק לפי 5 תת-שכונות פנימיות</div>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); openMimushModal(); }}>
-                                                <span className="report-icon">🚧</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">אחוזי מימוש</span>
-                                                    <span className="report-desc">שלביות ביצוע בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); window.__unitsData = null; window.__unitsFetching = false; setUnitsData(null); openPublicNeedsModal(); }}>
-                                                <span className="report-icon">🏘️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">פרוגרמה</span>
-                                                    <span className="report-desc">צרכי ציבור בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                window.__reportScope = 'projector_talpiot';
-                                                setReportScope('projector_talpiot');
-                                                setShowReportsMenu(false);
-                                                window.__unitsData = null; window.__unitsFetching = false;
-                                                setUnitsData(null);
-                                                setUnitsLoading(true);
-                                                setShowUnits(true);
-                                                fetchUnitsDataInternal();
-                                            }}>
-                                                <span className="report-icon">🏠</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">סיכום יח"ד</span>
-                                                    <span className="report-desc">יחידות דיור בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                window.__reportScope = 'projector_talpiot';
-                                                setReportScope('projector_talpiot');
-                                                setShowReportsMenu(false);
-                                                setCommerceData(null);
-                                                setCommerceLoading(true);
-                                                setShowCommerceTable(true);
-                                                fetchCommerceDataInternal();
-                                            }}>
-                                                <span className="report-icon">🏪</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">מסחר ותעסוקה</span>
-                                                    <span className="report-desc">שטחי מסחר ותעסוקה בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }}>
-                                                <span className="report-icon">🏘️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים לפי תת-שכונה</span>
-                                                    <span className="report-desc">פילוח שלב + יח"ד בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { window.__reportScope = 'projector_talpiot'; setReportScope('projector_talpiot'); setShowReportsMenu(false); setPermitsGapDrilldown(null); setShowPermitsGap(true); }}>
-                                                <span className="report-icon">📑</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים מול תב"ע</span>
-                                                    <span className="report-desc">פערי יח"ד בתחום הפרוייקטור</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* קטגוריה: פרוייקטור גוננים — סיכום ההמלצות */}
-                                    <div className="reports-category" style={{border:'1px dashed #1976d2', background:'rgba(25,118,210,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
-                                        <h3 style={{color:'#1976d2'}}>📋 פרוייקטור גוננים</h3>
-                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>סיכום ההמלצות (259 פיצ׳רים): פיזור לפי תת-שכונה/חומש/תחום, גורם מנהל ואומדן, ורשימת חסמים</div>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
-                                                // Poll for data to arrive (on-demand fetch), then open summary
-                                                let tries = 0;
-                                                const tick = () => {
-                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
-                                                    if (ready || tries > 100) {
-                                                        if (typeof window.__openProjectorSummary === 'function') window.__openProjectorSummary();
-                                                        return;
-                                                    }
-                                                    tries++;
-                                                    setTimeout(tick, 100);
-                                                };
-                                                tick();
-                                            }}>
-                                                <span className="report-icon">📊</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">סיכום + ציר זמן</span>
-                                                    <span className="report-desc">פיזור תת-שכונה × תחום × חומש + ציר זמן שנתי</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
-                                                let tries = 0;
-                                                const tick = () => {
-                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
-                                                    if (ready || tries > 100) {
-                                                        if (typeof window.__openProjectorSummary === 'function') {
-                                                            window.__openProjectorSummary();
-                                                            // Auto-switch to body tab
-                                                            setTimeout(() => {
-                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="body"]');
-                                                                if (btn) btn.click();
-                                                            }, 50);
-                                                        }
-                                                        return;
-                                                    }
-                                                    tries++;
-                                                    setTimeout(tick, 100);
-                                                };
-                                                tick();
-                                            }}>
-                                                <span className="report-icon">🏛️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">לפי גורם מנהל</span>
-                                                    <span className="report-desc">פילוח אחריות + אומדן כספי לפי גוף</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
-                                                let tries = 0;
-                                                const tick = () => {
-                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
-                                                    if (ready || tries > 100) {
-                                                        if (typeof window.__openProjectorSummary === 'function') {
-                                                            window.__openProjectorSummary();
-                                                            setTimeout(() => {
-                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="obstacles"]');
-                                                                if (btn) btn.click();
-                                                            }, 50);
-                                                        }
-                                                        return;
-                                                    }
-                                                    tries++;
-                                                    setTimeout(tick, 100);
-                                                };
-                                                tick();
-                                            }}>
-                                                <span className="report-icon">🚧</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">רשימת חסמים</span>
-                                                    <span className="report-desc">כל ההמלצות עם חסמים — לחיצה מעבירה למפה</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
-                                                let tries = 0;
-                                                const tick = () => {
-                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
-                                                    if (ready || tries > 100) {
-                                                        if (typeof window.__openProjectorSummary === 'function') {
-                                                            window.__openProjectorSummary();
-                                                            setTimeout(() => {
-                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="overlap"]');
-                                                                if (btn) btn.click();
-                                                            }, 50);
-                                                        }
-                                                        return;
-                                                    }
-                                                    tries++;
-                                                    setTimeout(tick, 100);
-                                                };
-                                                tick();
-                                            }}>
-                                                <span className="report-icon">🔗</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">חפיפת תב״עות</span>
-                                                    <span className="report-desc">המלצות שכבר בתב״ע מאושרת/בהפקדה — סיכוי מימוש</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                setLayers(prev => ({ ...prev, projector_gonenim: true }));
-                                                let tries = 0;
-                                                const tick = () => {
-                                                    const ready = geoDataRef.current && geoDataRef.current.projector_gonenim && geoDataRef.current.projector_gonenim.features;
-                                                    if (ready || tries > 100) {
-                                                        if (typeof window.__openProjectorSummary === 'function') {
-                                                            window.__openProjectorSummary();
-                                                            setTimeout(() => {
-                                                                const btn = document.querySelector('#pf-summary-modal [data-tab-btn="normalized"]');
-                                                                if (btn) btn.click();
-                                                            }, 50);
-                                                        }
-                                                        return;
-                                                    }
-                                                    tries++;
-                                                    setTimeout(tick, 100);
-                                                };
-                                                tick();
-                                            }}>
-                                                <span className="report-icon">📈</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">מנורמל ליח״ד</span>
-                                                    <span className="report-desc">השוואה לפי המלצות + תקציב לכל 1,000 יח״ד</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setEduForecastChumash(1); setShowEduForecast(true); }}>
-                                                <span className="report-icon">🎓</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">תחזית חינוך לפי חומש מול סטטוס</span>
-                                                    <span className="report-desc">צורך מול מתוכנן (פרויקטור) מול מצב בפועל — 4 תחומים, לפי חומש</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* קטגוריה: התחדשות עירונית וחינוך */}
-                                    <div className="reports-category" style={{border:'1px dashed #8e24aa', background:'rgba(142,36,170,0.06)', borderRadius:8, padding:'10px 12px', marginBottom:14}}>
-                                        <h3 style={{color:'#ab47bc'}}>🏫 התחדשות עירונית וחינוך</h3>
-                                        <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>מוסדות חינוך קיימים עד 50 מ' מתב"ע התחדשות עירונית/פינוי-בינוי/עיבוי מאושרת — הערכת הפרעה לתפקוד המוסד בשלב הביצוע. כולל מפה להדפסה ו-CSV.</div>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setEduRenewalReport(true); }}>
-                                                <span className="report-icon">🏫</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">תב"ע מאושרת ליד מוסד חינוך</span>
-                                                    <span className="report-desc">שם, שכבת גיל, תלמידים/כיתות + תכניות סמוכות (סטטוס, היתר, יזם)</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {/* קטגוריה: דוחות אזוריים */}
-                                    <div className="reports-category">
-                                        <h3>🏘️ דוחות אזוריים</h3>
-                                        <div className="reports-menu-grid">
-                                            <div className="reports-menu-item" onClick={(e) => {
-                                                if (e.target.tagName === 'SELECT') return;
-                                                setShowReportsMenu(false);
-                                                setMasterPlanReport(reportsMenuMP);
-                                            }}>
-                                                <span className="report-icon">🗺️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דוח תכנית אב</span>
-                                                    <span className="report-desc">KPI, מימוש, ותכניות לפי תת מתחם</span>
-                                                    <select value={reportsMenuMP} onClick={e => e.stopPropagation()} onChange={e => setReportsMenuMP(e.target.value)}>
-                                                        <option value="מושבות">מושבות</option>
-                                                        <option value="רסקו">רסקו</option>
-                                                        <option value="בקעה">בקעה</option>
-                                                        <option value="ארנונה">ארנונה</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }}>
-                                                <span className="report-icon">🏘️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים לפי תת-שכונה</span>
-                                                    <span className="report-desc">פילוח שלב + יח"ד לכל תת-שכונה</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openPublicNeedsModal(); }}>
-                                                <span className="report-icon">🏘️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">פרוגרמה שכונתית</span>
-                                                    <span className="report-desc">חישוב כיתות ושירותים קהילתיים לפי מינהל</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }}>
-                                                <span className="report-icon">🏛️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">שב"צ קיים לפי תת-שכונה</span>
-                                                    <span className="report-desc">מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowAllocChooser(true); }}>
-                                                <span className="report-icon">🏗️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">הפרשות מבונות ומבני ציבור עתידיים</span>
-                                                    <span className="report-desc">שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל</span>
-                                                </div>
-                                            </button>
-                                            <div className="reports-menu-item" onClick={(e) => {
-                                                if (e.target.tagName === 'SELECT') return;
-                                                setShowReportsMenu(false);
-                                                renderSubDashboard(dashSub);
-                                            }}>
-                                                <span className="report-icon">📋</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דשבורד שכונתי</span>
-                                                    <span className="report-desc">פרופיל מרוכז לתת-שכונה: יח"ד, מימוש, ציבור, מסחר, עצים</span>
-                                                    <select value={dashSub} onClick={e => e.stopPropagation()} onChange={e => setDashSub(e.target.value)}>
-                                                        {Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => <option key={sn} value={sn}>{sn}</option>)}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openPopulationDashboard(); }}>
-                                                <span className="report-icon">👥</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">אוכלוסייה קיימת</span>
-                                                    <span className="report-desc">פרופיל דמוגרפי לפי מינהל/תת-שכונה: גיל, אורח חיים, דיור (מפקד 2022)</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openConstructionDashboard(); }}>
-                                                <span className="report-icon">🏗️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">התחלות בנייה לפי תת-רובע</span>
-                                                    <span className="report-desc">התחלות וגמר בנייה 2022–2025 לפי תת-רובע (שנתון ירושלים 2026, ט/7)</span>
-                                                </div>
-                                            </button>
-                                            <div className="reports-menu-item" onClick={(e) => {
-                                                if (e.target.tagName === 'SELECT') return;
-                                                setShowReportsMenu(false);
-                                                renderMinhakDashboard(reportsMenuMinahak);
-                                            }}>
-                                                <span className="report-icon">🏛️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דוח מינהל קהילתי</span>
-                                                    <span className="report-desc">פירוט תכניות לפי סטטוס במינהל</span>
-                                                    <select value={reportsMenuMinahak} onClick={e => e.stopPropagation()} onChange={e => setReportsMenuMinahak(e.target.value)}>
-                                                        <option value="גינות העיר">גינות העיר</option>
-                                                        <option value="בית צפאפא">בית צפאפא</option>
-                                                        <option value="גוננים">גוננים</option>
-                                                        <option value="בקעה רבתי">בקעה רבתי</option>
-                                                        <option value="מינהל מוסדי מלחה">מינהל מוסדי מלחה</option>
-                                                        <option value="א.ת. תלפיות">א.ת. תלפיות</option>
-                                                        <option value="גבעת המטוס">גבעת המטוס</option>
-                                                    </select>
-                                                </div>
+                                    {catsToShow.map(c => (
+                                        <div className="reports-category" key={c.key} style={{border:'1px dashed ' + c.color, background:c.bg, borderRadius:8, padding:'10px 12px', marginBottom:14}}>
+                                            <h3 style={{color:c.color}}>{c.title}</h3>
+                                            {c.desc && !q && <div style={{fontSize:11, color:'#9ca3af', marginBottom:8}}>{c.desc}</div>}
+                                            <div className="reports-menu-grid">
+                                                {c.vis.map(renderItem)}
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* קטגוריה: דוחות תכניות */}
-                                    <div className="reports-category">
-                                        <h3>📋 דוחות תכניות</h3>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowUnits(true); }}>
-                                                <span className="report-icon">🏠</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">סיכום יח"ד</span>
-                                                    <span className="report-desc">טבלת יחידות דיור לפי מינהל וסטטוס</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitsGapDrilldown(null); setShowPermitsGap(true); }}>
-                                                <span className="report-icon">📑</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים מול תב"ע</span>
-                                                    <span className="report-desc">פערים בין יח"ד מאושרות ליח"ד בהיתרים</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setShowCommerceTable(true); }}>
-                                                <span className="report-icon">🏪</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">סיכום מסחר ותעסוקה</span>
-                                                    <span className="report-desc">שטחי מסחר ותעסוקה לפי מינהל</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); openMimushModal(); }}>
-                                                <span className="report-icon">🚧</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דוח מימוש</span>
-                                                    <span className="report-desc">שלביות ביצוע לפי מינהל ותכנית</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setStagingReport(true); }}>
-                                                <span className="report-icon">📊</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">שלביות ביצוע</span>
-                                                    <span className="report-desc">מתי מתקבלות ההפרשות הציבוריות (מסירה בשלבים) ומשך התכנית</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setConditionsReport(true); }}>
-                                                <span className="report-icon">📋</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">תנאים והפרשות ציבוריות</span>
-                                                    <span className="report-desc">תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setSpecialHousingReport(true); }}>
-                                                <span className="report-icon">🏘️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דיור להשכרה ומותנה</span>
-                                                    <span className="report-desc">יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setDevRepExpanded(null); setDevelopersReport(true); }}>
-                                                <span className="report-icon">🏗️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">דוח יזמים</span>
-                                                    <span className="report-desc">יח"ד מתוכננות לפי יזם, מינה"ק ושלב</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setOverlapReport(true); }}>
-                                                <span className="report-icon">🔁</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">תב"עות כפולות</span>
-                                                    <span className="report-desc">תכניות חופפות באותו מרחב</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setObjectionsReport(true); }}>
-                                                <span className="report-icon">📝</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">הפקדות להתנגדויות</span>
-                                                    <span className="report-desc">תכניות מופקדות לפי סמכות</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setPermitObjectionsReport(true); }}>
-                                                <span className="report-icon">⚖️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים פתוחים להתנגדויות</span>
-                                                    <span className="report-desc">בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => { setShowReportsMenu(false); setMeetingsReport(true); }}>
-                                                <span className="report-icon">📅</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">ישיבות קרובות</span>
-                                                    <span className="report-desc">תכניות בדיון בוועדות הקרובות</span>
-                                                </div>
-                                            </button>
+                                    ))}
+                                    {catsToShow.length === 0 && (
+                                        <div style={{padding:'24px 12px', textAlign:'center', color:'#888', fontSize:14}}>
+                                            לא נמצאו דוחות התואמים ל"{reportSearchQ}"
                                         </div>
-                                    </div>
-
-                                    {/* קטגוריה: ניתוח מרחבי */}
-                                    <div className="reports-category">
-                                        <h3>🔍 ניתוח מרחבי</h3>
-                                        <div className="reports-menu-grid">
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                cancelAllModes('landuse-compare');
-                                                setLanduseCompareMode('plan');
-                                            }}>
-                                                <span className="report-icon">🎨</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">ייעודי קרקע נכנס-יוצא</span>
-                                                    <span className="report-desc">השוואת מצב קיים מול מוצע בתכנית</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                cancelAllModes('area');
-                                                setAreaMode(true);
-                                            }}>
-                                                <span className="report-icon">✏️</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">סיכום אזור נבחר</span>
-                                                    <span className="report-desc">ציור פוליגון וסיכום תכניות בתוכו</span>
-                                                </div>
-                                            </button>
-                                            <button className="reports-menu-item" onClick={() => {
-                                                setShowReportsMenu(false);
-                                                cancelAllModes('radius');
-                                                setRadiusMode(true);
-                                            }}>
-                                                <span className="report-icon">⊙</span>
-                                                <div className="report-text">
-                                                    <span className="report-title">היתרים ברדיוס</span>
-                                                    <span className="report-desc">קליק על נקודה — סיכום היתרים ויח"ד ברדיוס נבחר</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-
+                                    )}
+                                    {!q && (
                                     <div style={{marginTop:14, padding:'10px 12px', background:'#16162a', border:'1px dashed #3a3a50', borderRadius:8, fontSize:12, color:'#9ca3af', textAlign:'center'}}>
                                         💡 דוחות נוספים (עצים לעקירה, צפיפות, חום-מסחר) זמינים גם דרך כפתורי ה-toolbar ותפריט השכבות
                                     </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        </div>);
+                    })()}
 
                     {/* ── Permits Gap Report Modal (היתרים מול תב"ע) ── */}
                     {showPermitsGap && (() => {
