@@ -415,6 +415,7 @@ def check_xplan_updates(changed_plans):
     plans_geometry_updated = 0 # plans whose blue-line geometry was rebuilt
     landuse_added = 0
     landuse_removed = 0
+    landuse_status_updated = 0 # plans whose parcels' station_desc was refreshed
     shavaz_added = 0
     easements_changed = 0      # plans whose easements changed
     easement_delta = 0         # net +/- easement count across changed plans
@@ -434,10 +435,30 @@ def check_xplan_updates(changed_plans):
             continue
 
         log_msg(f"  Checking XPLAN for {pl_number}...")
+        new_status = (plan.get('new_status') or '').strip()
         xplan_features = query_xplan_by_plan(pl_number)
         if not xplan_features:
             report.append(f"  {pl_number}: לא נמצא ב-XPLAN")
+            # Still refresh station_desc on the plan's existing parcels — the
+            # shavaz/hafrashah popups display it directly, and without a fresh
+            # XPLAN response the parcels would keep the pre-change status.
+            if new_status:
+                stale = [ff for ff in landuse_gj['features']
+                         if ff['properties'].get('pl_number') == pl_number
+                         and ff['properties'].get('station_desc') != new_status]
+                if stale:
+                    for ff in stale:
+                        ff['properties']['station_desc'] = new_status
+                    landuse_status_updated += 1
             continue
+
+        # Stamp the authoritative Mavat status on the fresh parcels: XPLAN's own
+        # station_desc can lag the Mavat page status that triggered this refresh,
+        # and both the hafrashah/shavaz popups (landuse station_desc) and new
+        # future_shavaz features (Mavat_Status, step 3 below) read it.
+        if new_status:
+            for xf in xplan_features:
+                xf['properties']['station_desc'] = new_status
 
         # Fetch blue-line plan boundary (XPLAN layer 1) — included in the union
         # so plans without detailed landuse still get a meaningful outline.
@@ -474,6 +495,11 @@ def check_xplan_updates(changed_plans):
             return out
         pre_features = [ff for ff in landuse_gj['features']
                         if ff.get('properties', {}).get('pl_number') == pl_number]
+        # Count plans whose parcels carried a stale status, so the status-stamped
+        # replace below gets saved even when no parcel was added/removed.
+        if new_status and any(ff['properties'].get('station_desc') != new_status
+                              for ff in pre_features):
+            landuse_status_updated += 1
         pre_cats = _by_category(pre_features)
         post_cats = _by_category(xplan_features)
         deltas = []
@@ -678,12 +704,13 @@ def check_xplan_updates(changed_plans):
             'data/plans.geojson',
             f'data: rebuild blue-line geometry for {plans_geometry_updated} plans (update_mavat_ui)'
         )
-    if landuse_added or landuse_removed:
+    if landuse_added or landuse_removed or landuse_status_updated:
         with open(LANDUSE_GEOJSON, 'w', encoding='utf-8') as f:
             json.dump(landuse_gj, f, ensure_ascii=False)
         msg_parts = []
         if landuse_added: msg_parts.append(f'+{landuse_added}')
         if landuse_removed: msg_parts.append(f'-{landuse_removed}')
+        if landuse_status_updated: msg_parts.append(f'status×{landuse_status_updated}')
         commit_and_push_after_write(
             'data/landuse_xplan.geojson',
             f'data: landuse refresh ({"/".join(msg_parts)} parcels) (update_mavat_ui)'
@@ -692,7 +719,7 @@ def check_xplan_updates(changed_plans):
         with open(SHAVAZ_GEOJSON, 'w', encoding='utf-8') as f:
             json.dump(shavaz_gj, f, ensure_ascii=False)
         commit_and_push_after_write(
-            'data/shavaz_kayam.geojson',
+            'data/future_shavaz.geojson',  # was wrongly 'shavaz_kayam' — added features never got committed
             f'data: add {shavaz_added} shavaz/hafrashah parcels (update_mavat_ui)'
         )
     if easements_changed:
@@ -717,7 +744,7 @@ def check_xplan_updates(changed_plans):
         )
 
     if (plans_updated or plans_geometry_updated or landuse_added or landuse_removed
-            or shavaz_added or easements_changed or trees_changed):
+            or landuse_status_updated or shavaz_added or easements_changed or trees_changed):
         landuse_parts = []
         if landuse_added: landuse_parts.append(f'+{landuse_added}')
         if landuse_removed: landuse_parts.append(f'-{landuse_removed}')
