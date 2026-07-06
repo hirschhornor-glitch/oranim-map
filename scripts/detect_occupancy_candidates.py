@@ -81,6 +81,12 @@ def main():
         tk = taba_key(pp.get("taba") or pp.get("TABA"))
         signals = []
         pstat = str(pp.get("permit_status") or "").strip()
+        stage = str(pp.get("stage") or "").strip()
+        # Strongest proxy: reached the "גמר בנייה" construction stage. It lives in `stage`
+        # (lifecycle ...ה-בבנייה -> ו-גמר בנייה), NOT permit_status.
+        gamar = ("גמר בני" in stage) or ("גמר" in pstat)
+        if "גמר בני" in stage:
+            signals.append("stage: " + stage)
         if "גמר" in pstat:
             signals.append("permit_status: " + pstat)
         hits = form4_hits.get(tk, [])
@@ -100,7 +106,7 @@ def main():
             "permit_status": pstat,
             "stage": pp.get("stage", ""),
             "signals": signals,
-            "strength": "high" if ("גמר" in pstat) else ("medium" if issued else "low"),
+            "strength": "high" if gamar else ("medium" if issued else "low"),
         })
 
     # field-observation completions (address-level; not auto-mapped to a plan)
