@@ -996,6 +996,134 @@
             },
         };
 
+        // Windows-1255 (Hebrew) codepage table — shp-write's DBF writer does a raw
+        // charCodeAt()->setUint8 truncation per character with no encoding awareness,
+        // which mangles Hebrew (code points >255). Pre-mapping each character to the
+        // JS char whose code equals its cp1255 byte makes that truncation land on the
+        // correct byte. Table per unicode.org CP1255.TXT.
+        const CP1255_ENCODE = {
+            0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,
+            0x02C6:0x88,0x2030:0x89,0x2039:0x8B,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,
+            0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x203A:0x9B,
+            0x00A0:0xA0,0x00A1:0xA1,0x00A2:0xA2,0x00A3:0xA3,0x20AA:0xA4,0x00A5:0xA5,0x00A6:0xA6,
+            0x00A7:0xA7,0x00A8:0xA8,0x00A9:0xA9,0x00D7:0xAA,0x00AB:0xAB,0x00AC:0xAC,0x00AD:0xAD,
+            0x00AE:0xAE,0x00AF:0xAF,0x00B0:0xB0,0x00B1:0xB1,0x00B2:0xB2,0x00B3:0xB3,0x00B4:0xB4,
+            0x00B5:0xB5,0x00B6:0xB6,0x00B7:0xB7,0x00B8:0xB8,0x00B9:0xB9,0x00F7:0xBA,0x00BB:0xBB,
+            0x00BC:0xBC,0x00BD:0xBD,0x00BE:0xBE,0x00BF:0xBF,
+            0x05B0:0xC0,0x05B1:0xC1,0x05B2:0xC2,0x05B3:0xC3,0x05B4:0xC4,0x05B5:0xC5,0x05B6:0xC6,
+            0x05B7:0xC7,0x05B8:0xC8,0x05B9:0xC9,0x05BB:0xCB,0x05BC:0xCC,0x05BD:0xCD,0x05BE:0xCE,0x05BF:0xCF,
+            0x05C0:0xD0,0x05C1:0xD1,0x05C2:0xD2,0x05C3:0xD3,0x05F0:0xD4,0x05F1:0xD5,0x05F2:0xD6,0x05F3:0xD7,0x05F4:0xD8,
+            0x05D0:0xE0,0x05D1:0xE1,0x05D2:0xE2,0x05D3:0xE3,0x05D4:0xE4,0x05D5:0xE5,0x05D6:0xE6,0x05D7:0xE7,
+            0x05D8:0xE8,0x05D9:0xE9,0x05DA:0xEA,0x05DB:0xEB,0x05DC:0xEC,0x05DD:0xED,0x05DE:0xEE,0x05DF:0xEF,
+            0x05E0:0xF0,0x05E1:0xF1,0x05E2:0xF2,0x05E3:0xF3,0x05E4:0xF4,0x05E5:0xF5,0x05E6:0xF6,0x05E7:0xF7,
+            0x05E8:0xF8,0x05E9:0xF9,0x05EA:0xFA,0x200E:0xFD,0x200F:0xFE,
+        };
+        function toCp1255(value) {
+            const s = value == null ? '' : String(value);
+            let out = '';
+            for (let i = 0; i < s.length; i++) {
+                const cp = s.charCodeAt(i);
+                if (cp < 0x80) { out += s[i]; continue; }
+                const b = CP1255_ENCODE[cp];
+                out += b != null ? String.fromCharCode(b) : '?';
+            }
+            return out;
+        }
+
+        // A layer is "exportable" if its toggle id is backed directly by a raw
+        // GeoJSON file (as opposed to a computed/derived overlay). Deriving this from
+        // GEOJSON_FILES + LAYER_CONFIG (instead of a separate hand-kept list) means any
+        // future toggle layer backed by a real file becomes exportable automatically.
+        function findLayerDisplayName(id) {
+            for (const group of Object.values(LAYER_CONFIG)) {
+                const found = (group.layers || []).find(l => l.id === id);
+                if (found) return found.name;
+            }
+            return null;
+        }
+        const EXPORT_LAYERS = Object.keys(GEOJSON_FILES)
+            .map(id => ({ id, name: findLayerDisplayName(id) }))
+            .filter(l => l.name);
+
+        function ensureScriptGlobal(src, globalName) {
+            return new Promise((resolve, reject) => {
+                if (window[globalName]) return resolve(window[globalName]);
+                const sc = document.createElement('script');
+                sc.src = src;
+                sc.onload = () => resolve(window[globalName]);
+                sc.onerror = () => reject(new Error('failed to load ' + src));
+                document.head.appendChild(sc);
+            });
+        }
+
+        // Shapefile export for QGIS. shp-write only understands Point/LineString/
+        // Polygon/MultiLineString/MultiPolygon (no MultiPoint), and its DBF writer does
+        // a raw per-character charCodeAt()->byte write with no encoding logic — so
+        // Hebrew text must be pre-transcoded to cp1255 (via toCp1255) beforehand, and a
+        // .cpg file added after the fact (shp-write never writes one) so QGIS/GDAL know
+        // to read the DBF as cp1255 rather than mangling it further.
+        async function exportLayerAsShapefile(layerId, features) {
+            if (!features.length) { alert('אין נתונים לייצוא'); return; }
+            let JSZipLib, shpwrite;
+            try {
+                [JSZipLib, shpwrite] = await Promise.all([
+                    ensureScriptGlobal('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'JSZip'),
+                    ensureScriptGlobal('https://unpkg.com/@mapbox/shp-write@0.4.3/shpwrite.js', 'shpwrite'),
+                ]);
+            } catch (e) { alert('שגיאה בטעינת ספריית ה-Shapefile'); return; }
+
+            // Union of property keys across all features; DBF field names are capped
+            // at 10 chars and de-duplicated (shp-write/dbf don't do this themselves).
+            const allKeys = [];
+            const seenKeys = new Set();
+            features.forEach(f => Object.keys(f.properties || {}).forEach(k => {
+                if (!seenKeys.has(k)) { seenKeys.add(k); allKeys.push(k); }
+            }));
+            const usedNames = new Set();
+            const nameMap = {};
+            allKeys.forEach(k => {
+                const base = k.slice(0, 10);
+                let candidate = base, i = 1;
+                while (usedNames.has(candidate)) { const suf = String(i++); candidate = base.slice(0, 10 - suf.length) + suf; }
+                usedNames.add(candidate);
+                nameMap[k] = candidate;
+            });
+
+            // Explode MultiPoint into individual Point features (one row per point) and
+            // cp1255-transcode every value.
+            const shpFeatures = [];
+            features.forEach(f => {
+                const props = {};
+                allKeys.forEach(k => { props[nameMap[k]] = toCp1255(f.properties ? f.properties[k] : ''); });
+                const geom = f.geometry;
+                if (geom && geom.type === 'MultiPoint') {
+                    geom.coordinates.forEach(coord => shpFeatures.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: coord } }));
+                } else {
+                    shpFeatures.push({ type: 'Feature', properties: props, geometry: geom });
+                }
+            });
+
+            // A layer can mix geometry types (e.g. tama38 is almost all MultiPoint but
+            // has a stray Polygon record) — shp-write writes one file set per type, and
+            // giving them distinct names is required: same name for two types means the
+            // second file set silently overwrites the first inside the zip.
+            const fc = { type: 'FeatureCollection', features: shpFeatures };
+            let shpZipBlob;
+            try {
+                shpZipBlob = await shpwrite.zip(fc, { outputType: 'blob', compression: 'DEFLATE', types: { point: layerId + '_points', polygon: layerId + '_polygons', polyline: layerId + '_lines' } });
+            } catch (e) { alert('שגיאה ביצירת ה-Shapefile'); return; }
+
+            const finalZip = await JSZipLib.loadAsync(shpZipBlob);
+            const dbfNames = Object.keys(finalZip.files).filter(n => n.toLowerCase().endsWith('.dbf'));
+            if (!dbfNames.length) { alert('אין גיאומטריה נתמכת ב-Shapefile עבור השכבה הזו'); return; }
+            dbfNames.forEach(n => finalZip.file(n.slice(0, -4) + '.cpg', 'ANSI 1255'));
+            const finalBlob = await finalZip.generateAsync({ type: 'blob' });
+
+            const url = URL.createObjectURL(finalBlob);
+            const a = document.createElement('a'); a.href = url; a.download = layerId + '_shapefile.zip';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
         const HEBREW_FIELD_NAMES = {
             'id': 'מזהה', 'name': 'שם', 'type': 'סוג', 'status': 'סטטוס',
             'area': 'שטח', 'address': 'כתובת', 'street': 'רחוב',
@@ -21852,38 +21980,63 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
                                         <span className="sub-label">תצ"א רבעונית</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="ייצוא תכניות מסוננות ל-CSV או GeoJSON" onClick={() => {
+                                    <button className="toolbar-dropdown-item" data-tip="ייצוא שכבה פעילה ל-GeoJSON, CSV או Shapefile (ל-QGIS)" onClick={async () => {
                                         setActiveDropdown(null);
                                         const gd = geoDataRef.current;
-                                        if (!gd.plans) return;
-                                        const adminLayers = LAYER_CONFIG.admin.layers;
-                                        const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
-                                        const allAdminOn = adminLayers.every(l => layers[l.id]);
-                                        const exported = gd.plans.features.filter(f => {
-                                            const p = f.properties;
-                                            if (!allAdminOn && !selectedMinahaks.includes(p.minahak || '')) return false;
-                                            const s = normalizeStatus((p.status_mavat || '').trim());
-                                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
-                                            if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
-                                            if (filters.minUnits && (parseFloat(p.units_add) || 0) < filters.minUnits) return false;
-                                            if (filters.maxUnits && (parseFloat(p.units_add) || 0) > filters.maxUnits) return false;
-                                            if (filters.planTypes.length > 0 && !filters.planTypes.includes(normalizePlanType(p.plan_type || ''))) return false;
-                                            if (filters.freeText) {
-                                                const q = filters.freeText.toLowerCase();
-                                                const searchable = [p.plan_name, p.plan_name_he, p.plan_summary, p.architect, p.developer].join(' ').toLowerCase();
-                                                if (!searchable.includes(q)) return false;
-                                            }
-                                            return true;
-                                        });
-                                        const format = window.prompt('בחר פורמט:\n1 = GeoJSON\n2 = CSV\n\nהקלד 1 או 2:', '2');
+                                        const onExportable = EXPORT_LAYERS.filter(l => layers[l.id] && gd[l.id] && gd[l.id].features && gd[l.id].features.length);
+                                        let chosen;
+                                        if (onExportable.length === 0) {
+                                            if (!gd.plans) return;
+                                            chosen = { id: 'plans', name: 'תב"ע' };
+                                        } else if (onExportable.length === 1) {
+                                            chosen = onExportable[0];
+                                        } else {
+                                            const list = onExportable.map((l, i) => (i + 1) + '. ' + l.name).join('\n');
+                                            const pick = window.prompt('כמה שכבות פעילות — איזו לייצא?\n' + list + '\n\nהקלד מספר:', '1');
+                                            const idx = parseInt(pick, 10) - 1;
+                                            if (!pick || isNaN(idx) || !onExportable[idx]) return;
+                                            chosen = onExportable[idx];
+                                        }
+                                        let exported;
+                                        if (chosen.id === 'plans') {
+                                            const adminLayers = LAYER_CONFIG.admin.layers;
+                                            const selectedMinahaks = adminLayers.filter(l => layers[l.id]).map(l => l.minahak);
+                                            const allAdminOn = adminLayers.every(l => layers[l.id]);
+                                            exported = gd.plans.features.filter(f => {
+                                                const p = f.properties;
+                                                if (!allAdminOn && !selectedMinahaks.includes(p.minahak || '')) return false;
+                                                const s = normalizeStatus((p.status_mavat || '').trim());
+                                                if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                                                if (['תשתיות','מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return false;
+                                                if (filters.minUnits && (parseFloat(p.units_add) || 0) < filters.minUnits) return false;
+                                                if (filters.maxUnits && (parseFloat(p.units_add) || 0) > filters.maxUnits) return false;
+                                                if (filters.planTypes.length > 0 && !filters.planTypes.includes(normalizePlanType(p.plan_type || ''))) return false;
+                                                if (filters.freeText) {
+                                                    const q = filters.freeText.toLowerCase();
+                                                    const searchable = [p.plan_name, p.plan_name_he, p.plan_summary, p.architect, p.developer].join(' ').toLowerCase();
+                                                    if (!searchable.includes(q)) return false;
+                                                }
+                                                return true;
+                                            });
+                                        } else {
+                                            exported = gd[chosen.id].features;
+                                        }
+                                        if (!exported.length) { alert('אין נתונים לייצוא בשכבה שנבחרה'); return; }
+                                        const format = window.prompt('ייצוא "' + chosen.name + '" — בחר פורמט:\n1 = GeoJSON\n2 = CSV\n3 = Shapefile ל-QGIS (zip)\n\nהקלד 1, 2 או 3:', '2');
                                         if (!format) return;
+                                        if (format === '3') {
+                                            await exportLayerAsShapefile(chosen.id, exported);
+                                            return;
+                                        }
                                         let blob, filename;
                                         if (format === '1') {
                                             const geojson = { type: 'FeatureCollection', features: exported };
                                             blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
-                                            filename = 'plans_export.geojson';
+                                            filename = chosen.id + '_export.geojson';
                                         } else {
-                                            const cols = ['plan_name', 'plan_name_he', 'plan_summary', 'status_mavat', 'units_add', 'units_in', 'minahak', 'sub_neighborhood', 'plan_type', 'stage', 'mavat_date', 'architect', 'developer'];
+                                            const cols = chosen.id === 'plans'
+                                                ? ['plan_name', 'plan_name_he', 'plan_summary', 'status_mavat', 'units_add', 'units_in', 'minahak', 'sub_neighborhood', 'plan_type', 'stage', 'mavat_date', 'architect', 'developer']
+                                                : Object.keys(exported[0].properties || {});
                                             const header = cols.join(',');
                                             const rows = exported.map(f => {
                                                 const p = f.properties;
@@ -21891,7 +22044,7 @@
                                             });
                                             const bom = '\uFEFF';
                                             blob = new Blob([bom + header + '\n' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
-                                            filename = 'plans_export.csv';
+                                            filename = chosen.id + '_export.csv';
                                         }
                                         const url = URL.createObjectURL(blob);
                                         const a = document.createElement('a'); a.href = url; a.download = filename;
