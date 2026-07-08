@@ -1,0 +1,82 @@
+[
+  {
+    "binui_no": "457ב",
+    "parent_taba": "3045",
+    "migrash": "א",
+    "name": "מתחם W - ציבורי",
+    "area": "מקור חיים",
+    "address": "מקור חיים",
+    "teur_makom": "מתחם הכלוא בין פארק המסילה, רח' צרת, רח' מקור חיים ורח' הפרסה",
+    "status": "נפתח תיק למתכנן",
+    "status_date": "2023-12-13",
+    "land_sqm": 9349,
+    "program": [
+      { "use": "בית ספר", "count": 48, "unit": "כיתות", "sqm": null }
+    ],
+    "submitter": "מנח\"י - עיריית ירושלים",
+    "architect": "יואל דבריינסקי",
+    "serial_no": "113621",
+    "tikmap": "1650/2017",
+    "gush_helka": ["30130/100", "30130/101", "30130/115", "30131/3", "30141/39", "30141/40", "30141/102"],
+    "documents": [
+      { "descr": "תוכנית בינוי", "date": "2024-01-14", "url": "https://jerarchivews.jerusalem.muni.il/api/items/BD36C88E-60ED-44BC-98E3-140DBC0936E3" },
+      { "descr": "תוכנית בינוי", "date": "2023-12-18", "url": "https://jerarchivews.jerusalem.muni.il/api/items/DBF1BDC2-0BBE-45BC-9572-B0113AB6CC0E" }
+    ],
+    "source_doc": "תיק תב\"ע YK 26400001 + מפה להיתר בניה 457ב",
+    "linkage": "confirmed: spatial overlap of parcels with shavaz_kayam fid 4220 (תב\"ע 3045 מגרש א)"
+  },
+  {
+    "binui_no": "410ב",
+    "parent_taba": null,
+    "migrash": null,
+    "name": "שלוחת מתנ\"ס ומעון יום, בית כנסת \"באורך\", עמותת \"צעד קדימה\"",
+    "area": "מקור חיים",
+    "address": "מקור חיים 21 (רח' גובל: יעקב בן דב)",
+    "teur_makom": null,
+    "status": "נפתח תיק למתכנן",
+    "status_date": "2022-09-14",
+    "land_sqm": 2986,
+    "program": [
+      { "use": "מעון יום", "count": 3, "unit": "כיתות", "sqm": null },
+      { "use": "בית כנסת", "count": 1, "unit": "מבנה", "sqm": null },
+      { "use": "מתנ\"ס / קהילה", "count": null, "unit": null, "sqm": null }
+    ],
+    "submitter": null,
+    "architect": null,
+    "serial_no": null,
+    "tikmap": null,
+    "gush_helka": ["30141/215"],
+    "parcel_canceled": true,
+    "location": { "lat": 31.7560, "lng": 35.2126, "precision": "approx", "source": "govmap - interpolated from neighbor parcels 30141/214,216 (חלקה 215 מבוטלת, not indexed)" },
+    "documents": [
+      { "descr": "תוכנית בינוי", "date": "2022-09-06", "url": "https://jerarchivews.jerusalem.muni.il/api/items/897310ED-8F9E-44CE-90FD-D2999770E074" },
+      { "descr": "תוכנית בינוי", "date": "2022-03-16", "url": "https://jerarchivews.jerusalem.muni.il/api/items/10F484E3-D8EF-4DAD-95EC-B700D0A9963E" }
+    ],
+    "source_doc": "תיק תב\"ע YK 26400001",
+    "linkage": "UNRESOLVED: authoritative parcel גוש 30141 חלקה 215 (315 מ\"ר) is מבוטלת (helkaMevutelet), does NOT overlap any shavaz_kayam מגרש, and is absent from parcels_gonenim/govmap. The earlier מגרש-ד mapping (by area-match 2986≈2977) was WRONG. Placed by approx govmap marker."
+  },
+  {
+    "binui_no": "484ב",
+    "parent_taba": null,
+    "migrash": null,
+    "name": "אולם ספורט",
+    "area": "מקור חיים",
+    "address": "יעקב בן דב 14",
+    "teur_makom": null,
+    "status": "נגנזה",
+    "status_date": "2025-02-27",
+    "land_sqm": null,
+    "program": [
+      { "use": "אולם ספורט", "count": null, "unit": null, "sqm": null }
+    ],
+    "submitter": null,
+    "architect": null,
+    "serial_no": null,
+    "tikmap": null,
+    "gush_helka": [],
+    "location": { "lat": 31.7543, "lng": 35.2153, "precision": "street", "source": "govmap - street-level יעקב בן דב (מס' 14 not indexed)" },
+    "documents": [],
+    "source_doc": "תיק תב\"ע YK 26400001",
+    "linkage": "UNRESOLVED: נגנזה. Address-only (יעקב בן דב 14); no parcels returned by the tik system."
+  }
+]
