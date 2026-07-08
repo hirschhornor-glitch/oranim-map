@@ -15372,6 +15372,111 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.201404,
+      31.763369
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 455,
+    "qc_id": 455,
+    "tik": "2013/0081.01",
+    "address": "דוד שמעוני 35",
+    "neighborho": "גבעת הורדים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.217577,
+      31.760124
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 456,
+    "qc_id": 456,
+    "tik": "2013/0179.01",
+    "address": "נפתלי 23",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2199716,
+      31.757785
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 457,
+    "qc_id": 457,
+    "tik": "2014/0132.00",
+    "address": "גדליהו בן אחיקם 3",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
   }
  ]
 }

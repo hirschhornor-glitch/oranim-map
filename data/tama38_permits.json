@@ -14337,5 +14337,53 @@
   "scraped_at": null,
   "permit_count": 1,
   "error": ""
+ },
+ "455": {
+  "tik": "2013/0081.01",
+  "address": "דוד שמעוני 35",
+  "permits": [
+   {
+    "file_number": "2013/0081.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "15/12/2014",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תכנית שינויים במסגרת תמ\"א 38 לקומה נוספת ויח\"ד חדשה"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "456": {
+  "tik": "2013/0179.01",
+  "address": "נפתלי 23",
+  "permits": [
+   {
+    "file_number": "2013/0179.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "01/06/2020",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוכנית שינויים."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "457": {
+  "tik": "2014/0132.00",
+  "address": "גדליהו בן אחיקם 3",
+  "permits": [
+   {
+    "file_number": "2014/0132.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "16/11/2015",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "בניית תוספות בנייה בהתאם לתמ\"א 38 לצורך חיזוק המבנה מפני רעידות אדמה."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
  }
 }
