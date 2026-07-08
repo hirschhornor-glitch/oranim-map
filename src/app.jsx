@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-06-binui-plans3';
+        const APP_VERSION = '2026-07-08-citywide-hide-tama48';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2652,6 +2652,12 @@
             '101-0055293',
             '101-0095612',
             '101-0571190',
+            // תכניות מטריה/מדיניות כלל-עירוניות (לא פרויקט שכונתי) — מסתירות היתרים גנריים
+            '101-0615880', // קווי בניין למרפסות ומחסנים, מכח תכנית 10038
+            '101-0965152', // עידכון תכנית 10038 לחיזוק מבנים בפני רעידות אדמה בירושלים
+            '101-0853093', // תקן חניה ירושלים - תכנית 5166 ג'
+            '101-1207158', // קביעת הוראות בינוי לגביי עוגנים והריסות, ירושלים
+            '101-1454198', // קביעת הוראות בינוי להשלמת קומה, ירושלים
         ]);
 
         // Minahak -> sub-neighborhoods mapping (for tama38 filtering)
