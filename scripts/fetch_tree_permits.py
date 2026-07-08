@@ -3,44 +3,67 @@
 fetch_tree_permits.py — Tree-cutting permits (אישורי כריתה) open for objection,
 for the Oranim project area.
 
-Source: Meirim open API (https://api.meirim.org/api), which aggregates the
-official פקיד היערות / gov.il regional XLS feeds + the Jerusalem municipality
-trees-conservation page and geocodes each permit to a WGS84 polygon.
-See memory: trees come from gov.il (felling before/after XLS, regional office
-"ירושלים") + jerusalem.muni.il. Meirim is the convenient pre-geocoded layer;
-the gov.il XLS is the documented fallback.
+Source (2026-07-08 onward): the official פקיד היערות / משרד החקלאות **יעל"ה**
+public portal — https://yeela-trees.moag.gov.il/FoPublic/FoLicence — via its
+anonymous grid API:
+
+    POST /api/Fo/FOServiceRequest/getFOGridPublicityLicenses
+
+This REPLACES the previous Meirim source, whose Jerusalem feed silently froze on
+2026-05-31 (all its data moved to יעל"ה). The יעל"ה endpoint is public — no login,
+no cookies, no reCAPTCHA on this endpoint (the site's reCAPTCHA is only on the
+user-exists check) — and returns fresh data with a real objection deadline
+(appealLastDate) per license. See memory project_tree_cutting_permits_layer.
 
 What it does:
-  1. Pages through  GET /api/tree/?PLACE=ירושלים  (≈2000 permits, 20/page).
-  2. Keeps permits whose last_date_to_objection is still open (>= today − GRACE).
-  3. Clips to the project area (centroid inside data/district_oranim.geojson).
-  4. Writes data/tree_permits.json — keyed dict, same shape conventions as
-     objections_permits.json, dates as dd/mm/yyyy so the app's existing
-     objectionsDaysLeft() parser works unchanged.
+  1. Pages the grid filtered to licenseStatusId=3 ("מושהה ופתוח להגשת השגה" =
+     suspended & open for objection) — the only status where an objection can be
+     filed. ~hundreds nationwide, grouped by requestId into distinct licenses.
+  2. Keeps licenses whose appealLastDate is still open (>= today − GRACE).
+  3. Geocodes each by גוש/חלקה → parcel_centroids.json, else street+house →
+     buildings.geojson, else גוש centroid. The parcel/building indexes only cover
+     the Oranim bbox, so a license outside the area simply fails to geocode and is
+     dropped — the geocode doubles as the spatial filter. A final centroid-in-
+     district_oranim.geojson check clips precisely.
+  4. Writes data/tree_permits.json — same schema the app already consumes
+     (keyed dict, dates dd/mm/yyyy, nested trees {action:{species:n}}), so app.jsx
+     needs no data-shape change.
 
-Re-run periodically (the objection window is ~14 days; new permits appear
-between runs only by re-scraping). Idempotent — overwrites the json.
+Each grid row is ONE tree species of a license; rows sharing a requestId are one
+license (aggregated here). Dependency: shapely (urllib is stdlib).
+Re-run periodically (objection window ~14–21 days). Idempotent — overwrites json.
 """
 import json, sys, io, time, datetime, urllib.parse, urllib.request, os, re
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-API = "https://api.meirim.org/api/tree/"
-PLACE = "ירושלים"
-GRACE_DAYS = 0           # only permits whose objection window is still open (deadline >= today)
-STALE_DAYS = 21           # alert if Meirim's newest permit is older than this — its Jerusalem
-                          # feed silently dried up on 2026-05-31 (יעל"ה migration) and the empty
-                          # report went unnoticed for ~5 weeks. Fail loud instead of showing 0.
-MAX_OBJECTION_DAYS = 120  # drop records whose deadline is implausibly far from the issue date —
-                          # Meirim's synthetic muni records ("meirim-jer-…") carry a bogus
-                          # deadline = start + 3 years, which keeps a 2024 permit "open" for years.
-                          # A real objection window is ~14 days.
+BASE = "https://yeela-trees.moag.gov.il"
+GRID = BASE + "/api/Fo/FOServiceRequest/getFOGridPublicityLicenses"
+OPEN_STATUS_ID = 3        # "מושהה ופתוח להגשת השגה" — the only objection-open status
+JERUSALEM_CITY_ID = 3000  # the Oranim project area is within Jerusalem municipality. Scope the query
+                          # to Jerusalem so a same-named street in another city (יד מרדכי, שדה יצחק,
+                          # אברבנאל all exist elsewhere) can't be geocoded into our building index.
+GRACE_DAYS = 0            # keep only licenses whose objection window is still open (deadline >= today)
+STALE_DAYS = 30           # source-health guard: open permits are inherently fresh (short objection
+                          # window), so if יעל"ה freezes the open set drains within ~a month. Fail loud
+                          # if zero open permits OR the newest approved one is older than this.
+PAGE_SIZE = 100           # server caps pageSize at 100
+
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+UA = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Origin": BASE,
+    "Referer": BASE + "/FoPublic/FoLicence",
+}
 
 
 def _find_data_dir():
-    # Works both locally (script in C:\ORANIM, data under oranim-app/data) and
-    # in CI (repo root IS the app, script copied to scripts/, data at ../data).
+    # Works both locally (script in C:\ORANIM, data under oranim-app/data) and in
+    # CI (repo root IS the app, script copied to scripts/, data at ../data).
     candidates = [
         os.path.join(HERE, "oranim-app", "data"),  # local: root ORANIM dir
         os.path.join(HERE, "data"),                # script sitting at repo root
@@ -54,62 +77,86 @@ def _find_data_dir():
 
 DATA_DIR = _find_data_dir()
 DISTRICT = os.path.join(DATA_DIR, "district_oranim.geojson")
+PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
+BUILDINGS = os.path.join(DATA_DIR, "buildings.geojson")
 OUT = os.path.join(DATA_DIR, "tree_permits.json")
 
-UA = {"User-Agent": "Mozilla/5.0 (oranim-tree-permits-fetch)"}
 
-
-def fetch_page(page, attempts=4):
-    # Retry EVERY page (incl. page 1) — Meirim intermittently sends a truncated /
-    # corrupted body (http.client.IncompleteRead) or times out. Previously only
-    # pages 2+ were retried, so a transient hiccup on page 1 crashed the whole
-    # run (CI failure 2026-07-06). Returns None if all attempts fail (caller
-    # decides whether that page is fatal).
-    qs = urllib.parse.urlencode({"PLACE": PLACE, "page": page})
+# ---------------------------------------------------------------- API paging ----
+def fetch_grid_page(page, attempts=4):
+    # Retry every page — transient truncation/timeout shouldn't crash the run.
+    # Returns the parsed json, or None if all attempts fail.
+    body = {
+        "orderDetails": {"orderFieldName": "requestId", "orderType": 1},
+        "pageDetails": {"pageNumber": page, "pageSize": PAGE_SIZE},
+        # licenseStatusId narrows to objection-open licenses; cityId to Jerusalem.
+        # Both filters are applied server-side. The gush/helka+address geocode then
+        # clips within Jerusalem to the Oranim district.
+        "parameters": {"zoneId": None, "cityId": JERUSALEM_CITY_ID, "appealLastDate": None,
+                       "licenseId": None, "licenseStatusId": OPEN_STATUS_ID},
+    }
     last = None
     for i in range(attempts):
         try:
-            req = urllib.request.Request(API + "?" + qs, headers=UA)
+            req = urllib.request.Request(GRID, data=json.dumps(body).encode("utf-8"),
+                                         headers=UA, method="POST")
             with urllib.request.urlopen(req, timeout=60) as r:
                 return json.load(r)
         except Exception as e:
             last = e
-            print(f"  page {page} retry {i + 1}/{attempts}: {e}")
+            print(f"  grid page {page} retry {i + 1}/{attempts}: {e}")
             time.sleep(2 * (i + 1))
-    print(f"  ⚠️ page {page} FAILED after {attempts} attempts: {last}")
+    print(f"  ⚠️ grid page {page} FAILED after {attempts} attempts: {last}")
     return None
 
 
-def fetch_all():
-    # Page 1 is fatal if unfetchable (it carries the pagination). A later page
-    # that stays broken across all retries (a corrupted Meirim response, seen
-    # 2026-07-06) is SKIPPED with a loud warning rather than failing the whole
-    # daily run — the ~14-day objection window + daily cadence means the next
-    # run recovers anything missed.
-    first = fetch_page(1)
+def fetch_all_open():
+    # Jerusalem open-for-objection licenses (the actual data we render).
+    first = fetch_grid_page(1)
     if first is None:
-        raise SystemExit("could not fetch page 1 (pagination) — Meirim API unavailable")
+        raise SystemExit("could not fetch יעל\"ה grid page 1 — API unavailable")
     pag = first.get("pagination", {})
-    pages = pag.get("pageCount", 1)
-    rows = list(first["data"])
-    print(f"rowCount={pag.get('rowCount')} pages={pages}")
-    skipped = []
+    pages = pag.get("totalPages", 1)
+    total = pag.get("totalCount", 0)
+    rows = list(first.get("result", []))
+    print(f"open-for-objection licenses in Jerusalem: totalCount={total} pages={pages}")
     for p in range(2, pages + 1):
-        page = fetch_page(p)
+        page = fetch_grid_page(p)
         if page is None:
-            skipped.append(p)
             continue
-        rows.extend(page["data"])
-        if p % 20 == 0:
-            print(f"  ...fetched page {p}/{pages}")
+        rows.extend(page.get("result", []))
         time.sleep(0.15)
-    if skipped:
-        print(f"  ⚠️ WARNING: skipped {len(skipped)} unreadable pages {skipped} — data may miss some permits")
-    print(f"total rows fetched: {len(rows)} (of ~{pag.get('rowCount')})")
-    return rows
+    print(f"total species-rows fetched: {len(rows)}")
+    return rows, total
 
 
-# ---- geometry helpers (no shapely dependency for PIP; shapely for centroid) ----
+def probe_source_health():
+    # Nationwide freshness probe (independent of Jerusalem, which may legitimately
+    # have 0 open some weeks). Returns (nationwide_open_total, newest_approved_iso).
+    # Used only to detect a frozen/broken source — NOT to gate the Jerusalem layer.
+    body = {
+        "orderDetails": {"orderFieldName": "requestId", "orderType": 1},
+        "pageDetails": {"pageNumber": 1, "pageSize": PAGE_SIZE},
+        "parameters": {"zoneId": None, "cityId": None, "appealLastDate": None,
+                       "licenseId": None, "licenseStatusId": OPEN_STATUS_ID},
+    }
+    try:
+        req = urllib.request.Request(GRID, data=json.dumps(body).encode("utf-8"), headers=UA, method="POST")
+        with urllib.request.urlopen(req, timeout=60) as r:
+            j = json.load(r)
+    except Exception as e:
+        print(f"  ⚠️ source-health probe failed: {e}")
+        return None, ""
+    total = j.get("pagination", {}).get("totalCount", 0)
+    newest = ""
+    for r in j.get("result", []):
+        ad = iso_date(r.get("approvedDate"))
+        if ad and ad > newest:
+            newest = ad
+    return total, newest
+
+
+# ------------------------------------------------------------- geometry / geo ---
 from shapely.geometry import shape, Point
 
 
@@ -123,39 +170,16 @@ def load_district_polygon():
     return poly
 
 
-def iso_to_ddmmyyyy(s):
-    if not s:
-        return ""
-    d = str(s)[:10]
-    try:
-        y, m, dd = d.split("-")
-        return f"{dd}/{m}/{y}"
-    except Exception:
-        return ""
-
-
-def iso_date(s):
-    return str(s)[:10] if s else ""
-
-
-def fix_reversed_digits(s):
-    # Meirim's free-text fields (e.g. person_request_name) are extracted from a
-    # visually-ordered RTL source, so embedded house numbers come out reversed
-    # ("עין צורים 18" → "עין צורים 81"). The parsed `street` field is fine, but
-    # the requester string isn't. Reverse standalone runs of 2–3 digits (house
-    # numbers); leave 1-digit and 4+-digit runs (years/large ids) untouched.
-    if not s:
-        return s
-    return re.sub(r"(?<!\d)(\d{2,3})(?!\d)", lambda m: m.group(1)[::-1], str(s))
-
-
-PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
-BUILDINGS = os.path.join(DATA_DIR, "buildings.geojson")
+def load_parcel_index():
+    if not os.path.isfile(PARCELS):
+        print("note: parcel_centroids.json not found — skipping parcel-based geocoding")
+        return None
+    idx = json.load(open(PARCELS, encoding="utf-8"))
+    print(f"parcel index: {len(idx.get('gush_helka', {}))} parcels, {len(idx.get('gush', {}))} gushim")
+    return idx
 
 
 def load_buildings_index():
-    # street + house number → building point. Lets us place a permit by address
-    # ("אמציה 3א" → building "אמציה 3") when the cadastral helka lookup misses.
     if not os.path.isfile(BUILDINGS):
         return None
     gj = json.load(open(BUILDINGS, encoding="utf-8"))
@@ -172,60 +196,27 @@ def load_buildings_index():
     return idx
 
 
-def parse_street_house(r):
-    # Return (street_name, house_digits) from Meirim's street/street_number.
-    # Meirim often jams the number into `street` with a Hebrew sub-lot letter
-    # ("אמציה 3א"); strip the letter and take the digits ("אמציה", "3").
-    street = (r.get("street") or "").strip()
-    num = r.get("street_number")
-    if num:
-        h = re.sub(r"\D", "", str(num))
-        return (street, h) if h and h != "0" else (None, None)
-    m = re.search(r"^(.*?)\s+(\d+)\s*[א-ת]?\.?\s*$", street)
+def parse_street_house(street):
+    # "גולדה מאיר  5" → ("גולדה מאיר", "5"); strip a trailing Hebrew sub-lot letter.
+    m = re.search(r"^(.*?)\s+(\d+)\s*[א-ת]?\.?\s*$", (street or "").strip())
     if not m:
-        return (None, None)
+        return None, None
     name, h = m.group(1).strip(), m.group(2)
     return (name, h) if h and h != "0" else (None, None)
 
 
-def load_parcel_index():
-    # Built once by build_parcel_centroids.py. Optional — if absent, we just
-    # fall back to whatever location Meirim provides.
-    if not os.path.isfile(PARCELS):
-        print("note: parcel_centroids.json not found — skipping parcel-based geocoding")
-        return None
-    idx = json.load(open(PARCELS, encoding="utf-8"))
-    print(f"parcel index: {len(idx.get('gush_helka', {}))} parcels, {len(idx.get('gush', {}))} gushim")
-    return idx
-
-
-def parse_gush_helka(r):
-    # gush/helka fields from Meirim are messy: helka may sit in the gush field
-    # ("30285, 223" = gush 30285 / helka 223), be "0"/empty, or a comma list.
-    gtoks = re.findall(r"\d+", str(r.get("gush") or ""))
-    htoks = [t for t in re.findall(r"\d+", str(r.get("helka") or "")) if t != "0"]
-    gush = gtoks[0] if gtoks else None
-    helkot = htoks if htoks else (gtoks[1:] if len(gtoks) >= 2 else [])
-    return gush, helkot
-
-
-def resolve_location(r, idx, buildings, meirim_centroid, has_footprint):
-    # Returns (lnglat[lng,lat], loc_source) — best available position.
-    #   meirim_polygon   : Meirim gave a real footprint (most precise)
-    #   parcel_helka     : matched the exact חלקה centroid from the cadastre
-    #   address_building : matched street + house number to a building point
-    #   parcel_gush      : matched the גוש centroid (block-level, ~approximate)
-    #   meirim_point     : Meirim's bare point (may be a shared default → flagged later)
-    if has_footprint and meirim_centroid is not None:
-        return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_polygon"
-    gush, helkot = parse_gush_helka(r)
+def resolve_location(gush, helkot, street, idx, buildings):
+    # Returns (lnglat[lng,lat], loc_source) — best available position, or (None, None).
+    #   parcel_helka     : exact חלקה centroid from the cadastre (most precise)
+    #   address_building : street + house number → building point
+    #   parcel_gush      : גוש centroid (block-level, ~approximate → "מרכז גוש" badge)
     if idx and gush:
         for h in helkot:
             hit = idx["gush_helka"].get(f"{gush}/{h}")
             if hit:
                 return hit, "parcel_helka"
     if buildings:
-        name, house = parse_street_house(r)
+        name, house = parse_street_house(street)
         if name and house:
             bhit = buildings.get(name + "|" + house)
             if bhit:
@@ -234,105 +225,130 @@ def resolve_location(r, idx, buildings, meirim_centroid, has_footprint):
         ghit = idx["gush"].get(gush)
         if ghit:
             return ghit, "parcel_gush"
-    if meirim_centroid is not None:
-        return [round(meirim_centroid.x, 7), round(meirim_centroid.y, 7)], "meirim_point"
     return None, None
+
+
+# ---------------------------------------------------------------- formatting ----
+def iso_to_ddmmyyyy(s):
+    if not s:
+        return ""
+    d = str(s)[:10]
+    try:
+        y, m, dd = d.split("-")
+        return f"{dd}/{m}/{y}"
+    except Exception:
+        return ""
+
+
+def iso_date(s):
+    return str(s)[:10] if s else ""
+
+
+# יעל"ה removal-type counts → the action buckets the app's popup understands.
+ACTION_FOR = [("unproot", "כריתה"), ("copying", "העתקה"), ("conservation", "שימור")]
+
+
+def build_license(rows):
+    # rows = all species-rows sharing one requestId. Aggregate into one license.
+    r0 = rows[0]
+    ex = (r0.get("expandRows") or [{}])[0]
+
+    # nested trees {action:{species:count}} — sum counts per species across rows.
+    trees = {}
+    total = 0
+    for r in rows:
+        sp = (r.get("treeName") or "").strip() or "עץ"
+        for fld, action in ACTION_FOR:
+            n = int(r.get(fld) or 0)
+            if n <= 0:
+                continue
+            trees.setdefault(action, {})
+            trees[action][sp] = trees[action].get(sp, 0) + n
+            total += n
+
+    # short action label for the popup's "פעולה" row.
+    present = [a for _, a in ACTION_FOR if a in trees]
+    removal = [a for a in present if a in ("כריתה", "העתקה")]
+    action = " ו".join(removal) if removal else (present[0] if present else "")
+
+    # collect all גוש/חלקה across the license's rows for a robust geocode.
+    gushes, helkot = [], []
+    for r in rows:
+        for e in (r.get("expandRows") or []):
+            gushes += re.findall(r"\d+", str(e.get("block") or ""))
+            helkot += [t for t in re.findall(r"\d+", str(e.get("parcel") or "")) if t != "0"]
+    gush = gushes[0] if gushes else None
+
+    street = (ex.get("street") or "").strip()
+    lic = r0.get("licenseId")
+    return {
+        "id": r0.get("requestId"),
+        "permit_number": str(lic) if lic else "",
+        "address": street or (r0.get("cityName") or ""),
+        "street": street,
+        "place": r0.get("cityName") or "",
+        "reason": ex.get("requestReason") or ex.get("shortHebDesc") or "",
+        "reason_detailed": ex.get("shortHebDesc") or "",
+        "requester": (ex.get("customerName") or "").strip(),
+        "approver": (ex.get("approvedBy") or "").strip(),
+        "approver_title": "",
+        "regional_office": r0.get("zoneName") or "",
+        "action": action,
+        "total_trees": total,
+        "trees": trees,
+        "gush": ex.get("block") or "",
+        "helka": ex.get("parcel") or "",
+        "issue_date": iso_to_ddmmyyyy(r0.get("approvedDate") or ex.get("dateOfIssue") or ex.get("dateOLicensePublic")),
+        "start_date": "",
+        "deadline": iso_to_ddmmyyyy(r0.get("appealLastDate")),
+        # geometry filled below
+        "lnglat": None, "loc_source": None, "geo_approx": False, "geom": None,
+        "url": BASE + "/FoPublic/FoLicence",
+        # keep raw parts for geocoding, popped before write
+        "_gush": gush, "_helkot": helkot,
+    }
 
 
 def main():
     today = datetime.date.today()
     cutoff = (today - datetime.timedelta(days=GRACE_DAYS)).isoformat()
-    rows = fetch_all()
+    rows, total_open = fetch_all_open()
 
     district = load_district_polygon()
     idx = load_parcel_index()
     buildings = load_buildings_index()
+
+    # group species-rows into licenses
+    by_id = {}
+    for r in rows:
+        by_id.setdefault(r.get("requestId"), []).append(r)
+
     out = {}
-    kept_total = skipped_deadline = skipped_outside = skipped_noloc = skipped_bogus = 0
+    kept = skipped_deadline = skipped_noloc = skipped_outside = 0
     src_counts = {}
 
-    for r in rows:
-        deadline_iso = iso_date(r.get("last_date_to_objection"))
+    for rid, grp in by_id.items():
+        r0 = grp[0]
+        deadline_iso = iso_date(r0.get("appealLastDate"))
         if not deadline_iso or deadline_iso < cutoff:
             skipped_deadline += 1
             continue
 
-        # Reject an implausibly long objection window (Meirim date bug — see above).
-        issue_iso = iso_date(r.get("permit_issue_date")) or iso_date(r.get("start_date"))
-        if issue_iso:
-            try:
-                span = (datetime.date.fromisoformat(deadline_iso) - datetime.date.fromisoformat(issue_iso)).days
-                if span > MAX_OBJECTION_DAYS:
-                    skipped_bogus += 1
-                    continue
-            except ValueError:
-                pass
-
-        # Best available Meirim geometry → centroid + footprint flag.
-        geom = r.get("geom")
-        meirim_centroid = None
-        has_footprint = False
-        if geom:
-            try:
-                g = shape(geom)
-                if not g.centroid.is_empty:
-                    meirim_centroid = g.centroid
-                    has_footprint = g.area > 0.0
-            except Exception:
-                pass
-
-        lnglat, loc_source = resolve_location(r, idx, buildings, meirim_centroid, has_footprint)
+        rec = build_license(grp)
+        lnglat, loc_source = resolve_location(rec.pop("_gush"), rec.pop("_helkot"), rec["street"], idx, buildings)
         if lnglat is None:
             skipped_noloc += 1
             continue
         if not district.contains(Point(lnglat[0], lnglat[1])):
             skipped_outside += 1
             continue
+        rec["lnglat"] = lnglat
+        rec["loc_source"] = loc_source
 
-        street = (r.get("street") or "").strip()
-        num = r.get("street_number")
-        address = (street + (" " + str(num) if num else "")).strip() or (r.get("place") or "")
-        key = str(r.get("id"))
-        out[key] = {
-            "id": r.get("id"),
-            "permit_number": r.get("permit_number") or "",
-            "address": address,
-            "street": street,
-            "place": r.get("place") or "",
-            "reason": r.get("reason_short") or "",
-            "reason_detailed": r.get("reason_detailed") or "",
-            "requester": fix_reversed_digits(r.get("person_request_name") or ""),
-            "approver": r.get("approver_name") or "",
-            "approver_title": r.get("approver_title") or "",
-            "regional_office": r.get("regional_office") or "",
-            "action": r.get("action") or "",
-            "total_trees": r.get("total_trees") or 0,
-            "trees": r.get("trees_per_permit") or {},
-            "gush": r.get("gush") or "",
-            "helka": r.get("helka") or "",
-            "issue_date": iso_to_ddmmyyyy(r.get("permit_issue_date")),
-            "start_date": iso_to_ddmmyyyy(r.get("start_date")),
-            "deadline": iso_to_ddmmyyyy(r.get("last_date_to_objection")),
-            "lnglat": lnglat,
-            "loc_source": loc_source,
-            "geo_approx": False,  # refined below
-            # Keep the real footprint only when Meirim supplied one.
-            "geom": geom if (loc_source == "meirim_polygon") else None,
-            "url": "https://meirim.org/tree/{}".format(r.get("id")),
-        }
-        kept_total += 1
+        key = rec["permit_number"] or str(rid)
+        out[key] = rec
+        kept += 1
         src_counts[loc_source] = src_counts.get(loc_source, 0) + 1
-
-    # A Meirim bare point shared by 2+ permits is the geocoder's default fallback
-    # (real parcels never collide to 7 decimals) → flag those as approximate.
-    # Parcel/footprint-resolved points are precise and never flagged.
-    from collections import Counter
-    coord_counts = Counter(tuple(v["lnglat"]) for v in out.values())
-    approx = 0
-    for v in out.values():
-        if v["loc_source"] == "meirim_point" and coord_counts[tuple(v["lnglat"])] > 1:
-            v["geo_approx"] = True
-            approx += 1
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
@@ -340,26 +356,30 @@ def main():
 
     print("--- summary ---")
     print(f"today={today}  grace={GRACE_DAYS}d  cutoff>={cutoff}")
-    print(f"kept (open for objection, in area): {kept_total}")
+    print(f"distinct Jerusalem open licenses: {len(by_id)}   kept (open & in Oranim area): {kept}")
     print(f"location sources: {src_counts}")
-    print(f"skipped: deadline={skipped_deadline}  bogus-window={skipped_bogus}  outside-area={skipped_outside}  no-location={skipped_noloc}")
-    print(f"geo_approx (unresolved shared default): {approx}")
+    print(f"skipped: deadline-passed={skipped_deadline}  no-location(out of area)={skipped_noloc}  outside-district={skipped_outside}")
     print(f"wrote {OUT}  ({os.path.getsize(OUT)} bytes)")
 
-    # Staleness guard — if the newest permit Meirim serves is older than
-    # STALE_DAYS, the source has likely stopped updating (as happened 2026-05-31).
-    # Exit non-zero AFTER writing so the workflow goes red and we notice, instead
-    # of silently emptying the layer for weeks.
-    issue_dates = [iso_date(r.get("permit_issue_date")) for r in rows if r.get("permit_issue_date")]
-    newest = max(issue_dates) if issue_dates else ""
-    if newest:
-        age = (today - datetime.date.fromisoformat(newest)).days
-        print(f"freshness: newest Meirim permit issued {newest} ({age}d ago)")
+    # ---- source-health guard (nationwide, NOT Jerusalem) -------------------
+    # Jerusalem may legitimately have 0 open permits some weeks — that's a valid
+    # empty layer, not a failure. What we must catch is יעל"ה migrating/freezing
+    # like Meirim did. Probe nationwide: if the whole country shows 0 open, or the
+    # newest approval anywhere is older than STALE_DAYS, the source has frozen —
+    # fail loud. Exit AFTER writing so the json is still committed.
+    nat_total, nat_newest = probe_source_health()
+    if nat_total == 0:
+        raise SystemExit(
+            "STALE/BROKEN SOURCE: יעל\"ה shows 0 open-for-objection licenses "
+            "nationwide — the public grid likely changed or went down. "
+            "See project_tree_cutting_permits_layer memory.")
+    if nat_newest:
+        age = (today - datetime.date.fromisoformat(nat_newest)).days
+        print(f"freshness (nationwide): {nat_total} open, newest approved {nat_newest} ({age}d ago)")
         if age > STALE_DAYS:
             raise SystemExit(
-                f"STALE SOURCE: newest Meirim permit is {age}d old (>{STALE_DAYS}). "
-                f"Meirim's Jerusalem feed likely stopped — the real data moved to יעל\"ה "
-                f"(yeela-trees.moag.gov.il). See project_tree_cutting_permits_layer memory.")
+                f"STALE SOURCE: newest open יעל\"ה license approved {age}d ago (>{STALE_DAYS}). "
+                f"The feed may have frozen — check yeela-trees.moag.gov.il.")
 
 
 if __name__ == "__main__":

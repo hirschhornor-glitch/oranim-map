@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: pip install shapely
 
-      - name: Fetch tree-cutting permits (Meirim API → data/tree_permits.json)
+      - name: Fetch tree-cutting permits (יעל"ה MOAG API → data/tree_permits.json)
         run: python scripts/fetch_tree_permits.py
 
       - name: Commit updated data

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-08-tama38-developers';
+        const APP_VERSION = '2026-07-08-tree-permits-yeela';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2864,7 +2864,7 @@
                 consolidation: false,    // תכניות איחוד וחלוקה
                 rental: false,           // פרוייקטים עם דירות להשכרה
                 permit_objections: false, // היתרים (הקלות) פתוחים להתנגדויות — סעיף 149
-                tree_permits: false,      // אישורי כריתת עצים פתוחים לערר (מקור: מעירים/פקיד היערות)
+                tree_permits: false,      // אישורי כריתת עצים פתוחים לערר (מקור: יעל"ה / פקיד היערות, משרד החקלאות)
                 excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
@@ -18628,13 +18628,11 @@
                     + (trees ? '<div style="margin-top:8px;font-size:12px;border-top:1px solid #234;padding-top:6px"><b style="color:#9ab">פירוט מינים:</b>' + trees + '</div>' : '')
                     + surveyHtml
                     + '<div style="margin-top:8px;font-size:12px;display:flex;flex-direction:column;gap:4px">'
-                    +   '<a href="' + esc(rec.url) + '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
-                    +   '🔗 פרטי האישור באתר מעירים ←</a>'
-                    // 7-digit license numbers are the official yeela (MOAG) format -
-                    // searchable on the public portal (paste the number shown).
-                    +   (/^\d{7}$/.test(String(rec.permit_number || ''))
-                          ? '<a href="https://yeela-trees.moag.gov.il/FoPublic/FoLicence" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">🔍 אימות ביעל״ה (רישיון ' + esc(rec.permit_number) + ') ←</a>'
-                          : '')
+                    // Source is now the official יעל"ה (MOAG) public portal. There is no
+                    // per-license deep link (Angular route only), so link to the public
+                    // search page and show the 7-digit license number to paste/verify.
+                    +   '<a href="' + esc(rec.url || 'https://yeela-trees.moag.gov.il/FoPublic/FoLicence') + '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
+                    +   '🔍 פרטי הרישיון ביעל״ה' + (/^\d{7}$/.test(String(rec.permit_number || '')) ? ' (רישיון ' + esc(rec.permit_number) + ')' : '') + ' ←</a>'
                     + '</div>'
                     + '</div>';
             }
