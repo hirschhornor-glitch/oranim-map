@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-08-tama38-149audit';
+        const APP_VERSION = '2026-07-08-tama38-developers';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2976,6 +2976,7 @@
             const [devRepMinahak, setDevRepMinahak] = useState('all');
             const [devRepQ, setDevRepQ] = useState('');
             const [devRepSort, setDevRepSort] = useState('plans'); // 'plans' | 'units'
+            const [devRepTama38, setDevRepTama38] = useState(false); // include TAMA 38 developers
             const [devRepExpanded, setDevRepExpanded] = useState(null);
             // הדגשת כל תכניות יזם על המפה: {name, plans, units} + שכבת Leaflet זמנית
             const [devMapSel, setDevMapSel] = useState(null);
@@ -4943,6 +4944,7 @@
                 window.__assetAllocations = {};
                 window.__binuiPlans = [];
                 window.__binuiByTabaMigrash = {};
+                window.__tama38Developers = {}; // by_tik: {developer, architect, units, minahak, is_residents}
                 // Permit/tree/meeting JSONs are loaded in stage 2 (after first paint) — they only feed
                 // popup-time globals and aren't needed for initial render.
                 var allEntries = entries;
@@ -4971,6 +4973,7 @@
                     ['__assetAllocations', 'data/asset_allocations.json'],
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
+                    ['__tama38Developers', 'data/tama38_developers.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5435,6 +5438,7 @@
                                     (window.__binuiByTabaMigrash[t] = window.__binuiByTabaMigrash[t] || {})[m] = b;
                                 });
                             }
+                            else if (key === '__tama38Developers') { window.__tama38Developers = (data && data.by_tik) ? data.by_tik : {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
@@ -13089,8 +13093,8 @@
                         ser: () => ({ f: eduRenewalFilter, mnk: eduRenewalMinahak }),
                         apply: p => { if (p.f) setEduRenewalFilter(p.f); if (p.mnk) setEduRenewalMinahak(p.mnk); } },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
-                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort }),
-                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); } },
+                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort, t38: devRepTama38 ? 1 : 0 }),
+                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); if (p.t38) setDevRepTama38(true); } },
                     { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
                         ser: () => ({ mp: masterPlanReport }) },
                     { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
@@ -29196,6 +29200,47 @@
                                 if (shared) d.shared++;
                             });
                         }
+
+                        // --- TAMA 38 developers (opt-in via toggle) ---
+                        // Reads the side-file tama38_developers.json (יזם = the 'מבקש/מגיש'
+                        // interested party from YK); units = added units (units_tose / parsed);
+                        // minahak = point-in-polygon precomputed; bucket from the permit status.
+                        // Kept behind a toggle so the SPV-heavy TAMA 38 names don't dilute the
+                        // תב"ע-based report by default.
+                        if (devRepTama38 && gd.tama38 && gd.tama38.features) {
+                            const devsByTik = window.__tama38Developers || {};
+                            const t38Bucket = (s) => (/הופק|הוצא היתר|אושר בוועד|אושר בועד/.test(s || '') ? 'ברישוי/היתר' : 'בתכנון');
+                            const seenTik = new Set();
+                            for (const f of gd.tama38.features) {
+                                const p = f.properties || {};
+                                const tik = p.tik;
+                                if (!tik || seenTik.has(tik)) continue;
+                                const info = devsByTik[tik];
+                                if (!info) continue;               // only enriched tiks
+                                seenTik.add(tik);
+                                const minahak = info.minahak || 'ללא שיוך';
+                                allMinahaks.add(minahak);
+                                if (devRepMinahak !== 'all' && minahak !== devRepMinahak) continue;
+                                const st = (info.status || p.status || '').trim();
+                                const bucket = t38Bucket(st);
+                                const units = num(info.units) || num(p.units_tose);
+                                let names = splitDevelopers(info.developer).map(canonOf).filter(Boolean);
+                                if (!names.length) names = [info.is_residents ? 'דיירים (ללא יזם)' : 'לא ידוע'];
+                                const priv = names.filter(n => !/עיריית|עירית|ועדה מקומית|הוועדה המקומית|רשות מקומית/.test(n));
+                                if (priv.length && priv.length < names.length) names = priv;
+                                const shared = names.length > 1;
+                                names.forEach(name => {
+                                    const d = devMap[name] || (devMap[name] = { name, plans: [], units: 0, buckets: {}, minahaks: {}, shared: 0 });
+                                    const c = f.geometry && f.geometry.coordinates ? (f.geometry.type === 'MultiPoint' ? f.geometry.coordinates[0] : f.geometry.coordinates) : null;
+                                    d.plans.push({ pn: 'tama:' + tik, summary: (p.address || tik), minahak, status: st, bucket, units, shared, tama38: true, tik, lnglat: c });
+                                    d.units += units;
+                                    d.buckets[bucket] = (d.buckets[bucket] || 0) + units;
+                                    d.minahaks[minahak] = (d.minahaks[minahak] || 0) + units;
+                                    if (shared) d.shared++;
+                                });
+                            }
+                        }
+
                         let rows = Object.values(devMap);
                         const q = devRepQ.trim();
                         // חיפוש לפי שם יזם או לפי תכנית (מספר / שם)
@@ -29345,6 +29390,10 @@
                                             <option value="plans">מיון: מס' תכניות</option>
                                             <option value="units">מיון: סה"כ יח"ד</option>
                                         </select>
+                                        <label style={{display:'flex',alignItems:'center',gap:5,color:'#e0e0e0',fontSize:12,cursor:'pointer',background:'#16162a',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px'}}>
+                                            <input type="checkbox" checked={devRepTama38} onChange={e => { setDevRepTama38(e.target.checked); setDevRepExpanded(null); }} style={{cursor:'pointer'}} />
+                                            כולל תמ"א 38
+                                        </label>
                                     </div>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0,zIndex:1}}>
@@ -29378,10 +29427,12 @@
                                                     </tr>
                                                     {devRepExpanded === r.name && r.plans.sort((a,b)=>b.units-a.units).map(pl => (
                                                         <tr key={pl.pn} style={{borderBottom:'1px solid #14142a',background:'#13131f',cursor:'pointer'}}
-                                                            onClick={e => { e.stopPropagation(); zoomToPlan(pl.pn); }}>
+                                                            onClick={e => { e.stopPropagation(); if (pl.tama38) { if (pl.lnglat && mapInstanceRef.current) { setDevelopersReport(false); mapInstanceRef.current.flyTo([pl.lnglat[1], pl.lnglat[0]], 17); } } else { zoomToPlan(pl.pn); } }}>
                                                             <td/>
                                                             <td style={{padding:'3px 4px 3px 4px',fontSize:11}}>
-                                                                <span style={{color:'#64b5f6',textDecoration:'underline'}}>{pl.pn}</span>
+                                                                {pl.tama38
+                                                                    ? <span style={{color:'#5dade2'}}>🏢 תמ"א 38 · <span style={{textDecoration:'underline'}}>{pl.tik}</span></span>
+                                                                    : <span style={{color:'#64b5f6',textDecoration:'underline'}}>{pl.pn}</span>}
                                                                 <span style={{color:'#bbb'}}> — {(pl.summary||'').slice(0,48)}{pl.shared?' ⊕':''}</span>
                                                             </td>
                                                             <td/>
