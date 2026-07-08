@@ -13217,5 +13217,1125 @@
   "scraped_at": null,
   "permit_count": 1,
   "error": ""
+ },
+ "385": {
+  "tik": "2017/0184.00",
+  "address": "רמבן 14",
+  "permits": [
+   {
+    "file_number": "2017/0184.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "14/08/2018",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "הריסת חלקי מבנה קיים תוך שימור חזיתות והקמת בניין בן 4 קומות מעל 2 קומות מחסנים וחניה עפ\"י תכנית 10038 ותמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "386": {
+  "tik": "2018/0752.00",
+  "address": "בן טבאי 1",
+  "permits": [
+   {
+    "file_number": "2018/0752.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "25/10/2020",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "בניית 35 יחידות דיור ע\"פ תמ\"א 38 + ממ\"דים, הרחבות ומרפסות ל64 יחידות קיימות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "387": {
+  "tik": "2018/0853.00",
+  "address": "כיכר מגנס 1",
+  "permits": [
+   {
+    "file_number": "2018/0853.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "23/11/2020",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה הכוללת ממ\"דים לדירות הקיימות וכן תוספת קומה וחצי. עפ\"י תמ\"א 38/1"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "388": {
+  "tik": "2019/0042.00",
+  "address": "י.ל. דיסקין 8",
+  "permits": [
+   {
+    "file_number": "2019/0042.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "24/01/2021",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "פירוק והריסה של מבנה קיים והקמת מבנה חדש עפ\"י תמ\"א 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "389": {
+  "tik": "2019/0501.00",
+  "address": "נתאי הארבלי 48",
+  "permits": [
+   {
+    "file_number": "2019/0501.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "16/04/2024",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת בניין קיים והקמת בניין בן 8 קומות מעל קומת מסחר ומחסנים וארבע קומות חניון"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "390": {
+  "tik": "2020/0270.01",
+  "address": "הנשיא 4",
+  "permits": [
+   {
+    "file_number": "2020/0270.01",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/12/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה בהתאם לתמ\"א 38 במבנה מגורים קיים"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "391": {
+  "tik": "2020/0270.02",
+  "address": "הנשיא 4",
+  "permits": [
+   {
+    "file_number": "2020/0270.02",
+    "status": "נפתח תיק רישוי",
+    "status_date": "24/05/2026",
+    "request_type": "תוכנית שינויים לתמ\"א 38",
+    "request_description": "תכנית שינויים לפרויקט תמא 38\\1 המשך להיתר מספר 2020.270.01"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "392": {
+  "tik": "2020/0333.00",
+  "address": "הפלמח 3",
+  "permits": [
+   {
+    "file_number": "2020/0333.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "21/09/2022",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת ממ\"דים וחיזוק מבנה לפי תמ\"א38,תוספת 2 קומות מעל המבנה בין 5 קומות מעל 0.00"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "393": {
+  "tik": "2020/0470.00",
+  "address": "דן 4",
+  "permits": [
+   {
+    "file_number": "2020/0470.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "20/07/2023",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובנייה מחדש לפי תמ\"א 38/2 תוך שימור חלקי מבנה וחזיתותיו"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "394": {
+  "tik": "2020/0578.00",
+  "address": "מקור חיים 15",
+  "permits": [
+   {
+    "file_number": "2020/0578.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "31/08/2022",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת שטחים עיקריים וממ\"דים+ תוספת 10 יח\"ד+ חיזוק וחידוש הבניין עפ\"י תמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "395": {
+  "tik": "2020/0748.00",
+  "address": "הנשיא 7",
+  "permits": [
+   {
+    "file_number": "2020/0748.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "22/08/2023",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה לבניין קיים ע\"פ הוראות תמ\"א 38 ותכנית 10038 לחיזוק הבניין מפני ר.אדמה"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "396": {
+  "tik": "2021/0311.00",
+  "address": "חרלפ 26",
+  "permits": [
+   {
+    "file_number": "2021/0311.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/12/2024",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובניית בניין חדש בן 5 קומות לפי תמ\"א 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "397": {
+  "tik": "2021/0049.00",
+  "address": "בן טבאי 4",
+  "permits": [
+   {
+    "file_number": "2021/0049.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "05/09/2023",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "בניית תוספת בניה בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין בפני רעידות אדמה."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "398": {
+  "tik": "2021/0507.00",
+  "address": "י. אלפסי 37",
+  "permits": [
+   {
+    "file_number": "2021/0507.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "19/09/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק והרחבת יח\"ד לפי תמ\"א 38 ותוספת קומה וחצי."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "399": {
+  "tik": "2021/0055.00",
+  "address": "נרקיס 31",
+  "permits": [
+   {
+    "file_number": "2021/0055.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "27/04/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "תמ\"א 38/2  הריסה ובניה תוך שימור חזיתות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "400": {
+  "tik": "2022/0127.00",
+  "address": "הרן 2",
+  "permits": [
+   {
+    "file_number": "2022/0127.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "10/03/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת קומה 3 ו-4 חלקית,מתוקף תמ\"א 38+ ממ\"ד ,מעלית, מדרגות חדשות, תוספת 3 יח\"ד."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "401": {
+  "tik": "2022/0221.00",
+  "address": "גד 12",
+  "permits": [
+   {
+    "file_number": "2022/0221.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "18/02/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק מבנה קיים והרחבות ,ותוספת קומה וחצי ע\"פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "402": {
+  "tik": "2022/0299.00",
+  "address": "בנימין זאב באכר 10",
+  "permits": [
+   {
+    "file_number": "2022/0299.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "31/03/2025",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה עפ\"י תמא 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "403": {
+  "tik": "2022/0448.00",
+  "address": "אמציה 3",
+  "permits": [
+   {
+    "file_number": "2022/0448.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/06/2026",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "תמא 38, הריסה ובנייה מחדש"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "404": {
+  "tik": "2022/0454.00",
+  "address": "צפורה 3",
+  "permits": [
+   {
+    "file_number": "2022/0454.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "12/09/2023",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק ותוספת במסגרת ת. 10038. תוספת 2 קומות. תוספת 8 יח\"ד חדשות (מתוכן 2 בקרקע)"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "405": {
+  "tik": "2022/0056.00",
+  "address": "דרך בית לחם 98",
+  "permits": [
+   {
+    "file_number": "2022/0056.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "23/01/2025",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "הרחבות בנייה ותוספת 2.5  קומות מעל בניין בן 5 קומות ע\"פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "406": {
+  "tik": "2022/0057.00",
+  "address": "בנימין מטודלה 10",
+  "permits": [
+   {
+    "file_number": "2022/0057.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "22/07/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה לבנין קיים ע\"פ הוראות תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "407": {
+  "tik": "2022/0583.00",
+  "address": "דן 1",
+  "permits": [
+   {
+    "file_number": "2022/0583.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "26/02/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "בקשה להריסה ובנייה מחדש במסגרת תמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "408": {
+  "tik": "2022/0063.00",
+  "address": "רמבן 39",
+  "permits": [
+   {
+    "file_number": "2022/0063.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "30/06/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת שטחים עיקריים וממדים + תוספת 3 יח\"ד + חיזוק וחידוש הבניין ע\"פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "409": {
+  "tik": "2023/0179.00",
+  "address": "נחום סוקולוב 3",
+  "permits": [
+   {
+    "file_number": "2023/0179.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "20/08/2023",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "הרחבת בנין קיים, חיזוקו עפ\"י תקן 413 ותוספת 2 קומות מגורים חדשות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "410": {
+  "tik": "2023/0196.00",
+  "address": "עזריאל הילדסהיימר  10",
+  "permits": [
+   {
+    "file_number": "2023/0196.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "27/06/2024",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה עפ\"י תמ\"א 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "411": {
+  "tik": "2023/0320.00",
+  "address": "דרך חברון 48",
+  "permits": [
+   {
+    "file_number": "2023/0320.00",
+    "status": "נדונה בועדת ערר",
+    "status_date": "09/12/2025",
+    "request_type": "חפירה ומילוי, תמ\"א 38 הריסה ובניה",
+    "request_description": "חיזוק מבנה לשימור והקמת שני מבנים מחדש לפי תב\"ע 0702662 ובמסגרת זכויות מאושרות בהתאם לסעיף 13 לתמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "412": {
+  "tik": "2023/0348.00",
+  "address": "גדעון 5",
+  "permits": [
+   {
+    "file_number": "2023/0348.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "03/09/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה קיים תוך שימור חזיתות המבנה לשימור והקמת מבנה חדש ע\"פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "413": {
+  "tik": "2023/0369.00",
+  "address": "ש. טשרניחובסקי 32",
+  "permits": [
+   {
+    "file_number": "2023/0369.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "25/06/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, חפירה ומילוי, בניית גדר, תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה המיועד למגורים והקמתו מחדש (הכולל 34 יח\"ד) לפי הוראות סעיף 14 א''"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "414": {
+  "tik": "2023/0475.00",
+  "address": "ביתר 44",
+  "permits": [
+   {
+    "file_number": "2023/0475.00",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "05/07/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק מבנה קיים ותוספת 2 קומות במסג'''' תמ\"א 38 ותכנית 10038. תוספת 10 יח\"ד חדשות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "415": {
+  "tik": "2023/0585.00",
+  "address": "המשורינים 5",
+  "permits": [
+   {
+    "file_number": "2023/0585.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "03/09/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה קיים בן 3 קומות ו- 12 יח\"ד והקמת מבנה בן 6 קומות ו- 22 יח\"ד במסגרת תמ\"א 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "416": {
+  "tik": "2024/0129.00",
+  "address": "אבן שפרוט 22",
+  "permits": [
+   {
+    "file_number": "2024/0129.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "06/05/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק הבנין ,הרחבות דיור , תוספת קומות ויח\"ד  לפי תמ\"א 38 ותכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "417": {
+  "tik": "2024/0152.00",
+  "address": "נגבה 9",
+  "permits": [
+   {
+    "file_number": "2024/0152.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/04/2026",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה קיים ובניית מבנה מגורים חדש תוך שימור חזית ראשית וצדית"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "418": {
+  "tik": "2024/0194.00",
+  "address": "רשב\"ג 37",
+  "permits": [
+   {
+    "file_number": "2024/0194.00",
+    "status": "התקבל ערר",
+    "status_date": "28/05/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה קיים בן 2 קומות ובניית בנין חדש בן 7 קומות במסלול תמ\"א 38 2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "419": {
+  "tik": "2024/0221.00",
+  "address": "שד בן מימון (הרמב\"ם) 52",
+  "permits": [
+   {
+    "file_number": "2024/0221.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "16/07/2025",
+    "request_type": "בניית בריכה פרטית, עבודות הריסה, בניה חדשה / בניין חדש, חפירה ומילוי, תמ\"א 38 הריסה ובניה, ריצוף חצר ועבודות פיתוח",
+    "request_description": "תמ\"א 38/2, הריסה ובנייה מחדש, מבנה של 6 קומות, עם חזית רחוב לשימור."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "420": {
+  "tik": "2024/0225.00",
+  "address": "דרך עזה 66",
+  "permits": [
+   {
+    "file_number": "2024/0225.00",
+    "status": "התקבל ערר",
+    "status_date": "14/04/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספות עפ\"י תמ\"א 38/1"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "421": {
+  "tik": "2024/0236.00",
+  "address": "אלעזר המודעי 12",
+  "permits": [
+   {
+    "file_number": "2024/0236.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "24/06/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, שינוי שימוש, תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת שלושה מבנים, ובניית ארבעה מבנים חדשים בני 8 קומות מעל קומות חניה ומחסנים.ללא שינוי שימוש."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "422": {
+  "tik": "2024/0250.00",
+  "address": "קורא הדורות 9",
+  "permits": [
+   {
+    "file_number": "2024/0250.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "01/07/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה,ממדי\"ם,מרפסות ומחסנים,תוספת קומות ויח\"ד ע\"פ תמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "423": {
+  "tik": "2024/0034.00",
+  "address": "הפלמח 71",
+  "permits": [
+   {
+    "file_number": "2024/0034.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "22/10/2025",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה, ממדי\"ם, מרפסות ומחסנים ,תוספת קומות ויח\"ד ע\"פ תמ\"א 38 ותוכנית 10038."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "424": {
+  "tik": "2024/0359.00",
+  "address": "דרך בית לחם 83",
+  "permits": [
+   {
+    "file_number": "2024/0359.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "02/07/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת בנין בן 3 קומות וגג רעפים ובנית בנין בן 6 קומות+2 קומות חניון"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "425": {
+  "tik": "2024/0370.00",
+  "address": "הקרן הקיימת לישראל 15",
+  "permits": [
+   {
+    "file_number": "2024/0370.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "09/02/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תמ\"א 38 הריסה ובניה",
+    "request_description": "תמ\"א 38 הריסה ובניה עם שימור חזיתות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "426": {
+  "tik": "2024/0397.00",
+  "address": "חובבי ציון 27",
+  "permits": [
+   {
+    "file_number": "2024/0397.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "12/05/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, תמ\"א 38 - תוספות",
+    "request_description": "חיזוק וחידוש הבנין ע\"פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "427": {
+  "tik": "2024/0410.00",
+  "address": "נחום סוקולוב 6",
+  "permits": [
+   {
+    "file_number": "2024/0410.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "02/07/2025",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "תמ''''א 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "428": {
+  "tik": "2024/0429.00",
+  "address": "קבוץ גלויות 3",
+  "permits": [
+   {
+    "file_number": "2024/0429.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "17/07/2025",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "הרחבות בניה ותוספת 2.5 קומות מעל בנין בן 4 קומות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "429": {
+  "tik": "2024/0430.00",
+  "address": "ראובן 6",
+  "permits": [
+   {
+    "file_number": "2024/0430.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/06/2026",
+    "request_type": "בניה חדשה / בניין חדש, שינוי שימוש, תמ\"א 38 הריסה ובניה, חפירה ומילוי, בניית בריכה פרטית, פיתוח שטח ציבורי פתוח",
+    "request_description": "בניית בית מגורים תוך הריסת מבנה קיים מלבד קירות לשימור ובניה מחדש לפי תמ\"א 38/2 ותכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "430": {
+  "tik": "2024/0432.00",
+  "address": "שד בן מימון (הרמב\"ם) 16",
+  "permits": [
+   {
+    "file_number": "2024/0432.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "20/04/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תמ\"א 38 - תוספות, ממ\"ד",
+    "request_description": "חיזוק מבנה קיים והרחבות , תוספת קומה וחצי ע\"פ תמ\"א 38,"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "431": {
+  "tik": "2024/0455.00",
+  "address": "מרטון יחזקאל 3",
+  "permits": [
+   {
+    "file_number": "2024/0455.00",
+    "status": "התקבל ערר",
+    "status_date": "22/02/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק וחידוש הבניין ע\"פ תמ\"א 38 ותכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "432": {
+  "tik": "2024/0477.00",
+  "address": "מנשה 6",
+  "permits": [
+   {
+    "file_number": "2024/0477.00",
+    "status": "התקבל ערר",
+    "status_date": "15/01/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת קומה וחצי לבניין קיים לפי תמ\"א 38/1"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "433": {
+  "tik": "2024/0518.00",
+  "address": "עמק רפאים 55",
+  "permits": [
+   {
+    "file_number": "2024/0518.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "28/01/2026",
+    "request_type": "עבודות הריסה, תמ\"א 38 הריסה ובניה",
+    "request_description": "שימור חזית הבניין ותוספת קומות מכוח תמא 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "434": {
+  "tik": "2024/0520.00",
+  "address": "רשב\"א 11",
+  "permits": [
+   {
+    "file_number": "2024/0520.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "17/02/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת קומה וחצי לבניין קיים לפי תמ\"א 38/1"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "435": {
+  "tik": "2024/0591.00",
+  "address": "יותם 9",
+  "permits": [
+   {
+    "file_number": "2024/0591.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "03/09/2025",
+    "request_type": "בניה חדשה / בניין חדש, תמ\"א 38 הריסה ובניה, בניית בריכה פרטית",
+    "request_description": "הריסת בניין בן 3 קומות 24 יח\"ד והקמת בניין בן 7 קומות 45 יח\"ד במסגרת תמ\"א 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "436": {
+  "tik": "2024/0621.00",
+  "address": "אברהם לינקולן 14",
+  "permits": [
+   {
+    "file_number": "2024/0621.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "20/04/2026",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסת מבנה קיים בן 3 קומות ו16 יח\"ד והקמת מבנה חדש בן 6 קומות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "437": {
+  "tik": "2024/0007.00",
+  "address": "מרדכי היהודי 18",
+  "permits": [
+   {
+    "file_number": "2024/0007.00",
+    "status": "הוכנה טיוטת היתר בניה",
+    "status_date": "05/07/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה,ממדי\"ם,מרפסות ומחסנים,תוספת קומות ויח\"ד ע\"פ תמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "438": {
+  "tik": "2024/0071.00",
+  "address": "אלוף שמחוני 2",
+  "permits": [
+   {
+    "file_number": "2024/0071.00",
+    "status": "נדונה בועדת ערר",
+    "status_date": "16/11/2025",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספות בניה במסגרת תמ\"א 38\\1."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "439": {
+  "tik": "2025/0104.00",
+  "address": "דוד שמעוני 37",
+  "permits": [
+   {
+    "file_number": "2025/0104.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "23/06/2026",
+    "request_type": "תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד , בניה חדשה / בניין חדש",
+    "request_description": "הריסת מבנה מגורים קיים ובניית מבנה מגורים חדש בן 8 קומות לכל חזית בשמעוני 37, לפי סעיף 13 לתמ\"א 38."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "440": {
+  "tik": "2025/0129.00",
+  "address": "אפרתה 22",
+  "permits": [
+   {
+    "file_number": "2025/0129.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "03/06/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת בניה בהתאם לתמא 10038 חיזוק מבנים בפני רעידות אדמה"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "441": {
+  "tik": "2025/0134.00",
+  "address": "עוזיה 15",
+  "permits": [
+   {
+    "file_number": "2025/0134.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "27/04/2026",
+    "request_type": "בניה חדשה / בניין חדש, תמ\"א 38 הריסה ובניה",
+    "request_description": "בנייה חדשה במסלול תמא 38/2"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "442": {
+  "tik": "2025/0252.00",
+  "address": "יוסי בן יועזר 1",
+  "permits": [
+   {
+    "file_number": "2025/0252.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "03/03/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+    "request_description": "הריסת מבנה  המיועד למגורים והקמתו מחדש לפי הוראות סעיף 14 א׳ לתמ״א 38 ולפי הוראות תוכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "443": {
+  "tik": "2025/0254.00",
+  "address": "הקליר 32",
+  "permits": [
+   {
+    "file_number": "2025/0254.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "15/10/2025",
+    "request_type": "תמ\"א 38 - תוספות, התקנת מעלית חיצונית, בניית מרפסת, בנית מחסן/מחסנים, ממ\"ד, תוספת יח\"ד באמצעות תוספת בניה, בניית בריכה פרטית, עבודות הריסה",
+    "request_description": "תוספת בניה לבניין ע\"פ הוראות תמ\"א ותכנית 10038 לחיזוק מבנים מפני רעידות אדמה."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "444": {
+  "tik": "2025/0320.00",
+  "address": "יהודה 16",
+  "permits": [
+   {
+    "file_number": "2025/0320.00",
+    "status": "נדונה בוועדת המשנה",
+    "status_date": "11/03/2026",
+    "request_type": "בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+    "request_description": "הריסה ובניה מחדש תוך שימור חזיתות עפ\"י תמ\"א 38/2 ותכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "445": {
+  "tik": "2025/0400.00",
+  "address": "הס 8",
+  "permits": [
+   {
+    "file_number": "2025/0400.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "20/01/2026",
+    "request_type": "בניה חדשה / בניין חדש, שינוי שימוש, תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובנית בנין חדש במסגרת תמ\"א 38/2 פינוי בינוי"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "446": {
+  "tik": "2025/0418.00",
+  "address": "מרדכי היהודי 16",
+  "permits": [
+   {
+    "file_number": "2025/0418.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "09/02/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תמ\"א 38 - תוספות, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תוספת בניה, ממ\"דים, מרפסות, מחסנים, מעלית והרחבת חדר מדרגות  ,תוספת קומות ויח\"ד ע,פ תמ\"א 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "447": {
+  "tik": "2025/0428.00",
+  "address": "חרלפ 26",
+  "permits": [
+   {
+    "file_number": "2025/0428.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "17/03/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תוספת לבניין קיים במסגרת תמ\"א 1\\38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "448": {
+  "tik": "2025/0473.00",
+  "address": "דרך עזה 51",
+  "permits": [
+   {
+    "file_number": "2025/0473.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "08/03/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, שינוי שימוש, תמ\"א 38 - תוספות",
+    "request_description": "חיזוק מבנים לפי תוכנית 10038 ותוספת בנייה במסגרת תמ\"א 38 תוך שימור החזית לרחוב עזה"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "449": {
+  "tik": "2025/0511.00",
+  "address": "חיים ברודי 20",
+  "permits": [
+   {
+    "file_number": "2025/0511.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "08/03/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, תמ\"א 38 - תוספות, ממ\"ד, בניית מרפסת, בנית מחסן/מחסנים, התקנת מעלית פנימית, תוספת יח\"ד באמצעות תוספת בניה",
+    "request_description": "תמ\"א 38 תוספות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "450": {
+  "tik": "2025/0055.00",
+  "address": "עזריאל הילדסהיימר  16",
+  "permits": [
+   {
+    "file_number": "2025/0055.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "16/06/2026",
+    "request_type": "בניית בריכה פרטית, בנית מחסן/מחסנים, בניית מרפסת, תוספת יח\"ד באמצעות תוספת בניה, תמ\"א 38 - תוספות, גדר בגובה עד 1.50 מטר, התקנת מעלית פנימית",
+    "request_description": "תמ\"א 38: חיזוק בניין כנגד רעידות אדמה. הרחבת יח\"ד קיימות ותוספת יח\"ד חדשות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "451": {
+  "tik": "2025/0569.00",
+  "address": "עמק רפאים 50",
+  "permits": [
+   {
+    "file_number": "2025/0569.00",
+    "status": "נפתח תיק רישוי",
+    "status_date": "30/06/2026",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד, תמ\"א 38 - תוספות",
+    "request_description": "תמ\"א 38 תוספות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "452": {
+  "tik": "2026/0157.00",
+  "address": "עמק רפאים 76",
+  "permits": [
+   {
+    "file_number": "2026/0157.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "23/06/2026",
+    "request_type": "עבודות הריסה, בניה חדשה / בניין חדש, תוספת בניה מכוח סעיף 13 לתמ\"א 38 כולל תוספת יח\"ד",
+    "request_description": "הריסת מבנה המיועד למגורים והקמתו מחדש, בניין בן 21 יח\"ד ,לפי סעיף 13 לתמא 38"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "453": {
+  "tik": "2017/0857.00",
+  "address": "עמק רפאים 6",
+  "permits": [
+   {
+    "file_number": "2017/0857.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "14/10/2020",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "בניית תוספות בהתאם לתמ\"א 38 ותכנית 10038 - חיזוק הבניין מפני רעידות אדמה."
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "454": {
+  "tik": "2019/0595.00",
+  "address": "לופו שמואל 7",
+  "permits": [
+   {
+    "file_number": "2019/0595.00",
+    "status": "הופק-הוצא היתר בניה",
+    "status_date": "12/07/2022",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "הוספת שטח ומעלית לדירות הקיימות והוספת 2 קומות"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
  }
 }

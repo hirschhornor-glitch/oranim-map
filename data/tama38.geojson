@@ -12922,6 +12922,2456 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.215943,
+      31.774898
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 385,
+    "qc_id": 385,
+    "tik": "2017/0184.00",
+    "address": "רמבן 14",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2043465,
+      31.7570868
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 386,
+    "qc_id": 386,
+    "tik": "2018/0752.00",
+    "address": "בן טבאי 1",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2138086,
+      31.7744809
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 387,
+    "qc_id": 387,
+    "tik": "2018/0853.00",
+    "address": "כיכר מגנס 1",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2101973,
+      31.7766641
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 388,
+    "qc_id": 388,
+    "tik": "2019/0042.00",
+    "address": "י.ל. דיסקין 8",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.202331,
+      31.75159
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 389,
+    "qc_id": 389,
+    "tik": "2019/0501.00",
+    "address": "נתאי הארבלי 48",
+    "neighborho": "גוננים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213687,
+      31.770291
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 390,
+    "qc_id": 390,
+    "tik": "2020/0270.01",
+    "address": "הנשיא 4",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213687,
+      31.770291
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 391,
+    "qc_id": 391,
+    "tik": "2020/0270.02",
+    "address": "הנשיא 4",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213417,
+      31.768179
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 392,
+    "qc_id": 392,
+    "tik": "2020/0333.00",
+    "address": "הפלמח 3",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.218931,
+      31.758506
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 393,
+    "qc_id": 393,
+    "tik": "2020/0470.00",
+    "address": "דן 4",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213191,
+      31.756314
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 394,
+    "qc_id": 394,
+    "tik": "2020/0578.00",
+    "address": "מקור חיים 15",
+    "neighborho": "מקור חיים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213359,
+      31.769458
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 395,
+    "qc_id": 395,
+    "tik": "2020/0748.00",
+    "address": "הנשיא 7",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.211984,
+      31.76958
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 396,
+    "qc_id": 396,
+    "tik": "2021/0311.00",
+    "address": "חרלפ 26",
+    "neighborho": "קריית שמואל",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.204978,
+      31.757795
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 397,
+    "qc_id": 397,
+    "tik": "2021/0049.00",
+    "address": "בן טבאי 4",
+    "neighborho": "גוננים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.211047,
+      31.772067
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 398,
+    "qc_id": 398,
+    "tik": "2021/0507.00",
+    "address": "י. אלפסי 37",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2124661,
+      31.7790196
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 399,
+    "qc_id": 399,
+    "tik": "2021/0055.00",
+    "address": "נרקיס 31",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.211948,
+      31.776695
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 400,
+    "qc_id": 400,
+    "tik": "2022/0127.00",
+    "address": "הרן 2",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.217522,
+      31.755605
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 401,
+    "qc_id": 401,
+    "tik": "2022/0221.00",
+    "address": "גד 12",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.218346,
+      31.766324
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 402,
+    "qc_id": 402,
+    "tik": "2022/0299.00",
+    "address": "בנימין זאב באכר 10",
+    "neighborho": "מושבה גרמנית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.214839,
+      31.76193
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 403,
+    "qc_id": 403,
+    "tik": "2022/0448.00",
+    "address": "אמציה 3",
+    "neighborho": "המושבה היוונית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219457,
+      31.7548
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 404,
+    "qc_id": 404,
+    "tik": "2022/0454.00",
+    "address": "צפורה 3",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.220008,
+      31.755196
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 405,
+    "qc_id": 405,
+    "tik": "2022/0056.00",
+    "address": "דרך בית לחם 98",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.212376,
+      31.772398
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 406,
+    "qc_id": 406,
+    "tik": "2022/0057.00",
+    "address": "בנימין מטודלה 10",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219151,
+      31.758151
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 407,
+    "qc_id": 407,
+    "tik": "2022/0583.00",
+    "address": "דן 1",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213135,
+      31.774174
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 408,
+    "qc_id": 408,
+    "tik": "2022/0063.00",
+    "address": "רמבן 39",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219819,
+      31.772753
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 409,
+    "qc_id": 409,
+    "tik": "2023/0179.00",
+    "address": "נחום סוקולוב 3",
+    "neighborho": "טלביה/המוגרבים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21886,
+      31.764454
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 410,
+    "qc_id": 410,
+    "tik": "2023/0196.00",
+    "address": "עזריאל הילדסהיימר  10",
+    "neighborho": "מושבה גרמנית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.223753,
+      31.76057
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 411,
+    "qc_id": 411,
+    "tik": "2023/0320.00",
+    "address": "דרך חברון 48",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.220718,
+      31.759767
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 412,
+    "qc_id": 412,
+    "tik": "2023/0348.00",
+    "address": "גדעון 5",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.20572,
+      31.766599
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 413,
+    "qc_id": 413,
+    "tik": "2023/0369.00",
+    "address": "ש. טשרניחובסקי 32",
+    "neighborho": "גבעת הורדים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.223145,
+      31.749692
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 414,
+    "qc_id": 414,
+    "tik": "2023/0475.00",
+    "address": "ביתר 44",
+    "neighborho": "ארנונה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.207569,
+      31.764084
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 415,
+    "qc_id": 415,
+    "tik": "2023/0585.00",
+    "address": "המשורינים 5",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21144,
+      31.774654
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 416,
+    "qc_id": 416,
+    "tik": "2024/0129.00",
+    "address": "אבן שפרוט 22",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.2109261,
+      31.7634664
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 417,
+    "qc_id": 417,
+    "tik": "2024/0152.00",
+    "address": "נגבה 9",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.20826,
+      31.754647
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 418,
+    "qc_id": 418,
+    "tik": "2024/0194.00",
+    "address": "רשב\"ג 37",
+    "neighborho": "גוננים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.212032,
+      31.773878
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 419,
+    "qc_id": 419,
+    "tik": "2024/0221.00",
+    "address": "שד בן מימון (הרמב\"ם) 52",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.211421,
+      31.770372
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 420,
+    "qc_id": 420,
+    "tik": "2024/0225.00",
+    "address": "דרך עזה 66",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.214606,
+      31.761468
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 421,
+    "qc_id": 421,
+    "tik": "2024/0236.00",
+    "address": "אלעזר המודעי 12",
+    "neighborho": "המושבה היוונית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.223131,
+      31.751511
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 422,
+    "qc_id": 422,
+    "tik": "2024/0250.00",
+    "address": "קורא הדורות 9",
+    "neighborho": "תלפיות",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.205513,
+      31.763581
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 423,
+    "qc_id": 423,
+    "tik": "2024/0034.00",
+    "address": "הפלמח 71",
+    "neighborho": "גבעת הורדים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21951,
+      31.753321
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 424,
+    "qc_id": 424,
+    "tik": "2024/0359.00",
+    "address": "דרך בית לחם 83",
+    "neighborho": "תלפיות",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.214763,
+      31.776688
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 425,
+    "qc_id": 425,
+    "tik": "2024/0370.00",
+    "address": "הקרן הקיימת לישראל 15",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21909,
+      31.770817
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 426,
+    "qc_id": 426,
+    "tik": "2024/0397.00",
+    "address": "חובבי ציון 27",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219361,
+      31.772876
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 427,
+    "qc_id": 427,
+    "tik": "2024/0410.00",
+    "address": "נחום סוקולוב 6",
+    "neighborho": "טלביה/המוגרבים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219712,
+      31.756024
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 428,
+    "qc_id": 428,
+    "tik": "2024/0429.00",
+    "address": "קבוץ גלויות 3",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.220087,
+      31.758997
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 429,
+    "qc_id": 429,
+    "tik": "2024/0430.00",
+    "address": "ראובן 6",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21634,
+      31.774251
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 430,
+    "qc_id": 430,
+    "tik": "2024/0432.00",
+    "address": "שד בן מימון (הרמב\"ם) 16",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.22234,
+      31.759394
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 431,
+    "qc_id": 431,
+    "tik": "2024/0455.00",
+    "address": "מרטון יחזקאל 3",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.218521,
+      31.759752
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 432,
+    "qc_id": 432,
+    "tik": "2024/0477.00",
+    "address": "מנשה 6",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.217073,
+      31.76117
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 433,
+    "qc_id": 433,
+    "tik": "2024/0518.00",
+    "address": "עמק רפאים 55",
+    "neighborho": "מושבה גרמנית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.210788,
+      31.773567
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 434,
+    "qc_id": 434,
+    "tik": "2024/0520.00",
+    "address": "רשב\"א 11",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.214734,
+      31.762469
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 435,
+    "qc_id": 435,
+    "tik": "2024/0591.00",
+    "address": "יותם 9",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219916,
+      31.775175
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 436,
+    "qc_id": 436,
+    "tik": "2024/0621.00",
+    "address": "אברהם לינקולן 14",
+    "neighborho": "טלביה/המוגרבים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.222472,
+      31.758397
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 437,
+    "qc_id": 437,
+    "tik": "2024/0007.00",
+    "address": "מרדכי היהודי 18",
+    "neighborho": "תלפיות",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.208245,
+      31.767533
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 438,
+    "qc_id": 438,
+    "tik": "2024/0071.00",
+    "address": "אלוף שמחוני 2",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.201204,
+      31.763116
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 439,
+    "qc_id": 439,
+    "tik": "2025/0104.00",
+    "address": "דוד שמעוני 37",
+    "neighborho": "גבעת הורדים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.221488,
+      31.752294
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 440,
+    "qc_id": 440,
+    "tik": "2025/0129.00",
+    "address": "אפרתה 22",
+    "neighborho": "תלפיות",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.21516,
+      31.762577
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 441,
+    "qc_id": 441,
+    "tik": "2025/0134.00",
+    "address": "עוזיה 15",
+    "neighborho": "מושבה גרמנית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.210559,
+      31.758904
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 442,
+    "qc_id": 442,
+    "tik": "2025/0252.00",
+    "address": "יוסי בן יועזר 1",
+    "neighborho": "גוננים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.210707,
+      31.77571
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 443,
+    "qc_id": 443,
+    "tik": "2025/0254.00",
+    "address": "הקליר 32",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219678,
+      31.75729
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 444,
+    "qc_id": 444,
+    "tik": "2025/0320.00",
+    "address": "יהודה 16",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.221044,
+      31.7759
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 445,
+    "qc_id": 445,
+    "tik": "2025/0400.00",
+    "address": "הס 8",
+    "neighborho": "טלביה/המוגרבים",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.222337,
+      31.758074
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 446,
+    "qc_id": 446,
+    "tik": "2025/0418.00",
+    "address": "מרדכי היהודי 16",
+    "neighborho": "גאולים - בקעה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.211984,
+      31.76958
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 447,
+    "qc_id": 447,
+    "tik": "2025/0428.00",
+    "address": "חרלפ 26",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.212088,
+      31.77026
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 448,
+    "qc_id": 448,
+    "tik": "2025/0473.00",
+    "address": "דרך עזה 51",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.210444,
+      31.767705
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 449,
+    "qc_id": 449,
+    "tik": "2025/0511.00",
+    "address": "חיים ברודי 20",
+    "neighborho": "ארנונה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.219392,
+      31.76494
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 450,
+    "qc_id": 450,
+    "tik": "2025/0055.00",
+    "address": "עזריאל הילדסהיימר  16",
+    "neighborho": "מושבה גרמנית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.217571,
+      31.762207
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 451,
+    "qc_id": 451,
+    "tik": "2025/0569.00",
+    "address": "עמק רפאים 50",
+    "neighborho": "המושבה היוונית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.215198,
+      31.759899
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 452,
+    "qc_id": 452,
+    "tik": "2026/0157.00",
+    "address": "עמק רפאים 76",
+    "neighborho": "המושבה היוונית",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.222642,
+      31.766855
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 453,
+    "qc_id": 453,
+    "tik": "2017/0857.00",
+    "address": "עמק רפאים 6",
+    "neighborho": "רמת אשכול",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.226258,
+      31.757416
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 454,
+    "qc_id": 454,
+    "tik": "2019/0595.00",
+    "address": "לופו שמואל 7",
+    "neighborho": "צפון תלפיות",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "הופק הוצא היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף ידנית 2026-07-08 מביקורת §149 (audit_section149_gaps) — חסר במאגר/GIS העירייה; מיקום=מבנה לפי כתובת.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "audit149",
+    "created_da": "2026-07-08",
+    "last_edite": "audit149",
+    "last_edi_1": "2026-07-08",
+    "__rec_stat": null
+   }
   }
  ]
 }
