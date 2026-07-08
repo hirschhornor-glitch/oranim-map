@@ -35,6 +35,12 @@ jobs:
         run: pip install shapely
 
       - name: Fetch tree-cutting permits (יעל"ה MOAG API → data/tree_permits.json)
+        env:
+          # Notify by email when a NEW open-for-objection permit appears in the
+          # area. If GMAIL_APP_PASSWORD isn't set as a repo secret, the script
+          # just skips the email (the data update still runs).
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python scripts/fetch_tree_permits.py
 
       - name: Commit updated data
