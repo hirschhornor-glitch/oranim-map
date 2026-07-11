@@ -15477,6 +15477,76 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.212188,
+      31.775496
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 458,
+    "qc_id": 458,
+    "tik": "2026/0075.00",
+    "address": "אברבנאל 30",
+    "neighborho": "רחביה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף אוטומטית 2026-07-11 מביקורת §149 שבועית.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "weekly149",
+    "created_da": "2026-07-11",
+    "last_edite": "weekly149",
+    "last_edi_1": "2026-07-11",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.221155,
+      31.74825
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 459,
+    "qc_id": 459,
+    "tik": "2026/0113.00",
+    "address": "שד עין צורים 18",
+    "neighborho": "ארנונה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 52.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף אוטומטית 2026-07-11 מביקורת §149 שבועית.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "weekly149",
+    "created_da": "2026-07-11",
+    "last_edite": "weekly149",
+    "last_edi_1": "2026-07-11",
+    "__rec_stat": null
+   }
   }
  ]
 }

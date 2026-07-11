@@ -1,1 +1,172 @@
-{"count": 0, "by_tik": {}}
+{
+ "count": 13,
+ "by_tik": {
+  "1971/1425.03": {
+   "developer": "טרספולסקי",
+   "developer_parts": [
+    {
+     "applicant": "טרספולסקי",
+     "group": "יגאל ברגמן ומשה",
+     "name": "טרספולסקי"
+    }
+   ],
+   "architect": "משה חיים שפירא",
+   "units": null,
+   "is_residents": false
+  },
+  "2015/0763.00": {
+   "developer": "סן מרטין 32",
+   "developer_parts": [
+    {
+     "applicant": "סן מרטין 32",
+     "group": "תמ\"א 38",
+     "name": "סן מרטין 32"
+    }
+   ],
+   "architect": "רועי אלרואי",
+   "units": null,
+   "is_residents": false
+  },
+  "2015/0871.00": {
+   "developer": "שלמה אורי",
+   "developer_parts": [
+    {
+     "applicant": "שלמה אורי",
+     "group": "לומברוזו",
+     "name": "שלמה אורי"
+    }
+   ],
+   "architect": "סטפן יצח קטורזה",
+   "units": null,
+   "is_residents": false
+  },
+  "2015/0562.00": {
+   "developer": "מיכאל דוד",
+   "developer_parts": [
+    {
+     "applicant": "מיכאל דוד",
+     "group": "מוס",
+     "name": "מיכאל דוד"
+    }
+   ],
+   "architect": "סטפן יצח קטורזה",
+   "units": null,
+   "is_residents": false
+  },
+  "2015/0865.00": {
+   "developer": "תמ\"א 38 בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "תמ\"א 38 בע\"מ",
+     "group": "בניין שלם",
+     "name": "תמ\"א 38 בע\"מ"
+    }
+   ],
+   "architect": "שרון דיאנה אברמסון",
+   "units": null,
+   "is_residents": false
+  },
+  "2016/0077.00": {
+   "developer": "בית דירות בע\"מ / חיים שחר",
+   "developer_parts": [
+    {
+     "applicant": "בית דירות בע\"מ",
+     "group": "",
+     "name": "בית דירות בע\"מ"
+    },
+    {
+     "applicant": "חיים שחר",
+     "group": "",
+     "name": "חיים שחר"
+    }
+   ],
+   "architect": "אדריכלים י מולכו",
+   "units": 14,
+   "is_residents": false
+  },
+  "2015/0210.00": {
+   "developer": "ישראל אה",
+   "developer_parts": [
+    {
+     "applicant": "ישראל אה",
+     "group": "ריבלין",
+     "name": "ישראל אה"
+    }
+   ],
+   "architect": "יצחק קטורזה",
+   "units": null,
+   "is_residents": false
+  },
+  "2016/1107.00": {
+   "developer": "התחדשות בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "התחדשות בע\"מ",
+     "group": "י.ד בראזני",
+     "name": "התחדשות בע\"מ"
+    }
+   ],
+   "architect": "גיא איגרא",
+   "units": null,
+   "is_residents": false
+  },
+  "2016/0984.00": {
+   "developer": "די וורולי סיאני הנדסה בע\"מ",
+   "developer_parts": [
+    {
+     "applicant": "די וורולי סיאני הנדסה בע\"מ",
+     "group": "",
+     "name": "די וורולי סיאני הנדסה בע\"מ"
+    }
+   ],
+   "architect": "סלמה מילסון ארד",
+   "units": null,
+   "is_residents": false
+  },
+  "2018/0089.00": {
+   "developer": "יונתן שמעון / זרגרי",
+   "developer_parts": [
+    {
+     "applicant": "יונתן שמעון",
+     "group": "טויטו",
+     "name": "יונתן שמעון"
+    },
+    {
+     "applicant": "זרגרי",
+     "group": "עצמון",
+     "name": "זרגרי"
+    }
+   ],
+   "architect": "יעקב קנטור",
+   "units": null,
+   "is_residents": false
+  },
+  "2019/0589.00": {
+   "developer": "אמיר",
+   "developer_parts": [
+    {
+     "applicant": "אמיר",
+     "group": "כהן",
+     "name": "אמיר"
+    }
+   ],
+   "architect": "מטיו אהר רוזנשיין",
+   "units": null,
+   "is_residents": false
+  },
+  "2026/0075.00": {
+   "developer": "מנחם / פנחס",
+   "architect": "דב",
+   "units": null,
+   "minahak": "גינות העיר",
+   "is_residents": false
+  },
+  "2026/0113.00": {
+   "developer": "18 בע\"מ / חגית",
+   "architect": "נורית",
+   "units": 52,
+   "minahak": "בקעה רבתי",
+   "is_residents": false
+  }
+ }
+}
