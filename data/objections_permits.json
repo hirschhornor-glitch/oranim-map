@@ -1,4 +1,27 @@
 {
+  "1994/0874.05": {
+    "tik": "1994/0874.05",
+    "status": "פרסום פעיל לפי סעיף 149",
+    "status_date": "15/07/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים",
+    "request_description": "תוספת מחסן עבור דירה 3- שינויים פנים + מדרגות חוץ עבור דירה 1",
+    "address": "יוסי בן יועזר 5",
+    "street": "יוסי בן יועזר",
+    "house": "5",
+    "schn": "גוננים",
+    "deadline_publish": "16/07/2026",
+    "deadline_verified": "2026-07-11",
+    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
+    "lnglat": [
+      35.210674,
+      31.758446
+    ],
+    "subs": [],
+    "tabas": [],
+    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=3fe3878a-ea1a-40df-917b-20ea28bc3d8a",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1994/0874.05&SystemCode=26400046&Page=BakashalInfo",
+    "source": "official_activepublications"
+  },
   "1995/0533.12": {
     "tik": "1995/0533.12",
     "status": "פרסום פעיל לפי סעיף 149",
@@ -9,8 +32,8 @@
     "street": "דב הוז",
     "house": "10",
     "schn": "גוננים",
-    "deadline_publish": "09/07/2026",
-    "deadline_verified": "2026-07-05",
+    "deadline_publish": "16/07/2026",
+    "deadline_verified": "2026-07-11",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
       35.19473,
@@ -20,29 +43,6 @@
     "tabas": [],
     "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=67b16c29-747c-4db9-986c-10ebaa2bd7fb",
     "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1995/0533.12&SystemCode=26400046&Page=BakashalInfo",
-    "source": "official_activepublications"
-  },
-  "1996/0876.01": {
-    "tik": "1996/0876.01",
-    "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "27/01/2026",
-    "request_type": "רישוי בניה - שימוש חורג מהיתר",
-    "request_description": "שימוש חורג ממגורים לבית הכנסת",
-    "address": "דרך עזה 24",
-    "street": "דרך עזה",
-    "house": "24",
-    "schn": "רחביה",
-    "deadline_publish": "10/07/2026",
-    "deadline_verified": "2026-07-05",
-    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
-    "lnglat": [
-      35.214834,
-      31.773336
-    ],
-    "subs": [],
-    "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=b9dd15c9-462d-4a95-86a3-46bce082ec47",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1996/0876.01&SystemCode=26400046&Page=BakashalInfo",
     "source": "official_activepublications"
   },
   "2010/0196.01": {
@@ -56,7 +56,7 @@
     "house": "217",
     "schn": "גוננים",
     "deadline_publish": "12/07/2026",
-    "deadline_verified": "2026-07-05",
+    "deadline_verified": "2026-07-11",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
       35.199588,
