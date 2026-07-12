@@ -67,7 +67,10 @@ UA = {
 # isn't set (e.g. local run), the notification is silently skipped.
 EMAIL_SENDER    = "hirschhorn.or@gmail.com"
 EMAIL_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")
-EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT", "Or_hi@jerusalem.muni.il")
+# `or` (not a get-default): the workflow passes EMAIL_RECIPIENT from a repo secret
+# that may not exist, which yields an EMPTY string (not an absent key), so a plain
+# get-default would keep "" and the notifier would skip for "no recipient".
+EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT") or "Or_hi@jerusalem.muni.il"
 
 
 def _find_data_dir():
@@ -331,9 +334,12 @@ def notify_new_permits(new_recs):
 
     if not new_recs:
         return
-    if not EMAIL_PASSWORD or not EMAIL_RECIPIENT:
-        print(f"  [email] {len(new_recs)} new permit(s) but no GMAIL_APP_PASSWORD/EMAIL_RECIPIENT — skipping notification.")
+    if not EMAIL_PASSWORD:
+        print(f"  [email] {len(new_recs)} new permit(s) but GMAIL_APP_PASSWORD is empty — skipping. "
+              f"(set the repo secret so CI can send)")
         return
+    print(f"  [email] notifying {EMAIL_RECIPIENT} about {len(new_recs)} permit(s) "
+          f"(app-password length={len(EMAIL_PASSWORD)})")
 
     date_str = datetime.date.today().strftime("%d/%m/%Y")
     n = len(new_recs)
