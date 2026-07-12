@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 6 * * *'   # Daily at 06:00 UTC (09:00 Israel)
   workflow_dispatch:        # Manual trigger
+    inputs:
+      test_email:
+        description: 'שלח מייל בדיקה של הרישיונות הפתוחים הנוכחיים (לאימות שהמייל עובד ב-CI)'
+        type: boolean
+        default: false
 
 # Needed so the auto-commit step can push back to master.
 permissions:
@@ -41,6 +46,9 @@ jobs:
           # just skips the email (the data update still runs).
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          # When the manual "test_email" box is checked, email the CURRENT open
+          # permits regardless of the new-vs-baseline diff — a live CI email test.
+          TREE_PERMITS_FORCE_EMAIL: ${{ inputs.test_email }}
         run: python scripts/fetch_tree_permits.py
 
       - name: Commit updated data

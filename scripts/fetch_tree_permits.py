@@ -457,8 +457,14 @@ def main():
     print(f"wrote {OUT}  ({os.path.getsize(OUT)} bytes)")
 
     # ---- notify on NEW open-for-objection permits --------------------------
+    # TREE_PERMITS_FORCE_EMAIL (set by the workflow's manual "test_email" box)
+    # emails the CURRENT permits regardless of the diff — a live CI email test.
+    force = str(os.environ.get("TREE_PERMITS_FORCE_EMAIL", "")).strip().lower() in ("1", "true", "yes")
     new_keys = [k for k in out if k not in prev]
-    if new_keys:
+    if force and out:
+        print(f"TREE_PERMITS_FORCE_EMAIL set — sending all {len(out)} current permit(s) as a CI email test.")
+        notify_new_permits(list(out.values()))
+    elif new_keys:
         print(f"NEW permit(s) since last run: {new_keys}")
         notify_new_permits([out[k] for k in new_keys])
     else:
