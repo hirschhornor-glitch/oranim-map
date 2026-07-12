@@ -91,7 +91,12 @@ DATA_DIR = _find_data_dir()
 DISTRICT = os.path.join(DATA_DIR, "district_oranim.geojson")
 PARCELS = os.path.join(DATA_DIR, "parcel_centroids.json")
 BUILDINGS = os.path.join(DATA_DIR, "buildings.geojson")
+SURVEYS = os.path.join(DATA_DIR, "tree_surveys.json")   # taba -> {total,krita,shimur,haataka,...}
+PLANS = os.path.join(DATA_DIR, "plans.geojson")         # plan polygons (taba, plan_type, name)
 OUT = os.path.join(DATA_DIR, "tree_permits.json")
+
+# Plan types the map popup ignores when picking the surveyed plan for a permit.
+SKIP_PLAN_TYPES = {"תשתיות", "מוסתר"}
 
 
 # ---------------------------------------------------------------- API paging ----
@@ -321,6 +326,63 @@ def build_license(rows):
     }
 
 
+def _cut_count(rec):
+    # Trees the permit asks to CUT (כריתה bucket) — mirrors the app's treePermitCutCount.
+    return sum(int(v) for v in ((rec.get("trees") or {}).get("כריתה") or {}).values())
+
+
+def attach_survey_warnings(recs):
+    # For each permit, find the SMALLEST surveyed plan whose polygon contains the
+    # permit point (skipping תשתיות/מוסתר plans, like the map popup) and flag when
+    # the requested כריתה exceeds the survey's recommended כריתה — the same
+    # "מבוקשים לכריתה N מעל M שהומלצו בסקר" gap the popup shows. Best-effort: if the
+    # survey/plans data is missing or unreadable, permits simply carry no warning.
+    if not os.path.isfile(SURVEYS) or not os.path.isfile(PLANS):
+        return
+    try:
+        surveys = {k: v for k, v in json.load(open(SURVEYS, encoding="utf-8")).items()
+                   if not k.startswith("_") and (v or {}).get("total", 0) > 0}
+        feats = json.load(open(PLANS, encoding="utf-8")).get("features", [])
+    except Exception as e:
+        print(f"  [survey] could not load surveys/plans ({e}) — skipping gap check.")
+        return
+    cand = []  # (shapely geom, taba, plan name) for surveyed, non-infrastructure plans
+    for f in feats:
+        p = f.get("properties") or {}
+        taba = str(p.get("taba") or "").strip()
+        if taba not in surveys or (p.get("plan_type") or "") in SKIP_PLAN_TYPES:
+            continue
+        g = f.get("geometry")
+        if not g:
+            continue
+        try:
+            cand.append((shape(g), taba, p.get("plan_name_he") or p.get("plan_summary") or taba))
+        except Exception:
+            continue
+    for rec in recs:
+        ll = rec.get("lnglat")
+        if not ll:
+            continue
+        pt = Point(ll[0], ll[1])
+        best = None
+        best_area = None
+        for geom, taba, name in cand:
+            try:
+                if geom.contains(pt) and (best_area is None or geom.area < best_area):
+                    best_area, best = geom.area, (taba, name)
+            except Exception:
+                continue
+        if not best:
+            continue
+        taba, name = best
+        s = surveys[taba]
+        cut, krita = _cut_count(rec), int(s.get("krita") or 0)
+        if cut > krita:
+            rec["_survey_warn"] = {"plan": name, "cut": cut, "krita": krita,
+                                   "total": s.get("total", 0), "shimur": s.get("shimur", 0),
+                                   "haataka": s.get("haataka", 0)}
+
+
 def _esc(s):
     return str(s == None and "" or s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -367,6 +429,20 @@ def notify_new_permits(new_recs):
             f'<td style="padding:6px;border:1px solid #ddd">{_esc(rec.get("permit_number"))}</td>'
             '</tr>'
         )
+        # Gap warning row (spans the table) when the permit over-cuts vs the survey.
+        w = rec.get("_survey_warn")
+        if w:
+            rows += (
+                '<tr><td colspan="6" style="padding:6px 8px;border:1px solid #ddd;'
+                'background:#fdecea;color:#c0392b;font-weight:bold">'
+                f'⚠️ מבוקשים לכריתה {w["cut"]} עצים — מעל {w["krita"]} שהומלצו לכריתה בסקר '
+                f'תכנית {_esc(w["plan"])} (נסקרו {w["total"]}: כריתה {w["krita"]}, '
+                f'שימור {w["shimur"]}, העתקה {w["haataka"]})'
+                '</td></tr>'
+            )
+    warn_n = sum(1 for r in new_recs if r.get("_survey_warn"))
+    if warn_n:
+        subject += f' — ⚠️ {warn_n} מעל המלצת הסקר'
     html = (
         '<html><body dir="rtl" style="font-family:Arial,sans-serif">'
         f'<h2 style="color:#2e7d32">🌳 {n} אישור כריתת עצים חדש פתוח לערר באזור אורנים</h2>'
@@ -469,12 +545,17 @@ def main():
     new_keys = [k for k in out if k not in prev]
     if force and out:
         print(f"TREE_PERMITS_FORCE_EMAIL set — sending all {len(out)} current permit(s) as a CI email test.")
-        notify_new_permits(list(out.values()))
+        notify_list = list(out.values())
     elif new_keys:
         print(f"NEW permit(s) since last run: {new_keys}")
-        notify_new_permits([out[k] for k in new_keys])
+        notify_list = [out[k] for k in new_keys]
     else:
         print("no new permits since last run.")
+        notify_list = []
+    if notify_list:
+        # Flag permits that request to cut more than the plan's tree survey recommended.
+        attach_survey_warnings(notify_list)
+        notify_new_permits(notify_list)
 
     # ---- source-health guard (nationwide, NOT Jerusalem) -------------------
     # Jerusalem may legitimately have 0 open permits some weeks — that's a valid
