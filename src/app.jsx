@@ -18419,6 +18419,56 @@
                 if (!entry || !entry.permits) return [];
                 return entry.permits.filter(_includePermit);
             }
+
+            // ─── Pending §149 objection permits (טרום-פרסום — התנגדויות בקרוב) ─────
+            // Building permits already in our stores whose YK status is a PUBLICATION
+            // PRECURSOR (the הקלה request opened but the formal §149 notice hasn't been
+            // filed to the muni publications system yet, so they are NOT in
+            // window.__objectionsPermits). Early-warning WATCHLIST: an objection window
+            // is about to open. Some never publish (withdrawn/denied) → watchlist, not a to-do.
+            function isPendingObjectionStatus(s) {
+                s = (s || '').trim();
+                if (!s) return false;
+                if (s.indexOf('פרסום') !== -1 && s.indexOf('הקלה') !== -1) return true;   // תחילת פרסום הבקשה להקלה
+                if (s.indexOf('ממתין') !== -1 && s.indexOf('נוסח פרסום') !== -1) return true; // ממתין לאישור נוסח פרסום
+                return false;
+            }
+            function collectPendingObjectionPermits() {
+                const open = window.__objectionsPermits || {};
+                const out = [], seen = new Set();
+                // Only surface permits whose YK status changed within the last 3 months —
+                // YK carries decades-old frozen 'ממתין לאישור נוסח פרסום' statuses that will
+                // never publish; a hard recency cutoff drops that noise. Unknown date → drop.
+                const cutoff = new Date(); cutoff.setHours(0, 0, 0, 0); cutoff.setMonth(cutoff.getMonth() - 3);
+                const recentEnough = (sd) => {
+                    const m = String(sd || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (!m) return false;
+                    const d = new Date(+m[3], +m[2] - 1, +m[1]); d.setHours(0, 0, 0, 0);
+                    return d >= cutoff;
+                };
+                const push = (p, address, context) => {
+                    const tik = ((p && p.file_number) || '').trim();
+                    if (!tik || seen.has(tik)) return;
+                    if (!isPendingObjectionStatus(p.status)) return;
+                    if (!recentEnough(p.status_date)) return;  // 3-month cutoff — drop stale frozen statuses
+                    if (open[tik]) return;            // already OPEN for objections → not pending
+                    if (!_includePermit(p)) return;   // skip closed/test
+                    seen.add(tik);
+                    out.push({ tik, status: (p.status || '').trim(), status_date: p.status_date || '',
+                        request_type: p.request_type || '', request_description: p.request_description || '',
+                        address: address || '', context: context || '' });
+                };
+                const t38 = window.__tama38Permits || {};
+                Object.keys(t38).forEach(fid => { const e = t38[fid]; if (e && e.permits) e.permits.forEach(p => push(p, e.address, 'תמ"א 38')); });
+                const all = window.__allPermits || {}, byTaba = window.__planByTaba || {};
+                Object.keys(all).forEach(taba => { const e = all[taba]; if (!e || !e.permits) return;
+                    const pp = byTaba[taba]; const nm = pp ? (pp.plan_summary || pp.plan_name_he || pp.plan_name || '') : '';
+                    e.permits.forEach(p => push(p, '', nm)); });
+                // newest first: live 'תחילת פרסום' (2026) leads, stale 'ממתין' (old) trails
+                const dkey = s => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '00000000'; };
+                out.sort((a, b) => dkey(b.status_date).localeCompare(dkey(a.status_date)));
+                return out;
+            }
             // ─── Open-for-objections permits (הקלות שפורסמו לפי סעיף 149) ──────────
             function objectionsDaysLeft(deadlineStr) {
                 // 'dd/mm/yyyy' → whole days from today (negative = passed); null if unparseable
@@ -19210,6 +19260,13 @@
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
                     html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
+                    if (window.__objectionsPermits && window.__objectionsPermits[(p.file_number || '').trim()]) {
+                        const _or = window.__objectionsPermits[(p.file_number || '').trim()];
+                        const _oc = objectionsUrgencyColor(objectionsDaysLeft(_or.deadline_publish));
+                        html += `<span class="popup-status-badge" style="background:${_oc};color:#fff;border:1px solid ${_oc};font-size:10px;font-weight:bold" title="פתוח להתנגדויות · מועד אחרון ${_or.deadline_publish || ''}">⚖️ פתוח להתנגדויות</span>`;
+                    } else if (isPendingObjectionStatus(p.status)) {
+                        html += `<span class="popup-status-badge" style="background:#c9a227;color:#1a1a2e;border:1px solid #c9a227;font-size:10px;font-weight:bold" title="הבקשה בשלב פרסום הקלה — טרם פורסמה רשמית לסעיף 149; התנגדויות צפויות להיפתח בקרוב">⏳ בהמתנה לפרסום §149</span>`;
+                    }
                     html += `</div></div>`;
                     html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
                     if (p.request_description) {
@@ -28582,6 +28639,7 @@
                             r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
                         const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
                         recs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
+                        const pending = collectPendingObjectionPermits();
                         const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                         return (
                         <div className="units-overlay" onClick={() => setPermitObjectionsReport(false)}>
@@ -28630,6 +28688,34 @@
                                             })}
                                         </tbody>
                                     </table>}
+                                    {pending.length > 0 && (
+                                        <div style={{marginTop:8,marginBottom:16}}>
+                                            <h3 style={{color:'#e0c34a',fontSize:15,margin:'8px 0 4px'}}>⏳ בהמתנה לפרסום §149 — התנגדויות צפויות בקרוב</h3>
+                                            <p style={{color:'#999',fontSize:12,marginBottom:8}}>{pending.length} בקשות להקלה (פרסום ב-3 החודשים האחרונים) שהחלו הליך פרסום ב-YK אך טרם פורסמו רשמית לסעיף 149. רשימת מעקב — חלקן עשויות שלא להתפרסם.</p>
+                                            <table style={{width:'100%',fontSize:12,borderCollapse:'collapse'}}>
+                                                <thead><tr style={{borderBottom:'2px solid #3a3320'}}>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0c34a'}}>#</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0c34a'}}>מס' תיק</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0c34a'}}>כתובת / תכנית</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0c34a'}}>מהות</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0c34a'}}>סטטוס</th>
+                                                    <th style={{textAlign:'center',padding:'6px 4px',color:'#e0c34a'}}>תאריך</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {pending.map((r, i) => (
+                                                        <tr key={'p'+i} style={{borderBottom:'1px solid #1a1a2e'}}>
+                                                            <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                            <td style={{padding:'4px',whiteSpace:'nowrap'}}><a href={objectionYkUrl(r.tik)} target="_blank" rel="noopener" style={{color:'#d4b23a',textDecoration:'none'}}>{r.tik}</a></td>
+                                                            <td style={{padding:'4px',color:'#e0e0e0'}}>{r.address || r.context || '-'}</td>
+                                                            <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.request_description || r.request_type || '-'}</td>
+                                                            <td style={{padding:'4px',color:'#c9a227',fontSize:11}}>{r.status || '-'}</td>
+                                                            <td style={{textAlign:'center',padding:'4px',color:'#aaa'}}>{r.status_date || '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                                         <button onClick={() => {
                                             const w = window.open('', '_blank');
@@ -28640,7 +28726,10 @@
                                             w.document.write('<table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מהות</th><th>מועד אחרון</th><th>פורסם</th><th>מינה"ק</th></tr></thead><tbody>');
                                             recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td><td>'+esc(objectionMinhak(r)||'-')+'</td></tr>'); });
                                             w.document.write('</tbody></table>');
-                                            const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם","מינה\\"ק"'];
+                                                                                        if (pending.length) { w.document.write('<h3>⏳ בהמתנה לפרסום §149 (התנגדויות צפויות)</h3><table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת/תכנית</th><th>מהות</th><th>סטטוס</th><th>תאריך</th></tr></thead><tbody>');
+                                                pending.forEach(function(r,i){ w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||r.context||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.status||'-')+'</td><td>'+esc(r.status_date||'-')+'</td></tr>'); });
+                                                w.document.write('</tbody></table>'); }
+const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם","מינה\\"ק"'];
                                             recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.tik).replace(/"/g,'""')+'","'+String(r.address||'-').replace(/"/g,'""')+'","'+String(r.request_description||r.request_type||'-').replace(/"/g,'""')+'","'+(r.deadline_publish||'-')+'","'+(r.status_date||'-')+'","'+String(objectionMinhak(r)||'-').replace(/"/g,'""')+'"'));
                                             w.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+'+JSON.stringify(csv.join('\n'))+'],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="היתרים_פתוחים_להתנגדויות.csv";a.click()});<\/script>');
                                             w.document.write('</body></html>'); w.document.close(); w.focus();
