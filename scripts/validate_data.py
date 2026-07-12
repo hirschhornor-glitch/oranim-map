@@ -18,9 +18,31 @@ from pathlib import Path
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
+# Make emoji-bearing output (⚠ ✖ ✓) safe on Windows consoles (cp1255) and any
+# non-UTF-8 CI locale — otherwise print() crashes before reporting results.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 # Jerusalem bounding box (generous margins)
 LNG_MIN, LNG_MAX = 35.05, 35.35
 LAT_MIN, LAT_MAX = 31.65, 31.90
+
+# TAMA38 projects that are permit-issued ("הופק") but the permit scraper cannot
+# resolve an address→permit match. A known, accepted backlog of scraper gaps
+# (tama38 permit scraping is partial). Keyed by `tik` (stable across feature
+# reordering, unlike the feature index). A permit-issued project with empty
+# permits that is NOT in this set is treated as a regression and still errors.
+# Re-audit and prune when the tama38 permit scraper improves.
+KNOWN_MISSING_TAMA38_PERMITS = {
+    "2018/0853.00",  # כיכר מגנס 1
+    "2019/0042.00",  # י.ל. דיסקין 8
+    "2020/0333.00",  # הפלמח 3
+    "2020/0578.00",  # מקור חיים 15
+    "2021/0311.00",  # חרלפ 26
+    "2022/0221.00",  # גד 12
+}
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -133,6 +155,7 @@ def check_tama38(tama_data, permits_data) -> None:
     if permits_data is None:
         return
     inconsistent: list[tuple[int, str, str]] = []
+    known_gaps = 0
     for i, f in enumerate(feats):
         p = f.get("properties", {}) or {}
         status = str(p.get("status") or "")
@@ -141,12 +164,22 @@ def check_tama38(tama_data, permits_data) -> None:
             continue
         entry = permits_data.get(str(i))
         permits = (entry or {}).get("permits") or []
-        if not permits:
+        if permits:
+            continue
+        tik = str(p.get("tik") or "").strip()
+        if tik in KNOWN_MISSING_TAMA38_PERMITS:
+            known_gaps += 1
+        else:
             inconsistent.append((i, p.get("address", ""), status))
 
+    if known_gaps:
+        warn(
+            f"tama38_permits.json: {known_gaps} permit-issued projects have empty "
+            f"permits (known scraper gaps, allow-listed)"
+        )
     if inconsistent:
-        # This is an error — a permit-issued project with no scraped permits suggests
-        # the scraper missed it. Top few shown.
+        # A permit-issued project with no scraped permits AND not in the known-gap
+        # allow-list suggests the scraper regressed or missed something new. Top few shown.
         err(
             f"tama38_permits.json: {len(inconsistent)} permit-issued projects "
             f"have empty permits (scraper likely missed). "
