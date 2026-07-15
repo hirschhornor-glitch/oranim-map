@@ -49,22 +49,15 @@ jobs:
       - name: Build asset allocations join (→ data/asset_allocations.json)
         run: python scripts/build_asset_allocations.py
 
-      # The gisviewer steps below can 403 when the muni WAF blocks the runner
-      # IP (seen 2026-07-05; fine from residential IPs). Each source is
-      # independent and every script only writes after passing its own sanity
-      # floor, so keep going on failure and commit whatever did refresh — the
-      # job still ends red, so the failure is not silent.
-      - name: Fetch excavation permits (muni GIS 232 → data/excavation_permits.json)
-        if: ${{ !cancelled() }}
-        run: python scripts/fetch_excavation_permits.py
-
-      - name: Fetch permit GIS points (muni GIS 2110 → data/permit_gis_points.json)
-        if: ${{ !cancelled() }}
-        run: python scripts/fetch_permit_gis_points.py
-
-      - name: Probe ortho quarters (→ data/ortho_quarters.json)
-        if: ${{ !cancelled() }}
-        run: python scripts/fetch_ortho_quarters.py
+      # NOTE: the gisviewer.jerusalem.muni.il fetches (excavation permits,
+      # permit GIS points, ortho quarters) used to run here but the muni WAF
+      # returns HTTP 403 to GitHub's datacenter IPs — they failed on EVERY run
+      # (2026-07-05 .. 2026-07-13) and only turned this job red. They work from
+      # a residential Israeli IP, so as of 2026-07-15 they run weekly on the
+      # local machine instead: C:\ORANIM\run_weekly_muni_gis.bat →
+      # weekly_muni_gis.py (Windows Task Scheduler), which commits + pushes
+      # data/{excavation_permits,permit_gis_points,unassigned_permits,ortho_quarters}
+      # directly. Do NOT re-add them here — GitHub cannot reach the muni server.
 
       # תמ"א 18 — public lots near fuel stations. OSM Overpass + local landuse
       # files; falls back to the committed stations list if Overpass is down.
@@ -77,7 +70,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hafrasha_delivery.json data/excavation_permits.json data/permit_gis_points.json data/unassigned_permits.geojson data/ortho_quarters.json data/asset_allocations.json data/fuel_barriers.json
+          git add data/hafrasha_delivery.json data/asset_allocations.json data/fuel_barriers.json
           if git diff --cached --quiet; then
             echo "No data change — nothing to commit."
             exit 0
