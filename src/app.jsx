@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-19-objproc';
+        const APP_VERSION = '2026-07-19-objproc2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -17891,6 +17891,34 @@
                         });
                         marker.addTo(objGroup);
                     });
+                    // Process-detected windows (YK תהליך) — routes the §149 feed misses
+                    // (תקנה 36 / תמ"א 38 ס׳27 / active §149 not in the feed). Dedup vs the
+                    // Rishui149 markers by tik; 'verify' (approximate) shown amber + dashed.
+                    const _proc = window.__objectionsProcess || {};
+                    [].concat((_proc.confirmed_open || []).map(r => Object.assign({ category: 'confirmed' }, r)),
+                              (_proc.verify || []).map(r => Object.assign({ category: 'verify' }, r)))
+                      .forEach(rec => {
+                        if (!rec.lnglat || rec.lnglat.length !== 2) return;
+                        if (window.__objectionsPermits && window.__objectionsPermits[(rec.tik || '').trim()]) return;
+                        const llp = rec.lnglat;
+                        if (!inDistrict(llp)) return;
+                        const isV = rec.category === 'verify';
+                        const col = isV ? '#e0a800' : objectionsUrgencyColor(objectionsDaysLeft(rec.deadline_publish));
+                        const latlng = L.latLng(rec.lnglat[1], rec.lnglat[0]);
+                        const marker = L.circleMarker(latlng, {
+                            pane: 'markerPane', radius: 7, color: '#fff', weight: 2,
+                            fillColor: col, fillOpacity: 0.95, dashArray: isV ? '3,3' : null,
+                            title: (rec.address || rec.tik) + (isV ? ' — פרסום פעיל (לאימות)' : '')
+                        });
+                        marker.on('click', () => {
+                            drawPlanOutline(llp);
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildProcessObjectionPopup(rec))
+                                .openOn(map);
+                        });
+                        marker.addTo(objGroup);
+                    });
                     geoLayersRef.current.objections = objGroup;
                 }
 
@@ -18537,6 +18565,34 @@
                     +   '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">'
                     +   '🔗 פתח את התיק באתר העירייה ←</a>'
                     + '</div>'
+                    + '</div>';
+            }
+            // Popup for a permit whose objection window was detected via the YK תהליך
+            // (routes the §149 feed misses). 'verify' = active publication with no formal
+            // 'תום מועד' row yet → amber, approximate deadline; 'confirmed' = future תום-מועד row.
+            function buildProcessObjectionPopup(rec) {
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const isV = rec.category === 'verify';
+                const col = isV ? '#e0a800' : objectionsUrgencyColor(objectionsDaysLeft(rec.deadline_publish));
+                const fg = isV ? '#1a1a2e' : '#fff';
+                const badge = isV ? '🔶 פרסום פעיל — לאימות' : '⚖️ פתוח להתנגדויות';
+                const row = (label, val) => val ? '<tr><td style="padding:3px 8px;color:#9ab;white-space:nowrap">' + esc(label) + '</td>'
+                    + '<td style="padding:3px 8px;color:#dfe">' + esc(val) + '</td></tr>' : '';
+                return ''
+                    + '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:280px">'
+                    + '<div style="margin-bottom:6px"><span style="background:' + col + ';color:' + fg + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold">' + badge + '</span></div>'
+                    + '<h3 style="margin:2px 0 8px;color:#cfe;font-size:15px">' + esc(rec.address || rec.tik) + '</h3>'
+                    + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+                    +   row('מס\' תיק', rec.tik)
+                    +   row('מסלול פרסום', rec.route)
+                    +   row('סטטוס YK', rec.stored_status)
+                    +   '<tr><td style="padding:5px 8px;color:' + fg + ';background:' + col + ';font-weight:bold;white-space:nowrap">' + (isV ? 'מועד משוער' : 'מועד אחרון') + '</td>'
+                    +     '<td style="padding:5px 8px;color:' + fg + ';background:' + col + ';font-weight:bold">' + (isV ? '~' : '') + esc(rec.deadline_publish || '—') + '</td></tr>'
+                    +   row('פורסם בתאריך', rec.status_date)
+                    + '</table>'
+                    + (isV ? '<div style="margin-top:6px;font-size:11px;color:#c9a227;line-height:1.4">⚠ פרסום פעיל בתהליך אך טרם נקבעה שורת "תום מועד" רשמית — המועד משוער וייתכן שכבר חלף. לאימות מול התיק.</div>' : '')
+                    + '<div style="margin-top:8px;font-size:12px"><a href="' + esc(objectionYkUrl(rec.tik))
+                    +   '" target="_blank" rel="noopener" style="color:#6cf;text-decoration:none">🔗 פתח את התיק באתר העירייה ←</a></div>'
                     + '</div>';
             }
             // ── Tree-cutting permits (אישורי כריתה) — open-for-objection layer ──
@@ -28659,6 +28715,11 @@
                         const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
                         recs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
                         const pending = collectPendingObjectionPermits();
+                        // process-detected windows (YK תהליך) not already in the Rishui149 table
+                        const proc = [].concat(
+                            ((window.__objectionsProcess||{}).confirmed_open||[]).map(r => Object.assign({category:'confirmed'}, r)),
+                            ((window.__objectionsProcess||{}).verify||[]).map(r => Object.assign({category:'verify'}, r))
+                        ).filter(r => !(window.__objectionsPermits && window.__objectionsPermits[(r.tik||'').trim()]));
                         const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                         return (
                         <div className="units-overlay" onClick={() => setPermitObjectionsReport(false)}>
@@ -28735,6 +28796,42 @@
                                             </table>
                                         </div>
                                     )}
+                                    {proc.length > 0 && (
+                                        <div style={{marginTop:8,marginBottom:16}}>
+                                            <h3 style={{color:'#e0a800',fontSize:15,margin:'8px 0 4px'}}>🔶 פרסום פעיל — לאימות</h3>
+                                            <p style={{color:'#999',fontSize:12,marginBottom:8}}>{proc.length} היתרים שפרסום ההתנגדות שלהם פעיל בתהליך YK (כולל מסלולי תקנה 36 / תמ"א 38 ס׳27 שאינם בפיד §149), אך טרם נקבעה שורת "תום מועד" רשמית — המועד משוער, לאימות מול התיק.</p>
+                                            <table style={{width:'100%',fontSize:12,borderCollapse:'collapse'}}>
+                                                <thead><tr style={{borderBottom:'2px solid #3a3320'}}>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0a800'}}>#</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0a800'}}>מס' תיק</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0a800'}}>כתובת</th>
+                                                    <th style={{textAlign:'right',padding:'6px 4px',color:'#e0a800'}}>מסלול</th>
+                                                    <th style={{textAlign:'center',padding:'6px 4px',color:'#e0a800'}}>מועד משוער</th>
+                                                    <th style={{textAlign:'center',padding:'6px 4px',color:'#e0a800'}}>פורסם</th>
+                                                </tr></thead>
+                                                <tbody>
+                                                    {proc.map((r, i) => (
+                                                        <tr key={'pr'+i} style={{borderBottom:'1px solid #1a1a2e',cursor:r.lnglat?'pointer':'default'}}
+                                                            onClick={() => {
+                                                                if (!r.lnglat || !mapInstanceRef.current) return;
+                                                                const center = L.latLng(r.lnglat[1], r.lnglat[0]);
+                                                                setPermitObjectionsReport(false);
+                                                                setTimeout(() => { mapInstanceRef.current.setView(center, 18);
+                                                                    setTimeout(() => { L.popup({maxWidth:340,className:'plan-popup'}).setLatLng(center).setContent(buildProcessObjectionPopup(r)).openOn(mapInstanceRef.current); }, 500);
+                                                                }, 100);
+                                                            }}>
+                                                            <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                            <td style={{padding:'4px',whiteSpace:'nowrap'}}><a href={objectionYkUrl(r.tik)} target="_blank" rel="noopener" style={{color:'#d19a00',textDecoration:'none'}}>{r.tik}</a></td>
+                                                            <td style={{padding:'4px',color:'#e0e0e0'}}>{r.address || '-'}</td>
+                                                            <td style={{padding:'4px',color:'#bbb',fontSize:11}}>{r.route || '-'}</td>
+                                                            <td style={{textAlign:'center',padding:'4px',color:'#1a1a2e',fontWeight:'bold',background:'#e0a800'}}>~{r.deadline_publish || '-'}</td>
+                                                            <td style={{textAlign:'center',padding:'4px',color:'#aaa'}}>{r.status_date || '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                                         <button onClick={() => {
                                             const w = window.open('', '_blank');
@@ -28747,6 +28844,9 @@
                                             w.document.write('</tbody></table>');
                                                                                         if (pending.length) { w.document.write('<h3>⏳ בהמתנה לפרסום §149 (התנגדויות צפויות)</h3><table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת/תכנית</th><th>מהות</th><th>סטטוס</th><th>תאריך</th></tr></thead><tbody>');
                                                 pending.forEach(function(r,i){ w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||r.context||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.status||'-')+'</td><td>'+esc(r.status_date||'-')+'</td></tr>'); });
+                                                w.document.write('</tbody></table>'); }
+                                            if (proc.length) { w.document.write('<h3>🔶 פרסום פעיל — לאימות</h3><table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מסלול</th><th>מועד משוער</th><th>פורסם</th></tr></thead><tbody>');
+                                                proc.forEach(function(r,i){ w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.route||'-')+'</td><td>~'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td></tr>'); });
                                                 w.document.write('</tbody></table>'); }
 const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון","פורסם","מינה\\"ק"'];
                                             recs.forEach((r,i) => csv.push('"'+(i+1)+'","'+String(r.tik).replace(/"/g,'""')+'","'+String(r.address||'-').replace(/"/g,'""')+'","'+String(r.request_description||r.request_type||'-').replace(/"/g,'""')+'","'+(r.deadline_publish||'-')+'","'+(r.status_date||'-')+'","'+String(objectionMinhak(r)||'-').replace(/"/g,'""')+'"'));
