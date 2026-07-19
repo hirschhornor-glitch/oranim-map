@@ -14417,5 +14417,53 @@
   "scraped_at": null,
   "permit_count": 1,
   "error": ""
+ },
+ "460": {
+  "tik": "2026/0032.00",
+  "address": "מבוא יורם 8",
+  "permits": [
+   {
+    "file_number": "2026/0032.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "07/07/2026",
+    "request_type": "תמ\"א 38 הריסה ובניה",
+    "request_description": "הריסה ובנייה חדשה מכוח תמ\"א 38/2 ו-10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "461": {
+  "tik": "2026/0146.00",
+  "address": "שופן 2",
+  "permits": [
+   {
+    "file_number": "2026/0146.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "14/07/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "תמ\"א 38/1 - חיזוק ותוספות במבנה קיים"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
+ },
+ "462": {
+  "tik": "2026/0258.00",
+  "address": "הלה 13",
+  "permits": [
+   {
+    "file_number": "2026/0258.00",
+    "status": "תום תקופת פרסום",
+    "status_date": "07/07/2026",
+    "request_type": "תמ\"א 38 - תוספות",
+    "request_description": "חיזוק וחידוש הבנין ע\"פ תמ\"א 38 ותכנית 10038"
+   }
+  ],
+  "scraped_at": null,
+  "permit_count": 1,
+  "error": ""
  }
 }

@@ -1,5 +1,5 @@
 {
- "count": 13,
+ "count": 16,
  "by_tik": {
   "1971/1425.03": {
    "developer": "טרספולסקי",
@@ -166,6 +166,27 @@
    "architect": "נורית",
    "units": 52,
    "minahak": "בקעה רבתי",
+   "is_residents": false
+  },
+  "2026/0032.00": {
+   "developer": "עירונית בע\"מ / זקלין",
+   "architect": "ראובן",
+   "units": null,
+   "minahak": "גינות העיר",
+   "is_residents": false
+  },
+  "2026/0146.00": {
+   "developer": "שופן 2 התחדשות עירונית / אברהם",
+   "architect": "מיכל",
+   "units": null,
+   "minahak": "גינות העיר",
+   "is_residents": false
+  },
+  "2026/0258.00": {
+   "developer": "הלל",
+   "architect": "פרץ פרי",
+   "units": null,
+   "minahak": "גינות העיר",
    "is_residents": false
   }
  }

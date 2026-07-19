@@ -15547,6 +15547,111 @@
     "last_edi_1": "2026-07-11",
     "__rec_stat": null
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213789,
+      31.767665
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 460,
+    "qc_id": 460,
+    "tik": "2026/0032.00",
+    "address": "מבוא יורם 8",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף אוטומטית 2026-07-19 מביקורת §149 שבועית.",
+    "harisaa": "כן",
+    "y": null,
+    "x": null,
+    "created_us": "weekly149",
+    "created_da": "2026-07-19",
+    "last_edite": "weekly149",
+    "last_edi_1": "2026-07-19",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.213974,
+      31.768558
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 461,
+    "qc_id": 461,
+    "tik": "2026/0146.00",
+    "address": "שופן 2",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף אוטומטית 2026-07-19 מביקורת §149 שבועית.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "weekly149",
+    "created_da": "2026-07-19",
+    "last_edite": "weekly149",
+    "last_edi_1": "2026-07-19",
+    "__rec_stat": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "MultiPoint",
+    "coordinates": [
+     [
+      35.210695,
+      31.765724
+     ]
+    ]
+   },
+   "properties": {
+    "fid": 462,
+    "qc_id": 462,
+    "tik": "2026/0258.00",
+    "address": "הלה 13",
+    "neighborho": "קטמון הישנה",
+    "rova": 0.0,
+    "units_exis": 0.0,
+    "units_tose": 0.0,
+    "open_": "",
+    "status": "נפתח תיק היתר",
+    "date": null,
+    "status_1": null,
+    "comment": "נוסף אוטומטית 2026-07-19 מביקורת §149 שבועית.",
+    "harisaa": "לא",
+    "y": null,
+    "x": null,
+    "created_us": "weekly149",
+    "created_da": "2026-07-19",
+    "last_edite": "weekly149",
+    "last_edi_1": "2026-07-19",
+    "__rec_stat": null
+   }
   }
  ]
 }
