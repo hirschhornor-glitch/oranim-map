@@ -1,0 +1,85 @@
+{
+ "scanned": 210,
+ "generated": "2026-07-19",
+ "confirmed_open": [],
+ "verify": [
+  {
+   "tik": "2026/0247.00",
+   "address": "עמק רפאים 68",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "24/06/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "02/08/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0247.00",
+   "lnglat": [
+    35.215697,
+    31.760717
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0283.00",
+   "address": "אסתר המלכה 2",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "01/07/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "09/08/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0283.00",
+   "lnglat": [
+    35.221986,
+    31.758968
+   ],
+   "in_district": true,
+   "category": "verify"
+  }
+ ],
+ "open_in_district": [
+  {
+   "tik": "2026/0247.00",
+   "address": "עמק רפאים 68",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "24/06/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "02/08/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0247.00",
+   "lnglat": [
+    35.215697,
+    31.760717
+   ],
+   "in_district": true,
+   "category": "verify"
+  },
+  {
+   "tik": "2026/0283.00",
+   "address": "אסתר המלכה 2",
+   "stored_status": "תחילת פרסום הבקשה להקלה",
+   "status_date": "01/07/2026",
+   "request_type": "",
+   "src": "tama38",
+   "open": true,
+   "route": "§149",
+   "deadline_publish": "09/08/2026",
+   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
+   "shown_tik": "2026/0283.00",
+   "lnglat": [
+    35.221986,
+    31.758968
+   ],
+   "in_district": true,
+   "category": "verify"
+  }
+ ]
+}

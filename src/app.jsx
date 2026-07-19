@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-19-149w';
+        const APP_VERSION = '2026-07-19-objproc';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4932,6 +4932,8 @@
                 window.__masterPlanCompliance = {};
                 window.__meetings = {};
                 window.__objectionsPermits = {};
+                window.__objectionsProcess = { confirmed_open: [], verify: [] };
+                window.__objectionsProcessByTik = {};
                 window.__treePermits = {};
                 window.__decisionSummaries = {};
                 window.__fieldObs = {};
@@ -4958,6 +4960,7 @@
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
+                    ['__objectionsProcess', 'data/objections_process.json'],
                     ['__treePermits', 'data/tree_permits.json'],
                     ['__eduForecast', 'data/education_forecast_gonenim.json'],
                     ['__decisionSummaries', 'data/decision_summaries.json'],
@@ -5415,6 +5418,13 @@
                             else if (key === '__tama38Valencies') { window.__tama38Valencies = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
+                            else if (key === '__objectionsProcess') {
+                                window.__objectionsProcess = data || { confirmed_open: [], verify: [] };
+                                window.__objectionsProcessByTik = {};
+                                ['confirmed_open', 'verify'].forEach(cat => (window.__objectionsProcess[cat] || []).forEach(r => {
+                                    if (r && r.tik) window.__objectionsProcessByTik[String(r.tik).trim()] = Object.assign({ category: cat }, r);
+                                }));
+                            }
                             else if (key === '__treePermits') { window.__treePermits = data || {}; }
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
@@ -19260,10 +19270,19 @@
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
                     html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
-                    if (window.__objectionsPermits && window.__objectionsPermits[(p.file_number || '').trim()]) {
-                        const _or = window.__objectionsPermits[(p.file_number || '').trim()];
+                    const _pk = (p.file_number || '').trim();
+                    if (window.__objectionsPermits && window.__objectionsPermits[_pk]) {
+                        const _or = window.__objectionsPermits[_pk];
                         const _oc = objectionsUrgencyColor(objectionsDaysLeft(_or.deadline_publish));
                         html += `<span class="popup-status-badge" style="background:${_oc};color:#fff;border:1px solid ${_oc};font-size:10px;font-weight:bold" title="פתוח להתנגדויות · מועד אחרון ${_or.deadline_publish || ''}">⚖️ פתוח להתנגדויות</span>`;
+                    } else if (window.__objectionsProcessByTik && window.__objectionsProcessByTik[_pk]) {
+                        const _pr = window.__objectionsProcessByTik[_pk];
+                        if (_pr.category === 'confirmed_open') {
+                            const _pc = objectionsUrgencyColor(objectionsDaysLeft(_pr.deadline_publish));
+                            html += `<span class="popup-status-badge" style="background:${_pc};color:#fff;border:1px solid ${_pc};font-size:10px;font-weight:bold" title="פתוח להתנגדויות (מתהליך YK · ${_pr.route || ''}) · מועד אחרון ${_pr.deadline_publish || ''}">⚖️ פתוח להתנגדויות</span>`;
+                        } else {
+                            html += `<span class="popup-status-badge" style="background:#e0a800;color:#1a1a2e;border:1px solid #e0a800;font-size:10px;font-weight:bold" title="פרסום פעיל בתהליך YK (${_pr.route || ''}) — מועד משוער ${_pr.deadline_publish || ''}; טרם נקבעה שורת 'תום מועד' רשמית — לאימות ידני">🔶 פרסום פעיל — לאימות</span>`;
+                        }
                     } else if (isPendingObjectionStatus(p.status)) {
                         html += `<span class="popup-status-badge" style="background:#c9a227;color:#1a1a2e;border:1px solid #c9a227;font-size:10px;font-weight:bold" title="הבקשה בשלב פרסום הקלה — טרם פורסמה רשמית לסעיף 149; התנגדויות צפויות להיפתח בקרוב">⏳ בהמתנה לפרסום §149</span>`;
                     }
