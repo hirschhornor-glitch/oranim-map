@@ -1,71 +1,25 @@
 {
-  "1994/0874.05": {
-    "tik": "1994/0874.05",
+  "2004/0135.06": {
+    "tik": "2004/0135.06",
     "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "15/07/2025",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים",
-    "request_description": "תוספת מחסן עבור דירה 3- שינויים פנים + מדרגות חוץ עבור דירה 1",
-    "address": "יוסי בן יועזר 5",
-    "street": "יוסי בן יועזר",
-    "house": "5",
-    "schn": "גוננים",
-    "deadline_publish": "16/07/2026",
-    "deadline_verified": "2026-07-11",
-    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
-    "lnglat": [
-      35.210674,
-      31.758446
-    ],
-    "subs": [],
-    "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=3fe3878a-ea1a-40df-917b-20ea28bc3d8a",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1994/0874.05&SystemCode=26400046&Page=BakashalInfo",
-    "source": "official_activepublications"
-  },
-  "1995/0533.12": {
-    "tik": "1995/0533.12",
-    "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "16/04/2024",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים, ממ\"ד",
-    "request_description": "תוספת בניה לפי תב\"ע",
-    "address": "דב הוז 10",
-    "street": "דב הוז",
-    "house": "10",
-    "schn": "גוננים",
-    "deadline_publish": "16/07/2026",
-    "deadline_verified": "2026-07-11",
-    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
-    "lnglat": [
-      35.19473,
-      31.756053
-    ],
-    "subs": [],
-    "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=67b16c29-747c-4db9-986c-10ebaa2bd7fb",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1995/0533.12&SystemCode=26400046&Page=BakashalInfo",
-    "source": "official_activepublications"
-  },
-  "2010/0196.01": {
-    "tik": "2010/0196.01",
-    "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "21/06/2026",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים, בנית מחסן/מחסנים, ממ\"ד, בניית מרפסת",
-    "request_description": "תוספת בניה עפ\"י תב\"ע, ממ\"ד, מחסן ומרפסת",
-    "address": "ניקנור 217",
+    "status_date": "29/07/2025",
+    "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, בנית מחסן/מחסנים",
+    "request_description": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ריצוף מרפסת גג , בניית מחסן.",
+    "address": "ניקנור 216",
     "street": "ניקנור",
-    "house": "217",
-    "schn": "גוננים",
-    "deadline_publish": "12/07/2026",
-    "deadline_verified": "2026-07-11",
+    "house": "216",
+    "schn": "קטמון הישנה",
+    "deadline_publish": "30/07/2026",
+    "deadline_verified": "2026-07-19",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
-      35.199588,
-      31.757387
+      35.199837,
+      31.757849
     ],
     "subs": [],
     "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=1a292818-8eb1-4f62-bb9d-9fc2a6da5490",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2010/0196.01&SystemCode=26400046&Page=BakashalInfo",
+    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=df606abb-3730-461a-a79e-9e170c07c514",
+    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=2004/0135.06&SystemCode=26400046&Page=BakashalInfo",
     "source": "official_activepublications"
   }
 }
