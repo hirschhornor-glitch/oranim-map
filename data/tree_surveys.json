@@ -931,12 +931,13 @@
     "source": "xplan"
   },
   "1151901": {
-    "total": 36,
-    "shimur": 18,
-    "krita": 16,
-    "haataka": 2,
+    "total": 29,
+    "shimur": 10,
+    "krita": 18,
+    "haataka": 1,
     "lo_nidresh": 0,
-    "confidence": "medium"
+    "confidence": "xplan",
+    "source": "xplan"
   },
   "1115450": {
     "total": 94,
@@ -975,9 +976,9 @@
     "source": "xplan"
   },
   "1297548": {
-    "total": 97,
-    "shimur": 32,
-    "krita": 65,
+    "total": 85,
+    "shimur": 50,
+    "krita": 35,
     "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "xplan",
@@ -4059,8 +4060,8 @@
     "source": "xplan"
   },
   "978031": {
-    "total": 7,
-    "shimur": 7,
+    "total": 6,
+    "shimur": 6,
     "krita": 0,
     "haataka": 0,
     "lo_nidresh": 0,
@@ -4413,6 +4414,24 @@
     "total": 32,
     "shimur": 6,
     "krita": 26,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1582451": {
+    "total": 14,
+    "shimur": 0,
+    "krita": 14,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "xplan",
+    "source": "xplan"
+  },
+  "1561513": {
+    "total": 3,
+    "shimur": 3,
+    "krita": 0,
     "haataka": 0,
     "lo_nidresh": 0,
     "confidence": "xplan",
