@@ -29,7 +29,7 @@ COMPANY_MARK = ("בע\"מ", "בעמ", "בע'מ", "חברה", "שותפות", 'י
 RESIDENTS = ("הדיירים", "דיירים", "נציגות", "ועד הבית", "בעלי הדירות")
 
 
-def yk(proc, params, tries=3):
+def yk(proc, params, tries=5):
     for a in range(tries):
         try:
             d = S.post(YK, json={"ProcName": proc, "Cnn": "cnnGisYk", "Parameters": params},
@@ -38,7 +38,7 @@ def yk(proc, params, tries=3):
                 return d
         except Exception:
             pass
-        time.sleep(3 * (a + 1))
+        time.sleep(3 * (a + 1))       # 3,6,9,12,15s — grind through soft throttle
     return []
 
 
@@ -120,8 +120,8 @@ def main():
         if not d:
             consec_thr += 1
             print(f"[{i}/{n}] THR {tik} (throttled, will resume)", flush=True)
-            if consec_thr >= 4:
-                print("4 consecutive throttles — aborting pass, needs longer cooldown", flush=True)
+            if consec_thr >= 40:
+                print("40 consecutive throttles — YK hard-blocked, aborting", flush=True)
                 break
             continue
         consec_thr = 0
