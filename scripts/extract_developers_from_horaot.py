@@ -26,7 +26,22 @@ HORAOT_DIR = r"C:\ORANIM\horaot"
 PLANS_GEOJSON = r"C:\ORANIM\oranim-app\data\plans.geojson"
 OUT_FILE = r"C:\ORANIM\_developer_extract_results.json"
 
-GARBAGE_DEVS = {'כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד'}
+GARBAGE_DEVS = {'כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד',
+                'ניסיון', 'אדריכלים ומתכנני ערים', 'אדריכלים', 'פרטי'}
+# ערך שנראה כמו כתובת ("בלפור 16 , טלביה") — הסקרייפר הישן כתב כתובות בשדות
+ADDR_RE = re.compile(r'\d+\s*,\s*\S|^(רחוב|שד|דרך|ככר)\b')
+
+
+def value_is_garbage(v):
+    v = (v or '').strip() if isinstance(v, str) else str(v or '')
+    if not v:
+        return False
+    if v in GARBAGE_DEVS or v.startswith('.4') or v.isdigit():
+        return True
+    if ADDR_RE.search(v):
+        return True
+    # length is checked per JV partner — a 3-way partnership is legit at 70+ chars
+    return any(len(part.strip()) >= 60 for part in v.split(' / '))
 
 HEB = re.compile(r'[֐-׿]')
 
@@ -250,16 +265,22 @@ def load_targets(all_units=False):
         # units_add is sometimes only filled by the GS override layer at app
         # load time — fall back to units_total so those plans aren't skipped
         u = num(p.get('units_add')) or num(p.get('units_total'))
-        if u <= 0:
-            continue
         d = p.get('developer')
         d = d.strip() if isinstance(d, str) else (str(d) if d else '')
         pn = str(p.get('plan_name') or '')
-        bad = (not d or d in GARBAGE_DEVS or d.startswith('.4')
-               or len(d) >= 60 or d.isdigit())
-        if (bad or all_units) and pn:
-            targets[pn] = {'taba': str(p.get('taba')), 'units': u,
-                           'old_developer': d}
+        if not pn:
+            continue
+        bad_dev = (not d) or value_is_garbage(d)
+        bad_arch = value_is_garbage(p.get('architect'))
+        if u <= 0:
+            # zero-unit plans (public buildings etc.) still show dev/arch in
+            # popups — include them when a field holds scrape garbage
+            if not (value_is_garbage(d) or bad_arch):
+                continue
+        elif not (bad_dev or bad_arch or all_units):
+            continue
+        targets[pn] = {'taba': str(p.get('taba')), 'units': u,
+                       'old_developer': d}
     return targets
 
 

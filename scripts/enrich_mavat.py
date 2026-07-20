@@ -4,6 +4,7 @@ persistent browser context + input() for captcha + API + DOM scraping.
 """
 import asyncio, json, sys
 from datetime import datetime
+from plan_name_util import clean_plan_name
 import gspread
 from google.oauth2.service_account import Credentials
 from playwright.async_api import async_playwright
@@ -370,7 +371,7 @@ async def main():
         if dt and "T" in str(dt):
             try: dt = datetime.fromisoformat(dt.replace("Z", "+00:00")).strftime("%d/%m/%Y")
             except: pass
-        if r.get("name"): props["plan_name_he"] = r["name"]
+        if r.get("name"): props["plan_name_he"] = clean_plan_name(r["name"])
         if r.get("status"): props["status_mavat"] = r["status"]
         if dt: props["mavat_date"] = dt
         if r.get("permissions"): props["plan_summary"] = r["permissions"][:200]

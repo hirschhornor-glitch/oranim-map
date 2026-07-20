@@ -37,14 +37,20 @@ RESULTS_FILE  = r"C:\ORANIM\_developer_extract_results.json"
 GARBAGE = {'כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד',
            # generic/junk architect values from the old scrape
            'ניסיון', 'אדריכלים ומתכנני ערים', 'אדריכלים', 'פרטי'}
+# ערך שנראה כמו כתובת ("בלפור 16 , טלביה") — הסקרייפר הישן כתב כתובות בשדות
+ADDR_RE = re.compile(r'\d+\s*,\s*\S|^(רחוב|שד|דרך|ככר)\b')
 
 
 def is_garbage(v):
     v = (v or '').strip()
     if not v:
         return False
-    return (v in GARBAGE or v.startswith('.4') or len(v) >= 60
-            or v.isdigit())
+    if v in GARBAGE or v.startswith('.4') or v.isdigit():
+        return True
+    if ADDR_RE.search(v):
+        return True
+    # length per JV partner — a 3-way partnership is legit at 70+ chars
+    return any(len(part.strip()) >= 60 for part in v.split(' / '))
 
 
 def should_write(current):
@@ -110,7 +116,13 @@ def dev_action(current, r):
     if (not cur) or is_garbage(cur):
         return 'write'
     if names_match(cur, new):
-        return None  # same entity, keep existing form (aliases handle display)
+        # same entity — but if the statutory doc lists MORE partners than the
+        # current single value (e.g. ש.ב.ח -> ש.ב.ח / רמי לוי), upgrade to the
+        # fuller JV list so co-developers aren't lost.
+        if (r.get('source') == 'horaot_1.8.2_yazam'
+                and len(new.split(' / ')) > len(cur.split(' / '))):
+            return 'write'
+        return None  # keep existing form (aliases handle display)
     if r.get('source') == 'horaot_1.8.2_yazam':
         return 'write'  # statutory יזם section beats old scrape
     return 'review'
