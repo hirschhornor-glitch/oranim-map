@@ -1101,6 +1101,25 @@ def _parse_xplan_report(xplan_report, plan_meta):
     return summary, rows
 
 
+def _load_pending_new_plans():
+    """Read new_plans_report.json if present. Returns (list_of_plans, path).
+    detect_new_plans.py writes this at the start of run_mavat_sync.bat; we
+    consume it here and rename to `.consumed` so it isn't re-included."""
+    path = r"C:\ORANIM\new_plans_report.json"
+    try:
+        if not os.path.exists(path):
+            return [], path
+        with open(path, encoding='utf-8') as f:
+            report = json.load(f)
+        if report.get('new_plans_count', 0) == 0:
+            return [], path
+        plans = list((report.get('plans') or {}).values())
+        return plans, path
+    except Exception as e:
+        log_msg(f"Failed to read new_plans_report.json: {e}")
+        return [], path
+
+
 def send_email_notification(updates, objection_results=None, xplan_report=None):
     if not SENDER_EMAIL or not SENDER_PASSWORD or not RECEIVER_EMAIL:
         log_msg("Email settings not configured. Skipping email notification.")
@@ -1119,13 +1138,20 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     future_objections = [o for o in (objection_results or []) if _is_future(o.get('objection_end', ''))]
     has_objections = bool(future_objections)
     has_xplan = bool(xplan_report)
-    if not has_updates and not has_objections and not has_xplan:
+
+    # Consolidated new-plans section — read detect_new_plans's report if present.
+    new_plans, new_plans_report_path = _load_pending_new_plans()
+    has_new_plans = bool(new_plans)
+
+    if not has_updates and not has_objections and not has_xplan and not has_new_plans:
         return
 
     log_msg("Sending email notification...")
 
     # Build subject
     parts = []
+    if has_new_plans:
+        parts.append(f"{len(new_plans)} תכניות חדשות")
     if has_updates:
         parts.append(f"{len(updates)} סטטוסים עודכנו")
     if has_objections:
@@ -1133,6 +1159,43 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     subject = "עידכון ממבאת: " + " | ".join(parts)
 
     html = "<html dir='rtl'><body style='font-family: Arial, sans-serif;'>"
+
+    # New plans section — placed first so it stands out.
+    if has_new_plans:
+        html += "<h2>🆕 תכניות חדשות שזוהו</h2>"
+        html += f"<p>נמצאו {len(new_plans)} תכניות חדשות שנוספו ל-GS ו-plans.geojson:</p>"
+        html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
+        html += ("<tr style='background-color: #e8f5e9;'>"
+                 "<th>מספר תכנית</th><th>שם התכנית</th><th>מינה\"ק</th>"
+                 "<th>סטטוס</th><th>יח\"ד</th><th>מסחר (מ\"ר)</th>"
+                 "<th>שב\"צ</th><th>הפרשה</th><th>גובה/קומות</th><th>מבא\"ת</th>"
+                 "</tr>")
+        for p in new_plans:
+            def _num(v):
+                if not v and v != 0: return ''
+                try:
+                    f = float(v); return str(int(f)) if f.is_integer() else f"{f:.1f}"
+                except: return str(v)
+            status = p.get('status', '')
+            is_obj = 'הפקדה להתנגדויות' in status
+            status_cell = status + ('<br><b style="color:#1976d2">פתוחה להתנגדויות</b>' if is_obj else '')
+            hgt = _num(p.get('High'))
+            lvl = _num(p.get('level_num'))
+            hgt_lvl = f"{hgt}מ׳ / {lvl}ק׳" if hgt and lvl else (hgt + 'מ׳' if hgt else (lvl + ' קומות' if lvl else ''))
+            mavat = p.get('mavat_url', '')
+            html += "<tr>"
+            html += f"<td>{p.get('pl_number', '')}</td>"
+            html += f"<td dir='rtl'>{p.get('name_he', '')}</td>"
+            html += f"<td dir='rtl'>{p.get('minahak', '') or '-'}</td>"
+            html += f"<td dir='rtl'>{status_cell}</td>"
+            html += f"<td>{_num(p.get('units_total')) or '-'}</td>"
+            html += f"<td>{_num(p.get('commerce_out')) or '-'}</td>"
+            html += f"<td>{_num(p.get('shavatz_out_sqm')) or '-'}</td>"
+            html += f"<td>{_num(p.get('hafrash_sqm')) or '-'}</td>"
+            html += f"<td>{hgt_lvl or '-'}</td>"
+            html += f"<td>{'<a href=' + repr(mavat) + '>קישור</a>' if mavat else '-'}</td>"
+            html += "</tr>"
+        html += "</table><br>"
 
     # Status updates section
     if has_updates:
@@ -1253,6 +1316,15 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         server.send_message(msg)
         server.quit()
         log_msg("Email sent successfully!")
+        # Mark the new-plans report as consumed so tomorrow's run doesn't
+        # re-include the same plans. Only rename after a successful send.
+        if has_new_plans and os.path.exists(new_plans_report_path):
+            consumed_path = new_plans_report_path + f".consumed_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            try:
+                os.rename(new_plans_report_path, consumed_path)
+                log_msg(f"Marked new_plans_report as consumed: {consumed_path}")
+            except Exception as e:
+                log_msg(f"Failed to rename new_plans_report: {e}")
     except Exception as e:
         log_msg(f"Failed to send email: {e}")
 
@@ -1277,6 +1349,15 @@ async def main():
     sheet = get_sheet()
     all_data = sheet.get_all_values()
     log_msg(f"Total rows in sheet: {len(all_data) - 1}")
+
+    # Sanity check: row 1 must be the header ('agam_id' in A1). If not,
+    # the sheet was corrupted (see 2026-07-12 incident where detect_new_plans
+    # overwrote the header with plan data, causing update_mavat_ui to shift
+    # its row-based writes onto the WRONG plan). Abort BEFORE any writes.
+    if not all_data or not all_data[0] or all_data[0][0].strip() != 'agam_id':
+        log_msg(f"FATAL: GS row 1 is not the header (A1={all_data[0][0] if all_data and all_data[0] else 'MISSING'!r}). "
+                f"Aborting to prevent row-shifted writes. Run _restore_gs_header.py first.")
+        return
 
     status_filter = {ONLY_STATUS} if ONLY_STATUS else TARGET_STATUSES
 
@@ -1500,26 +1581,73 @@ async def main():
             log_msg(f"  Row {u['row']}: {u['old_status']} → {u['new_status']} (date: {u['new_date']})")
             
         log_msg(f"Auto-updating {len(updates)} rows in Google Sheets...")
-        
-        # We re-fetch the sheet to be safe before writing
+
+        # Race-safe write: re-fetch the sheet and RE-VERIFY each update's row
+        # still holds the expected plan_name. Between our initial read (main
+        # start) and now, other processes (detect_new_plans, manual edits) may
+        # have shifted rows. If plan_name at the recorded row doesn't match,
+        # look up the plan_name in fresh data. If STILL not found, skip.
+        # 2026-07-12 incident: without this, 5 status writes went to wrong plans.
         sheet = get_sheet()
+        fresh_data = sheet.get_all_values()
+        # Sanity check: row 1 must be the header before we do anything
+        if not fresh_data or not fresh_data[0] or fresh_data[0][0].strip() != 'agam_id':
+            log_msg(f"FATAL: GS row 1 is not the header at write time "
+                    f"(A1={fresh_data[0][0] if fresh_data and fresh_data[0] else 'MISSING'!r}). "
+                    f"Aborting all writes.")
+            return
+        fresh_row_by_plan = {}
+        for _ri, _row in enumerate(fresh_data[1:], start=2):
+            if len(_row) >= COL_PLAN_NAME:
+                _pn = _row[COL_PLAN_NAME - 1].strip()
+                if _pn:
+                    fresh_row_by_plan[_pn] = _ri
+
         batch_updates = []
+        skipped = []
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         for u in updates:
-            row = u['row']
+            captured_row = u['row']
+            expected_plan = u.get('plan_name', '')
+            # Re-verify: what's the plan_name AT captured_row NOW?
+            actual_at_row = ''
+            if 1 <= captured_row - 1 < len(fresh_data):
+                _r = fresh_data[captured_row - 1]
+                if len(_r) >= COL_PLAN_NAME:
+                    actual_at_row = _r[COL_PLAN_NAME - 1].strip()
+            if actual_at_row == expected_plan:
+                target_row = captured_row  # unchanged — safe
+            else:
+                # Sheet shifted. Find plan by name in fresh data.
+                looked_up = fresh_row_by_plan.get(expected_plan)
+                if looked_up is None:
+                    log_msg(f"  SKIP write for {expected_plan}: not found in fresh sheet "
+                            f"(captured row {captured_row} now has plan {actual_at_row!r})")
+                    skipped.append(u)
+                    continue
+                log_msg(f"  Row-shift detected for {expected_plan}: captured row "
+                        f"{captured_row} now has {actual_at_row!r}; writing to row {looked_up} instead")
+                target_row = looked_up
+                u['row'] = looked_up  # so downstream code (t5, geojson) uses the correct row
+
             batch_updates.append({
-                'range': f'{gspread.utils.rowcol_to_a1(row, COL_STATUS_MAVAT)}',
+                'range': f'{gspread.utils.rowcol_to_a1(target_row, COL_STATUS_MAVAT)}',
                 'values': [[u['new_status']]]
             })
             if u['new_date']:
                 batch_updates.append({
-                    'range': f'{gspread.utils.rowcol_to_a1(row, COL_MAVAT_DATE)}',
+                    'range': f'{gspread.utils.rowcol_to_a1(target_row, COL_MAVAT_DATE)}',
                     'values': [[u['new_date']]]
                 })
             batch_updates.append({
-                'range': f'{gspread.utils.rowcol_to_a1(row, COL_LAST_MODIFIED)}',
+                'range': f'{gspread.utils.rowcol_to_a1(target_row, COL_LAST_MODIFIED)}',
                 'values': [[current_time]]
             })
+
+        if skipped:
+            log_msg(f"  {len(skipped)} update(s) skipped due to unresolvable row shift.")
+        # Drop skipped from updates so downstream steps don't re-touch them
+        updates = [u for u in updates if u not in skipped]
 
         # ── Table 5 + נכנס re-check for the changed plans (mirrors land-use check) ──
         try:

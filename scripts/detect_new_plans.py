@@ -28,6 +28,7 @@ from collections import defaultdict
 import warnings
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
+from plan_name_util import clean_plan_name
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
@@ -38,14 +39,21 @@ from google.oauth2.service_account import Credentials
 # also used by update_mavat_ui.py so the whole status pipeline is consistent.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scope_filter import EXCLUDE_PLAN_NUMBERS, load_exclusion_geometry, plan_majority_in
+from mavat_auth_js import MAVAT_AUTH_JS
+
+# Table 5 XLSX download + parsing. Shared with update_mavat_ui's status-change path.
+# For new plans we do the same thing status-change plans get: download the
+# "זכויות והוראות בניה XLS" file and fill OUT fields on the GS row + geojson.
+from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
+from scrape_table5_xlsx import download_xlsx as _download_table5_xlsx
+from table5_status_check import OUT_MAP as _T5_OUT_MAP
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
-# Repo root (.../oranim-app) and its parent (.../ORANIM locally). On Windows the
-# hardcoded absolute paths below resolve directly; in CI (Ubuntu) they don't
-# exist, so _local_or_repo() falls back to a path relative to this checkout.
+# Local Windows paths resolve directly; in CI (Ubuntu, detect_new_plans.yml)
+# they don't exist, so _local_or_repo() falls back to paths in this checkout.
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_REPO_ROOT  = os.path.dirname(_SCRIPT_DIR)          # .../oranim-app
+_REPO_ROOT  = os.path.dirname(_SCRIPT_DIR)
 
 def _local_or_repo(win_path, *repo_relparts):
     """Prefer the local absolute path; fall back to a repo-relative path in CI."""
@@ -66,10 +74,9 @@ EMAIL_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")
 EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT", "Or_hi@jerusalem.muni.il")
 
 # XPLAN API
-# NOTE: iplan restructured the Xplan service (~2026-06) — the old land-use layer
-# /MapServer/4 is now empty (returns 0 features for any query). The plan polygons
-# (one blue-line boundary per plan, with pl_number/mp_id/pl_name) now live in
-# /MapServer/1, so we query that for both detection and geometry.
+# NOTE (2026-06): iplan emptied the old land-use layer /MapServer/4. The plan
+# polygons (one blue-line boundary per plan, with pl_number/mp_id/pl_name) now
+# live in /MapServer/1, so detection queries that for both id + geometry.
 XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 XPLAN_BLUE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 MAX_PER_REQUEST = 1000
@@ -212,8 +219,7 @@ def fetch_xplan_plans(bbox_itm):
             'geometryType':      'esriGeometryEnvelope',
             'inSR':              '2039',
             'spatialRel':        'esriSpatialRelIntersects',
-            # Only fields that exist on /MapServer/1. (mavat_code/mavat_name/
-            # station/legal_area lived on the old layer 4 and weren't used here.)
+            # Only fields present on /MapServer/1 (the others lived on layer 4).
             'outFields':         'pl_number,mp_id,pl_name,station_desc,last_update_date,shape_area',
             'returnGeometry':    'true',
             'f':                 'geojson',
@@ -508,10 +514,10 @@ async def enrich_from_mavat(new_plans):
                   "while you solve any captcha in the browser window...")
 
         async def _mavat_ok():
-            return await page.evaluate("""
-                async () => {
+            return await page.evaluate("async () => {" + MAVAT_AUTH_JS + """
                     try {
-                        const resp = await fetch('/rest/api/SV4/1?mid=1000247867&guid=0');
+                        const resp = await fetch('/rest/api/SV4/1?mid=1000247867&guid=0',
+                                                 { headers: await mvHeaders() });
                         const data = JSON.parse(await resp.text());
                         return { ok: !!data.planDetails };
                     } catch(e) {
@@ -541,10 +547,10 @@ async def enrich_from_mavat(new_plans):
         for norm, info in plans_with_agam.items():
             agam_id = info['mp_ids'][0]  # use first AGAM_ID
             try:
-                result = await page.evaluate("""
-                    async (id) => {
+                result = await page.evaluate("async (id) => {" + MAVAT_AUTH_JS + """
                         try {
-                            const resp = await fetch('/rest/api/SV4/1?mid=' + id + '&guid=0');
+                            const resp = await fetch('/rest/api/SV4/1?mid=' + id + '&guid=0',
+                                                     { headers: await mvHeaders() });
                             const text = await resp.text();
                             if (!text || text.length < 50) return { error: 'empty response' };
                             const data = JSON.parse(text);
@@ -573,6 +579,29 @@ async def enrich_from_mavat(new_plans):
                 else:
                     info['mavat_details'] = result
                     print(f"  {norm}: {result.get('name_he', '?')[:40]} | {result.get('status', '?')}")
+
+                await asyncio.sleep(0.5)
+
+                # Also fetch Table 5 (זכויות והוראות בניה XLS) — same source of
+                # truth used for status-change plans (table5_status_check.OUT_MAP).
+                try:
+                    plan_arg = {
+                        'taba': norm,
+                        'pl_number': info.get('pl_number', ''),
+                        'agam_id': agam_id,
+                    }
+                    path = await _download_table5_xlsx(page, plan_arg)
+                    if path:
+                        parsed = parse_table5_xlsx(path)
+                        if parsed and not parsed.error:
+                            info['t5_data'] = result_to_dict(parsed)
+                            t5 = info['t5_data']
+                            print(f"    Table 5: units_resid={t5.get('total_residential_units')} "
+                                  f"shavaz={t5.get('public_building_sqm')} "
+                                  f"hafrash={t5.get('hafrash_built_sqm')} "
+                                  f"commerce={t5.get('commerce_sqm')}")
+                except Exception as e:
+                    print(f"    Table 5 fetch failed for {norm}: {e}")
 
                 await asyncio.sleep(0.5)
 
@@ -616,7 +645,7 @@ def update_sheets(new_plans):
         pl_number = info['pl_number']
 
         # Use Mavat details if available, otherwise fall back to XPLAN metadata
-        name_he = md.get('name_he', '') or info.get('xplan_name', '')
+        name_he = clean_plan_name(md.get('name_he', '') or info.get('xplan_name', ''))
         status = md.get('status', '') or info.get('xplan_status', '')
 
         # Format date
@@ -643,27 +672,46 @@ def update_sheets(new_plans):
         set_col('status_mavat', status)
         set_col('mavat_date', status_date)
         set_col('mavat_url', f'https://mavat.iplan.gov.il/SV4/1/{agam_id}/310' if agam_id else '')
-        set_col('plan_summary', md.get('permissions', '')[:200])
+        # NOTE: don't set plan_summary from md['permissions'] — that field is a
+        # generic Mavat category ("תכנית שמכוחה ניתן להוציא היתרים או הרשאות")
+        # that overrides plan_name_he in the popup (see 2026-07-12 discussion
+        # re: plan 101-1561513). Leave plan_summary empty so the popup shows
+        # plan_name_he as the title.
         set_col('last_modified', now_str)
         set_col('plan_type', '')
         set_col('minahak', '')
         set_col('sub_neighborhood', '')
 
+        # Table 5 OUT fields — parsed in enrich_from_mavat via download_xlsx.
+        # Only write non-zero values to avoid clobbering with sparse-table zeros.
+        t5 = info.get('t5_data', {}) or {}
+        for xlsx_key, gs_col in _T5_OUT_MAP:
+            v = t5.get(xlsx_key, 0)
+            if v:
+                set_col(gs_col, v)
+
         rows_to_append.append(row)
 
     if rows_to_append:
-        # INSERT_ROWS: values.append's table detection once resolved to A1 and
-        # its default OVERWRITE mode replaced the header row with a plan row
-        # (2026-07-05). INSERT_ROWS can only insert new rows, never overwrite.
-        sheet.append_rows(rows_to_append, value_input_option='RAW',
-                          insert_data_option='INSERT_ROWS', table_range='A1')
+        # 2026-07-12: switched from append_rows(table_range='A1') to explicit
+        # insert_rows at last_data+1. Even with insert_data_option='INSERT_ROWS'
+        # the append endpoint's table-detection still clobbered row 1 on
+        # 2026-07-12 (same failure mode as the 2026-07-05 incident). Explicit
+        # positioning bypasses table detection entirely.
+        last_data = 1  # 1-indexed row of the last non-empty row
+        for i in range(len(all_data) - 1, 0, -1):
+            if all_data[i] and any(c.strip() for c in all_data[i]):
+                last_data = i + 1
+                break
+        insert_at = last_data + 1
+        sheet.insert_rows(rows_to_append, row=insert_at, value_input_option='RAW')
         row1 = sheet.row_values(1)
         if not row1 or row1[0].strip() != 'agam_id':
             raise RuntimeError(
-                "Header row damaged by append (row 1 no longer starts with "
+                "Header row damaged by insert (row 1 no longer starts with "
                 "'agam_id') — restore it before the next scheduled sync."
             )
-        print(f"  Added {len(rows_to_append)} rows to Sheets.")
+        print(f"  Added {len(rows_to_append)} rows to Sheets (at row {insert_at}).")
 
     return len(rows_to_append)
 
@@ -794,7 +842,7 @@ def update_geojson(new_plans, push_to_github=False):
                 pass
 
         # Use Mavat details if available, otherwise fall back to XPLAN metadata
-        name_he = md.get('name_he', '') or info.get('xplan_name', '')
+        name_he = clean_plan_name(md.get('name_he', '') or info.get('xplan_name', ''))
         status = md.get('status', '') or info.get('xplan_status', '')
 
         max_fid += 1
@@ -809,7 +857,9 @@ def update_geojson(new_plans, push_to_github=False):
                 'taba': norm,
                 'mavat_url': f'https://mavat.iplan.gov.il/SV4/1/{agam_id}/310' if agam_id else '',
                 'plan_name_he': name_he,
-                'plan_summary': md.get('permissions', '')[:200],
+                # See GS-side comment above — plan_summary must NOT be populated
+                # with the generic PERMISSIONS text (would hide plan_name_he in popups).
+                'plan_summary': '',
                 'architect': '',
                 'developer': '',
                 'units_total': '',
@@ -847,6 +897,14 @@ def update_geojson(new_plans, push_to_github=False):
                 'permit_growth_reason': None,
             }
         }
+        # Overlay Table 5 OUT fields (geojson property names match GS header names,
+        # except 'shavatz_out_sqm' etc — the mapping is identical to _T5_OUT_MAP).
+        t5 = info.get('t5_data', {}) or {}
+        for xlsx_key, gs_col in _T5_OUT_MAP:
+            v = t5.get(xlsx_key, 0)
+            if v:
+                # numeric fields go as float, strings stay strings
+                feature['properties'][gs_col] = v
         geojson['features'].append(feature)
         added += 1
 
@@ -1009,15 +1067,39 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
         'email_sent': email_sent,
         'plans': {}
     }
+    # Enrich each plan with data useful for the consolidated email
+    # (minahak comes from plans.geojson after update_geojson ran).
+    try:
+        with open(PLANS_GEOJSON, encoding='utf-8') as gf:
+            _gj = json.load(gf)
+        _minhak_by_plan = {f['properties'].get('plan_name'): f['properties'].get('minahak', '')
+                           for f in _gj['features']}
+    except Exception:
+        _minhak_by_plan = {}
+
     for norm, info in new_plans.items():
         md = info.get('mavat_details', {})
+        agam_id = info['mp_ids'][0] if info['mp_ids'] else ''
+        t5 = info.get('t5_data', {}) or {}
         report['plans'][norm] = {
             'pl_number': info['pl_number'],
             'agam_ids': info['mp_ids'],
             'name_he': md.get('name_he', ''),
             'status': md.get('status', ''),
+            'mavat_url': f'https://mavat.iplan.gov.il/SV4/1/{agam_id}/310' if agam_id else '',
+            'authority': md.get('authority', ''),
+            'minahak': _minhak_by_plan.get(info['pl_number'], ''),
             'parcel_count': len(info['features']),
             'land_uses': info['mavat_names'][:10],
+            # Table 5 OUT fields (only include non-zero values)
+            'units_total': int(t5['total_residential_units']) if t5.get('total_residential_units') else '',
+            'commerce_out': round(t5['commerce_sqm'], 1) if t5.get('commerce_sqm') else '',
+            'shavatz_out_sqm': round(t5['public_building_sqm'], 1) if t5.get('public_building_sqm') else '',
+            'hafrash_sqm': round(t5['hafrash_built_sqm'], 1) if t5.get('hafrash_built_sqm') else '',
+            'shatzap_out': round(t5['shatzap_sqm'], 1) if t5.get('shatzap_sqm') else '',
+            'employment': round(t5['employment_sqm'], 1) if t5.get('employment_sqm') else '',
+            'High': t5.get('max_height_m') or '',
+            'level_num': t5.get('max_floors') or '',
         }
 
     with open(REPORT_FILE, 'w', encoding='utf-8') as f:
@@ -1059,9 +1141,9 @@ async def run(do_update=False, skip_mavat=False):
     bbox = get_bbox_from_boundary()
     xplan_features = fetch_xplan_plans(bbox)
     if not xplan_features:
-        # The Oranim area always has plans — 0 features means the XPLAN service
-        # broke or changed (e.g. a layer was emptied/renumbered). Fail loudly so
-        # CI goes red instead of silently "succeeding" with no detection.
+        # The Oranim area always has plans — 0 features means XPLAN broke or
+        # changed (e.g. a layer emptied/renumbered). Fail loud instead of
+        # silently "succeeding" with no detection.
         print("ERROR: XPLAN returned 0 features for the Oranim bbox. The service "
               "may have changed (check the MapServer layer). Aborting.")
         sys.exit(1)
@@ -1119,11 +1201,31 @@ async def run(do_update=False, skip_mavat=False):
     push = bool(os.environ.get('GITHUB_TOKEN'))
     geojson_added = update_geojson(new_plans, push_to_github=push)
 
-    # Step 6: Send email
-    email_sent = send_email(new_plans)
+    # Step 6: Consolidated email is handled by update_mavat_ui.py (which runs
+    # right after in run_mavat_sync.bat) — it reads new_plans_report.json and
+    # includes the new plans as a section. Standalone send_email kept for
+    # manual/testing use but not invoked here.
+    email_sent = False
 
     # Step 7: Report
     write_report(new_plans, sheets_added, geojson_added, email_sent)
+
+    # Step 8: queue for deep enrichment (staging / hafrash-type / floors).
+    # The enrichment itself needs a local browser session, so it can't run here
+    # in the cloud cron — it only records the worklist. enrich_changed_plans.py
+    # drains it on the local machine (or use --from-report after a git pull).
+    try:
+        import enrich_queue as _eq
+        _eq.enqueue([
+            {"taba": _eq.norm_taba(info["pl_number"]),
+             "agam_id": (info["mp_ids"][0] if info.get("mp_ids") else None),
+             "plan_name": info["pl_number"], "reason": "new",
+             "queued_at": get_israel_time().strftime("%Y-%m-%d %H:%M:%S")}
+            for info in new_plans.values()
+        ])
+        print(f"[enrich-queue] queued {len(new_plans)} new plans for deep enrichment")
+    except Exception as e:
+        print(f"[enrich-queue] could not enqueue: {e}")
 
     print(f"\nDone! {get_israel_time().strftime('%H:%M:%S')}")
 
