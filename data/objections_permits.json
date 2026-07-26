@@ -1,27 +1,4 @@
 {
-  "1978/0433.03": {
-    "tik": "1978/0433.03",
-    "status": "פרסום פעיל לפי סעיף 149",
-    "status_date": "28/06/2026",
-    "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית מרפסת, ממ\"ד, עבודות לשיפור נגישות, התקנת מעלית חיצונית",
-    "request_description": "תוספת בניה ל2 דירות הגג+חדר מחוזק בגג +מדרגות גישה +מרפסת גג + מעלית ומבואות.",
-    "address": "אלעזר המודעי 5",
-    "street": "אלעזר המודעי",
-    "house": "5",
-    "schn": "גוננים",
-    "deadline_publish": "19/07/2026",
-    "deadline_verified": "2026-07-19",
-    "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
-    "lnglat": [
-      35.214558,
-      31.759948
-    ],
-    "subs": [],
-    "tabas": [],
-    "doc_url": "http://jerarchivews.jerusalem.muni.il/ArchiveNGService.svc/rest/StreamDocById?DocId=9d818c1f-2df2-444b-b1f6-79aabbdee684",
-    "yk_url": "https://ykpubdata.jerusalem.muni.il/#/Details?TikNum=1978/0433.03&SystemCode=26400046&Page=BakashalInfo",
-    "source": "official_activepublications"
-  },
   "2004/0135.06": {
     "tik": "2004/0135.06",
     "status": "פרסום פעיל לפי סעיף 149",
@@ -33,7 +10,7 @@
     "house": "216",
     "schn": "קטמון הישנה",
     "deadline_publish": "30/07/2026",
-    "deadline_verified": "2026-07-19",
+    "deadline_verified": "2026-07-26",
     "deadline_source": "muni Rishui149 api/publish PD900 (תום מועד להגשת התנגדויות)",
     "lnglat": [
       35.199837,
