@@ -121,6 +121,11 @@ OUT_MAP = [
     ("public_building_sqm", "shavatz_out_sqm"),
     ("hafrash_built_sqm", "hafrash_sqm"),
     ("shatzap_sqm", "shatzap_out"),
+    # Shared-tenant ("חדר דיירים") common areas — PRIVATE to the building's own
+    # residents, NOT public program. Kept in its own column so it can never be
+    # confused with שב"צ/שצ"פ (see reference_program_vs_shared_tenant_spaces).
+    # The matching text breakdown is written to resident_shared_prg below.
+    ("resident_shared_sqm", "resident_shared"),
     ("rental_units", "rental"),
     ("rental_duration_years", "rental_duration"),
     ("conditional_units", "conditional_housing"),
@@ -207,6 +212,14 @@ def compute_changes(h, row, scraped, plan_label=""):
             v = t5.get(key, 0)
             if v:  # don't overwrite with zeros from a sparse table
                 set_field(field, v, field)
+
+    # Shared-tenant notes — a TEXT field, so written directly rather than through
+    # set_field (whose _fmt coerces to number). The numeric total rides OUT_MAP.
+    notes = t5.get("shared_tenant_notes")
+    ci_notes = h.get("resident_shared_prg")
+    if notes and ci_notes is not None and cur("resident_shared_prg") != notes:
+        updates[ci_notes] = notes
+        report.append(f"      resident_shared_prg: {cur('resident_shared_prg') or '∅'} → {notes}")
 
     # IN fields — accordion only.
     ui = bal.get("units_in")

@@ -5,6 +5,7 @@ Public API:
 """
 from __future__ import annotations
 
+import html
 import io
 import re
 from dataclasses import dataclass, field, asdict
@@ -25,6 +26,56 @@ EMPLOYMENT_KEYS = ["תעסוקה", "משרד", "תעשיה", "תעשייה"]
 PUBLIC_KEYS     = ["מבנים ומוסדות ציבור", "מוסדות ציבור", "מוסד ציבור",
                    "מבני ציבור", "מבנה ציבור"]
 SHATZAP_KEYS    = ["שטח ציבורי פתוח", "שטח פרטי פתוח", 'שצ"פ', "שצפ", "שצ”פ"]
+
+# ── Shared-tenant ("חדר דיירים") spaces ──────────────────────────────────────
+# Private common areas that serve the building's OWN residents — shared leisure
+# floors, shared balconies, a tenants' club room. These are NOT public program
+# (שב"צ / שצ"פ) and must never be merged with it — see the memory
+# reference_program_vs_shared_tenant_spaces. They live only in the Table 5
+# free-text notes, e.g. plan 101-1563642 (אריה בעהם):
+#   "150 מ\"ר לטובת שטחי פנאי משותפים בכל מבנה מגורים"
+#   "500 מ\"ר לטובת מרפסות משותפות לטובת הדיירים"
+# Quote glyphs vary across files: straight ' / ", Hebrew gershayim (U+05F4),
+# and the curly/prime family — so מ"ר is matched permissively.
+_QUOTE = r"[\"'״’″“”‘]"
+_SQM_RE = re.compile(r"(\d[\d,]*)\s*מ" + _QUOTE + r"{0,2}ר")
+# (label, pattern) — first match in a window wins, so order by specificity.
+_SHARED_TENANT_CATS = [
+    ("מרפסות משותפות",   re.compile(r"מרפסות\s+משותפ")),
+    ("פנאי משותף",        re.compile(r"פנאי\s+משותפ")),
+    ("חדר דיירים",        re.compile(r"חדר(?:י)?\s+דייר")),
+    ("שטח משותף לדיירים", re.compile(r"משותפ\w*\s+לדייר|משותפ\w*\s+לטובת\s+הדייר")),
+]
+
+
+def _shared_tenant_spaces(note_txt: str) -> Tuple[float, List[str]]:
+    """Extract shared-tenant ("חדר דיירים") areas from Table 5 note text.
+
+    Anchors on each "<num> מ\"ר" figure and keeps it only when a shared-tenant
+    keyword sits in the surrounding window, so ordinary floor-area numbers (e.g.
+    a יח"ד size mix "40 מ\"ר") are not swept in.
+
+    Returns (total_sqm, notes) where notes is a list of "<label>: <n> מ\"ר"
+    strings, one per matched mention (per-building footnotes stay separate).
+    """
+    total = 0.0
+    notes: List[str] = []
+    seen = set()
+    for m in _SQM_RE.finditer(note_txt):
+        win = note_txt[max(0, m.start() - 30): m.end() + 45]
+        label = next((lab for lab, pat in _SHARED_TENANT_CATS if pat.search(win)), None)
+        if not label:
+            continue
+        val = _to_float(m.group(1))
+        if val <= 0:
+            continue
+        key = (label, val, m.start())
+        if key in seen:
+            continue
+        seen.add(key)
+        total += val
+        notes.append(f'{label}: {int(val) if float(val).is_integer() else val} מ"ר')
+    return total, notes
 
 
 def _categories(text: str):
@@ -77,6 +128,8 @@ class ParseResult:
     public_building_sqm: float = 0.0  # built area of pure-מבנים ומוסדות ציבור (שב"צ) — יעוד must be public
     hafrash_built_sqm: float = 0.0    # built area of institutional space WITHIN a residential lot (הפרשה מבונה)
     shatzap_sqm: float = 0.0          # land area of שטח ציבורי פתוח (שצ"פ) rows
+    resident_shared_sqm: float = 0.0  # shared-tenant ("חדר דיירים") area from notes — PRIVATE, not program
+    shared_tenant_notes: str = ""     # per-mention breakdown, e.g. 'פנאי משותף: 150 מ"ר; מרפסות משותפות: 500 מ"ר'
     mixed_use_sqm: float = 0.0        # built area of multi-use rows (can't be split)
     total_building_sqm_all: float = 0.0
     rows: List[dict] = field(default_factory=list)
@@ -249,7 +302,7 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
     # Rental period from the free-text note ("יח\"ד להשכרה לתקופה של 15 שנה").
     # Parsed from the note text, not the table — kept here so it rides along with
     # rental_units. Strip tags first so the phrase isn't split across elements.
-    _note_txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content))
+    _note_txt = html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content)))
     _rent_years = 0
     _m = re.search(r"להשכרה[^.]{0,40}?לתקופה של\s*(\d+)\s*שנ", _note_txt) \
         or re.search(r"השכרה[^.]{0,30}?(\d+)\s*שנ", _note_txt)
@@ -271,6 +324,11 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
 
     result = ParseResult(raw_html_tables=len(tables))
     result.rental_duration_years = _rent_years
+
+    # Shared-tenant ("חדר דיירים") areas live only in the free-text notes.
+    _shared_total, _shared_notes = _shared_tenant_spaces(_note_txt)
+    result.resident_shared_sqm = _shared_total
+    result.shared_tenant_notes = "; ".join(_shared_notes)
 
     t = tables[0]
     # Store columns for debugging
@@ -387,6 +445,8 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
         "public_building_sqm": round(r.public_building_sqm, 1),
         "hafrash_built_sqm": round(r.hafrash_built_sqm, 1),
         "shatzap_sqm": round(r.shatzap_sqm, 1),
+        "resident_shared_sqm": round(r.resident_shared_sqm, 1),
+        "shared_tenant_notes": r.shared_tenant_notes,
         "mixed_use_sqm": round(r.mixed_use_sqm, 1),
         "total_building_sqm_all": round(r.total_building_sqm_all, 1),
         "rental_candidate_uses": r.rental_candidate_uses,
