@@ -13982,7 +13982,7 @@
                         style: f => {
                             const p = f.properties;
                             if (planningTopics.new_plans && isNewPlan(p))
-                                return { color: '#00c853', weight: 3, fillOpacity: 0 };
+                                return { color: '#e91e63', weight: 3, fillOpacity: 0 };
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.meetings) {
