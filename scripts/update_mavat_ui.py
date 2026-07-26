@@ -1686,10 +1686,18 @@ async def main():
         update_future_shavaz_status(updates)
 
     # ── Check XPLAN for geometry/landuse/shavaz changes ──
+    # New plans (added by detect_new_plans this run) also need their land-use
+    # polygons mirrored into landuse_xplan.geojson so the ייעודי קרקע layer shows
+    # them — route them through the same XPLAN sync as status-changed plans.
+    _new_for_xplan = [{'plan_name': (p.get('pl_number') or '').strip(),
+                       'new_status': (p.get('status') or '').strip()}
+                      for p in (_load_pending_new_plans()[0] or [])
+                      if (p.get('pl_number') or '').strip()]
+    xplan_targets = list(updates) + _new_for_xplan
     xplan_report = []
-    if updates:
+    if xplan_targets:
         log_msg("\n=== Checking XPLAN for geometry updates ===")
-        xplan_report = check_xplan_updates(updates)
+        xplan_report = check_xplan_updates(xplan_targets)
     # Surface the Table 5 / נכנס deltas in the same report/email
     if t5_report:
         xplan_report = (xplan_report or []) + [""] + t5_report
