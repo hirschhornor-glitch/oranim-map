@@ -712,6 +712,13 @@ def update_sheets(new_plans):
                 last_data = i + 1
                 break
         insert_at = last_data + 1
+        # Google Sheets rejects insertDimension when the 0-indexed start
+        # (insert_at - 1) is >= the current grid size and inheritFromBefore is
+        # false — i.e. when the grid is exactly full (2026-07-26 incident, grid
+        # size 1087, "startIndex must be less than the grid size"). Grow the
+        # grid first so there's a row before the insertion point.
+        if sheet.row_count < insert_at:
+            sheet.add_rows(insert_at - sheet.row_count + len(rows_to_append))
         sheet.insert_rows(rows_to_append, row=insert_at, value_input_option='RAW')
         row1 = sheet.row_values(1)
         if not row1 or row1[0].strip() != 'agam_id':
