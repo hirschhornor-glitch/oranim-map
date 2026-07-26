@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-19-objproc2';
+        const APP_VERSION = '2026-07-26-newplans';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2856,6 +2856,7 @@
             const [planningTopics, setPlanningTopics] = useState({
                 overlapping: false,   // תבעות כפולות על אותו מרחב
                 objections: false,     // תכניות המופקדות להתנגדויות
+                new_plans: false,      // תכניות חדשות שזוהו ב-30 הימים האחרונים (first_detected)
                 meetings: false,       // תכניות עם ישיבה קרובה
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
@@ -2959,6 +2960,7 @@
             const [mimushTailOpen, setMimushTailOpen] = useState({}); // { minahak: true/false }
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
+            const [newPlansReport, setNewPlansReport] = useState(false);
             const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
             const [treePermitsReport, setTreePermitsReport] = useState(false);
             const [meetingsReport, setMeetingsReport] = useState(false);
@@ -13095,6 +13097,7 @@
                         apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
                     { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true) },
+                    { key: 'newPlans', isOpen: () => newPlansReport, open: () => setNewPlansReport(true) },
                     { key: 'permitObjections', isOpen: () => permitObjectionsReport, open: () => setPermitObjectionsReport(true) },
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
@@ -13895,7 +13898,19 @@
                     return false;
                 }
 
-                if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
+                // "תכניות חדשות" — plans first detected within the last 30 days
+                // (first_detected is a fixed YYYY-MM-DD stamp set by detect_new_plans).
+                function isNewPlan(p) {
+                    const fd = String(p.first_detected || '').trim();
+                    if (!fd) return false;
+                    const d = new Date(fd);
+                    if (isNaN(d.getTime())) return false;
+                    const cutoff = new Date(); cutoff.setHours(0,0,0,0);
+                    cutoff.setDate(cutoff.getDate() - 30);
+                    return d >= cutoff;
+                }
+
+                if (gd.plans && (planningTopics.overlapping || planningTopics.objections || planningTopics.new_plans || planningTopics.meetings || planningTopics.infrastructure || planningTopics.archived || planningTopics.shavaz_demolition)) {
                     // Inject SVG hatch patterns into map's SVG defs
                     const svgEl = map.getRenderer(L.geoJSON())._container || map.getPane('overlayPane').querySelector('svg');
                     if (svgEl) {
@@ -13928,6 +13943,7 @@
                             }
                             const p = f.properties;
                             if (planningTopics.overlapping && isOverlapHighlighted(p)) return true;
+                            if (planningTopics.new_plans && isNewPlan(p)) return true;
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות')) {
                                 // Show only plans whose effective objection-end date is today or in the future.
                                 // For ועדה מחוזית: fall back to (mavat_date + 60 days) when no stored date,
@@ -13965,6 +13981,8 @@
                         },
                         style: f => {
                             const p = f.properties;
+                            if (planningTopics.new_plans && isNewPlan(p))
+                                return { color: '#00c853', weight: 3, fillOpacity: 0 };
                             if (planningTopics.objections && (p.status_mavat || '').includes('הפקדה להתנגדויות'))
                                 return { color: '#dd0000', weight: 3, fillOpacity: 0 };
                             if (planningTopics.meetings) {
@@ -21141,6 +21159,7 @@
                     { id: 'mimush',       title: 'דוח מימוש',               desc: 'שלביות ביצוע', icon: '🚧' },
                     { id: 'overlap',      title: 'תב"עות כפולות',            desc: 'תכניות חופפות', icon: '🔁' },
                     { id: 'objections',   title: 'הפקדות להתנגדויות',        desc: 'תכניות מופקדות', icon: '📝' },
+                    { id: 'new_plans',    title: 'תכניות חדשות',            desc: 'זוהו ב-30 הימים האחרונים', icon: '🆕' },
                     { id: 'permit_objections', title: 'היתרים פתוחים להתנגדויות', desc: 'בקשות להיתר עם הקלות (סעיף 149)', icon: '⚖️' },
                     { id: 'tree_permits', title: 'אישורי כריתת עצים פתוחים לערר', desc: 'אישורי כריתה עם מועד אחרון לערר (מעירים/פקיד היערות)', icon: '🌳' },
                     { id: 'meetings',     title: 'ישיבות קרובות',            desc: 'תכניות בדיון', icon: '📅' },
@@ -21260,6 +21279,7 @@
                     else if (id === 'mimush') openMimushModal();
                     else if (id === 'overlap') setOverlapReport(true);
                     else if (id === 'objections') setObjectionsReport(true);
+                    else if (id === 'new_plans') setNewPlansReport(true);
                     else if (id === 'permit_objections') setPermitObjectionsReport(true);
                     else if (id === 'tree_permits') setTreePermitsReport(true);
                     else if (id === 'meetings') setMeetingsReport(true);
@@ -21881,6 +21901,16 @@
                                 <label style={{flex:1}}>תכניות המופקדות להתנגדויות</label>
                                 <button className="layer-legend-btn" title="דוח סיכום הפקדות"
                                     onClick={(e) => { e.stopPropagation(); setObjectionsReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='תכניות חדשות שזוהו ב-30 הימים האחרונים'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => setPlanningTopics(prev => ({...prev, new_plans: !prev.new_plans}))}>
+                                <input type="checkbox" checked={planningTopics.new_plans} onChange={() => {}} />
+                                <label style={{flex:1}}>תכניות חדשות</label>
+                                <button className="layer-legend-btn" title="דוח תכניות חדשות"
+                                    onClick={(e) => { e.stopPropagation(); setNewPlansReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             <div className="layer-item"
@@ -24382,6 +24412,7 @@
                                 { icon:'🚧', title:'דוח מימוש', desc:'שלביות ביצוע לפי מינהל ותכנית', onClick:() => go(() => openMimushModal()) },
                                 { icon:'📊', title:'שלביות ביצוע', desc:'מתי מתקבלות ההפרשות הציבוריות (מסירה בשלבים) ומשך התכנית', onClick:() => go(() => setStagingReport(true)) },
                                 { icon:'📝', title:'הפקדות להתנגדויות', desc:'תכניות מופקדות לפי סמכות', onClick:() => go(() => setObjectionsReport(true)) },
+                                { icon:'🆕', title:'תכניות חדשות', desc:'תכניות שזוהו ב-30 הימים האחרונים (יח"ד, שב"צ/שצ"פ יוצא)', onClick:() => go(() => setNewPlansReport(true)) },
                                 { icon:'📅', title:'ישיבות קרובות', desc:'תכניות בדיון בוועדות הקרובות', onClick:() => go(() => setMeetingsReport(true)) },
                                 { icon:'🔁', title:'תב"עות כפולות', desc:'תכניות חופפות באותו מרחב', onClick:() => go(() => setOverlapReport(true)) },
                             ]},
@@ -28691,6 +28722,131 @@
                                             });
                                             const csvContent = csvRows.join('\n');
                                             printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="הפקדות_להתנגדויות.csv";a.click()});<\/script>');
+                                            printWin.document.write('</body></html>');
+                                            printWin.document.close();
+                                            printWin.focus();
+                                        }} style={{background:'#e94560',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',cursor:'pointer',fontSize:13,fontWeight:600}}>
+                                            &#128424; הדפסה / שמירה
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── New plans report (תכניות חדשות שזוהו ב-30 הימים האחרונים) ── */}
+                    {newPlansReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const adminLayersN = Object.values(LAYER_CONFIG).flatMap(g => g.layers).filter(l => l.minahak);
+                        const selectedMinahaksN = adminLayersN.filter(l => layers[l.id]).map(l => l.minahak);
+                        const allAdminOnN = adminLayersN.every(l => layers[l.id]);
+                        const checkMinahakN = (props) => allAdminOnN || selectedMinahaksN.includes(props.minahak || '');
+                        const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - 30);
+                        const nfmt = (v) => {
+                            if (v === null || v === undefined || v === '') return '-';
+                            const f = parseFloat(v); if (isNaN(f)) return String(v);
+                            return f % 1 === 0 ? String(f) : f.toFixed(1);
+                        };
+                        const seen = new Set();
+                        const plans = gd.plans.features.filter(f => {
+                            const p = f.properties;
+                            if (!checkMinahakN(p)) return false;
+                            const fd = String(p.first_detected || '').trim();
+                            if (!fd) return false;
+                            const d = new Date(fd);
+                            if (isNaN(d.getTime()) || d < cutoff) return false;
+                            const id = p.plan_name || '';
+                            if (seen.has(id)) return false;
+                            seen.add(id);
+                            return true;
+                        }).map(f => f.properties).sort((a, b) =>
+                            String(b.first_detected || '').localeCompare(String(a.first_detected || '')));
+                        return (
+                        <div className="units-overlay" onClick={() => setNewPlansReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(880px, 96vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
+                                <ReportLinkBtn /><button className="units-close" onClick={() => setNewPlansReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#127381; תכניות חדשות</h2>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} תכניות שזוהו ב-30 הימים האחרונים</p>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מספר תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>מינה"ק</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>סטטוס</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>יח"ד נכנס</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>יח"ד יוצא</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שב"צ יוצא</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שצ"פ יוצא</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>זוהתה</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {plans.map((p, i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = (e) => {
+                                                    e.stopPropagation();
+                                                    const gd = geoDataRef.current;
+                                                    if (!gd.plans || !mapInstanceRef.current) return;
+                                                    const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
+                                                    if (!feat || !feat.geometry) return;
+                                                    const coords = [];
+                                                    const g = feat.geometry;
+                                                    if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                                                    else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                                                    if (!coords.length) return;
+                                                    const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                                                    const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                                                    const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                                                    const props = JSON.parse(JSON.stringify(feat.properties));
+                                                    setNewPlansReport(false);
+                                                    setTimeout(() => {
+                                                        mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                                        setTimeout(() => {
+                                                            const mapped = mapPlanProps(props);
+                                                            const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                                            popup.openOn(mapInstanceRef.current);
+                                                            bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                                        }, 600);
+                                                    }, 100);
+                                                }; }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#ce93d8'}}>{String(p.minahak || '-').trim()}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffa726',fontSize:11}}>{String(p.status_mavat || '-').trim()}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#bbb'}}>{nfmt(p.units_in)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#66bb6a',fontWeight:600}}>{nfmt(p.units_total)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#c8a97a'}}>{nfmt(p.shavatz_out_sqm)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#81c784'}}>{nfmt(p.shatzap_out)}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#4fc3f7',fontSize:11}}>{p.first_detected || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                        <button onClick={() => {
+                                            const printWin = window.open('', '_blank');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח תכניות חדשות</title>');
+                                            printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0}@media print{.no-print{display:none!important}}</style>');
+                                            printWin.document.write('</head><body>');
+                                            printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
+                                            printWin.document.write('<button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128424; הדפסה</button>');
+                                            printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
+                                            printWin.document.write('</div>');
+                                            printWin.document.write('<div class="header"><h2>תכניות חדשות</h2>');
+                                            printWin.document.write('<p>' + plans.length + ' תכניות שזוהו ב-30 הימים האחרונים</p></div>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>מינה"ק</th><th>סטטוס</th><th>יח"ד נכנס</th><th>יח"ד יוצא</th><th>שב"צ יוצא</th><th>שצ"פ יוצא</th><th>זוהתה</th></tr></thead><tbody>');
+                                            plans.forEach((p, i) => {
+                                                printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + String(p.minahak||'-').trim() + '</td><td>' + String(p.status_mavat||'-').trim() + '</td><td>' + nfmt(p.units_in) + '</td><td>' + nfmt(p.units_total) + '</td><td>' + nfmt(p.shavatz_out_sqm) + '</td><td>' + nfmt(p.shatzap_out) + '</td><td>' + (p.first_detected||'-') + '</td></tr>');
+                                            });
+                                            printWin.document.write('</tbody></table>');
+                                            const csvRows = ['"#","מספר תכנית","שם תכנית","מינה\\"ק","סטטוס","יח\\"ד נכנס","יח\\"ד יוצא","שב\\"צ יוצא","שצ\\"פ יוצא","זוהתה"'];
+                                            plans.forEach((p, i) => {
+                                                csvRows.push('"' + (i+1) + '","' + (p.plan_name||'').replace(/"/g,'""') + '","' + (p.plan_summary||p.plan_name_he||'-').replace(/"/g,'""') + '","' + String(p.minahak||'-').trim().replace(/"/g,'""') + '","' + String(p.status_mavat||'-').trim().replace(/"/g,'""') + '","' + nfmt(p.units_in) + '","' + nfmt(p.units_total) + '","' + nfmt(p.shavatz_out_sqm) + '","' + nfmt(p.shatzap_out) + '","' + (p.first_detected||'-') + '"');
+                                            });
+                                            const csvContent = csvRows.join('\n');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="תכניות_חדשות.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
                                             printWin.focus();
