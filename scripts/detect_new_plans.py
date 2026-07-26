@@ -688,6 +688,10 @@ def update_sheets(new_plans):
         # re: plan 101-1561513). Leave plan_summary empty so the popup shows
         # plan_name_he as the title.
         set_col('last_modified', now_str)
+        # first_detected: date this plan was first caught. Unlike last_modified
+        # (bumped on every enrichment) this stays fixed, so the "תכניות חדשות"
+        # map layer can show plans detected within a rolling window.
+        set_col('first_detected', get_israel_time().strftime('%Y-%m-%d'))
         set_col('plan_type', '')
         set_col('minahak', '')
         set_col('sub_neighborhood', '')
@@ -872,6 +876,7 @@ def update_geojson(new_plans, push_to_github=False):
                 'agam_id': float(agam_id) if agam_id else None,
                 'ver_id': None,
                 'taba': norm,
+                'first_detected': get_israel_time().strftime('%Y-%m-%d'),
                 'mavat_url': f'https://mavat.iplan.gov.il/SV4/1/{agam_id}/310' if agam_id else '',
                 'plan_name_he': name_he,
                 # See GS-side comment above — plan_summary must NOT be populated
