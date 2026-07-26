@@ -647,6 +647,15 @@ async def enrich_from_mavat(new_plans):
                                   f"shavaz={t5.get('public_building_sqm')} "
                                   f"hafrash={t5.get('hafrash_built_sqm')} "
                                   f"commerce={t5.get('commerce_sqm')}")
+                            # Consistency flag: the declared "סך הכל" row doesn't
+                            # match the summed detail rows — a component (rental /
+                            # conditional) is listed as additive. Worth review.
+                            if not t5.get('units_totals_consistent', True):
+                                print(f"    ⚠️  Table 5 totals mismatch: detail-sum="
+                                      f"{t5.get('total_units')} vs declared="
+                                      f"{t5.get('stated_total_units')} "
+                                      f"(additive={t5.get('additive_units')}) — review "
+                                      f"whether rental/conditional are additive.")
                 except Exception as e:
                     print(f"    Table 5 fetch failed for {norm}: {e}")
 

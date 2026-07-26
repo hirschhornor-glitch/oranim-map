@@ -70,6 +70,12 @@ class ParseResult:
     max_height_m: float = 0.0
     max_floors: int = 0
     total_residential_units: int = 0
+    # Consistency check: does the declared "סך הכל" row match the summed detail
+    # rows? When they differ, some component (usually rental or conditional) is
+    # listed as ADDITIVE (not folded into the declared total) — flag for review.
+    stated_total_units: int = 0       # units on the residential "סך הכל" row
+    units_totals_consistent: bool = True
+    additive_units: int = 0           # detail-sum minus declared total, when > 0
     # Expanded aggregation (planned/approved state — maps to GS "out" columns)
     total_units: int = 0              # sum of יח"ד across all rows
     commerce_sqm: float = 0.0         # built area of pure-מסחר rows
@@ -369,6 +375,23 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
                 # 2+ non-residential categories, or non-resid mixed with residential
                 result.mixed_use_sqm += area
 
+    # Consistency: compare the declared "סך הכל" row(s) against the summed detail
+    # rows (result.total_units = all residential detail rows incl rental+cond).
+    # A residential total row should equal that sum. If none matches, the plan
+    # lists some units OUTSIDE the declared total (additive) — flag it, and when
+    # a total row sits below the sum, the gap is the additive count.
+    _total_rows = [int(rr.units) for rr in rows_data if rr.is_total and rr.units > 0]
+    if _total_rows and result.total_units > 0:
+        _matched = any(abs(st - result.total_units) <= 1 for st in _total_rows)
+        # residential total row = the one closest to the detail sum (ignore the
+        # grand-total-of-all-uses row, which is usually much larger).
+        result.stated_total_units = min(_total_rows, key=lambda st: abs(st - result.total_units))
+        result.units_totals_consistent = _matched
+        if not _matched:
+            _below = [st for st in _total_rows if st < result.total_units]
+            if _below:
+                result.additive_units = result.total_units - max(_below)
+
     result.rows = [asdict(r) for r in rows_data]
     return result
 
@@ -382,6 +405,9 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
         "max_floors": r.max_floors,
         "total_residential_units": r.total_residential_units,
         "total_units": r.total_units,
+        "stated_total_units": r.stated_total_units,
+        "units_totals_consistent": r.units_totals_consistent,
+        "additive_units": r.additive_units,
         "commerce_sqm": round(r.commerce_sqm, 1),
         "employment_sqm": round(r.employment_sqm, 1),
         "public_building_sqm": round(r.public_building_sqm, 1),
