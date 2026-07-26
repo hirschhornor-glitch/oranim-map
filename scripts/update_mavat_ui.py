@@ -1167,8 +1167,9 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
         html += ("<tr style='background-color: #e8f5e9;'>"
                  "<th>מספר תכנית</th><th>שם התכנית</th><th>מינה\"ק</th>"
-                 "<th>סטטוס</th><th>יח\"ד</th><th>מסחר (מ\"ר)</th>"
-                 "<th>שב\"צ</th><th>הפרשה</th><th>גובה/קומות</th><th>מבא\"ת</th>"
+                 "<th>סטטוס</th><th>יח\"ד (נכנס→יוצא)</th><th>מסחר (מ\"ר)</th>"
+                 "<th>שב\"צ יוצא</th><th>שצ\"פ יוצא</th><th>הפרשה</th>"
+                 "<th>גובה/קומות</th><th>מבא\"ת</th>"
                  "</tr>")
         for p in new_plans:
             def _num(v):
@@ -1188,9 +1189,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             html += f"<td dir='rtl'>{p.get('name_he', '')}</td>"
             html += f"<td dir='rtl'>{p.get('minahak', '') or '-'}</td>"
             html += f"<td dir='rtl'>{status_cell}</td>"
-            html += f"<td>{_num(p.get('units_total')) or '-'}</td>"
+            _ui = _num(p.get('units_in')); _uo = _num(p.get('units_total'))
+            units_cell = (f"{_ui or '0'}→{_uo}" if _uo else (_ui or '-'))
+            html += f"<td>{units_cell}</td>"
             html += f"<td>{_num(p.get('commerce_out')) or '-'}</td>"
             html += f"<td>{_num(p.get('shavatz_out_sqm')) or '-'}</td>"
+            html += f"<td>{_num(p.get('shatzap_out')) or '-'}</td>"
             html += f"<td>{_num(p.get('hafrash_sqm')) or '-'}</td>"
             html += f"<td>{hgt_lvl or '-'}</td>"
             html += f"<td>{'<a href=' + repr(mavat) + '>קישור</a>' if mavat else '-'}</td>"

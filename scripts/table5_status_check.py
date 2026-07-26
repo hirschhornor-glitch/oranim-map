@@ -19,7 +19,7 @@ import asyncio
 
 from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
 from parse_quantity_balance import parse_quantity_balance
-from scrape_table5_xlsx import download_xlsx
+from scrape_table5_xlsx import download_xlsx, MAVAT_BASE
 
 CLICK_MORE_JS = r"""
 () => { let c=0; document.querySelectorAll('*').forEach(el=>{
@@ -31,11 +31,83 @@ READ_SECTION_JS = r"""
   const titles=[...document.querySelectorAll('.uk-accordion-title')];
   const t=titles.find(x=>(x.textContent||'').includes('נתונים כמותיים'));
   if(!t) return '';
-  let panel=t.parentElement?t.parentElement.querySelector('.uk-accordion-content'):null;
+  const li=t.closest('li')||t.parentElement;
+  let panel=li?li.querySelector('.uk-accordion-content'):null;
   if(!panel) panel=t.nextElementSibling||t.parentElement;
   return panel ? (panel.textContent||'') : '';
 }
 """
+
+
+async def _read_quantity_balance(page, plan=None):
+    """Read the 'נתונים כמותיים' accordion so parse_quantity_balance can see the
+    per-category מצב מאושר/שינוי rows (that's where units_in lives).
+
+    The section is a NESTED UIkit accordion that (a) only shows the first couple
+    of categories until a 'נתונים נוספים' load-more control is clicked, and (b)
+    renders each category's מצב מאושר/שינוי detail lazily, only once that category
+    is expanded. UIkit ignores JS .click(), so we drive it with real Playwright
+    locator clicks. Returns the panel textContent (or '')."""
+    # Ensure we're on the plan page. download_xlsx short-circuits (no navigation)
+    # when the XLSX is already cached, which would leave us on a blank page.
+    agam = str((plan or {}).get("agam_id") or "")
+    if agam and agam not in (page.url or ""):
+        try:
+            await page.goto(f"{MAVAT_BASE}/SV4/1/{agam}/310",
+                            wait_until="domcontentloaded", timeout=30000)
+            await asyncio.sleep(6)
+        except Exception:
+            pass
+    try:
+        main = page.locator(".uk-accordion-title", has_text="נתונים כמותיים").first
+        await main.scroll_into_view_if_needed(timeout=8000)
+        # Only open if closed — an earlier download_xlsx pass may have already
+        # expanded it, and a blind click would TOGGLE it shut.
+        if (await main.get_attribute("aria-expanded")) != "true":
+            await main.click(timeout=6000)
+    except Exception:
+        return ""
+    await asyncio.sleep(1.2)
+    # Reveal the remaining categories via the "load more" control (bounded loop).
+    for _ in range(8):
+        more = page.locator("text=נתונים נוספים")
+        try:
+            cnt = await more.count()
+        except Exception:
+            cnt = 0
+        if not cnt:
+            break
+        clicked = False
+        for i in range(cnt):
+            try:
+                el = more.nth(i)
+                await el.scroll_into_view_if_needed(timeout=3000)
+                await el.click(timeout=3000)
+                clicked = True
+            except Exception:
+                pass
+        await asyncio.sleep(0.9)
+        if not clicked:
+            break
+    # Expand each category so its מצב מאושר/שינוי rows render.
+    try:
+        cats = page.locator("ul[sv4-quantity] .uk-accordion-title")
+        n = await cats.count()
+        for i in range(n):
+            try:
+                bt = cats.nth(i)
+                # Expand only closed categories — clicking an open one collapses it.
+                if (await bt.get_attribute("aria-expanded")) != "true":
+                    await bt.click(timeout=3000)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    await asyncio.sleep(1.2)
+    try:
+        return await page.evaluate(READ_SECTION_JS)
+    except Exception:
+        return ""
 
 # Table-5 xlsx result key -> GS header (the authoritative "out"/planned state)
 # units_total = residential units only ("מגורים" in שימוש). Hotel rooms /
@@ -70,9 +142,7 @@ async def scrape_plan(page, plan):
         pass
     bal = {}
     try:
-        await page.evaluate(CLICK_MORE_JS)
-        await asyncio.sleep(1.0)
-        text = await page.evaluate(READ_SECTION_JS)
+        text = await _read_quantity_balance(page, plan)
         if text:
             bal = {k: v for k, v in parse_quantity_balance(text).items() if k != "cards"}
     except Exception:

@@ -50,11 +50,48 @@ from mavat_auth_js import MAVAT_AUTH_JS
 try:
     from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
     from scrape_table5_xlsx import download_xlsx as _download_table5_xlsx
-    from table5_status_check import OUT_MAP as _T5_OUT_MAP
+    from table5_status_check import OUT_MAP as _T5_OUT_MAP, _read_quantity_balance as _read_balance
+    from parse_quantity_balance import parse_quantity_balance as _parse_qbalance
 except ImportError as _t5_import_err:
     print(f"  (Table 5 modules unavailable — skipping their use: {_t5_import_err})")
     parse_table5_xlsx = result_to_dict = _download_table5_xlsx = None
+    _read_balance = _parse_qbalance = None
     _T5_OUT_MAP = []
+
+# XPLAN land-use polygons (MapServer/4). Table 5's shb"z/שצ"פ come back 0 when the
+# public-building / open-space is a standalone LAND-USE rather than a pure row in
+# Table 5 (e.g. a mixed "מגורים מסחר ותעסוקה" plan). The authoritative שב"צ יוצא /
+# שצ"פ יוצא are the land-use legal areas, so read them here and let them win.
+XPLAN_LANDUSE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
+
+def fetch_landuse_shavaz_shatzap(pl_number):
+    """Return (shavatz_out_sqm, shatzap_out) — legal areas of the מבנים ומוסדות
+    ציבור (שב"צ) and שטח ציבורי פתוח (שצ"פ) land-uses for a plan, or (None, None)
+    on failure. Aggregates XPLAN MapServer/4 legal_area by mavat_name."""
+    if not pl_number:
+        return None, None
+    try:
+        params = {'where': f"pl_number='{pl_number}'",
+                  'outFields': 'mavat_name,legal_area,shape_area',
+                  'f': 'json', 'returnGeometry': 'false', 'resultRecordCount': 200}
+        resp = _SESSION.get(XPLAN_LANDUSE_URL, params=params, timeout=60, verify=False)
+        feats = resp.json().get('features', [])
+        if not feats:
+            return None, None
+        shavaz = 0.0
+        shatzap = 0.0
+        for f in feats:
+            a = f.get('attributes', {})
+            nm = (a.get('mavat_name') or '').strip()
+            area = a.get('legal_area') or a.get('shape_area') or 0
+            if nm == 'מבנים ומוסדות ציבור':
+                shavaz += area
+            elif 'שטח ציבורי פתוח' in nm:
+                shatzap += area
+        return round(shavaz, 1), round(shatzap, 1)
+    except Exception as e:
+        print(f"    land-use fetch failed for {pl_number}: {e}")
+        return None, None
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -613,6 +650,32 @@ async def enrich_from_mavat(new_plans):
                 except Exception as e:
                     print(f"    Table 5 fetch failed for {norm}: {e}")
 
+                # יח"ד נכנס (existing units) — from the "נתונים כמותיים" accordion
+                # (מצב מאושר), NOT Table 5 (which is proposed only).
+                try:
+                    if _read_balance and _parse_qbalance:
+                        btext = await _read_balance(page, plan_arg)
+                        if btext:
+                            bal = _parse_qbalance(btext)
+                            if bal.get('units_in') is not None:
+                                info['units_in'] = bal['units_in']
+                                print(f"    units_in (accordion): {bal['units_in']}")
+                except Exception as e:
+                    print(f"    balance fetch failed for {norm}: {e}")
+
+                # שב"צ יוצא / שצ"פ יוצא — from XPLAN land-use (authoritative; Table 5
+                # gives 0 for mixed-use plans where שב"צ is a separate designation).
+                try:
+                    lu_shavaz, lu_shatzap = fetch_landuse_shavaz_shatzap(info.get('pl_number', ''))
+                    if lu_shavaz is not None:
+                        info['landuse_shavatz_out'] = lu_shavaz
+                    if lu_shatzap is not None:
+                        info['landuse_shatzap_out'] = lu_shatzap
+                    if lu_shavaz or lu_shatzap:
+                        print(f"    land-use: שב\"צ={lu_shavaz} שצ\"פ={lu_shatzap}")
+                except Exception as e:
+                    print(f"    land-use fetch failed for {norm}: {e}")
+
                 await asyncio.sleep(0.5)
 
             except Exception as e:
@@ -703,6 +766,19 @@ def update_sheets(new_plans):
             v = t5.get(xlsx_key, 0)
             if v:
                 set_col(gs_col, v)
+
+        # יח"ד נכנס (accordion) + derived tosefet; land-use שב"צ/שצ"פ יוצא override
+        # the Table 5 zeros (they win — see fetch_landuse_shavaz_shatzap).
+        units_in = info.get('units_in')
+        if units_in is not None and units_in != '':
+            set_col('units_in', units_in)
+            out_units = t5.get('total_residential_units')
+            if out_units:
+                set_col('units_add', int(out_units) - int(units_in))
+        if info.get('landuse_shavatz_out'):
+            set_col('shavatz_out_sqm', info['landuse_shavatz_out'])
+        if info.get('landuse_shatzap_out'):
+            set_col('shatzap_out', info['landuse_shatzap_out'])
 
         rows_to_append.append(row)
 
@@ -927,6 +1003,17 @@ def update_geojson(new_plans, push_to_github=False):
             if v:
                 # numeric fields go as float, strings stay strings
                 feature['properties'][gs_col] = v
+        # יח"ד נכנס (accordion) + land-use שב"צ/שצ"פ override (same as GS side).
+        _ui = info.get('units_in')
+        if _ui is not None and _ui != '':
+            feature['properties']['units_in'] = _ui
+            _out = t5.get('total_residential_units')
+            if _out:
+                feature['properties']['units_add'] = int(_out) - int(_ui)
+        if info.get('landuse_shavatz_out'):
+            feature['properties']['shavatz_out_sqm'] = info['landuse_shavatz_out']
+        if info.get('landuse_shatzap_out'):
+            feature['properties']['shatzap_out'] = info['landuse_shatzap_out']
         geojson['features'].append(feature)
         added += 1
 
@@ -1116,12 +1203,20 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
             # Table 5 OUT fields (only include non-zero values)
             'units_total': int(t5['total_residential_units']) if t5.get('total_residential_units') else '',
             'commerce_out': round(t5['commerce_sqm'], 1) if t5.get('commerce_sqm') else '',
-            'shavatz_out_sqm': round(t5['public_building_sqm'], 1) if t5.get('public_building_sqm') else '',
+            # שב"צ/שצ"פ יוצא: land-use legal areas win over Table 5 (0 for mixed-use).
+            'shavatz_out_sqm': info.get('landuse_shavatz_out')
+                               or (round(t5['public_building_sqm'], 1) if t5.get('public_building_sqm') else ''),
             'hafrash_sqm': round(t5['hafrash_built_sqm'], 1) if t5.get('hafrash_built_sqm') else '',
-            'shatzap_out': round(t5['shatzap_sqm'], 1) if t5.get('shatzap_sqm') else '',
+            'shatzap_out': info.get('landuse_shatzap_out')
+                           or (round(t5['shatzap_sqm'], 1) if t5.get('shatzap_sqm') else ''),
             'employment': round(t5['employment_sqm'], 1) if t5.get('employment_sqm') else '',
             'High': t5.get('max_height_m') or '',
             'level_num': t5.get('max_floors') or '',
+            # יח"ד נכנס (accordion) + derived tosefet.
+            'units_in': info.get('units_in') if info.get('units_in') is not None else '',
+            'units_add': (int(t5['total_residential_units']) - int(info['units_in']))
+                         if (t5.get('total_residential_units') and info.get('units_in') is not None)
+                         else '',
         }
 
     with open(REPORT_FILE, 'w', encoding='utf-8') as f:
