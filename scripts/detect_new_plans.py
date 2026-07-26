@@ -79,7 +79,9 @@ BROWSER_DATA   = r"C:\ORANIM\.browser_data"
 # Email config (SMTP with Gmail App Password — same as send_meeting_notification.py)
 EMAIL_SENDER    = "hirschhorn.or@gmail.com"
 EMAIL_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")
-EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT", "Or_hi@jerusalem.muni.il")
+# `or` (not get's default) so an env var set to "" — e.g. an unset GitHub
+# secret expands to an empty string in CI — still falls back to the default.
+EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT") or "Or_hi@jerusalem.muni.il"
 
 # XPLAN API
 # NOTE (2026-06): iplan emptied the old land-use layer /MapServer/4. The plan

@@ -24,8 +24,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+          # The script sends the new-plans notification via SMTP with a Gmail
+          # App Password (GMAIL_APP_PASSWORD) — NOT the refresh token, which it
+          # never reads. Without this secret every detection printed
+          # "Email sent: no" and plans were added silently (2026-07-26).
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          # EMAIL_RECIPIENT is optional: if the secret is unset it expands to ""
+          # and the script falls back to its built-in default recipient.
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
         run: |
           # Run in place from scripts/ so the script's sibling modules
           # (scope_filter.py) resolve via its own sys.path insert, and the
