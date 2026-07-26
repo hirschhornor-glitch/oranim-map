@@ -65,6 +65,7 @@ class XlsxRow:
 @dataclass
 class ParseResult:
     rental_units: int = 0
+    rental_duration_years: int = 0   # from the Table 5 note ("להשכרה לתקופה של N שנה")
     conditional_units: int = 0
     max_height_m: float = 0.0
     max_floors: int = 0
@@ -245,6 +246,17 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
 
     cleaned = re.sub(r"<sup[^>]*>\([0-9]+\)</sup>\s*", "", content)
 
+    # Rental period from the free-text note ("יח\"ד להשכרה לתקופה של 15 שנה").
+    # Parsed from the note text, not the table — kept here so it rides along with
+    # rental_units. Strip tags first so the phrase isn't split across elements.
+    _note_txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content))
+    _rent_years = 0
+    _m = re.search(r"להשכרה[^.]{0,40}?לתקופה של\s*(\d+)\s*שנ", _note_txt) \
+        or re.search(r"השכרה[^.]{0,30}?(\d+)\s*שנ", _note_txt)
+    if _m:
+        try: _rent_years = int(_m.group(1))
+        except ValueError: _rent_years = 0
+
     try:
         tables = pd.read_html(io.StringIO(cleaned), encoding="utf-8")
     except Exception as e:
@@ -258,6 +270,7 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
         return r
 
     result = ParseResult(raw_html_tables=len(tables))
+    result.rental_duration_years = _rent_years
 
     t = tables[0]
     # Store columns for debugging
@@ -309,10 +322,12 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
                 result.rental_units += int(r.units)
                 if r.use and r.use not in result.rental_candidate_uses:
                     result.rental_candidate_uses.append(r.use)
-            if "מגורים" in r.use and not r.is_conditional and not r.is_rental_candidate:
-                result.total_residential_units += int(r.units)
-            elif "מגורים" in r.use:
-                # Still count toward total
+            # יח"ד "מותנות" are conditional rights (their realization is tied to a
+            # קרן תחזוקה / long-term maintenance fund — see Table 5 note ד). By
+            # convention they are ADDITIVE extras, not part of the proposed unit
+            # count, so exclude them from total_residential_units (they remain
+            # tracked in conditional_units). Rental units ARE proposed — keep them.
+            if "מגורים" in r.use and not r.is_conditional:
                 result.total_residential_units += int(r.units)
         if r.height_m > result.max_height_m:
             result.max_height_m = r.height_m
@@ -362,6 +377,7 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
     out = {
         "rental_units": r.rental_units,
         "conditional_units": r.conditional_units,
+        "rental_duration_years": r.rental_duration_years,
         "max_height_m": r.max_height_m,
         "max_floors": r.max_floors,
         "total_residential_units": r.total_residential_units,

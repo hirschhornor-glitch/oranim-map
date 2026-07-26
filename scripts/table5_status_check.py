@@ -122,6 +122,7 @@ OUT_MAP = [
     ("hafrash_built_sqm", "hafrash_sqm"),
     ("shatzap_sqm", "shatzap_out"),
     ("rental_units", "rental"),
+    ("rental_duration_years", "rental_duration"),
     ("conditional_units", "conditional_housing"),
     ("max_height_m", "High"),
     ("max_floors", "level_num"),
