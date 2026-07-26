@@ -44,9 +44,17 @@ from mavat_auth_js import MAVAT_AUTH_JS
 # Table 5 XLSX download + parsing. Shared with update_mavat_ui's status-change path.
 # For new plans we do the same thing status-change plans get: download the
 # "זכויות והוראות בניה XLS" file and fill OUT fields on the GS row + geojson.
-from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
-from scrape_table5_xlsx import download_xlsx as _download_table5_xlsx
-from table5_status_check import OUT_MAP as _T5_OUT_MAP
+# These pull in pandas (parse) and playwright (download). Both the download and
+# the OUT-field write only run under Mavat enrichment, which CI skips (--no-mavat,
+# no browser). On CI those deps are absent, so guard the import and no-op there.
+try:
+    from parse_table5_xlsx import parse_table5_xlsx, result_to_dict
+    from scrape_table5_xlsx import download_xlsx as _download_table5_xlsx
+    from table5_status_check import OUT_MAP as _T5_OUT_MAP
+except ImportError as _t5_import_err:
+    print(f"  (Table 5 modules unavailable — skipping their use: {_t5_import_err})")
+    parse_table5_xlsx = result_to_dict = _download_table5_xlsx = None
+    _T5_OUT_MAP = []
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
