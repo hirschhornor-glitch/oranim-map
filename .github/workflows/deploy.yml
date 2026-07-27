@@ -11,6 +11,7 @@ on:
     branches: [master]
     paths:
       - 'src/app.jsx'
+      - 'src/junction.jsx'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/deploy.yml'
@@ -40,17 +41,17 @@ jobs:
       - name: Install Babel
         run: npm install --no-audit --no-fund
 
-      - name: Build app.js from src/app.jsx
-        run: npm run build
+      - name: Build app.js + junction.js from JSX sources
+        run: npm run build:all
 
-      - name: Commit built app.js back to master
+      - name: Commit built bundles back to master
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app.js
+          git add app.js junction.js
           if git diff --cached --quiet; then
-            echo "app.js unchanged — nothing to commit."
+            echo "bundles unchanged — nothing to commit."
           else
-            git commit -m "build: rebuild app.js [skip ci]"
+            git commit -m "build: rebuild app.js + junction.js [skip ci]"
             git push
           fi
