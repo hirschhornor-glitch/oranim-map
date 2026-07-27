@@ -684,14 +684,32 @@ const legDist = { fontSize: 11, color: '#7fa3b0' };
 const LRT_NAMES = { '3': 'התכלת', '8': 'הסגול' };
 const selStyle = { width: '100%', marginBottom: 6, padding: '7px 8px', borderRadius: 8, background: '#0f2530', color: '#d6e6ec', border: '1px solid #2c4a56', fontSize: 12, fontFamily: 'inherit' };
 function StreetPicker({ label, icon, streets, onPick }) {
-  const [q, setQ] = useState(''); const [open, setOpen] = useState(false); const boxRef = useRef(null);
-  const matches = useMemo(() => { const s = q.trim(); const base = !s ? streets : streets.filter(x => x.name.indexOf(s) >= 0); return base.slice(0, 12); }, [q, streets]);
+  const [q, setQ] = useState(''); const [open, setOpen] = useState(false); const [geo, setGeo] = useState([]); const [busy, setBusy] = useState(false); const boxRef = useRef(null);
+  const matches = useMemo(() => { const s = q.trim(); const base = !s ? streets : streets.filter(x => x.name.indexOf(s) >= 0); return base.slice(0, 8); }, [q, streets]);
+  // address geocoding (street + house number) via Nominatim, biased to the Jerusalem area
+  useEffect(() => {
+    const s = q.trim(); if (s.length < 3) { setGeo([]); return; }
+    setBusy(true);
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      const to = setTimeout(() => ctrl.abort(), 5000);
+      try {
+        const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=il&accept-language=he&viewbox=35.185,31.805,35.255,31.735&bounded=1&q=' + encodeURIComponent(s + ', ירושלים');
+        const r = await fetch(url, { signal: ctrl.signal }); const j = await r.json();
+        setGeo((j || []).map(x => ({ name: x.display_name.split(',').slice(0, 3).join(',').trim(), lat: +x.lat, lng: +x.lon, addr: true })));
+      } catch (e) { setGeo([]); }
+      clearTimeout(to); setBusy(false);
+    }, 550);
+    return () => { clearTimeout(t); ctrl.abort(); setBusy(false); };
+  }, [q]);
   useEffect(() => { const h = (ev) => { if (boxRef.current && !boxRef.current.contains(ev.target)) setOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []);
+  const list = matches.concat(geo);
   return <div ref={boxRef} style={{ position: 'relative', marginBottom: 6 }}>
-    <input dir="rtl" value={q} placeholder={icon + ' ' + label + ' — הקלד שם רחוב…'} onFocus={() => setOpen(true)} onChange={e => { setQ(e.target.value); setOpen(true); }} style={selStyle} />
-    {open && matches.length > 0 && <div style={{ position: 'absolute', zIndex: 1000, top: '100%', insetInlineStart: 0, insetInlineEnd: 0, background: '#0f2530', border: '1px solid #2c4a56', borderRadius: 8, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,.5)' }}>
-      {matches.map((m, i) => <div key={i} onMouseDown={() => { onPick(m); setQ(m.name); setOpen(false); }} style={{ padding: '7px 9px', fontSize: 12.5, color: '#d6e6ec', cursor: 'pointer', borderBottom: '1px solid #17323c', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-        <span>{m.landmark ? '📌 ' : ''}{m.name}</span>{m.d ? <span style={{ color: '#6f97a4', fontSize: 10 }}>{Math.round(m.d)} מ׳</span> : null}</div>)}
+    <input dir="rtl" value={q} placeholder={icon + ' ' + label + ' — רחוב או כתובת (רחוב + מס׳)…'} onFocus={() => setOpen(true)} onChange={e => { setQ(e.target.value); setOpen(true); }} style={selStyle} />
+    {open && (list.length > 0 || busy) && <div style={{ position: 'absolute', zIndex: 1000, top: '100%', insetInlineStart: 0, insetInlineEnd: 0, background: '#0f2530', border: '1px solid #2c4a56', borderRadius: 8, maxHeight: 260, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,.5)' }}>
+      {list.map((m, i) => <div key={i} onMouseDown={() => { onPick(m); setQ(m.addr ? m.name.split(',')[0] : m.name); setOpen(false); }} style={{ padding: '7px 9px', fontSize: 12.5, color: '#d6e6ec', cursor: 'pointer', borderBottom: '1px solid #17323c', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+        <span>{m.addr ? '🏠 ' : m.landmark ? '📌 ' : ''}{m.name}</span>{m.d ? <span style={{ color: '#6f97a4', fontSize: 10 }}>{Math.round(m.d)} מ׳</span> : null}</div>)}
+      {busy && geo.length === 0 && <div style={{ padding: '7px 9px', fontSize: 11, color: '#6f97a4' }}>מחפש כתובת…</div>}
     </div>}
   </div>;
 }
