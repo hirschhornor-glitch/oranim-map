@@ -346,15 +346,15 @@ function JunctionApp() {
   const [errMsg, setErrMsg] = useState('');
   const baseRef = useRef(null); const changesRef = useRef(null); const lrtRef = useRef(null); const lrtDataRef = useRef(null);
   const [mode, setMode] = useState('car');
-  const [A, setA] = useState({ lat: 31.756462, lng: 35.214686 }); // פייר קניג דרום (ליד הרחוב החדש)
-  const [B, setB] = useState({ lat: 31.759527, lng: 35.215198 }); // צומת בן זכאי / עמק רפאים (צפון)
+  const [A, setA] = useState(null); // no default route — only when the user picks A/B
+  const [B, setB] = useState(null);
   const [pick, setPick] = useState('A');
   const [activeExp, setActiveExp] = useState(() => new Set());
   const [showToday, setShowToday] = useState(true);
   const [showFinal, setShowFinal] = useState(true);
-  const [showChanges, setShowChanges] = useState(true);
-  const [showBans, setShowBans] = useState(true);
-  const [showCad, setShowCad] = useState(false); const cadRef = useRef(null);
+  const [showChanges, setShowChanges] = useState(false);
+  const [showBans, setShowBans] = useState(false);
+  const [showCad, setShowCad] = useState(true); const cadRef = useRef(null);
   const [debug, setDebug] = useState(false);
   const [detailState, setDetailState] = useState('final'); // which turn list to show
   const [draw, setDraw] = useState(false); const [drawPts, setDrawPts] = useState([]);
@@ -405,8 +405,8 @@ function JunctionApp() {
   const applyFreeWG = (eff) => { if (!eff) return null; if (!freeMuts.length) return eff.wg; const wg = cloneWG(eff.wg); for (const m of freeMuts) applyMutation(wg, m, () => {}); return wg; };
   const todayWG = useMemo(() => applyFreeWG(todayEff), [todayEff, freeMuts]);
   const finalWG = useMemo(() => applyFreeWG(finalEff), [finalEff, freeMuts]);
-  const routeToday = useMemo(() => !todayWG ? null : (mode === 'transit' ? routeWalk(todayWG, nearestNode(todayWG, A, 'walk'), nearestNode(todayWG, B, 'walk')) : route(todayWG, mode, A, B)), [todayWG, mode, A, B, status]);
-  const routeFinal = useMemo(() => !finalWG ? null : (mode === 'transit' ? routeTransit(lrtRef.current, A, B) : route(finalWG, mode, A, B)), [finalWG, mode, A, B, status]);
+  const routeToday = useMemo(() => (!todayWG || !A || !B) ? null : (mode === 'transit' ? routeWalk(todayWG, nearestNode(todayWG, A, 'walk'), nearestNode(todayWG, B, 'walk')) : route(todayWG, mode, A, B)), [todayWG, mode, A, B, status]);
+  const routeFinal = useMemo(() => (!finalWG || !A || !B) ? null : (mode === 'transit' ? routeTransit(lrtRef.current, A, B) : route(finalWG, mode, A, B)), [finalWG, mode, A, B, status]);
 
   // init map
   useEffect(() => {
