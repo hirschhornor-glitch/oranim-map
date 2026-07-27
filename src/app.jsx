@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-27-committee-permits';
+        const APP_VERSION = '2026-07-27-permit-unify';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -5489,6 +5489,7 @@
                             }
                             cur.permit_count = cur.permits.length;
                         }
+                        window.__permitsByNorm = null; // stores changed — rebuild canonical-key index lazily
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
                         // re-render open reports that consume stage-2 globals
                         // (e.g. developers report opened via deeplink reads
@@ -14036,7 +14037,7 @@
                             fillColor: '#ff8c00', fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false
                         });
                         marker.on('click', () => {
-                            L.popup({ maxWidth: popupMaxWidth() }).setLatLng(latlng).setContent(buildCommitteePermitPopup(mt)).openOn(map);
+                            openCommitteePermitPopup(mt, latlng, map);
                         });
                         marker.addTo(permitGroup);
                     });
@@ -19342,6 +19343,7 @@
                 html += `<div class="popup-header-title">${title}</div>`;
                 html += `<div class="popup-header-subtitle">${subtitle} | ${permits.length} היתרים</div>`;
                 html += '</div>';
+                html += buildPermitCrossBanners(permits);
                 html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
                     const sc = getPermitStatusColor(p.status);
@@ -19719,6 +19721,77 @@
                 w.focus();
             }
 
+            // ── Unified permit identity ──────────────────────────────────────────────
+            // A permit is one real-world entity that surfaces across sources with
+            // differently-padded numbers (YK file_number "2023/0928.00", committee
+            // permit_no "2023/928.0"). Canonicalise to "YYYY/N.S" — mirrors
+            // normalize_permit_no in audit_committee_vs_permits.py — so the committee
+            // agenda, our permit stores, and objection data can be joined.
+            function normPermitNo(raw) {
+                let s = String(raw || '').trim();
+                if (!s) return null;
+                if (s.indexOf('/') >= 0 && s.indexOf('.') < 0) s += '.0';
+                const m = s.match(/^(\d{4})\/0*(\d+)\.0*(\d+)$/);
+                if (!m) return null;
+                return m[1] + '/' + parseInt(m[2], 10) + '.' + parseInt(m[3], 10);
+            }
+            // Our permit record (from __allPermits / __tama38Permits) matching a permit
+            // number, or null. Lazily indexes by canonical key (cached on window; cleared
+            // when the stores reload — see the data loader).
+            function findOurPermit(permitNo) {
+                const key = normPermitNo(permitNo);
+                if (!key) return null;
+                if (!window.__permitsByNorm) {
+                    const idx = {};
+                    const add = store => Object.values(store || {}).forEach(e => (e.permits || []).forEach(p => {
+                        const k = normPermitNo(p.file_number);
+                        if (k && !idx[k]) idx[k] = p;
+                    }));
+                    add(window.__allPermits); add(window.__tama38Permits);
+                    window.__permitsByNorm = idx;
+                }
+                return window.__permitsByNorm[key] || null;
+            }
+            // First upcoming committee meeting for any of these permits (by canonical key).
+            function upcomingMeetingForPermits(permits) {
+                const meetings = window.__meetings || {};
+                const keys = permits.map(p => normPermitNo(p.file_number)).filter(Boolean);
+                if (!keys.length) return null;
+                for (const mt of Object.values(meetings)) {
+                    const mk = normPermitNo(mt.plan_id);
+                    if (mk && keys.indexOf(mk) !== -1) return mt;
+                }
+                return null;
+            }
+            // Cross-source banners for a permit popup — same visual language as the plan
+            // popup banners (buildPlanPopup): open-for-objections (blue) + upcoming
+            // committee meeting (orange). Driven by permit identity, not plan identity.
+            function buildPermitCrossBanners(permits) {
+                const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                let html = '';
+                let objDeadline = null;
+                for (const p of permits) {
+                    const fk = (p.file_number || '').trim();
+                    if (window.__objectionsPermits && window.__objectionsPermits[fk]) { objDeadline = window.__objectionsPermits[fk].deadline_publish || ''; break; }
+                    if (window.__objectionsProcessByTik && window.__objectionsProcessByTik[fk] && window.__objectionsProcessByTik[fk].category === 'confirmed_open') { objDeadline = window.__objectionsProcessByTik[fk].deadline_publish || ''; break; }
+                }
+                if (objDeadline != null) {
+                    html += '<div style="background:#1976d2;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
+                    html += '<div style="font-weight:bold">&#9878;&#65039; פתוח להגשת התנגדויות' + (objDeadline ? ' עד ' + esc(objDeadline) : '') + '</div>';
+                    html += '</div>';
+                }
+                const mt = upcomingMeetingForPermits(permits);
+                if (mt) {
+                    const committee = mt.committee || 'מחוזית';
+                    const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                    html += '<div style="background:#ff8c00;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
+                    html += '<div style="font-weight:bold">&#128197; ישיבה קרובה (' + esc(committeeLabel) + '): ' + esc(mt.meeting_date) + '</div>';
+                    if (mt.purpose) html += '<div style="font-size:11px;margin-top:2px;opacity:0.95">' + esc(mt.purpose) + '</div>';
+                    html += '</div>';
+                }
+                return html;
+            }
+
             // Committee permits (ועדת רישוי) have no תב"ע polygon — they're placed as an
             // approximate geocoded point. Shared popup for both the meetings-report click
             // and the meetings-layer marker. `mt` is a window.__meetings entry.
@@ -19737,6 +19810,29 @@
                     line('תת-שכונה', mt.sub_neighborhood) +
                     '<div style="margin-top:6px;color:#e0a635;font-size:11px">&#128205; מיקום מקורב לפי כתובת</div>' +
                     '</div>';
+            }
+
+            // Open a committee-permit popup at latlng. If the permit exists in our stores
+            // (the audit's "matched" set) → show the full unified permit popup (real YK
+            // status/stage + field obs + cross-source banners), i.e. the two sources
+            // "merge". Otherwise → the lightweight committee popup (still carries the
+            // meeting info). Used by the meetings report click and the layer marker.
+            function openCommitteePermitPopup(mt, latlng, mapObj) {
+                const our = findOurPermit(mt.plan_id);
+                if (our) {
+                    const title = 'היתר ' + (mt.plan_id || '');
+                    const subtitle = (mt.minahak || '') + (mt.sub_neighborhood ? ' · ' + mt.sub_neighborhood : '');
+                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                        .setLatLng(latlng)
+                        .setContent(buildPermitsDetailPopup([our], title, subtitle, null, null, '', 0, 'committee:' + (normPermitNo(mt.plan_id) || mt.plan_id), 0));
+                    popup.openOn(mapObj);
+                    bindPopupEvents(popup, [{ properties: our, type: 'permit' }], 0);
+                } else {
+                    L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                        .setLatLng(latlng)
+                        .setContent(buildCommitteePermitPopup(mt))
+                        .openOn(mapObj);
+                }
             }
 
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
@@ -29950,7 +30046,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                         setTimeout(() => {
                                                             mapInstanceRef.current.flyTo(latlng, 17);
                                                             setTimeout(() => {
-                                                                L.popup({maxWidth:320}).setLatLng(latlng).setContent(buildCommitteePermitPopup(mt)).openOn(mapInstanceRef.current);
+                                                                openCommitteePermitPopup(mt, latlng, mapInstanceRef.current);
                                                             }, 600);
                                                         }, 100);
                                                         return;
