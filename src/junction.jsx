@@ -500,8 +500,8 @@ function JunctionApp() {
     layer.clearLayers();
     if (!showCad) return;
     const STYLE = {
-      curb: { color: '#8794a0', weight: 1, opacity: .85 },
-      centerline: { color: '#00e0a8', weight: 1.6, opacity: .95 },
+      curb: { color: '#9aa7b0', weight: .6, opacity: .25 },
+      centerline: { color: '#00e0a8', weight: 2.6, opacity: .97, lineCap: 'round', lineJoin: 'round' },
       island: { color: '#4faf5a', weight: 1.2, opacity: .9 },
       bus: { color: '#3b82f6', weight: 2, opacity: .95 },
       bike: { color: '#f59e0b', weight: 1.6, opacity: .95 },
@@ -642,7 +642,7 @@ function JunctionApp() {
             <div style={{ fontSize: 10, color: '#5c7482', marginTop: 4 }}>פעלים: חסום · חד-סטרי · דו-סטרי · פתח. יעד: שם רחוב או מזהה קשת (e123 / x_ring). לאימות מזהים — הפעל DebugOverlay.</div>
           </div>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#8ff0d6', cursor: 'pointer' }}>
-            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג תשריט CAD מדויק (שפות כביש · איים · תח״צ · ריהוט)
+            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג צירי כביש מהתשריט (CAD · איים · תח״צ)
           </label>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#e3c6ee', cursor: 'pointer' }}>
             <input type="checkbox" checked={showChanges} onChange={() => setShowChanges(s => !s)} /> הצג שינויי תשתית (רחוב חדש · ביטולי פניות · דו-סטרי)
