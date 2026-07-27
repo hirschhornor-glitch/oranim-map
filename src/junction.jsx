@@ -354,6 +354,7 @@ function JunctionApp() {
   const [showFinal, setShowFinal] = useState(true);
   const [showChanges, setShowChanges] = useState(true);
   const [showBans, setShowBans] = useState(true);
+  const [showCad, setShowCad] = useState(false); const cadRef = useRef(null);
   const [debug, setDebug] = useState(false);
   const [detailState, setDetailState] = useState('final'); // which turn list to show
   const [draw, setDraw] = useState(false); const [drawPts, setDrawPts] = useState([]);
@@ -419,7 +420,7 @@ function JunctionApp() {
       setPick(p => { if (p === 'A') { setA(ll); return 'B'; } setB(ll); return 'A'; });
     });
     mapRef.current = map;
-    layersRef.current = { routes: L.layerGroup().addTo(map), changes: L.layerGroup().addTo(map), bans: L.layerGroup().addTo(map), draw: L.layerGroup().addTo(map), markers: L.layerGroup().addTo(map), debug: L.layerGroup().addTo(map) };
+    layersRef.current = { cad: L.layerGroup().addTo(map), routes: L.layerGroup().addTo(map), changes: L.layerGroup().addTo(map), bans: L.layerGroup().addTo(map), draw: L.layerGroup().addTo(map), markers: L.layerGroup().addTo(map), debug: L.layerGroup().addTo(map) };
   }, [status]);
 
   // draw planned-infrastructure overlay (new road, banned turns, two-way, closures)
@@ -491,6 +492,22 @@ function JunctionApp() {
     const pin = (p, label, color) => L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', html: '<div class="ab-pin" style="color:' + color + '">' + label + '</div>', iconSize: [26, 26], iconAnchor: [13, 24] }) }).addTo(markers);
     if (A) pin(A, '📍', COL.a); if (B) pin(B, '🏁', COL.b);
   }, [routeToday, routeFinal, showToday, showFinal, A, B, status]);
+
+  // precise CAD plan overlay (georeferenced curbs from the DWG) — lazy-loaded, toggleable
+  useEffect(() => {
+    const map = mapRef.current; if (!map) return;
+    const layer = layersRef.current.cad; if (!layer) return;
+    layer.clearLayers();
+    if (!showCad) return;
+    const draw = (fc) => {
+      for (const f of fc.features) {
+        const c = f.geometry.coordinates;
+        L.polyline(c.map(p => [p[1], p[0]]), { color: '#3a4a55', weight: 1, opacity: .9 }).addTo(layer);
+      }
+    };
+    if (cadRef.current) draw(cadRef.current);
+    else fetch('data/junction_cad.geojson?v=2026-07-27').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+  }, [showCad, status]);
 
   // digitize overlay: the polyline the user is drawing
   useEffect(() => {
@@ -613,6 +630,9 @@ function JunctionApp() {
             {freeMsg && <div style={{ fontSize: 10.5, color: '#9bb', marginTop: 4 }}>{freeMsg}</div>}
             <div style={{ fontSize: 10, color: '#5c7482', marginTop: 4 }}>פעלים: חסום · חד-סטרי · דו-סטרי · פתח. יעד: שם רחוב או מזהה קשת (e123 / x_ring). לאימות מזהים — הפעל DebugOverlay.</div>
           </div>
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#8ff0d6', cursor: 'pointer' }}>
+            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג תשריט CAD מדויק (שפות כביש)
+          </label>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#e3c6ee', cursor: 'pointer' }}>
             <input type="checkbox" checked={showChanges} onChange={() => setShowChanges(s => !s)} /> הצג שינויי תשתית (רחוב חדש · ביטולי פניות · דו-סטרי)
           </label>
