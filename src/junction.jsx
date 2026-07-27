@@ -6,7 +6,7 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const GRAPH_URL = 'data/junction_graph.json?v=2026-07-27b';
-const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27b';
+const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27c';
 const LRT_URL = 'data/junction_lrt.json?v=2026-07-26';
 const LRT_COL = { '3': '#22c3a6', '8': '#b06cff' };
 const CENTER = [31.7573, 35.2150];
@@ -502,7 +502,7 @@ function JunctionApp() {
     const STYLE = {
       curb: { color: '#9aa7b0', weight: .6, opacity: .25 },
       centerline: { color: '#00e0a8', weight: 2.4, opacity: .9, lineCap: 'round', lineJoin: 'round' },
-      new_axis: { color: '#ff2d9b', weight: 3.4, opacity: .98, lineCap: 'round', lineJoin: 'round' },
+      new_axis: { color: '#6fb5aa', weight: 1.3, opacity: .42, lineCap: 'round', lineJoin: 'round' },
       island: { color: '#4faf5a', weight: 1.2, opacity: .9 },
       bus: { color: '#3b82f6', weight: 2, opacity: .95 },
       bike: { color: '#f59e0b', weight: 1.6, opacity: .95 },
@@ -518,7 +518,7 @@ function JunctionApp() {
       }
     };
     if (cadRef.current) draw(cadRef.current);
-    else fetch('data/junction_cad.geojson?v=2026-07-27').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+    else fetch('data/junction_cad.geojson?v=2026-07-27c').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
   }, [showCad, status]);
 
   // digitize overlay: the polyline the user is drawing
