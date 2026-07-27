@@ -501,7 +501,8 @@ function JunctionApp() {
     if (!showCad) return;
     const STYLE = {
       curb: { color: '#9aa7b0', weight: .6, opacity: .25 },
-      centerline: { color: '#00e0a8', weight: 2.6, opacity: .97, lineCap: 'round', lineJoin: 'round' },
+      centerline: { color: '#00e0a8', weight: 2.4, opacity: .9, lineCap: 'round', lineJoin: 'round' },
+      new_axis: { color: '#ff2d9b', weight: 3.4, opacity: .98, lineCap: 'round', lineJoin: 'round' },
       island: { color: '#4faf5a', weight: 1.2, opacity: .9 },
       bus: { color: '#3b82f6', weight: 2, opacity: .95 },
       bike: { color: '#f59e0b', weight: 1.6, opacity: .95 },
