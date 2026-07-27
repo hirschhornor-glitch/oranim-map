@@ -499,10 +499,21 @@ function JunctionApp() {
     const layer = layersRef.current.cad; if (!layer) return;
     layer.clearLayers();
     if (!showCad) return;
+    const STYLE = {
+      curb: { color: '#8794a0', weight: 1, opacity: .85 },
+      centerline: { color: '#00e0a8', weight: 1.6, opacity: .95 },
+      island: { color: '#4faf5a', weight: 1.2, opacity: .9 },
+      bus: { color: '#3b82f6', weight: 2, opacity: .95 },
+      bike: { color: '#f59e0b', weight: 1.6, opacity: .95 },
+      furniture: { color: '#9fb0bb', weight: .7, opacity: .6 },
+      tree: { color: '#2e8b57', weight: 1.2, opacity: .8 },
+    };
     const draw = (fc) => {
       for (const f of fc.features) {
-        const c = f.geometry.coordinates;
-        L.polyline(c.map(p => [p[1], p[0]]), { color: '#3a4a55', weight: 1, opacity: .9 }).addTo(layer);
+        const st = STYLE[(f.properties || {}).kind] || { color: '#8794a0', weight: 1, opacity: .85 };
+        const g = f.geometry;
+        const lines = g.type === 'MultiLineString' ? g.coordinates : [g.coordinates];
+        for (const ln of lines) L.polyline(ln.map(p => [p[1], p[0]]), st).addTo(layer);
       }
     };
     if (cadRef.current) draw(cadRef.current);
@@ -631,7 +642,7 @@ function JunctionApp() {
             <div style={{ fontSize: 10, color: '#5c7482', marginTop: 4 }}>פעלים: חסום · חד-סטרי · דו-סטרי · פתח. יעד: שם רחוב או מזהה קשת (e123 / x_ring). לאימות מזהים — הפעל DebugOverlay.</div>
           </div>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#8ff0d6', cursor: 'pointer' }}>
-            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג תשריט CAD מדויק (שפות כביש)
+            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג תשריט CAD מדויק (שפות כביש · איים · תח״צ · ריהוט)
           </label>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#e3c6ee', cursor: 'pointer' }}>
             <input type="checkbox" checked={showChanges} onChange={() => setShowChanges(s => !s)} /> הצג שינויי תשתית (רחוב חדש · ביטולי פניות · דו-סטרי)
