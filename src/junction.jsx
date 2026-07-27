@@ -499,22 +499,28 @@ function JunctionApp() {
     const layer = layersRef.current.cad; if (!layer) return;
     layer.clearLayers();
     if (!showCad) return;
+    // new roads render like ordinary OSM/basemap streets (white casing) — future state
     const STYLE = {
-      curb: { color: '#9aa7b0', weight: .6, opacity: .25 },
-      centerline: { color: '#00e0a8', weight: 2.4, opacity: .9, lineCap: 'round', lineJoin: 'round' },
-      new_axis: { color: '#6fb5aa', weight: 1.3, opacity: .42, lineCap: 'round', lineJoin: 'round' },
-      island: { color: '#4faf5a', weight: 1.2, opacity: .9 },
-      bus: { color: '#3b82f6', weight: 2, opacity: .95 },
-      bike: { color: '#f59e0b', weight: 1.6, opacity: .95 },
-      furniture: { color: '#9fb0bb', weight: .7, opacity: .6 },
-      tree: { color: '#2e8b57', weight: 1.2, opacity: .8 },
+      curb: { color: '#9aa7b0', weight: .5, opacity: .18 },
+      island: { color: '#7fb98a', weight: 1, opacity: .5 },
+      bus: { color: '#5b9bd5', weight: 1.6, opacity: .6 },
+      bike: { color: '#e0a94a', weight: 1.3, opacity: .55 },
+      furniture: { color: '#b6c2cb', weight: .6, opacity: .35 },
+      tree: { color: '#5aa06f', weight: 1, opacity: .45 },
     };
     const draw = (fc) => {
       for (const f of fc.features) {
-        const st = STYLE[(f.properties || {}).kind] || { color: '#8794a0', weight: 1, opacity: .85 };
+        const kind = (f.properties || {}).kind;
+        if (kind === 'centerline') continue; // existing roads already drawn by the basemap
         const g = f.geometry;
         const lines = g.type === 'MultiLineString' ? g.coordinates : [g.coordinates];
-        for (const ln of lines) L.polyline(ln.map(p => [p[1], p[0]]), st).addTo(layer);
+        for (const ln of lines) {
+          const ll = ln.map(p => [p[1], p[0]]);
+          if (kind === 'new_axis') { // draw as a normal white street (casing + fill)
+            L.polyline(ll, { color: '#c8bda3', weight: 6.5, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            L.polyline(ll, { color: '#ffffff', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+          } else L.polyline(ll, STYLE[kind] || { color: '#8794a0', weight: 1, opacity: .5 }).addTo(layer);
+        }
       }
     };
     if (cadRef.current) draw(cadRef.current);
@@ -643,7 +649,7 @@ function JunctionApp() {
             <div style={{ fontSize: 10, color: '#5c7482', marginTop: 4 }}>פעלים: חסום · חד-סטרי · דו-סטרי · פתח. יעד: שם רחוב או מזהה קשת (e123 / x_ring). לאימות מזהים — הפעל DebugOverlay.</div>
           </div>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#8ff0d6', cursor: 'pointer' }}>
-            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג צירי כביש מהתשריט (CAD · איים · תח״צ)
+            <input type="checkbox" checked={showCad} onChange={() => setShowCad(s => !s)} /> הצג את הכבישים החדשים (מצב עתידי, מהתשריט)
           </label>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, fontSize: 12.5, color: '#e3c6ee', cursor: 'pointer' }}>
             <input type="checkbox" checked={showChanges} onChange={() => setShowChanges(s => !s)} /> הצג שינויי תשתית (רחוב חדש · ביטולי פניות · דו-סטרי)
