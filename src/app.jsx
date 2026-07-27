@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-26-newplans';
+        const APP_VERSION = '2026-07-27-committee-permits';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -14021,6 +14021,29 @@
                     geoLayersRef.current.topics = topicsLayer;
                 }
 
+                // Meetings layer — committee permits (ועדת רישוי) have no תב"ע polygon, so
+                // draw them as approximate geocoded points (hollow dashed marker = "מיקום מקורב",
+                // same convention as unassigned_permits). Respects the same מינה"ק filter as
+                // the plan polygons via planInMinahak on the corrected minahak.
+                if (gd.plans && planningTopics.meetings) {
+                    const permitGroup = L.layerGroup();
+                    Object.values(window.__meetings || {}).forEach(mt => {
+                        if (mt.lat == null || mt.lng == null) return;
+                        if (!planInMinahak({ minahak: mt.minahak })) return;
+                        const latlng = L.latLng(mt.lat, mt.lng);
+                        const marker = L.circleMarker(latlng, {
+                            pane: 'topicsPane', radius: 6, color: '#ff8c00', weight: 2,
+                            fillColor: '#ff8c00', fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false
+                        });
+                        marker.on('click', () => {
+                            L.popup({ maxWidth: popupMaxWidth() }).setLatLng(latlng).setContent(buildCommitteePermitPopup(mt)).openOn(map);
+                        });
+                        marker.addTo(permitGroup);
+                    });
+                    permitGroup.addTo(map);
+                    geoLayersRef.current.meetingsPermits = permitGroup;
+                }
+
                 // --- Infrastructure layer (below plans) ---
                 if (gd.plans && planningTopics.infrastructure) {
                     const infraLayer = L.geoJSON(gd.plans, {
@@ -19694,6 +19717,26 @@
                 w.document.write(html);
                 w.document.close();
                 w.focus();
+            }
+
+            // Committee permits (ועדת רישוי) have no תב"ע polygon — they're placed as an
+            // approximate geocoded point. Shared popup for both the meetings-report click
+            // and the meetings-layer marker. `mt` is a window.__meetings entry.
+            function buildCommitteePermitPopup(mt) {
+                const committee = mt.committee || 'מקומית - היתרים';
+                const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                const timePart = (mt.meeting_time && mt.meeting_time !== 'לא צוין') ? ' · ' + mt.meeting_time : '';
+                const line = (label, val) => val ? '<div style="margin:2px 0"><span style="color:#8a93a6">' + label + ':</span> <span style="color:#eee">' + val + '</span></div>' : '';
+                return '<div style="min-width:220px;direction:rtl">' +
+                    '<div style="font-weight:700;color:#ffa726;font-size:14px;margin-bottom:4px">&#128296; היתר ' + (mt.plan_id || '') + '</div>' +
+                    line('מהות', mt.plan_name) +
+                    line('ועדה', committeeLabel) +
+                    line('תאריך', (mt.meeting_date || '') + timePart) +
+                    line('מטרת הדיון', mt.purpose) +
+                    line('מינה"ק', mt.minahak) +
+                    line('תת-שכונה', mt.sub_neighborhood) +
+                    '<div style="margin-top:6px;color:#e0a635;font-size:11px">&#128205; מיקום מקורב לפי כתובת</div>' +
+                    '</div>';
             }
 
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
@@ -29893,11 +29936,27 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 const mt = p._meeting;
                                                 const committee = mt.committee || 'מחוזית';
                                                 const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                                                // permit rows have no polygon but may have an approximate geocoded point
+                                                const hasPoint = p._unmatched && mt.lat != null && mt.lng != null;
+                                                const clickable = !p._unmatched || hasPoint;
                                                 return (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: p._unmatched ? 'default' : 'pointer'}} ref={el => { if (el && !p._unmatched) el.onclick = (e) => {
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: clickable ? 'pointer' : 'default'}} ref={el => { if (el && clickable) el.onclick = (e) => {
                                                     e.stopPropagation();
+                                                    if (!mapInstanceRef.current) return;
+                                                    if (hasPoint) {
+                                                        // Committee permit — zoom to its approximate point + permit popup.
+                                                        const latlng = L.latLng(mt.lat, mt.lng);
+                                                        setMeetingsReport(false);
+                                                        setTimeout(() => {
+                                                            mapInstanceRef.current.flyTo(latlng, 17);
+                                                            setTimeout(() => {
+                                                                L.popup({maxWidth:320}).setLatLng(latlng).setContent(buildCommitteePermitPopup(mt)).openOn(mapInstanceRef.current);
+                                                            }, 600);
+                                                        }, 100);
+                                                        return;
+                                                    }
                                                     const gd = geoDataRef.current;
-                                                    if (!gd.plans || !mapInstanceRef.current) return;
+                                                    if (!gd.plans) return;
                                                     const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name);
                                                     if (!feat || !feat.geometry) return;
                                                     const coords = [];
@@ -29924,7 +29983,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{mt.meeting_date}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726',fontSize:11}}>{mt.meeting_time || '-'}</td>
                                                     <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{committeeLabel}</td>
-                                                    <td style={{padding:'4px',color: p._unmatched ? '#888' : '#64b5f6', textDecoration: p._unmatched ? 'none' : 'underline'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color: clickable ? '#64b5f6' : '#888', textDecoration: clickable ? 'underline' : 'none'}}>{p.plan_name || '-'}{hasPoint ? ' \u{1F4CD}' : ''}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0',fontSize:11}}>{mt.purpose || '-'}</td>
                                                     <td style={{padding:'4px',color:'#f0f0f0',fontSize:11}}>{p._unmatched ? '-' : ((p.status_mavat||'-').trim())}</td>
