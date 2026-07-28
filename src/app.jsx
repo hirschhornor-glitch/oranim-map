@@ -21003,6 +21003,12 @@
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
+                // #4 consistency: same canonical bucket badge as the rich popup
+                const _mpp = masterPermit(props.building_permit || props.file_number);
+                if (_mpp && _mpp.bucket) {
+                    const _bcc = PERMIT_BUCKET_COLOR[_mpp.bucket] || '#7f8c8d';
+                    html += `<div class="popup-row"><span class="popup-row-label">סיווג</span><span class="popup-status-badge" style="background:${_bcc}22;color:${_bcc};border:1px solid ${_bcc};font-weight:bold">${_mpp.bucket_label || _mpp.bucket}</span></div>`;
+                }
                 html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">מהות הבקשה</span><span class="popup-row-value" style="font-size:11px;max-width:180px;text-align:left">${requestType}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
