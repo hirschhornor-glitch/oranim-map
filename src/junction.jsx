@@ -459,8 +459,10 @@ function JunctionApp() {
       }
     };
     for (const f of finalEff.features) {
-      if (f.kind === 'marked') drawNewRoad(f.segs, f.style, f.label);
-      else if (f.kind === 'new_road') drawNewRoad([f.coords], 'new_road', f.label || 'רחוב חדש');
+      // road FILLS come from the precise CAD layer (white, OSM-like). The changes layer no longer
+      // redraws them — that put a magenta centerline between the two white CAD carriageways.
+      // Only the LRT-only corridor (teal, dashed) and full closures are annotated here.
+      if (f.kind === 'marked' && f.style === 'lrt_only') drawNewRoad(f.segs, f.style, f.label);
       else if (f.kind === 'closed') L.polyline(toLL(f.coords), { color: '#e5484d', weight: 6, opacity: .85, dashArray: '4 8' }).addTo(layer).bindTooltip(f.label || 'מקטע סגור', { sticky: true });
     }
   }, [showChanges, finalEff, status]);
@@ -539,7 +541,7 @@ function JunctionApp() {
     const onZoom = () => { const w = roadW(); for (const r of roads) { r.cas.setStyle({ weight: w.cas }); r.fil.setStyle({ weight: w.fill }); } };
     map.on('zoomend', onZoom);
     if (cadRef.current) draw(cadRef.current);
-    else fetch('data/junction_cad.geojson?v=2026-07-27g').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+    else fetch('data/junction_cad.geojson?v=2026-07-28a').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
     return () => { map.off('zoomend', onZoom); };
   }, [showCad, status]);
 
