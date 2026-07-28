@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-27-permit-unify';
+        const APP_VERSION = '2026-07-27-permit-buckets';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2869,6 +2869,12 @@
                 excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
+            // Permits-layer bucket filter (derives views from the canonical master). All on
+            // by default = no change to the existing stage-colored layer; toggling a subset
+            // filters the layer to plans with a permit in a selected bucket AND colors by bucket.
+            const [permitBuckets, setPermitBuckets] = useState({
+                tama38: true, zchuyot: true, ibuy: true, shimush_chorag: true, tava_gadol: true, acher: true
+            });
             const [mapScale, setMapScale] = useState('');
             const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
@@ -4979,6 +4985,7 @@
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
+                    ['__permitsMaster', 'data/permits_master.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5449,6 +5456,21 @@
                                     if (!t || !m) return;
                                     (window.__binuiByTabaMigrash[t] = window.__binuiByTabaMigrash[t] || {})[m] = b;
                                 });
+                            }
+                            else if (key === '__permitsMaster') {
+                                // THE canonical permit store (build_permits_master.py): one record
+                                // per tik, keyed by tik, with baked classification bucket + facets.
+                                const permits = (data && data.permits) ? data.permits : {};
+                                window.__permitsMaster = permits;
+                                window.__permitsMasterMeta = data ? { count: data.count, bucket_counts: data.bucket_counts, generated_at: data.generated_at } : {};
+                                // which buckets are present per taba — powers the layer bucket filter
+                                const byTaba = {};
+                                Object.values(permits).forEach(r => {
+                                    const t = String(r.taba || '').trim();
+                                    if (!t) return;
+                                    (byTaba[t] = byTaba[t] || {})[r.bucket] = true;
+                                });
+                                window.__permitBucketByTaba = byTaba;
                             }
                             else if (key === '__tama38Developers') { window.__tama38Developers = (data && data.by_tik) ? data.by_tik : {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
@@ -17712,21 +17734,33 @@
                     window.__permitLabels = {};
                     // Group for permit labels (so they toggle with the permits layer)
                     const permitLabelsGroup = L.layerGroup();
+                    // bucket filter: when a subset of buckets is selected, restrict the layer
+                    // to plans with a permit in a selected bucket and color by bucket (derived
+                    // from the canonical master). All-selected = unchanged stage coloring.
+                    const _bkAll = PERMIT_BUCKETS.every(b => permitBuckets[b.id]);
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             // Only show polygons that actually have permits in the JSON
-                            return _getPermits(f.properties.taba).length > 0;
+                            if (_getPermits(f.properties.taba).length === 0) return false;
+                            if (!_bkAll) {
+                                const bks = bucketsForTaba(f.properties.taba);
+                                if (!bks.some(b => permitBuckets[b])) return false;
+                            }
+                            return true;
                         },
                         style: f => {
-                            const stage = (f.properties.stage || '').trim();
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
-                            const stageColor = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
-                            if (shavazActive) {
-                                return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.07 };
+                            let color;
+                            if (!_bkAll) {
+                                const b = dominantBucket(f.properties.taba, permitBuckets);
+                                color = (b && PERMIT_BUCKET_COLOR[b]) || '#5dade2';
+                            } else {
+                                const stage = (f.properties.stage || '').trim();
+                                color = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
                             }
-                            return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.5 };
+                            return { color, weight: 2, fillColor: color, fillOpacity: shavazActive ? 0.07 : 0.5 };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -18451,7 +18485,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -19367,6 +19401,13 @@
                     html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
                     html += `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">`;
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
+                    // canonical bucket (from permits_master.json) — the derived classification
+                    const _mp = masterPermit(p.file_number);
+                    if (_mp && _mp.bucket) {
+                        const _bc = PERMIT_BUCKET_COLOR[_mp.bucket] || '#7f8c8d';
+                        const _ua = (_mp.units_added || 0) > 0 ? ` +${_mp.units_added} יח"ד` : '';
+                        html += `<span class="popup-status-badge" style="background:${_bc}22;color:${_bc};border:1px solid ${_bc};font-size:10px;font-weight:bold" title="סיווג מהמאגר הקנוני${_ua}">${_mp.bucket_label || _mp.bucket}</span>`;
+                    }
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
                     html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
                     const _pk = (p.file_number || '').trim();
@@ -19734,6 +19775,43 @@
                 const m = s.match(/^(\d{4})\/0*(\d+)\.0*(\d+)$/);
                 if (!m) return null;
                 return m[1] + '/' + parseInt(m[2], 10) + '.' + parseInt(m[3], 10);
+            }
+            // tik = year/number without the revision — the identity of the application,
+            // and the key of the canonical master (build_permits_master.py).
+            function permitTik(raw) {
+                const k = normPermitNo(raw);
+                return k ? k.slice(0, k.lastIndexOf('.')) : null;
+            }
+            // Canonical master record for a permit number (by tik), or null.
+            function masterPermit(raw) {
+                const t = permitTik(raw);
+                return (t && window.__permitsMaster) ? (window.__permitsMaster[t] || null) : null;
+            }
+            // The 5 super-buckets the master classifies into (+ אחר). Order + colors used
+            // by the popup badge and the permits-layer bucket filter.
+            const PERMIT_BUCKETS = [
+                { id: 'tama38',         label: 'תמ"א 38',               color: '#8e44ad' },
+                { id: 'zchuyot',        label: 'הגדלת זכויות (ללא יח"ד)', color: '#2980b9' },
+                { id: 'ibuy',           label: 'עיבוי (תוספת יח"ד)',     color: '#16a085' },
+                { id: 'shimush_chorag', label: 'שימוש חורג',            color: '#e67e22' },
+                { id: 'tava_gadol',     label: 'תב"ע גדול / התחדשות',    color: '#c0392b' },
+                { id: 'acher',          label: 'אחר',                   color: '#7f8c8d' },
+            ];
+            const PERMIT_BUCKET_COLOR = PERMIT_BUCKETS.reduce((o, b) => { o[b.id] = b.color; return o; }, {});
+            // dominance for coloring a plan whose permits span several buckets — most-impactful first
+            const PERMIT_BUCKET_PRIORITY = ['tava_gadol', 'tama38', 'shimush_chorag', 'ibuy', 'zchuyot', 'acher'];
+            // buckets present among a taba's permits (from the master index built at load)
+            function bucketsForTaba(taba) {
+                const m = (window.__permitBucketByTaba || {})[String(taba || '').trim()];
+                return m ? Object.keys(m) : [];
+            }
+            // highest-priority bucket for a taba that is also currently enabled in the filter
+            function dominantBucket(taba, enabled) {
+                const present = bucketsForTaba(taba);
+                for (const b of PERMIT_BUCKET_PRIORITY) {
+                    if (present.indexOf(b) !== -1 && (!enabled || enabled[b])) return b;
+                }
+                return present.length ? present[0] : null;
             }
             // Our permit record (from __allPermits / __tama38Permits) matching a permit
             // number, or null. Lazily indexes by canonical key (cached on window; cleared
@@ -31282,6 +31360,29 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+                    {/* Permits-layer bucket filter — derives the master's classification onto the map */}
+                    {layers.permits && window.__permitsMaster && (
+                        <div style={{position:'fixed', left:12, bottom:70, zIndex:1000, background:'rgba(18,18,32,0.94)', border:'1px solid #2a2a4a', borderRadius:8, padding:'8px 10px', width:210, boxShadow:'0 2px 10px rgba(0,0,0,0.45)', direction:'rtl'}}>
+                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                                <span style={{color:'#fff',fontSize:12,fontWeight:700}}>סוג היתר (מהמאגר)</span>
+                                <button onClick={() => setPermitBuckets({tama38:true,zchuyot:true,ibuy:true,shimush_chorag:true,tava_gadol:true,acher:true})}
+                                    style={{background:'none',border:'1px solid #3a3a5a',color:'#9fd6ff',borderRadius:5,fontSize:10,padding:'1px 7px',cursor:'pointer'}}>הכל</button>
+                            </div>
+                            {PERMIT_BUCKETS.map(b => {
+                                const on = permitBuckets[b.id];
+                                const cnt = (window.__permitsMasterMeta && window.__permitsMasterMeta.bucket_counts && window.__permitsMasterMeta.bucket_counts[b.id]) || 0;
+                                return (
+                                    <div key={b.id} onClick={() => setPermitBuckets(p => ({...p, [b.id]: !p[b.id]}))}
+                                        style={{display:'flex',alignItems:'center',gap:8,padding:'3px 2px',cursor:'pointer',opacity:on?1:0.42,userSelect:'none'}}>
+                                        <span style={{width:12,height:12,borderRadius:3,background:b.color,flex:'0 0 auto'}}></span>
+                                        <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>{b.label}</span>
+                                        <span style={{color:'#8a93a6',fontSize:10}}>{cnt}</span>
+                                        <input type="checkbox" checked={on} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </>
