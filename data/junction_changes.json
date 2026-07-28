@@ -279,29 +279,29 @@
         {
           "op": "addTurnRestriction",
           "id": "ban6_pk_to_yehuda",
-          "fromEdge": "e3090",
-          "viaNode": "n1754176341",
-          "toEdge": "e3089",
+          "fromEdge": "e3074_2w",
+          "viaNode": "n30213844",
+          "toEdge": "e3079",
           "type": "no_turn",
-          "note": "ביטול #6: ביטול הגישה בין פייר קניג ליהודה (דרך הטבעת). חלופה: מעקף דרך צרת ומקור חיים / דרך רבקה."
+          "note": "ביטול #6: אין פנייה ימינה מפייר קניג (מדרום) ליהודה→הטבעת. חלופה: מעקף דרך צרת/מקור חיים או רבקה. (תרחיש exp_right_pk_yehuda בודק פתיחתה)"
         },
         {
           "op": "addTurnRestriction",
           "id": "ban6_yehuda_to_pk",
-          "fromEdge": "e3081",
-          "viaNode": "n1754176341",
-          "toEdge": "e3023",
+          "fromEdge": "e3089",
+          "viaNode": "n30213844",
+          "toEdge": "e3074",
           "type": "no_turn",
-          "note": "ביטול #6 (כיוון הפוך): יהודה→פייר קניג דרך הטבעת מבוטל."
+          "note": "ביטול #6 (כיוון נגדי): אין גישה מיהודה לפייר קניג דרומה."
         },
         {
           "op": "addTurnRestriction",
           "id": "ban1_left_into_makor",
-          "fromEdge": "e3089",
+          "fromEdge": "e3074_2w",
           "viaNode": "n30213844",
           "toEdge": "e3094",
           "type": "no_left_turn",
-          "note": "ביטול #1: ביטול שמאלה לתוך רח' מקור חיים. חלופה: כניסה מפייר קניג דרך הרחוב החדש. (מזהה קשת לאימות ב-DebugOverlay)"
+          "note": "ביטול #1: ביטול שמאלה (מפייר קניג צפונה) לתוך רח' מקור חיים. חלופה: כניסה מפייר קניג דרך הרחוב החדש."
         },
         {
           "op": "addTurnRestriction",

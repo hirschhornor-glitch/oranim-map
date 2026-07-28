@@ -325,6 +325,8 @@ def validate_changes(graph):
                 added_nodes.add(m["id"])
             elif op == "addEdge":
                 added_edges.add(m["id"])
+                if m.get("bidirectional"):
+                    added_edges.add(m["id"] + "_r")  # synthetic reverse
                 for k in ("from", "to"):
                     nid = m.get(k)
                     if nid and nid not in node_ids and nid not in added_nodes:
@@ -332,6 +334,8 @@ def validate_changes(graph):
                         ok = False
             elif op in ("removeEdge", "modifyEdge", "setOneway"):
                 eid = m.get("edgeId")
+                if op == "setOneway" and m.get("oneway") is False:
+                    added_edges.add(eid + "_2w")  # synthetic two-way reverse
                 if eid not in edge_ids and eid not in added_edges:
                     print(f"  [{cs['id']}] {op} references missing edge {eid}")
                     ok = False
