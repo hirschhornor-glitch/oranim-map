@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-27-permit-buckets';
+        const APP_VERSION = '2026-07-27-tama38-richpopup';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -18103,11 +18103,32 @@
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
                                 const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
+                                // Use the SAME rich permit popup as the permits layer's tama38 markers
+                                // (tama38PermGroup) so one building never shows two conflicting popups.
+                                // Falls back to the building popup only when no permit records exist yet.
+                                const fid = String(p.fid != null ? p.fid : '');
+                                const permits = getPermitsForTama38(fid);
+                                let content, feat;
+                                if (permits.length > 0) {
+                                    let tamaType = '';
+                                    const tt = permits.find(pp => pp.tama_type);
+                                    if (tt) tamaType = tt.tama_type;
+                                    else if (p.harisaa === 'כן') tamaType = '38/2';
+                                    else if (p.harisaa === 'לא') tamaType = '38/1';
+                                    const title = (p.address || 'תמ"א 38') + (tamaType ? ' - תמ"א ' + tamaType : '');
+                                    const unitsTose = p.units_tose != null ? p.units_tose : '';
+                                    const subtitle = [p.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
+                                    content = buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose));
+                                    feat = { properties: p, type: 'tama38' };
+                                } else {
+                                    content = buildTama38Popup(p);
+                                    feat = { properties: p, type: 'tama38' };
+                                }
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildTama38Popup(p));
+                                    .setContent(content);
                                 popup.openOn(m);
-                                bindPopupEvents(popup, [{ properties: p, type: 'tama38' }], 0);
+                                bindPopupEvents(popup, [feat], 0);
                             });
                             const addr = f.properties.address || '';
                             const tose = parseFloat(f.properties.units_tose) || 0;
