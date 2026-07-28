@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-27-tama38-richpopup';
+        const APP_VERSION = '2026-07-27-permit-currency';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -19401,8 +19401,16 @@
                 html += buildPermitCrossBanners(permits);
                 html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
-                    const sc = getPermitStatusColor(p.status);
-                    const stage = getPermitStage(p);
+                    // Reconcile the DISPLAYED status/date to the canonical master (freshest
+                    // status_date across תב"ע + תמ"א stores), so the same permit reads the same
+                    // on every layer. Units/inclusion still come from p — totals are untouched.
+                    const _mp = masterPermit(p.file_number);
+                    const effStatus = (_mp && _mp.status) ? _mp.status : p.status;
+                    const effDate = (_mp && _mp.status_date) ? _mp.status_date : p.status_date;
+                    const _eff = (_mp && _mp.status) ? Object.assign({}, p, { status: effStatus }) : p;
+                    const _srcs = (_mp && _mp.provenance) ? _mp.provenance.filter(s => s === 'all_permits' || s === 'tama38' || s === 'extra') : [];
+                    const sc = getPermitStatusColor(effStatus);
+                    const stage = getPermitStage(_eff);
                     const stageColor = getPermitStageColor(stage);
                     const stageLabel = getPermitStageLabel(stage);
                     const cat = classifyPermitCategory(p);
@@ -19423,14 +19431,17 @@
                     html += `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">`;
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
                     // canonical bucket (from permits_master.json) — the derived classification
-                    const _mp = masterPermit(p.file_number);
                     if (_mp && _mp.bucket) {
                         const _bc = PERMIT_BUCKET_COLOR[_mp.bucket] || '#7f8c8d';
                         const _ua = (_mp.units_added || 0) > 0 ? ` +${_mp.units_added} יח"ד` : '';
                         html += `<span class="popup-status-badge" style="background:${_bc}22;color:${_bc};border:1px solid ${_bc};font-size:10px;font-weight:bold" title="סיווג מהמאגר הקנוני${_ua}">${_mp.bucket_label || _mp.bucket}</span>`;
                     }
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
-                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
+                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס עדכני (מהמאגר הקנוני — הטרי מבין המקורות)">${effStatus || '-'}</span>`;
+                    if (_srcs.length > 1) {
+                        const _slabel = _srcs.map(s => s === 'all_permits' ? 'תב"ע' : s === 'tama38' ? 'תמ"א' : 'משלים').join('+');
+                        html += `<span class="popup-status-badge" style="background:#5a4b7a22;color:#b9a7dd;border:1px solid #5a4b7a;font-size:10px" title="ההיתר מופיע בכמה מקורות — הסטטוס המוצג הוא העדכני מביניהם">📚 ${_slabel}</span>`;
+                    }
                     const _pk = (p.file_number || '').trim();
                     if (window.__objectionsPermits && window.__objectionsPermits[_pk]) {
                         const _or = window.__objectionsPermits[_pk];
@@ -19448,7 +19459,7 @@
                         html += `<span class="popup-status-badge" style="background:#c9a227;color:#1a1a2e;border:1px solid #c9a227;font-size:10px;font-weight:bold" title="הבקשה בשלב פרסום הקלה — טרם פורסמה רשמית לסעיף 149; התנגדויות צפויות להיפתח בקרוב">⏳ בהמתנה לפרסום §149</span>`;
                     }
                     html += `</div></div>`;
-                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${effDate ? 'עודכן ' + effDate : ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
                     if (p.request_description) {
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
