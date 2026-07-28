@@ -516,15 +516,15 @@ function JunctionApp() {
         const lines = g.type === 'MultiLineString' ? g.coordinates : [g.coordinates];
         for (const ln of lines) {
           const ll = ln.map(p => [p[1], p[0]]);
-          if (kind === 'new_axis') { // draw as a normal white street (casing + fill)
-            L.polyline(ll, { color: '#c8bda3', weight: 6.5, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
-            L.polyline(ll, { color: '#ffffff', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+          if (kind === 'new_axis') { // draw as a normal white street (casing + fill); dual carriageways read as separate
+            L.polyline(ll, { color: '#c8bda3', weight: 4.4, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            L.polyline(ll, { color: '#ffffff', weight: 2.7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
           } else L.polyline(ll, STYLE[kind] || { color: '#8794a0', weight: 1, opacity: .5 }).addTo(layer);
         }
       }
     };
     if (cadRef.current) draw(cadRef.current);
-    else fetch('data/junction_cad.geojson?v=2026-07-27c').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+    else fetch('data/junction_cad.geojson?v=2026-07-27d').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
   }, [showCad, status]);
 
   // digitize overlay: the polyline the user is drawing
