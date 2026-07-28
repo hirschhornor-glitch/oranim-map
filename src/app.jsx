@@ -17842,9 +17842,18 @@
                         const tama38PermGroup = L.layerGroup().addTo(map);
                         gd.tama38.features.forEach(f => {
                             if (!tama38InMinahak(f.properties)) return;
+                            // #2 dedup: when the dedicated תמ"א 38 layer is on it renders these same
+                            // buildings (now with the same rich popup) — don't draw a second marker.
+                            if (layers['tama38']) return;
                             const fid = String(f.properties.fid != null ? f.properties.fid : '');
                             const permits = getPermitsForTama38(fid);
                             if (permits.length === 0) return;
+                            // #1 bucket filter — hide when none of this building's buckets is selected
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const bks = permits.map(p => { const m = masterPermit(p.file_number); return m && m.bucket; }).filter(Boolean);
+                                const eff = bks.length ? bks : ['tama38'];
+                                if (!eff.some(b => permitBuckets[b])) return;
+                            }
                             const coords = f.geometry && f.geometry.coordinates;
                             if (!coords || !coords[0]) return;
                             const c = f.geometry.type === 'MultiPoint' ? coords[0] : coords;
@@ -17883,6 +17892,11 @@
                             const pr = f.properties || {};
                             const c = f.geometry && f.geometry.coordinates;
                             if (!c) return;
+                            // #1 bucket filter
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const m = masterPermit(pr.file_number);
+                                if (!permitBuckets[(m && m.bucket) || 'acher']) return;
+                            }
                             const latlng = L.latLng(c[1], c[0]);
                             const stage = getPermitStage(pr);
                             const col = getPermitStageColor(stage);
@@ -18076,7 +18090,17 @@
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
                         pane: 'tama38Pane',
-                        filter: f => tama38InMinahak(f.properties),
+                        filter: f => {
+                            if (!tama38InMinahak(f.properties)) return false;
+                            // #1 bucket filter — share the permits-layer bucket selection
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const fid = String(f.properties.fid != null ? f.properties.fid : '');
+                                const bks = getPermitsForTama38(fid).map(p => { const m = masterPermit(p.file_number); return m && m.bucket; }).filter(Boolean);
+                                const eff = bks.length ? bks : ['tama38'];
+                                if (!eff.some(b => permitBuckets[b])) return false;
+                            }
+                            return true;
+                        },
                         pointToLayer: (f, latlng) => {
                             const rawStatus = (f.properties.status || '').trim();
                             // Normalize spaceless variants
@@ -19229,6 +19253,10 @@
             // User can override per-permit via checkbox; overrides persist in localStorage keyed
             // by file_number (or scope+index when no file_number).
             const PERMIT_OVERRIDES_KEY = 'oranim:permitInclude';
+            // Per-plan override for whether conditional units (יח״ד מותנות / conditional_housing)
+            // are folded into the approved-units baseline that permits are compared against.
+            // Keyed by cluster scopeKey; default falls back to the global permitsGapIncludeConditional toggle.
+            const CONDITIONAL_INCLUDE_KEY = 'oranim:permitConditionalInclude';
             const PERMIT_PLAN_TOLERANCE = 1.10;
             const PERMIT_INFRA_KEYWORDS = ['הריסה', 'דיפון', 'חפירה', 'ביסוס', 'עבודות מקדימות'];
             function parsePlanUnits(v) {
@@ -19332,6 +19360,24 @@
                     return Object.prototype.hasOwnProperty.call(overrides, k) ? !!overrides[k] : defaults[i];
                 });
             }
+            function getConditionalOverrides() {
+                try {
+                    const raw = localStorage.getItem(CONDITIONAL_INCLUDE_KEY);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) { return {}; }
+            }
+            function setConditionalOverride(scopeKey, included) {
+                if (!scopeKey) return;
+                const overrides = getConditionalOverrides();
+                overrides[scopeKey] = !!included;
+                try { localStorage.setItem(CONDITIONAL_INCLUDE_KEY, JSON.stringify(overrides)); } catch (e) {}
+            }
+            // Whether a plan/cluster's conditional units count toward the comparison baseline.
+            // Per-plan override wins; otherwise falls back to the global default.
+            function getEffectiveConditionalInclude(scopeKey, globalDefault) {
+                const overrides = getConditionalOverrides();
+                return Object.prototype.hasOwnProperty.call(overrides, scopeKey) ? !!overrides[scopeKey] : !!globalDefault;
+            }
             function sumIncludedPermitUnits(permits, scopeKey, planUnits) {
                 const inc = getEffectivePermitInclusion(permits, scopeKey, planUnits);
                 let s = 0;
@@ -19409,6 +19455,9 @@
                     const effDate = (_mp && _mp.status_date) ? _mp.status_date : p.status_date;
                     const _eff = (_mp && _mp.status) ? Object.assign({}, p, { status: effStatus }) : p;
                     const _srcs = (_mp && _mp.provenance) ? _mp.provenance.filter(s => s === 'all_permits' || s === 'tama38' || s === 'extra') : [];
+                    // #6 occupancy (טופס 4): resolve the permit's plan and show if occupied
+                    const _plan = (_mp && _mp.taba) ? (window.__planByTaba || {})[String(_mp.taba)] : null;
+                    const _occ = _plan ? planOccupancy(_plan) : null;
                     const sc = getPermitStatusColor(effStatus);
                     const stage = getPermitStage(_eff);
                     const stageColor = getPermitStageColor(stage);
@@ -19441,6 +19490,10 @@
                     if (_srcs.length > 1) {
                         const _slabel = _srcs.map(s => s === 'all_permits' ? 'תב"ע' : s === 'tama38' ? 'תמ"א' : 'משלים').join('+');
                         html += `<span class="popup-status-badge" style="background:#5a4b7a22;color:#b9a7dd;border:1px solid #5a4b7a;font-size:10px" title="ההיתר מופיע בכמה מקורות — הסטטוס המוצג הוא העדכני מביניהם">📚 ${_slabel}</span>`;
+                    }
+                    if (_occ) {
+                        const _od = (_occ.form4_date || '').trim();
+                        html += `<span class="popup-status-badge" style="background:#2e7d3222;color:#81c784;border:1px solid #2e7d32;font-size:10px;font-weight:bold" title="המבנה מאוכלס${_od ? ' · טופס 4: ' + _od : ''}${_occ.notes ? ' · ' + _occ.notes : ''}">🏠 מאוכלס</span>`;
                     }
                     const _pk = (p.file_number || '').trim();
                     if (window.__objectionsPermits && window.__objectionsPermits[_pk]) {
@@ -24808,8 +24861,9 @@
                             // Fall back to units_add if units_total is missing/zero.
                             const baseTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
                             const conditional = parseFloat(p.conditional_housing) || 0;
-                            const unitsTotal = baseTotal + (permitsGapIncludeConditional ? conditional : 0);
-                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: unitsTotal, conditional });
+                            // Conditional units are folded in per-plan at the cluster level (Step 3),
+                            // so the baseline here excludes them.
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: baseTotal, conditional });
                         });
 
                         // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
@@ -24868,11 +24922,16 @@
                                 });
                             });
                             const mergedPermits = [...permitByFn.values(), ...orphanPermits];
-                            const unitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
+                            const baseUnitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
                             const conditionalSum = members.reduce((s, m) => s + (m.conditional || 0), 0);
                             const tabas = members.map(m => m.taba);
                             const planNames = members.map(m => m.props.plan_name || m.taba);
                             const scopeKey = 'cluster:' + [...tabas].sort().join(',');
+                            // Per-plan decision (default = global toggle) on folding conditional units into the baseline.
+                            const includeConditional = conditionalSum > 0
+                                ? getEffectiveConditionalInclude(scopeKey, permitsGapIncludeConditional)
+                                : false;
+                            const unitsAdd = baseUnitsAdd + (includeConditional ? conditionalSum : 0);
                             const inclusion = getEffectivePermitInclusion(mergedPermits, scopeKey, unitsAdd);
                             const unitsInPermits = mergedPermits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
@@ -24894,6 +24953,7 @@
                                 minahak: p.minahak || '',
                                 unitsAdd, unitsInPermits, gap, pctDone,
                                 conditional: conditionalSum,
+                                includeConditional,
                                 permitCount: mergedPermits.length,
                                 countedPermits,
                                 permits: mergedPermits,
@@ -24970,11 +25030,24 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={permitsGapIncludeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{permitsGapIncludeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
                                             </div>
+
+                                            {/* Per-plan toggle: include this plan's conditional units in the comparison baseline */}
+                                            {row.conditional > 0 && (
+                                                <div style={{marginBottom:14,padding:'10px 14px',background:'#241f14',border:'1px solid ' + (row.includeConditional ? '#e0a635' : '#4a3f24'),borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#f0e2bf',fontWeight:600}} title="כשמסומן, יח״ד המותנות מתווספות ליח״ד המאושרות שאליהן משווים את ההיתרים">
+                                                        <input type="checkbox" checked={row.includeConditional} onChange={() => { setConditionalOverride(row.scopeKey, !row.includeConditional); setPermitsGapRev(v => v + 1); }} style={{cursor:'pointer',width:18,height:18}} />
+                                                        כלול {fmt(row.conditional)} יח"ד מותנות במניין ההשוואה מול ההיתר
+                                                    </label>
+                                                    <span style={{fontSize:11,color:'#9ca3af',marginRight:'auto',marginLeft:0}}>
+                                                        {row.includeConditional ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל מותנות)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.conditional) + ' מותנות)'}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {/* Cluster breakdown: when multiple plans merged, show per-plan contribution */}
                                             {row.isCluster && (
@@ -25127,9 +25200,9 @@
                                                     return <option key={m} value={m}>{m} ({c})</option>;
                                                 })}
                                             </select>
-                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות">
+                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
                                                 <input type="checkbox" checked={permitsGapIncludeConditional} onChange={e => setPermitsGapIncludeConditional(e.target.checked)} style={{cursor:'pointer'}} />
-                                                כלול יח"ד מותנות
+                                                כלול יח"ד מותנות (ברירת מחדל)
                                             </label>
                                         </div>
                                         <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
