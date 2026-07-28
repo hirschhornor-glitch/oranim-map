@@ -318,15 +318,24 @@ def validate_changes(graph):
     node_ids = set(graph["nodes"].keys())
     added_edges, added_nodes = set(), set()
     ok = True
+    # pass 1: collect all added/synthetic ids (order-independent)
+    for cs in changes.get("changesets", []):
+        for m in cs.get("mutations", []):
+            if m.get("op") == "addNode":
+                added_nodes.add(m["id"])
+            elif m.get("op") == "addEdge":
+                added_edges.add(m["id"])
+                if m.get("bidirectional"):
+                    added_edges.add(m["id"] + "_r")
+            elif m.get("op") == "setOneway" and m.get("oneway") is False:
+                added_edges.add(m.get("edgeId") + "_2w")
+    # pass 2: check references
     for cs in changes.get("changesets", []):
         for m in cs.get("mutations", []):
             op = m.get("op")
             if op == "addNode":
-                added_nodes.add(m["id"])
+                pass
             elif op == "addEdge":
-                added_edges.add(m["id"])
-                if m.get("bidirectional"):
-                    added_edges.add(m["id"] + "_r")  # synthetic reverse
                 for k in ("from", "to"):
                     nid = m.get(k)
                     if nid and nid not in node_ids and nid not in added_nodes:

@@ -6,7 +6,7 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const GRAPH_URL = 'data/junction_graph.json?v=2026-07-27b';
-const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27e';
+const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27f';
 const LRT_URL = 'data/junction_lrt.json?v=2026-07-26';
 const LRT_COL = { '3': '#22c3a6', '8': '#b06cff' };
 const CENTER = [31.7573, 35.2150];

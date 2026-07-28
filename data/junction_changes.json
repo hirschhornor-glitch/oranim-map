@@ -305,6 +305,24 @@
         },
         {
           "op": "addTurnRestriction",
+          "id": "ban2_into_r34",
+          "fromEdge": "x_ring",
+          "viaNode": "n1763409625",
+          "toEdge": "x_r34_s8_r",
+          "type": "no_turn",
+          "note": "ביטול #2: איסור פנייה (שמאלה) לתוך רח' פארק המסילה (כביש 34) מהצומת/הטבעת. חלופה: מעקף דרך בן זכאי."
+        },
+        {
+          "op": "addTurnRestriction",
+          "id": "ban3_r34_nw",
+          "fromEdge": "x_r34_s8",
+          "viaNode": "n1763409625",
+          "toEdge": "e997",
+          "type": "no_turn",
+          "note": "ביטול #3: איסור פנייה שמאלה מכביש 34 צפונה/מערבה (עמק רפאים ובן זכאי). חלופה: מעקפים."
+        },
+        {
+          "op": "addTurnRestriction",
           "id": "ban4_makor_north",
           "fromEdge": "e3093",
           "viaNode": "n30213844",
