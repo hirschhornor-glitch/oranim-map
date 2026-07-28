@@ -6,7 +6,7 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const GRAPH_URL = 'data/junction_graph.json?v=2026-07-27b';
-const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27f';
+const CHANGES_URL = 'data/junction_changes.json?v=2026-07-27g';
 const LRT_URL = 'data/junction_lrt.json?v=2026-07-26';
 const LRT_COL = { '3': '#22c3a6', '8': '#b06cff' };
 const CENTER = [31.7573, 35.2150];
@@ -142,6 +142,11 @@ function buildEffective(baseWG, changes, activeIds, includeFinal) {
     const on = cs.isFinalPlan ? includeFinal : activeIds.has(cs.id);
     if (!on) continue;
     for (const m of cs.mutations) {
+      if (m.op === 'marker') { // point marker (e.g. gas-station access change) — no routing effect
+        features.push({ kind: 'ban', lng: m.lng, lat: m.lat, label: m.note, num: m.num || '' });
+        if (m.note) notes.push({ cs: cs.id, note: m.note });
+        continue;
+      }
       if (m.op === 'markRoad') { // visual-only highlight (existing edges or explicit geometry)
         let segs;
         if (m.geometry) segs = Array.isArray(m.geometry[0][0]) ? m.geometry : [m.geometry];
@@ -419,7 +424,7 @@ function JunctionApp() {
       if (drawRef.current) { setDrawPts(pts => [...pts, [+ll.lng.toFixed(6), +ll.lat.toFixed(6)]]); return; }
       setPick(p => { if (p === 'A') { setA(ll); return 'B'; } setB(ll); return 'A'; });
     });
-    mapRef.current = map;
+    mapRef.current = map; window.__jmap = map;
     layersRef.current = { cad: L.layerGroup().addTo(map), routes: L.layerGroup().addTo(map), changes: L.layerGroup().addTo(map), bans: L.layerGroup().addTo(map), draw: L.layerGroup().addTo(map), markers: L.layerGroup().addTo(map), debug: L.layerGroup().addTo(map) };
   }, [status]);
 
@@ -508,7 +513,14 @@ function JunctionApp() {
       furniture: { color: '#b6c2cb', weight: .6, opacity: .35 },
       tree: { color: '#5aa06f', weight: 1, opacity: .45 },
     };
+    const roads = []; // new-road polylines {cas, fil} — width scales with zoom (metric), OSM-like
+    const roadW = () => { // pixel widths from a ~5 m single carriageway at current zoom
+      const mpp = 156543.03392 * Math.cos(31.758 * Math.PI / 180) / Math.pow(2, map.getZoom());
+      const fill = Math.max(1.6, Math.min(34, 5 / mpp));
+      return { fill, cas: fill + Math.max(1.1, fill * 0.28) }; // thin casing, like the basemap
+    };
     const draw = (fc) => {
+      const w = roadW();
       for (const f of fc.features) {
         const kind = (f.properties || {}).kind;
         if (kind === 'centerline') continue; // existing roads already drawn by the basemap
@@ -516,15 +528,19 @@ function JunctionApp() {
         const lines = g.type === 'MultiLineString' ? g.coordinates : [g.coordinates];
         for (const ln of lines) {
           const ll = ln.map(p => [p[1], p[0]]);
-          if (kind === 'new_axis') { // draw as a normal white street (casing + fill); dual carriageways read as separate
-            L.polyline(ll, { color: '#c8bda3', weight: 7.5, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
-            L.polyline(ll, { color: '#ffffff', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+          if (kind === 'new_axis') { // normal white street (casing + fill), zoom-scaled
+            const cas = L.polyline(ll, { color: '#d4cebf', weight: w.cas, opacity: .9, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            const fil = L.polyline(ll, { color: '#ffffff', weight: w.fill, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            roads.push({ cas, fil });
           } else L.polyline(ll, STYLE[kind] || { color: '#8794a0', weight: 1, opacity: .5 }).addTo(layer);
         }
       }
     };
+    const onZoom = () => { const w = roadW(); for (const r of roads) { r.cas.setStyle({ weight: w.cas }); r.fil.setStyle({ weight: w.fill }); } };
+    map.on('zoomend', onZoom);
     if (cadRef.current) draw(cadRef.current);
-    else fetch('data/junction_cad.geojson?v=2026-07-27d').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+    else fetch('data/junction_cad.geojson?v=2026-07-27g').then(r => r.json()).then(fc => { cadRef.current = fc; if (showCad) draw(fc); }).catch(() => { });
+    return () => { map.off('zoomend', onZoom); };
   }, [showCad, status]);
 
   // digitize overlay: the polyline the user is drawing
