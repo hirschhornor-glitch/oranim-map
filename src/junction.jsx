@@ -517,8 +517,8 @@ function JunctionApp() {
         for (const ln of lines) {
           const ll = ln.map(p => [p[1], p[0]]);
           if (kind === 'new_axis') { // draw as a normal white street (casing + fill); dual carriageways read as separate
-            L.polyline(ll, { color: '#c8bda3', weight: 4.4, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
-            L.polyline(ll, { color: '#ffffff', weight: 2.7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            L.polyline(ll, { color: '#c8bda3', weight: 7.5, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
+            L.polyline(ll, { color: '#ffffff', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(layer);
           } else L.polyline(ll, STYLE[kind] || { color: '#8794a0', weight: 1, opacity: .5 }).addTo(layer);
         }
       }
