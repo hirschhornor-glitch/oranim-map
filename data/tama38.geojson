@@ -181,7 +181,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 13,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -440,7 +443,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1911,7 +1915,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2712,7 +2717,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3778,7 +3784,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4328,7 +4335,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "floors_tama": 5.5
+    "floors_tama": 5.5,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5021,7 +5029,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 8,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5537,7 +5548,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 6
+    "floors_tama": 6,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7100,7 +7112,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7539,7 +7552,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3.5
+    "floors_tama": 3.5,
+    "units_out": -1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8298,7 +8312,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8442,7 +8457,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8735,7 +8751,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9207,7 +9224,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9350,7 +9370,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12693,7 +12714,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
