@@ -4896,7 +4896,7 @@
     "__rec_stat": null,
     "units_in": 1,
     "units_out": 1,
-    "floors_tama": 1,
+    "floors_tama": 2,
     "units_review": true
    },
    "geometry": {
@@ -8000,7 +8000,7 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 6,
-    "floors_tama": 2,
+    "floors_tama": 1,
     "units_review": true
    },
    "geometry": {
@@ -8839,7 +8839,7 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 4,
-    "floors_tama": 1,
+    "floors_tama": 2,
     "units_review": true
    },
    "geometry": {
@@ -10596,9 +10596,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 23,
-    "units_out": 1,
-    "floors_tama": 8,
-    "units_review": true
+    "units_out": 43,
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11225,7 +11224,7 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 3,
+    "floors_tama": 1,
     "units_review": true
    },
    "geometry": {
@@ -12665,10 +12664,8 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_in": 26,
     "units_out": 26,
-    "floors_tama": 8,
-    "units_review": true
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
