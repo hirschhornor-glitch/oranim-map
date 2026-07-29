@@ -154,6 +154,27 @@ def build_result(plan: Dict, status: str, xlsx_path: Optional[Path], parse_data:
     return out
 
 
+async def _wait_render(page, timeout_s: float) -> bool:
+    """Wait until the plan SPA renders its accordion. True if rendered in time."""
+    try:
+        await page.wait_for_selector(".uk-accordion-title", timeout=int(timeout_s * 1000))
+        return True
+    except Exception:
+        return False
+
+
+async def _warm_homepage(page) -> None:
+    """Prime Mavat's SV4 SPA. A direct plan-page load can return only the
+    ~215-char nav shell — the Angular app bundle bootstraps only after a homepage
+    visit (diagnosed 2026-07). Visiting '/' first makes subsequent plan pages
+    render."""
+    try:
+        await page.goto(f"{MAVAT_BASE}/", wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(6)
+    except Exception:
+        pass
+
+
 async def download_xlsx(page, plan: Dict) -> Optional[Path]:
     """Navigate to Mavat plan, expand accordions, download XLS. Returns path or None."""
     agam = plan["agam_id"]
@@ -167,21 +188,33 @@ async def download_xlsx(page, plan: Dict) -> Optional[Path]:
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
     except Exception:
         pass
-    await asyncio.sleep(6)
+    # Wait for the SPA to render (it can take ~16s). If it stays on the cold
+    # ~215-char shell, warm the homepage and retry once with a longer budget.
+    # None on failure keeps the existing contract (caller treats it as no_xlsx),
+    # but the warm-up retry avoids the false no_xlsx we used to get on cold pages.
+    if not await _wait_render(page, 14):
+        await _warm_homepage(page)
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        except Exception:
+            pass
+        if not await _wait_render(page, 28):
+            return None
 
-    # Expand accordions in 3 rounds (nested)
-    for _ in range(3):
+    # Expand accordions (nested) and poll for the XLS link (loads lazily).
+    has_xls = False
+    for _ in range(6):
         try:
             await page.evaluate(EXPAND_ALL_JS)
         except Exception:
+            pass
+        try:
+            has_xls = await page.evaluate(XLS_PRESENT_JS)
+        except Exception:
+            has_xls = False
+        if has_xls:
             break
-        await asyncio.sleep(1.5)
-
-    # Check if XLS exists for this plan
-    try:
-        has_xls = await page.evaluate(XLS_PRESENT_JS)
-    except Exception:
-        has_xls = False
+        await asyncio.sleep(2)
     if not has_xls:
         return None
 
