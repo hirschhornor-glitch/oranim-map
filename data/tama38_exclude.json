@@ -1,0 +1,10 @@
+{
+ "_comment": "Manually-verified NON-tama38 permits that were mis-swept into the tama38 layer. Honored by harvest_tama38_by_street.is_tama38(). Keyed by base_tik (YYYY/NNNN).",
+ "exclude": [
+  {
+   "base_tik": "2000/0770",
+   "address": "בנימין דישראלי 4",
+   "reason": "היתר שינויים פנימיים / איחוד דירות (12→10 יח\"ד), לא תמ\"א 38 — הגיע מהשכבה הקפואה gisviewer/63. אומת מול teur+שטחים 2026-07-29."
+  }
+ ]
+}

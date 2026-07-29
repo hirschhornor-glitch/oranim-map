@@ -260,7 +260,7 @@
     "units_in": 5,
     "units_out": 2,
     "floors_tama": 4.5,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8699,45 +8699,6 @@
      [
       35.213902756249475,
       31.774348257034465
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "fid": 237,
-    "qc_id": 238,
-    "tik": "15655",
-    "address": "בנימין דישראלי 4",
-    "neighborho": "טלביה",
-    "rova": 0.0,
-    "units_exis": 10.0,
-    "units_tose": 7.0,
-    "open_": "28/04/2022",
-    "status": "תכנון - טרם כניסה לרישוי",
-    "date": "28/04/2022",
-    "status_1": null,
-    "comment": "חיזוק הבניין עפ\"י תמ\"א 1/38 ותכנית 10038 והוספת 7 יח\"ד ב-5.1 קומות חדשות",
-    "harisaa": "לא",
-    "y": 630786.0,
-    "x": 220676.0,
-    "created_us": "SDE",
-    "created_da": "2023-05-04",
-    "last_edite": "SDE",
-    "last_edi_1": "2023-05-04",
-    "__rec_stat": null,
-    "units_in": 12,
-    "units_out": 10,
-    "floors_tama": 1,
-    "units_review": true
-   },
-   "geometry": {
-    "type": "MultiPoint",
-    "coordinates": [
-     [
-      35.21732050413386,
-      31.769749920098857
      ]
     ]
    }
