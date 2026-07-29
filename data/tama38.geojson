@@ -34,7 +34,7 @@
     "__rec_stat": null,
     "units_in": 16,
     "units_out": 21,
-    "floors_tama": 5.5
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -184,7 +184,7 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 13,
-    "floors_tama": 6
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1622,7 +1622,6 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_in": 6,
     "floors_tama": 3
    },
    "geometry": {
@@ -1734,7 +1733,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 5.5
+    "floors_tama": 5.5,
+    "units_out": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1916,7 +1916,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2094,7 +2095,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_out": 12
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2355,7 +2357,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 7,
-    "units_out": 18,
+    "units_out": 11,
     "floors_tama": 4
    },
    "geometry": {
@@ -2393,7 +2395,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_out": 9
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2645,8 +2648,9 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 7,
-    "floors_tama": 3
+    "units_out": 11,
+    "floors_tama": 3,
+    "units_in": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3233,7 +3237,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 5
+    "units_out": 5,
+    "units_in": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3671,7 +3676,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3746,7 +3752,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 4
+    "floors_tama": 4,
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4479,7 +4486,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_in": 7,
+    "units_in": 8,
     "units_out": 12,
     "floors_tama": 5
    },
@@ -5030,7 +5037,7 @@
     "__rec_stat": null,
     "units_in": 8,
     "units_out": 8,
-    "floors_tama": 3,
+    "floors_tama": 1,
     "units_no_add": true
    },
    "geometry": {
@@ -5436,7 +5443,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 4,
-    "floors_tama": 3
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5548,7 +5555,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 6
+    "floors_tama": 6,
+    "units_out": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6019,7 +6027,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 5.5
+    "floors_tama": 5.5,
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6277,7 +6286,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 4,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_out": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7222,7 +7232,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 7,
-    "units_out": 18,
+    "units_out": 11,
     "floors_tama": 4
    },
    "geometry": {
@@ -7477,7 +7487,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "units_out": 9,
+    "units_out": 12,
     "floors_tama": 3
    },
    "geometry": {
@@ -7623,7 +7633,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 2,
-    "units_out": 5,
+    "units_out": 9,
     "floors_tama": 3
    },
    "geometry": {
@@ -7841,7 +7851,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4,
+    "units_out": 18,
     "floors_tama": 6
    },
    "geometry": {
@@ -7986,7 +7996,7 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 6,
-    "floors_tama": 1,
+    "floors_tama": 2,
     "units_no_add": true
    },
    "geometry": {
@@ -8786,7 +8796,7 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 4,
-    "floors_tama": 1,
+    "floors_tama": 2,
     "units_no_add": true
    },
    "geometry": {
@@ -9189,7 +9199,7 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 6,
-    "floors_tama": 1,
+    "floors_tama": 4,
     "units_no_add": true
    },
    "geometry": {
@@ -9262,7 +9272,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 11,
+    "units_out": 26,
     "floors_tama": 6
    },
    "geometry": {
@@ -9517,7 +9527,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "units_out": 18,
+    "units_out": 17,
     "floors_tama": 6
    },
    "geometry": {
@@ -9666,7 +9676,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 3,
-    "units_out": 8,
+    "units_out": 14,
     "floors_tama": 3
    },
    "geometry": {
@@ -9777,7 +9787,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 5,
+    "units_out": 16,
     "floors_tama": 6
    },
    "geometry": {
@@ -9852,8 +9862,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_in": 17,
-    "units_out": 34,
+    "units_out": 17,
     "floors_tama": 6
    },
    "geometry": {
@@ -9925,7 +9934,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 2,
+    "units_out": 8,
     "floors_tama": 4.5
    },
    "geometry": {
@@ -10071,7 +10080,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 2,
-    "units_out": 3,
+    "units_out": 10,
     "floors_tama": 4
    },
    "geometry": {
@@ -10875,7 +10884,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "floors_tama": 1
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11171,7 +11180,7 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 3,
+    "floors_tama": 1,
     "units_no_add": true
    },
    "geometry": {
@@ -11466,7 +11475,7 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 2,
-    "units_out": 6,
+    "units_out": 9,
     "floors_tama": 3
    },
    "geometry": {
@@ -11653,7 +11662,7 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 5,
-    "units_out": 7,
+    "units_out": 8,
     "floors_tama": 3
    },
    "geometry": {
@@ -11800,7 +11809,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_out": 1,
+    "units_out": 11,
     "floors_tama": 5
    },
    "geometry": {
@@ -11983,7 +11992,7 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 3,
-    "units_out": 7,
+    "units_out": 9,
     "floors_tama": 3
    },
    "geometry": {
@@ -12240,7 +12249,7 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 3,
+    "floors_tama": 1,
     "units_no_add": true
    },
    "geometry": {
@@ -12716,8 +12725,8 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_in": 32,
-    "units_out": 70,
+    "units_in": 70,
+    "units_out": 98,
     "floors_tama": 5
    },
    "geometry": {
@@ -13166,7 +13175,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_out": 8,
+    "units_out": 34,
     "floors_tama": 9
    },
    "geometry": {
@@ -14136,7 +14145,7 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
     "units_in": 4,
-    "units_out": 10,
+    "units_out": 18,
     "floors_tama": 5
    }
   },
@@ -14247,7 +14256,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 1,
+    "units_out": 17,
     "floors_tama": 6
    }
   },
@@ -14467,7 +14476,7 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
     "units_in": 9,
-    "units_out": 13,
+    "units_out": 14,
     "floors_tama": 6
    }
   },
@@ -14504,7 +14513,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 56,
+    "units_out": 78,
     "floors_tama": 10
    }
   },
@@ -14689,7 +14698,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 3,
+    "units_out": 10,
     "floors_tama": 6
    }
   },
@@ -15400,7 +15409,7 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
     "units_in": 24,
-    "units_out": 44,
+    "units_out": 45,
     "floors_tama": 7
    }
   },
@@ -15698,7 +15707,7 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
     "units_in": 2,
-    "units_out": 3,
+    "units_out": 9,
     "floors_tama": 5
    }
   },
@@ -16220,7 +16229,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_in": 2,
+    "units_in": 6,
     "units_out": 8,
     "floors_tama": 5.5
    }
