@@ -71,9 +71,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "units_out": 6,
-    "floors_tama": 3,
-    "units_review": true
+    "units_out": 25,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -110,9 +109,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "units_out": 12,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 14,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -335,9 +333,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 8,
-    "units_out": 8,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 10,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -411,9 +408,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "units_out": 12,
-    "floors_tama": 3,
-    "units_review": true
+    "units_out": 18,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -522,9 +518,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "units_out": 12,
-    "floors_tama": 10,
-    "units_review": true
+    "units_out": 18,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -632,9 +627,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 4,
-    "units_out": 4,
-    "floors_tama": 3,
-    "units_review": true
+    "units_out": 5,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -816,9 +810,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 4,
-    "units_out": 4,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 5,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -855,8 +848,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 10,
-    "units_out": 10,
-    "units_review": true
+    "units_out": 12
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1042,9 +1034,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 24,
-    "units_out": 24,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 36,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1337,8 +1328,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "units_out": 6,
-    "units_review": true
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1375,8 +1365,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "units_out": 6,
-    "units_review": true
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1597,7 +1586,7 @@
     "units_in": 3,
     "units_out": 3,
     "floors_tama": 2.5,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1708,9 +1697,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 19,
-    "units_out": 19,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 25,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3061,10 +3049,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_in": 4,
     "units_out": 4,
-    "floors_tama": 5,
-    "units_review": true
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4897,7 +4883,7 @@
     "units_in": 1,
     "units_out": 1,
     "floors_tama": 2,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5044,8 +5030,8 @@
     "__rec_stat": null,
     "units_in": 8,
     "units_out": 8,
-    "floors_tama": 1,
-    "units_review": true
+    "floors_tama": 3,
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5341,7 +5327,7 @@
     "units_in": 11,
     "units_out": 11,
     "floors_tama": 2,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8001,7 +7987,7 @@
     "units_in": 6,
     "units_out": 6,
     "floors_tama": 1,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8800,8 +8786,8 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 4,
-    "floors_tama": 2,
-    "units_review": true
+    "floors_tama": 1,
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9204,7 +9190,7 @@
     "units_in": 6,
     "units_out": 6,
     "floors_tama": 1,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9608,7 +9594,7 @@
     "units_in": 12,
     "units_out": 12,
     "floors_tama": 1,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11185,8 +11171,8 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 1,
-    "units_review": true
+    "floors_tama": 3,
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11332,9 +11318,8 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 3,
-    "units_out": 3,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 5,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11443,10 +11428,8 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_in": 8,
     "units_out": 8,
-    "floors_tama": 4,
-    "units_review": true
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12146,8 +12129,7 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 16,
-    "units_out": 16,
-    "units_review": true
+    "units_out": 18
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12258,8 +12240,8 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 1,
-    "units_review": true
+    "floors_tama": 3,
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12479,7 +12461,7 @@
     "units_in": 4,
     "units_out": 4,
     "floors_tama": 2,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -14596,10 +14578,8 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_in": 34,
     "units_out": 34,
-    "floors_tama": 7,
-    "units_review": true
+    "floors_tama": 7
    }
   },
   {
