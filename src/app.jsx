@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-tama38-tiles';
+        const APP_VERSION = '2026-07-29-hide-closed-default';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -19428,7 +19428,7 @@
                     return n + (getPermitStage({ status: _st }) === PERMIT_STAGE_DONE ? 1 : 0);
                 }, 0);
                 if (_closedCount > 0) {
-                    html += `<div style="padding:3px 10px;display:flex;justify-content:flex-end"><label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#9a9aba" title="הסתרה חזותית בלבד — לא משפיעה על ספירת יח״ד"><input type="checkbox" data-permit-hide-closed style="cursor:pointer;margin:0;accent-color:#5dade2">הסתר סגורים/בוטלו (${_closedCount})</label></div>`;
+                    html += `<div style="padding:3px 10px;display:flex;justify-content:flex-end"><label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#9a9aba" title="הסתרה חזותית בלבד — לא משפיעה על ספירת יח״ד"><input type="checkbox" data-permit-hide-closed checked style="cursor:pointer;margin:0;accent-color:#5dade2">הסתר סגורים/בוטלו (${_closedCount})</label></div>`;
                 }
                 html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
@@ -19454,7 +19454,7 @@
                     const checked = inclusion[i];
                     const oKey = permitOverrideKey(p, i, scopeKey);
                     const u = Number(p.units) || 0;
-                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
+                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:${stage === PERMIT_STAGE_DONE ? 'none' : 'flex'};gap:6px;align-items:flex-start">`;
                     html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
                     html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
                     html += `</label>`;
@@ -21456,7 +21456,7 @@
                     if (hc) {
                         const root = hc.closest('.leaflet-popup-content') || el;
                         root.querySelectorAll('.permit-row[data-permit-closed="1"]').forEach(r => {
-                            r.style.display = hc.checked ? 'none' : '';
+                            r.style.display = hc.checked ? 'none' : 'flex';  // rows are flex; '' would drop to block
                         });
                         return;
                     }
