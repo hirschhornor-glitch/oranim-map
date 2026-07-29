@@ -182,9 +182,13 @@ async def run(limit=None):
 
 def backfill_landuse_layer(limit=None):
     """Phase 2 — sync land-use POLYGONS (+ shavaz/easements/trees) into the map
-    layers for the same plans, via update_mavat_ui.check_xplan_updates (one call,
-    writes + pushes the geojson layers)."""
+    layers, via update_mavat_ui.check_xplan_updates (one call, writes + pushes the
+    geojson layers). Scoped to plans MISSING from landuse_xplan.geojson so we don't
+    needlessly re-query the ~785 plans already present."""
     import update_mavat_ui as u
+    with open(u.LANDUSE_GEOJSON, encoding='utf-8') as f:
+        lu = json.load(f)
+    have = {str(ft['properties'].get('pl_number') or '').strip() for ft in lu['features']}
     ws = _get_sheet()
     data = ws.get_all_values()
     hdr = data[0]
@@ -194,11 +198,11 @@ def backfill_landuse_layer(limit=None):
     for row in data[1:]:
         p = (row[cp] if cp < len(row) else '').strip()
         st = (row[cs] if 0 <= cs < len(row) else '').strip()
-        if p:
+        if p and p.startswith('101-') and p not in have:
             plans.append({'plan_name': p, 'new_status': st})
     if limit:
         plans = plans[:limit]
-    print(f"[landuse-layer] syncing {len(plans)} plans via check_xplan_updates")
+    print(f"[landuse-layer] {len(plans)} plans missing from the landuse layer → check_xplan_updates")
     rep = u.check_xplan_updates(plans)
     for line in rep:
         print(line)

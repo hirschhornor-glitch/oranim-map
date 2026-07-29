@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-26-newplans';
+        const APP_VERSION = '2026-07-29-done-outline';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -373,6 +373,7 @@
             district_oranim: 'data/district_oranim.geojson',
             roads: 'data/roads.geojson',
             rakal: 'data/rakal.geojson',
+            bike_paths: 'data/bike_paths.geojson',
             minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
             minahak_talpiot: 'data/minahak_talpiot.geojson',
             minahak_malha: 'data/minahak_malha.geojson',
@@ -906,6 +907,7 @@
                     { id: 'roads', name: 'כבישים', on: true },
                     { id: 'rakal', name: 'רק"ל', on: false },
                     { id: 'stations', name: 'תחנות רק"ל', on: false },
+                    { id: 'bike_paths', name: 'שבילי אופניים', desc: 'רשת שבילי האופניים בירושלים לפי סטטוס (קיים/בביצוע/בתכנון/רשת אסטרטגית). מקור: עיריית ירושלים, עדכון רבעוני', on: false },
                     { id: 'easements', name: 'זיקות הנאה', desc: 'תכניות עם זיקת הנאה — הפרדה גרפית בין רכב/הולכי רגל', on: false },
                 ]
             },
@@ -1246,10 +1248,23 @@
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
-        // מאוכלס rendering: green outline + subtle diagonal hatch fill. The pattern is injected
-        // once into a hidden svg; plan paths reference it via fill:url(#occHatch) (SVG fragment
-        // refs resolve document-wide, so it works across Leaflet pane svgs).
-        const OCC_LINE_COLOR = '#1e8449';
+        // "הושלם/מאוכלס" rendering — UNIFIED completed language (2026-07-29): a building/plan
+        // that finished construction (תעודת גמר) or is occupied recedes to a turquoise OUTLINE
+        // ONLY, no fill. Same turquoise for plan polygons and תמ"א 38 markers so "done" reads
+        // as one family across layers. (Was green #1e8449 + hatch fill.)
+        const OCC_LINE_COLOR = '#0d9488';
+        // Did this permit reach תעודת גמר (construction finished)? Sourced from pikuah_status.json.
+        function permitReachedGmar(fileNumber) {
+            const g = window.__pikuahGmarByFile;
+            if (!g) return false;
+            const fn = normPermitNo(fileNumber || '');
+            return !!(fn && g[fn]);
+        }
+        // A תמ"א 38 building (its permit list) counts as completed if ANY of its permits
+        // reached תעודת גמר — one building = one completion event.
+        function tama38Completed(permits) {
+            return Array.isArray(permits) && permits.some(p => permitReachedGmar(p && p.file_number));
+        }
         function ensureOccHatchDefs() {
             if (typeof document === 'undefined' || document.getElementById('occHatch')) return;
             const NS = 'http://www.w3.org/2000/svg';
@@ -1271,7 +1286,8 @@
             pat.appendChild(line); defs.appendChild(pat); svg.appendChild(defs);
             document.body.appendChild(svg);
         }
-        function occPlanStyle() { ensureOccHatchDefs(); return { color: OCC_LINE_COLOR, weight: 1.6, fillColor: 'url(#occHatch)', fillOpacity: 1, dashArray: '' }; }
+        // Outline-only (no fill) — the unified "completed/occupied" look.
+        function occPlanStyle() { return { color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0, dashArray: '' }; }
 
         const PLAN_TYPE_NORMALIZE = {
             'איחודוחלוקה': 'איחוד וחלוקה',
@@ -1418,7 +1434,7 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
-            'מאוכלס': '#1e8449',
+            'מאוכלס': '#0d9488',
         };
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
@@ -2534,6 +2550,29 @@
             { label: 'כללי', color: '#a855f7' },
         ];
 
+        // שבילי אופניים — צבעי סטטוס לפי הסימבולוגיה הרשמית של עיריית ירושלים.
+        // מתוכנן (בשלבי תכנון / רשת אסטרטגית) מוצג מקווקו; קיים/בביצוע — קו מלא.
+        // Colors deliberately avoid green (clashes with the neighborhood / minhak boundaries)
+        // and grey (roads). Magenta/cyan/orange/purple are maximally separated and unused elsewhere.
+        const BIKE_STATUS_COLORS = {
+            'קיים': '#d81b60',
+            'בביצוע': '#00a2d6',
+            'לקראת ביצוע': '#00a2d6',
+            'בשלבי תכנון': '#e69800',
+            'רשת שבילי אופניים-תוכנית אסטרטגית': '#8e24aa',
+        };
+        const BIKE_DEFAULT_COLOR = '#9e9e9e';
+        const bikeIsPlanned = (s) => s === 'בשלבי תכנון' || s === 'רשת שבילי אופניים-תוכנית אסטרטגית';
+        // Four status buckets, used both for the legend and for the per-status on/off toggles.
+        const BIKE_BUCKETS = [
+            { key: 'קיים',       short: 'קיים',        planned: false, label: 'קיים',                        color: BIKE_STATUS_COLORS['קיים'],     match: (s) => s === 'קיים' },
+            { key: 'בביצוע',     short: 'בביצוע',      planned: false, label: 'בביצוע / לקראת ביצוע',        color: BIKE_STATUS_COLORS['בביצוע'],   match: (s) => s === 'בביצוע' || s === 'לקראת ביצוע' },
+            { key: 'תכנון',      short: 'בתכנון',      planned: true,  label: 'בשלבי תכנון (מקווקו)',        color: BIKE_STATUS_COLORS['בשלבי תכנון'], match: (s) => s === 'בשלבי תכנון' },
+            { key: 'אסטרטגית',   short: 'אסטרטגית',    planned: true,  label: 'רשת אסטרטגית — מתוכנן (מקווקו)', color: BIKE_STATUS_COLORS['רשת שבילי אופניים-תוכנית אסטרטגית'], match: (s) => s === 'רשת שבילי אופניים-תוכנית אסטרטגית' },
+        ];
+        const bikeBucketKey = (s) => (BIKE_BUCKETS.find(b => b.match(String(s || ''))) || { key: 'אחר' }).key;
+        const BIKE_LEGEND = BIKE_BUCKETS.map(b => ({ label: b.label, color: b.color }));
+
         const MOSADOT_LEGEND = [
             { label: 'צורה: סוג מוסד', style: 'header' },
             { label: 'יסודי', style: 'svg', svg: '<svg width="18" height="18"><circle cx="9" cy="9" r="7" fill="#aaa" stroke="#666" stroke-width="2"/></svg>' },
@@ -2869,6 +2908,12 @@
                 excavation: false         // היתרי חפירה בתוקף — עבודות בשטח (GIS עירוני 232)
             });
             const [legendPopup, setLegendPopup] = useState(null); // { title, items }
+            // Permits-layer bucket filter (derives views from the canonical master). All on
+            // by default = no change to the existing stage-colored layer; toggling a subset
+            // filters the layer to plans with a permit in a selected bucket AND colors by bucket.
+            const [permitBuckets, setPermitBuckets] = useState({
+                tama38: true, zchuyot: true, ibuy: true, shimush_chorag: true, tava_gadol: true, acher: true
+            });
             const [mapScale, setMapScale] = useState('');
             const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
@@ -3227,6 +3272,8 @@
                 return () => clearTimeout(t);
             }, [filters.freeText]);
             const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
+            // Per-status visibility for the bike-paths layer. Holds visible BIKE_BUCKETS keys; empty = show all.
+            const [bikeFilter, setBikeFilter] = useState([]);
             // Plan-status filter for the future public-buildings layers (שב"צ עתידי / הפרשה מבונה).
             // Holds filterStatusGroups keys; empty = show all statuses.
             const [shavazStatusFilter, setShavazStatusFilter] = useState([]);
@@ -4837,6 +4884,8 @@
                 map.createPane('districtPane').style.zIndex = 200;
                 map.createPane('roadsPane').style.zIndex = 320;
                 map.createPane('roadsPane').style.pointerEvents = 'none';
+                // שבילי אופניים — מעל כבישים, מתחת לתב"עות; אינטראקטיבי (פופאפ).
+                map.createPane('bikePane').style.zIndex = 330;
                 map.createPane('rakalPane').style.zIndex = 490;
                 map.createPane('rakalPane').style.pointerEvents = 'none';
                 // Separate SVG renderer for rakal so pane z-index works
@@ -4916,6 +4965,7 @@
                     'givat_hamatos_companies', 'givat_hamatos_jewish',
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
                     'easements', 'construction_yb',
+                    'bike_paths',
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -4979,6 +5029,9 @@
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
+                    ['__permitsMaster', 'data/permits_master.json'],
+                    ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
+                    ['__pikuahStatus', 'data/pikuah_status.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5450,9 +5503,40 @@
                                     (window.__binuiByTabaMigrash[t] = window.__binuiByTabaMigrash[t] || {})[m] = b;
                                 });
                             }
+                            else if (key === '__tama38MpCheck') { window.__tama38MpCheck = data || {}; }
+                            else if (key === '__permitsMaster') {
+                                // THE canonical permit store (build_permits_master.py): one record
+                                // per tik, keyed by tik, with baked classification bucket + facets.
+                                const permits = (data && data.permits) ? data.permits : {};
+                                window.__permitsMaster = permits;
+                                window.__permitsMasterMeta = data ? { count: data.count, bucket_counts: data.bucket_counts, generated_at: data.generated_at } : {};
+                                // which buckets are present per taba — powers the layer bucket filter
+                                const byTaba = {};
+                                Object.values(permits).forEach(r => {
+                                    const t = String(r.taba || '').trim();
+                                    if (!t) return;
+                                    (byTaba[t] = byTaba[t] || {})[r.bucket] = true;
+                                });
+                                window.__permitBucketByTaba = byTaba;
+                            }
                             else if (key === '__tama38Developers') { window.__tama38Developers = (data && data.by_tik) ? data.by_tik : {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
+                            else if (key === '__pikuahStatus') {
+                                // per-permit building-supervision status (pikuah_status.json).
+                                // Index the completed ones (תעודת גמר) by normalized file_number
+                                // for O(1) "did this permit finish construction?" lookups.
+                                const bp = (data && data.by_permit) ? data.by_permit : {};
+                                window.__pikuahStatus = bp;
+                                const gmar = {};
+                                Object.values(bp).forEach(r => {
+                                    if (r && r.classification === 'gmar') {
+                                        const fn = normPermitNo(r.file_number || r.permit_tik || '');
+                                        if (fn) gmar[fn] = r.gmar_date || '';
+                                    }
+                                });
+                                window.__pikuahGmarByFile = gmar;
+                            }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
@@ -5489,6 +5573,7 @@
                             }
                             cur.permit_count = cur.permits.length;
                         }
+                        window.__permitsByNorm = null; // stores changed — rebuild canonical-key index lazily
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
                         // re-render open reports that consume stage-2 globals
                         // (e.g. developers report opened via deeplink reads
@@ -13377,6 +13462,48 @@
                     }).addTo(map);
                 }
 
+                // --- Bike paths (שבילי אופניים) — colored by status, dashed for planned, clickable popup ---
+                if (layers['bike_paths'] && gd.bike_paths) {
+                    const bikeColor = (s) => BIKE_STATUS_COLORS[s] || BIKE_DEFAULT_COLOR;
+                    // bikeFilter holds visible bucket keys; empty = show all.
+                    const bikeVisible = (f) => bikeFilter.length === 0
+                        || bikeFilter.includes(bikeBucketKey(f.properties && f.properties.status));
+                    geoLayersRef.current.bike_paths = L.geoJSON(gd.bike_paths, {
+                        pane: 'bikePane',
+                        filter: bikeVisible,
+                        style: (f) => {
+                            const s = (f.properties && f.properties.status) || '';
+                            const planned = bikeIsPlanned(s);
+                            return {
+                                color: bikeColor(s),
+                                weight: planned ? 2.5 : 3.5,
+                                opacity: planned ? 0.85 : 0.95,
+                                dashArray: planned ? '7,5' : null,
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const c = bikeColor(p.status);
+                            const lenTxt = (typeof p.length === 'number' && p.length > 0)
+                                ? Math.round(p.length).toLocaleString('he-IL') + ' מ\'' : '';
+                            const row = (lbl, val) => val
+                                ? '<div style="font-size:12px;color:#333;margin-top:2px"><b>' + lbl + ':</b> ' + val + '</div>' : '';
+                            layer.bindPopup(
+                                '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:190px">' +
+                                '<div style="font-weight:700;font-size:14px;border-right:4px solid ' + c + ';padding-right:6px;margin-bottom:5px">' +
+                                    '🚲 ' + (p.name || 'שביל אופניים') + '</div>' +
+                                row('סטטוס', p.status) +
+                                row('סוג', p.type) +
+                                row('אורך', lenTxt) +
+                                '</div>',
+                                { className: 'bike-popup' }
+                            );
+                        }
+                    }).addTo(map);
+                }
+
                 // --- Sub-neighborhoods (always on) — green outline, green label ---
                 if (gd.sub_neighborhoods && layers['sub_neighborhoods']) {
                     const zoom = map.getZoom();
@@ -14019,6 +14146,29 @@
                     });
 
                     geoLayersRef.current.topics = topicsLayer;
+                }
+
+                // Meetings layer — committee permits (ועדת רישוי) have no תב"ע polygon, so
+                // draw them as approximate geocoded points (hollow dashed marker = "מיקום מקורב",
+                // same convention as unassigned_permits). Respects the same מינה"ק filter as
+                // the plan polygons via planInMinahak on the corrected minahak.
+                if (gd.plans && planningTopics.meetings) {
+                    const permitGroup = L.layerGroup();
+                    Object.values(window.__meetings || {}).forEach(mt => {
+                        if (mt.lat == null || mt.lng == null) return;
+                        if (!planInMinahak({ minahak: mt.minahak })) return;
+                        const latlng = L.latLng(mt.lat, mt.lng);
+                        const marker = L.circleMarker(latlng, {
+                            pane: 'topicsPane', radius: 6, color: '#ff8c00', weight: 2,
+                            fillColor: '#ff8c00', fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false
+                        });
+                        marker.on('click', () => {
+                            openCommitteePermitPopup(mt, latlng, map);
+                        });
+                        marker.addTo(permitGroup);
+                    });
+                    permitGroup.addTo(map);
+                    geoLayersRef.current.meetingsPermits = permitGroup;
                 }
 
                 // --- Infrastructure layer (below plans) ---
@@ -17688,21 +17838,33 @@
                     window.__permitLabels = {};
                     // Group for permit labels (so they toggle with the permits layer)
                     const permitLabelsGroup = L.layerGroup();
+                    // bucket filter: when a subset of buckets is selected, restrict the layer
+                    // to plans with a permit in a selected bucket and color by bucket (derived
+                    // from the canonical master). All-selected = unchanged stage coloring.
+                    const _bkAll = PERMIT_BUCKETS.every(b => permitBuckets[b.id]);
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
                             // Only show polygons that actually have permits in the JSON
-                            return _getPermits(f.properties.taba).length > 0;
+                            if (_getPermits(f.properties.taba).length === 0) return false;
+                            if (!_bkAll) {
+                                const bks = bucketsForTaba(f.properties.taba);
+                                if (!bks.some(b => permitBuckets[b])) return false;
+                            }
+                            return true;
                         },
                         style: f => {
-                            const stage = (f.properties.stage || '').trim();
                             const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
-                            const stageColor = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
-                            if (shavazActive) {
-                                return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.07 };
+                            let color;
+                            if (!_bkAll) {
+                                const b = dominantBucket(f.properties.taba, permitBuckets);
+                                color = (b && PERMIT_BUCKET_COLOR[b]) || '#5dade2';
+                            } else {
+                                const stage = (f.properties.stage || '').trim();
+                                color = STAGE_COLORS[stage] || STAGE_COLORS[stage.replace(/ /g, '  ')] || '#5dade2';
                             }
-                            return { color: stageColor, weight: 2, fillColor: stageColor, fillOpacity: 0.5 };
+                            return { color, weight: 2, fillColor: color, fillOpacity: shavazActive ? 0.07 : 0.5 };
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -17784,31 +17946,30 @@
                         const tama38PermGroup = L.layerGroup().addTo(map);
                         gd.tama38.features.forEach(f => {
                             if (!tama38InMinahak(f.properties)) return;
+                            // #2 dedup: when the dedicated תמ"א 38 layer is on it renders these same
+                            // buildings (now with the same rich popup) — don't draw a second marker.
+                            if (layers['tama38']) return;
                             const fid = String(f.properties.fid != null ? f.properties.fid : '');
                             const permits = getPermitsForTama38(fid);
                             if (permits.length === 0) return;
+                            // #1 bucket filter — hide when none of this building's buckets is selected
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const bks = permits.map(p => { const m = masterPermit(p.file_number); return m && m.bucket; }).filter(Boolean);
+                                const eff = bks.length ? bks : ['tama38'];
+                                if (!eff.some(b => permitBuckets[b])) return;
+                            }
                             const coords = f.geometry && f.geometry.coordinates;
                             if (!coords || !coords[0]) return;
                             const c = f.geometry.type === 'MultiPoint' ? coords[0] : coords;
                             const latlng = L.latLng(c[1], c[0]);
-                            const marker = L.circleMarker(latlng, {
-                                pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5,
-                                fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false
-                            });
+                            const _done = tama38Completed(permits);
+                            const marker = L.circleMarker(latlng, _done
+                                ? { pane: 'tama38Pane', radius: 6, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0, bubblingMouseEvents: false }
+                                : { pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5, fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false });
                             marker.on('click', () => {
-                                // Detect tama type from permits or harisaa field
-                                var tamaType = '';
-                                var tt = permits.find(function(p) { return p.tama_type; });
-                                if (tt) { tamaType = tt.tama_type; }
-                                else if (f.properties.harisaa === 'כן') { tamaType = '38/2'; }
-                                else if (f.properties.harisaa === 'לא') { tamaType = '38/1'; }
-                                const addr = f.properties.address || 'תמ"א 38';
-                                const title = addr + (tamaType ? ' - תמ"א ' + tamaType : '');
-                                const unitsTose = f.properties.units_tose != null ? f.properties.units_tose : '';
-                                const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose)));
+                                    .setContent(buildTama38RichPopup(f.properties, permits, null));
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
                             });
@@ -17825,6 +17986,11 @@
                             const pr = f.properties || {};
                             const c = f.geometry && f.geometry.coordinates;
                             if (!c) return;
+                            // #1 bucket filter
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const m = masterPermit(pr.file_number);
+                                if (!permitBuckets[(m && m.bucket) || 'acher']) return;
+                            }
                             const latlng = L.latLng(c[1], c[0]);
                             const stage = getPermitStage(pr);
                             const col = getPermitStageColor(stage);
@@ -18018,7 +18184,17 @@
                 if (layers['tama38'] && gd.tama38) {
                     const tama38Layer = L.geoJSON(gd.tama38, {
                         pane: 'tama38Pane',
-                        filter: f => tama38InMinahak(f.properties),
+                        filter: f => {
+                            if (!tama38InMinahak(f.properties)) return false;
+                            // #1 bucket filter — share the permits-layer bucket selection
+                            if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
+                                const fid = String(f.properties.fid != null ? f.properties.fid : '');
+                                const bks = getPermitsForTama38(fid).map(p => { const m = masterPermit(p.file_number); return m && m.bucket; }).filter(Boolean);
+                                const eff = bks.length ? bks : ['tama38'];
+                                if (!eff.some(b => permitBuckets[b])) return false;
+                            }
+                            return true;
+                        },
                         pointToLayer: (f, latlng) => {
                             const rawStatus = (f.properties.status || '').trim();
                             // Normalize spaceless variants
@@ -18036,6 +18212,12 @@
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             const z = map.getZoom();
                             const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
+                            // Completed (תעודת גמר) → hollow turquoise ring, no fill (unified "done" look).
+                            if (tama38Completed(getPermitsForTama38(String(f.properties.fid != null ? f.properties.fid : '')))) {
+                                return L.circleMarker(latlng, {
+                                    radius: r, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0
+                                });
+                            }
                             return L.circleMarker(latlng, {
                                 radius: r, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
                             });
@@ -18045,11 +18227,17 @@
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
                                 const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
+                                // Rebuilt תמ"א 38 popup — plan-like, prominent permit number + tama
+                                // type + נכנס→יוצא + קומות + יזם. "פירוט" opens the full permit list.
+                                const fid = String(p.fid != null ? p.fid : '');
+                                const permits = getPermitsForTama38(fid);
+                                const content = buildTama38RichPopup(p, permits, null);
+                                const feat = { properties: p, type: 'tama38' };
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildTama38Popup(p));
+                                    .setContent(content);
                                 popup.openOn(m);
-                                bindPopupEvents(popup, [{ properties: p, type: 'tama38' }], 0);
+                                bindPopupEvents(popup, [feat], 0);
                             });
                             const addr = f.properties.address || '';
                             const tose = parseFloat(f.properties.units_tose) || 0;
@@ -18427,7 +18615,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -19150,6 +19338,10 @@
             // User can override per-permit via checkbox; overrides persist in localStorage keyed
             // by file_number (or scope+index when no file_number).
             const PERMIT_OVERRIDES_KEY = 'oranim:permitInclude';
+            // Per-plan override for whether conditional units (יח״ד מותנות / conditional_housing)
+            // are folded into the approved-units baseline that permits are compared against.
+            // Keyed by cluster scopeKey; default falls back to the global permitsGapIncludeConditional toggle.
+            const CONDITIONAL_INCLUDE_KEY = 'oranim:permitConditionalInclude';
             const PERMIT_PLAN_TOLERANCE = 1.10;
             const PERMIT_INFRA_KEYWORDS = ['הריסה', 'דיפון', 'חפירה', 'ביסוס', 'עבודות מקדימות'];
             function parsePlanUnits(v) {
@@ -19253,6 +19445,24 @@
                     return Object.prototype.hasOwnProperty.call(overrides, k) ? !!overrides[k] : defaults[i];
                 });
             }
+            function getConditionalOverrides() {
+                try {
+                    const raw = localStorage.getItem(CONDITIONAL_INCLUDE_KEY);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) { return {}; }
+            }
+            function setConditionalOverride(scopeKey, included) {
+                if (!scopeKey) return;
+                const overrides = getConditionalOverrides();
+                overrides[scopeKey] = !!included;
+                try { localStorage.setItem(CONDITIONAL_INCLUDE_KEY, JSON.stringify(overrides)); } catch (e) {}
+            }
+            // Whether a plan/cluster's conditional units count toward the comparison baseline.
+            // Per-plan override wins; otherwise falls back to the global default.
+            function getEffectiveConditionalInclude(scopeKey, globalDefault) {
+                const overrides = getConditionalOverrides();
+                return Object.prototype.hasOwnProperty.call(overrides, scopeKey) ? !!overrides[scopeKey] : !!globalDefault;
+            }
             function sumIncludedPermitUnits(permits, scopeKey, planUnits) {
                 const inc = getEffectivePermitInclusion(permits, scopeKey, planUnits);
                 let s = 0;
@@ -19319,10 +19529,32 @@
                 html += `<div class="popup-header-title">${title}</div>`;
                 html += `<div class="popup-header-subtitle">${subtitle} | ${permits.length} היתרים</div>`;
                 html += '</div>';
+                html += buildPermitCrossBanners(permits);
+                // "hide closed/cancelled" toggle — declutter popups with many סגור/בוטל rows.
+                // Closed = getPermitStage(effStatus)===PERMIT_STAGE_DONE (status includes נסגר/בוטל).
+                const _closedCount = permits.reduce((n, p) => {
+                    const _m = masterPermit(p.file_number);
+                    const _st = (_m && _m.status) ? _m.status : p.status;
+                    return n + (getPermitStage({ status: _st }) === PERMIT_STAGE_DONE ? 1 : 0);
+                }, 0);
+                if (_closedCount > 0) {
+                    html += `<div style="padding:3px 10px;display:flex;justify-content:flex-end"><label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#9a9aba" title="הסתרה חזותית בלבד — לא משפיעה על ספירת יח״ד"><input type="checkbox" data-permit-hide-closed checked style="cursor:pointer;margin:0;accent-color:#5dade2">הסתר סגורים/בוטלו (${_closedCount})</label></div>`;
+                }
                 html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
                 permits.forEach((p, i) => {
-                    const sc = getPermitStatusColor(p.status);
-                    const stage = getPermitStage(p);
+                    // Reconcile the DISPLAYED status/date to the canonical master (freshest
+                    // status_date across תב"ע + תמ"א stores), so the same permit reads the same
+                    // on every layer. Units/inclusion still come from p — totals are untouched.
+                    const _mp = masterPermit(p.file_number);
+                    const effStatus = (_mp && _mp.status) ? _mp.status : p.status;
+                    const effDate = (_mp && _mp.status_date) ? _mp.status_date : p.status_date;
+                    const _eff = (_mp && _mp.status) ? Object.assign({}, p, { status: effStatus }) : p;
+                    const _srcs = (_mp && _mp.provenance) ? _mp.provenance.filter(s => s === 'all_permits' || s === 'tama38' || s === 'extra') : [];
+                    // #6 occupancy (טופס 4): resolve the permit's plan and show if occupied
+                    const _plan = (_mp && _mp.taba) ? (window.__planByTaba || {})[String(_mp.taba)] : null;
+                    const _occ = _plan ? planOccupancy(_plan) : null;
+                    const sc = getPermitStatusColor(effStatus);
+                    const stage = getPermitStage(_eff);
                     const stageColor = getPermitStageColor(stage);
                     const stageLabel = getPermitStageLabel(stage);
                     const cat = classifyPermitCategory(p);
@@ -19332,7 +19564,7 @@
                     const checked = inclusion[i];
                     const oKey = permitOverrideKey(p, i, scopeKey);
                     const u = Number(p.units) || 0;
-                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
+                    html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:${stage === PERMIT_STAGE_DONE ? 'none' : 'flex'};gap:6px;align-items:flex-start">`;
                     html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
                     html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
                     html += `</label>`;
@@ -19342,8 +19574,22 @@
                     html += permitUrl ? `<a href="${permitUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:bold;color:#5dade2;direction:ltr;text-decoration:none">${p.file_number}</a>` : `<span style="font-size:12px;font-weight:bold;color:#ddd;direction:ltr">${p.file_number || '-'}</span>`;
                     html += `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">`;
                     if (unitsStr) html += `<span style="font-size:11px;font-weight:bold;color:#fff">${unitsStr}</span>`;
+                    // canonical bucket (from permits_master.json) — the derived classification
+                    if (_mp && _mp.bucket) {
+                        const _bc = PERMIT_BUCKET_COLOR[_mp.bucket] || '#7f8c8d';
+                        const _ua = (_mp.units_added || 0) > 0 ? ` +${_mp.units_added} יח"ד` : '';
+                        html += `<span class="popup-status-badge" style="background:${_bc}22;color:${_bc};border:1px solid ${_bc};font-size:10px;font-weight:bold" title="סיווג מהמאגר הקנוני${_ua}">${_mp.bucket_label || _mp.bucket}</span>`;
+                    }
                     html += `<span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor};font-size:10px" title="שלב לוגי (נגזר)">${stageLabel}</span>`;
-                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס מקורי">${p.status || '-'}</span>`;
+                    html += `<span class="popup-status-badge" style="background:${sc}33;color:${sc};border:1px solid ${sc};font-size:10px" title="סטטוס עדכני (מהמאגר הקנוני — הטרי מבין המקורות)">${effStatus || '-'}</span>`;
+                    if (_srcs.length > 1) {
+                        const _slabel = _srcs.map(s => s === 'all_permits' ? 'תב"ע' : s === 'tama38' ? 'תמ"א' : 'משלים').join('+');
+                        html += `<span class="popup-status-badge" style="background:#5a4b7a22;color:#b9a7dd;border:1px solid #5a4b7a;font-size:10px" title="ההיתר מופיע בכמה מקורות — הסטטוס המוצג הוא העדכני מביניהם">📚 ${_slabel}</span>`;
+                    }
+                    if (_occ) {
+                        const _od = (_occ.form4_date || '').trim();
+                        html += `<span class="popup-status-badge" style="background:#2e7d3222;color:#81c784;border:1px solid #2e7d32;font-size:10px;font-weight:bold" title="המבנה מאוכלס${_od ? ' · טופס 4: ' + _od : ''}${_occ.notes ? ' · ' + _occ.notes : ''}">🏠 מאוכלס</span>`;
+                    }
                     const _pk = (p.file_number || '').trim();
                     if (window.__objectionsPermits && window.__objectionsPermits[_pk]) {
                         const _or = window.__objectionsPermits[_pk];
@@ -19361,7 +19607,7 @@
                         html += `<span class="popup-status-badge" style="background:#c9a227;color:#1a1a2e;border:1px solid #c9a227;font-size:10px;font-weight:bold" title="הבקשה בשלב פרסום הקלה — טרם פורסמה רשמית לסעיף 149; התנגדויות צפויות להיפתח בקרוב">⏳ בהמתנה לפרסום §149</span>`;
                     }
                     html += `</div></div>`;
-                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${p.status_date || ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
+                    html += `<div style="font-size:11px;color:#8888aa;margin-top:2px">${effDate ? 'עודכן ' + effDate : ''}${tamaStr} <span style="color:#9a9aba" title="קטגוריית סוג היתר">${catLabel}</span></div>`;
                     if (p.request_description) {
                         const desc = p.request_description.length > 80 ? p.request_description.substring(0, 80) + '...' : p.request_description;
                         html += `<div style="font-size:10px;color:#6a6a8a;margin-top:2px">${desc}</div>`;
@@ -19694,6 +19940,262 @@
                 w.document.write(html);
                 w.document.close();
                 w.focus();
+            }
+
+            // ── Unified permit identity ──────────────────────────────────────────────
+            // A permit is one real-world entity that surfaces across sources with
+            // differently-padded numbers (YK file_number "2023/0928.00", committee
+            // permit_no "2023/928.0"). Canonicalise to "YYYY/N.S" — mirrors
+            // normalize_permit_no in audit_committee_vs_permits.py — so the committee
+            // agenda, our permit stores, and objection data can be joined.
+            function normPermitNo(raw) {
+                let s = String(raw || '').trim();
+                if (!s) return null;
+                if (s.indexOf('/') >= 0 && s.indexOf('.') < 0) s += '.0';
+                const m = s.match(/^(\d{4})\/0*(\d+)\.0*(\d+)$/);
+                if (!m) return null;
+                return m[1] + '/' + parseInt(m[2], 10) + '.' + parseInt(m[3], 10);
+            }
+            // tik = year/number without the revision — the identity of the application,
+            // and the key of the canonical master (build_permits_master.py).
+            function permitTik(raw) {
+                const k = normPermitNo(raw);
+                return k ? k.slice(0, k.lastIndexOf('.')) : null;
+            }
+            // Canonical master record for a permit number (by tik), or null.
+            function masterPermit(raw) {
+                const t = permitTik(raw);
+                return (t && window.__permitsMaster) ? (window.__permitsMaster[t] || null) : null;
+            }
+            // The 5 super-buckets the master classifies into (+ אחר). Order + colors used
+            // by the popup badge and the permits-layer bucket filter.
+            const PERMIT_BUCKETS = [
+                { id: 'tama38',         label: 'תמ"א 38',               color: '#8e44ad' },
+                { id: 'zchuyot',        label: 'הגדלת זכויות (ללא יח"ד)', color: '#2980b9' },
+                { id: 'ibuy',           label: 'עיבוי (תוספת יח"ד)',     color: '#16a085' },
+                { id: 'shimush_chorag', label: 'שימוש חורג',            color: '#e67e22' },
+                { id: 'tava_gadol',     label: 'תב"ע גדול / התחדשות',    color: '#c0392b' },
+                { id: 'acher',          label: 'אחר',                   color: '#7f8c8d' },
+            ];
+            const PERMIT_BUCKET_COLOR = PERMIT_BUCKETS.reduce((o, b) => { o[b.id] = b.color; return o; }, {});
+            // dominance for coloring a plan whose permits span several buckets — most-impactful first
+            const PERMIT_BUCKET_PRIORITY = ['tava_gadol', 'tama38', 'shimush_chorag', 'ibuy', 'zchuyot', 'acher'];
+            // buckets present among a taba's permits (from the master index built at load)
+            function bucketsForTaba(taba) {
+                const m = (window.__permitBucketByTaba || {})[String(taba || '').trim()];
+                return m ? Object.keys(m) : [];
+            }
+            // highest-priority bucket for a taba that is also currently enabled in the filter
+            function dominantBucket(taba, enabled) {
+                const present = bucketsForTaba(taba);
+                for (const b of PERMIT_BUCKET_PRIORITY) {
+                    if (present.indexOf(b) !== -1 && (!enabled || enabled[b])) return b;
+                }
+                return present.length ? present[0] : null;
+            }
+            // Our permit record (from __allPermits / __tama38Permits) matching a permit
+            // number, or null. Lazily indexes by canonical key (cached on window; cleared
+            // when the stores reload — see the data loader).
+            function findOurPermit(permitNo) {
+                const key = normPermitNo(permitNo);
+                if (!key) return null;
+                if (!window.__permitsByNorm) {
+                    const idx = {};
+                    const add = store => Object.values(store || {}).forEach(e => (e.permits || []).forEach(p => {
+                        const k = normPermitNo(p.file_number);
+                        if (k && !idx[k]) idx[k] = p;
+                    }));
+                    add(window.__allPermits); add(window.__tama38Permits);
+                    window.__permitsByNorm = idx;
+                }
+                return window.__permitsByNorm[key] || null;
+            }
+            // First upcoming committee meeting for any of these permits (by canonical key).
+            function upcomingMeetingForPermits(permits) {
+                const meetings = window.__meetings || {};
+                const keys = permits.map(p => normPermitNo(p.file_number)).filter(Boolean);
+                if (!keys.length) return null;
+                for (const mt of Object.values(meetings)) {
+                    const mk = normPermitNo(mt.plan_id);
+                    if (mk && keys.indexOf(mk) !== -1) return mt;
+                }
+                return null;
+            }
+            // Cross-source banners for a permit popup — same visual language as the plan
+            // popup banners (buildPlanPopup): open-for-objections (blue) + upcoming
+            // committee meeting (orange). Driven by permit identity, not plan identity.
+            function buildPermitCrossBanners(permits) {
+                const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                let html = '';
+                let objDeadline = null;
+                for (const p of permits) {
+                    const fk = (p.file_number || '').trim();
+                    if (window.__objectionsPermits && window.__objectionsPermits[fk]) { objDeadline = window.__objectionsPermits[fk].deadline_publish || ''; break; }
+                    if (window.__objectionsProcessByTik && window.__objectionsProcessByTik[fk] && window.__objectionsProcessByTik[fk].category === 'confirmed_open') { objDeadline = window.__objectionsProcessByTik[fk].deadline_publish || ''; break; }
+                }
+                if (objDeadline != null) {
+                    html += '<div style="background:#1976d2;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
+                    html += '<div style="font-weight:bold">&#9878;&#65039; פתוח להגשת התנגדויות' + (objDeadline ? ' עד ' + esc(objDeadline) : '') + '</div>';
+                    html += '</div>';
+                }
+                const mt = upcomingMeetingForPermits(permits);
+                if (mt) {
+                    const committee = mt.committee || 'מחוזית';
+                    const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                    html += '<div style="background:#ff8c00;color:#fff;padding:8px 10px;border-radius:4px;text-align:center;margin-bottom:4px;font-size:12px">';
+                    html += '<div style="font-weight:bold">&#128197; ישיבה קרובה (' + esc(committeeLabel) + '): ' + esc(mt.meeting_date) + '</div>';
+                    if (mt.purpose) html += '<div style="font-size:11px;margin-top:2px;opacity:0.95">' + esc(mt.purpose) + '</div>';
+                    html += '</div>';
+                }
+                return html;
+            }
+
+            // Committee permits (ועדת רישוי) have no תב"ע polygon — they're placed as an
+            // approximate geocoded point. Shared popup for both the meetings-report click
+            // and the meetings-layer marker. `mt` is a window.__meetings entry.
+            function buildCommitteePermitPopup(mt) {
+                const committee = mt.committee || 'מקומית - היתרים';
+                const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                const timePart = (mt.meeting_time && mt.meeting_time !== 'לא צוין') ? ' · ' + mt.meeting_time : '';
+                const line = (label, val) => val ? '<div style="margin:2px 0"><span style="color:#8a93a6">' + label + ':</span> <span style="color:#eee">' + val + '</span></div>' : '';
+                return '<div style="min-width:220px;direction:rtl">' +
+                    '<div style="font-weight:700;color:#ffa726;font-size:14px;margin-bottom:4px">&#128296; היתר ' + (mt.plan_id || '') + '</div>' +
+                    line('מהות', mt.plan_name) +
+                    line('ועדה', committeeLabel) +
+                    line('תאריך', (mt.meeting_date || '') + timePart) +
+                    line('מטרת הדיון', mt.purpose) +
+                    line('מינה"ק', mt.minahak) +
+                    line('תת-שכונה', mt.sub_neighborhood) +
+                    '<div style="margin-top:6px;color:#e0a635;font-size:11px">&#128205; מיקום מקורב לפי כתובת</div>' +
+                    '</div>';
+            }
+
+            // Open a committee-permit popup at latlng. If the permit exists in our stores
+            // (the audit's "matched" set) → show the full unified permit popup (real YK
+            // status/stage + field obs + cross-source banners), i.e. the two sources
+            // "merge". Otherwise → the lightweight committee popup (still carries the
+            // meeting info). Used by the meetings report click and the layer marker.
+            function openCommitteePermitPopup(mt, latlng, mapObj) {
+                const our = findOurPermit(mt.plan_id);
+                if (our) {
+                    const title = 'היתר ' + (mt.plan_id || '');
+                    const subtitle = (mt.minahak || '') + (mt.sub_neighborhood ? ' · ' + mt.sub_neighborhood : '');
+                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                        .setLatLng(latlng)
+                        .setContent(buildPermitsDetailPopup([our], title, subtitle, null, null, '', 0, 'committee:' + (normPermitNo(mt.plan_id) || mt.plan_id), 0));
+                    popup.openOn(mapObj);
+                    bindPopupEvents(popup, [{ properties: our, type: 'permit' }], 0);
+                } else {
+                    L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                        .setLatLng(latlng)
+                        .setContent(buildCommitteePermitPopup(mt))
+                        .openOn(mapObj);
+                }
+            }
+
+            // Rebuilt תמ"א 38 building popup — plan-popup-like. Prominent permit number +
+            // tama type (38/1 חיזוק / 38/2 הריסה-ובנייה), reconciled status, units נכנס→יוצא,
+            // floors, developer, cross-source banners. `permits` = getPermitsForTama38(fid).
+            function buildTama38RichPopup(props, permits, navInfo) {
+                const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                permits = permits || [];
+                const pri = permits.slice().sort((a, b) =>
+                    ((('' + (b.status || '')).includes('הופק') ? 1 : 0) - (('' + (a.status || '')).includes('הופק') ? 1 : 0))
+                    || String(b.file_number || '').localeCompare(String(a.file_number || '')))[0] || {};
+                const fileNum = pri.file_number || props.tik || '';
+                let tt = (permits.find(p => p.tama_type) || {}).tama_type || '';
+                if (!tt) {
+                    if (props.harisaa === 'כן') tt = '38/2';
+                    else if (props.harisaa === 'לא') tt = '38/1';
+                    else {
+                        const rt = permits.map(p => (p.request_type || '') + ' ' + (p.request_description || '')).join(' ');
+                        if (/הריסה ובני|הריסת/.test(rt)) tt = '38/2';
+                        else if (/תוספות|חיזוק|תמ"א 38/.test(rt)) tt = '38/1';
+                    }
+                }
+                const ttLabel = tt === '38/2' ? 'תמ"א 38/2 · הריסה ובנייה'
+                    : tt === '38/1' ? 'תמ"א 38/1 · חיזוק ותוספות'
+                    : (tt ? 'תמ"א ' + esc(tt) : 'תמ"א 38');
+                const mp = masterPermit(fileNum);
+                const status = (mp && mp.status) || pri.status || props.status || '';
+                const statusColor = getPermitStatusColor(status);
+                const statusDate = (mp && mp.status_date) || pri.status_date || '';
+                const uin = parseFloat(props.units_in) || 0, uout = parseFloat(props.units_out) || 0, fl = parseFloat(props.floors_tama) || 0;
+                const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
+                const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
+
+                const fid = String(props.fid != null ? props.fid : '');
+                const ts = (window.__tama38TreeSurveys || {})[fid] || (window.__tama38TreeSurveys || {})[fileNum] || (window.__tama38TreeSurveys || {})[props.tik] || null;
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                // ── Header — gradient + status-color bar (same language as buildPlanPopup) ──
+                html += '<div class="popup-header" style="position:relative;background:linear-gradient(135deg,#16213e,#0f3460);border-bottom:3px solid ' + statusColor + '">';
+                html += '<div class="popup-header-title">&#127970; ' + esc(props.address || 'תמ"א 38') + '</div>';
+                html += '<div class="popup-header-subtitle">' + esc(ttLabel) + '</div>';
+                html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
+                html += '<span class="popup-status-badge" style="background:' + statusColor + '33;color:' + statusColor + ';border:1px solid ' + statusColor + '">' + esc(status || '-') + '</span>';
+                if (statusDate) html += '<span style="font-size:11px;color:#8899bb">' + esc(statusDate) + '</span>';
+                html += '</div>';
+                if (dev.developer || dev.architect) {
+                    html += '<div style="display:flex;justify-content:center;gap:12px;margin-top:5px;font-size:10px;color:#8899bb">';
+                    if (dev.developer) html += '<span>יזם: ' + esc(dev.developer.length > 25 ? dev.developer.slice(0, 25) + '...' : dev.developer) + (dev.is_residents ? ' (דיירים)' : '') + '</span>';
+                    if (dev.architect) html += '<span>אדריכל: ' + esc(dev.architect.length > 20 ? dev.architect.slice(0, 20) + '...' : dev.architect) + '</span>';
+                    html += '</div>';
+                }
+                html += '</div>';  // end header
+                html += buildPermitCrossBanners(permits);
+                html += '<div class="popup-body">';
+                html += '<div class="popup-row"><span class="popup-row-label">מספר היתר</span>' +
+                    (ykUrl ? '<a href="' + ykUrl + '" target="_blank" rel="noopener" style="color:#5dade2;font-weight:bold;direction:ltr;text-decoration:underline">' + esc(fileNum) + '</a>'
+                           : '<span class="popup-row-value" style="direction:ltr;font-weight:bold">' + esc(fileNum) + '</span>') + '</div>';
+                // ── יח"ד + קומות tiles (same format as the plan popup) ──
+                if (uin || uout || fl) {
+                    html += '<div class="popup-section-title" style="border-top:none;margin-top:0">יח"ד</div>';
+                    html += '<div class="popup-pair">';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">' + (uin ? uin : '-') + '</span></div>';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">' + (uout ? uout : '-') + '</span></div>';
+                    if (uin && uout && uin > 0) {
+                        html += '<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">&#215;' + (uout / uin).toFixed(1) + '</span></div>';
+                    }
+                    if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value">' + fl + '</span></div>';
+                    html += '</div>';
+                }
+                // ── סקר עצים tiles ──
+                if (ts && ts.total) {
+                    html += '<div class="popup-section-title">&#127795; סקר עצים</div>';
+                    html += '<div class="popup-pair">';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">סה"כ</span><span class="popup-pair-value">' + ts.total + '</span></div>';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">שימור</span><span class="popup-pair-value" style="color:#66bb6a">' + (ts.shimur || 0) + '</span></div>';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">כריתה</span><span class="popup-pair-value" style="color:#e57373">' + (ts.krita || 0) + '</span></div>';
+                    if (ts.haataka) html += '<div class="popup-pair-item"><span class="popup-pair-label">העתקה</span><span class="popup-pair-value" style="color:#ffa726">' + ts.haataka + '</span></div>';
+                    html += '</div>';
+                }
+                // ── התייחסות תכנית האב (like the plan popup's compliance context) ──
+                const mpc = (window.__tama38MpCheck || {})[fid];
+                if (mpc && mpc.master_plan) {
+                    html += '<div style="margin-top:8px;background:#15152a;border-radius:6px;padding:8px 10px">';
+                    html += '<div style="font-size:10px;color:#7a8a9a;letter-spacing:0.5px;margin-bottom:4px">&#128205; לפי תכנית האב · ' + esc(mpc.master_plan) + '</div>';
+                    if (mpc.cap != null) {
+                        html += '<div style="display:flex;gap:14px;font-size:11px;color:#aab;margin-bottom:4px">' +
+                            '<span><b>קומות מותר:</b> ' + mpc.cap + '</span>' +
+                            (fl ? '<span><b>בהיתר:</b> ' + fl + '</span>' : '') + '</div>';
+                    } else {
+                        html += '<div style="font-size:10px;color:#8a93a6;margin-bottom:4px">אין תקרת-קומות מדויקת באזור זה בתכנית האב</div>';
+                    }
+                    if (mpc.flag === 'הפרה') html += '<div style="font-size:12px;font-weight:bold;color:#ef5350">&#128308; חריגת קומות מתכנית האב</div>';
+                    else if (mpc.flag === 'אזהרה') html += '<div style="font-size:12px;font-weight:bold;color:#ffb74d">&#128993; אזהרת קומות (כלל גס)</div>';
+                    else if (mpc.cap != null) html += '<div style="font-size:12px;color:#81c784">&#128994; תואם קומות</div>';
+                    if (mpc.conservation_kind === 'מבנה לשימור') html += '<div style="font-size:12px;font-weight:bold;color:#ce93d8;margin-top:3px">&#127963;&#65039; מבנה לשימור' + (mpc.conservation && mpc.conservation !== '?' ? ' · ' + esc(mpc.conservation) : '') + '</div>';
+                    else if (mpc.conservation_kind === 'באזור שימור') html += '<div style="font-size:11px;color:#b39ddb;margin-top:3px">&#127963;&#65039; באזור שימור</div>';
+                    html += '</div>';
+                }
+                if (permits.length) {
+                    html += '<div class="popup-row" style="border-top:1px solid #2a2a4a;margin-top:6px;padding-top:6px"><span class="popup-row-label">היתרים בתיק</span>' +
+                        '<button class="popup-btn-permit" data-action="show-permits" data-fid="' + esc(fid) + '" style="background:#2a2a4a;color:#9fd6ff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">' + permits.length + ' היתרים · פירוט &#8592;</button></div>';
+                }
+                html += '</div></div>';
+                return html;
             }
 
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
@@ -20701,6 +21203,12 @@
                 html += '</div>';
                 // Body
                 html += '<div class="popup-body">';
+                // #4 consistency: same canonical bucket badge as the rich popup
+                const _mpp = masterPermit(props.building_permit || props.file_number);
+                if (_mpp && _mpp.bucket) {
+                    const _bcc = PERMIT_BUCKET_COLOR[_mpp.bucket] || '#7f8c8d';
+                    html += `<div class="popup-row"><span class="popup-row-label">סיווג</span><span class="popup-status-badge" style="background:${_bcc}22;color:${_bcc};border:1px solid ${_bcc};font-weight:bold">${_mpp.bucket_label || _mpp.bucket}</span></div>`;
+                }
                 html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">מהות הבקשה</span><span class="popup-row-value" style="font-size:11px;max-width:180px;text-align:left">${requestType}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
@@ -20882,7 +21390,7 @@
                     const entry = allFeatures[idx];
                     const navInfo = allFeatures.length > 1 ? { current: idx, total: allFeatures.length } : null;
                     if (entry.type === 'permit') return buildPermitPopup(entry.properties, { properties: entry.properties }, navInfo);
-                    if (entry.type === 'tama38') return buildTama38Popup(entry.properties, navInfo);
+                    if (entry.type === 'tama38') return buildTama38RichPopup(entry.properties, getPermitsForTama38(String(entry.properties.fid != null ? entry.properties.fid : '')), navInfo);
                     return buildPlanPopup(entry.properties, { properties: entry.properties }, navInfo);
                 }
                 const el = popup.getElement();
@@ -21041,7 +21549,8 @@
                     if (permitBtn && permitBtn.dataset.action === 'back-to-tama38') {
                         ev.stopPropagation();
                         const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
-                        popup.setContent(buildTama38Popup(allFeatures[currentIdx].properties, navInfo));
+                        const tprops = allFeatures[currentIdx].properties;
+                        popup.setContent(buildTama38RichPopup(tprops, getPermitsForTama38(String(tprops.fid != null ? tprops.fid : '')), navInfo));
                         return;
                     }
                     if (permitBtn) {
@@ -21072,6 +21581,14 @@
                 el.addEventListener('click', el._popupHandler);
                 if (el._popupChangeHandler) el.removeEventListener('change', el._popupChangeHandler);
                 el._popupChangeHandler = function(ev) {
+                    const hc = ev.target.closest('input[data-permit-hide-closed]');
+                    if (hc) {
+                        const root = hc.closest('.leaflet-popup-content') || el;
+                        root.querySelectorAll('.permit-row[data-permit-closed="1"]').forEach(r => {
+                            r.style.display = hc.checked ? 'none' : 'flex';  // rows are flex; '' would drop to block
+                        });
+                        return;
+                    }
                     const cb = ev.target.closest('input[data-permit-include]');
                     if (!cb) return;
                     setPermitOverride(cb.dataset.permitKey, cb.checked);
@@ -21718,6 +22235,10 @@
                                                 <button className="layer-legend-btn" title="מקרא זיקות הנאה"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא זיקות הנאה - סוג', items: EASEMENTS_LEGEND }); }}>⋯</button>
                                             )}
+                                            {layer.id === 'bike_paths' && (
+                                                <button className="layer-legend-btn" title="מקרא שבילי אופניים"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא שבילי אופניים - סטטוס', items: BIKE_LEGEND }); }}>⋯</button>
+                                            )}
                                             {groupKey === 'master_plans' && (
                                                 <button className="layer-legend-btn" title={"דוח סיכום — תכנית אב " + layer.name}
                                                     onClick={(e) => {
@@ -21753,6 +22274,34 @@
                                                 <label onClick={() => toggleLayer(sub.id)} style={{fontSize:'11px'}}>{sub.name}</label>
                                             </div>
                                         ))}
+                                        {layer.id === 'bike_paths' && layers['bike_paths'] && (
+                                            <div style={{padding:'2px 8px 6px 24px',fontSize:11,direction:'rtl'}}>
+                                                <div style={{color:'#888',fontSize:10,marginBottom:3}}>הצג לפי סטטוס:</div>
+                                                <div style={{display:'flex',flexWrap:'wrap',gap:'3px 10px'}}>
+                                                    {BIKE_BUCKETS.map(b => (
+                                                        <label key={b.key} style={{display:'flex',alignItems:'center',gap:4,cursor:'pointer'}}>
+                                                            <input type="checkbox"
+                                                                checked={bikeFilter.length === 0 || bikeFilter.includes(b.key)}
+                                                                onChange={e => {
+                                                                    setBikeFilter(prev => {
+                                                                        const all = BIKE_BUCKETS.map(x => x.key);
+                                                                        let next = prev.length === 0 ? [...all] : [...prev];
+                                                                        if (e.target.checked) { if (!next.includes(b.key)) next.push(b.key); }
+                                                                        else { next = next.filter(x => x !== b.key); }
+                                                                        if (next.length === all.length) next = [];
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                onClick={e => e.stopPropagation()}
+                                                                style={{margin:0}}
+                                                            />
+                                                            <span style={{display:'inline-block',width:16,height:0,borderTop:'3px ' + (b.planned ? 'dashed' : 'solid') + ' ' + b.color}}></span>
+                                                            <span>{b.short}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         </div>
                                     ))}
                                     {groupKey === 'shavaz_kayam_group' && !collapsedGroups[groupKey] && layers['education_shanaton'] && (
@@ -24562,8 +25111,9 @@
                             // Fall back to units_add if units_total is missing/zero.
                             const baseTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
                             const conditional = parseFloat(p.conditional_housing) || 0;
-                            const unitsTotal = baseTotal + (permitsGapIncludeConditional ? conditional : 0);
-                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: unitsTotal, conditional });
+                            // Conditional units are folded in per-plan at the cluster level (Step 3),
+                            // so the baseline here excludes them.
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: baseTotal, conditional });
                         });
 
                         // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
@@ -24622,11 +25172,16 @@
                                 });
                             });
                             const mergedPermits = [...permitByFn.values(), ...orphanPermits];
-                            const unitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
+                            const baseUnitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
                             const conditionalSum = members.reduce((s, m) => s + (m.conditional || 0), 0);
                             const tabas = members.map(m => m.taba);
                             const planNames = members.map(m => m.props.plan_name || m.taba);
                             const scopeKey = 'cluster:' + [...tabas].sort().join(',');
+                            // Per-plan decision (default = global toggle) on folding conditional units into the baseline.
+                            const includeConditional = conditionalSum > 0
+                                ? getEffectiveConditionalInclude(scopeKey, permitsGapIncludeConditional)
+                                : false;
+                            const unitsAdd = baseUnitsAdd + (includeConditional ? conditionalSum : 0);
                             const inclusion = getEffectivePermitInclusion(mergedPermits, scopeKey, unitsAdd);
                             const unitsInPermits = mergedPermits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
@@ -24648,6 +25203,7 @@
                                 minahak: p.minahak || '',
                                 unitsAdd, unitsInPermits, gap, pctDone,
                                 conditional: conditionalSum,
+                                includeConditional,
                                 permitCount: mergedPermits.length,
                                 countedPermits,
                                 permits: mergedPermits,
@@ -24724,11 +25280,24 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={permitsGapIncludeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{permitsGapIncludeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
                                             </div>
+
+                                            {/* Per-plan toggle: include this plan's conditional units in the comparison baseline */}
+                                            {row.conditional > 0 && (
+                                                <div style={{marginBottom:14,padding:'10px 14px',background:'#241f14',border:'1px solid ' + (row.includeConditional ? '#e0a635' : '#4a3f24'),borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#f0e2bf',fontWeight:600}} title="כשמסומן, יח״ד המותנות מתווספות ליח״ד המאושרות שאליהן משווים את ההיתרים">
+                                                        <input type="checkbox" checked={row.includeConditional} onChange={() => { setConditionalOverride(row.scopeKey, !row.includeConditional); setPermitsGapRev(v => v + 1); }} style={{cursor:'pointer',width:18,height:18}} />
+                                                        כלול {fmt(row.conditional)} יח"ד מותנות במניין ההשוואה מול ההיתר
+                                                    </label>
+                                                    <span style={{fontSize:11,color:'#9ca3af',marginRight:'auto',marginLeft:0}}>
+                                                        {row.includeConditional ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל מותנות)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.conditional) + ' מותנות)'}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {/* Cluster breakdown: when multiple plans merged, show per-plan contribution */}
                                             {row.isCluster && (
@@ -24881,9 +25450,9 @@
                                                     return <option key={m} value={m}>{m} ({c})</option>;
                                                 })}
                                             </select>
-                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות">
+                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
                                                 <input type="checkbox" checked={permitsGapIncludeConditional} onChange={e => setPermitsGapIncludeConditional(e.target.checked)} style={{cursor:'pointer'}} />
-                                                כלול יח"ד מותנות
+                                                כלול יח"ד מותנות (ברירת מחדל)
                                             </label>
                                         </div>
                                         <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
@@ -27938,6 +28507,10 @@
                                     }
                                     const tamaCount = tama38InsideMp.length;
                                     const tamaUnitsAdd = tama38InsideMp.reduce((s, tf) => s + (parseFloat(tf.properties.units_tose) || 0), 0);
+                                    // תמ"א 38 buildings' compliance vs this master plan (tama38_master_plan_check.json)
+                                    const t38mp = Object.values(window.__tama38MpCheck || {}).filter(r => r && r.master_plan === masterPlanReport);
+                                    const t38Viol = t38mp.filter(r => r.flag === 'הפרה');
+                                    const t38Cons = t38mp.filter(r => r.conservation_kind === 'מבנה לשימור');
 
                                     // Master-plan context: subzone counts, floor range, conservation totals, no-densif zones
                                     const mpFeatures = (mpFc && mpFc.features) || [];
@@ -28060,6 +28633,23 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* תמ"א 38 buildings — floor & conservation compliance vs the master plan */}
+                                            {(t38Viol.length > 0 || t38Cons.length > 0) && (
+                                                <div style={{background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6,padding:'8px 12px',marginTop:10}}>
+                                                    <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>🏢 מבני תמ"א 38 מול תכנית האב</div>
+                                                    <div style={{display:'flex',gap:18,marginBottom:6}}>
+                                                        <span style={{fontSize:12,color:'#ef5350'}}>🔴 חריגת קומות: <b>{t38Viol.length}</b></span>
+                                                        <span style={{fontSize:12,color:'#ce93d8'}}>🏛️ מבנה לשימור: <b>{t38Cons.length}</b></span>
+                                                    </div>
+                                                    {t38Viol.slice(0,6).map((r,i) => (
+                                                        <div key={'v'+i} style={{fontSize:11,color:'#e0a0a0',margin:'2px 0'}}>• {r.address} — {r.floors_tama} קומות מול תקרה {r.cap}{r.conservation_kind==='מבנה לשימור'?' · 🏛️ שימור':''}</div>
+                                                    ))}
+                                                    {t38Cons.filter(r=>r.flag!=='הפרה').slice(0,4).map((r,i) => (
+                                                        <div key={'c'+i} style={{fontSize:11,color:'#b9a7dd',margin:'2px 0'}}>• {r.address} — 🏛️ מבנה לשימור{r.conservation&&r.conservation!=='?'?' ('+r.conservation+')':''}</div>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Aggregate sqm + units — with MP context underneath */}
                                             <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 6px'}}>סיכום כמותי</h3>
@@ -29896,11 +30486,27 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 const mt = p._meeting;
                                                 const committee = mt.committee || 'מחוזית';
                                                 const committeeLabel = committee.startsWith('מקומית') ? 'ועדה ' + committee : 'ועדה מחוזית';
+                                                // permit rows have no polygon but may have an approximate geocoded point
+                                                const hasPoint = p._unmatched && mt.lat != null && mt.lng != null;
+                                                const clickable = !p._unmatched || hasPoint;
                                                 return (
-                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: p._unmatched ? 'default' : 'pointer'}} ref={el => { if (el && !p._unmatched) el.onclick = (e) => {
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor: clickable ? 'pointer' : 'default'}} ref={el => { if (el && clickable) el.onclick = (e) => {
                                                     e.stopPropagation();
+                                                    if (!mapInstanceRef.current) return;
+                                                    if (hasPoint) {
+                                                        // Committee permit — zoom to its approximate point + permit popup.
+                                                        const latlng = L.latLng(mt.lat, mt.lng);
+                                                        setMeetingsReport(false);
+                                                        setTimeout(() => {
+                                                            mapInstanceRef.current.flyTo(latlng, 17);
+                                                            setTimeout(() => {
+                                                                openCommitteePermitPopup(mt, latlng, mapInstanceRef.current);
+                                                            }, 600);
+                                                        }, 100);
+                                                        return;
+                                                    }
                                                     const gd = geoDataRef.current;
-                                                    if (!gd.plans || !mapInstanceRef.current) return;
+                                                    if (!gd.plans) return;
                                                     const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name);
                                                     if (!feat || !feat.geometry) return;
                                                     const coords = [];
@@ -29927,7 +30533,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726'}}>{mt.meeting_date}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#ffa726',fontSize:11}}>{mt.meeting_time || '-'}</td>
                                                     <td style={{padding:'4px',color:'#81d4fa',fontSize:11}}>{committeeLabel}</td>
-                                                    <td style={{padding:'4px',color: p._unmatched ? '#888' : '#64b5f6', textDecoration: p._unmatched ? 'none' : 'underline'}}>{p.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color: clickable ? '#64b5f6' : '#888', textDecoration: clickable ? 'underline' : 'none'}}>{p.plan_name || '-'}{hasPoint ? ' \u{1F4CD}' : ''}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0'}}>{p.plan_summary || p.plan_name_he || '-'}</td>
                                                     <td style={{padding:'4px',color:'#e0e0e0',fontSize:11}}>{mt.purpose || '-'}</td>
                                                     <td style={{padding:'4px',color:'#f0f0f0',fontSize:11}}>{p._unmatched ? '-' : ((p.status_mavat||'-').trim())}</td>
@@ -31130,6 +31736,29 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+                    {/* Permits-layer bucket filter — derives the master's classification onto the map */}
+                    {layers.permits && window.__permitsMaster && (
+                        <div style={{position:'fixed', left:12, bottom:70, zIndex:1000, background:'rgba(18,18,32,0.94)', border:'1px solid #2a2a4a', borderRadius:8, padding:'8px 10px', width:210, boxShadow:'0 2px 10px rgba(0,0,0,0.45)', direction:'rtl'}}>
+                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                                <span style={{color:'#fff',fontSize:12,fontWeight:700}}>סוג היתר (מהמאגר)</span>
+                                <button onClick={() => setPermitBuckets({tama38:true,zchuyot:true,ibuy:true,shimush_chorag:true,tava_gadol:true,acher:true})}
+                                    style={{background:'none',border:'1px solid #3a3a5a',color:'#9fd6ff',borderRadius:5,fontSize:10,padding:'1px 7px',cursor:'pointer'}}>הכל</button>
+                            </div>
+                            {PERMIT_BUCKETS.map(b => {
+                                const on = permitBuckets[b.id];
+                                const cnt = (window.__permitsMasterMeta && window.__permitsMasterMeta.bucket_counts && window.__permitsMasterMeta.bucket_counts[b.id]) || 0;
+                                return (
+                                    <div key={b.id} onClick={() => setPermitBuckets(p => ({...p, [b.id]: !p[b.id]}))}
+                                        style={{display:'flex',alignItems:'center',gap:8,padding:'3px 2px',cursor:'pointer',opacity:on?1:0.42,userSelect:'none'}}>
+                                        <span style={{width:12,height:12,borderRadius:3,background:b.color,flex:'0 0 auto'}}></span>
+                                        <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>{b.label}</span>
+                                        <span style={{color:'#8a93a6',fontSize:10}}>{cnt}</span>
+                                        <input type="checkbox" checked={on} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </>

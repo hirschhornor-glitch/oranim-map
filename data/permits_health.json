@@ -1,0 +1,226 @@
+{
+  "generated_at": "2026-07-28T05:24:03",
+  "sources": [
+    {
+      "file": "all_permits.json",
+      "label": "היתרים לפי תב\"ע",
+      "refresh": "דו-שבועי (סריקה)",
+      "records": 761,
+      "last_publish": "2026-07-20",
+      "age_days": 8,
+      "status": "green",
+      "notes": []
+    },
+    {
+      "file": "tama38_permits.json",
+      "label": "היתרי תמ\"א 38",
+      "refresh": "דו-שבועי + §149 שבועי",
+      "records": 1302,
+      "last_publish": "2026-07-20",
+      "age_days": 8,
+      "status": "green",
+      "notes": []
+    },
+    {
+      "file": "extra_permits.json",
+      "label": "היתרים משלימים (YK API)",
+      "refresh": "לפי צורך",
+      "records": 18,
+      "last_publish": "2026-06-29",
+      "age_days": 29,
+      "status": "info",
+      "notes": []
+    },
+    {
+      "file": "meetings.json",
+      "label": "ישיבות ועדה קרובות",
+      "refresh": "שבועי (ועדות)",
+      "records": 27,
+      "last_publish": "2026-07-27",
+      "age_days": 1,
+      "status": "green",
+      "notes": []
+    },
+    {
+      "file": "objections_permits.json",
+      "label": "היתרים פתוחים להתנגדות §149",
+      "refresh": "שבועי",
+      "records": 1,
+      "last_publish": "2026-07-26",
+      "age_days": 2,
+      "status": "green",
+      "notes": []
+    },
+    {
+      "file": "unassigned_permits.geojson",
+      "label": "היתרים לא-משויכים (מגוקודד)",
+      "refresh": "לפי צורך",
+      "records": 13,
+      "last_publish": "2026-07-03",
+      "age_days": 25,
+      "status": "info",
+      "notes": []
+    },
+    {
+      "file": "tree_permits.json",
+      "label": "אישורי כריתת עצים",
+      "refresh": "יומי (CI)",
+      "records": 2,
+      "last_publish": "2026-07-24",
+      "age_days": 4,
+      "status": "yellow",
+      "notes": []
+    },
+    {
+      "file": "field_observations.json",
+      "label": "תצפיות שטח",
+      "refresh": "לפי צורך",
+      "records": 247,
+      "last_publish": "2026-06-21",
+      "age_days": 37,
+      "status": "info",
+      "notes": []
+    },
+    {
+      "file": "occupancy_status.json",
+      "label": "מאוכלס (טופס 4)",
+      "refresh": "לפי צורך",
+      "records": 1,
+      "last_publish": "2026-07-06",
+      "age_days": 22,
+      "status": "info",
+      "notes": []
+    }
+  ],
+  "scan": {
+    "date": "2026-07-19",
+    "removed_flag": false,
+    "raw": "2026-07-19T07:25:24 | date=2026-07-19 | all=new:4,status:33,removed:0 | tama38=new:0,status:14,removed:0",
+    "all": {
+      "new": 4,
+      "status": 33,
+      "removed": 0
+    },
+    "tama38": {
+      "new": 0,
+      "status": 14,
+      "removed": 0
+    },
+    "age_days": 9
+  },
+  "committee_audit": {
+    "date": "2026-07-27",
+    "matched": 7,
+    "missing": 16,
+    "missing_list": [
+      {
+        "permit_no": "1981/0501.05",
+        "neighborhood": "גוננים",
+        "address": "בית כנסת אור לישרים יוסי בן יועזר0 , גוננים",
+        "essence": "תכנית שינויים- התאמה למצב הקיים לזמן"
+      },
+      {
+        "permit_no": "2015/0858.04",
+        "neighborhood": "תלפיות",
+        "address": "תרזה מימון וכספים בע\" מ אליהו ג''''''''''''''''ורג'''' החרושת9 , תלפיות",
+        "essence": "תעשיה פיצול היתר בנייה עבור בניין ציבורי לאשר את הבקשה"
+      },
+      {
+        "permit_no": "2005/0292.02",
+        "neighborhood": "בקעה",
+        "address": "אלחייני מיכאל יהודה14 , גאולים - בקעה",
+        "essence": "תוספת חדר מחוזק על הגג ,ריצוף מרפסת גג מובא להכרעת הועדה האם לזמן"
+      },
+      {
+        "permit_no": "1999/0718.06",
+        "neighborhood": "גוננים",
+        "address": "דורפמן יצחק שדיאור רשב\" ג8 , גוננים",
+        "essence": "תוספת קומת מרתף , הרחבת יח\" ד בקומת קרקע ,ובניית ממ\"ד ,"
+      },
+      {
+        "permit_no": "1986/0648.07",
+        "neighborhood": "גוננים",
+        "address": "הוד גלעד יהודה הנשיא11 , גוננים",
+        "essence": "בקשה לתוספת בניה , מרפסת זיז + סגירת מרפסת"
+      },
+      {
+        "permit_no": "1971/0766.03",
+        "neighborhood": "קטמון הישנה",
+        "address": "יואן סולי נטף כט בנובמבר25 , קטמון הישנה",
+        "essence": "תוספת קומות , יחידות דיור ומרפסות לאשר את הבקשה"
+      },
+      {
+        "permit_no": "2012/0573.02",
+        "neighborhood": "קטמון הישנה",
+        "address": "קטמון הישנה תוספת חדר מחוזק מובא להכרעת הועדה האם לזמן",
+        "essence": "מערכת אוטומטית"
+      },
+      {
+        "permit_no": "2001/0556.02",
+        "neighborhood": "גוננים",
+        "address": "קרדשוב קרן רשב\" ג19 , גוננים",
+        "essence": "תוספת בניה/ הרחבה לבנין קיים+ממ\"ד משלוח הודעות לפי"
+      },
+      {
+        "permit_no": "2007/0428.03",
+        "neighborhood": "המושבה היוונית",
+        "address": "בוכריס מאיר יהושע בן נון31 , המושבה היוונית",
+        "essence": "תוספות יח\" ד חדשות ע\" פ שיתוף הכוללות"
+      },
+      {
+        "permit_no": "1986/0422.11",
+        "neighborhood": "המושבה הגרמנית",
+        "address": "מושבה גרמנית תוספת ממ\"ד ומחסן לאשר את הבקשה בכפוף לשינויים",
+        "essence": "מערכת אוטומטית"
+      },
+      {
+        "permit_no": "1957/0354.07",
+        "neighborhood": "רחביה",
+        "address": "סמרשטיין דוד קרן היסוד17 , רחביה בקשה לתוספת",
+        "essence": "מעלית , תוספות מרפסות, וסגירת"
+      },
+      {
+        "permit_no": "1973/0136.01",
+        "neighborhood": "תלפיות",
+        "address": "לסרי אלי  דב גרונר12 , תלפיות מזרח",
+        "essence": "בניית25 מ\"ר עפ\" י תב\" ע3894"
+      },
+      {
+        "permit_no": "2021/0507.01",
+        "neighborhood": "רחביה",
+        "address": "א . שנהב הנדסה ושמאות בע\"מ י . אלפסי37 , רחביה שינויים ללא תוספת",
+        "essence": "שטחים. לאשר את הבקשה בכפוף לשינויים ובתנאים"
+      },
+      {
+        "permit_no": "2022/0299.01",
+        "neighborhood": "המושבה הגרמנית",
+        "address": "זאב בכר10 תמא38 בעמ בנימין זאב באכר10 , מושבה גרמנית",
+        "essence": "מערכת אוטומטית"
+      },
+      {
+        "permit_no": "2015/858.3",
+        "neighborhood": "תלפיות",
+        "address": "הופק היתר בניה בתיק בשכונת תלפיות רחוב החרושת , במתחם בליליוס",
+        "essence": "הכולל מגורים, תעסוקה ומסחר, בבקשה זו מוצע בניין בן3 קומות לשימוש ציבורי הכולל גנ"
+      },
+      {
+        "permit_no": "1971/766.2",
+        "neighborhood": "קטמון הישנה",
+        "address": ". - לא יצא היתר. מהות הבקשה : מצב קיים: בניין מגורים בן2 קומות .מעל קומת מרתף המיועדת למגורים בעל גג",
+        "essence": " :,חלקה56 . "
+      }
+    ]
+  },
+  "known_failures": [
+    {
+      "log": "objections_last_run.log",
+      "sample": "[2026-06-26T06:31:19] Scrape loop finished without throttle — done.",
+      "count": 13
+    },
+    {
+      "log": "tama38_dev_backfill_last.log",
+      "sample": "YK throttled this run — will retry tomorrow.",
+      "count": 13
+    }
+  ]
+}

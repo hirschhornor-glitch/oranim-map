@@ -1,0 +1,51 @@
+name: Update Bike Paths
+
+on:
+  schedule:
+    # רבעוני — ה-1 בינואר/אפריל/יולי/אוקטובר ב-04:00 UTC.
+    - cron: '0 4 1 1,4,7,10 *'
+  workflow_dispatch:   # הפעלה ידנית
+
+# נדרש כדי שצעד ה-commit האוטומטי יוכל לדחוף חזרה ל-master.
+permissions:
+  contents: write
+
+# מונע התנגשות עם בניית app.js (deploy.yml) כששניהם דוחפים ל-master.
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # מתמיד PAT כדי ש-git push יעבוד (github.token ברירת המחדל read-only). מראה deploy.yml.
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install shapely
+
+      - name: Fetch bike paths (ArcGIS services3 → data/bike_paths.geojson)
+        run: python scripts/fetch_bike_paths.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/bike_paths.geojson
+          if git diff --cached --quiet; then
+            echo "No change in bike_paths.geojson — nothing to commit."
+            exit 0
+          fi
+          git commit -m "auto: update bike paths [skip ci]"
+          # Rebase onto any concurrent pushes (deploy bot, manual) then push. No `|| true`.
+          git pull --rebase --autostash origin master
+          git push
