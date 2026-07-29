@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-bike-paths';
+        const APP_VERSION = '2026-07-29-bike-paths-2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -2538,21 +2538,26 @@
 
         // שבילי אופניים — צבעי סטטוס לפי הסימבולוגיה הרשמית של עיריית ירושלים.
         // מתוכנן (בשלבי תכנון / רשת אסטרטגית) מוצג מקווקו; קיים/בביצוע — קו מלא.
+        // Colors deliberately avoid green (clashes with the neighborhood / minhak boundaries)
+        // and grey (roads). Magenta/cyan/orange/purple are maximally separated and unused elsewhere.
         const BIKE_STATUS_COLORS = {
-            'קיים': '#2e9e34',
+            'קיים': '#d81b60',
             'בביצוע': '#00a2d6',
             'לקראת ביצוע': '#00a2d6',
             'בשלבי תכנון': '#e69800',
-            'רשת שבילי אופניים-תוכנית אסטרטגית': '#d84fa0',
+            'רשת שבילי אופניים-תוכנית אסטרטגית': '#8e24aa',
         };
         const BIKE_DEFAULT_COLOR = '#9e9e9e';
         const bikeIsPlanned = (s) => s === 'בשלבי תכנון' || s === 'רשת שבילי אופניים-תוכנית אסטרטגית';
-        const BIKE_LEGEND = [
-            { label: 'קיים', color: BIKE_STATUS_COLORS['קיים'] },
-            { label: 'בביצוע / לקראת ביצוע', color: BIKE_STATUS_COLORS['בביצוע'] },
-            { label: 'בשלבי תכנון (מקווקו)', color: BIKE_STATUS_COLORS['בשלבי תכנון'] },
-            { label: 'רשת אסטרטגית — מתוכנן (מקווקו)', color: BIKE_STATUS_COLORS['רשת שבילי אופניים-תוכנית אסטרטגית'] },
+        // Four status buckets, used both for the legend and for the per-status on/off toggles.
+        const BIKE_BUCKETS = [
+            { key: 'קיים',       short: 'קיים',        planned: false, label: 'קיים',                        color: BIKE_STATUS_COLORS['קיים'],     match: (s) => s === 'קיים' },
+            { key: 'בביצוע',     short: 'בביצוע',      planned: false, label: 'בביצוע / לקראת ביצוע',        color: BIKE_STATUS_COLORS['בביצוע'],   match: (s) => s === 'בביצוע' || s === 'לקראת ביצוע' },
+            { key: 'תכנון',      short: 'בתכנון',      planned: true,  label: 'בשלבי תכנון (מקווקו)',        color: BIKE_STATUS_COLORS['בשלבי תכנון'], match: (s) => s === 'בשלבי תכנון' },
+            { key: 'אסטרטגית',   short: 'אסטרטגית',    planned: true,  label: 'רשת אסטרטגית — מתוכנן (מקווקו)', color: BIKE_STATUS_COLORS['רשת שבילי אופניים-תוכנית אסטרטגית'], match: (s) => s === 'רשת שבילי אופניים-תוכנית אסטרטגית' },
         ];
+        const bikeBucketKey = (s) => (BIKE_BUCKETS.find(b => b.match(String(s || ''))) || { key: 'אחר' }).key;
+        const BIKE_LEGEND = BIKE_BUCKETS.map(b => ({ label: b.label, color: b.color }));
 
         const MOSADOT_LEGEND = [
             { label: 'צורה: סוג מוסד', style: 'header' },
@@ -3253,6 +3258,8 @@
                 return () => clearTimeout(t);
             }, [filters.freeText]);
             const [eduFilters, setEduFilters] = useState({ sugMosad: [], pikuach: [] });
+            // Per-status visibility for the bike-paths layer. Holds visible BIKE_BUCKETS keys; empty = show all.
+            const [bikeFilter, setBikeFilter] = useState([]);
             // Plan-status filter for the future public-buildings layers (שב"צ עתידי / הפרשה מבונה).
             // Holds filterStatusGroups keys; empty = show all statuses.
             const [shavazStatusFilter, setShavazStatusFilter] = useState([]);
@@ -13428,8 +13435,12 @@
                 // --- Bike paths (שבילי אופניים) — colored by status, dashed for planned, clickable popup ---
                 if (layers['bike_paths'] && gd.bike_paths) {
                     const bikeColor = (s) => BIKE_STATUS_COLORS[s] || BIKE_DEFAULT_COLOR;
+                    // bikeFilter holds visible bucket keys; empty = show all.
+                    const bikeVisible = (f) => bikeFilter.length === 0
+                        || bikeFilter.includes(bikeBucketKey(f.properties && f.properties.status));
                     geoLayersRef.current.bike_paths = L.geoJSON(gd.bike_paths, {
                         pane: 'bikePane',
+                        filter: bikeVisible,
                         style: (f) => {
                             const s = (f.properties && f.properties.status) || '';
                             const planned = bikeIsPlanned(s);
@@ -18568,7 +18579,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -22225,6 +22236,34 @@
                                                 <label onClick={() => toggleLayer(sub.id)} style={{fontSize:'11px'}}>{sub.name}</label>
                                             </div>
                                         ))}
+                                        {layer.id === 'bike_paths' && layers['bike_paths'] && (
+                                            <div style={{padding:'2px 8px 6px 24px',fontSize:11,direction:'rtl'}}>
+                                                <div style={{color:'#888',fontSize:10,marginBottom:3}}>הצג לפי סטטוס:</div>
+                                                <div style={{display:'flex',flexWrap:'wrap',gap:'3px 10px'}}>
+                                                    {BIKE_BUCKETS.map(b => (
+                                                        <label key={b.key} style={{display:'flex',alignItems:'center',gap:4,cursor:'pointer'}}>
+                                                            <input type="checkbox"
+                                                                checked={bikeFilter.length === 0 || bikeFilter.includes(b.key)}
+                                                                onChange={e => {
+                                                                    setBikeFilter(prev => {
+                                                                        const all = BIKE_BUCKETS.map(x => x.key);
+                                                                        let next = prev.length === 0 ? [...all] : [...prev];
+                                                                        if (e.target.checked) { if (!next.includes(b.key)) next.push(b.key); }
+                                                                        else { next = next.filter(x => x !== b.key); }
+                                                                        if (next.length === all.length) next = [];
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                onClick={e => e.stopPropagation()}
+                                                                style={{margin:0}}
+                                                            />
+                                                            <span style={{display:'inline-block',width:16,height:0,borderTop:'3px ' + (b.planned ? 'dashed' : 'solid') + ' ' + b.color}}></span>
+                                                            <span>{b.short}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         </div>
                                     ))}
                                     {groupKey === 'shavaz_kayam_group' && !collapsedGroups[groupKey] && layers['education_shanaton'] && (
