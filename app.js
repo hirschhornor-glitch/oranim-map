@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-07-29-tama38-popup';
+const APP_VERSION = '2026-07-29-tama38-tiles';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -23476,6 +23476,18 @@ function App() {
     html += `<div class="popup-header-subtitle">${subtitle} | ${permits.length} היתרים</div>`;
     html += '</div>';
     html += buildPermitCrossBanners(permits);
+    // "hide closed/cancelled" toggle — declutter popups with many סגור/בוטל rows.
+    // Closed = getPermitStage(effStatus)===PERMIT_STAGE_DONE (status includes נסגר/בוטל).
+    const _closedCount = permits.reduce((n, p) => {
+      const _m = masterPermit(p.file_number);
+      const _st = _m && _m.status ? _m.status : p.status;
+      return n + (getPermitStage({
+        status: _st
+      }) === PERMIT_STAGE_DONE ? 1 : 0);
+    }, 0);
+    if (_closedCount > 0) {
+      html += `<div style="padding:3px 10px;display:flex;justify-content:flex-end"><label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#9a9aba" title="הסתרה חזותית בלבד — לא משפיעה על ספירת יח״ד"><input type="checkbox" data-permit-hide-closed style="cursor:pointer;margin:0;accent-color:#5dade2">הסתר סגורים/בוטלו (${_closedCount})</label></div>`;
+    }
     html += '<div class="popup-body" data-permit-scope="' + (scopeKey || '') + '" style="max-height:350px;overflow-y:auto">';
     permits.forEach((p, i) => {
       // Reconcile the DISPLAYED status/date to the canonical master (freshest
@@ -23502,7 +23514,7 @@ function App() {
       const checked = inclusion[i];
       const oKey = permitOverrideKey(p, i, scopeKey);
       const u = Number(p.units) || 0;
-      html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
+      html += `<div class="permit-row" data-permit-units="${u}" data-permit-stage="${stage}" data-permit-category="${cat}" data-permit-closed="${stage === PERMIT_STAGE_DONE ? '1' : '0'}" style="padding:6px 0;${i > 0 ? 'border-top:1px solid #2a2a4a' : ''};display:flex;gap:6px;align-items:flex-start">`;
       html += `<label style="display:flex;align-items:center;padding-top:2px;cursor:pointer" title="כלול בסה״כ יח״ד">`;
       html += `<input type="checkbox" data-permit-include data-permit-key="${oKey}"${checked ? ' checked' : ''} style="cursor:pointer;margin:0;accent-color:#5dade2">`;
       html += `</label>`;
@@ -24109,26 +24121,52 @@ function App() {
       fl = parseFloat(props.floors_tama) || 0;
     const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
     const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
+    const fid = String(props.fid != null ? props.fid : '');
+    const ts = (window.__tama38TreeSurveys || {})[fid] || (window.__tama38TreeSurveys || {})[fileNum] || (window.__tama38TreeSurveys || {})[props.tik] || null;
     let html = '<div>';
     html += buildNavBar(navInfo);
-    html += '<div class="permit-detail-header">';
+    // ── Header — gradient + status-color bar (same language as buildPlanPopup) ──
+    html += '<div class="popup-header" style="position:relative;background:linear-gradient(135deg,#16213e,#0f3460);border-bottom:3px solid ' + statusColor + '">';
     html += '<div class="popup-header-title">&#127970; ' + esc(props.address || 'תמ"א 38') + '</div>';
     html += '<div class="popup-header-subtitle">' + esc(ttLabel) + '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">';
+    html += '<span class="popup-status-badge" style="background:' + statusColor + '33;color:' + statusColor + ';border:1px solid ' + statusColor + '">' + esc(status || '-') + '</span>';
+    if (statusDate) html += '<span style="font-size:11px;color:#8899bb">' + esc(statusDate) + '</span>';
     html += '</div>';
+    if (dev.developer || dev.architect) {
+      html += '<div style="display:flex;justify-content:center;gap:12px;margin-top:5px;font-size:10px;color:#8899bb">';
+      if (dev.developer) html += '<span>יזם: ' + esc(dev.developer.length > 25 ? dev.developer.slice(0, 25) + '...' : dev.developer) + (dev.is_residents ? ' (דיירים)' : '') + '</span>';
+      if (dev.architect) html += '<span>אדריכל: ' + esc(dev.architect.length > 20 ? dev.architect.slice(0, 20) + '...' : dev.architect) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>'; // end header
     html += buildPermitCrossBanners(permits);
     html += '<div class="popup-body">';
     html += '<div class="popup-row"><span class="popup-row-label">מספר היתר</span>' + (ykUrl ? '<a href="' + ykUrl + '" target="_blank" rel="noopener" style="color:#5dade2;font-weight:bold;direction:ltr;text-decoration:underline">' + esc(fileNum) + '</a>' : '<span class="popup-row-value" style="direction:ltr;font-weight:bold">' + esc(fileNum) + '</span>') + '</div>';
-    html += '<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:' + statusColor + '33;color:' + statusColor + ';border:1px solid ' + statusColor + '">' + esc(status || '-') + '</span></div>';
-    if (statusDate) html += '<div class="popup-row"><span class="popup-row-label">עודכן</span><span class="popup-row-value">' + esc(statusDate) + '</span></div>';
-    if (uin || uout) {
-      const us = uin && uout ? uin + ' &#8592; ' + uout : uout ? '&#8592; ' + uout : uin + ' קיים';
-      html += '<div class="popup-row"><span class="popup-row-label">יח"ד (נכנס&#8594;יוצא)</span><span class="popup-row-value" style="font-weight:bold;color:#fff;direction:ltr">' + us + '</span></div>';
+    // ── יח"ד + קומות tiles (same format as the plan popup) ──
+    if (uin || uout || fl) {
+      html += '<div class="popup-section-title" style="border-top:none;margin-top:0">יח"ד</div>';
+      html += '<div class="popup-pair">';
+      html += '<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">' + (uin ? uin : '-') + '</span></div>';
+      html += '<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">' + (uout ? uout : '-') + '</span></div>';
+      if (uin && uout && uin > 0) {
+        html += '<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">&#215;' + (uout / uin).toFixed(1) + '</span></div>';
+      }
+      if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value">' + fl + '</span></div>';
+      html += '</div>';
     }
-    if (fl) html += '<div class="popup-row"><span class="popup-row-label">קומות</span><span class="popup-row-value">' + fl + '</span></div>';
-    if (dev.developer) html += '<div class="popup-row"><span class="popup-row-label">יזם</span><span class="popup-row-value" style="font-size:11px">' + esc(dev.developer) + (dev.is_residents ? ' <span style="color:#8a93a6">(דיירים)</span>' : '') + '</span></div>';
-    if (dev.architect) html += '<div class="popup-row"><span class="popup-row-label">אדריכל</span><span class="popup-row-value" style="font-size:11px">' + esc(dev.architect) + '</span></div>';
+    // ── סקר עצים tiles ──
+    if (ts && ts.total) {
+      html += '<div class="popup-section-title">&#127795; סקר עצים</div>';
+      html += '<div class="popup-pair">';
+      html += '<div class="popup-pair-item"><span class="popup-pair-label">סה"כ</span><span class="popup-pair-value">' + ts.total + '</span></div>';
+      html += '<div class="popup-pair-item"><span class="popup-pair-label">שימור</span><span class="popup-pair-value" style="color:#66bb6a">' + (ts.shimur || 0) + '</span></div>';
+      html += '<div class="popup-pair-item"><span class="popup-pair-label">כריתה</span><span class="popup-pair-value" style="color:#e57373">' + (ts.krita || 0) + '</span></div>';
+      if (ts.haataka) html += '<div class="popup-pair-item"><span class="popup-pair-label">העתקה</span><span class="popup-pair-value" style="color:#ffa726">' + ts.haataka + '</span></div>';
+      html += '</div>';
+    }
     if (permits.length) {
-      html += '<div class="popup-row" style="border-top:1px solid #2a2a4a;margin-top:4px;padding-top:6px"><span class="popup-row-label">היתרים בתיק</span>' + '<button class="popup-btn-permit" data-action="show-permits" data-fid="' + esc(String(props.fid)) + '" style="background:#2a2a4a;color:#9fd6ff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">' + permits.length + ' היתרים · פירוט &#8592;</button></div>';
+      html += '<div class="popup-row" style="border-top:1px solid #2a2a4a;margin-top:6px;padding-top:6px"><span class="popup-row-label">היתרים בתיק</span>' + '<button class="popup-btn-permit" data-action="show-permits" data-fid="' + esc(fid) + '" style="background:#2a2a4a;color:#9fd6ff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">' + permits.length + ' היתרים · פירוט &#8592;</button></div>';
     }
     html += '</div></div>';
     return html;
@@ -25618,6 +25656,14 @@ function App() {
     el.addEventListener('click', el._popupHandler);
     if (el._popupChangeHandler) el.removeEventListener('change', el._popupChangeHandler);
     el._popupChangeHandler = function (ev) {
+      const hc = ev.target.closest('input[data-permit-hide-closed]');
+      if (hc) {
+        const root = hc.closest('.leaflet-popup-content') || el;
+        root.querySelectorAll('.permit-row[data-permit-closed="1"]').forEach(r => {
+          r.style.display = hc.checked ? 'none' : '';
+        });
+        return;
+      }
       const cb = ev.target.closest('input[data-permit-include]');
       if (!cb) return;
       setPermitOverride(cb.dataset.permitKey, cb.checked);
