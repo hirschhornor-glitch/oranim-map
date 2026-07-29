@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-hide-closed-default';
+        const APP_VERSION = '2026-07-29-tama38-mp';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -4986,6 +4986,7 @@
                     ['__binuiPlans', 'data/binui_plans.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
                     ['__permitsMaster', 'data/permits_master.json'],
+                    ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5457,6 +5458,7 @@
                                     (window.__binuiByTabaMigrash[t] = window.__binuiByTabaMigrash[t] || {})[m] = b;
                                 });
                             }
+                            else if (key === '__tama38MpCheck') { window.__tama38MpCheck = data || {}; }
                             else if (key === '__permitsMaster') {
                                 // THE canonical permit store (build_permits_master.py): one record
                                 // per tik, keyed by tik, with baked classification bucket + facets.
@@ -20061,6 +20063,25 @@
                     if (ts.haataka) html += '<div class="popup-pair-item"><span class="popup-pair-label">העתקה</span><span class="popup-pair-value" style="color:#ffa726">' + ts.haataka + '</span></div>';
                     html += '</div>';
                 }
+                // ── התייחסות תכנית האב (like the plan popup's compliance context) ──
+                const mpc = (window.__tama38MpCheck || {})[fid];
+                if (mpc && mpc.master_plan) {
+                    html += '<div style="margin-top:8px;background:#15152a;border-radius:6px;padding:8px 10px">';
+                    html += '<div style="font-size:10px;color:#7a8a9a;letter-spacing:0.5px;margin-bottom:4px">&#128205; לפי תכנית האב · ' + esc(mpc.master_plan) + '</div>';
+                    if (mpc.cap != null) {
+                        html += '<div style="display:flex;gap:14px;font-size:11px;color:#aab;margin-bottom:4px">' +
+                            '<span><b>קומות מותר:</b> ' + mpc.cap + '</span>' +
+                            (fl ? '<span><b>בהיתר:</b> ' + fl + '</span>' : '') + '</div>';
+                    } else {
+                        html += '<div style="font-size:10px;color:#8a93a6;margin-bottom:4px">אין תקרת-קומות מדויקת באזור זה בתכנית האב</div>';
+                    }
+                    if (mpc.flag === 'הפרה') html += '<div style="font-size:12px;font-weight:bold;color:#ef5350">&#128308; חריגת קומות מתכנית האב</div>';
+                    else if (mpc.flag === 'אזהרה') html += '<div style="font-size:12px;font-weight:bold;color:#ffb74d">&#128993; אזהרת קומות (כלל גס)</div>';
+                    else if (mpc.cap != null) html += '<div style="font-size:12px;color:#81c784">&#128994; תואם קומות</div>';
+                    if (mpc.conservation_kind === 'מבנה לשימור') html += '<div style="font-size:12px;font-weight:bold;color:#ce93d8;margin-top:3px">&#127963;&#65039; מבנה לשימור' + (mpc.conservation && mpc.conservation !== '?' ? ' · ' + esc(mpc.conservation) : '') + '</div>';
+                    else if (mpc.conservation_kind === 'באזור שימור') html += '<div style="font-size:11px;color:#b39ddb;margin-top:3px">&#127963;&#65039; באזור שימור</div>';
+                    html += '</div>';
+                }
                 if (permits.length) {
                     html += '<div class="popup-row" style="border-top:1px solid #2a2a4a;margin-top:6px;padding-top:6px"><span class="popup-row-label">היתרים בתיק</span>' +
                         '<button class="popup-btn-permit" data-action="show-permits" data-fid="' + esc(fid) + '" style="background:#2a2a4a;color:#9fd6ff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">' + permits.length + ' היתרים · פירוט &#8592;</button></div>';
@@ -28343,6 +28364,10 @@
                                     }
                                     const tamaCount = tama38InsideMp.length;
                                     const tamaUnitsAdd = tama38InsideMp.reduce((s, tf) => s + (parseFloat(tf.properties.units_tose) || 0), 0);
+                                    // תמ"א 38 buildings' compliance vs this master plan (tama38_master_plan_check.json)
+                                    const t38mp = Object.values(window.__tama38MpCheck || {}).filter(r => r && r.master_plan === masterPlanReport);
+                                    const t38Viol = t38mp.filter(r => r.flag === 'הפרה');
+                                    const t38Cons = t38mp.filter(r => r.conservation_kind === 'מבנה לשימור');
 
                                     // Master-plan context: subzone counts, floor range, conservation totals, no-densif zones
                                     const mpFeatures = (mpFc && mpFc.features) || [];
@@ -28465,6 +28490,23 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* תמ"א 38 buildings — floor & conservation compliance vs the master plan */}
+                                            {(t38Viol.length > 0 || t38Cons.length > 0) && (
+                                                <div style={{background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6,padding:'8px 12px',marginTop:10}}>
+                                                    <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>🏢 מבני תמ"א 38 מול תכנית האב</div>
+                                                    <div style={{display:'flex',gap:18,marginBottom:6}}>
+                                                        <span style={{fontSize:12,color:'#ef5350'}}>🔴 חריגת קומות: <b>{t38Viol.length}</b></span>
+                                                        <span style={{fontSize:12,color:'#ce93d8'}}>🏛️ מבנה לשימור: <b>{t38Cons.length}</b></span>
+                                                    </div>
+                                                    {t38Viol.slice(0,6).map((r,i) => (
+                                                        <div key={'v'+i} style={{fontSize:11,color:'#e0a0a0',margin:'2px 0'}}>• {r.address} — {r.floors_tama} קומות מול תקרה {r.cap}{r.conservation_kind==='מבנה לשימור'?' · 🏛️ שימור':''}</div>
+                                                    ))}
+                                                    {t38Cons.filter(r=>r.flag!=='הפרה').slice(0,4).map((r,i) => (
+                                                        <div key={'c'+i} style={{fontSize:11,color:'#b9a7dd',margin:'2px 0'}}>• {r.address} — 🏛️ מבנה לשימור{r.conservation&&r.conservation!=='?'?' ('+r.conservation+')':''}</div>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Aggregate sqm + units — with MP context underneath */}
                                             <h3 style={{color:'#e94560',fontSize:14,margin:'12px 0 6px'}}>סיכום כמותי</h3>
