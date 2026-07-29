@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-done-outline';
+        const APP_VERSION = '2026-07-29-done-outline2';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1253,12 +1253,19 @@
         // ONLY, no fill. Same turquoise for plan polygons and תמ"א 38 markers so "done" reads
         // as one family across layers. (Was green #1e8449 + hatch fill.)
         const OCC_LINE_COLOR = '#0d9488';
+        // Revision-agnostic permit key: "2015/0935.01" and "2015/0935.00" are the same
+        // physical permit/building (different revisions), so completion on ANY revision
+        // applies to all. permits_master merges revisions under this base tik too.
+        function permitBaseKey(fn) {
+            const m = String(fn || '').match(/^(\d{4})\/0*(\d+)/);
+            return m ? m[1] + '/' + m[2] : '';
+        }
         // Did this permit reach תעודת גמר (construction finished)? Sourced from pikuah_status.json.
         function permitReachedGmar(fileNumber) {
             const g = window.__pikuahGmarByFile;
             if (!g) return false;
-            const fn = normPermitNo(fileNumber || '');
-            return !!(fn && g[fn]);
+            const k = permitBaseKey(fileNumber);
+            return !!(k && g[k]);
         }
         // A תמ"א 38 building (its permit list) counts as completed if ANY of its permits
         // reached תעודת גמר — one building = one completion event.
@@ -5524,15 +5531,16 @@
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__pikuahStatus') {
                                 // per-permit building-supervision status (pikuah_status.json).
-                                // Index the completed ones (תעודת גמר) by normalized file_number
-                                // for O(1) "did this permit finish construction?" lookups.
+                                // Index the completed ones (תעודת גמר) by the REVISION-AGNOSTIC
+                                // base tik (permitBaseKey) so a תמ"א 38 layer permit "…/.00" matches
+                                // a master/pikuah record stored under a later revision "…/.01".
                                 const bp = (data && data.by_permit) ? data.by_permit : {};
                                 window.__pikuahStatus = bp;
                                 const gmar = {};
                                 Object.values(bp).forEach(r => {
                                     if (r && r.classification === 'gmar') {
-                                        const fn = normPermitNo(r.file_number || r.permit_tik || '');
-                                        if (fn) gmar[fn] = r.gmar_date || '';
+                                        const k = permitBaseKey(r.permit_tik || r.file_number || '');
+                                        if (k) gmar[k] = r.gmar_date || '';
                                     }
                                 });
                                 window.__pikuahGmarByFile = gmar;
