@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-tama38-mp';
+        const APP_VERSION = '2026-07-29-bike-paths';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -373,6 +373,7 @@
             district_oranim: 'data/district_oranim.geojson',
             roads: 'data/roads.geojson',
             rakal: 'data/rakal.geojson',
+            bike_paths: 'data/bike_paths.geojson',
             minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
             minahak_talpiot: 'data/minahak_talpiot.geojson',
             minahak_malha: 'data/minahak_malha.geojson',
@@ -906,6 +907,7 @@
                     { id: 'roads', name: 'כבישים', on: true },
                     { id: 'rakal', name: 'רק"ל', on: false },
                     { id: 'stations', name: 'תחנות רק"ל', on: false },
+                    { id: 'bike_paths', name: 'שבילי אופניים', desc: 'רשת שבילי האופניים בירושלים לפי סטטוס (קיים/בביצוע/בתכנון/רשת אסטרטגית). מקור: עיריית ירושלים, עדכון רבעוני', on: false },
                     { id: 'easements', name: 'זיקות הנאה', desc: 'תכניות עם זיקת הנאה — הפרדה גרפית בין רכב/הולכי רגל', on: false },
                 ]
             },
@@ -2532,6 +2534,24 @@
             { label: 'רכב', color: '#dc2626' },
             { label: 'רגלי', color: '#22c55e' },
             { label: 'כללי', color: '#a855f7' },
+        ];
+
+        // שבילי אופניים — צבעי סטטוס לפי הסימבולוגיה הרשמית של עיריית ירושלים.
+        // מתוכנן (בשלבי תכנון / רשת אסטרטגית) מוצג מקווקו; קיים/בביצוע — קו מלא.
+        const BIKE_STATUS_COLORS = {
+            'קיים': '#2e9e34',
+            'בביצוע': '#00a2d6',
+            'לקראת ביצוע': '#00a2d6',
+            'בשלבי תכנון': '#e69800',
+            'רשת שבילי אופניים-תוכנית אסטרטגית': '#d84fa0',
+        };
+        const BIKE_DEFAULT_COLOR = '#9e9e9e';
+        const bikeIsPlanned = (s) => s === 'בשלבי תכנון' || s === 'רשת שבילי אופניים-תוכנית אסטרטגית';
+        const BIKE_LEGEND = [
+            { label: 'קיים', color: BIKE_STATUS_COLORS['קיים'] },
+            { label: 'בביצוע / לקראת ביצוע', color: BIKE_STATUS_COLORS['בביצוע'] },
+            { label: 'בשלבי תכנון (מקווקו)', color: BIKE_STATUS_COLORS['בשלבי תכנון'] },
+            { label: 'רשת אסטרטגית — מתוכנן (מקווקו)', color: BIKE_STATUS_COLORS['רשת שבילי אופניים-תוכנית אסטרטגית'] },
         ];
 
         const MOSADOT_LEGEND = [
@@ -4843,6 +4863,8 @@
                 map.createPane('districtPane').style.zIndex = 200;
                 map.createPane('roadsPane').style.zIndex = 320;
                 map.createPane('roadsPane').style.pointerEvents = 'none';
+                // שבילי אופניים — מעל כבישים, מתחת לתב"עות; אינטראקטיבי (פופאפ).
+                map.createPane('bikePane').style.zIndex = 330;
                 map.createPane('rakalPane').style.zIndex = 490;
                 map.createPane('rakalPane').style.pointerEvents = 'none';
                 // Separate SVG renderer for rakal so pane z-index works
@@ -4922,6 +4944,7 @@
                     'givat_hamatos_companies', 'givat_hamatos_jewish',
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
                     'easements', 'construction_yb',
+                    'bike_paths',
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -13399,6 +13422,44 @@
                         pane: 'roadsPane',
                         style: { color: '#666', weight: zoom >= 17 ? 1.5 : 1.0, opacity: 0.6 },
                         interactive: false
+                    }).addTo(map);
+                }
+
+                // --- Bike paths (שבילי אופניים) — colored by status, dashed for planned, clickable popup ---
+                if (layers['bike_paths'] && gd.bike_paths) {
+                    const bikeColor = (s) => BIKE_STATUS_COLORS[s] || BIKE_DEFAULT_COLOR;
+                    geoLayersRef.current.bike_paths = L.geoJSON(gd.bike_paths, {
+                        pane: 'bikePane',
+                        style: (f) => {
+                            const s = (f.properties && f.properties.status) || '';
+                            const planned = bikeIsPlanned(s);
+                            return {
+                                color: bikeColor(s),
+                                weight: planned ? 2.5 : 3.5,
+                                opacity: planned ? 0.85 : 0.95,
+                                dashArray: planned ? '7,5' : null,
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const c = bikeColor(p.status);
+                            const lenTxt = (typeof p.length === 'number' && p.length > 0)
+                                ? Math.round(p.length).toLocaleString('he-IL') + ' מ\'' : '';
+                            const row = (lbl, val) => val
+                                ? '<div style="font-size:12px;color:#333;margin-top:2px"><b>' + lbl + ':</b> ' + val + '</div>' : '';
+                            layer.bindPopup(
+                                '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:190px">' +
+                                '<div style="font-weight:700;font-size:14px;border-right:4px solid ' + c + ';padding-right:6px;margin-bottom:5px">' +
+                                    '🚲 ' + (p.name || 'שביל אופניים') + '</div>' +
+                                row('סטטוס', p.status) +
+                                row('סוג', p.type) +
+                                row('אורך', lenTxt) +
+                                '</div>',
+                                { className: 'bike-popup' }
+                            );
+                        }
                     }).addTo(map);
                 }
 
@@ -22124,6 +22185,10 @@
                                             {layer.id === 'easements' && (
                                                 <button className="layer-legend-btn" title="מקרא זיקות הנאה"
                                                     onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא זיקות הנאה - סוג', items: EASEMENTS_LEGEND }); }}>⋯</button>
+                                            )}
+                                            {layer.id === 'bike_paths' && (
+                                                <button className="layer-legend-btn" title="מקרא שבילי אופניים"
+                                                    onClick={(e) => { e.stopPropagation(); setLegendPopup({ title: 'מקרא שבילי אופניים - סטטוס', items: BIKE_LEGEND }); }}>⋯</button>
                                             )}
                                             {groupKey === 'master_plans' && (
                                                 <button className="layer-legend-btn" title={"דוח סיכום — תכנית אב " + layer.name}
