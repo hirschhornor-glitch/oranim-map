@@ -21691,6 +21691,7 @@
                     { id: 'permits_sub',  title: 'היתרים לפי תת-שכונה',      desc: 'פילוח שלב לתת-שכונה', icon: '🏘️' },
                     { id: 'use_gaps',     title: 'פערי שימוש — ספר הנכסים',  desc: 'שימוש נכסי הפרשה בפועל מול טבלה 5 (כולל חפיפות)', icon: '⚖️' },
                     { id: 'fuel_barriers', title: 'חסמים למבני ציבור',       desc: 'מגרשי ציבור בקרבת תחנת דלק (תמ"א 18)', icon: '⛽' },
+                    { id: 'resident_shared', title: 'שטחי דיירים משותפים',    desc: 'חדר דיירים / פנאי משותף / מרפסות משותפות — מ"ר לדירה', icon: '🛋️' },
                     { id: 'reports_menu', title: 'כל הדוחות',                desc: 'פתיחת תפריט הדוחות המרכזי', icon: '📊' },
                 ];
                 // All toggleable layers
@@ -21811,6 +21812,7 @@
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'use_gaps') setShowUseGaps(true);
                     else if (id === 'fuel_barriers') setShowFuelBarriers(true);
+                    else if (id === 'resident_shared') window.open('reports/resident_shared_report.html', '_blank');
                     else if (id === 'reports_menu') setShowReportsMenu(true);
                 }
             };
@@ -24980,6 +24982,7 @@
                                     value:dashSub, onChange:v => setDashSub(v),
                                     options:Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => ({ value:sn, label:sn })),
                                     onOpen:() => go(() => renderSubDashboard(dashSub)) } },
+                                { icon:'🛋️', title:'שטחי דיירים משותפים', desc:'חדר דיירים / פנאי משותף / מרפסות משותפות — מ"ר משותף לדירה בכל תכנית', onClick:() => go(() => window.open('reports/resident_shared_report.html', '_blank')) },
                             ]},
                             { key:'master', title:'🗺️ תכניות אב ומינהלים', color:'#6d4c41', bg:'rgba(109,76,65,0.06)', items:[
                                 { icon:'🗺️', title:'דוח תכנית אב', desc:'KPI, מימוש, ותכניות לפי תת מתחם', dropdown:{
