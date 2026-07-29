@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-bike-paths-2';
+        const APP_VERSION = '2026-07-29-done-outline';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1248,10 +1248,23 @@
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
-        // מאוכלס rendering: green outline + subtle diagonal hatch fill. The pattern is injected
-        // once into a hidden svg; plan paths reference it via fill:url(#occHatch) (SVG fragment
-        // refs resolve document-wide, so it works across Leaflet pane svgs).
-        const OCC_LINE_COLOR = '#1e8449';
+        // "הושלם/מאוכלס" rendering — UNIFIED completed language (2026-07-29): a building/plan
+        // that finished construction (תעודת גמר) or is occupied recedes to a turquoise OUTLINE
+        // ONLY, no fill. Same turquoise for plan polygons and תמ"א 38 markers so "done" reads
+        // as one family across layers. (Was green #1e8449 + hatch fill.)
+        const OCC_LINE_COLOR = '#0d9488';
+        // Did this permit reach תעודת גמר (construction finished)? Sourced from pikuah_status.json.
+        function permitReachedGmar(fileNumber) {
+            const g = window.__pikuahGmarByFile;
+            if (!g) return false;
+            const fn = normPermitNo(fileNumber || '');
+            return !!(fn && g[fn]);
+        }
+        // A תמ"א 38 building (its permit list) counts as completed if ANY of its permits
+        // reached תעודת גמר — one building = one completion event.
+        function tama38Completed(permits) {
+            return Array.isArray(permits) && permits.some(p => permitReachedGmar(p && p.file_number));
+        }
         function ensureOccHatchDefs() {
             if (typeof document === 'undefined' || document.getElementById('occHatch')) return;
             const NS = 'http://www.w3.org/2000/svg';
@@ -1273,7 +1286,8 @@
             pat.appendChild(line); defs.appendChild(pat); svg.appendChild(defs);
             document.body.appendChild(svg);
         }
-        function occPlanStyle() { ensureOccHatchDefs(); return { color: OCC_LINE_COLOR, weight: 1.6, fillColor: 'url(#occHatch)', fillOpacity: 1, dashArray: '' }; }
+        // Outline-only (no fill) — the unified "completed/occupied" look.
+        function occPlanStyle() { return { color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0, dashArray: '' }; }
 
         const PLAN_TYPE_NORMALIZE = {
             'איחודוחלוקה': 'איחוד וחלוקה',
@@ -1420,7 +1434,7 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
-            'מאוכלס': '#1e8449',
+            'מאוכלס': '#0d9488',
         };
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
@@ -5017,6 +5031,7 @@
                     ['__tama38Developers', 'data/tama38_developers.json'],
                     ['__permitsMaster', 'data/permits_master.json'],
                     ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
+                    ['__pikuahStatus', 'data/pikuah_status.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5507,6 +5522,21 @@
                             else if (key === '__tama38Developers') { window.__tama38Developers = (data && data.by_tik) ? data.by_tik : {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
+                            else if (key === '__pikuahStatus') {
+                                // per-permit building-supervision status (pikuah_status.json).
+                                // Index the completed ones (תעודת גמר) by normalized file_number
+                                // for O(1) "did this permit finish construction?" lookups.
+                                const bp = (data && data.by_permit) ? data.by_permit : {};
+                                window.__pikuahStatus = bp;
+                                const gmar = {};
+                                Object.values(bp).forEach(r => {
+                                    if (r && r.classification === 'gmar') {
+                                        const fn = normPermitNo(r.file_number || r.permit_tik || '');
+                                        if (fn) gmar[fn] = r.gmar_date || '';
+                                    }
+                                });
+                                window.__pikuahGmarByFile = gmar;
+                            }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
                             else if (key === '__eduForecast') { window.__eduForecast = (data && data.facilities) ? data.facilities : []; window.__eduForecastDemand = (data && data.demand) ? data.demand : {}; window.__eduForecastContext = (data && data.context) ? data.context : {}; }
@@ -17932,10 +17962,10 @@
                             if (!coords || !coords[0]) return;
                             const c = f.geometry.type === 'MultiPoint' ? coords[0] : coords;
                             const latlng = L.latLng(c[1], c[0]);
-                            const marker = L.circleMarker(latlng, {
-                                pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5,
-                                fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false
-                            });
+                            const _done = tama38Completed(permits);
+                            const marker = L.circleMarker(latlng, _done
+                                ? { pane: 'tama38Pane', radius: 6, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0, bubblingMouseEvents: false }
+                                : { pane: 'tama38Pane', radius: 6, color: '#5dade2', weight: 1.5, fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false });
                             marker.on('click', () => {
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
@@ -18182,6 +18212,12 @@
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             const z = map.getZoom();
                             const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
+                            // Completed (תעודת גמר) → hollow turquoise ring, no fill (unified "done" look).
+                            if (tama38Completed(getPermitsForTama38(String(f.properties.fid != null ? f.properties.fid : '')))) {
+                                return L.circleMarker(latlng, {
+                                    radius: r, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0
+                                });
+                            }
                             return L.circleMarker(latlng, {
                                 radius: r, fillColor: fillColor, color: '#999', weight: 0.5, fillOpacity: 0.9
                             });
