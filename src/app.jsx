@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-done-outline2';
+        const APP_VERSION = '2026-07-29-tama38-review';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -20168,6 +20168,10 @@
                     }
                     if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value">' + fl + '</span></div>';
                     html += '</div>';
+                    // תמ"א 38 always adds units → יוצא ≤ נכנס means the source data is suspect.
+                    if (props.units_review) {
+                        html += '<div style="font-size:11px;color:#ffb74d;margin-top:3px">&#9888;&#65039; יוצא ≤ נכנס — נתון לבדיקה (תמ"א אמורה להוסיף יח"ד)</div>';
+                    }
                 }
                 // ── סקר עצים tiles ──
                 if (ts && ts.total) {
