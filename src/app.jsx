@@ -3012,6 +3012,7 @@
             const [mimushTailOpen, setMimushTailOpen] = useState({}); // { minahak: true/false }
             const [mimushCellReport, setMimushCellReport] = useState(null);
             const [objectionsReport, setObjectionsReport] = useState(false);
+            const [residentSharedReport, setResidentSharedReport] = useState(false);
             const [newPlansReport, setNewPlansReport] = useState(false);
             const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
             const [treePermitsReport, setTreePermitsReport] = useState(false);
@@ -21816,7 +21817,7 @@
                     else if (id === 'permits_sub') { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }
                     else if (id === 'use_gaps') setShowUseGaps(true);
                     else if (id === 'fuel_barriers') setShowFuelBarriers(true);
-                    else if (id === 'resident_shared') window.open('reports/resident_shared_report.html', '_blank');
+                    else if (id === 'resident_shared') setResidentSharedReport(true);
                     else if (id === 'reports_menu') setShowReportsMenu(true);
                 }
             };
@@ -24986,7 +24987,7 @@
                                     value:dashSub, onChange:v => setDashSub(v),
                                     options:Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => ({ value:sn, label:sn })),
                                     onOpen:() => go(() => renderSubDashboard(dashSub)) } },
-                                { icon:'🛋️', title:'שטחי דיירים משותפים', desc:'חדר דיירים / פנאי משותף / מרפסות משותפות — מ"ר משותף לדירה בכל תכנית', onClick:() => go(() => window.open('reports/resident_shared_report.html', '_blank')) },
+                                { icon:'🛋️', title:'שטחי דיירים משותפים', desc:'חדר דיירים / פנאי משותף / מרפסות משותפות — מ"ר משותף לדירה בכל תכנית', onClick:() => go(() => setResidentSharedReport(true)) },
                             ]},
                             { key:'master', title:'🗺️ תכניות אב ומינהלים', color:'#6d4c41', bg:'rgba(109,76,65,0.06)', items:[
                                 { icon:'🗺️', title:'דוח תכנית אב', desc:'KPI, מימוש, ותכניות לפי תת מתחם', dropdown:{
@@ -29195,6 +29196,97 @@
                         </div>
                     )}
 
+                    {residentSharedReport && (() => {
+                        const gd = geoDataRef.current;
+                        if (!gd.plans) return null;
+                        const num = v => { const n = parseFloat(String(v == null ? '' : v).replace(/,/g,'').trim()); return isNaN(n) ? 0 : n; };
+                        const seen = new Set();
+                        const rows = gd.plans.features.filter(f => {
+                            if (num(f.properties.resident_shared) <= 0) return false;
+                            const id = f.properties.plan_name || '';
+                            if (seen.has(id)) return false;
+                            seen.add(id);
+                            return true;
+                        }).map(f => {
+                            const p = f.properties;
+                            const sqm = num(p.resident_shared);
+                            const units = num(p.units_total) || num(p.units_in);
+                            return { plan_name: p.plan_name || '', taba: p.taba,
+                                name: p.plan_summary || p.plan_name_he || '',
+                                units, sqm, ratio: units ? sqm/units : null,
+                                notes: p.resident_shared_prg || '' };
+                        }).sort((a,b) => b.sqm - a.sqm);
+                        const totalSqm = rows.reduce((s,r)=>s+r.sqm,0);
+                        const totalUnits = rows.reduce((s,r)=>s+(r.units||0),0);
+                        const avg = totalUnits ? (totalSqm/totalUnits) : 0;
+                        const zoomTo = (r) => {
+                            const gd2 = geoDataRef.current;
+                            if (!gd2.plans || !mapInstanceRef.current) return;
+                            const feat = gd2.plans.features.find(f => f.properties.plan_name === r.plan_name || f.properties.taba === r.taba);
+                            if (!feat || !feat.geometry) return;
+                            const coords = []; const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c=>c[1]), lons = coords.map(c=>c[0]);
+                            const bounds = [[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0]+bounds[1][0])/2,(bounds[0][1]+bounds[1][1])/2);
+                            const props = JSON.parse(JSON.stringify(feat.properties));
+                            setResidentSharedReport(false);
+                            setTimeout(() => {
+                                mapInstanceRef.current.fitBounds(bounds, {padding:[50,50], maxZoom:17});
+                                setTimeout(() => {
+                                    const mapped = mapPlanProps(props);
+                                    const popup = L.popup({maxWidth:340}).setLatLng(center).setContent(buildPlanPopup(mapped, {properties:mapped,type:'plan'}));
+                                    popup.openOn(mapInstanceRef.current);
+                                    bindPopupEvents(popup, [{properties:mapped,type:'plan'}], 0);
+                                }, 600);
+                            }, 100);
+                        };
+                        const card = (val, lbl) => (<div style={{background:'#16213e',border:'1px solid #24365c',borderRadius:8,padding:'8px 14px'}}><div style={{fontSize:20,fontWeight:700,color:'#fff'}}>{val}</div><div style={{fontSize:11,color:'#9db4d8'}}>{lbl}</div></div>);
+                        return (
+                        <div className="units-overlay" onClick={() => setResidentSharedReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(840px, 95vw)', maxHeight:'85vh', display:'flex', flexDirection:'column'}}>
+                                <button className="units-close" onClick={() => setResidentSharedReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{overflowY:'auto', flex:1}}>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128715; שטחי דיירים משותפים ("חדר דיירים")</h2>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:12}}>שטחי פנאי משותפים · מרפסות משותפות · חדר דיירים — פרטיים לדיירי הבניין, לא פרוגרמה ציבורית (שב"צ/שצ"פ)</p>
+                                    <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:12}}>
+                                        {card(rows.length, 'תכניות')}
+                                        {card(Math.round(totalSqm).toLocaleString('he-IL'), 'סה"כ שטח (מ"ר)')}
+                                        {card(avg.toFixed(2), 'ממוצע מ"ר/דירה')}
+                                    </div>
+                                    <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:12}}>
+                                        <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>תב"ע</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>שם תכנית</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>יח"ד</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>שטח משותף (מ"ר)</th>
+                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>מ"ר/דירה</th>
+                                            <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>פירוט</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {rows.map((r,i) => (
+                                                <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = () => zoomTo(r); }}>
+                                                    <td style={{padding:'4px',color:'#888',fontSize:11}}>{i+1}</td>
+                                                    <td style={{padding:'4px',color:'#64b5f6',textDecoration:'underline'}}>{r.plan_name || '-'}</td>
+                                                    <td style={{padding:'4px',color:'#e0e0e0'}}>{r.name || '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#e0e0e0'}}>{r.units ? r.units.toLocaleString('he-IL') : '-'}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:'#80cbc4'}}>{Math.round(r.sqm).toLocaleString('he-IL')}</td>
+                                                    <td style={{textAlign:'center',padding:'4px',color:(r.ratio!=null&&r.ratio>=1.5)?'#ffd479':'#e0e0e0',fontWeight:(r.ratio!=null&&r.ratio>=1.5)?700:400}}>{r.ratio!=null?r.ratio.toFixed(2):'—'}</td>
+                                                    <td style={{padding:'4px',color:'#a9bad8',fontSize:11}}>{r.notes || '-'}</td>
+                                                </tr>
+                                            ))}
+                                            {rows.length===0 && (<tr><td colSpan={7} style={{padding:'16px',textAlign:'center',color:'#888'}}>אין נתונים עדיין</td></tr>)}
+                                        </tbody>
+                                    </table>
+                                    <p style={{color:'#7f8db0',fontSize:11}}>מודגש בצהוב = ‎1.5 מ"ר/דירה ומעלה. המקור: הערות טבלה 5. מתעדכן אוטומטית ככל שהצנרת מזהה עוד תכניות.</p>
+                                </div>
+                            </div>
+                        </div>
+                        );
+                    })()}
                     {objectionsReport && (() => {
                         const gd = geoDataRef.current;
                         if (!gd.plans) return null;
