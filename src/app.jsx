@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-tama38-review';
+        const APP_VERSION = '2026-07-29-tama38-teur-fix';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -20169,9 +20169,12 @@
                     }
                     if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value">' + fl + '</span></div>';
                     html += '</div>';
-                    // תמ"א 38 always adds units → יוצא ≤ נכנס means the source data is suspect.
+                    // תמ"א 38 usually adds units. יוצא≤נכנס with no authoritative total = suspect
+                    // data (review); confirmed by the permit text = a legit no-added-units permit.
                     if (props.units_review) {
-                        html += '<div style="font-size:11px;color:#ffb74d;margin-top:3px">&#9888;&#65039; יוצא ≤ נכנס — נתון לבדיקה (תמ"א אמורה להוסיף יח"ד)</div>';
+                        html += '<div style="font-size:11px;color:#ffb74d;margin-top:3px">&#9888;&#65039; יוצא ≤ נכנס — נתון לבדיקה</div>';
+                    } else if (props.units_no_add) {
+                        html += '<div style="font-size:11px;color:#8a93a6;margin-top:3px">&#8505;&#65039; ללא תוספת יח"ד (חיזוק/שימור)</div>';
                     }
                 }
                 // ── סקר עצים tiles ──

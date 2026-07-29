@@ -297,9 +297,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 28,
-    "units_out": 28,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 56,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -967,9 +966,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "units_out": 6,
-    "floors_tama": 10,
-    "units_review": true
+    "units_out": 8,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1189,10 +1187,9 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_in": 4,
-    "units_out": 4,
-    "floors_tama": 5,
-    "units_review": true
+    "units_in": 8,
+    "units_out": 10,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1857,9 +1854,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 7,
-    "units_out": 7,
-    "floors_tama": 5.5,
-    "units_review": true
+    "units_out": 8,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4023,8 +4019,7 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 7,
-    "units_out": 7,
-    "units_review": true
+    "units_out": 9
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11118,9 +11113,8 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 26,
-    "units_out": 26,
-    "floors_tama": 4,
-    "units_review": true
+    "units_out": 40,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11231,7 +11225,7 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 12,
-    "floors_tama": 1,
+    "floors_tama": 3,
     "units_review": true
    },
    "geometry": {
@@ -12414,9 +12408,8 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 76,
-    "units_out": 76,
-    "floors_tama": 82,
-    "units_review": true
+    "units_out": 110,
+    "floors_tama": 82
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12784,9 +12777,8 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_in": 32,
-    "units_out": 32,
-    "floors_tama": 5,
-    "units_review": true
+    "units_out": 70,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12863,7 +12855,7 @@
     "units_in": 16,
     "units_out": 16,
     "floors_tama": 4,
-    "units_review": true
+    "units_no_add": true
    },
    "geometry": {
     "type": "MultiPoint",
@@ -15244,9 +15236,9 @@
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
     "units_in": 2,
-    "units_out": 1,
+    "units_out": 2,
     "floors_tama": 2,
-    "units_review": true
+    "units_no_add": true
    }
   },
   {
