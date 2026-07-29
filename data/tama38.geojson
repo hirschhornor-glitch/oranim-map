@@ -31,7 +31,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 16,
+    "units_out": 21,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -66,7 +69,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -101,7 +107,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -136,7 +145,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -241,7 +251,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 5,
+    "units_out": 2,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -276,7 +289,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 28,
+    "units_out": 28,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -311,7 +327,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 8,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -346,7 +365,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 26,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -381,7 +402,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -451,7 +475,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 39,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -486,7 +512,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -556,7 +585,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -591,7 +621,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -626,7 +659,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -661,7 +696,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -731,7 +767,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -766,7 +804,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -801,7 +842,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 10,
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -836,7 +879,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 18,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -906,7 +952,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -941,7 +990,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 15,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -976,7 +1028,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 24,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1046,7 +1101,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1081,7 +1137,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1116,7 +1173,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1151,7 +1211,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1186,7 +1248,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 22,
+    "units_out": 37,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1221,7 +1286,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1256,7 +1322,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1291,7 +1359,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1326,7 +1396,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1396,7 +1467,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 10,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1431,7 +1505,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 18,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1466,7 +1542,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1501,7 +1578,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 3,
+    "floors_tama": 2.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1536,7 +1616,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1571,7 +1653,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1606,7 +1690,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 19,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1641,7 +1728,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1711,7 +1799,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1746,7 +1835,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 7,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1781,7 +1873,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1816,7 +1909,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1956,7 +2051,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 34,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1991,7 +2088,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2026,7 +2124,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 12,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2061,7 +2161,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2096,7 +2197,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 10,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2131,7 +2235,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 30,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2166,7 +2273,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 8,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2201,7 +2311,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 9
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2236,7 +2348,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 11,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2271,7 +2386,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2306,7 +2423,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 5,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2376,7 +2496,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 38
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2481,7 +2602,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2516,7 +2639,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 7,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2551,7 +2676,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2656,7 +2782,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 11,
+    "units_out": 16,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2691,7 +2820,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 38,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2726,7 +2858,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2761,7 +2895,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 9,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2796,7 +2933,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2831,7 +2969,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2866,7 +3005,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2901,7 +3042,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2936,7 +3080,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 1,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2971,7 +3117,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3006,7 +3154,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3041,7 +3190,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3076,7 +3227,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3146,7 +3298,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 8,
+    "floors_tama": 2.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3216,7 +3370,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 5,
+    "units_out": 7,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3286,7 +3443,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 16,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3321,7 +3481,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3356,7 +3518,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 16,
+    "units_out": 32,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3391,7 +3556,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3426,7 +3592,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3461,7 +3629,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3496,7 +3665,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3531,7 +3701,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 13,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3566,7 +3739,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3601,7 +3776,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3636,7 +3813,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 18
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3671,7 +3849,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 10,
+    "units_out": 10,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3706,7 +3887,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 10,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3776,7 +3960,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 30,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3811,7 +3998,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3846,7 +4035,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 15,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3881,7 +4073,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3916,7 +4109,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3951,7 +4145,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3986,7 +4181,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4021,7 +4217,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 17,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4091,7 +4290,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4126,7 +4326,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4161,7 +4363,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4231,7 +4435,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 14,
+    "units_out": 17,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4266,7 +4473,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 12,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4301,7 +4511,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 8,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4336,7 +4549,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 11,
+    "units_out": 16,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4371,7 +4587,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 5,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4441,7 +4660,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 45
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4546,7 +4766,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4581,7 +4802,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4616,7 +4838,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4651,7 +4874,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 1,
+    "units_out": 1,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4686,7 +4912,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 14,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4756,7 +4985,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4826,7 +5056,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 36,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4861,7 +5094,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 5,
+    "units_out": 9,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4896,7 +5132,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 10,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4931,7 +5170,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4966,7 +5206,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5001,7 +5242,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5071,7 +5313,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 11,
+    "units_out": 11,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5141,7 +5386,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5176,7 +5423,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5211,7 +5460,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 22,
+    "units_out": 36,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5246,7 +5498,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 3,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5281,7 +5536,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5386,7 +5642,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5421,7 +5678,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 11,
+    "units_out": 16,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5526,7 +5786,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 48,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5561,7 +5824,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5596,7 +5861,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 15,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5631,7 +5898,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 23
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5701,7 +5969,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 15,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5736,7 +6006,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5771,7 +6043,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5806,7 +6079,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 18,
+    "units_out": 6,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5841,7 +6117,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5876,7 +6154,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 14
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5946,7 +6226,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 10,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5981,7 +6264,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6016,7 +6301,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 10,
+    "floors_tama": 1.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6051,7 +6339,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 32,
+    "floors_tama": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6121,7 +6412,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 22,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6191,7 +6485,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6261,7 +6556,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6296,7 +6593,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6331,7 +6630,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6366,7 +6667,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 19
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6401,7 +6703,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 11,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6436,7 +6741,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 20,
+    "units_out": 31
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6506,7 +6813,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 22
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6541,7 +6849,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6576,7 +6885,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 14,
+    "units_out": 23,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6681,7 +6993,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6751,7 +7064,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6821,7 +7135,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 14,
+    "units_out": 12,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6891,7 +7208,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 11,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6926,7 +7246,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 14,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6996,7 +7318,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 37,
+    "floors_tama": 7.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7031,7 +7355,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 13
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7066,7 +7392,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7136,7 +7463,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 3,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7171,7 +7501,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7206,7 +7538,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7276,7 +7609,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 3,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7346,7 +7682,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 9,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7416,7 +7755,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 8,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7451,7 +7792,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7486,7 +7828,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7556,7 +7900,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7626,7 +7971,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7661,7 +8009,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 15,
+    "units_out": 13,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7731,7 +8082,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7871,7 +8224,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 13,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7906,7 +8262,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7976,7 +8333,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8011,7 +8370,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 13,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8116,7 +8477,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8151,7 +8514,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 5,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8221,7 +8587,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8256,7 +8624,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 4,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8326,7 +8697,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 10,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8431,7 +8805,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8466,7 +8843,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8501,7 +8880,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 40,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8536,7 +8917,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8606,7 +8988,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 12,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8676,7 +9060,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 32,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8711,7 +9098,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8746,7 +9134,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 3,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8851,7 +9242,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8886,7 +9278,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9026,7 +9420,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9061,7 +9456,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 4,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9096,7 +9494,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9131,7 +9531,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 6,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9166,7 +9569,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9201,7 +9606,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9271,7 +9679,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 5,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9306,7 +9717,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9341,7 +9753,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9376,7 +9791,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9411,7 +9828,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9446,7 +9866,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 17,
+    "units_out": 17,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9516,7 +9939,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9621,7 +10046,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 5,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9656,7 +10084,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 1,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9691,7 +10122,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 5,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9726,7 +10160,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9761,7 +10198,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9796,7 +10235,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9831,7 +10271,8 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9936,7 +10377,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9971,7 +10414,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10111,7 +10556,10 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 23,
+    "units_out": 1,
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10146,7 +10594,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 24,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10181,7 +10631,9 @@
     "created_da": "2023-05-04",
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 14,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10216,7 +10668,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 15,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10251,7 +10705,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10286,7 +10741,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 16,
+    "floors_tama": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10356,7 +10813,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 1,
+    "units_out": 18,
+    "floors_tama": 5.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10391,7 +10851,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 8,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10426,7 +10889,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10461,7 +10925,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 70,
+    "units_out": 126,
+    "floors_tama": 6.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10496,7 +10963,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10531,7 +10999,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10566,7 +11035,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 48,
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10601,7 +11072,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 26,
+    "units_out": 26,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10636,7 +11110,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10671,7 +11146,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10706,7 +11183,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10741,7 +11221,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 11,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10776,7 +11258,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10811,7 +11294,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10846,7 +11330,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 3,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10881,7 +11368,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 8,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10951,7 +11441,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 8,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10986,7 +11479,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 4,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11021,7 +11517,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 72,
+    "units_out": 112,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11056,7 +11555,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11091,7 +11591,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 32,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11126,7 +11629,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 19,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11161,7 +11666,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 5,
+    "units_out": 7,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11196,7 +11704,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 13,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11231,7 +11742,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11266,7 +11778,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11301,7 +11814,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11336,7 +11851,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 12,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11441,7 +11959,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11476,7 +11996,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 7,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11511,7 +12034,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11546,7 +12070,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 42
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11616,7 +12142,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 16,
+    "units_out": 16
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11651,7 +12179,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 3,
+    "units_out": 13,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11721,7 +12252,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 12,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11791,7 +12325,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 25,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11826,7 +12362,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 76,
+    "units_out": 76,
+    "floors_tama": 82
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11861,7 +12400,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11931,7 +12471,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 4,
+    "floors_tama": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11966,7 +12509,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 14,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12036,7 +12582,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12071,7 +12619,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 26,
+    "units_out": 26,
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12106,7 +12657,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12176,7 +12728,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 32,
+    "units_out": 32,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12211,7 +12766,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 11,
+    "floors_tama": 3.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12246,7 +12804,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 16,
+    "units_out": 16,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12281,7 +12842,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 10,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12316,7 +12880,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 10,
+    "units_out": 14,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12351,7 +12918,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 18,
+    "units_out": 30,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12386,7 +12956,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 14,
+    "floors_tama": 4.5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12456,7 +13029,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 39,
+    "floors_tama": 1
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12491,7 +13066,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12526,7 +13102,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 43,
+    "floors_tama": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12561,7 +13139,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 20,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12596,7 +13177,9 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 8,
+    "floors_tama": 9
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12666,7 +13249,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 18,
+    "units_out": 149,
+    "floors_tama": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12736,7 +13322,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 10,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12771,7 +13360,8 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12806,7 +13396,10 @@
     "created_da": "2026-05-28",
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 14,
+    "units_out": 26,
+    "floors_tama": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12841,7 +13434,10 @@
     "created_da": "2026-05-28",
     "last_edite": "manual",
     "last_edi_1": "2026-05-28",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 7,
+    "floors_tama": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12920,7 +13516,10 @@
     "created_da": "2026-07-08",
     "last_edite": "manual",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 26,
+    "units_out": 62,
+    "floors_tama": 8
    }
   },
   {
@@ -12955,7 +13554,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6,
+    "floors_tama": 4
    }
   },
   {
@@ -13025,7 +13626,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 5,
+    "floors_tama": 5
    }
   },
   {
@@ -13060,7 +13664,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 1
    }
   },
   {
@@ -13095,7 +13701,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 29,
+    "floors_tama": 8
    }
   },
   {
@@ -13130,7 +13739,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 4,
+    "floors_tama": 4
    }
   },
   {
@@ -13165,7 +13777,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 6
    }
   },
   {
@@ -13200,7 +13814,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 14,
+    "units_out": 20,
+    "floors_tama": 5
    }
   },
   {
@@ -13235,7 +13852,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    }
   },
   {
@@ -13270,7 +13888,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 26,
+    "floors_tama": 4
    }
   },
   {
@@ -13340,7 +13961,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 9,
+    "floors_tama": 5
    }
   },
   {
@@ -13375,7 +13998,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 28,
+    "units_out": 42
    }
   },
   {
@@ -13410,7 +14035,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 7,
+    "units_out": 11,
+    "floors_tama": 4
    }
   },
   {
@@ -13445,7 +14073,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 3
    }
   },
   {
@@ -13480,7 +14110,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3
    }
   },
   {
@@ -13515,7 +14146,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 6,
+    "floors_tama": 5
    }
   },
   {
@@ -13550,7 +14184,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 13
    }
   },
   {
@@ -13585,7 +14221,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 39,
+    "floors_tama": 8
    }
   },
   {
@@ -13620,7 +14258,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1,
+    "floors_tama": 6
    }
   },
   {
@@ -13655,7 +14295,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 26
    }
   },
   {
@@ -13690,7 +14331,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    }
   },
   {
@@ -13725,7 +14367,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 3.5
    }
   },
   {
@@ -13760,7 +14404,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4
    }
   },
   {
@@ -13795,7 +14440,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 10,
+    "floors_tama": 5
    }
   },
   {
@@ -13830,7 +14477,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 13,
+    "floors_tama": 6
    }
   },
   {
@@ -13865,7 +14515,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 56,
+    "floors_tama": 10
    }
   },
   {
@@ -13900,7 +14552,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3,
+    "floors_tama": 3
    }
   },
   {
@@ -13935,7 +14589,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 34,
+    "units_out": 34,
+    "floors_tama": 7
    }
   },
   {
@@ -13970,7 +14627,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 10,
+    "floors_tama": 5
    }
   },
   {
@@ -14005,7 +14665,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 22
    }
   },
   {
@@ -14040,7 +14701,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3,
+    "floors_tama": 6
    }
   },
   {
@@ -14075,7 +14738,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 1,
+    "floors_tama": 2
    }
   },
   {
@@ -14110,7 +14775,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 23,
+    "floors_tama": 7
    }
   },
   {
@@ -14145,7 +14812,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 6
    }
   },
   {
@@ -14180,7 +14848,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3,
+    "floors_tama": 7
    }
   },
   {
@@ -14215,7 +14885,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 12,
+    "units_out": 131,
+    "floors_tama": 8
    }
   },
   {
@@ -14250,7 +14923,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 5
    }
   },
   {
@@ -14285,7 +14961,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 6,
+    "units_out": 6,
+    "floors_tama": 6
    }
   },
   {
@@ -14320,7 +14999,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 6,
+    "floors_tama": 6
    }
   },
   {
@@ -14355,7 +15036,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 10,
+    "floors_tama": 5
    }
   },
   {
@@ -14390,7 +15073,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 10,
+    "units_out": 4,
+    "floors_tama": 5
    }
   },
   {
@@ -14425,7 +15111,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 12,
+    "floors_tama": 6
    }
   },
   {
@@ -14460,7 +15148,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 32,
+    "floors_tama": 7
    }
   },
   {
@@ -14495,7 +15185,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 1,
+    "floors_tama": 2
    }
   },
   {
@@ -14530,7 +15223,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 3,
+    "floors_tama": 5
    }
   },
   {
@@ -14565,7 +15260,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 5
    }
   },
   {
@@ -14600,7 +15297,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 5,
+    "floors_tama": 5
    }
   },
   {
@@ -14635,7 +15335,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 11,
+    "units_out": 16,
+    "floors_tama": 1
    }
   },
   {
@@ -14670,7 +15373,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 5,
+    "floors_tama": 5
    }
   },
   {
@@ -14705,7 +15410,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 44,
+    "floors_tama": 7
    }
   },
   {
@@ -14740,7 +15448,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 29,
+    "floors_tama": 6
    }
   },
   {
@@ -14775,7 +15485,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 8,
+    "units_out": 6,
+    "floors_tama": 5
    }
   },
   {
@@ -14810,7 +15523,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 8,
+    "floors_tama": 6
    }
   },
   {
@@ -14845,7 +15561,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 35,
+    "floors_tama": 10
    }
   },
   {
@@ -14880,7 +15598,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 19
    }
   },
   {
@@ -14915,7 +15634,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 22,
+    "floors_tama": 6
    }
   },
   {
@@ -14950,7 +15671,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 43,
+    "floors_tama": 10
    }
   },
   {
@@ -14985,7 +15708,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 3,
+    "floors_tama": 5
    }
   },
   {
@@ -15020,7 +15746,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 8,
+    "floors_tama": 4
    }
   },
   {
@@ -15055,7 +15783,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 22,
+    "units_out": 42,
+    "floors_tama": 8
    }
   },
   {
@@ -15090,7 +15821,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 6
    }
   },
   {
@@ -15125,7 +15858,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    }
   },
   {
@@ -15160,7 +15895,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 6
    }
   },
   {
@@ -15195,7 +15932,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 4,
+    "floors_tama": 5
    }
   },
   {
@@ -15230,7 +15969,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 9,
+    "units_out": 5,
+    "floors_tama": 5
    }
   },
   {
@@ -15265,7 +16007,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 2,
+    "floors_tama": 3
    }
   },
   {
@@ -15300,7 +16044,9 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 21,
+    "floors_tama": 10
    }
   },
   {
@@ -15335,7 +16081,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 24,
+    "units_out": 39,
+    "floors_tama": 6.5
    }
   },
   {
@@ -15370,7 +16119,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 5,
+    "units_out": 9,
+    "floors_tama": 3
    }
   },
   {
@@ -15405,7 +16157,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 4,
+    "units_out": 5,
+    "floors_tama": 5
    }
   },
   {
@@ -15440,7 +16195,8 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "floors_tama": 1.5
    }
   },
   {
@@ -15475,7 +16231,10 @@
     "created_da": "2026-07-08",
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 2,
+    "units_out": 6,
+    "floors_tama": 5.5
    }
   },
   {
@@ -15510,7 +16269,9 @@
     "created_da": "2026-07-11",
     "last_edite": "weekly149",
     "last_edi_1": "2026-07-11",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_out": 12,
+    "floors_tama": 6
    }
   },
   {
@@ -15545,7 +16306,10 @@
     "created_da": "2026-07-11",
     "last_edite": "weekly149",
     "last_edi_1": "2026-07-11",
-    "__rec_stat": null
+    "__rec_stat": null,
+    "units_in": 19,
+    "units_out": 55,
+    "floors_tama": 7
    }
   },
   {

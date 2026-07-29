@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-27-permit-currency';
+        const APP_VERSION = '2026-07-29-tama38-popup';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -17863,19 +17863,9 @@
                                 fillColor: '#5dade2', fillOpacity: 0.8, bubblingMouseEvents: false
                             });
                             marker.on('click', () => {
-                                // Detect tama type from permits or harisaa field
-                                var tamaType = '';
-                                var tt = permits.find(function(p) { return p.tama_type; });
-                                if (tt) { tamaType = tt.tama_type; }
-                                else if (f.properties.harisaa === 'כן') { tamaType = '38/2'; }
-                                else if (f.properties.harisaa === 'לא') { tamaType = '38/1'; }
-                                const addr = f.properties.address || 'תמ"א 38';
-                                const title = addr + (tamaType ? ' - תמ"א ' + tamaType : '');
-                                const unitsTose = f.properties.units_tose != null ? f.properties.units_tose : '';
-                                const subtitle = [f.properties.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
-                                    .setContent(buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose)));
+                                    .setContent(buildTama38RichPopup(f.properties, permits, null));
                                 popup.openOn(map);
                                 bindPopupEvents(popup, [{ properties: f.properties, type: 'tama38' }], 0);
                             });
@@ -18127,27 +18117,12 @@
                                 const m = mapInstanceRef.current || map;
                                 const p = f.properties;
                                 const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
-                                // Use the SAME rich permit popup as the permits layer's tama38 markers
-                                // (tama38PermGroup) so one building never shows two conflicting popups.
-                                // Falls back to the building popup only when no permit records exist yet.
+                                // Rebuilt תמ"א 38 popup — plan-like, prominent permit number + tama
+                                // type + נכנס→יוצא + קומות + יזם. "פירוט" opens the full permit list.
                                 const fid = String(p.fid != null ? p.fid : '');
                                 const permits = getPermitsForTama38(fid);
-                                let content, feat;
-                                if (permits.length > 0) {
-                                    let tamaType = '';
-                                    const tt = permits.find(pp => pp.tama_type);
-                                    if (tt) tamaType = tt.tama_type;
-                                    else if (p.harisaa === 'כן') tamaType = '38/2';
-                                    else if (p.harisaa === 'לא') tamaType = '38/1';
-                                    const title = (p.address || 'תמ"א 38') + (tamaType ? ' - תמ"א ' + tamaType : '');
-                                    const unitsTose = p.units_tose != null ? p.units_tose : '';
-                                    const subtitle = [p.tik || '', unitsTose ? '+' + unitsTose + ' יח"ד' : ''].filter(Boolean).join(' | ');
-                                    content = buildPermitsDetailPopup(permits, title, subtitle, null, 'back-to-tama38', "data-fid='" + fid + "'", unitsTose ? Number(unitsTose) : 0, 'tama:' + fid, parsePlanUnits(unitsTose));
-                                    feat = { properties: p, type: 'tama38' };
-                                } else {
-                                    content = buildTama38Popup(p);
-                                    feat = { properties: p, type: 'tama38' };
-                                }
+                                const content = buildTama38RichPopup(p, permits, null);
+                                const feat = { properties: p, type: 'tama38' };
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(latlng)
                                     .setContent(content);
@@ -19998,6 +19973,65 @@
                 }
             }
 
+            // Rebuilt תמ"א 38 building popup — plan-popup-like. Prominent permit number +
+            // tama type (38/1 חיזוק / 38/2 הריסה-ובנייה), reconciled status, units נכנס→יוצא,
+            // floors, developer, cross-source banners. `permits` = getPermitsForTama38(fid).
+            function buildTama38RichPopup(props, permits, navInfo) {
+                const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                permits = permits || [];
+                const pri = permits.slice().sort((a, b) =>
+                    ((('' + (b.status || '')).includes('הופק') ? 1 : 0) - (('' + (a.status || '')).includes('הופק') ? 1 : 0))
+                    || String(b.file_number || '').localeCompare(String(a.file_number || '')))[0] || {};
+                const fileNum = pri.file_number || props.tik || '';
+                let tt = (permits.find(p => p.tama_type) || {}).tama_type || '';
+                if (!tt) {
+                    if (props.harisaa === 'כן') tt = '38/2';
+                    else if (props.harisaa === 'לא') tt = '38/1';
+                    else {
+                        const rt = permits.map(p => (p.request_type || '') + ' ' + (p.request_description || '')).join(' ');
+                        if (/הריסה ובני|הריסת/.test(rt)) tt = '38/2';
+                        else if (/תוספות|חיזוק|תמ"א 38/.test(rt)) tt = '38/1';
+                    }
+                }
+                const ttLabel = tt === '38/2' ? 'תמ"א 38/2 · הריסה ובנייה'
+                    : tt === '38/1' ? 'תמ"א 38/1 · חיזוק ותוספות'
+                    : (tt ? 'תמ"א ' + esc(tt) : 'תמ"א 38');
+                const mp = masterPermit(fileNum);
+                const status = (mp && mp.status) || pri.status || props.status || '';
+                const statusColor = getPermitStatusColor(status);
+                const statusDate = (mp && mp.status_date) || pri.status_date || '';
+                const uin = parseFloat(props.units_in) || 0, uout = parseFloat(props.units_out) || 0, fl = parseFloat(props.floors_tama) || 0;
+                const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
+                const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
+
+                let html = '<div>';
+                html += buildNavBar(navInfo);
+                html += '<div class="permit-detail-header">';
+                html += '<div class="popup-header-title">&#127970; ' + esc(props.address || 'תמ"א 38') + '</div>';
+                html += '<div class="popup-header-subtitle">' + esc(ttLabel) + '</div>';
+                html += '</div>';
+                html += buildPermitCrossBanners(permits);
+                html += '<div class="popup-body">';
+                html += '<div class="popup-row"><span class="popup-row-label">מספר היתר</span>' +
+                    (ykUrl ? '<a href="' + ykUrl + '" target="_blank" rel="noopener" style="color:#5dade2;font-weight:bold;direction:ltr;text-decoration:underline">' + esc(fileNum) + '</a>'
+                           : '<span class="popup-row-value" style="direction:ltr;font-weight:bold">' + esc(fileNum) + '</span>') + '</div>';
+                html += '<div class="popup-row"><span class="popup-row-label">סטטוס</span><span class="popup-status-badge" style="background:' + statusColor + '33;color:' + statusColor + ';border:1px solid ' + statusColor + '">' + esc(status || '-') + '</span></div>';
+                if (statusDate) html += '<div class="popup-row"><span class="popup-row-label">עודכן</span><span class="popup-row-value">' + esc(statusDate) + '</span></div>';
+                if (uin || uout) {
+                    const us = (uin && uout) ? (uin + ' &#8592; ' + uout) : (uout ? ('&#8592; ' + uout) : (uin + ' קיים'));
+                    html += '<div class="popup-row"><span class="popup-row-label">יח"ד (נכנס&#8594;יוצא)</span><span class="popup-row-value" style="font-weight:bold;color:#fff;direction:ltr">' + us + '</span></div>';
+                }
+                if (fl) html += '<div class="popup-row"><span class="popup-row-label">קומות</span><span class="popup-row-value">' + fl + '</span></div>';
+                if (dev.developer) html += '<div class="popup-row"><span class="popup-row-label">יזם</span><span class="popup-row-value" style="font-size:11px">' + esc(dev.developer) + (dev.is_residents ? ' <span style="color:#8a93a6">(דיירים)</span>' : '') + '</span></div>';
+                if (dev.architect) html += '<div class="popup-row"><span class="popup-row-label">אדריכל</span><span class="popup-row-value" style="font-size:11px">' + esc(dev.architect) + '</span></div>';
+                if (permits.length) {
+                    html += '<div class="popup-row" style="border-top:1px solid #2a2a4a;margin-top:4px;padding-top:6px"><span class="popup-row-label">היתרים בתיק</span>' +
+                        '<button class="popup-btn-permit" data-action="show-permits" data-fid="' + esc(String(props.fid)) + '" style="background:#2a2a4a;color:#9fd6ff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">' + permits.length + ' היתרים · פירוט &#8592;</button></div>';
+                }
+                html += '</div></div>';
+                return html;
+            }
+
             function buildPlanPopup(props, featureData, navInfo, originShavazProps) {
                 const title = (props.plan_summary && props.plan_summary.length < props.plan_name_he?.length) ? props.plan_summary : (props.plan_name_he || props.plan_summary || 'תוכנית');
                 const subtitle = props.plan_name || props.taba || '';
@@ -21190,7 +21224,7 @@
                     const entry = allFeatures[idx];
                     const navInfo = allFeatures.length > 1 ? { current: idx, total: allFeatures.length } : null;
                     if (entry.type === 'permit') return buildPermitPopup(entry.properties, { properties: entry.properties }, navInfo);
-                    if (entry.type === 'tama38') return buildTama38Popup(entry.properties, navInfo);
+                    if (entry.type === 'tama38') return buildTama38RichPopup(entry.properties, getPermitsForTama38(String(entry.properties.fid != null ? entry.properties.fid : '')), navInfo);
                     return buildPlanPopup(entry.properties, { properties: entry.properties }, navInfo);
                 }
                 const el = popup.getElement();
@@ -21349,7 +21383,8 @@
                     if (permitBtn && permitBtn.dataset.action === 'back-to-tama38') {
                         ev.stopPropagation();
                         const navInfo = allFeatures.length > 1 ? { current: currentIdx, total: allFeatures.length } : null;
-                        popup.setContent(buildTama38Popup(allFeatures[currentIdx].properties, navInfo));
+                        const tprops = allFeatures[currentIdx].properties;
+                        popup.setContent(buildTama38RichPopup(tprops, getPermitsForTama38(String(tprops.fid != null ? tprops.fid : '')), navInfo));
                         return;
                     }
                     if (permitBtn) {
