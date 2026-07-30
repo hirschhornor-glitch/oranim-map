@@ -35,14 +35,15 @@ LAT_MIN, LAT_MAX = 31.65, 31.90
 # reordering, unlike the feature index). A permit-issued project with empty
 # permits that is NOT in this set is treated as a regression and still errors.
 # Re-audit and prune when the tama38 permit scraper improves.
-KNOWN_MISSING_TAMA38_PERMITS = {
-    "2018/0853.00",  # כיכר מגנס 1
-    "2019/0042.00",  # י.ל. דיסקין 8
-    "2020/0333.00",  # הפלמח 3
-    "2020/0578.00",  # מקור חיים 15
-    "2021/0311.00",  # חרלפ 26
-    "2022/0221.00",  # גד 12
-}
+#
+# 2026-07-30: emptied. The 6 tiks previously listed here were NOT real scraper
+# gaps — tama38_permits.json is keyed by properties.fid (the stable id the
+# scrapers write, e.g. weekly_tama38_149_scan.py: pdata[str(fid)]=entry), but
+# this validator was looking permits up by ARRAY INDEX. After the street-harvest
+# appended features (fid != index), the index lookup silently returned the wrong
+# entry for ~half the buildings, so genuine permits read as "missing". Fixing the
+# lookup to use properties.fid (below) resolves all of them, allow-list included.
+KNOWN_MISSING_TAMA38_PERMITS: set[str] = set()
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -162,7 +163,12 @@ def check_tama38(tama_data, permits_data) -> None:
         # "הופק" = actually issued. Skip "נפתח" (file opened), "תכנון", etc.
         if "הופק" not in status:
             continue
-        entry = permits_data.get(str(i))
+        # tama38_permits.json is keyed by the stable properties.fid, NOT the
+        # array index (features get appended/reordered by the harvest scrapers,
+        # so index != fid). Fall back to index only if a feature has no fid.
+        fid = p.get("fid")
+        key = str(fid) if fid is not None else str(i)
+        entry = permits_data.get(key)
         permits = (entry or {}).get("permits") or []
         if permits:
             continue
