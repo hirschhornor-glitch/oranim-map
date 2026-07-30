@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-30-tama38-newplans-report';
+        const APP_VERSION = '2026-07-30-unit-bonus-t5';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1246,6 +1246,29 @@
             return (k && o[k]) ? o[k] : null;
         }
         function isOccupied(props) { return !!planOccupancy(props); }
+        // Table 5 "unit bonus" note (תותר תוספת של עד N% ממספר יחידות הדיור...) —
+        // a note at the bottom of טבלה 5 permitting MORE יח"ד at building-permit
+        // stage without a further planning process. From unit_bonus.json
+        // (window.__unitBonus, keyed by plan_name). Returns {pct, kind, note} or null.
+        function planUnitBonus(props) {
+            const o = window.__unitBonus || {};
+            const k = String((props && props.plan_name) || '').trim();
+            return (k && o[k] && o[k].pct) ? o[k] : null;
+        }
+        // The baseline יח"ד count the bonus percentage applies to — same base the
+        // permits-vs-plan report compares against (units_total, falling back to units_add).
+        function planBonusBase(props) {
+            const t = parseFloat(props && props.units_total);
+            if (t) return t;
+            const a = parseFloat(props && props.units_add);
+            return a || 0;
+        }
+        // Extra יח"ד the bonus note allows: round(base * pct/100). 0 when unknown.
+        function planBonusUnits(props) {
+            const b = planUnitBonus(props);
+            if (!b) return 0;
+            return Math.round(planBonusBase(props) * b.pct / 100);
+        }
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
@@ -3246,6 +3269,7 @@
             const [permitsGapRev, setPermitsGapRev] = useState(0);
             const [permitsGapMinhakFilter, setPermitsGapMinhakFilter] = useState('all');
             const [permitsGapIncludeConditional, setPermitsGapIncludeConditional] = useState(false);
+            const [permitsGapIncludeBonus, setPermitsGapIncludeBonus] = useState(false);
             const [reasonDraft, setReasonDraft] = useState('');
             const [reasonSaving, setReasonSaving] = useState(false);
             const [overlapExpanded, setOverlapExpanded] = useState(() => new Set());
@@ -5071,6 +5095,7 @@
                     ['__permitsMaster', 'data/permits_master.json'],
                     ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
                     ['__pikuahStatus', 'data/pikuah_status.json'],
+                    ['__unitBonus', 'data/unit_bonus.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5561,6 +5586,7 @@
                             else if (key === '__tama38Developers') { window.__tama38Developers = (data && data.by_tik) ? data.by_tik : {}; }
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
+                            else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__pikuahStatus') {
                                 // per-permit building-supervision status (pikuah_status.json).
                                 // Index the completed ones (תעודת גמר) by the REVISION-AGNOSTIC
@@ -19562,6 +19588,11 @@
             // are folded into the approved-units baseline that permits are compared against.
             // Keyed by cluster scopeKey; default falls back to the global permitsGapIncludeConditional toggle.
             const CONDITIONAL_INCLUDE_KEY = 'oranim:permitConditionalInclude';
+            // Same mechanism for the Table 5 "unit bonus" note (תותר תוספת של עד N%
+            // ממספר יח״ד) — whether the extra יח״ד it permits are folded into the
+            // approved-units baseline. Keyed by cluster scopeKey; per-plan override
+            // falls back to the global permitsGapIncludeBonus toggle.
+            const BONUS_INCLUDE_KEY = 'oranim:permitBonusInclude';
             const PERMIT_PLAN_TOLERANCE = 1.10;
             const PERMIT_INFRA_KEYWORDS = ['הריסה', 'דיפון', 'חפירה', 'ביסוס', 'עבודות מקדימות'];
             function parsePlanUnits(v) {
@@ -19681,6 +19712,24 @@
             // Per-plan override wins; otherwise falls back to the global default.
             function getEffectiveConditionalInclude(scopeKey, globalDefault) {
                 const overrides = getConditionalOverrides();
+                return Object.prototype.hasOwnProperty.call(overrides, scopeKey) ? !!overrides[scopeKey] : !!globalDefault;
+            }
+            function getBonusOverrides() {
+                try {
+                    const raw = localStorage.getItem(BONUS_INCLUDE_KEY);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) { return {}; }
+            }
+            function setBonusOverride(scopeKey, included) {
+                if (!scopeKey) return;
+                const overrides = getBonusOverrides();
+                overrides[scopeKey] = !!included;
+                try { localStorage.setItem(BONUS_INCLUDE_KEY, JSON.stringify(overrides)); } catch (e) {}
+            }
+            // Whether a plan/cluster's Table 5 unit-bonus units count toward the baseline.
+            // Per-plan override wins; otherwise falls back to the global default.
+            function getEffectiveBonusInclude(scopeKey, globalDefault) {
+                const overrides = getBonusOverrides();
                 return Object.prototype.hasOwnProperty.call(overrides, scopeKey) ? !!overrides[scopeKey] : !!globalDefault;
             }
             function sumIncludedPermitUnits(permits, scopeKey, planUnits) {
@@ -20591,6 +20640,18 @@
                         }
                         html += '</div>';
                     }
+                }
+                // Table 5 "unit bonus" note — permits MORE יח"ד at building-permit stage.
+                const _bonus = planUnitBonus(props);
+                if (_bonus) {
+                    const _extra = planBonusUnits(props);
+                    const _esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const _label = _bonus.kind === 'גמישות' ? 'גמישות יח"ד' : 'בונוס יח"ד';
+                    html += '<div style="margin:4px 0 2px;padding:6px 8px;background:#241f14;border:1px solid #4a3f24;border-radius:6px;font-size:11px;color:#f0e2bf" title="' + _esc(_bonus.note) + '">';
+                    html += '<span style="color:#f5b041;font-weight:600">📈 ' + _label + ' (טבלה 5): עד ' + _bonus.pct + '%'
+                          + (_extra ? ' · ≈' + _extra.toLocaleString('he-IL') + ' יח"ד' : '') + '</span>';
+                    html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc(_bonus.note) + '</div>';
+                    html += '</div>';
                 }
                 // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units)
                 const htlRooms = v(props.hotels);
@@ -25349,9 +25410,15 @@
                             // Fall back to units_add if units_total is missing/zero.
                             const baseTotal = parseFloat(p.units_total) || parseFloat(p.units_add) || 0;
                             const conditional = parseFloat(p.conditional_housing) || 0;
-                            // Conditional units are folded in per-plan at the cluster level (Step 3),
+                            // Table 5 unit-bonus (תותר תוספת של עד N% ממספר יח״ד) — extra יח״ד the
+                            // plan permits at building-permit stage. Folded per-plan at cluster level.
+                            const bonusInfo = planUnitBonus(p);
+                            const bonus = bonusInfo ? Math.round(baseTotal * bonusInfo.pct / 100) : 0;
+                            // Conditional/bonus units are folded in per-plan at the cluster level (Step 3),
                             // so the baseline here excludes them.
-                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: baseTotal, conditional });
+                            candidates.set(taba, { props: p, feature: f, permits, unitsAdd: baseTotal, conditional,
+                                bonus, bonusPct: bonusInfo ? bonusInfo.pct : 0, bonusNote: bonusInfo ? bonusInfo.note : '',
+                                bonusKind: bonusInfo ? bonusInfo.kind : '' });
                         });
 
                         // Step 2: cluster candidates by significant overlap (union-find via overlapMap)
@@ -25412,6 +25479,9 @@
                             const mergedPermits = [...permitByFn.values(), ...orphanPermits];
                             const baseUnitsAdd = members.reduce((s, m) => s + m.unitsAdd, 0);
                             const conditionalSum = members.reduce((s, m) => s + (m.conditional || 0), 0);
+                            const bonusSum = members.reduce((s, m) => s + (m.bonus || 0), 0);
+                            // Cluster bonus %/note: take the primary plan's if it has one, else the first member that does.
+                            const bonusCarrier = (primary.bonusPct ? primary : members.find(m => m.bonusPct)) || null;
                             const tabas = members.map(m => m.taba);
                             const planNames = members.map(m => m.props.plan_name || m.taba);
                             const scopeKey = 'cluster:' + [...tabas].sort().join(',');
@@ -25419,7 +25489,10 @@
                             const includeConditional = conditionalSum > 0
                                 ? getEffectiveConditionalInclude(scopeKey, permitsGapIncludeConditional)
                                 : false;
-                            const unitsAdd = baseUnitsAdd + (includeConditional ? conditionalSum : 0);
+                            const includeBonus = bonusSum > 0
+                                ? getEffectiveBonusInclude(scopeKey, permitsGapIncludeBonus)
+                                : false;
+                            const unitsAdd = baseUnitsAdd + (includeConditional ? conditionalSum : 0) + (includeBonus ? bonusSum : 0);
                             const inclusion = getEffectivePermitInclusion(mergedPermits, scopeKey, unitsAdd);
                             const unitsInPermits = mergedPermits.reduce((s, x, i) => s + (inclusion[i] ? (parseFloat(x.units) || 0) : 0), 0);
                             const countedPermits = inclusion.filter(Boolean).length;
@@ -25442,6 +25515,11 @@
                                 unitsAdd, unitsInPermits, gap, pctDone,
                                 conditional: conditionalSum,
                                 includeConditional,
+                                bonus: bonusSum,
+                                includeBonus,
+                                bonusPct: bonusCarrier ? bonusCarrier.bonusPct : 0,
+                                bonusNote: bonusCarrier ? bonusCarrier.bonusNote : '',
+                                bonusKind: bonusCarrier ? bonusCarrier.bonusKind : '',
                                 permitCount: mergedPermits.length,
                                 countedPermits,
                                 permits: mergedPermits,
@@ -25518,7 +25596,7 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}{row.bonus > 0 && <span style={{fontSize:11,color:'#5dade2',marginRight:6}} title={row.bonusNote}>{row.includeBonus ? '(כולל ' + fmt(row.bonus) + ' בונוס ' + row.bonusPct + '%)' : '(+ ' + fmt(row.bonus) + ' בונוס ' + row.bonusPct + '% לא נכלל)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
@@ -25533,6 +25611,19 @@
                                                     </label>
                                                     <span style={{fontSize:11,color:'#9ca3af',marginRight:'auto',marginLeft:0}}>
                                                         {row.includeConditional ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל מותנות)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.conditional) + ' מותנות)'}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Per-plan toggle: include this plan's Table 5 unit-bonus יח״ד in the comparison baseline */}
+                                            {row.bonus > 0 && (
+                                                <div style={{marginBottom:14,padding:'10px 14px',background:'#14202b',border:'1px solid ' + (row.includeBonus ? '#3d7ca8' : '#26384a'),borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#cfe4f5',fontWeight:600}} title={'הערת טבלה 5: ' + (row.bonusNote || ('תותר תוספת של עד ' + row.bonusPct + '% ממספר יח״ד')) + '\nכשמסומן, ' + fmt(row.bonus) + ' יח״ד הבונוס מתווספות ליח״ד המאושרות שאליהן משווים את ההיתרים'}>
+                                                        <input type="checkbox" checked={row.includeBonus} onChange={() => { setBonusOverride(row.scopeKey, !row.includeBonus); setPermitsGapRev(v => v + 1); }} style={{cursor:'pointer',width:18,height:18}} />
+                                                        📈 כלול {fmt(row.bonus)} יח"ד בונוס טבלה 5 (עד {row.bonusPct}%) במניין ההשוואה
+                                                    </label>
+                                                    <span style={{fontSize:11,color:'#9ca3af',marginRight:'auto',marginLeft:0}}>
+                                                        {row.includeBonus ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל בונוס)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.bonus) + ' בונוס)'}
                                                     </span>
                                                 </div>
                                             )}
@@ -25691,6 +25782,10 @@
                                             <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את עמודת conditional_housing (Z ב-GS) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
                                                 <input type="checkbox" checked={permitsGapIncludeConditional} onChange={e => setPermitsGapIncludeConditional(e.target.checked)} style={{cursor:'pointer'}} />
                                                 כלול יח"ד מותנות (ברירת מחדל)
+                                            </label>
+                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את בונוס היח״ד מהערת טבלה 5 (תותר תוספת של עד N% ממספר יח״ד) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
+                                                <input type="checkbox" checked={permitsGapIncludeBonus} onChange={e => setPermitsGapIncludeBonus(e.target.checked)} style={{cursor:'pointer'}} />
+                                                📈 כלול בונוס טבלה 5 (ברירת מחדל)
                                             </label>
                                         </div>
                                         <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
