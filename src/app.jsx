@@ -14243,6 +14243,12 @@
                 // the new plan polygons. Reuses isNewPlan (same 30-day first_detected window).
                 if (gd.tama38 && planningTopics.new_plans) {
                     const newTamaGroup = L.layerGroup();
+                    // District boundary ring — drop any tama38 point outside our area.
+                    const distFeatT = gd.district_oranim && gd.district_oranim.features && gd.district_oranim.features[0];
+                    const distRingsT = distFeatT ? (distFeatT.geometry.type === 'MultiPolygon'
+                        ? distFeatT.geometry.coordinates.map(poly => poly[0])
+                        : [distFeatT.geometry.coordinates[0]]) : null;
+                    const inDistrict = (ll) => !distRingsT || distRingsT.some(r => pointInPolygon(ll, r));
                     (gd.tama38.features || []).forEach(f => {
                         const p = f.properties || {};
                         if (!isNewPlan(p)) return;
