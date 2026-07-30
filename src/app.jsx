@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-30-tama38-newplans-layer';
+        const APP_VERSION = '2026-07-30-tama38-newplans-report';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -29673,7 +29673,7 @@
                             return f % 1 === 0 ? String(f) : f.toFixed(1);
                         };
                         const seen = new Set();
-                        const plans = gd.plans.features.filter(f => {
+                        const plansOnly = gd.plans.features.filter(f => {
                             const p = f.properties;
                             if (!checkMinahakN(p)) return false;
                             const fd = String(p.first_detected || '').trim();
@@ -29684,7 +29684,26 @@
                             if (seen.has(id)) return false;
                             seen.add(id);
                             return true;
-                        }).map(f => f.properties).sort((a, b) =>
+                        }).map(f => f.properties);
+                        // Also list recently-detected TAMA 38 licences (street-harvest) as rows,
+                        // normalized to the plan columns (יח"ד יוצא = units_out; no שב"צ/שצ"פ). No
+                        // minahak filter — tama features carry no minahak and are all in-district.
+                        const tamaRows = ((gd.tama38 && gd.tama38.features) || []).filter(f => {
+                            const fd = String(f.properties.first_detected || '').trim();
+                            if (!fd) return false;
+                            const d = new Date(fd);
+                            return !isNaN(d.getTime()) && d >= cutoff;
+                        }).map(f => {
+                            const pr = f.properties; const g = f.geometry;
+                            const c = g ? (g.type === 'MultiPoint' ? (g.coordinates || [])[0] : g.coordinates) : null;
+                            return { _tama: true, _fid: String(pr.fid != null ? pr.fid : ''),
+                                _ll: (c && c.length >= 2) ? [c[1], c[0]] : null, _props: pr,
+                                plan_name: pr.tik || '', plan_summary: pr.address || '', plan_name_he: pr.address || '',
+                                minahak: 'תמ"א 38', status_mavat: pr.status || '',
+                                units_in: pr.units_in, units_total: pr.units_out,
+                                shavatz_out_sqm: null, shatzap_out: null, first_detected: pr.first_detected };
+                        });
+                        const plans = plansOnly.concat(tamaRows).sort((a, b) =>
                             String(b.first_detected || '').localeCompare(String(a.first_detected || '')));
                         return (
                         <div className="units-overlay" onClick={() => setNewPlansReport(false)}>
@@ -29692,7 +29711,7 @@
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setNewPlansReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#127381; תכניות חדשות</h2>
-                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} תכניות שזוהו ב-30 הימים האחרונים</p>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} פריטים שזוהו ב-30 הימים האחרונים{tamaRows.length ? ` (${plansOnly.length} תב"ע + ${tamaRows.length} תמ"א 38)` : ''}</p>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
@@ -29710,6 +29729,20 @@
                                             {plans.map((p, i) => (
                                                 <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}} ref={el => { if (el) el.onclick = (e) => {
                                                     e.stopPropagation();
+                                                    if (p._tama) {
+                                                        if (!p._ll || !mapInstanceRef.current) return;
+                                                        const center = L.latLng(p._ll[0], p._ll[1]);
+                                                        setNewPlansReport(false);
+                                                        setTimeout(() => {
+                                                            mapInstanceRef.current.setView(center, 18);
+                                                            setTimeout(() => {
+                                                                L.popup({maxWidth:340, className:'plan-popup'}).setLatLng(center)
+                                                                    .setContent(buildTama38RichPopup(p._props, getPermitsForTama38(p._fid), null))
+                                                                    .openOn(mapInstanceRef.current);
+                                                            }, 500);
+                                                        }, 100);
+                                                        return;
+                                                    }
                                                     const gd = geoDataRef.current;
                                                     if (!gd.plans || !mapInstanceRef.current) return;
                                                     const feat = gd.plans.features.find(f => f.properties.plan_name === p.plan_name || f.properties.taba === p.taba);
