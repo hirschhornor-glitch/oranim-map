@@ -1272,6 +1272,27 @@
         function tama38Completed(permits) {
             return Array.isArray(permits) && permits.some(p => permitReachedGmar(p && p.file_number));
         }
+        // ── תמ"א 38 "closed file" predicate (canonical, top-level so every report can use it) ──
+        // Raw permit list (incl. closed/cancelled — getPermitsForTama38 strips those).
+        function tama38RawPermits(fid) {
+            const entry = (window.__tama38Permits || {})[String(fid)];
+            return (entry && entry.permits) ? entry.permits : [];
+        }
+        // Did any of this building's permits (incl. closed ones) reach תעודת גמר?
+        function tama38HasGmar(fid) {
+            return tama38RawPermits(fid).some(p => p && permitReachedGmar(p.file_number));
+        }
+        function _tama38PermitClosed(p) { const s = ((p && p.status) || '').trim(); return s.indexOf('נסגר') !== -1 || s.indexOf('בוטל') !== -1; }
+        function _tama38PermitTest(p) { return (((p && p.status) || '').trim()) === 'הגשה מקוונת הושלמה'; }
+        // A תמ"א 38 building's file is "closed" when EVERY real permit request is closed/cancelled
+        // (נסגרה/בוטל), UNLESS it reached תעודת גמר. Closed files render grey and hidden by default
+        // on the map, and must NOT count as adding יח"ד in any summary.
+        function tama38IsClosedFile(fid) {
+            if (fid == null || fid === '') return false;
+            if (tama38HasGmar(fid)) return false;
+            const real = tama38RawPermits(fid).filter(p => p && !p.filtered && !_tama38PermitTest(p));
+            return real.length > 0 && real.every(_tama38PermitClosed);
+        }
         function ensureOccHatchDefs() {
             if (typeof document === 'undefined' || document.getElementById('occHatch')) return;
             const NS = 'http://www.w3.org/2000/svg';
@@ -9941,6 +9962,7 @@
                 // TAMA-38 projects in this minhak (by sub-neighborhood membership)
                 const subsList = MINAHAK_SUBS[minhakName] || [];
                 const tamaFeatures = (gd.tama38 && gd.tama38.features ? gd.tama38.features : []).filter(f => {
+                    if (tama38IsClosedFile(f.properties.fid)) return false; // תיק סגור — לא נספר כמוסיף יח"ד
                     const n = (f.properties.neighborho || '').trim(); const nn = SUB_NORMALIZE[n] || n;
                     return subsList.includes(n) || subsList.includes(nn);
                 });
@@ -11173,6 +11195,7 @@
                         const c = geomCentroid(f.geometry);
                         if (!c || !pip(c, polyCoords)) return;
                         const p = f.properties || {};
+                        if (tama38IsClosedFile(p.fid)) return; // תיק סגור — לא נספר כמוסיף יח"ד
                         const u = parseFloat(p.units_tose) || 0;
                         tamaCount++; tamaUnits += u;
                         tamaRows.push({ address: p.address || p.tik || p.kvuzat_id || '', status: p.status || '', units: u, lng: c[0], lat: c[1] });
@@ -11415,6 +11438,7 @@
                 if (gd.tama38 && gd.tama38.features) {
                     gd.tama38.features.forEach(f => {
                         const p = f.properties;
+                        if (tama38IsClosedFile(p.fid)) return; // תיק סגור — לא נספר כמוסיף יח"ד
                         const geom = f.geometry;
                         if (!geom || !geom.coordinates) return;
                         let lng, lat;
@@ -12355,6 +12379,7 @@
                     // Skip in scope mode — tama38 records have no plan_name we can spatially filter.
                     tamaMap.forEach(p => {
                         if (window.__reportScope) return;
+                        if (tama38IsClosedFile(p.fid)) return; // תיק סגור — לא נספר כמוסיף יח"ד
                         const neighborho = (p.neighborho || '').trim();
                         const m = NEIGHBORHOOD_TO_MINAHAK[neighborho] || '';
                         if (!m) return;
@@ -18688,24 +18713,8 @@
                 if (!entry || !entry.permits) return [];
                 return entry.permits.filter(_includePermit);
             }
-            // Raw permit list (incl. closed/cancelled) — getPermitsForTama38 strips those.
-            function tama38RawPermits(fid) {
-                const entry = (window.__tama38Permits || {})[String(fid)];
-                return (entry && entry.permits) ? entry.permits : [];
-            }
-            // Did any of this building's permits (incl. closed ones) reach תעודת גמר?
-            function tama38HasGmar(fid) {
-                return tama38RawPermits(fid).some(p => p && permitReachedGmar(p.file_number));
-            }
-            // A תמ"א 38 building's file counts as "closed" when EVERY real permit request is
-            // closed/cancelled (נסגרה/בוטל). Such files render grey and are hidden by default
-            // (like נגנז plans) — UNLESS the building reached a completion certificate
-            // (תעודת גמר), in which case it renders as the turquoise "completed" ring instead.
-            function tama38IsClosedFile(fid) {
-                if (tama38HasGmar(fid)) return false;      // completed → shown as ring, never grey
-                const real = tama38RawPermits(fid).filter(p => p && !p.filtered && !isPermitTest(p));
-                return real.length > 0 && real.every(isPermitClosed);
-            }
+            // tama38RawPermits / tama38HasGmar / tama38IsClosedFile are defined at top level
+            // (canonical, so every report can share them) — see near tama38Completed.
 
             // ─── Pending §149 objection permits (טרום-פרסום — התנגדויות בקרוב) ─────
             // Building permits already in our stores whose YK status is a PUBLICATION
@@ -28361,6 +28370,7 @@
                                     // Count TAMA38 projects in this minahak
                                     const subs = MINAHAK_SUBS[minahakReport] || [];
                                     const tamaFeatures = (gd.tama38 && gd.tama38.features) ? gd.tama38.features.filter(f => {
+                                        if (tama38IsClosedFile(f.properties.fid)) return false; // תיק סגור — לא נספר כמוסיף יח"ד
                                         const n = (f.properties.neighborho || '').trim();
                                         const normalized = SUB_NORMALIZE[n] || n;
                                         return subs.includes(n) || subs.includes(normalized);
@@ -28549,6 +28559,7 @@
                                     const tama38InsideMp = [];
                                     if (boundaryGeom && gd.tama38 && gd.tama38.features) {
                                         gd.tama38.features.forEach(tf => {
+                                            if (tama38IsClosedFile(tf.properties.fid)) return; // תיק סגור — לא נספר כמוסיף יח"ד
                                             if (!tf.geometry || !tf.geometry.coordinates) return;
                                             const c = tf.geometry.type === 'MultiPoint' ? tf.geometry.coordinates[0] : tf.geometry.coordinates;
                                             if (!c) return;
@@ -30309,6 +30320,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const seenTik = new Set();
                             for (const f of gd.tama38.features) {
                                 const p = f.properties || {};
+                                if (tama38IsClosedFile(p.fid)) continue; // תיק סגור — לא נספר כמוסיף יח"ד
                                 const tik = p.tik;
                                 if (!tik || seenTik.has(tik)) continue;
                                 const info = devsByTik[tik];
