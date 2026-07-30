@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-07-29-tama38-teur-fix';
+        const APP_VERSION = '2026-07-30-tama38-newplans-layer';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -899,6 +899,7 @@
                     },
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
+                    { id: 'new_construction', name: 'בינוי חדש', desc: 'בינוי שהושלם בפועל — תב"עות שאוכלסו (טופס 4) ומבני תמ"א 38 עם תעודת גמר. הפריטים האלה מוצגים מלאים בשכבה זו, ומעומעמים ל-30% בשכבות תב"ע/תמ"א 38 הרגילות', on: false },
                 ]
             },
             infrastructure: {
@@ -1253,6 +1254,11 @@
         // ONLY, no fill. Same turquoise for plan polygons and תמ"א 38 markers so "done" reads
         // as one family across layers. (Was green #1e8449 + hatch fill.)
         const OCC_LINE_COLOR = '#0d9488';
+        // "בינוי חדש" — built/occupied fade. In the regular תב"ע and תמ"א 38 layers, plans that
+        // reached טופס 4 (isOccupied) and תמ"א 38 buildings that reached תעודת גמר (tama38HasGmar)
+        // recede to this opacity so they read as "already built", while the dedicated
+        // "בינוי חדש" layer highlights them. Multiplied onto the normal style's opacities.
+        const BUILT_FADE_OPACITY = 0.30;
         // Revision-agnostic permit key: "2015/0935.01" and "2015/0935.00" are the same
         // physical permit/building (different revisions), so completion on ANY revision
         // applies to all. permits_master merges revisions under this base tik too.
@@ -2570,7 +2576,7 @@
             { label: 'נפתח תיק היתר', color: 'rgb(253,174,97)' },
             { label: 'היתר אושר בועדת רישוי', color: 'rgb(255,255,192)' },
             { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
-            { label: 'הושלם (תעודת גמר)', color: 'rgb(13,148,136)', style: 'outline' },
+            { label: 'בנוי/הושלם (תעודת גמר) — מעומעם ל-30%; מוצג מלא בשכבת "בינוי חדש"', color: 'rgb(13,148,136)' },
             { label: 'בקשה שבוטלה/נסגרה (מוסתר כברירת מחדל)', color: '#888' },
         ];
 
@@ -2698,6 +2704,7 @@
             { label: 'תכניות תשתיות', color: '#9b59b6', style: 'solid' },
             { label: 'תכניות 77/78', color: '#e74c3c', style: 'hatch' },
             { label: 'תכניות שנגנזו', color: '#888', style: 'hatch' },
+            { label: 'תמ"א 38 שנסגרה', color: '#888', style: 'solid' },
         ];
 
         // תכניות שמוסתרות ידנית מהאפליקציה (לא דרך גוגל שיטס)
@@ -2930,6 +2937,7 @@
                 infrastructure: false,
                 plan7778: false,         // תכניות בהודעה 77/78
                 archived: false,        // תכניות שנגנזו/נדחו
+                tama38_closed: false,   // תמ"א 38 שנסגרה (כל הבקשות נסגרו/בוטלו, ללא תעודת גמר)
                 shavaz_demolition: false, // מבני ציבור להריסה במסגרת התחדשות עירונית
                 consolidation: false,    // תכניות איחוד וחלוקה
                 rental: false,           // פרוייקטים עם דירות להשכרה
@@ -2944,8 +2952,6 @@
             const [permitBuckets, setPermitBuckets] = useState({
                 tama38: true, zchuyot: true, ibuy: true, shimush_chorag: true, tava_gadol: true, acher: true
             });
-            // תיקי תמ"א 38 שכל הבקשות בהם נסגרו/בוטלו (ללא תעודת גמר) — מוסתר כברירת מחדל, כמו נגנז בתב"ע.
-            const [showTama38Cancelled, setShowTama38Cancelled] = useState(false);
             const [mapScale, setMapScale] = useState('');
             const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
@@ -13708,8 +13714,14 @@
                             const landuseActive = layers['landuse_xplan'];
                             const projectorActive = layers['projector_gonenim'] || layers['projector_gonenim_tzatal'];
                             const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
-                            // מאוכלס (טופס 4): green outline + subtle hatch fill, in every view mode.
-                            if (isOccupied(f.properties)) return occPlanStyle();
+                            // בינוי חדש: an occupied plan (טופס 4) recedes to BUILT_FADE_OPACITY in
+                            // EVERY view mode — it is already built, and the dedicated "בינוי חדש"
+                            // layer highlights it. withBuiltFade() multiplies stroke+fill opacity so
+                            // the plan reads as a faint ghost while its status color still identifies it.
+                            const _built = isOccupied(f.properties);
+                            const withBuiltFade = s => _built
+                                ? { ...s, opacity: (s.opacity != null ? s.opacity : 1) * BUILT_FADE_OPACITY, fillOpacity: (s.fillOpacity || 0) * BUILT_FADE_OPACITY }
+                                : s;
                             // When any master plan layer is on: hide plans inside an active
                             // master plan (drawn by that layer); show others as outline only
                             const activeMpKeys = ['master_plan_moshavot','master_plan_rasko','master_plan_baka','master_plan_arnona','master_plan_gonenim','master_plan_talpiot'].filter(k => layers[k]);
@@ -13720,25 +13732,25 @@
                                 if (c && activeMpNames.has(c.mp_match)) {
                                     return { color: 'transparent', weight: 0, fillOpacity: 0, opacity: 0 };
                                 }
-                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                                return withBuiltFade({ color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' });
                             }
                             if (landuseActive) {
-                                return { color: statusColor, weight: 2.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                                return withBuiltFade({ color: statusColor, weight: 2.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' });
                             }
                             if (futureShavazActive) {
-                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                                return withBuiltFade({ color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' });
                             }
                             if (shavazActive) {
                                 // Outline-only — match future_shavaz/landuse (the faint 0.07 fill read as a
                                 // pink "filled plan" on warm-status מתחמים when only שב"צ קיים was on).
-                                return { color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' };
+                                return withBuiltFade({ color: statusColor, weight: 1.5, fillColor: 'transparent', fillOpacity: 0, dashArray: '' });
                             }
                             if (projectorActive) {
                                 // Fade plans when projector recommendations are on so the
                                 // recommendations are more visible. Outline still readable.
-                                return { color: statusColor, weight: 1, fillColor: fillColor, fillOpacity: isApprovedGreen ? 0.05 : 0.1, dashArray: '4,2' };
+                                return withBuiltFade({ color: statusColor, weight: 1, fillColor: fillColor, fillOpacity: isApprovedGreen ? 0.05 : 0.1, dashArray: '4,2' });
                             }
-                            return { color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), dashArray: '4,2' };
+                            return withBuiltFade({ color: 'rgba(67,67,227,1)', weight: 1.5, fillColor: fillColor, fillOpacity: isSatellite ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3), dashArray: '4,2' });
                         },
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -13827,6 +13839,9 @@
                                 const isSat = basemap === 'satellite';
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 const landuseOn = layersRef.current['landuse_xplan'];
+                                // בינוי חדש: a faded (built) plan partially reveals on hover for readability,
+                                // then settles back to its ghost look on mouseout.
+                                if (isOccupied(f.properties)) { layer.setStyle({ weight: 2.5, opacity: 0.9, fillOpacity: (isSat ? 1 : opacity * 0.5) * 0.6 }); return; }
                                 if (landuseOn) {
                                     layer.setStyle({ weight: 4, fillOpacity: 0 });
                                 } else if (shavazOn) {
@@ -13843,7 +13858,20 @@
                                 const shavazOn = layersRef.current['shavaz_kayam'] || layersRef.current['future_shavaz'];
                                 const landuseOn = layersRef.current['landuse_xplan'];
                                 const isApprovedGreen = fillColor === STATUS_COLORS['אישור'];
-                                if (isOccupied(f.properties)) { layer.setStyle(occPlanStyle()); return; }
+                                // בינוי חדש: restore the built plan's faded ghost, matching the style fn.
+                                if (isOccupied(f.properties)) {
+                                    const outlineMode = landuseOn || shavazOn;
+                                    const baseFill = outlineMode ? 0 : (isSat ? 1 : opacity * (isApprovedGreen ? 0.15 : 0.3));
+                                    layer.setStyle({
+                                        weight: landuseOn ? 2.5 : 1.5,
+                                        opacity: BUILT_FADE_OPACITY,
+                                        fillOpacity: baseFill * BUILT_FADE_OPACITY,
+                                        fillColor: outlineMode ? 'transparent' : fillColor,
+                                        color: outlineMode ? statusColor : 'rgba(67,67,227,1)',
+                                        dashArray: outlineMode ? '' : '4,2'
+                                    });
+                                    return;
+                                }
                                 if (landuseOn) {
                                     layer.setStyle({ weight: 2.5, fillOpacity: 0, fillColor: 'transparent', color: statusColor });
                                 } else if (shavazOn) {
@@ -14207,6 +14235,38 @@
                     });
                     permitGroup.addTo(map);
                     geoLayersRef.current.meetingsPermits = permitGroup;
+                }
+
+                // New TAMA 38 points — surface tama38 licences we just detected whose file
+                // date is within the last month (first_detected stamped by the street-harvest
+                // pipeline for recent-dated new files) inside the "תכניות חדשות" topic, next to
+                // the new plan polygons. Reuses isNewPlan (same 30-day first_detected window).
+                if (gd.tama38 && planningTopics.new_plans) {
+                    const newTamaGroup = L.layerGroup();
+                    (gd.tama38.features || []).forEach(f => {
+                        const p = f.properties || {};
+                        if (!isNewPlan(p)) return;
+                        const g = f.geometry; if (!g) return;
+                        const c = g.type === 'MultiPoint' ? (g.coordinates || [])[0] : g.coordinates;
+                        if (!c || c.length < 2 || !inDistrict(c)) return;
+                        const latlng = L.latLng(c[1], c[0]);
+                        const marker = L.circleMarker(latlng, {
+                            pane: 'topicsPane', radius: 6, color: '#e91e63', weight: 2,
+                            fillColor: '#e91e63', fillOpacity: 0.9, bubblingMouseEvents: false,
+                            title: (p.address || p.tik || '') + ' — תמ״א 38 חדשה'
+                        });
+                        marker.on('click', () => {
+                            drawPlanOutline(c);
+                            const fid = String(p.fid != null ? p.fid : '');
+                            L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                .setLatLng(latlng)
+                                .setContent(buildTama38RichPopup(p, getPermitsForTama38(fid), null))
+                                .openOn(map);
+                        });
+                        marker.addTo(newTamaGroup);
+                    });
+                    newTamaGroup.addTo(map);
+                    geoLayersRef.current.newTamaPoints = newTamaGroup;
                 }
 
                 // --- Infrastructure layer (below plans) ---
@@ -18224,9 +18284,9 @@
                         pane: 'tama38Pane',
                         filter: f => {
                             if (!tama38InMinahak(f.properties)) return false;
-                            // Closed files (כל הבקשות נסגרו/בוטלו, ללא תעודת גמר) — hidden by
-                            // default, shown only when the "הצג בקשות שבוטלו" toggle is on (like נגנז).
-                            if (!showTama38Cancelled && tama38IsClosedFile(String(f.properties.fid != null ? f.properties.fid : ''))) return false;
+                            // Closed files (כל הבקשות נסגרו/בוטלו, ללא תעודת גמר) are never shown on
+                            // the main layer — they live in the "תמ"א 38 שנסגרה" hidden-plans layer.
+                            if (tama38IsClosedFile(String(f.properties.fid != null ? f.properties.fid : ''))) return false;
                             // #1 bucket filter — share the permits-layer bucket selection
                             if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
                                 const fid = String(f.properties.fid != null ? f.properties.fid : '');
@@ -18254,18 +18314,13 @@
                             const z = map.getZoom();
                             const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
                             const _fid = String(f.properties.fid != null ? f.properties.fid : '');
-                            // Completed (תעודת גמר) → hollow turquoise ring, no fill (unified "done"
-                            // look). Checked on raw permits so a completed-then-closed file still rings.
+                            // בינוי חדש: completed (תעודת גמר) → recede to BUILT_FADE_OPACITY in the
+                            // regular layer (already built); the dedicated "בינוי חדש" layer shows it
+                            // solid. Checked on raw permits so a completed-then-closed file still fades.
                             if (tama38HasGmar(_fid)) {
                                 return L.circleMarker(latlng, {
-                                    radius: r, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0
-                                });
-                            }
-                            // Closed file (all requests נסגרו/בוטלו, no תעודת גמר) → grey
-                            // (only reachable when the "הצג בקשות שבוטלו" toggle is on).
-                            if (tama38IsClosedFile(_fid)) {
-                                return L.circleMarker(latlng, {
-                                    radius: r, fillColor: '#888', color: '#666', weight: 0.5, fillOpacity: 0.7
+                                    radius: r, fillColor: fillColor, color: '#999', weight: 0.5,
+                                    fillOpacity: 0.9 * BUILT_FADE_OPACITY, opacity: BUILT_FADE_OPACITY
                                 });
                             }
                             return L.circleMarker(latlng, {
@@ -18304,6 +18359,113 @@
                         const z = map.getZoom();
                         const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
                         tama38Layer.eachLayer(l => { if (l.setRadius) l.setRadius(r); });
+                    });
+                }
+
+                // --- בינוי חדש: תב"עות מאוכלסות (טופס 4) + מבני תמ"א 38 עם תעודת גמר ---
+                // A dedicated layer that highlights construction that finished in reality. The same
+                // items recede to BUILT_FADE_OPACITY in the regular תב"ע / תמ"א 38 layers (see the
+                // plans style fn and the tama38HasGmar marker branch). Respects the minahak filter.
+                if (layers['new_construction'] && (gd.plans || gd.tama38)) {
+                    const ncGroup = L.layerGroup();
+                    // Occupied plans → prominent turquoise-filled polygons.
+                    if (gd.plans && gd.plans.features) {
+                        const occLayer = L.geoJSON(gd.plans, {
+                            pane: 'plansPane',
+                            renderer: L.svg({ pane: 'plansPane' }),
+                            filter: f => isOccupied(f.properties) && planInMinahak(f.properties),
+                            style: () => ({ color: OCC_LINE_COLOR, weight: 2, fillColor: OCC_LINE_COLOR, fillOpacity: 0.35, dashArray: '' }),
+                            onEachFeature: (f, layer) => {
+                                layer.on('click', (e) => {
+                                    if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                    const mapped = mapPlanProps(f.properties);
+                                    const content = buildPlanPopup(mapped, { properties: mapped }, null);
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(e.latlng).setContent(content);
+                                    popup.openOn(map);
+                                    bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                                });
+                                const nm = f.properties.plan_summary || f.properties.plan_name_he || '';
+                                if (nm) layer.bindTooltip('<div style="color:#0a6b62;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">🏗️ ' + nm + '</div>', { permanent: false, direction: 'center', className: 'tama38-label' });
+                            }
+                        });
+                        occLayer.addTo(ncGroup);
+                    }
+                    // Completed תמ"א 38 (תעודת גמר) → solid turquoise markers.
+                    if (gd.tama38 && gd.tama38.features) {
+                        const zNC = map.getZoom();
+                        const rNC = zNC >= 16 ? 6 : zNC >= 14 ? 4 : zNC >= 13 ? 3 : 2;
+                        const tamaNCLayer = L.geoJSON(gd.tama38, {
+                            pane: 'tama38Pane',
+                            filter: f => tama38HasGmar(String(f.properties.fid != null ? f.properties.fid : '')) && tama38InMinahak(f.properties),
+                            pointToLayer: (f, latlng) => L.circleMarker(latlng, { radius: rNC, fillColor: OCC_LINE_COLOR, color: '#0a6b62', weight: 1.5, fillOpacity: 0.95 }),
+                            onEachFeature: (f, layer) => {
+                                layer.on('click', (e) => {
+                                    const p = f.properties;
+                                    const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
+                                    const fid = String(p.fid != null ? p.fid : '');
+                                    const permits = getPermitsForTama38(fid);
+                                    const content = buildTama38RichPopup(p, permits, null);
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(latlng).setContent(content);
+                                    popup.openOn(map);
+                                    bindPopupEvents(popup, [{ properties: p, type: 'tama38' }], 0);
+                                });
+                                const addr = f.properties.address || '';
+                                if (addr) layer.bindTooltip('<div style="color:#0a6b62;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">✅ ' + addr + '</div>', { permanent: false, direction: 'right', className: 'tama38-label', offset: [5, 0] });
+                            }
+                        });
+                        tamaNCLayer.addTo(ncGroup);
+                        map.on('zoomend', () => { const z2 = map.getZoom(); const r2 = z2 >= 16 ? 6 : z2 >= 14 ? 4 : z2 >= 13 ? 3 : 2; tamaNCLayer.eachLayer(l => { if (l.setRadius) l.setRadius(r2); }); });
+                    }
+                    ncGroup.addTo(map);
+                    geoLayersRef.current.new_construction = ncGroup;
+                }
+
+                // --- תמ"א 38 שנסגרה — closed files (hidden-plans layer, grey, independent of the main layer) ---
+                if (planningTopics.tama38_closed && gd.tama38) {
+                    const tama38ClosedLayer = L.geoJSON(gd.tama38, {
+                        pane: 'tama38Pane',
+                        filter: f => {
+                            if (!tama38InMinahak(f.properties)) return false;
+                            return tama38IsClosedFile(String(f.properties.fid != null ? f.properties.fid : ''));
+                        },
+                        pointToLayer: (f, latlng) => {
+                            const z = map.getZoom();
+                            const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
+                            return L.circleMarker(latlng, {
+                                radius: r, fillColor: '#888', color: '#666', weight: 0.5, fillOpacity: 0.7
+                            });
+                        },
+                        onEachFeature: (f, layer) => {
+                            layer.on('click', (e) => {
+                                const m = mapInstanceRef.current || map;
+                                const p = f.properties;
+                                const latlng = e.latlng || (layer.getLatLng ? layer.getLatLng() : e.target.getLatLng());
+                                const fid = String(p.fid != null ? p.fid : '');
+                                const permits = getPermitsForTama38(fid);
+                                const content = buildTama38RichPopup(p, permits, null);
+                                const feat = { properties: p, type: 'tama38' };
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(latlng)
+                                    .setContent(content);
+                                popup.openOn(m);
+                                bindPopupEvents(popup, [feat], 0);
+                            });
+                            const addr = f.properties.address || '';
+                            if (addr) {
+                                layer.bindTooltip(
+                                    '<div style="color:#888;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + addr + '<br>נסגרה</div>',
+                                    { permanent: false, direction: 'right', className: 'tama38-label', offset: [5, 0] }
+                                );
+                            }
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.tama38Closed = tama38ClosedLayer;
+                    map.on('zoomend', () => {
+                        const z = map.getZoom();
+                        const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
+                        tama38ClosedLayer.eachLayer(l => { if (l.setRadius) l.setRadius(r); });
                     });
                 }
 
@@ -18665,7 +18827,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets, showTama38Cancelled]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -19573,6 +19735,11 @@
             }
             function buildPermitsDetailPopup(permits, title, subtitle, navInfo, backAction, backDataAttr, fallbackUnits, scopeKey, planUnits) {
                 const planU = parsePlanUnits(planUnits);
+                // TAMA 38 permits are compared to themselves, not to an approved plan — the
+                // "תב״ע" baseline line is meaningless here (and the units_tose source is
+                // unreliable), so suppress it for the tama scope. Plan permits keep it.
+                const isTama = String(scopeKey || '').startsWith('tama:');
+                const cmpPlanU = isTama ? 0 : planU;
                 const defaultsInfo = getPermitInclusionDefaults(permits, planU);
                 const inclusion = getEffectivePermitInclusion(permits, scopeKey, planU);
                 let html = '<div>';
@@ -19674,15 +19841,15 @@
                 const totalAll = permits.reduce((sum, p) => sum + (Number(p.units) || 0), 0);
                 if (totalAll > 0 || (fallbackUnits && fallbackUnits > 0)) {
                     const displayTotal = totalIncluded || (totalAll === 0 && fallbackUnits ? fallbackUnits : 0);
-                    const totalColor = permitTotalColor(displayTotal, planU);
+                    const totalColor = permitTotalColor(displayTotal, cmpPlanU);
                     const defaultMode = defaultsInfo.rules.length > 0
                         ? 'סינון אוטומטי: ' + defaultsInfo.rules.join(', ')
                         : 'ברירת מחדל: כל ההיתרים נספרים';
                     html += `<div style="padding:8px 12px;border-top:1px solid #2a2a4a;text-align:center">`;
-                    if (planU > 0) {
-                        html += `<div style="font-size:11px;color:#aaa;margin-bottom:4px">תב״ע: <span style="color:#fff;font-weight:bold">${planU}</span> יח״ד</div>`;
+                    if (cmpPlanU > 0) {
+                        html += `<div style="font-size:11px;color:#aaa;margin-bottom:4px">תב״ע: <span style="color:#fff;font-weight:bold">${cmpPlanU}</span> יח״ד</div>`;
                     }
-                    html += `<div data-permit-total-line data-plan-units="${planU}" style="font-size:13px;font-weight:bold;color:${totalColor}">סה"כ <span data-permit-total-units>${displayTotal}</span> יח"ד בהיתרים</div>`;
+                    html += `<div data-permit-total-line data-plan-units="${cmpPlanU}" style="font-size:13px;font-weight:bold;color:${totalColor}">סה"כ <span data-permit-total-units>${displayTotal}</span> יח"ד בהיתרים</div>`;
                     html += `<div style="font-size:10px;color:#8888aa;margin-top:2px">נספרו <span data-permit-included-count>${countIncluded}</span> מתוך ${permits.length} היתרים <span style="opacity:0.7">(${defaultMode})</span></div>`;
                     html += `</div>`;
                 }
@@ -22598,6 +22765,12 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, archived: !prev.archived}))}>
                                 <input type="checkbox" checked={planningTopics.archived} onChange={() => {}} />
                                 <label>תכניות שנגנזו</label>
+                            </div>
+                            <div className="layer-item"
+                                 title='תמ"א 38 שכל הבקשות בהן נסגרו/בוטלו (ללא תעודת גמר)'
+                                 onClick={() => setPlanningTopics(prev => ({...prev, tama38_closed: !prev.tama38_closed}))}>
+                                <input type="checkbox" checked={planningTopics.tama38_closed} onChange={() => {}} />
+                                <label>תמ"א 38 שנסגרה</label>
                             </div>
                             </div>)}
                         </div>
@@ -31912,17 +32085,6 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
                                 );
                             })}
-                        </div>
-                    )}
-                    {/* תמ"א 38 — הצגת בקשות שבוטלו/נסגרו (מוסתר כברירת מחדל, כמו תכניות שנגנזו). */}
-                    {layers.tama38 && (
-                        <div style={{position:'fixed', left:12, bottom:(layers.permits && window.__permitsMaster) ? 240 : 70, zIndex:1000, background:'rgba(18,18,32,0.94)', border:'1px solid #2a2a4a', borderRadius:8, padding:'8px 10px', width:210, boxShadow:'0 2px 10px rgba(0,0,0,0.45)', direction:'rtl'}}>
-                            <div onClick={() => setShowTama38Cancelled(v => !v)}
-                                style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',userSelect:'none'}}>
-                                <span style={{width:12,height:12,borderRadius:6,background:'#888',flex:'0 0 auto'}}></span>
-                                <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>הצג בקשות שבוטלו/נסגרו</span>
-                                <input type="checkbox" checked={showTama38Cancelled} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
-                            </div>
                         </div>
                     )}
                 </>
