@@ -2549,6 +2549,8 @@
             { label: 'נפתח תיק היתר', color: 'rgb(253,174,97)' },
             { label: 'היתר אושר בועדת רישוי', color: 'rgb(255,255,192)' },
             { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
+            { label: 'הושלם (תעודת גמר)', color: 'rgb(13,148,136)', style: 'outline' },
+            { label: 'בקשה שבוטלה/נסגרה (מוסתר כברירת מחדל)', color: '#888' },
         ];
 
         const EASEMENTS_LEGEND = [
@@ -2921,6 +2923,8 @@
             const [permitBuckets, setPermitBuckets] = useState({
                 tama38: true, zchuyot: true, ibuy: true, shimush_chorag: true, tava_gadol: true, acher: true
             });
+            // תיקי תמ"א 38 שכל הבקשות בהם נסגרו/בוטלו (ללא תעודת גמר) — מוסתר כברירת מחדל, כמו נגנז בתב"ע.
+            const [showTama38Cancelled, setShowTama38Cancelled] = useState(false);
             const [mapScale, setMapScale] = useState('');
             const [zoomLevel, setZoomLevel] = useState(15);
             const [measureMode, setMeasureMode] = useState(null); // null | 'distance' | 'area'
@@ -18195,6 +18199,9 @@
                         pane: 'tama38Pane',
                         filter: f => {
                             if (!tama38InMinahak(f.properties)) return false;
+                            // Closed files (כל הבקשות נסגרו/בוטלו, ללא תעודת גמר) — hidden by
+                            // default, shown only when the "הצג בקשות שבוטלו" toggle is on (like נגנז).
+                            if (!showTama38Cancelled && tama38IsClosedFile(String(f.properties.fid != null ? f.properties.fid : ''))) return false;
                             // #1 bucket filter — share the permits-layer bucket selection
                             if (!PERMIT_BUCKETS.every(b => permitBuckets[b.id])) {
                                 const fid = String(f.properties.fid != null ? f.properties.fid : '');
@@ -18221,10 +18228,19 @@
                             else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
                             const z = map.getZoom();
                             const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
-                            // Completed (תעודת גמר) → hollow turquoise ring, no fill (unified "done" look).
-                            if (tama38Completed(getPermitsForTama38(String(f.properties.fid != null ? f.properties.fid : '')))) {
+                            const _fid = String(f.properties.fid != null ? f.properties.fid : '');
+                            // Completed (תעודת גמר) → hollow turquoise ring, no fill (unified "done"
+                            // look). Checked on raw permits so a completed-then-closed file still rings.
+                            if (tama38HasGmar(_fid)) {
                                 return L.circleMarker(latlng, {
                                     radius: r, color: OCC_LINE_COLOR, weight: 2, fill: false, fillOpacity: 0
+                                });
+                            }
+                            // Closed file (all requests נסגרו/בוטלו, no תעודת גמר) → grey
+                            // (only reachable when the "הצג בקשות שבוטלו" toggle is on).
+                            if (tama38IsClosedFile(_fid)) {
+                                return L.circleMarker(latlng, {
+                                    radius: r, fillColor: '#888', color: '#666', weight: 0.5, fillOpacity: 0.7
                                 });
                             }
                             return L.circleMarker(latlng, {
@@ -18624,7 +18640,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets, showTama38Cancelled]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -18671,6 +18687,24 @@
                 const entry = data[String(fid)];
                 if (!entry || !entry.permits) return [];
                 return entry.permits.filter(_includePermit);
+            }
+            // Raw permit list (incl. closed/cancelled) — getPermitsForTama38 strips those.
+            function tama38RawPermits(fid) {
+                const entry = (window.__tama38Permits || {})[String(fid)];
+                return (entry && entry.permits) ? entry.permits : [];
+            }
+            // Did any of this building's permits (incl. closed ones) reach תעודת גמר?
+            function tama38HasGmar(fid) {
+                return tama38RawPermits(fid).some(p => p && permitReachedGmar(p.file_number));
+            }
+            // A תמ"א 38 building's file counts as "closed" when EVERY real permit request is
+            // closed/cancelled (נסגרה/בוטל). Such files render grey and are hidden by default
+            // (like נגנז plans) — UNLESS the building reached a completion certificate
+            // (תעודת גמר), in which case it renders as the turquoise "completed" ring instead.
+            function tama38IsClosedFile(fid) {
+                if (tama38HasGmar(fid)) return false;      // completed → shown as ring, never grey
+                const real = tama38RawPermits(fid).filter(p => p && !p.filtered && !isPermitTest(p));
+                return real.length > 0 && real.every(isPermitClosed);
             }
 
             // ─── Pending §149 objection permits (טרום-פרסום — התנגדויות בקרוב) ─────
@@ -31866,6 +31900,17 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     </div>
                                 );
                             })}
+                        </div>
+                    )}
+                    {/* תמ"א 38 — הצגת בקשות שבוטלו/נסגרו (מוסתר כברירת מחדל, כמו תכניות שנגנזו). */}
+                    {layers.tama38 && (
+                        <div style={{position:'fixed', left:12, bottom:(layers.permits && window.__permitsMaster) ? 240 : 70, zIndex:1000, background:'rgba(18,18,32,0.94)', border:'1px solid #2a2a4a', borderRadius:8, padding:'8px 10px', width:210, boxShadow:'0 2px 10px rgba(0,0,0,0.45)', direction:'rtl'}}>
+                            <div onClick={() => setShowTama38Cancelled(v => !v)}
+                                style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',userSelect:'none'}}>
+                                <span style={{width:12,height:12,borderRadius:6,background:'#888',flex:'0 0 auto'}}></span>
+                                <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>הצג בקשות שבוטלו/נסגרו</span>
+                                <input type="checkbox" checked={showTama38Cancelled} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
+                            </div>
                         </div>
                     )}
                 </>
