@@ -18405,7 +18405,10 @@
                         const occLayer = L.geoJSON(gd.plans, {
                             pane: 'plansPane',
                             renderer: L.svg({ pane: 'plansPane' }),
-                            filter: f => isOccupied(f.properties) && planInMinahak(f.properties),
+                            // Exclude city-wide/reference plans (no minahak → very large polygons
+                            // covering the whole city, e.g. 101-0615880 ≈124 km²). Same criterion
+                            // isPlanVisible uses. "בינוי חדש" should be site-level construction only.
+                            filter: f => isOccupied(f.properties) && planInMinahak(f.properties) && (f.properties.minahak || '').trim(),
                             style: () => ({ color: OCC_LINE_COLOR, weight: 2, fillColor: OCC_LINE_COLOR, fillOpacity: 0.35, dashArray: '' }),
                             onEachFeature: (f, layer) => {
                                 layer.on('click', (e) => {
