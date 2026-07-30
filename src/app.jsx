@@ -20646,10 +20646,9 @@
                 if (_bonus) {
                     const _extra = planBonusUnits(props);
                     const _esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-                    const _label = _bonus.kind === 'גמישות' ? 'גמישות יח"ד' : 'בונוס יח"ד';
                     html += '<div style="margin:4px 0 2px;padding:6px 8px;background:#241f14;border:1px solid #4a3f24;border-radius:6px;font-size:11px;color:#f0e2bf" title="' + _esc(_bonus.note) + '">';
-                    html += '<span style="color:#f5b041;font-weight:600">📈 ' + _label + ' (טבלה 5): עד ' + _bonus.pct + '%'
-                          + (_extra ? ' · ≈' + _extra.toLocaleString('he-IL') + ' יח"ד' : '') + '</span>';
+                    html += '<span style="color:#f5b041;font-weight:600">📈 הערת טבלה 5 מאפשרת תוספת של עד ' + _bonus.pct + '% יח"ד'
+                          + (_extra ? ' (≈' + _extra.toLocaleString('he-IL') + ')' : '') + '</span>';
                     html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc(_bonus.note) + '</div>';
                     html += '</div>';
                 }
@@ -25596,7 +25595,7 @@
                                             <div style={{padding:'10px 16px',background: isOver(row) ? '#3a1a1a' : '#1a1a2e', border: isOver(row) ? '1px solid #e94560' : 'none', borderRadius:8,marginBottom:14,fontSize:13,display:'flex',flexWrap:'wrap',gap:20,color:'#e0e0ff'}}>
                                                 <div><strong style={{color:'#fff'}}>שם:</strong> {row.plan_summary || '—'}</div>
                                                 <div><strong style={{color:'#fff'}}>מינהל:</strong> {row.minahak || '—'}</div>
-                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}{row.bonus > 0 && <span style={{fontSize:11,color:'#5dade2',marginRight:6}} title={row.bonusNote}>{row.includeBonus ? '(כולל ' + fmt(row.bonus) + ' בונוס ' + row.bonusPct + '%)' : '(+ ' + fmt(row.bonus) + ' בונוס ' + row.bonusPct + '% לא נכלל)'}</span>}</div>
+                                                <div><strong style={{color:'#fff'}}>יח"ד מאושרות:</strong> {fmt(row.unitsAdd)}{row.conditional > 0 && <span style={{fontSize:11,color:'#f5b041',marginRight:6}} title={row.includeConditional ? 'כולל ' + fmt(row.conditional) + ' מותנות' : 'מתוכן ' + fmt(row.conditional) + ' מותנות (לא נכלל)'}>{row.includeConditional ? '(כולל ' + fmt(row.conditional) + ' מותנות)' : '(+ ' + fmt(row.conditional) + ' מותנות לא נכלל)'}</span>}{row.bonus > 0 && <span style={{fontSize:11,color:'#5dade2',marginRight:6}} title={row.bonusNote}>{row.includeBonus ? '(כולל ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '%)' : '(+ ' + fmt(row.bonus) + ' תוספת טבלה 5 ' + row.bonusPct + '% לא נכלל)'}</span>}</div>
                                                 <div><strong style={{color:'#fff'}}>יח"ד בהיתרים:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.unitsInPermits)}</span></div>
                                                 <div><strong style={{color:'#fff'}}>פער:</strong> <span style={isOver(row) ? {color:'#ff9aa8',fontWeight:700} : {color:'#fff'}}>{fmt(row.gap)}</span></div>
                                                 {isOver(row) && <div style={{color:'#ff9aa8',fontWeight:700}}>⚠ חריגה מעל היח"ד המאושרות</div>}
@@ -25618,12 +25617,12 @@
                                             {/* Per-plan toggle: include this plan's Table 5 unit-bonus יח״ד in the comparison baseline */}
                                             {row.bonus > 0 && (
                                                 <div style={{marginBottom:14,padding:'10px 14px',background:'#14202b',border:'1px solid ' + (row.includeBonus ? '#3d7ca8' : '#26384a'),borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#cfe4f5',fontWeight:600}} title={'הערת טבלה 5: ' + (row.bonusNote || ('תותר תוספת של עד ' + row.bonusPct + '% ממספר יח״ד')) + '\nכשמסומן, ' + fmt(row.bonus) + ' יח״ד הבונוס מתווספות ליח״ד המאושרות שאליהן משווים את ההיתרים'}>
+                                                    <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#cfe4f5',fontWeight:600}} title={'הערת טבלה 5: ' + (row.bonusNote || ('תותר תוספת של עד ' + row.bonusPct + '% ממספר יח״ד')) + '\nכשמסומן, ' + fmt(row.bonus) + ' יח״ד התוספת מתווספות ליח״ד המאושרות שאליהן משווים את ההיתרים'}>
                                                         <input type="checkbox" checked={row.includeBonus} onChange={() => { setBonusOverride(row.scopeKey, !row.includeBonus); setPermitsGapRev(v => v + 1); }} style={{cursor:'pointer',width:18,height:18}} />
-                                                        📈 כלול {fmt(row.bonus)} יח"ד בונוס טבלה 5 (עד {row.bonusPct}%) במניין ההשוואה
+                                                        📈 כלול {fmt(row.bonus)} יח"ד — הערת טבלה 5 מאפשרת תוספת של עד {row.bonusPct}%
                                                     </label>
                                                     <span style={{fontSize:11,color:'#9ca3af',marginRight:'auto',marginLeft:0}}>
-                                                        {row.includeBonus ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל בונוס)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.bonus) + ' בונוס)'}
+                                                        {row.includeBonus ? 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (כולל תוספת טבלה 5)' : 'מניין ההשוואה: ' + fmt(row.unitsAdd) + ' (בלי ' + fmt(row.bonus) + ' תוספת טבלה 5)'}
                                                     </span>
                                                 </div>
                                             )}
@@ -25783,9 +25782,9 @@
                                                 <input type="checkbox" checked={permitsGapIncludeConditional} onChange={e => setPermitsGapIncludeConditional(e.target.checked)} style={{cursor:'pointer'}} />
                                                 כלול יח"ד מותנות (ברירת מחדל)
                                             </label>
-                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את בונוס היח״ד מהערת טבלה 5 (תותר תוספת של עד N% ממספר יח״ד) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
+                                            <label style={{fontSize:12,color:'#9ca3af',display:'flex',alignItems:'center',gap:4,cursor:'pointer',marginRight:12}} title="ברירת מחדל לכל התכניות: מוסיף את תוספת היח״ד שהערת טבלה 5 מאפשרת (תותר תוספת של עד N% ממספר יח״ד) ליח״ד המאושרות. ניתן לעקוף פר-תכנית בכניסה לתכנית (drill-down).">
                                                 <input type="checkbox" checked={permitsGapIncludeBonus} onChange={e => setPermitsGapIncludeBonus(e.target.checked)} style={{cursor:'pointer'}} />
-                                                📈 כלול בונוס טבלה 5 (ברירת מחדל)
+                                                📈 כלול תוספת מהערת טבלה 5 (ברירת מחדל)
                                             </label>
                                         </div>
                                         <ReportLinkBtn /><button className="units-close" onClick={() => { setShowPermitsGap(false); setPermitsGapDrilldown(null); }}>&times;</button>
