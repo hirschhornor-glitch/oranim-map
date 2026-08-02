@@ -22,6 +22,36 @@ CHANGELOG_FILE = "data/plan_changelog.jsonl"
 # slow; cap defensively so the file can't grow unbounded over years.
 MAX_CHANGELOG_LINES = 50000
 
+# Stage-3 verification gate: a NEW built public allocation (hafrash) must not go
+# live until a human corroborates it against Table 5 / הוראות (see the
+# 101-1354356 incident, where a binui-misread kindergarten slipped through).
+# When detected, the field is HELD (not written to the live geojson) and queued
+# in pending_review.json; scripts/review_queue.py approves (publish) or rejects.
+PENDING_REVIEW_FILE = "data/pending_review.json"
+GATED_FIELDS = ("hafrash_prg", "hafrash_sqm")
+PUBLIC_BUILDING_TERMS = ('גן ילדים', 'כיתות גן', 'מעון', 'בי"ס', 'בית ספר',
+                         'בית-ספר', 'מבנה ציבור', 'מבני ציבור', 'ציבור', 'שב"צ',
+                         'קהילה', 'מתנ"ס', 'בית כנסת', 'מרפאה', 'רווחה')
+
+
+def _is_new_public_allocation(field, old, new):
+    """True for a hafrash that appeared where there was none, or a hafrash_prg
+    that gained a public-building term it lacked before. Mirrors the same
+    predicate in update_mavat_ui.py (Stage 2 email flag) so what gets flagged is
+    exactly what gets gated."""
+    if field not in GATED_FIELDS:
+        return False
+    o = "" if old is None else str(old).strip()
+    n = "" if new is None else str(new).strip()
+    if not n:
+        return False
+    if field == "hafrash_sqm":
+        return not o
+    if not o:
+        return any(t in n for t in PUBLIC_BUILDING_TERMS)
+    return any(t in n and t not in o for t in PUBLIC_BUILDING_TERMS)
+
+
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json"
@@ -180,6 +210,20 @@ def append_changelog(events):
         print(f"  ⚠ changelog write failed (non-fatal): {e}")
 
 
+def save_pending_review(pending):
+    """Persist the verification-gate queue. Non-fatal on error."""
+    try:
+        sha, _ = get_github_file(PENDING_REVIEW_FILE)
+        content = json.dumps(pending, ensure_ascii=False, indent=1)
+        ok = upload_github_file(
+            PENDING_REVIEW_FILE, content, sha,
+            f"review queue: {len(pending)} pending public-allocation item(s) "
+            f"{get_israel_time().strftime('%Y-%m-%d %H:%M')}")
+        print(f"{'✓' if ok else '✗'} review queue: {len(pending)} pending item(s)")
+    except Exception as e:
+        print(f"  ⚠ review queue save failed (non-fatal): {e}")
+
+
 def update_plans():
     last_update = load_last_update()
     print(f"עדכון אחרון: {last_update}")
@@ -212,6 +256,17 @@ def update_plans():
 
     geojson_data = json.loads(existing_geojson)
 
+    # Verification gate — load the review queue. Fail-open: if it can't be read,
+    # set to None so the gate is disabled this run (never withhold legit data or
+    # break the mirror because the queue was momentarily unavailable).
+    try:
+        _, pr_content = get_github_file(PENDING_REVIEW_FILE)
+        pending_review = json.loads(pr_content) if pr_content else {}
+    except Exception as e:
+        print(f"  ⚠ review queue unavailable — gate disabled this run: {e}")
+        pending_review = None
+    pending_changed = False
+
     now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
     change_events = []
     updated = 0
@@ -223,6 +278,28 @@ def update_plans():
             new_status = row.get("status_mavat", props.get("status_mavat", ""))
             taba = row.get("taba", props.get("taba", ""))
             for k, v in row.items():
+                # ── verification gate for built public allocations ──
+                if pending_review is not None and k in GATED_FIELDS:
+                    gkey = f"{taba}|{k}"
+                    if gkey in pending_review:
+                        continue  # already held & queued — keep old value, don't republish
+                    if _is_new_public_allocation(k, props.get(k), v):
+                        pending_review[gkey] = {
+                            "taba": taba,
+                            "plan_name": plan_name,
+                            "field": k,
+                            "old": props.get(k),
+                            "held_value": v,
+                            "status": new_status,
+                            "first_seen": now_str,
+                        }
+                        pending_changed = True
+                        change_events.append({
+                            "ts": now_str, "taba": taba, "plan_name": plan_name,
+                            "status": new_status, "field": k,
+                            "old": props.get(k), "new": v, "held": True,
+                        })
+                        continue  # HOLD: do not write to the live geojson
                 # capture old->new BEFORE overwriting; skip the trigger field
                 if k != TS_FIELD and _norm(props.get(k)) != _norm(v):
                     change_events.append({
@@ -247,6 +324,10 @@ def update_plans():
     if success:
         print("✓ plans.geojson עודכן")
         append_changelog(change_events)
+        if pending_review is not None and pending_changed:
+            n_held = sum(1 for e in change_events if e.get("held"))
+            print(f"🚩 {n_held} built-allocation change(s) HELD for review")
+            save_pending_review(pending_review)
         save_last_update()
         write_summary(updated, changed_rows, last_update)
     else:
