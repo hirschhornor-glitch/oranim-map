@@ -171,6 +171,14 @@ def _fmt(field, v):
     return str(int(round(float(v)))) if float(v) == int(float(v)) else str(round(float(v), 1))
 
 
+# Public-building terms — a hafrash_prg containing any of these claims a public
+# allocation, which must be corroborated by Table 5 (see the 101-1354356 incident
+# and feedback_hafrash_public_needs_table5_or_horaot).
+PUBLIC_BUILDING_TERMS = ('גן ילדים', 'כיתות גן', 'מעון', 'בי"ס', 'בית ספר',
+                         'בית-ספר', 'מבנה ציבור', 'מבני ציבור', 'ציבור', 'שב"צ',
+                         'קהילה', 'מתנ"ס', 'בית כנסת', 'מרפאה', 'רווחה')
+
+
 def compute_changes(h, row, scraped, plan_label=""):
     """Return (updates {col0idx: strval}, report_lines).
 
@@ -235,6 +243,41 @@ def compute_changes(h, row, scraped, plan_label=""):
         set_field("units_add", out_total - ui, "units_add")
         if ui:
             set_field("Machpil", round(out_total / ui, 2), "Machpil")
+
+    # Table 5 "unit bonus" note — a bottom-of-table note permitting MORE יח"ד at
+    # building-permit stage ("תותר תוספת של עד N% ממספר יח״ד"). Not a GS column —
+    # the authoritative store is data/unit_bonus.json, rebuilt at the end of the
+    # update_mavat_ui run from the fresh temp_xlsx downloaded here. Surfaced in the
+    # status email so a plan that gains such a note on a status change is visible.
+    if t5.get("unit_bonus_pct"):
+        kind = t5.get("unit_bonus_kind", "")
+        report.append(
+            f"      📈 הערת טבלה 5 מאפשרת תוספת של עד {t5['unit_bonus_pct']}% יח\"ד"
+            + (f" ({kind})" if kind else "")
+        )
+
+    # ── Corroboration + correction (user rule 2026-08-02): the plan carries a
+    # built public allocation (hafrash) that Table 5 does NOT show. Table 5 is
+    # authoritative, so CLEAR it in GS — the mirror then removes it from the live
+    # map — and flag it 🚩 in the email. GUARD: only act when Table 5 clearly WAS
+    # parsed (some OUT field populated); a failed/empty parse must not trigger a
+    # mass clear. See the 101-1354356 incident.
+    if t5 and any(t5.get(k) for k, _ in OUT_MAP):
+        prg_cur = cur("hafrash_prg")
+        sqm_cur = _num(cur("hafrash_sqm")) or 0
+        claims_public = any(t in prg_cur for t in PUBLIC_BUILDING_TERMS) or sqm_cur > 0
+        t5_shows_public = ((t5.get("hafrash_built_sqm") or 0) > 0
+                           or (t5.get("public_building_sqm") or 0) > 0)
+        if claims_public and not t5_shows_public:
+            ci_prg = h.get("hafrash_prg")
+            ci_sqm = h.get("hafrash_sqm")
+            if ci_prg is not None and prg_cur:
+                updates[ci_prg] = ""
+            if ci_sqm is not None and sqm_cur:
+                updates[ci_sqm] = ""
+            report.append(
+                f"      🚩 הפרשה/מבנה ציבור ('{prg_cur or sqm_cur}') לא נמצא בטבלה 5 "
+                f"— נוקה ב-GS (לאמת מול הוראות אם צריך להחזיר)")
 
     if report:
         report.insert(0, f"  📊 {plan_label}: עדכון מטבלה 5 (יוצא) + אקורדיון (נכנס)")
