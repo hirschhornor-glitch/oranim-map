@@ -47,6 +47,8 @@ SHAVAZ_GEOJSON    = r"C:\ORANIM\oranim-app\data\future_shavaz.geojson"
 EASEMENTS_GEOJSON = r"C:\ORANIM\oranim-app\data\easements.geojson"
 TREE_SURVEYS_JSON = r"C:\ORANIM\oranim-app\data\tree_surveys.json"
 TREE_POINTS_JSON  = r"C:\ORANIM\oranim-app\data\tree_points_xplan.json"
+CHANGELOG_JSON    = r"C:\ORANIM\oranim-app\data\plan_changelog.jsonl"  # written by the GS->geojson cron
+LAST_CHANGELOG_EMAIL = r"C:\ORANIM\.last_changelog_email.txt"          # local marker, not committed
 XPLAN_URL         = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
 XPLAN_BLUE_URL    = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 XPLAN_EASEMENT_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/3/query"
@@ -1191,6 +1193,114 @@ def _load_pending_new_plans():
         return [], path
 
 
+# Sensitive fields worth surfacing from the changelog (status/date already have
+# their own email sections, so they are excluded here to avoid duplication).
+SENSITIVE_FIELDS = {
+    "hafrash_prg":     'הפרשה (תיאור)',
+    "hafrash_sqm":     'הפרשה (מ"ר)',
+    "shavatz_out_sqm": 'שב"צ יוצא',
+    "shavatz_in_sqm":  'שב"צ נכנס',
+    "shatzap_out":     'שצ"פ יוצא',
+    "units_total":     'יח"ד יוצא',
+    "units_in":        'יח"ד נכנס',
+    "commerce_out":    'מסחר יוצא',
+    "employment":      'תעסוקה',
+    "floors_max":      'קומות',
+    "High":            'גובה',
+    "resident_shared": 'חדר דיירים',
+}
+PUBLIC_BUILDING_TERMS = ('גן ילדים', 'כיתות גן', 'מעון', 'בי"ס', 'בית ספר',
+                         'בית-ספר', 'מבנה ציבור', 'מבני ציבור', 'ציבור', 'שב"צ',
+                         'קהילה', 'מתנ"ס', 'בית כנסת', 'מרפאה', 'רווחה')
+
+
+def _is_new_public_allocation(field, old, new):
+    """Flag a NEW built public allocation (the exact class that slipped in for
+    101-1354356): a hafrash that appeared where there was none, or a hafrash_prg
+    that gained a public-building term. Per the rule, these must be corroborated
+    against Table 5 / הוראות before they are trusted."""
+    if field not in ("hafrash_prg", "hafrash_sqm"):
+        return False
+    o = "" if old is None else str(old).strip()
+    n = "" if new is None else str(new).strip()
+    if not n:
+        return False
+    if field == "hafrash_sqm":
+        return not o  # empty -> a value
+    # hafrash_prg: brand-new text, or gained a public term it lacked before
+    if not o:
+        return any(t in n for t in PUBLIC_BUILDING_TERMS)
+    return any(t in n and t not in o for t in PUBLIC_BUILDING_TERMS)
+
+
+def build_changelog_digest():
+    """Read plan_changelog.jsonl and return (html, newest_ts, n_events) for
+    sensitive field changes since the last email (tracked by a local marker
+    file). Empty html when nothing new / file missing. Non-fatal on any error."""
+    try:
+        if not os.path.exists(CHANGELOG_JSON):
+            return "", None, 0
+        marker = ""
+        try:
+            with open(LAST_CHANGELOG_EMAIL, encoding="utf-8") as f:
+                marker = f.read().strip()
+        except OSError:
+            marker = ""
+        if not marker:
+            # first run: only look back 7 days so we don't dump the whole history
+            marker = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+
+        events, newest = [], marker
+        with open(CHANGELOG_JSON, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if e.get("field") not in SENSITIVE_FIELDS:
+                    continue
+                ts = e.get("ts", "")
+                if ts <= marker:  # "YYYY-MM-DD HH:MM:SS" sorts chronologically
+                    continue
+                events.append(e)
+                if ts > newest:
+                    newest = ts
+        if not events:
+            return "", newest, 0
+
+        html = '<h2>🏛️ שינויי שדות רגישים (הפרשה / שב"צ / יח"ד / קומות)</h2>'
+        html += (f'<p>מאז המייל האחרון נרשמו {len(events)} שינויי שדה ביומן '
+                 f'השינויים (plan_changelog):</p>')
+        html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
+        html += ("<tr style='background-color: #fff3e0;'>"
+                 "<th>תאריך</th><th>מספר תכנית</th><th>שדה</th>"
+                 "<th>ישן → חדש</th><th>סטטוס</th><th>דגל</th></tr>")
+        for e in events:
+            flag = _is_new_public_allocation(e.get("field"), e.get("old"), e.get("new"))
+            flag_cell = ('🚩 <b style="color:#c62828">הקצאת ציבור חדשה — '
+                         'לאמת מול טבלה 5/הוראות</b>') if flag else ''
+            row_style = " style='background-color:#ffebee;'" if flag else ""
+            label = SENSITIVE_FIELDS.get(e.get("field"), e.get("field"))
+            old = e.get("old")
+            old_s = '∅' if old in (None, "", []) else old
+            html += f"<tr{row_style}>"
+            html += f"<td>{e.get('ts','')}</td>"
+            html += f"<td>{e.get('plan_name','')}</td>"
+            html += f"<td dir='rtl'>{label}</td>"
+            html += f"<td dir='rtl'>{old_s} → <b>{e.get('new')}</b></td>"
+            html += f"<td dir='rtl'>{e.get('status','')}</td>"
+            html += f"<td dir='rtl'>{flag_cell}</td>"
+            html += "</tr>"
+        html += "</table><br>"
+        return html, newest, len(events)
+    except Exception as ex:
+        log_msg(f"changelog digest failed (non-fatal): {ex}")
+        return "", None, 0
+
+
 def send_email_notification(updates, objection_results=None, xplan_report=None):
     if not SENDER_EMAIL or not SENDER_PASSWORD or not RECEIVER_EMAIL:
         log_msg("Email settings not configured. Skipping email notification.")
@@ -1214,7 +1324,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     new_plans, new_plans_report_path = _load_pending_new_plans()
     has_new_plans = bool(new_plans)
 
-    if not has_updates and not has_objections and not has_xplan and not has_new_plans:
+    # Sensitive field-change digest from the changelog (hafrash/shavaz/units/floors)
+    digest_html, digest_newest_ts, digest_n = build_changelog_digest()
+    has_digest = bool(digest_html)
+
+    if not has_updates and not has_objections and not has_xplan and not has_new_plans \
+            and not has_digest:
         return
 
     log_msg("Sending email notification...")
@@ -1227,6 +1342,8 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         parts.append(f"{len(updates)} סטטוסים עודכנו")
     if has_objections:
         parts.append(f"{len(future_objections)} תאריכי התנגדויות")
+    if has_digest:
+        parts.append(f"{digest_n} שינויי שדה")
     subject = "עידכון ממבאת: " + " | ".join(parts)
 
     html = "<html dir='rtl'><body style='font-family: Arial, sans-serif;'>"
@@ -1289,6 +1406,10 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             html += f"<td>{u['new_date']}</td>"
             html += f"</tr>"
         html += "</table><br>"
+
+    # Sensitive field-change digest (from plan_changelog.jsonl)
+    if has_digest:
+        html += digest_html
 
     # Objection dates section — only future dates (past dates are stored but not surfaced)
     if has_objections:
@@ -1391,6 +1512,14 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         server.send_message(msg)
         server.quit()
         log_msg("Email sent successfully!")
+        # Advance the changelog-digest marker so the next email doesn't repeat
+        # the same field changes. Only after a successful send.
+        if digest_newest_ts:
+            try:
+                with open(LAST_CHANGELOG_EMAIL, "w", encoding="utf-8") as f:
+                    f.write(digest_newest_ts)
+            except OSError as e:
+                log_msg(f"Failed to write changelog-digest marker: {e}")
         # Mark the new-plans report as consumed so tomorrow's run doesn't
         # re-include the same plans. Only rename after a successful send.
         if has_new_plans and os.path.exists(new_plans_report_path):
