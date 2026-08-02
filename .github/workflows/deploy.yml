@@ -51,7 +51,18 @@ jobs:
           git add app.js junction.js
           if git diff --cached --quiet; then
             echo "bundles unchanged — nothing to commit."
-          else
-            git commit -m "build: rebuild app.js + junction.js [skip ci]"
-            git push
+            exit 0
           fi
+          git commit -m "build: rebuild app.js + junction.js [skip ci]"
+          # Push with rebase-retry: other bots (summary/data updates) push to
+          # master concurrently, so a bare push can be rejected non-fast-forward.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt) — rebasing onto latest master"
+            git pull --rebase origin master
+          done
+          echo "failed to push built bundles after 5 attempts" >&2
+          exit 1
