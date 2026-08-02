@@ -17,6 +17,10 @@ KEY_FIELD      = "plan_name"
 TS_FIELD       = "last_modified"
 TIMESTAMP_FILE = "data/last_update.txt"
 SUMMARY_FILE   = "data/last_run_summary.txt"
+CHANGELOG_FILE = "data/plan_changelog.jsonl"
+# plan changes are infrequent (few plans/run, most runs zero), so growth is
+# slow; cap defensively so the file can't grow unbounded over years.
+MAX_CHANGELOG_LINES = 50000
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -143,6 +147,39 @@ def read_sheet_rows(attempts=4):
     raise SystemExit(f"ERROR: sheet read failed after {attempts} attempts: {last_err}")
 
 
+def _norm(v):
+    """Canonical comparison form so type/formatting noise (130 vs '130',
+    '' vs None, 34.0 vs 34) is not logged as a field change."""
+    if v is None:
+        return ""
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    return str(v).strip()
+
+
+def append_changelog(events):
+    """Append per-field change events to data/plan_changelog.jsonl (one JSON
+    object per line). Non-fatal: a changelog failure must never break the
+    geojson mirror, so all errors are swallowed with a warning."""
+    if not events:
+        return
+    try:
+        sha, content = get_github_file(CHANGELOG_FILE)
+        lines = content.splitlines() if content else []
+        for ev in events:
+            lines.append(json.dumps(ev, ensure_ascii=False))
+        if len(lines) > MAX_CHANGELOG_LINES:
+            lines = lines[-MAX_CHANGELOG_LINES:]
+        new_content = "\n".join(lines) + "\n"
+        ok = upload_github_file(
+            CHANGELOG_FILE, new_content, sha,
+            f"changelog +{len(events)} field changes "
+            f"{get_israel_time().strftime('%Y-%m-%d %H:%M')}")
+        print(f"{'✓' if ok else '✗'} changelog: +{len(events)} field changes")
+    except Exception as e:
+        print(f"  ⚠ changelog write failed (non-fatal): {e}")
+
+
 def update_plans():
     last_update = load_last_update()
     print(f"עדכון אחרון: {last_update}")
@@ -175,15 +212,32 @@ def update_plans():
 
     geojson_data = json.loads(existing_geojson)
 
+    now_str = get_israel_time().strftime("%Y-%m-%d %H:%M:%S")
+    change_events = []
     updated = 0
     for feature in geojson_data["features"]:
-        plan_name = str(feature["properties"].get(KEY_FIELD, ""))
+        props = feature["properties"]
+        plan_name = str(props.get(KEY_FIELD, ""))
         if plan_name in changed_rows:
-            for k, v in changed_rows[plan_name].items():
-                feature["properties"][k] = v
+            row = changed_rows[plan_name]
+            new_status = row.get("status_mavat", props.get("status_mavat", ""))
+            taba = row.get("taba", props.get("taba", ""))
+            for k, v in row.items():
+                # capture old->new BEFORE overwriting; skip the trigger field
+                if k != TS_FIELD and _norm(props.get(k)) != _norm(v):
+                    change_events.append({
+                        "ts": now_str,
+                        "taba": taba,
+                        "plan_name": plan_name,
+                        "status": new_status,
+                        "field": k,
+                        "old": props.get(k),
+                        "new": v,
+                    })
+                props[k] = v
             updated += 1
 
-    print(f"מעדכן {updated} פיצ'רים...")
+    print(f"מעדכן {updated} פיצ'רים... ({len(change_events)} שינויי שדה)")
     geojson_str = json.dumps(geojson_data, ensure_ascii=False)
     success = upload_github_file(
         "data/plans.geojson", geojson_str, sha,
@@ -192,6 +246,7 @@ def update_plans():
 
     if success:
         print("✓ plans.geojson עודכן")
+        append_changelog(change_events)
         save_last_update()
         write_summary(updated, changed_rows, last_update)
     else:
