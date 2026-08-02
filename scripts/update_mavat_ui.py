@@ -425,6 +425,15 @@ def check_xplan_updates(changed_plans):
     trees_changed = 0          # plans whose tree counts/points changed
     tree_delta = 0             # net +/- tree count across changed plans
 
+    # Per-plan keys of what actually changed, so the write block below can push
+    # each file via update_json_and_push with a re-appliable, delta-only edit_fn
+    # (splice just these plans onto the freshly-pulled file) instead of the legacy
+    # whole-file overwrite that left files modified-but-uncommitted on a push race.
+    plans_geom_changed = set()      # plan_name → blue-line geometry rebuilt
+    landuse_changed = set()         # pl_number → landuse features replaced/status-refreshed
+    shavaz_new_feats = []           # freshly-added shavaz/hafrashah features
+    easements_changed_plans = set() # pl_number → easements replaced
+
     # Note: dedup by objectid was unreliable — XPLAN occasionally reassigns objectids,
     # causing the local file to accumulate duplicate parcels. We now do per-plan REPLACE
     # (delete all features for the plan then append fresh ones from XPLAN), which keeps
@@ -453,6 +462,7 @@ def check_xplan_updates(changed_plans):
                     for ff in stale:
                         ff['properties']['station_desc'] = new_status
                     landuse_status_updated += 1
+                    landuse_changed.add(pl_number)
             continue
 
         # Stamp the authoritative Mavat status on the fresh parcels: XPLAN's own
@@ -477,6 +487,7 @@ def check_xplan_updates(changed_plans):
                     if geometry_differs(feat.get('geometry'), merged_geo):
                         feat['geometry'] = merged_geo
                         plans_geometry_updated += 1
+                        plans_geom_changed.add(pl_number)
                     break
 
         # 2. Compute per-category delta for the report
@@ -503,6 +514,7 @@ def check_xplan_updates(changed_plans):
         if new_status and any(ff['properties'].get('station_desc') != new_status
                               for ff in pre_features):
             landuse_status_updated += 1
+            landuse_changed.add(pl_number)
         pre_cats = _by_category(pre_features)
         post_cats = _by_category(xplan_features)
         deltas = []
@@ -547,6 +559,7 @@ def check_xplan_updates(changed_plans):
         landuse_gj['features'].extend(xplan_features)
         landuse_added += len(post_keys - pre_keys)
         landuse_removed += len(pre_keys - post_keys)
+        landuse_changed.add(pl_number)
 
         # 3. Check for new public building / hafrashah parcels
         for xf in xplan_features:
@@ -574,6 +587,7 @@ def check_xplan_updates(changed_plans):
                     }
                 }
                 shavaz_gj['features'].append(shavaz_feat)
+                shavaz_new_feats.append(shavaz_feat)
                 existing_shavaz_tabas.add(taba_key)
                 shavaz_added += 1
 
@@ -595,6 +609,7 @@ def check_xplan_updates(changed_plans):
                                if p['properties'].get('plan_name') == pl_number), {})
             easements_gj['features'] = [ff for ff in easements_gj['features']
                                         if ff['properties'].get('pl_number') != pl_number]
+            easements_changed_plans.add(pl_number)
             for ff in new_eas_raw:
                 pp = ff.get('properties', {})
                 easements_gj['features'].append({
@@ -699,39 +714,92 @@ def check_xplan_updates(changed_plans):
                 f"(שימור:{new_counts['shimur']} עקירה:{new_counts['krita']} העתקה:{new_counts['haataka']})"
             )
 
-    # Save updated files + push each so scheduled sync doesn't clobber.
-    if plans_geometry_updated:
-        with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(plans_gj, f, ensure_ascii=False)
-        commit_and_push_after_write(
-            'data/plans.geojson',
-            f'data: rebuild blue-line geometry for {plans_geometry_updated} plans (update_mavat_ui)'
+    # Push each changed file via update_json_and_push: its edit_fn re-applies our
+    # per-plan delta onto the freshly-pulled file, so (a) a remote push landing
+    # mid-run can't leave the file modified-but-uncommitted (which blocked later
+    # pulls), and (b) concurrent remote edits to OTHER plans are preserved.
+
+    # plans.geojson — replace blue-line geometry in place, keyed by plan_name.
+    if plans_geom_changed:
+        new_geoms = {f['properties'].get('plan_name'): f.get('geometry')
+                     for f in plans_gj['features']
+                     if f['properties'].get('plan_name') in plans_geom_changed}
+        def _apply_plans_geom(data):
+            n = 0
+            for feat in data['features']:
+                pn = feat['properties'].get('plan_name')
+                if pn in new_geoms and geometry_differs(feat.get('geometry'), new_geoms[pn]):
+                    feat['geometry'] = new_geoms[pn]
+                    n += 1
+            return n
+        update_json_and_push(
+            'data/plans.geojson', _apply_plans_geom,
+            f'data: rebuild blue-line geometry for {len(plans_geom_changed)} plans (update_mavat_ui)'
         )
+
+    # landuse_xplan.geojson — replace each changed plan's parcels (drop + re-append
+    # our version), keyed by pl_number.
     if landuse_added or landuse_removed or landuse_status_updated:
-        with open(LANDUSE_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(landuse_gj, f, ensure_ascii=False)
+        ours_lu = {p: [] for p in landuse_changed}
+        for ff in landuse_gj['features']:
+            p = ff['properties'].get('pl_number')
+            if p in ours_lu:
+                ours_lu[p].append(ff)
+        def _apply_landuse(data):
+            data['features'] = [ff for ff in data['features']
+                                if ff['properties'].get('pl_number') not in landuse_changed]
+            for p in landuse_changed:
+                data['features'].extend(ours_lu[p])
+            return len(landuse_changed)
         msg_parts = []
         if landuse_added: msg_parts.append(f'+{landuse_added}')
         if landuse_removed: msg_parts.append(f'-{landuse_removed}')
         if landuse_status_updated: msg_parts.append(f'status×{landuse_status_updated}')
-        commit_and_push_after_write(
-            'data/landuse_xplan.geojson',
+        update_json_and_push(
+            'data/landuse_xplan.geojson', _apply_landuse,
             f'data: landuse refresh ({"/".join(msg_parts)} parcels) (update_mavat_ui)'
         )
-    if shavaz_added:
-        with open(SHAVAZ_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(shavaz_gj, f, ensure_ascii=False)
-        commit_and_push_after_write(
-            'data/future_shavaz.geojson',  # was wrongly 'shavaz_kayam' — added features never got committed
+
+    # future_shavaz.geojson — append the freshly-detected parcels, deduped by
+    # (TABA, MIGRASH) against whatever is already on the remote tip.
+    if shavaz_new_feats:
+        def _apply_shavaz(data):
+            seen = {(f['properties'].get('TABA', ''), f['properties'].get('MIGRASH', ''))
+                    for f in data['features']}
+            n = 0
+            for feat in shavaz_new_feats:
+                k = (feat['properties'].get('TABA', ''), feat['properties'].get('MIGRASH', ''))
+                if k not in seen:
+                    data['features'].append(feat)
+                    seen.add(k)
+                    n += 1
+            return n
+        update_json_and_push(
+            'data/future_shavaz.geojson', _apply_shavaz,
             f'data: add {shavaz_added} shavaz/hafrashah parcels (update_mavat_ui)'
         )
-    if easements_changed:
-        with open(EASEMENTS_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(easements_gj, f, ensure_ascii=False)
-        commit_and_push_after_write(
-            'data/easements.geojson',
+
+    # easements.geojson — replace each changed plan's easements, keyed by pl_number.
+    if easements_changed_plans:
+        ours_eas = {p: [] for p in easements_changed_plans}
+        for ff in easements_gj['features']:
+            p = ff['properties'].get('pl_number')
+            if p in ours_eas:
+                ours_eas[p].append(ff)
+        def _apply_easements(data):
+            data['features'] = [ff for ff in data['features']
+                                if ff['properties'].get('pl_number') not in easements_changed_plans]
+            for p in easements_changed_plans:
+                data['features'].extend(ours_eas[p])
+            return len(easements_changed_plans)
+        update_json_and_push(
+            'data/easements.geojson', _apply_easements,
             f'data: easement refresh ({easements_changed} plans, net {easement_delta:+d}) (update_mavat_ui)'
         )
+
+    # tree_surveys.json / tree_points_xplan.json stay on the legacy path: they are
+    # written indent=2 (pretty) and update_json_and_push writes compact, which would
+    # reformat the whole file. They are tree COUNTS, not geometry.
     if trees_changed:
         with open(TREE_SURVEYS_JSON, 'w', encoding='utf-8') as f:
             json.dump(tree_surveys, f, ensure_ascii=False, indent=2)
