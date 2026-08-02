@@ -129,14 +129,16 @@ def save_progress(progress):
         json.dump(progress, f, ensure_ascii=False, indent=2)
 
 def update_geojson(updates):
-    """Update plans.geojson with new statuses."""
+    """Update plans.geojson with new statuses (concurrency-safe via git_sync).
+
+    Uses update_json_and_push (not the legacy write-then-commit path): its
+    edit_fn is re-applied on a freshly-pulled file, so a remote push landing
+    mid-run can't leave plans.geojson modified-but-uncommitted — which used to
+    block the next pull --ff-only in every downstream/scheduled task."""
     if not updates:
         return
     try:
-        with open(PLANS_GEOJSON, encoding='utf-8') as f:
-            geojson = json.load(f)
-
-        # Build lookup by agam_id
+        # Build lookup by agam_id (pure computation — _apply below is re-appliable).
         update_map = {}
         for u in updates:
             aid = u['agam_id']
@@ -144,30 +146,32 @@ def update_geojson(updates):
                 aid = aid[:-2]
             update_map[aid] = u
 
+        # Stamp once so last_modified stays identical across push-retry re-applies.
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        updated = 0
-        for feat in geojson['features']:
-            agam = str(feat['properties'].get('agam_id', ''))
-            if agam.endswith('.0'):
-                agam = agam[:-2]
-            if agam in update_map:
-                u = update_map[agam]
-                feat['properties']['status_mavat'] = u['new_status']
-                if u.get('new_date'):
-                    feat['properties']['mavat_date'] = u['new_date']
-                feat['properties']['last_modified'] = now_str
-                updated += 1
 
-        with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
-            json.dump(geojson, f, ensure_ascii=False)
-        log_msg(f"Updated {updated} features in plans.geojson")
-        # Commit before downstream steps (check_xplan_updates) call pull --ff-only,
-        # which otherwise aborts with "local changes would be overwritten".
-        if updated:
-            commit_and_push_after_write(
-                'data/plans.geojson',
-                f'data: mavat status sync ({updated} plans) (update_mavat_ui)'
-            )
+        def _apply(geojson):
+            updated = 0
+            for feat in geojson['features']:
+                agam = str(feat['properties'].get('agam_id', ''))
+                if agam.endswith('.0'):
+                    agam = agam[:-2]
+                if agam in update_map:
+                    u = update_map[agam]
+                    feat['properties']['status_mavat'] = u['new_status']
+                    if u.get('new_date'):
+                        feat['properties']['mavat_date'] = u['new_date']
+                    feat['properties']['last_modified'] = now_str
+                    updated += 1
+            if updated:
+                log_msg(f"Updated {updated} features in plans.geojson")
+            return updated
+
+        # Commits (before downstream check_xplan_updates runs pull --ff-only) and
+        # pushes; on a rejected push it re-applies on the new remote tip.
+        update_json_and_push(
+            'data/plans.geojson', _apply,
+            f'data: mavat status sync ({len(update_map)} plans) (update_mavat_ui)'
+        )
     except Exception as e:
         log_msg(f"Failed to update GeoJSON: {e}")
 
@@ -182,9 +186,6 @@ def update_future_shavaz_status(updates):
     if not updates:
         return
     try:
-        with open(SHAVAZ_GEOJSON, encoding='utf-8') as f:
-            shavaz_gj = json.load(f)
-
         def bare_taba(val):
             """Normalize '101-1252998' / '1252998' / '0095612' → '1252998' / '95612'."""
             s = str(val).strip()
@@ -201,24 +202,26 @@ def update_future_shavaz_status(updates):
         if not status_by_taba:
             return
 
-        updated = 0
-        for feat in shavaz_gj['features']:
-            bt = bare_taba(feat['properties'].get('TABA', ''))
-            if not bt or bt not in status_by_taba:
-                continue
-            new_status = status_by_taba[bt]
-            if feat['properties'].get('Mavat_Status') != new_status:
-                feat['properties']['Mavat_Status'] = new_status
-                updated += 1
+        def _apply(shavaz_gj):
+            updated = 0
+            for feat in shavaz_gj['features']:
+                bt = bare_taba(feat['properties'].get('TABA', ''))
+                if not bt or bt not in status_by_taba:
+                    continue
+                new_status = status_by_taba[bt]
+                if feat['properties'].get('Mavat_Status') != new_status:
+                    feat['properties']['Mavat_Status'] = new_status
+                    updated += 1
+            if updated:
+                log_msg(f"Updated Mavat_Status on {updated} future_shavaz feature(s)")
+            return updated
 
-        if updated:
-            with open(SHAVAZ_GEOJSON, 'w', encoding='utf-8') as f:
-                json.dump(shavaz_gj, f, ensure_ascii=False)
-            log_msg(f"Updated Mavat_Status on {updated} future_shavaz feature(s)")
-            commit_and_push_after_write(
-                'data/future_shavaz.geojson',
-                f'data: shavaz status sync ({updated} parcels) (update_mavat_ui)'
-            )
+        # Re-appliable via update_json_and_push (see update_geojson) — no more
+        # modified-but-uncommitted future_shavaz.geojson blocking later pulls.
+        update_json_and_push(
+            'data/future_shavaz.geojson', _apply,
+            f'data: shavaz status sync ({len(status_by_taba)} plans) (update_mavat_ui)'
+        )
     except Exception as e:
         log_msg(f"Failed to update future_shavaz statuses: {e}")
 
@@ -1722,6 +1725,23 @@ async def main():
     # Re-fetch all_data first so it includes the has_objection_btn updates we just made
     all_data = sheet.get_all_values()
     objection_results = fetch_objection_dates(all_data, sheet, progress)
+
+    # ── Refresh the Table 5 "unit bonus" overlay (side-JSON) ──
+    # The t5 recheck above downloads fresh Table 5 files into temp_xlsx for any
+    # status-changed plan; rebuild data/unit_bonus.json so a plan that gains (or
+    # loses) the "תותר תוספת של עד N% ממספר יח״ד" note is reflected in the popup
+    # and the permits-vs-תב״ע comparison. Additive + guarded — never breaks sync.
+    try:
+        import build_unit_bonus
+        def _apply_bonus(data):
+            fresh = build_unit_bonus.build(write=False)
+            if data.get('by_plan') == fresh.get('by_plan'):
+                return False
+            data.clear(); data.update(fresh); return True
+        update_json_and_push('data/unit_bonus.json', _apply_bonus,
+                             'data: refresh Table 5 unit-bonus overlay (update_mavat_ui)')
+    except Exception as e:
+        log_msg(f"[unit_bonus] refresh skipped: {e}")
 
     # ── Send email if anything changed ──
     send_email_notification(updates, objection_results, xplan_report)
