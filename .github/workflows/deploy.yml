@@ -54,15 +54,27 @@ jobs:
             exit 0
           fi
           git commit -m "build: rebuild app.js + junction.js [skip ci]"
-          # Push with rebase-retry: other bots (summary/data updates) push to
-          # master concurrently, so a bare push can be rejected non-fast-forward.
+          # Push-back is racy: other bots (summary/data updates) push to master
+          # during the build window, so a bare push can be rejected non-fast-forward.
+          # On rejection, resync to the latest master and rebuild the bundles on top.
+          # Because app.js/junction.js are pure build outputs of the JSX sources,
+          # regenerating from the fresh source is conflict-proof by construction —
+          # no rebase, so no half-finished-rebase failure mode.
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "pushed on attempt $attempt"
               exit 0
             fi
-            echo "push rejected (attempt $attempt) — rebasing onto latest master"
-            git pull --rebase origin master
+            echo "push rejected (attempt $attempt) — resyncing to latest master and rebuilding"
+            git fetch origin master
+            git reset --hard origin/master
+            npm run build:all
+            git add app.js junction.js
+            if git diff --cached --quiet; then
+              echo "bundles already up to date on master — nothing to push."
+              exit 0
+            fi
+            git commit -m "build: rebuild app.js + junction.js [skip ci]"
           done
           echo "failed to push built bundles after 5 attempts" >&2
           exit 1
