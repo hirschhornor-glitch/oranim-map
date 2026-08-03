@@ -645,6 +645,9 @@
         // use entries (preferred) or the free-text hafrash_prg fallback. Features with no recognized
         // domain (sqm-only, "מבנים ומוסדות ציבור", "בתיאום…", noise) collapse to the 'other' bucket.
         function hafrashahFeatureDomains(props) {
+            // Per-lot marker override: a shavaz lot carrying its own future_shavaz designation
+            // (e.g. "9 כיתות מעון") is symbolized by THAT use, not the plan-wide envelope.
+            if (props._lot_tag) { const d = new Set(hafrashUseDomainsAll(props._lot_tag)); if (d.size) return d; }
             // Resolution override: once the muni property book opened concrete assets
             // for this plan's hafrasha, THEIR specific use decides the symbology —
             // "דירות לבעלי מוגבלויות" is רווחה, not the plan's broad קהילה/רווחה/תרבות
@@ -683,7 +686,8 @@
         // the sub-filter agrees with the domain classification. Non-education uses are ignored.
         function featureEduSubtypes(props) {
             let uses = [];
-            if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) {
+            if (props._lot_tag) uses = [props._lot_tag];
+            else if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) {
                 uses = props._hafrash_lot_entries.map(e => e.use || '');
             } else if (props.hafrash_prg) {
                 uses = String(props.hafrash_prg).split(/[;,]/).map(s => s.trim());
@@ -17042,21 +17046,38 @@
                             });
                         }
                     });
-                    // One centroid marker per plan (largest polygon lot) — merging avoids stacking
-                    const shavazPolyByTaba = {};
+                    // Markers: a pin PER LOT where the proposed use is known (future_shavaz per-lot
+                    // tag, e.g. lot 201A → "9 כיתות מעון") so each lot shows its own icon; plans with
+                    // NO tagged lot fall back to ONE aggregate pin on the largest lot (avoids stacking).
+                    // "when known" per user 2026-08-03.
+                    const _fsLotsByTaba = {};
                     gd.landuse_xplan.features
                         .filter(f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)))
                         .forEach(f => {
                             const t = tabaFromPlNumFs(f.properties.pl_number);
                             if (!t) return;
-                            if (!shavazPolyByTaba[t] || (f.properties.shape_area || 0) > (shavazPolyByTaba[t].properties.shape_area || 0))
-                                shavazPolyByTaba[t] = f;
+                            (_fsLotsByTaba[t] = _fsLotsByTaba[t] || []).push(f);
                         });
-                    const shavazPolyPoints = Object.values(shavazPolyByTaba).map(f => {
+                    const _fsMkPoint = (f, tag) => {
                         const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
                         const c = fsInteriorPoint(ring);
-                        return { type: 'Feature', properties: { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true }, geometry: { type: 'Point', coordinates: c } };
-                    }).filter(pf => passesEduSubFilter(pf.properties));
+                        const props = { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true };
+                        if (tag) props._lot_tag = tag;
+                        return { type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: c } };
+                    };
+                    const shavazPolyPoints = [];
+                    for (const t in _fsLotsByTaba) {
+                        const lots = _fsLotsByTaba[t];
+                        const tagged = lots.map(f => [f, (window.__futureShavazLotTag ? window.__futureShavazLotTag(t, f.properties.num) : '')]).filter(pair => pair[1]);
+                        if (tagged.length) {
+                            tagged.forEach(pair => shavazPolyPoints.push(_fsMkPoint(pair[0], pair[1])));
+                        } else {
+                            const big = lots.reduce((a, b) => ((b.properties.shape_area || 0) > (a.properties.shape_area || 0) ? b : a));
+                            shavazPolyPoints.push(_fsMkPoint(big, null));
+                        }
+                    }
+                    const shavazPolyPointsFiltered = shavazPolyPoints.filter(pf => passesEduSubFilter(pf.properties));
+                    shavazPolyPoints.length = 0; shavazPolyPoints.push(...shavazPolyPointsFiltered);
                     const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
