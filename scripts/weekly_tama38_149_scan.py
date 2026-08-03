@@ -386,8 +386,18 @@ def main():
 
     if args.no_push:
         log("--no-push — files written, not pushed."); return
+    # Regenerate the derived permit files from the freshly-updated tama38 store so the
+    # canonical master reflects these §149 additions immediately (no wait for biweekly).
+    # Regenerate derived files + fill units/floors for the newly-added תמ"א 38 buildings
+    # (enrich resumes → only the new ones), then re-check them against the master plans.
+    for builder in ("build_permits_master.py", "build_permits_health.py",
+                    "enrich_tama38_units.py", "tama38_master_plan_check.py"):
+        r = subprocess.run([sys.executable, str(ROOT / builder)], cwd=str(ROOT),
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        log(f"ran {builder}" + (f" (exit {r.returncode})" if r.returncode else ""))
     git("add", "data/tama38.geojson", "data/tama38_permits.json", "data/tama38_developers.json",
-        "src/app.jsx", "index.html")
+        "data/tama38_master_plan_check.json",
+        "data/permits_master.json", "data/permits_health.json", "src/app.jsx", "index.html")
     msg = f"תמ\"א 38: +{len(added)} מביקורת §149 שבועית ({date.today().isoformat()})\n\n" + \
           "\n".join(f"{a['tik']} {a['address']}" for a in added) + \
           "\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"

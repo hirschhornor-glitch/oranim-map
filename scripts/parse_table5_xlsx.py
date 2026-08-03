@@ -14,6 +14,8 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 
+from detect_unit_bonus_note import detect_unit_bonus
+
 
 CONDITIONAL_USE_KEYS = ["מותנה", "מותנות", "מותנ"]
 RENTAL_USE_KEYS = ["השכרה", "מיוחד", "מוגן", "קשיש", "סיעוד"]
@@ -111,6 +113,7 @@ class XlsxRow:
     is_conditional: bool = False
     is_rental_candidate: bool = False
     is_total: bool = False
+    is_grand_total: bool = False
 
 
 @dataclass
@@ -136,6 +139,12 @@ class ParseResult:
     shatzap_sqm: float = 0.0          # land area of שטח ציבורי פתוח (שצ"פ) rows
     resident_shared_sqm: float = 0.0  # shared-tenant ("חדר דיירים") area from notes — PRIVATE, not program
     shared_tenant_notes: str = ""     # per-mention breakdown, e.g. 'פנאי משותף: 150 מ"ר; מרפסות משותפות: 500 מ"ר'
+    # Unit-bonus note (bottom of Table 5): permits INCREASING the number of יח"ד
+    # at building-permit stage without a further planning process. See
+    # detect_unit_bonus_note.py. pct=0 → no such note.
+    unit_bonus_pct: int = 0
+    unit_bonus_kind: str = ""         # 'תוספת' | 'הגדלה' | 'גמישות'
+    unit_bonus_note: str = ""         # the note sentence itself
     mixed_use_sqm: float = 0.0        # built area of multi-use rows (can't be split)
     total_building_sqm_all: float = 0.0
     rows: List[dict] = field(default_factory=list)
@@ -167,6 +176,16 @@ def _to_float(val) -> float:
         return 0.0
 
 
+def _is_grand_total_row(row: XlsxRow) -> bool:
+    """The single plan-wide aggregate row at the end: yiyud + use both empty but
+    carrying numeric sums. Its floors_above is a SUM across lots (e.g. 92), not a
+    real building height, so floor/height maxima must skip it — unlike the per-lot
+    "<סך הכל>" subtotal rows, which do carry the real per-building floor count."""
+    return not row.yiyud and not row.use and (
+        row.units > 0 or row.height_m > 0 or row.floors_above > 0 or row.primary_above_sqm > 0
+    )
+
+
 def _is_total_row(row: XlsxRow) -> bool:
     if any(m in row.use for m in TOTAL_ROW_MARKERS):
         return True
@@ -174,11 +193,7 @@ def _is_total_row(row: XlsxRow) -> bool:
         return True
     if any(m in row.parcel for m in TOTAL_ROW_MARKERS):
         return True
-    # Grand-total row at the end: yiyud + use both empty but has numeric content
-    # (parcel and units may contain aggregate sums)
-    if not row.yiyud and not row.use and (
-        row.units > 0 or row.height_m > 0 or row.floors_above > 0 or row.primary_above_sqm > 0
-    ):
+    if _is_grand_total_row(row):
         return True
     return False
 
@@ -336,6 +351,13 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
     result.resident_shared_sqm = _shared_total
     result.shared_tenant_notes = "; ".join(_shared_notes)
 
+    # Unit-bonus note ("תותר תוספת של עד N% ממספר יחידות הדיור...") — from the notes.
+    _bonus = detect_unit_bonus(_note_txt)
+    if _bonus:
+        result.unit_bonus_pct = _bonus["pct"]
+        result.unit_bonus_kind = _bonus["kind"]
+        result.unit_bonus_note = _bonus["sentence"]
+
     t = tables[0]
     # Store columns for debugging
     result.columns_found = [tuple(c) if isinstance(c, tuple) else (c,) for c in t.columns]
@@ -368,11 +390,28 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
             floors_above      = _to_float(g(raw, "floors_above")),
         )
         row.is_total = _is_total_row(row)
+        row.is_grand_total = _is_grand_total_row(row)
         if _matches_any(row.use, CONDITIONAL_USE_KEYS) or _matches_any(row.location, CONDITIONAL_USE_KEYS):
             row.is_conditional = True
         if _matches_any(row.use, RENTAL_USE_KEYS) or _matches_any(row.location, RENTAL_USE_KEYS):
             row.is_rental_candidate = True
         rows_data.append(row)
+
+    # Floors and building height are read from ALL rows except the grand-total
+    # (whose floors_above is a cross-lot SUM). In some Table 5 layouts the floor
+    # count appears ONLY on the per-lot "<סך הכל>" subtotal rows — detail rows
+    # like מגורים/מסחר leave floors blank — so those subtotals (is_total but not
+    # is_grand_total) must be included here even though they're skipped for area
+    # and unit aggregation below, to avoid double-counting. Plan 1252998: towers
+    # of 28/26/30 floors live only on the per-lot totals; skipping them yielded a
+    # wrong max_floors=5 (the low public building).
+    for r in rows_data:
+        if r.is_grand_total:
+            continue
+        if r.floors_above > result.max_floors:
+            result.max_floors = int(r.floors_above)
+        if r.height_m > result.max_height_m:
+            result.max_height_m = r.height_m
 
     # Aggregate (excluding total rows)
     for r in rows_data:
@@ -393,10 +432,6 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
             # tracked in conditional_units). Rental units ARE proposed — keep them.
             if "מגורים" in r.use and not r.is_conditional:
                 result.total_residential_units += int(r.units)
-        if r.height_m > result.max_height_m:
-            result.max_height_m = r.height_m
-        if r.floors_above > result.max_floors:
-            result.max_floors = int(r.floors_above)
 
         # Area aggregation by use-category. Area columns are total-per-parcel and
         # NOT split by use, so attribute area only when a row is single-purpose
@@ -473,6 +508,9 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
         "shatzap_sqm": round(r.shatzap_sqm, 1),
         "resident_shared_sqm": round(r.resident_shared_sqm, 1),
         "shared_tenant_notes": r.shared_tenant_notes,
+        "unit_bonus_pct": r.unit_bonus_pct,
+        "unit_bonus_kind": r.unit_bonus_kind,
+        "unit_bonus_note": r.unit_bonus_note,
         "mixed_use_sqm": round(r.mixed_use_sqm, 1),
         "total_building_sqm_all": round(r.total_building_sqm_all, 1),
         "rental_candidate_uses": r.rental_candidate_uses,
