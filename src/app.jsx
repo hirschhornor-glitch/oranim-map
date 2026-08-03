@@ -14596,6 +14596,31 @@
                     }
                     return props;
                 }
+                // Per-lot proposed designation from the future_shavaz layer (MVT_PLAN/XPLAN):
+                // e.g. plan 1261510 lot 201A → "9 כיתות מעון". Lazily builds a
+                // {taba: {migrash: MAVAT_NAME}} lookup, rebuilt when the (on-demand) future_shavaz
+                // feature count changes. Returns '' when there is no specific per-lot tag.
+                const FS_TAG_GENERIC = /^(מבנים ומוסדות ציבור|מבני ציבור|שטח למבני ציבור|מוסדות ציבור כלל עירוני)/;
+                function futureShavazLotTag(taba, lot) {
+                    const gd = geoDataRef.current;
+                    const feats = (gd && gd.future_shavaz && gd.future_shavaz.features) || [];
+                    if (!window.__fsTagLookup || window.__fsTagCount !== feats.length) {
+                        const m = {};
+                        for (const f of feats) {
+                            const p = f.properties || {};
+                            let t = String(p.TABA || '').replace(/^101-?/, '');
+                            t = t ? String(parseInt(t, 10)) : '';
+                            const mg = String(p.MIGRASH == null ? '' : p.MIGRASH).trim();
+                            const nm = String(p.MAVAT_NAME == null ? '' : p.MAVAT_NAME).trim();
+                            if (t && mg && nm) { if (!m[t]) m[t] = {}; if (!m[t][mg]) m[t][mg] = nm; }
+                        }
+                        window.__fsTagLookup = m; window.__fsTagCount = feats.length;
+                    }
+                    const t = String(parseInt(String(taba || '').replace(/^101-?/, ''), 10) || '');
+                    const nm = (window.__fsTagLookup[t] || {})[String(lot == null ? '' : lot).trim()] || '';
+                    return (nm && !FS_TAG_GENERIC.test(nm)) ? nm : '';
+                }
+                window.__futureShavazLotTag = futureShavazLotTag;
                 // Helper: find all overlapping shavaz features at a click point
                 function findOverlappingShavaz(clickLatLng) {
                     const allShavaz = [];
@@ -21296,6 +21321,14 @@
                 }
                 if (tabaLot) {
                     html += `<div class="popup-row"${!isFuture ? ' style="font-weight:700"' : ''}><span class="popup-row-label">תכנית / מגרש</span><span class="popup-row-value">${tabaLot}</span></div>`;
+                }
+                // Per-lot proposed designation (מנחה) from future_shavaz — surfaces e.g. "9 כיתות מעון"
+                // for lot 201A of a multi-use compound where the statutory lot is generic "מבנ"צ".
+                if ((isFuture || isXplan) && !isHafrashah && lotNum && typeof window.__futureShavazLotTag === 'function') {
+                    const _fsTag = window.__futureShavazLotTag(taba, lotNum);
+                    if (_fsTag) {
+                        html += `<div class="popup-row"><span class="popup-row-label">סימון מגרש (מנחה)</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${_fsTag}</span></div>`;
+                    }
                 }
                 // תכנית בינוי — a design/building plan detailing this public מגרש. It is NOT a statutory
                 // תב"ע (no MAVAT code / blue line); it lives in data/binui_plans.json and is matched to
