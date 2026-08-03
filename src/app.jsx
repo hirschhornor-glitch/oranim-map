@@ -612,6 +612,22 @@
             ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/],
             ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
         ];
+        // Education sub-topic classifier (מעון / גן / יסודי / על-יסודי) for the future
+        // public-building sub-filter. Order matters: על-יסודי is tested before יסודי (the
+        // word "יסודי" is a substring of "על יסודי"), and the specific tokens before the
+        // catch-all bare "גן". Only ever applied to strings already domain-classified as
+        // education, so a bare "גן" here can't leak in from "גן ציבורי" (a park).
+        const EDU_SUB_RX = [
+            ['al_yesodi', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|מקיף|אורט|על[\- ]?יסודי)/],
+            ['yesodi',    /(ת"ת|ת״ת|תלמוד תורה|בית[- ]?ספר יסודי|בי"?ס יסודי|בי״ס יסודי|יסודי)/],
+            ['maon',      /(מעונות יום|מעון|פעוטון)/],
+            ['gan',       /(גן ילדים|גני ילדים|גנון|כיתת גן|כיתות גן|גן חובה|טרום חובה|גן)/],
+        ];
+        function eduSubOf(t) {
+            const s = String(t || '');
+            for (const [k, rx] of EDU_SUB_RX) if (rx.test(s)) return k;
+            return null; // education use with no identifiable sub-type
+        }
         // First matching domain only (kept for callers that want a single label).
         function hafrashUseDomain(t) {
             if (!t || !t.trim()) return null;
@@ -661,6 +677,20 @@
             uses.forEach(u => { hafrashUseDomainsAll(u).forEach(d => domains.add(d)); });
             if (domains.size === 0) domains.add('other');
             return domains;
+        }
+        // Education sub-types (maon/gan/yesodi/al_yesodi, or 'other' for unspecified) present
+        // among a feature's EDUCATION uses. Mirrors hafrashahFeatureDomains' use extraction so
+        // the sub-filter agrees with the domain classification. Non-education uses are ignored.
+        function featureEduSubtypes(props) {
+            let uses = [];
+            if (Array.isArray(props._hafrash_lot_entries) && props._hafrash_lot_entries.length) {
+                uses = props._hafrash_lot_entries.map(e => e.use || '');
+            } else if (props.hafrash_prg) {
+                uses = String(props.hafrash_prg).split(/[;,]/).map(s => s.trim());
+            }
+            const subs = new Set();
+            uses.forEach(u => { if (hafrashUseDomainsAll(u).includes('education')) subs.add(eduSubOf(u) || 'other'); });
+            return subs;
         }
 
         // Returns true if [lng,lat] (or {lng,lat}) point is inside any feature polygon of layer (e.g. minahak_gonen)
@@ -3342,6 +3372,7 @@
             const [shavazStatusFilter, setShavazStatusFilter] = useState([]);
             // Use-domain filter for the הפרשה מבונה layer. Holds hafrashDomainGroups keys; empty = all.
             const [hafrashDomainFilter, setHafrashDomainFilter] = useState([]);
+            const [eduSubFilter, setEduSubFilter] = useState([]);
             const [availablePlanTypes, setAvailablePlanTypes] = useState([]);
             const filterStatusGroups = [
                 { key: 'occupied', label: 'מאוכלס (טופס 4)' },
@@ -3368,6 +3399,15 @@
                 { key: 'culture',   label: 'קהילה ותרבות' },
                 { key: 'emergency', label: 'חירום' },
                 { key: 'other',     label: 'כללי / לא מסווג' },
+            ];
+            // Education sub-topic groups — refine the חינוך domain. Keys match eduSubOf()
+            // output + an 'other' bucket for education uses without an identifiable sub-type.
+            const eduSubGroups = [
+                { key: 'maon',      label: 'מעונות יום' },
+                { key: 'gan',       label: 'גני ילדים' },
+                { key: 'yesodi',    label: 'בי"ס יסודי' },
+                { key: 'al_yesodi', label: 'על-יסודי' },
+                { key: 'other',     label: 'חינוך אחר' },
             ];
             // Multi-select filter convention for the shavaz/hafrash filters:
             //   []          → ALL selected (nothing filtered) — the default.
@@ -16567,6 +16607,18 @@
                     const domains = hafrashahFeatureDomains(props);
                     return hafrashDomainFilter.some(d => domains.has(d));
                 }
+                // Education sub-topic filter (מעון/גן/יסודי/על-יסודי) — refines EDUCATION features
+                // across future_shavaz + hafrashah_future. Empty selection shows all; non-education
+                // features always pass; education features with no identifiable sub-type fall into
+                // the 'other' bucket. Callers must pass enriched props (future_shavaz polygons carry
+                // their per-lot use only after enrichFutureShavazProps()).
+                function passesEduSubFilter(props) {
+                    if (!eduSubFilter.length) return true;
+                    if (!hafrashahFeatureDomains(props).has('education')) return true;
+                    const subs = featureEduSubtypes(props);
+                    if (!subs.size) subs.add('other');
+                    return eduSubFilter.some(k => subs.has(k));
+                }
                 // Out-of-scope exclusion zones (גילה, נחלאות) — district_oranim includes Gilo, so
                 // shavaz/hafrash features there leak in. Hide any feature whose centroid falls inside
                 // an exclusion polygon. Zones load eagerly from exclude_*.geojson.
@@ -16795,7 +16847,7 @@
                     const HAFRASHAH_CODES_FOR_SHAVAZ = new Set([1250, 1300, 1410, 1480, 1492, 1550, 1576, 1578, 1604]);
                     const futureShavazLayer = L.geoJSON(gd.landuse_xplan, {
                         pane: 'shavazPane',
-                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)),
+                        filter: f => SHAVAZ_CODES.has(f.properties.mavat_code) && passesShavazStatusFilter(f.properties.pl_number) && !inExcludeZone(featureCentroidLngLat(f)) && passesEduSubFilter(enrichFutureShavazProps(f.properties)),
                         style: () => ({ fillColor: '#D2B48C', fillOpacity: 0.4, color: '#8B4513', weight: 1 }),
                         onEachFeature: (f, layer) => {
                             layer.on('click', (e) => {
@@ -16905,7 +16957,7 @@
                             ? { ...f.properties, _hafrash_lot_entries: entries, _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name }
                             : { ...f.properties, hafrash_sqm: planProps.shavatz_out_sqm || '', hafrash_prg: planProps.shavatz_out_prog || '', _shavatz_fallback: true, pl_name: planProps.plan_name_he || f.properties.pl_name };
                         return { type: 'Feature', properties: enrichedProps, geometry: { type: 'Point', coordinates: c } };
-                    });
+                    }).filter(pf => passesEduSubFilter(pf.properties));
                     const fallbackLayer = L.geoJSON({ type: 'FeatureCollection', features: fbPoints }, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
@@ -16939,7 +16991,7 @@
                         const ring = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
                         const c = fsInteriorPoint(ring);
                         return { type: 'Feature', properties: { ...enrichFutureShavazProps(f.properties), _is_shavaz_poly: true }, geometry: { type: 'Point', coordinates: c } };
-                    });
+                    }).filter(pf => passesEduSubFilter(pf.properties));
                     const shavazPolyMarkersLayer = L.geoJSON({ type: 'FeatureCollection', features: shavazPolyPoints }, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
@@ -17172,7 +17224,7 @@
                         });
                         proximityGroups.push(_mergeGroup(grp));
                     });
-                    const pointCollection = { type: 'FeatureCollection', features: proximityGroups.filter(pf => passesHafrashDomainFilter(pf.properties)) };
+                    const pointCollection = { type: 'FeatureCollection', features: proximityGroups.filter(pf => passesHafrashDomainFilter(pf.properties) && passesEduSubFilter(pf.properties)) };
                     const hafrashaLayer = L.geoJSON(pointCollection, {
                         pane: 'shavazPane',
                         pointToLayer: (f, latlng) => L.marker(latlng, {
@@ -18862,7 +18914,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, deferredTick, overlapReady, permitBuckets]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -22694,6 +22746,29 @@
                                                     </div>
                                                 </>
                                             )}
+                                            <div style={{borderTop:'1px solid rgba(255,255,255,0.08)',marginTop:8,paddingTop:6}}>
+                                                <label style={{display:'flex',alignItems:'center',gap:4,marginBottom:4,fontWeight:'bold',color:'#aaa',cursor:'pointer'}}>
+                                                    <input type="checkbox" style={{margin:0}}
+                                                        title="סמן/נקה הכל"
+                                                        checked={eduSubFilter.length === 0}
+                                                        onChange={e => setFilterAll(setEduSubFilter, e.target.checked)}
+                                                    />
+                                                    <span>חינוך — תת-נושא:</span>
+                                                </label>
+                                                <div style={{display:'flex',flexWrap:'wrap',gap:'2px 8px'}}>
+                                                    {eduSubGroups.map(sg => (
+                                                        <label key={sg.key} style={{display:'flex',alignItems:'center',gap:2,cursor:'pointer'}}>
+                                                            <input type="checkbox"
+                                                                checked={eduSubFilter.length === 0 || eduSubFilter.includes(sg.key)}
+                                                                onChange={e => toggleFilterGroup(setEduSubFilter, eduSubGroups.map(g => g.key), sg.key, e.target.checked)}
+                                                                style={{margin:0}}
+                                                            />
+                                                            <span>{sg.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                <div style={{color:'#777',fontSize:9.5,marginTop:3}}>מסנן מוסדות חינוך בלבד; שאר התחומים אינם מושפעים</div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
