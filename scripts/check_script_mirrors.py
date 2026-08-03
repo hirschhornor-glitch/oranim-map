@@ -16,6 +16,7 @@ fixed one, e.g. scope_filter's CI path fallback), so a human/agent decides.
 """
 import os
 import sys
+import ast
 import datetime
 import smtplib
 from email.mime.text import MIMEText
@@ -33,16 +34,69 @@ def _norm(path):
         return f.read().replace(b'\r\n', b'\n')
 
 
-def _email_alert(diverged):
+def _local_imports(path):
+    """Absolute module names imported UNCONDITIONALLY at module scope by `path`.
+
+    Only direct children of the module body count — these are the imports that
+    raise ImportError the moment the file is imported/run. Imports nested inside
+    a function, `try/except`, or `if` are deliberately lazy/optional (e.g.
+    update_mavat_ui's guarded `import build_unit_bonus`) and must NOT be flagged.
+    Relative imports (from . / from ..) are skipped — they can't name a sibling
+    script by bare name anyway."""
+    try:
+        tree = ast.parse(_norm(path), filename=path)
+    except SyntaxError:
+        return set()
+    mods = set()
+    for node in tree.body:                            # module scope only
+        if isinstance(node, ast.Import):
+            for a in node.names:
+                mods.add(a.name.split('.')[0])
+        elif isinstance(node, ast.ImportFrom):
+            if node.level == 0 and node.module:       # absolute import only
+                mods.add(node.module.split('.')[0])
+    return mods
+
+
+def _check_missing_deps():
+    """Second guard: a versioned script that imports a LOCAL sibling module
+    (a bare `import foo` where foo.py lives next to the operational scripts in
+    C:\\ORANIM) is broken in the repo if foo.py was never mirrored into
+    oranim-app\\scripts — `python scripts\\that_script.py` / CI would ImportError.
+    The pair-diff above never catches this: it only compares same-named pairs
+    and silently skips modules present on one side only.
+    (This is exactly how detect_unit_bonus_note slipped through on 2026-08-03.)"""
+    missing = []
+    for name in sorted(os.listdir(REPO_SCRIPTS)):
+        if not name.endswith('.py'):
+            continue
+        repo_p = os.path.join(REPO_SCRIPTS, name)
+        for mod in sorted(_local_imports(repo_p)):
+            # "local" == a sibling script exists in ROOT; skip stdlib/3rd-party.
+            if not os.path.isfile(os.path.join(ROOT, mod + '.py')):
+                continue
+            if not os.path.isfile(os.path.join(REPO_SCRIPTS, mod + '.py')):
+                missing.append(f"{name} imports {mod} -> {mod}.py missing from repo")
+    return missing
+
+
+def _email_alert(diverged, missing):
     if not EMAIL_PASSWORD:
         print("[mirror-check] GMAIL_APP_PASSWORD not set — skipping email alert")
         return
-    body = ("הסקריפטים הבאים שונים בין C:\\ORANIM לבין oranim-app\\scripts.\n"
-            "צריך להחליט כיוון סנכרון (לא תמיד העותק החדש הוא הנכון!) ולדחוף.\n\n"
-            + "\n".join(diverged)
-            + "\n\nבדיקה: python check_script_mirrors.py")
+    body = ""
+    if diverged:
+        body += ("הסקריפטים הבאים שונים בין C:\\ORANIM לבין oranim-app\\scripts.\n"
+                 "צריך להחליט כיוון סנכרון (לא תמיד העותק החדש הוא הנכון!) ולדחוף.\n\n"
+                 + "\n".join(diverged) + "\n\n")
+    if missing:
+        body += ("סקריפטים מגובים שמייבאים מודול לוקאלי שלא הועתק לרפו "
+                 "(העותק ברפו ישבור ב-ImportError):\n\n"
+                 + "\n".join(missing) + "\n\n")
+    body += "בדיקה: python check_script_mirrors.py"
     msg = MIMEText(body, 'plain', 'utf-8')
-    msg['Subject'] = f"[Oranim] {len(diverged)} סקריפטים מפוצלים בין לוקאל לרפו"
+    n = len(diverged) + len(missing)
+    msg['Subject'] = f"[Oranim] {n} בעיות סנכרון סקריפטים בין לוקאל לרפו"
     msg['From'] = EMAIL_SENDER
     msg['To'] = EMAIL_RECIPIENT
     try:
@@ -71,14 +125,21 @@ def main():
             newer = 'root' if os.path.getmtime(root_p) > os.path.getmtime(repo_p) else 'repo'
             diverged.append(f"{name}: root {rt} vs repo {pt} (newer: {newer})")
 
+    missing = _check_missing_deps()
+
     print(f"[mirror-check] {pairs} mirrored scripts checked")
-    if not diverged:
+    if not diverged and not missing:
         print("[mirror-check] all in sync")
         return 0
-    print(f"[mirror-check] {len(diverged)} DIVERGED:")
-    for d in diverged:
-        print("  " + d)
-    _email_alert(diverged)
+    if diverged:
+        print(f"[mirror-check] {len(diverged)} DIVERGED:")
+        for d in diverged:
+            print("  " + d)
+    if missing:
+        print(f"[mirror-check] {len(missing)} MISSING DEPENDENCIES in repo:")
+        for m in missing:
+            print("  " + m)
+    _email_alert(diverged, missing)
     return 1
 
 
