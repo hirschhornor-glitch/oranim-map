@@ -5290,6 +5290,46 @@
                 // (its hafrash-prg display called parseProgEntriesFlat and threw ReferenceError → the
                 // whole popup failed to open). Bridge it via window so the popup can reach it.
                 window.__parseProgEntriesFlat = parseProgEntriesFlat;
+                // Render a plan's public program (shavatz_in_prog = מצב קיים / shavatz_out_prog =
+                // מצב מוצע) for the shavaz/future popup. Handles the domain-grouped free-text format
+                // ("PREAMBLE — חינוך: ...; ספורט: ...") that the per-lot "מגרש N -" parser can't read,
+                // AND the simple ";"-separated existing-program list. Returns HTML ('' if empty).
+                function renderProgramBlock(inProg, inSqm, outProg, outSqm) {
+                    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const numFmt = (v) => { const n = parseInt(String(v == null ? '' : v).replace(/[^\d]/g, '')); return n ? n.toLocaleString() : ''; };
+                    function parseProg(txt) {
+                        let s = String(txt || '').trim();
+                        if (!s) return { preamble: '', groups: [] };
+                        let preamble = '';
+                        const dash = s.indexOf('—');           // strip a leading source/name preamble
+                        if (dash >= 0) { preamble = s.slice(0, dash).trim(); s = s.slice(dash + 1).trim(); }
+                        const groups = [];
+                        s.split(/\s*;\s*/).forEach(seg => {
+                            seg = seg.trim(); if (!seg) return;
+                            const m = seg.match(/^([^:,()]{1,18}):\s*(.+)$/);   // "חינוך: a, b, c"
+                            if (m) groups.push({ domain: m[1].trim(), items: m[2].split(/\s*,\s*/).map(x => x.trim()).filter(Boolean) });
+                            else groups.push({ domain: null, items: [seg] });
+                        });
+                        return { preamble, groups };
+                    }
+                    function section(label, color, prog, sqm) {
+                        const { preamble, groups } = parseProg(prog);
+                        if (!groups.length) return '';
+                        let h = `<div style="font-size:10px;font-weight:bold;color:${color};margin-top:5px">${label}${sqm ? ` · ${numFmt(sqm)} מ"ר` : ''}</div>`;
+                        if (preamble && /פרוגרמה|פרוייקטור|תדריך|\(/.test(preamble)) h += `<div style="font-size:9px;color:#8a8a9a;margin:1px 0">${esc(preamble)}</div>`;
+                        groups.forEach(g => {
+                            if (g.domain) h += `<div style="font-size:10.5px;color:#e6e9ef;margin:1px 0"><b style="color:#c9b7e0">${esc(g.domain)}:</b> ${g.items.map(esc).join(' · ')}</div>`;
+                            else g.items.forEach(it => { h += `<div style="font-size:10.5px;color:#e6e9ef;margin:1px 0">• ${esc(it)}</div>`; });
+                        });
+                        return h;
+                    }
+                    const inH = section('מצב קיים', '#c4956a', inProg, inSqm);
+                    const outH = section('מצב מוצע', '#86b89a', outProg, outSqm);
+                    if (!inH && !outH) return '';
+                    return '<div style="margin-top:6px;padding:6px 8px;background:rgba(139,69,19,0.10);border:1px solid rgba(210,180,140,0.35);border-radius:5px">' +
+                        '<div style="font-weight:bold;color:#d2b48c;font-size:11px;margin-bottom:2px">פרוגרמה ציבורית</div>' + inH + outH + '</div>';
+                }
+                window.__renderProgramBlock = renderProgramBlock;
                 // Format: "מגרש N - use1 (sqm1), use2 (sqm2); use3 (sqm3); מגרש M - ..."
                 // Both ; and , separate entries; "מגרש N -" sets the current lot for following entries.
                 // Result: {taba: {lotNum: [{use, sqm} or {use, count, unit}, ...]}}
@@ -21410,6 +21450,20 @@
                 }
                 // (עמודת "קומה" בטבלת השימושים לעיל מציגה את קומת ההתחלה לכל שימוש,
                 //  עם נקודת ביטחון, מתוך window.__floorAllocations — נקרא מחתכי נספח הבינוי.)
+
+                // ── פרוגרמה ציבורית — מצב קיים + מצב מוצע (כלל התכנית) ──
+                // Surfaces shavatz_in_prog (existing program) + shavatz_out_prog (proposed) for
+                // shavaz/future public lots — including the domain-grouped free-text format the
+                // per-lot table can't parse (e.g. דנמרק, קנגורו). The proposed section is skipped
+                // when the per-lot table already rendered it (hasLotEntries) to avoid duplication;
+                // the existing (in) program is shown regardless — it never appears in that table.
+                if ((isFuture || isXplan) && !isHafrashah && typeof window.__renderProgramBlock === 'function') {
+                    const _planProg = (window.__planByTaba || {})[taba] || {};
+                    const _inProg = cleanNull(_planProg.shavatz_in_prog) || '';
+                    const _outProg = hasLotEntries ? '' : (cleanNull(_planProg.shavatz_out_prog) || '');
+                    const _progHtml = window.__renderProgramBlock(_inProg, _planProg.shavatz_in_sqm, _outProg, _planProg.shavatz_out_sqm);
+                    if (_progHtml) html += _progHtml;
+                }
 
                 // מבצ enrichment — statutory facts from Yotam's land-cell table, grafted onto this
                 // feature by col-F status. Q/R (potential/recommendations) live in the projector layer.
