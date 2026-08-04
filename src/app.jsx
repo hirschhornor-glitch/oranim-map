@@ -3047,6 +3047,7 @@
             const [fullReportTables, setFullReportTables] = useState({}); // {tableId: true} = detailed record-table expanded
             const fullReportAreaActiveRef = useRef(false);
             const fullReportPolyRef = useRef(null); // highlighted polygon kept on the map while report is open
+            const fullReportTitleRef = useRef(null); // override report title (e.g. when scope is a whole sub-neighborhood)
             // Expose function to trigger area analysis from landuse panel
             window.__triggerAreaAnalysis = (points) => {
                 landuseCompareModeRef.current = null;
@@ -3145,6 +3146,7 @@
             const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
             const [reportsMenuMinahak, setReportsMenuMinahak] = useState('בקעה רבתי');
+            const [reportsMenuSub, setReportsMenuSub] = useState('בקעה'); // sub-neighborhood for the comprehensive-report picker
             // Active spatial scope for reports (null | 'projector_talpiot'). When set, build functions
             // filter plans/permits to those whose centroid is inside the projector boundary, roll them
             // up under one virtual minahak ("פרוייקטור תלפיות"), and bucket sub-neighborhood by the 5 internal polygons.
@@ -11479,7 +11481,7 @@
                 const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
-                    title: 'סיכום אזור נבחר', areaSqm, streets,
+                    title: fullReportTitleRef.current || 'סיכום אזור נבחר', areaSqm, streets,
                     plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll, rental: rentalTotal, rentalRows },
                     tama: { count: tamaCount, units: tamaUnits, rows: tamaRows },
                     existingUnits: existingUnits + occupiedUnits,
@@ -11722,6 +11724,7 @@
                 treeAreaActiveRef.current = false;
                 setTreeAreaActive(false);
                 fullReportAreaActiveRef.current = false;
+                fullReportTitleRef.current = null;
                 setFullAreaReport(null);
                 setFullReportDrill(null);
                 setFullAreaLoading(false);
@@ -11768,6 +11771,34 @@
                 // 8. Always strip cursor — entry handlers re-add it via useEffect or directly.
                 if (map) map.getContainer().classList.remove('measuring');
             }, [clearMeasurement]);
+
+            // Run the comprehensive area report for a whole sub-neighborhood (תת-שכונה) instead of
+            // a hand-drawn polygon. We feed the sub's boundary into the same areaFinished mechanism the
+            // drawn report uses, so all aggregation/print/Excel logic is reused unchanged.
+            const startSubNeighborhoodReport = useCallback((subName) => {
+                subName = (subName || '').trim();
+                const gd = geoDataRef.current;
+                const layer = gd && gd.sub_neighborhoods;
+                if (!layer || !layer.features) { alert('שכבת תת-השכונות עדיין נטענת — נסה שוב בעוד רגע.'); return; }
+                const feat = layer.features.find(f => (((f.properties || {}).schn_nama) || '').trim() === subName);
+                const g = feat && feat.geometry;
+                if (!g) { alert('לא נמצאה תת-שכונה בשם: ' + subName); return; }
+                // Pick the largest outer ring across all polygon parts (some subs are MultiPolygon,
+                // often with a degenerate sliver part — the biggest ring is the real boundary).
+                const ringArea = r => { let a = 0; for (let i = 0; i < r.length; i++) { const j = (i + 1) % r.length; a += r[i][0] * r[j][1] - r[j][0] * r[i][1]; } return Math.abs(a) / 2; };
+                let best = null, bestA = -1;
+                if (g.type === 'Polygon') best = g.coordinates[0];
+                else if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => { const a = ringArea(poly[0]); if (a > bestA) { bestA = a; best = poly[0]; } });
+                if (!best || best.length < 3) { alert('גיאומטריה לא נתמכת עבור: ' + subName); return; }
+                const ring = best.map(c => ({ lng: c[0], lat: c[1] }));
+                cancelAllModes('area');
+                fullReportTitleRef.current = 'סיכום תת-שכונה: ' + subName;
+                fullReportAreaActiveRef.current = true;
+                setFullAreaReport(null);
+                // Zoom the map to the selected sub so the highlighted boundary + report have context.
+                try { const map = mapInstanceRef.current; if (map) map.fitBounds(ring.map(p => [p.lat, p.lng]), { padding: [40, 40], animate: false }); } catch (e) {}
+                setAreaFinished(ring);
+            }, [cancelAllModes]);
 
             // Format distance in m/km
             function fmtDist(m) {
@@ -25472,6 +25503,17 @@
                             ]},
                             { key:'spatial', title:'✏️ ניתוח מרחבי (ציור על המפה)', color:'#e94560', bg:'rgba(233,69,96,0.06)', desc:'כלים אינטראקטיביים — צייר או לחץ על המפה כדי לקבל סיכום', items:[
                                 { icon:'🗺️', title:'דוח אזור מקיף', desc:'צייר אזור וקבל סיכום מלא: תב"ע, היתרים, המלצות פרויקטור ותכניות אב (דאבל-קליק לסיום)', onClick:() => go(() => { cancelAllModes('area'); setAreaFinished(null); fullReportAreaActiveRef.current = true; setFullAreaReport(null); setAreaMode(true); }) },
+                                { icon:'🏘️', title:'דוח מקיף לפי תת-שכונה', desc:'אותו סיכום מלא, לתחום של תת-שכונה שלמה — בחר מהרשימה במקום לצייר', dropdown:{
+                                    value:reportsMenuSub, onChange:v => setReportsMenuSub(v),
+                                    options:(() => {
+                                        const layer = (geoDataRef.current || {}).sub_neighborhoods;
+                                        const names = (layer && layer.features ? layer.features.map(f => (((f.properties || {}).schn_nama) || '').trim()).filter(Boolean) : [])
+                                            .filter((v, i, a) => a.indexOf(v) === i)
+                                            .sort((a, b) => a.localeCompare(b, 'he'));
+                                        const list = names.length ? names : ['בקעה'];
+                                        return list.map(n => ({ value:n, label:n }));
+                                    })(),
+                                    onOpen:() => go(() => startSubNeighborhoodReport(reportsMenuSub)) } },
                                 { icon:'🎨', title:'ייעודי קרקע נכנס-יוצא', desc:'השוואת מצב קיים מול מוצע בתכנית', onClick:() => go(() => { cancelAllModes('landuse-compare'); setLanduseCompareMode('plan'); }) },
                                 { icon:'⊙', title:'היתרים ברדיוס', desc:'קליק על נקודה — סיכום היתרים ויח"ד ברדיוס נבחר', onClick:() => go(() => { cancelAllModes('radius'); setRadiusMode(true); }) },
                             ]},
