@@ -120,6 +120,17 @@
     "source": "pdf",
     "file_number": "2023/0495.00"
   },
+  "15489": {
+    "total": 81,
+    "shimur": 76,
+    "krita": 0,
+    "haataka": 5,
+    "lo_nidresh": 0,
+    "confidence": "high",
+    "method": "summary_found",
+    "source": "pdf",
+    "file_number": "1989/0080.01"
+  },
   "2025/0212.00": {
     "total": 27,
     "shimur": 20,
@@ -801,6 +812,17 @@
     "method": "summary_found",
     "source": "pdf",
     "file_number": "2024/0520.00"
+  },
+  "2025/0308.00": {
+    "total": 7,
+    "shimur": 3,
+    "krita": 4,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "high",
+    "method": "agronomist_summary",
+    "source": "pdf",
+    "file_number": "2025/0308.00"
   },
   "2015/0871.00": {
     "total": 29,
