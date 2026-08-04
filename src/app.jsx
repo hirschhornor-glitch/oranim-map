@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-02-permits';
+        const APP_VERSION = '2026-08-04-tree-valency';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -20623,6 +20623,15 @@
                     html += '<div class="popup-pair-item"><span class="popup-pair-label">כריתה</span><span class="popup-pair-value" style="color:#e57373">' + (ts.krita || 0) + '</span></div>';
                     if (ts.haataka) html += '<div class="popup-pair-item"><span class="popup-pair-label">העתקה</span><span class="popup-pair-value" style="color:#ffa726">' + ts.haataka + '</span></div>';
                     html += '</div>';
+                }
+                // ── ערכיות עצים (crosstab bucket × recommendation) — reuses the plan-popup helper ──
+                const tv38 = (window.__tama38Valencies || {})[fid] || (window.__tama38Valencies || {})[fileNum] || (window.__tama38Valencies || {})[props.tik] || null;
+                if (tv38) {
+                    const pivotHtml38 = renderValencyPivotHTML(tv38, { dark: true });
+                    if (pivotHtml38) {
+                        html += '<div class="popup-section-title">&#127793; ערכיות עצים' + (tv38.status === 'partial' ? ' <span style="font-size:9px;color:#8a93a6;font-weight:normal">(חלקי)</span>' : '') + '</div>';
+                        html += pivotHtml38;
+                    }
                 }
                 // ── התייחסות תכנית האב (like the plan popup's compliance context) ──
                 const mpc = (window.__tama38MpCheck || {})[fid];
