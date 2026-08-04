@@ -2327,5 +2327,195 @@
     "total_trees": 22,
     "status": "ok",
     "file_number": "2026/0363.00"
+  },
+  "2026/0355.00": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 8
+      },
+      "7-13": {
+        "shimur": 6,
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "14-16": 8,
+      "7-13": 8
+    },
+    "by_reco": {
+      "shimur": 14,
+      "krita": 2
+    },
+    "total_trees": 16,
+    "status": "ok",
+    "file_number": "2026/0355.00",
+    "source": "harmonica"
+  },
+  "15687": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 4,
+        "shimur": 2
+      },
+      "14-16": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 6,
+      "14-16": 1
+    },
+    "by_reco": {
+      "krita": 4,
+      "shimur": 3
+    },
+    "total_trees": 7,
+    "status": "ok",
+    "file_number": "2026/0283.00",
+    "source": "harmonica"
+  },
+  "2026/0259.00": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 5,
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 7
+    },
+    "by_reco": {
+      "shimur": 5,
+      "krita": 2
+    },
+    "total_trees": 7,
+    "status": "ok",
+    "file_number": "2026/0259.00",
+    "source": "harmonica"
+  },
+  "2026/0258.00": {
+    "by_bucket": {
+      "14-16": {
+        "shimur": 2
+      },
+      "7-13": {
+        "shimur": 7,
+        "krita": 5
+      }
+    },
+    "bucket_totals": {
+      "14-16": 2,
+      "7-13": 12
+    },
+    "by_reco": {
+      "shimur": 9,
+      "krita": 5
+    },
+    "total_trees": 14,
+    "status": "ok",
+    "file_number": "2026/0258.00",
+    "source": "harmonica"
+  },
+  "15710": {
+    "by_bucket": {
+      "17-20": {
+        "shimur": 1
+      },
+      "14-16": {
+        "shimur": 8,
+        "krita": 5
+      },
+      "7-13": {
+        "shimur": 4
+      }
+    },
+    "bucket_totals": {
+      "17-20": 1,
+      "14-16": 13,
+      "7-13": 4
+    },
+    "by_reco": {
+      "shimur": 13,
+      "krita": 5
+    },
+    "total_trees": 18,
+    "status": "ok",
+    "file_number": "2026/0180.00",
+    "source": "harmonica"
+  },
+  "15666": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 11,
+        "shimur": 3
+      },
+      "14-16": {
+        "shimur": 2
+      },
+      "0-6": {
+        "krita": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 14,
+      "14-16": 2,
+      "0-6": 1
+    },
+    "by_reco": {
+      "krita": 12,
+      "shimur": 5
+    },
+    "total_trees": 17,
+    "status": "ok",
+    "file_number": "2024/0321.00",
+    "source": "harmonica"
+  },
+  "15620": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 11,
+        "shimur": 5
+      },
+      "14-16": {
+        "shimur": 2,
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 16,
+      "14-16": 3
+    },
+    "by_reco": {
+      "krita": 11,
+      "shimur": 7,
+      "?": 1
+    },
+    "total_trees": 19,
+    "status": "partial",
+    "file_number": "2024/0114.00",
+    "source": "harmonica"
+  },
+  "15608": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 12,
+        "?": 4
+      },
+      "14-16": {
+        "?": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 16,
+      "14-16": 1
+    },
+    "by_reco": {
+      "krita": 12,
+      "?": 5
+    },
+    "total_trees": 17,
+    "status": "partial",
+    "file_number": "2022/0507.00",
+    "source": "harmonica"
   }
 }

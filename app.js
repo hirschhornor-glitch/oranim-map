@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-08-04-tree-valency';
+const APP_VERSION = '2026-08-04-harmonica';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -430,6 +430,7 @@ const GEOJSON_FILES = {
   roads: 'data/roads.geojson',
   rakal: 'data/rakal.geojson',
   bike_paths: 'data/bike_paths.geojson',
+  transit_bus: 'data/transit_bus_stops_jlm.geojson',
   minahak_beit_tzfafa: 'data/minahak_beit_tzfafa.geojson',
   minahak_talpiot: 'data/minahak_talpiot.geojson',
   minahak_malha: 'data/minahak_malha.geojson',
@@ -1155,6 +1156,11 @@ const LAYER_CONFIG = {
       id: 'bike_paths',
       name: 'שבילי אופניים',
       desc: 'רשת שבילי האופניים בירושלים לפי סטטוס (קיים/בביצוע/בתכנון/רשת אסטרטגית). מקור: עיריית ירושלים, עדכון רבעוני',
+      on: false
+    }, {
+      id: 'transit_bus',
+      name: 'תחנות אוטובוס',
+      desc: 'תחנות אוטובוס בירושלים עם רשימת הקווים המשרתים כל תחנה. מקור: GTFS (Open Bus/הסדנא), דגימת יום שירות מייצג',
       on: false
     }, {
       id: 'easements',
@@ -6239,6 +6245,11 @@ function App() {
     window.__stationsRenderer = L.svg({
       pane: 'stationsPane'
     });
+    // Bus stops (~2k points) — dedicated canvas renderer for perf, above lines/tama38.
+    map.createPane('transitBusPane').style.zIndex = 470;
+    window.__transitBusRenderer = L.canvas({
+      pane: 'transitBusPane'
+    });
     const labelsP = map.createPane('labelsPane');
     labelsP.style.zIndex = 550;
     labelsP.style.pointerEvents = 'none';
@@ -6272,7 +6283,7 @@ function App() {
     'roads', 'buildings'];
     // ON_DEMAND_FILES — fetched only when their layer is toggled ON.
     // Visualization-only, OFF by default. Heavy and rarely-used.
-    const ON_DEMAND_FILES = ['yiud_karka_kayam', 'landuse_xplan', 'master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'givat_hamatos_arab_armenian', 'givat_hamatos_state', 'givat_hamatos_companies', 'givat_hamatos_jewish', 'givat_hamatos_christian', 'givat_hamatos_unknown', 'easements', 'construction_yb', 'bike_paths'];
+    const ON_DEMAND_FILES = ['yiud_karka_kayam', 'landuse_xplan', 'master_plan_moshavot', 'master_plan_rasko', 'master_plan_baka', 'master_plan_arnona', 'master_plan_gonenim', 'master_plan_talpiot', 'projector_gonenim', 'projector_gonenim_tzatal', 'givat_hamatos_arab_armenian', 'givat_hamatos_state', 'givat_hamatos_companies', 'givat_hamatos_jewish', 'givat_hamatos_christian', 'givat_hamatos_unknown', 'easements', 'construction_yb', 'bike_paths', 'transit_bus'];
     const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
     const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
     const deferredEntries = Object.entries(GEOJSON_FILES).filter(([k]) => DEFERRED_FILES.includes(k));
@@ -16706,6 +16717,34 @@ function App() {
       }).addTo(map);
     }
 
+    // --- Bus stops (תחנות אוטובוס) — GTFS points, teal, popup lists the lines serving the stop ---
+    if (layers['transit_bus'] && gd.transit_bus) {
+      geoLayersRef.current.transit_bus = L.geoJSON(gd.transit_bus, {
+        pane: 'transitBusPane',
+        pointToLayer: (f, latlng) => {
+          const n = f.properties && f.properties.n_lines || 0;
+          const r = n >= 12 ? 6 : n >= 5 ? 5 : 4;
+          return L.circleMarker(latlng, {
+            pane: 'transitBusPane',
+            renderer: window.__transitBusRenderer,
+            radius: r,
+            color: '#00695c',
+            weight: 1,
+            fillColor: '#26a69a',
+            fillOpacity: 0.9
+          });
+        },
+        onEachFeature: (f, layer) => {
+          const p = f.properties || {};
+          const row = (lbl, val) => val || val === 0 ? '<div style="font-size:12px;color:#333;margin-top:2px"><b>' + lbl + ':</b> ' + val + '</div>' : '';
+          layer.bindPopup('<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:200px;max-width:280px">' + '<div style="font-weight:700;font-size:14px;border-right:4px solid #00897b;padding-right:6px;margin-bottom:5px">' + '🚌 ' + (p.name || 'תחנת אוטובוס') + '</div>' + row('קוד תחנה', p.code) + row('מס\' קווים', p.n_lines) + (p.lines ? '<div style="font-size:12px;color:#333;margin-top:4px"><b>קווים:</b>' + '<div style="margin-top:2px;line-height:1.7;color:#00695c;font-weight:600">' + p.lines + '</div></div>' : '') + '</div>', {
+            className: 'bus-popup',
+            maxWidth: 300
+          });
+        }
+      }).addTo(map);
+    }
+
     // --- Sub-neighborhoods (always on) — green outline, green label ---
     if (gd.sub_neighborhoods && layers['sub_neighborhoods']) {
       const zoom = map.getZoom();
@@ -24839,7 +24878,12 @@ function App() {
       '"': '&quot;'
     })[c]);
     permits = permits || [];
-    const pri = permits.slice().sort((a, b) => (('' + (b.status || '')).includes('הופק') ? 1 : 0) - (('' + (a.status || '')).includes('הופק') ? 1 : 0) || String(b.file_number || '').localeCompare(String(a.file_number || '')))[0] || {};
+    // Primary permit = the file's CURRENT state: prefer a live (not
+    // closed/cancelled) request over a closed one, then the newest by
+    // file number. This surfaces the active permit (e.g. a 2026 תיק
+    // רישוי) instead of an old issued/closed one that makes a live file
+    // look closed. Uses the same closed test as the layer's hide logic.
+    const pri = permits.slice().sort((a, b) => (_tama38PermitClosed(a) ? 1 : 0) - (_tama38PermitClosed(b) ? 1 : 0) || String(b.file_number || '').localeCompare(String(a.file_number || '')))[0] || {};
     const fileNum = pri.file_number || props.tik || '';
     let tt = (permits.find(p => p.tama_type) || {}).tama_type || '';
     if (!tt) {
