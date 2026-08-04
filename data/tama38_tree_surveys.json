@@ -76,6 +76,17 @@
     "source": "harmonica",
     "file_number": "2026/0258.00"
   },
+  "15189": {
+    "total": 6,
+    "shimur": 0,
+    "krita": 6,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "medium",
+    "method": "harmonica_partial_summary",
+    "source": "harmonica",
+    "file_number": "2019/0438.00"
+  },
   "2023/0369.00": {
     "total": 22,
     "shimur": 13,
