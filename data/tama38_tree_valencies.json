@@ -1998,6 +1998,29 @@
     "status": "ok",
     "file_number": "2025/0212.00"
   },
+  "2025/0308.00": {
+    "by_bucket": {
+      "7-13": {
+        "shimur": 1,
+        "krita": 2
+      },
+      "14-16": {
+        "krita": 2,
+        "shimur": 2
+      }
+    },
+    "bucket_totals": {
+      "7-13": 3,
+      "14-16": 4
+    },
+    "by_reco": {
+      "shimur": 3,
+      "krita": 4
+    },
+    "total_trees": 7,
+    "status": "ok",
+    "file_number": "2025/0308.00"
+  },
   "2025/0320.00": {
     "by_bucket": {
       "14-16": {
