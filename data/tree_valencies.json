@@ -1988,6 +1988,35 @@
     "total_trees": 31,
     "status": "ok"
   },
+  "581850": {
+    "by_bucket": {
+      "14-16": {
+        "krita": 11,
+        "haataka": 1,
+        "shimur": 1
+      },
+      "7-13": {
+        "krita": 25,
+        "shimur": 20,
+        "haataka": 1
+      },
+      "0-6": {
+        "krita": 2
+      }
+    },
+    "bucket_totals": {
+      "14-16": 13,
+      "7-13": 46,
+      "0-6": 2
+    },
+    "by_reco": {
+      "krita": 38,
+      "shimur": 21,
+      "haataka": 2
+    },
+    "total_trees": 61,
+    "status": "ok"
+  },
   "588897": {
     "by_bucket": {
       "7-13": {
@@ -2231,6 +2260,43 @@
     },
     "total_trees": 237,
     "status": "ok"
+  },
+  "766154": {
+    "by_bucket": {
+      "7-13": {
+        "krita": 36,
+        "shimur": 24,
+        "haataka": 3
+      },
+      "14-16": {
+        "krita": 25,
+        "shimur": 41,
+        "haataka": 175
+      },
+      "0-6": {
+        "?": 36,
+        "shimur": 1,
+        "krita": 3
+      },
+      "17-20": {
+        "shimur": 1
+      }
+    },
+    "bucket_totals": {
+      "7-13": 63,
+      "14-16": 241,
+      "0-6": 40,
+      "17-20": 1
+    },
+    "by_reco": {
+      "krita": 64,
+      "shimur": 67,
+      "haataka": 178,
+      "?": 36
+    },
+    "total_trees": 345,
+    "status": "partial",
+    "unmapped_rows": 36
   },
   "771600": {
     "by_bucket": {
