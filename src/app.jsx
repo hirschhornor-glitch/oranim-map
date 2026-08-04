@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-04-harmonica';
+        const APP_VERSION = '2026-08-04-overlap';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -5123,6 +5123,7 @@
                     ['__tama38TreeSurveys', 'data/tama38_tree_surveys.json'],
                     ['__treeValencies', 'data/tree_valencies.json'],
                     ['__tama38Valencies', 'data/tama38_tree_valencies.json'],
+                    ['__tama38TreeOverlap', 'data/tama38_tree_overlap.json'],
                     ['__masterPlanCompliance', 'data/master_plan_compliance.json'],
                     ['__meetings', 'data/meetings.json'],
                     ['__objectionsPermits', 'data/objections_permits.json'],
@@ -5626,6 +5627,7 @@
                             else if (key === '__tama38TreeSurveys') { window.__tama38TreeSurveys = data || {}; }
                             else if (key === '__treeValencies') { window.__treeValencies = data || {}; }
                             else if (key === '__tama38Valencies') { window.__tama38Valencies = data || {}; }
+                            else if (key === '__tama38TreeOverlap') { window.__tama38TreeOverlap = data || {}; }
                             else if (key === '__masterPlanCompliance') { window.__masterPlanCompliance = data || {}; }
                             else if (key === '__objectionsPermits') { window.__objectionsPermits = data || {}; }
                             else if (key === '__objectionsProcess') {
@@ -20675,6 +20677,20 @@
                         html += '<div class="popup-section-title">&#127793; ערכיות עצים' + (tv38.status === 'partial' ? ' <span style="font-size:9px;color:#8a93a6;font-weight:normal">(חלקי)</span>' : '') + '</div>';
                         html += pivotHtml38;
                     }
+                }
+                // ── עצים דרך תכנית חופפת: no survey of its own, but the building
+                // sits inside a תב"ע plan that has one — the trees are documented there.
+                const ovl = !(ts && ts.total) && (window.__tama38TreeOverlap || {})[props.tik];
+                if (ovl) {
+                    html += '<div class="popup-section-title">&#127795; עצים לפי תכנית חופפת</div>';
+                    html += '<div style="font-size:11px;color:#8a93a6;margin-bottom:4px">אין סקר עצים ישיר; המגרש בתוך תכנית ' +
+                        '<b style="color:#9fd6ff">' + esc(ovl.plan_name || ovl.plan_taba) + '</b> שיש לה סקר:</div>';
+                    html += '<div class="popup-pair">';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">בתכנית</span><span class="popup-pair-value">' + (ovl.total || 0) + '</span></div>';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">שימור</span><span class="popup-pair-value" style="color:#66bb6a">' + (ovl.shimur || 0) + '</span></div>';
+                    html += '<div class="popup-pair-item"><span class="popup-pair-label">כריתה</span><span class="popup-pair-value" style="color:#e57373">' + (ovl.krita || 0) + '</span></div>';
+                    html += '</div>';
+                    html += '<div style="font-size:10px;color:#7a8a9a;margin-top:2px">* נתוני התכנית כולה — לא בהכרח רק מגרש זה</div>';
                 }
                 // ── התייחסות תכנית האב (like the plan popup's compliance context) ──
                 const mpc = (window.__tama38MpCheck || {})[fid];
