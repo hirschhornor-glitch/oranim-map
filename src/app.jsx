@@ -1308,6 +1308,47 @@
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
+        // ── Permit STAGE reconciliation from building-supervision (פיקוח על הבנייה) ──
+        // The GS-owned "שלב" column (permit stage: ג-רישוי בתהליך → ד-היתר בנייה →
+        // ה-בבנייה → ו-גמר בנייה) is hand-maintained and lags reality — 85% blank, and
+        // permits sit at "היתר בנייה" for years while construction actually finished.
+        // The building-supervision system (pikuah_status.json → window.__pikuahStatus,
+        // rolled up per taba into window.__pikuahStageByTaba) is the authoritative
+        // construction signal: an OPEN supervision file ⇒ ה-בבנייה, a תעודת גמר ⇒
+        // ו-גמר בנייה. reconcilePikuahStage() folds that into each plan's `stage` in
+        // place so every consumer (map color, permits filter, popup, reports) reflects
+        // it, WITHOUT clobbering the GS value (preserved on stage_gs). Advance-only:
+        // pikuah never downgrades a manually-set higher stage.
+        const STAGE_LADDER = ['ג-רישוי בתהליך', 'ד-היתר בנייה', 'ה-בבנייה', 'ו-גמר בנייה'];
+        function stageRank(s) { return STAGE_LADDER.indexOf(String(s || '').trim().replace(/\s+/g, ' ')); }
+        function planPikuahStage(props) {
+            const m = window.__pikuahStageByTaba || {};
+            const t = String((props && props.taba) || '').trim();
+            return (t && m[t]) ? m[t].stage : '';
+        }
+        function reconcilePikuahStage(gd) {
+            const m = window.__pikuahStageByTaba;
+            if (!m) return 0;
+            let n = 0;
+            const advance = (obj) => {
+                // idempotent: recompute from the preserved GS base, not an already-advanced value
+                const base = (obj.stage_gs !== undefined) ? obj.stage_gs : (obj.stage || '');
+                obj.stage_gs = base;
+                const entry = m[String((obj.taba) || '').trim()];
+                if (entry && stageRank(entry.stage) > stageRank(base)) {
+                    obj.stage = entry.stage; obj.stage_source = 'pikuah'; return true;
+                }
+                obj.stage = base;
+                if (obj.stage_source === 'pikuah') delete obj.stage_source;
+                return false;
+            };
+            if (gd && gd.plans && gd.plans.features) {
+                gd.plans.features.forEach(f => { if (f.properties && advance(f.properties)) n++; });
+            }
+            // keep CSV-backed reports (window.__plansCsvRows) consistent with the map
+            if (Array.isArray(window.__plansCsvRows)) window.__plansCsvRows.forEach(r => advance(r));
+            return n;
+        }
         // "הושלם/מאוכלס" rendering — UNIFIED completed language (2026-07-29): a building/plan
         // that finished construction (תעודת גמר) or is occupied recedes to a turquoise OUTLINE
         // ONLY, no fill. Same turquoise for plan polygons and תמ"א 38 markers so "done" reads
@@ -3010,6 +3051,11 @@
             // filters the layer to plans with a permit in a selected bucket AND colors by bucket.
             const [permitBuckets, setPermitBuckets] = useState({
                 tama38: true, zchuyot: true, ibuy: true, shimush_chorag: true, tava_gadol: true, acher: true
+            });
+            // Permits-layer STAGE filter (per-permit, refined by building-supervision).
+            // All-on = no filtering. "בביצוע בלבד" isolates permits with an open פיקוח file.
+            const [permitStageFilter, setPermitStageFilter] = useState({
+                pre_licensing: true, licensing: true, issued: true, construction: true, built: true, done: true
             });
             const [mapScale, setMapScale] = useState('');
             const [zoomLevel, setZoomLevel] = useState(15);
@@ -5613,6 +5659,7 @@
                         rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
                         extractAvailablePlanTypes(gd); // CSV may add/change plan_type values
                         applyKayamFilter(); // re-apply if landuse_xplan + kayamTabaSet are ready
+                        reconcilePikuahStage(gd); // fold building-supervision stage into CSV+geojson (no-op until pikuah lands)
                         setDeferredTick(t => t + 1);
                     });
 
@@ -5695,6 +5742,43 @@
                                     }
                                 });
                                 window.__pikuahGmarByFile = gmar;
+                                // Roll supervision status up per taba → a coarse construction
+                                // STAGE for the permits layer/filter/popup (see reconcilePikuahStage).
+                                // OPEN file (construction under way somewhere) wins → ה-בבנייה;
+                                // else a תעודת גמר → ו-גמר בנייה; only-closed is ambiguous → skip.
+                                // Same "open beats gmar for mixed tabas" rule as the occupancy roll-up.
+                                const acc = {};
+                                Object.values(bp).forEach(r => {
+                                    const t = String((r && r.taba) || '').trim();
+                                    if (!t) return;
+                                    const a = acc[t] || (acc[t] = { open: 0, gmar: 0, closed: 0 });
+                                    if (r.classification === 'open') a.open++;
+                                    else if (r.classification === 'gmar') a.gmar++;
+                                    else if (r.classification === 'closed') a.closed++;
+                                });
+                                const stageByTaba = {};
+                                Object.keys(acc).forEach(t => {
+                                    const a = acc[t];
+                                    const st = a.open > 0 ? 'ה-בבנייה' : (a.gmar > 0 ? 'ו-גמר בנייה' : '');
+                                    if (st) stageByTaba[t] = { stage: st, evidence: a };
+                                });
+                                window.__pikuahStageByTaba = stageByTaba;
+                                // Per-PERMIT construction status, indexed by revision-agnostic
+                                // base tik (permitBaseKey), so getPermitStage() can refine a
+                                // single permit from its OWN supervision file — the correct
+                                // granularity for "which permits are in execution". Strongest
+                                // evidence wins across revisions of the same permit: גמר>פתוח>סגור.
+                                const pkByBase = {};
+                                const _ord = { gmar: 3, open: 2, closed: 1 };
+                                Object.values(bp).forEach(r => {
+                                    const bk = permitBaseKey(r.permit_tik || r.file_number || '');
+                                    if (!bk) return;
+                                    const cur = pkByBase[bk];
+                                    if (!cur || (_ord[r.classification] || 0) > (_ord[cur.classification] || 0)) {
+                                        pkByBase[bk] = { classification: r.classification, gmar_date: r.gmar_date || '' };
+                                    }
+                                });
+                                window.__pikuahByBaseTik = pkByBase;
                             }
                             else if (key === '__devAliases') { window.__devAliases = (data && data.aliases) ? data.aliases : {}; window.__devExcludePlans = (data && data.exclude_plans) ? data.exclude_plans : []; }
                             else if (key === '__extraPermits') { window.__extraPermits = (data && data.by_taba) ? data.by_taba : {}; }
@@ -5733,6 +5817,40 @@
                             cur.permit_count = cur.permits.length;
                         }
                         window.__permitsByNorm = null; // stores changed — rebuild canonical-key index lazily
+                        // Now that pikuah_status.json has landed, fold the building-supervision
+                        // stage into the plan features (and CSV rows). Advance-only + idempotent,
+                        // so this is safe even though Stage 2a already called it (before pikuah).
+                        const _advStage = reconcilePikuahStage(geoDataRef.current);
+                        if (_advStage) console.log('[Pikuah] advanced permit stage on', _advStage, 'plans from building-supervision (פיקוח)');
+                        // Per-taba set of permit stages + global per-stage counts, for the
+                        // permits-layer STAGE filter. Uses the same rule as getPermitStage() but
+                        // with literal stage ids — this runs at load, outside the component's
+                        // PERMIT_STAGE_* const scope (which the permits layer can't reach: TDZ).
+                        (function buildPermitStageIndex() {
+                            const pm = window.__permitsMaster || {};
+                            const pk = window.__pikuahByBaseTik || {};
+                            const bk = fn => { const m = String(fn || '').match(/^(\d{4})\/0*(\d+)/); return m ? m[1] + '/' + m[2] : ''; };
+                            const stageOf = p => {
+                                const c = pk[bk(p.tik || p.file_number)];
+                                if (c) { if (c.classification === 'open') return 'construction'; if (c.classification === 'gmar') return 'built'; }
+                                const s = (p.status || '').trim();
+                                if (!s) return 'pre_licensing';
+                                if (s.includes('נסגר') || s.includes('בוטל')) return 'done';
+                                if (s.includes('הופק') || s.includes('הוצא היתר')) return 'issued';
+                                if (s.includes('היתר בני') || s.includes('בעתידה') || s.includes('בתוקף')) return 'licensing';
+                                if (s.includes('אושר') || s.includes('טיוטת')) return 'licensing';
+                                return 'pre_licensing';
+                            };
+                            const byTaba = {}, counts = {};
+                            Object.values(pm).forEach(p => {
+                                const st = stageOf(p);
+                                counts[st] = (counts[st] || 0) + 1;
+                                const t = String(p.taba || '').trim(); if (!t) return;
+                                (byTaba[t] = byTaba[t] || {})[st] = true;
+                            });
+                            window.__permitStagesByTaba = byTaba;
+                            window.__permitStageCounts = counts;
+                        })();
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
                         // re-render open reports that consume stage-2 globals
                         // (e.g. developers report opened via deeplink reads
@@ -18181,6 +18299,7 @@
                     // to plans with a permit in a selected bucket and color by bucket (derived
                     // from the canonical master). All-selected = unchanged stage coloring.
                     const _bkAll = PERMIT_BUCKETS.every(b => permitBuckets[b.id]);
+                    const _stAll = ['pre_licensing','licensing','issued','construction','built','done'].every(s => permitStageFilter[s]);
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
@@ -18190,6 +18309,12 @@
                             if (!_bkAll) {
                                 const bks = bucketsForTaba(f.properties.taba);
                                 if (!bks.some(b => permitBuckets[b])) return false;
+                            }
+                            // Per-permit STAGE filter (e.g. "בביצוע בלבד"): keep the plan if it has
+                            // ≥1 permit in a selected stage (window.__permitStagesByTaba).
+                            if (!_stAll) {
+                                const sset = (window.__permitStagesByTaba || {})[String(f.properties.taba)];
+                                if (!sset || !Object.keys(sset).some(s => permitStageFilter[s])) return false;
                             }
                             return true;
                         },
@@ -19071,7 +19196,7 @@
                 console.log('[GeoJSON] Rendered layers:', Object.keys(geoLayersRef.current).join(', '));
             }, [layers, opacity, basemap, planningTopics, dataLoaded, zoomLevel,
                 filters.minUnits, filters.maxUnits, filters.planTypes, filters.statuses, appliedFreeText,
-                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets]);
+                showHeatMap, densityMode, showCommerceHeatMap, eduFilters, bikeFilter, shavazStatusFilter, hafrashDomainFilter, eduSubFilter, deferredTick, overlapReady, permitBuckets, permitStageFilter]);
 
             // Build the plan popup HTML
             function getStatusColor(status) {
@@ -19488,9 +19613,24 @@
             const PERMIT_STAGE_LIC = 'licensing';
             const PERMIT_STAGE_ISSUED = 'issued';
             const PERMIT_STAGE_DONE = 'done';
+            // Two construction stages the רישוי status alone can't witness — filled from
+            // building-supervision (פיקוח) per the permit's OWN file. "הופק היתר" (ISSUED)
+            // now means issued-but-no-open-file (idle/unknown); these two split off from it.
+            const PERMIT_STAGE_CONSTR = 'construction'; // בביצוע — תיק פיקוח פתוח
+            const PERMIT_STAGE_BUILT = 'built';         // גמר בנייה — תעודת גמר
             // Kept for backward compat — older code references this as the third stage.
             const PERMIT_STAGE_EXEC = PERMIT_STAGE_ISSUED;
             function getPermitStage(p) {
+                // Building-supervision (פיקוח) is the ground truth for what is actually
+                // being built: it refines the רישוי status, which stalls at "הופק היתר"
+                // and never sees construction. Look this permit up by its OWN
+                // revision-agnostic tik (window.__pikuahByBaseTik, from pikuah_status.json).
+                const pkc = (window.__pikuahByBaseTik || {})[permitBaseKey((p && (p.tik || p.file_number)) || '')];
+                if (pkc) {
+                    if (pkc.classification === 'open') return PERMIT_STAGE_CONSTR;   // בביצוע
+                    if (pkc.classification === 'gmar') return PERMIT_STAGE_BUILT;    // גמר בנייה
+                    // 'closed' alone is ambiguous (finished-then-closed vs abandoned) → fall through
+                }
                 const s = (p && p.status || '').trim();
                 if (!s) return PERMIT_STAGE_PRE;
                 if (s.includes('נסגר') || s.includes('בוטל')) return PERMIT_STAGE_DONE;
@@ -19504,13 +19644,17 @@
                 if (stage === PERMIT_STAGE_PRE) return 'טרום-רישוי';
                 if (stage === PERMIT_STAGE_LIC) return 'ברישוי';
                 if (stage === PERMIT_STAGE_ISSUED) return 'הופק היתר';
+                if (stage === PERMIT_STAGE_CONSTR) return 'בביצוע';
+                if (stage === PERMIT_STAGE_BUILT) return 'גמר בנייה';
                 if (stage === PERMIT_STAGE_DONE) return 'סגור/בוטל';
                 return stage;
             }
             function getPermitStageColor(stage) {
                 if (stage === PERMIT_STAGE_PRE) return PERMITS_PALETTE.pre_licensing;
                 if (stage === PERMIT_STAGE_LIC) return PERMITS_PALETTE.licensing;
-                if (stage === PERMIT_STAGE_ISSUED) return PERMITS_PALETTE.in_construction;
+                if (stage === PERMIT_STAGE_ISSUED) return PERMITS_PALETTE.licensing;
+                if (stage === PERMIT_STAGE_CONSTR) return PERMITS_PALETTE.in_construction;
+                if (stage === PERMIT_STAGE_BUILT) return OCC_LINE_COLOR;
                 if (stage === PERMIT_STAGE_DONE) return PERMITS_PALETTE.done;
                 return PERMITS_PALETTE.tama38_marker;
             }
@@ -19769,7 +19913,7 @@
                 if (cat === PERMIT_CAT_TACHZUKA) return 'תחזוקה/בטיחות';
                 return 'אחר';
             }
-            const PERMIT_STAGES_ALL = [PERMIT_STAGE_PRE, PERMIT_STAGE_LIC, PERMIT_STAGE_EXEC, PERMIT_STAGE_DONE];
+            const PERMIT_STAGES_ALL = [PERMIT_STAGE_PRE, PERMIT_STAGE_LIC, PERMIT_STAGE_ISSUED, PERMIT_STAGE_CONSTR, PERMIT_STAGE_BUILT, PERMIT_STAGE_DONE];
             const PERMIT_CATS_ALL = [
                 PERMIT_CAT_BNIYA, PERMIT_CAT_TOSEFET, PERMIT_CAT_HARISA, PERMIT_CAT_CHAFIRA,
                 PERMIT_CAT_TAMA38, PERMIT_CAT_SHINUYIM, PERMIT_CAT_SHIMUSH, PERMIT_CAT_DRACHIM,
@@ -21763,7 +21907,8 @@
                     const _bcc = PERMIT_BUCKET_COLOR[_mpp.bucket] || '#7f8c8d';
                     html += `<div class="popup-row"><span class="popup-row-label">סיווג</span><span class="popup-status-badge" style="background:${_bcc}22;color:${_bcc};border:1px solid ${_bcc};font-weight:bold">${_mpp.bucket_label || _mpp.bucket}</span></div>`;
                 }
-                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span></div>`;
+                const stageSrc = (props.stage_source === 'pikuah') ? ' <span title="נגזר מתיק פיקוח על הבנייה" style="font-size:9px;color:#0d9488;font-weight:bold">◆ פיקוח</span>' : '';
+                html += `<div class="popup-row"><span class="popup-row-label">שלב</span><span class="popup-status-badge" style="background:${stageColor}33;color:${stageColor};border:1px solid ${stageColor}">${stage}</span>${stageSrc}</div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">מהות הבקשה</span><span class="popup-row-value" style="font-size:11px;max-width:180px;text-align:left">${requestType}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">תאריך היתר</span><span class="popup-row-value">${permitDate}</span></div>`;
                 html += `<div class="popup-row"><span class="popup-row-label">יח"ד תוספת בהיתר</span><span class="popup-row-value">${permitAddDisplay}</span></div>`;
@@ -32509,6 +32654,31 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         style={{display:'flex',alignItems:'center',gap:8,padding:'3px 2px',cursor:'pointer',opacity:on?1:0.42,userSelect:'none'}}>
                                         <span style={{width:12,height:12,borderRadius:3,background:b.color,flex:'0 0 auto'}}></span>
                                         <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>{b.label}</span>
+                                        <span style={{color:'#8a93a6',fontSize:10}}>{cnt}</span>
+                                        <input type="checkbox" checked={on} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
+                                    </div>
+                                );
+                            })}
+                            {/* Per-permit STAGE filter — refined by building-supervision (בביצוע/גמר בנייה). */}
+                            <div style={{borderTop:'1px solid #2a2a4a',margin:'8px 0 6px'}}></div>
+                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,gap:6}}>
+                                <span style={{color:'#fff',fontSize:12,fontWeight:700}}>שלב ביצוע (פיקוח)</span>
+                                <div style={{display:'flex',gap:4}}>
+                                    <button onClick={() => setPermitStageFilter({pre_licensing:true,licensing:true,issued:true,construction:true,built:true,done:true})}
+                                        style={{background:'none',border:'1px solid #3a3a5a',color:'#9fd6ff',borderRadius:5,fontSize:10,padding:'1px 7px',cursor:'pointer'}}>הכל</button>
+                                    <button onClick={() => setPermitStageFilter({pre_licensing:false,licensing:false,issued:false,construction:true,built:false,done:false})}
+                                        style={{background:'none',border:'1px solid '+PERMITS_PALETTE.in_construction,color:'#9fd6ff',borderRadius:5,fontSize:10,padding:'1px 7px',cursor:'pointer'}}>בביצוע בלבד</button>
+                                </div>
+                            </div>
+                            {[{id:'construction'},{id:'built'},{id:'issued'},{id:'licensing'},{id:'pre_licensing'},{id:'done'}].map(s => {
+                                const on = permitStageFilter[s.id];
+                                const cnt = (window.__permitStageCounts && window.__permitStageCounts[s.id]) || 0;
+                                const col = getPermitStageColor(s.id);
+                                return (
+                                    <div key={s.id} onClick={() => setPermitStageFilter(p => ({...p, [s.id]: !p[s.id]}))}
+                                        style={{display:'flex',alignItems:'center',gap:8,padding:'3px 2px',cursor:'pointer',opacity:on?1:0.42,userSelect:'none'}}>
+                                        <span style={{width:12,height:12,borderRadius:3,background:col,flex:'0 0 auto'}}></span>
+                                        <span style={{flex:1,color:'#e6e6ee',fontSize:11}}>{getPermitStageLabel(s.id)}</span>
                                         <span style={{color:'#8a93a6',fontSize:10}}>{cnt}</span>
                                         <input type="checkbox" checked={on} onChange={() => {}} style={{margin:0,pointerEvents:'none'}} />
                                     </div>
