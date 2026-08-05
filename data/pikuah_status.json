@@ -566,7 +566,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 1
   },
   "1994/187": {
@@ -2046,7 +2046,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2016/1295": {
@@ -2852,7 +2852,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2017/888": {
@@ -2867,7 +2867,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2017/776": {
@@ -3005,7 +3005,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2020/489": {
@@ -3598,7 +3598,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2019/595": {
@@ -4012,7 +4012,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2018/253": {
@@ -4893,7 +4893,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2014/1008": {
@@ -5121,7 +5121,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2017/972": {
@@ -5151,7 +5151,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2019/55": {
@@ -5628,7 +5628,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2022/418": {
@@ -6139,7 +6139,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2024/350": {
@@ -6199,7 +6199,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2020/165": {
@@ -6255,7 +6255,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2021/426": {
@@ -6547,7 +6547,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "1992/686": {
@@ -6575,7 +6575,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2019/286": {
@@ -6603,7 +6603,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2025/333": {
@@ -6618,7 +6618,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2021/557": {
@@ -6648,7 +6648,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "1989/855": {
@@ -6751,7 +6751,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2022/221": {
@@ -6835,7 +6835,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2020/569": {
@@ -6850,7 +6850,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "1970/1060": {
@@ -7030,7 +7030,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2022/527": {
@@ -7045,7 +7045,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "1982/594": {
@@ -7075,7 +7075,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2006/812": {
@@ -8957,7 +8957,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 1
   },
   "2004/239": {
@@ -9775,7 +9775,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2018/483": {
@@ -10822,7 +10822,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 1
   },
   "1981/916": {
@@ -10906,7 +10906,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 1
   },
   "2000/770": {
@@ -12105,7 +12105,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2023/300": {
@@ -12714,7 +12714,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2007/295": {
@@ -13273,7 +13273,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2023/201": {
@@ -13580,7 +13580,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2022/27": {
@@ -14050,7 +14050,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2020/240": {
@@ -14784,7 +14784,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2024/71": {
@@ -14913,7 +14913,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2022/123": {
@@ -15106,7 +15106,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2013/103": {
@@ -15301,7 +15301,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2025/418": {
@@ -15704,7 +15704,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2015/320": {
@@ -15964,7 +15964,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2017/739": {
@@ -16007,7 +16007,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2021/89": {
@@ -16258,7 +16258,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2026/226": {
@@ -16344,7 +16344,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "1982/748": {
@@ -16531,7 +16531,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2018/517": {
@@ -16735,7 +16735,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2023/609": {
@@ -17102,7 +17102,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2020/440": {
@@ -17325,7 +17325,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2026/75": {
@@ -17977,7 +17977,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2020/626": {
@@ -18007,7 +18007,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 3
   },
   "2021/442": {
@@ -18217,7 +18217,7 @@
    "form4_date": null,
    "form2_date": null,
    "closed_date": null,
-   "classification": "construction",
+   "classification": "file_opened",
    "steps": 2
   },
   "2021/189": {
