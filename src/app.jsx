@@ -1366,6 +1366,30 @@
             const m = String(fn || '').match(/^(\d{4})\/0*(\d+)/);
             return m ? m[1] + '/' + m[2] : '';
         }
+        // Refine a building-supervision (פיקוח) record into a construction state:
+        // '' (not building — file merely opened / enforcement / closed), 'construction'
+        // (בביצוע — טופס 2 / active work), or 'built' (גמר בנייה / occupied). This exists
+        // because the raw 'open' classification conflates "file opened, no digging" with
+        // "actually building" (e.g. permit 2025/115: pikuah_status 'נפתח תיק פיקוח' →
+        // was wrongly shown בביצוע). Handles BOTH the refined scraper values and, until
+        // the next monthly re-scan lands, the legacy 'open' via its pikuah_status + steps.
+        const _PK_ENFORCE = ['צו הפסקת עבודה', 'צו הריסה', 'כתב אישום', 'עבירה', 'אי ציות'];
+        function pikuahConstructionState(rec) {
+            if (!rec) return '';
+            const c = rec.classification;
+            if (c === 'gmar' || c === 'built') return 'built';
+            if (c === 'construction') return 'construction';
+            if (c === 'closed' || c === 'file_opened' || c === 'enforcement' || c === 'no_file') return '';
+            if (c === 'open') { // legacy pre-re-scan → derive from the file's own status
+                const ps = String(rec.pikuah_status || '');
+                if (ps.indexOf('טופס 4') !== -1 || ps.indexOf('תעודת גמר') !== -1) return 'built';
+                if (_PK_ENFORCE.some(t => ps.indexOf(t) !== -1)) return '';
+                if (ps === 'נפתח תיק פיקוח' || ps === 'נפתח תיק רישוי' || ps === 'התיק נפתח מחדש') return '';
+                if (ps.indexOf('טופס 2') !== -1) return 'construction';
+                return (rec.steps || 0) >= 3 ? 'construction' : ''; // null/other: activity ⇒ building
+            }
+            return '';
+        }
         // Did this permit reach תעודת גמר (construction finished)? Sourced from pikuah_status.json.
         function permitReachedGmar(fileNumber) {
             const g = window.__pikuahGmarByFile;
@@ -5734,48 +5758,50 @@
                                 // a master/pikuah record stored under a later revision "…/.01".
                                 const bp = (data && data.by_permit) ? data.by_permit : {};
                                 window.__pikuahStatus = bp;
+                                // "Completed" index (תעודת גמר OR טופס 4) by revision-agnostic base
+                                // tik — powers תמ"א 38 completion + occupied fade.
                                 const gmar = {};
                                 Object.values(bp).forEach(r => {
-                                    if (r && r.classification === 'gmar') {
+                                    if (pikuahConstructionState(r) === 'built') {
                                         const k = permitBaseKey(r.permit_tik || r.file_number || '');
-                                        if (k) gmar[k] = r.gmar_date || '';
+                                        if (k) gmar[k] = r.gmar_date || r.form4_date || '';
                                     }
                                 });
                                 window.__pikuahGmarByFile = gmar;
-                                // Roll supervision status up per taba → a coarse construction
-                                // STAGE for the permits layer/filter/popup (see reconcilePikuahStage).
-                                // OPEN file (construction under way somewhere) wins → ה-בבנייה;
-                                // else a תעודת גמר → ו-גמר בנייה; only-closed is ambiguous → skip.
-                                // Same "open beats gmar for mixed tabas" rule as the occupancy roll-up.
+                                // Roll construction state up per taba → a coarse plan STAGE for the
+                                // permits map layer (see reconcilePikuahStage). REAL construction
+                                // somewhere (טופס 2 / activity) → ה-בבנייה; else a completion → ו-גמר
+                                // בנייה. A merely-opened / enforcement file is NOT construction.
                                 const acc = {};
                                 Object.values(bp).forEach(r => {
                                     const t = String((r && r.taba) || '').trim();
                                     if (!t) return;
-                                    const a = acc[t] || (acc[t] = { open: 0, gmar: 0, closed: 0 });
-                                    if (r.classification === 'open') a.open++;
-                                    else if (r.classification === 'gmar') a.gmar++;
-                                    else if (r.classification === 'closed') a.closed++;
+                                    const st = pikuahConstructionState(r);
+                                    const a = acc[t] || (acc[t] = { construction: 0, built: 0 });
+                                    if (st === 'construction') a.construction++;
+                                    else if (st === 'built') a.built++;
                                 });
                                 const stageByTaba = {};
                                 Object.keys(acc).forEach(t => {
                                     const a = acc[t];
-                                    const st = a.open > 0 ? 'ה-בבנייה' : (a.gmar > 0 ? 'ו-גמר בנייה' : '');
+                                    const st = a.construction > 0 ? 'ה-בבנייה' : (a.built > 0 ? 'ו-גמר בנייה' : '');
                                     if (st) stageByTaba[t] = { stage: st, evidence: a };
                                 });
                                 window.__pikuahStageByTaba = stageByTaba;
-                                // Per-PERMIT construction status, indexed by revision-agnostic
-                                // base tik (permitBaseKey), so getPermitStage() can refine a
-                                // single permit from its OWN supervision file — the correct
-                                // granularity for "which permits are in execution". Strongest
-                                // evidence wins across revisions of the same permit: גמר>פתוח>סגור.
+                                // Per-PERMIT record indexed by revision-agnostic base tik, so
+                                // getPermitStage() can refine a single permit from its OWN file.
+                                // Keep the strongest construction state across a permit's revisions
+                                // (built > construction > none), and carry pikuah_status+steps so the
+                                // legacy-'open' derivation in pikuahConstructionState still works.
                                 const pkByBase = {};
-                                const _ord = { gmar: 3, open: 2, closed: 1 };
+                                const _stRank = { built: 3, construction: 2, '': 1 };
                                 Object.values(bp).forEach(r => {
                                     const bk = permitBaseKey(r.permit_tik || r.file_number || '');
                                     if (!bk) return;
                                     const cur = pkByBase[bk];
-                                    if (!cur || (_ord[r.classification] || 0) > (_ord[cur.classification] || 0)) {
-                                        pkByBase[bk] = { classification: r.classification, gmar_date: r.gmar_date || '' };
+                                    if (!cur || _stRank[pikuahConstructionState(r)] > _stRank[pikuahConstructionState(cur)]) {
+                                        pkByBase[bk] = { classification: r.classification, pikuah_status: r.pikuah_status || '',
+                                                         steps: r.steps || 0, gmar_date: r.gmar_date || '', form4_date: r.form4_date || '' };
                                     }
                                 });
                                 window.__pikuahByBaseTik = pkByBase;
@@ -5831,8 +5857,9 @@
                             const pk = window.__pikuahByBaseTik || {};
                             const bk = fn => { const m = String(fn || '').match(/^(\d{4})\/0*(\d+)/); return m ? m[1] + '/' + m[2] : ''; };
                             const stageOf = p => {
-                                const c = pk[bk(p.tik || p.file_number)];
-                                if (c) { if (c.classification === 'open') return 'construction'; if (c.classification === 'gmar') return 'built'; }
+                                const pst = pikuahConstructionState(pk[bk(p.tik || p.file_number)]);
+                                if (pst === 'construction') return 'construction';
+                                if (pst === 'built') return 'built';
                                 const s = (p.status || '').trim();
                                 if (!s) return 'pre_licensing';
                                 if (s.includes('נסגר') || s.includes('בוטל')) return 'done';
@@ -19626,11 +19653,10 @@
                 // and never sees construction. Look this permit up by its OWN
                 // revision-agnostic tik (window.__pikuahByBaseTik, from pikuah_status.json).
                 const pkc = (window.__pikuahByBaseTik || {})[permitBaseKey((p && (p.tik || p.file_number)) || '')];
-                if (pkc) {
-                    if (pkc.classification === 'open') return PERMIT_STAGE_CONSTR;   // בביצוע
-                    if (pkc.classification === 'gmar') return PERMIT_STAGE_BUILT;    // גמר בנייה
-                    // 'closed' alone is ambiguous (finished-then-closed vs abandoned) → fall through
-                }
+                const pst = pikuahConstructionState(pkc);
+                if (pst === 'construction') return PERMIT_STAGE_CONSTR;   // בביצוע — real work (טופס 2/activity)
+                if (pst === 'built') return PERMIT_STAGE_BUILT;           // גמר בנייה — תעודת גמר / טופס 4
+                // a merely-opened / enforcement / closed file is NOT construction → fall through
                 const s = (p && p.status || '').trim();
                 if (!s) return PERMIT_STAGE_PRE;
                 if (s.includes('נסגר') || s.includes('בוטל')) return PERMIT_STAGE_DONE;
