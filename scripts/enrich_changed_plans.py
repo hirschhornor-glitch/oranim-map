@@ -57,6 +57,7 @@ STAGING_JSON = DATA / "execution_staging.json"
 HAFRASH_TYPES_JSON = DATA / "hafrash_types.json"
 NEW_PLANS_REPORT = ROOT / "new_plans_report.json"
 SUMMARY_TXT = ROOT / "last_enrichment_summary.txt"
+ENRICH_EMAIL_PAYLOAD = ROOT / "_pending_enrich_email.json"  # handed to update_mavat_ui for one-email policy
 SEEN_PATH = ROOT / ".enriched_seen"   # tabas we've already seen (for --derive-new)
 
 EMAIL_FROM = "hirschhorn.or@gmail.com"
@@ -186,7 +187,7 @@ def run_staging(taba):
         return False
 
 
-def run_table5(plan_names, allow_download):
+def run_table5(plan_names, allow_download, no_email=False):
     """Refresh Table 5 -> GS for the plans enriched this run by invoking the
     guarded Mavat sync (update_mavat_ui.py) scoped to just these plans via
     --plans-file. Reuses that script's validated compute_changes + header/
@@ -201,7 +202,10 @@ def run_table5(plan_names, allow_download):
         tf.write("\n".join(names))
         tmp = tf.name
     try:
-        ok, tail = run_py(["update_mavat_ui.py", f"--plans-file={tmp}"], 3600, "table5")
+        cmd = ["update_mavat_ui.py", f"--plans-file={tmp}"]
+        if no_email:
+            cmd.append("--no-email")
+        ok, tail = run_py(cmd, 3600, "table5")
         print(f"[table5] refresh of {len(names)} plan(s): {'ok' if ok else 'FAILED'}")
         if not ok:
             print(tail[-500:])
@@ -211,6 +215,23 @@ def run_table5(plan_names, allow_download):
             os.unlink(tmp)
         except OSError:
             pass
+
+
+def _write_enrich_email_payload(rows):
+    """Drop the per-plan enrichment summary for update_mavat_ui to fold into its
+    single consolidated email (one-email policy)."""
+    try:
+        with io.open(ENRICH_EMAIL_PAYLOAD, "w", encoding="utf-8") as f:
+            json.dump(rows, f, ensure_ascii=False)
+    except OSError as e:
+        print(f"[table5] could not write enrich email payload: {e}")
+
+
+def _clear_enrich_email_payload():
+    try:
+        os.remove(ENRICH_EMAIL_PAYLOAD)
+    except OSError:
+        pass
 
 
 def classify_type(taba, plan_name, hafrash_prg):
@@ -484,14 +505,22 @@ def main():
             print(tail[-400:])
 
     write_summary(rows)
-    send_email(rows, dry=args.no_email)
 
-    # Refresh Table 5 -> GS for the plans enriched this run (auto-write + its own
-    # "עדכון סטטוסים מבא"ת" email, via the guarded update_mavat_ui path). Runs
-    # after the enrich email so a slow browser pass doesn't delay it. Off with
-    # --no-table5, and skipped under --no-download (needs a browser).
-    if not args.no_table5:
-        run_table5([r["plan_name"] for r in rows], allow_download)
+    # One-email policy: hand our per-plan enrichment summary to update_mavat_ui,
+    # which folds it into its single consolidated "עידכון ממבאת" email while it
+    # refreshes Table 5 -> GS for these plans (auto-write). We send our own email
+    # only as a fallback when that pass is skipped (--no-table5 / --no-download)
+    # or fails. --no-email suppresses email on both sides.
+    ran_table5 = False
+    if not args.no_table5 and allow_download and rows:
+        if not args.no_email:
+            _write_enrich_email_payload(rows)
+        ok, _ = run_table5([r["plan_name"] for r in rows], allow_download, no_email=args.no_email)
+        ran_table5 = ok
+        if not ok and not args.no_email:
+            _clear_enrich_email_payload()   # update_mavat_ui didn't run — no stale payload
+    if not (ran_table5 and not args.no_email):
+        send_email(rows, dry=args.no_email)
 
     print(f"\nDone. {len(rows)} plans. Summary -> {SUMMARY_TXT.name}")
     fq = eq.load_floor_queue()

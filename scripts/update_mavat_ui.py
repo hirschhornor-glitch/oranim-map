@@ -1301,9 +1301,25 @@ def build_changelog_digest():
         return "", None, 0
 
 
+def _load_pending_enrich_email():
+    """Enrichment summary dropped by enrich_changed_plans.py so its per-plan
+    staging/type/floors/developer results ride in THIS script's single email
+    instead of a second one. Returns (rows, path); consumed after a good send."""
+    path = r"C:\ORANIM\_pending_enrich_email.json"
+    try:
+        with open(path, encoding="utf-8") as f:
+            rows = json.load(f)
+        return (rows if isinstance(rows, list) else []), path
+    except Exception:
+        return [], path
+
+
 def send_email_notification(updates, objection_results=None, xplan_report=None):
     if not SENDER_EMAIL or not SENDER_PASSWORD or not RECEIVER_EMAIL:
         log_msg("Email settings not configured. Skipping email notification.")
+        return
+    if '--no-email' in sys.argv:
+        log_msg("--no-email set; skipping email notification.")
         return
 
     has_updates = bool(updates)
@@ -1328,8 +1344,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
     digest_html, digest_newest_ts, digest_n = build_changelog_digest()
     has_digest = bool(digest_html)
 
+    # Enrichment summary handed over by enrich_changed_plans.py (one-email policy).
+    enrich_rows, enrich_payload_path = _load_pending_enrich_email()
+    has_enrich = bool(enrich_rows)
+
     if not has_updates and not has_objections and not has_xplan and not has_new_plans \
-            and not has_digest:
+            and not has_digest and not has_enrich:
         return
 
     log_msg("Sending email notification...")
@@ -1344,6 +1364,8 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
         parts.append(f"{len(future_objections)} תאריכי התנגדויות")
     if has_digest:
         parts.append(f"{digest_n} שינויי שדה")
+    if has_enrich:
+        parts.append(f"{len(enrich_rows)} העשרות")
     subject = "עידכון ממבאת: " + " | ".join(parts)
 
     html = "<html dir='rtl'><body style='font-family: Arial, sans-serif;'>"
@@ -1405,6 +1427,24 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
             html += f"<td><b>{u['new_status']}</b></td>"
             html += f"<td>{u['new_date']}</td>"
             html += f"</tr>"
+        html += "</table><br>"
+
+    # Enrichment section (staging / hafrash-type / floors / developer) from the
+    # enrich_changed_plans run that invoked this sync — folded in for one email.
+    if has_enrich:
+        html += "<h2>העשרת תכניות חדשות / משנות-סטטוס</h2>"
+        html += f"<p>{len(enrich_rows)} תכניות עובדו:</p>"
+        html += "<table border='1' cellpadding='8' style='border-collapse: collapse;'>"
+        html += ("<tr style='background-color: #ede7f6;'><th>תכנית</th><th>סיבה</th>"
+                 "<th>סטטוס</th><th>שלביות</th><th>סוג הפרשה</th><th>קומות</th>"
+                 "<th>יזם</th><th>הערה</th></tr>")
+        for r in enrich_rows:
+            html += ("<tr>"
+                     f"<td>{r.get('plan_name','')}</td><td dir='rtl'>{r.get('reason','')}</td>"
+                     f"<td dir='rtl'>{r.get('status','')}</td><td dir='rtl'>{r.get('staging','')}</td>"
+                     f"<td dir='rtl'>{r.get('hafrash_type','')}</td><td dir='rtl'>{r.get('floors','')}</td>"
+                     f"<td dir='rtl'>{r.get('developer','')}</td><td dir='rtl'>{r.get('note','')}</td>"
+                     "</tr>")
         html += "</table><br>"
 
     # Sensitive field-change digest (from plan_changelog.jsonl)
@@ -1520,6 +1560,12 @@ def send_email_notification(updates, objection_results=None, xplan_report=None):
                     f.write(digest_newest_ts)
             except OSError as e:
                 log_msg(f"Failed to write changelog-digest marker: {e}")
+        # Consume the enrichment payload so it isn't re-emailed on the next run.
+        if has_enrich and enrich_payload_path and os.path.exists(enrich_payload_path):
+            try:
+                os.remove(enrich_payload_path)
+            except OSError as e:
+                log_msg(f"Failed to remove enrich payload: {e}")
         # Mark the new-plans report as consumed so tomorrow's run doesn't
         # re-include the same plans. Only rename after a successful send.
         if has_new_plans and os.path.exists(new_plans_report_path):
