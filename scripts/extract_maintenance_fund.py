@@ -59,6 +59,62 @@ SUB_CANON = {
 }
 MIN_FLOORS = 13   # scope: urban-renewal / tower plans of MORE THAN 13 floors
 
+SUBS_GEOJSON = os.path.join(os.path.dirname(__file__), "..", "data", "sub_neighborhoods.geojson")
+
+
+# ── neighbourhood by geometry (authoritative — the stored sub_neighborhood
+# field is unreliable; assign the plan to the polygon it physically sits in) ──
+def _ring_centroid(ring):
+    xs = [c[0] for c in ring]; ys = [c[1] for c in ring]
+    return (sum(xs) / len(xs), sum(ys) / len(ys)) if xs else None
+
+
+def _feature_centroid(g):
+    if not g:
+        return None
+    if g["type"] == "Polygon":
+        return _ring_centroid(g["coordinates"][0])
+    if g["type"] == "MultiPolygon":
+        return _ring_centroid(g["coordinates"][0][0])
+    return None
+
+
+def _pip(lng, lat, ring):
+    inside = False
+    n = len(ring); j = n - 1
+    for i in range(n):
+        xi, yi = ring[i][0], ring[i][1]; xj, yj = ring[j][0], ring[j][1]
+        if ((yi > lat) != (yj > lat)) and (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi):
+            inside = not inside
+        j = i
+    return inside
+
+
+def _in_geom(lng, lat, g):
+    if g["type"] == "Polygon":
+        return _pip(lng, lat, g["coordinates"][0])
+    if g["type"] == "MultiPolygon":
+        return any(_pip(lng, lat, poly[0]) for poly in g["coordinates"])
+    return False
+
+
+def load_sub_polys():
+    if not os.path.exists(SUBS_GEOJSON):
+        return []
+    feats = json.load(io.open(SUBS_GEOJSON, encoding="utf-8"))["features"]
+    return [(f["properties"].get("schn_nama"), f["geometry"])
+            for f in feats if f.get("geometry") and f["properties"].get("schn_nama")]
+
+
+def geo_sub(geometry, sub_polys):
+    c = _feature_centroid(geometry)
+    if not c:
+        return None
+    for name, g in sub_polys:
+        if _in_geom(c[0], c[1], g):
+            return name
+    return None
+
 
 # ── RTL normalization (mirrors extract_execution_staging.py) ──────────────
 _NUM_TOKEN = re.compile(r"^[0-9][0-9().,/_%\"'-]*$")
@@ -271,12 +327,17 @@ def analyze(text: str) -> dict:
 def load_plans():
     with io.open(PLANS_GEOJSON, encoding="utf-8") as f:
         feats = json.load(f)["features"]
+    sub_polys = load_sub_polys()
     out = {}
     for ft in feats:
         p = ft["properties"]
         pn = p.get("plan_name")
         if not pn or pn in out:
             continue
+        # neighbourhood: manual override > geometry (authoritative) > stored field
+        _stored = p.get("sub_neighborhood") or p.get("SUB_N") or ""
+        _geo = geo_sub(ft.get("geometry"), sub_polys) if sub_polys else None
+        _sub = SUB_OVERRIDE.get(pn) or _geo or SUB_CANON.get(_stored, _stored)
         def _int(v):
             try:
                 return int(float(str(v)))
@@ -285,7 +346,7 @@ def load_plans():
         out[pn] = {
             "plan_name": pn,
             "plan_name_he": p.get("plan_name_he") or "",
-            "sub_neighborhood": (lambda s: SUB_CANON.get(s, s))(SUB_OVERRIDE.get(pn) or p.get("sub_neighborhood") or p.get("SUB_N") or ""),
+            "sub_neighborhood": _sub,
             "minahak": p.get("minahak") or "",
             "status_mavat": p.get("status_mavat") or "",
             "mavat_url": p.get("mavat_url") or "",

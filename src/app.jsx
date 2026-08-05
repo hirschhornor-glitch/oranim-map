@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-05-fund-neighborhoods';
+        const APP_VERSION = '2026-08-05-fund-geo-subs';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -32818,14 +32818,44 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             let h = parseFloat(p.High); let hf = (h > 0) ? Math.round(h / 3.1) : 0;
                             return Math.max(ln, hf);
                         };
-                        // same-neighbourhood aliases → canonical (matches the extractor)
-                        const SUB_CANON = { 'רסקו': 'רסקו - גבעת הורדים', 'א.ת. תלפיות': 'תלפיות - תעשייה ומסחר' };
                         const FUND_SUB_OVERRIDE = { '101-1563642': 'פת' };
                         const NOSUB = '— ללא תת-שכונה —';
-                        const canonSub = (s) => SUB_CANON[s] || s || NOSUB;
-                        // bucket every tower plan by canonical sub, splitting fund / non-fund.
-                        // a fund plan is filed under its fund-record sub so the per-neighbourhood
-                        // counts line up with the fund rows below.
+                        // Neighbourhood by GEOMETRY (authoritative — the stored sub_neighborhood
+                        // field is unreliable). Same centroid→polygon lookup the extractor uses,
+                        // so fund plans (assigned in the data) and non-fund tower plans (assigned
+                        // here) end up under the same neighbourhood name.
+                        const subPolys = [];
+                        if (gd.sub_neighborhoods) gd.sub_neighborhoods.features.forEach(sf => {
+                            const nm = sf.properties && sf.properties.schn_nama;
+                            if (nm && sf.geometry) subPolys.push([nm, sf.geometry]);
+                        });
+                        const ringHit = (lng, lat, ring) => {
+                            let inside = false;
+                            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                                const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+                                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi)) inside = !inside;
+                            }
+                            return inside;
+                        };
+                        const inGeom = (lng, lat, g) => {
+                            if (!g) return false;
+                            if (g.type === 'Polygon') return ringHit(lng, lat, g.coordinates[0]);
+                            if (g.type === 'MultiPolygon') return g.coordinates.some(poly => ringHit(lng, lat, poly[0]));
+                            return false;
+                        };
+                        const ringCentroid = (ring) => {
+                            let cx = 0, cy = 0, n = 0;
+                            for (const c of ring) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } }
+                            return n ? [cx / n, cy / n] : null;
+                        };
+                        const featCentroid = (g) => g ? (g.type === 'Polygon' ? ringCentroid(g.coordinates[0]) : g.type === 'MultiPolygon' ? ringCentroid(g.coordinates[0][0]) : null) : null;
+                        const findSub = (g) => {
+                            const c = featCentroid(g);
+                            if (!c) return null;
+                            for (const [nm, sg] of subPolys) { if (inGeom(c[0], c[1], sg)) return nm; }
+                            return null;
+                        };
+                        // bucket every tower plan by (geometric) sub, splitting fund / non-fund.
                         let totalPlans = 0;
                         const towerBySub = {}; // sub -> { total, fund, nonFund:[{plan_name,title,floors,status,feature}] }
                         if (gd.plans && gd.plans.features) {
@@ -32840,8 +32870,10 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 totalPlans++;
                                 const rec = fundMap[p.plan_name];
                                 const isFund = !!(rec && rec.has_fund);
+                                // fund plans keep the neighbourhood assigned in the data (also geometric);
+                                // non-fund towers are assigned here by the same geometry.
                                 const cs = isFund ? (rec.sub_neighborhood || NOSUB)
-                                    : (FUND_SUB_OVERRIDE[p.plan_name] || canonSub(p.sub_neighborhood || p.SUB_N || ''));
+                                    : (FUND_SUB_OVERRIDE[p.plan_name] || findSub(f.geometry) || NOSUB);
                                 const b = towerBySub[cs] || (towerBySub[cs] = { total: 0, fund: 0, nonFund: [] });
                                 b.total++;
                                 if (isFund) b.fund++;

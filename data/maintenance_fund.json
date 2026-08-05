@@ -46,7 +46,7 @@
  "101-0778035": {
   "plan_name": "101-0778035",
   "plan_name_he": "פינוי בינוי מתחם נהוראי 5-11 ו-18-28",
-  "sub_neighborhood": "גוננים א-ו",
+  "sub_neighborhood": "גוננים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1001022041/310",
@@ -90,7 +90,7 @@
  "101-0836809": {
   "plan_name": "101-0836809",
   "plan_name_he": "התחדשות עירונית במעגלי יבנה, ירושלים",
-  "sub_neighborhood": "גוננים א-ו",
+  "sub_neighborhood": "גוננים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005056616/310",
@@ -112,7 +112,7 @@
  "101-0855585": {
   "plan_name": "101-0855585",
   "plan_name_he": "התחדשות עירונית ברחוב בר יוחאי 17-21 ואלמליח 143-145 - מתחם 06",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005067670/310",
@@ -134,7 +134,7 @@
  "101-0855668": {
   "plan_name": "101-0855668",
   "plan_name_he": "התחדשות עירונית ברחוב בר יוחאי 4 ויצחק שדה 3, מתחם 11, ירושלים",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005067692/310",
@@ -178,7 +178,7 @@
  "101-0928176": {
   "plan_name": "101-0928176",
   "plan_name_he": "פינוי בינוי רחוב הקצין סילבר, דרך בית לחם 119-121",
-  "sub_neighborhood": "בקעה",
+  "sub_neighborhood": "שיכוני תלפיות",
   "minahak": "בקעה רבתי",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005111370/310",
@@ -200,7 +200,7 @@
  "101-0944512": {
   "plan_name": "101-0944512",
   "plan_name_he": "התחדשות עירונית ברחוב יוסי בן יועזר בירושלים",
-  "sub_neighborhood": "גוננים א-ו",
+  "sub_neighborhood": "גוננים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005121260/310",
@@ -244,7 +244,7 @@
  "101-0987016": {
   "plan_name": "101-0987016",
   "plan_name_he": "פינוי בינוי ברחוב סן-מרטין 1",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005146800/310",
@@ -266,7 +266,7 @@
  "101-1019157": {
   "plan_name": "101-1019157",
   "plan_name_he": "פינוי בינוי רחוב סן מרטין 19-21, ירושלים",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005183160/310",
@@ -288,7 +288,7 @@
  "101-1024645": {
   "plan_name": "101-1024645",
   "plan_name_he": "פינוי בינוי רחוב חסדא ויהושע בן נון, ירושלים",
-  "sub_neighborhood": "המושבה היוונית",
+  "sub_neighborhood": "קטמון הישנה",
   "minahak": "גינות העיר",
   "status_mavat": "בהליך אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005185990/310",
@@ -310,7 +310,7 @@
  "101-1025295": {
   "plan_name": "101-1025295",
   "plan_name_he": "התחדשות עירונית בן זכאי 31, ירושלים.",
-  "sub_neighborhood": "גוננים א-ו",
+  "sub_neighborhood": "גוננים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005186454/310",
@@ -332,7 +332,7 @@
  "101-1033869": {
   "plan_name": "101-1033869",
   "plan_name_he": "התחדשות עירונית ברחוב בר יוחאי 1-3- מתחם 01",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005191924/310",
@@ -354,7 +354,7 @@
  "101-1063957": {
   "plan_name": "101-1063957",
   "plan_name_he": "פינוי בינוי רחוב סן מרטין 22, 24, 26, רחוב בר יוחאי 12, 14. ירושלים",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005209594/310",
@@ -376,7 +376,7 @@
  "101-1069764": {
   "plan_name": "101-1069764",
   "plan_name_he": "התחדשות עירונית סן מרטין 4-6 , ירושלים.",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005213134/310",
@@ -420,7 +420,7 @@
  "101-1114305": {
   "plan_name": "101-1114305",
   "plan_name_he": "התחדשות עירונית- בר יוחאי 18",
-  "sub_neighborhood": "קטמונים ח-ט",
+  "sub_neighborhood": "קטמונים",
   "minahak": "גוננים",
   "status_mavat": "אישור",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005240378/310",
@@ -662,7 +662,7 @@
  "101-1404177": {
   "plan_name": "101-1404177",
   "plan_name_he": "רח' הרצוג 33-37 ורח' טשרניחובסקי 4,6,10",
-  "sub_neighborhood": "קריית שמואל",
+  "sub_neighborhood": "רסקו - גבעת הורדים",
   "minahak": "גינות העיר",
   "status_mavat": "בבדיקה תכנונית",
   "mavat_url": "https://mavat.iplan.gov.il/SV4/1/1005423182/310",
