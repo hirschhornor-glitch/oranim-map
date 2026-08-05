@@ -4463,5 +4463,167 @@
     "lo_nidresh": 0,
     "confidence": "xplan",
     "source": "xplan"
+  },
+  "1320233": {
+    "total": 112,
+    "shimur": 10,
+    "krita": 76,
+    "haataka": 26,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1079011": {
+    "total": 64,
+    "shimur": 0,
+    "krita": 64,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1404177": {
+    "total": 57,
+    "shimur": 17,
+    "krita": 40,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1219724": {
+    "total": 115,
+    "shimur": 33,
+    "krita": 80,
+    "haataka": 2,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1241785": {
+    "total": 27,
+    "shimur": 9,
+    "krita": 12,
+    "haataka": 6,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "794214": {
+    "total": 43,
+    "shimur": 6,
+    "krita": 36,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "781104": {
+    "total": 45,
+    "shimur": 11,
+    "krita": 34,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "466359": {
+    "total": 53,
+    "shimur": 36,
+    "krita": 17,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "700641": {
+    "total": 28,
+    "shimur": 15,
+    "krita": 13,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "140806": {
+    "total": 13,
+    "shimur": 6,
+    "krita": 0,
+    "haataka": 7,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "792077": {
+    "total": 90,
+    "shimur": 26,
+    "krita": 60,
+    "haataka": 4,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "601898": {
+    "total": 165,
+    "shimur": 85,
+    "krita": 79,
+    "haataka": 1,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "594176": {
+    "total": 4,
+    "shimur": 3,
+    "krita": 1,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "621045": {
+    "total": 2,
+    "shimur": 2,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "594200": {
+    "total": 14,
+    "shimur": 14,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "823922": {
+    "total": 438,
+    "shimur": 100,
+    "krita": 298,
+    "haataka": 40,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1041870": {
+    "total": 71,
+    "shimur": 26,
+    "krita": 39,
+    "haataka": 6,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
+  },
+  "1258110": {
+    "total": 4,
+    "shimur": 4,
+    "krita": 0,
+    "haataka": 0,
+    "lo_nidresh": 0,
+    "confidence": "mavat",
+    "source": "mavat"
   }
 }
