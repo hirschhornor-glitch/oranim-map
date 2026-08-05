@@ -1577,7 +1577,12 @@ async def main():
             # are removed upstream and detect_new_plans won't re-add them).
             if is_blocklisted(plan_name_val):
                 continue
-            if status in status_filter and agam_id:
+            # When an explicit --plans-file names the plans to refresh, process
+            # them regardless of status: a plan that just changed TO an approved
+            # (terminal) status — exactly when Table 5 finalises — is not in
+            # TARGET_STATUSES and would otherwise be skipped. The normal
+            # scheduled run (PLANS_FILTER is None) keeps the status gate.
+            if (PLANS_FILTER is not None or status in status_filter) and agam_id:
                 if agam_id.endswith('.0'):
                     agam_id = agam_id[:-2]
                 rows_to_check.append({

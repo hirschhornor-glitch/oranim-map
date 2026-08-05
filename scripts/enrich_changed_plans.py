@@ -186,6 +186,33 @@ def run_staging(taba):
         return False
 
 
+def run_table5(plan_names, allow_download):
+    """Refresh Table 5 -> GS for the plans enriched this run by invoking the
+    guarded Mavat sync (update_mavat_ui.py) scoped to just these plans via
+    --plans-file. Reuses that script's validated compute_changes + header/
+    row-shift guard + backup + its own status email, rather than duplicating the
+    historically bug-prone GS-write here. Needs a browser, so it is skipped under
+    --no-download. Returns (ran, n_plans)."""
+    names = sorted({n for n in plan_names if n})
+    if not names or not allow_download:
+        return False, 0
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False,
+                                     encoding="utf-8") as tf:
+        tf.write("\n".join(names))
+        tmp = tf.name
+    try:
+        ok, tail = run_py(["update_mavat_ui.py", f"--plans-file={tmp}"], 3600, "table5")
+        print(f"[table5] refresh of {len(names)} plan(s): {'ok' if ok else 'FAILED'}")
+        if not ok:
+            print(tail[-500:])
+        return ok, len(names)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
 def classify_type(taba, plan_name, hafrash_prg):
     types = hc.classify(hafrash_prg)
     if not types:
@@ -331,6 +358,8 @@ def main():
     ap.add_argument("--no-download", action="store_true",
                     help="use cached horaot/nispach only, no browser")
     ap.add_argument("--no-email", action="store_true")
+    ap.add_argument("--no-table5", action="store_true",
+                    help="skip the Table 5 -> GS refresh (update_mavat_ui --plans-file)")
     ap.add_argument("--limit", type=int, help="process at most N plans")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -456,6 +485,14 @@ def main():
 
     write_summary(rows)
     send_email(rows, dry=args.no_email)
+
+    # Refresh Table 5 -> GS for the plans enriched this run (auto-write + its own
+    # "עדכון סטטוסים מבא"ת" email, via the guarded update_mavat_ui path). Runs
+    # after the enrich email so a slow browser pass doesn't delay it. Off with
+    # --no-table5, and skipped under --no-download (needs a browser).
+    if not args.no_table5:
+        run_table5([r["plan_name"] for r in rows], allow_download)
+
     print(f"\nDone. {len(rows)} plans. Summary -> {SUMMARY_TXT.name}")
     fq = eq.load_floor_queue()
     if fq:
