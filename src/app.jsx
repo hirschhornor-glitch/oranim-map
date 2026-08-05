@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-04-overlap';
+        const APP_VERSION = '2026-08-05-migrash-footprints';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -415,6 +415,7 @@
             mivnei_lashimur: 'data/arcgis/mivnei_lashimur.geojson',
             construction_yb: 'data/construction_yearbook.geojson',
             unassigned_permits: 'data/unassigned_permits.geojson',
+            permit_footprints: 'data/permit_footprints.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -18327,10 +18328,44 @@
                     // from the canonical master). All-selected = unchanged stage coloring.
                     const _bkAll = PERMIT_BUCKETS.every(b => permitBuckets[b.id]);
                     const _stAll = ['pre_licensing','licensing','issued','construction','built','done'].every(s => permitStageFilter[s]);
+                    // --- Per-permit מגרש footprints (large multi-permit projects) ---
+                    // For plans whose permits we've split onto their planning plots
+                    // (permit_footprints.geojson: each feature = one היתר drawn on its
+                    // מגרש, from landuse_xplan ∩ the permit's גוש/חלקה), draw the split
+                    // instead of one plan-wide blob. Covered tabas are excluded from the
+                    // plan-blob layer below and rendered by footprintLayer instead.
+                    const _footprintTabas = new Set();
+                    const _footprintGroups = [];   // { taba, nums, geom, tiks, permits, stage }
+                    if (gd.permit_footprints && gd.permit_footprints.features) {
+                        const _STAGE_PRIO = { built:5, construction:4, issued:3, licensing:2, pre_licensing:1, done:0 };
+                        const byBuilding = {};     // taba|nums -> features sharing a plot
+                        gd.permit_footprints.features.forEach(ft => {
+                            const taba = String(ft.properties.taba || '');
+                            if (_getPermits(taba).length === 0) return;   // permit gone from data → skip
+                            _footprintTabas.add(taba);
+                            const key = taba + '|' + (ft.properties.migrash_nums || []).join(',');
+                            (byBuilding[key] = byBuilding[key] || []).push(ft);
+                        });
+                        Object.keys(byBuilding).forEach(key => {
+                            const feats = byBuilding[key];
+                            const taba = String(feats[0].properties.taba || '');
+                            const planPermits = _getPermits(taba);
+                            const tiks = feats.map(f => String(f.properties.permit_tik));
+                            // permit records for the tiks on this plot (exact file_number match)
+                            const permits = planPermits.filter(p => tiks.indexOf(String(p.file_number)) !== -1);
+                            if (permits.length === 0) return;
+                            // dominant stage = most active permit on the plot
+                            let stage = 'pre_licensing', best = -1;
+                            permits.forEach(p => { const s = getPermitStage(p); const pr = _STAGE_PRIO[s] != null ? _STAGE_PRIO[s] : 0; if (pr > best) { best = pr; stage = s; } });
+                            _footprintGroups.push({ taba, nums: feats[0].properties.migrash_nums || [], geom: feats[0].geometry, tiks, permits, stage, planProps: (window.__planByTaba || {})[taba] || feats[0].properties });
+                        });
+                    }
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
                         filter: f => {
                             if (!planInMinahak(f.properties)) return false;
+                            // Plans split onto מגרשים are drawn by footprintLayer, not as a blob
+                            if (_footprintTabas.has(String(f.properties.taba))) return false;
                             // Only show polygons that actually have permits in the JSON
                             if (_getPermits(f.properties.taba).length === 0) return false;
                             if (!_bkAll) {
@@ -18500,8 +18535,50 @@
                             marker.addTo(unassignedGroup);
                         });
                     }
-                    // Bundle polygons + labels + unassigned points so toggling off removes all
-                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, permitLabelsGroup, unassignedGroup]).addTo(map);
+                    // Footprint polygons: each היתר (or building's permits) drawn on its מגרש
+                    const footprintFC = { type: 'FeatureCollection', features: _footprintGroups.map((g, i) => ({ type: 'Feature', properties: { _fi: i }, geometry: g.geom })) };
+                    const footprintLayer = L.geoJSON(footprintFC, {
+                        pane: 'permitsPane',
+                        filter: f => {
+                            const g = _footprintGroups[f.properties._fi];
+                            if (!_bkAll) {
+                                const bks = g.permits.map(p => { const m = masterPermit(p.file_number); return m && m.bucket; }).filter(Boolean);
+                                const eff = bks.length ? bks : ['acher'];
+                                if (!eff.some(b => permitBuckets[b])) return false;
+                            }
+                            if (!_stAll && !g.permits.map(p => getPermitStage(p)).some(s => permitStageFilter[s])) return false;
+                            return true;
+                        },
+                        style: f => {
+                            const g = _footprintGroups[f.properties._fi];
+                            const shavazActive = layers['shavaz_kayam'] || layers['future_shavaz'];
+                            const c = getPermitStageColor(g.stage);
+                            return { color: c, weight: 2, fillColor: c, fillOpacity: shavazActive ? 0.12 : 0.55 };
+                        },
+                        onEachFeature: (f, layer) => {
+                            const g = _footprintGroups[f.properties._fi];
+                            layer.on('click', (e) => {
+                                const mapped = mapPlanProps(g.planProps);
+                                const title = (mapped.plan_summary || mapped.plan_name_he || 'תוכנית') + ' · מגרש ' + g.nums.join(',');
+                                const subtitle = (mapped.plan_name || g.taba) + ' · ' + g.permits.length + ' היתרים על המגרש';
+                                const featureJson = JSON.stringify({ properties: mapped, type: 'plan' }).replace(/'/g, '&#39;');
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(e.latlng)
+                                    .setContent(buildPermitsDetailPopup(g.permits, title, subtitle, null, 'back-to-plan', "data-feature='" + featureJson + "'", 0, 'plan:' + (mapped.taba || ''), 0));
+                                popup.openOn(map);
+                                bindPopupEvents(popup, [{ properties: mapped, type: 'plan' }], 0);
+                            });
+                            if (plansOff) {
+                                try {
+                                    const center = visualCenter(g.geom) || layer.getBounds().getCenter();
+                                    const icon = L.divIcon({ className: 'plan-label-center plan-label-small', html: '<div class="label-inner">מגרש ' + g.nums.join(',') + '<br>' + g.permits.length + ' היתרים</div>', iconSize: [0, 0], iconAnchor: [0, 0] });
+                                    L.marker(center, { icon: icon, pane: 'labelsPane', interactive: false }).addTo(permitLabelsGroup);
+                                } catch (e) {}
+                            }
+                        }
+                    });
+                    // Bundle polygons + footprints + labels + unassigned points so toggling off removes all
+                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, footprintLayer, permitLabelsGroup, unassignedGroup]).addTo(map);
                 }
 
                 // --- Open-for-objections permits (הקלות שפורסמו, סעיף 149) ---
