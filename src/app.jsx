@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-05-maintenance-fund';
+        const APP_VERSION = '2026-08-05-project-outline';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -18546,6 +18546,14 @@
                             marker.addTo(unassignedGroup);
                         });
                     }
+                    // Blue project-boundary outline around split plans, so the separate
+                    // building footprints read as ONE project (not unrelated polygons).
+                    const projectOutlineLayer = L.geoJSON(gd.plans, {
+                        pane: 'permitsPane',
+                        interactive: false,
+                        filter: f => _footprintTabas.has(String(f.properties.taba)),
+                        style: () => ({ color: '#1a56db', weight: 3, fill: false, fillOpacity: 0, dashArray: '' })
+                    });
                     // Footprint polygons: each היתר (or building's permits) drawn on its מגרש
                     const footprintFC = { type: 'FeatureCollection', features: _footprintGroups.map((g, i) => ({ type: 'Feature', properties: { _fi: i }, geometry: g.geom })) };
                     const footprintLayer = L.geoJSON(footprintFC, {
@@ -18588,8 +18596,8 @@
                             }
                         }
                     });
-                    // Bundle polygons + footprints + labels + unassigned points so toggling off removes all
-                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, footprintLayer, permitLabelsGroup, unassignedGroup]).addTo(map);
+                    // Bundle polygons + project outline + footprints + labels + unassigned points so toggling off removes all
+                    geoLayersRef.current.permits = L.layerGroup([permitsLayer, projectOutlineLayer, footprintLayer, permitLabelsGroup, unassignedGroup]).addTo(map);
                 }
 
                 // --- Open-for-objections permits (הקלות שפורסמו, סעיף 149) ---
