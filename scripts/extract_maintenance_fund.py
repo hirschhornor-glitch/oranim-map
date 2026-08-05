@@ -362,8 +362,69 @@ def merge(rec, finding, t5rec):
     return rec
 
 
+def push_updates(plan_names):
+    """Recompute the given plans and push data/maintenance_fund.json via
+    git_sync (concurrency-safe delta write). Called by the enrichment pipeline
+    when a plan is new or changes status, so the fund data is re-checked
+    alongside the Table-5 / יח"ד-מותנות re-check (horaot is freshly downloaded
+    by enrich before this runs)."""
+    for d in (os.path.dirname(__file__), r"C:\ORANIM"):
+        if d not in sys.path:
+            sys.path.insert(0, d)
+    import git_sync
+
+    plans = load_plans()
+    t5 = load_table5_conditional()
+
+    def t5_for(meta):
+        taba7 = meta["taba"].zfill(7) if meta["taba"] else ""
+        return t5.get(meta["taba"]) or t5.get(taba7) or {}
+
+    deltas = {}   # plan_name -> record | None (remove)
+    for pn in plan_names:
+        meta = plans.get(pn)
+        if not meta:
+            continue
+        pdf = os.path.join(HORAOT_DIR, pn + ".pdf")
+        rec = dict(meta); rec["has_horaot"] = os.path.exists(pdf)
+        finding = {"has_fund": False}
+        if rec["has_horaot"]:
+            try:
+                finding = analyze(read_horaot_text(pdf))
+            except Exception as e:
+                finding = {"has_fund": False, "error": f"{type(e).__name__}: {str(e)[:80]}"}
+        rec = merge(rec, finding, t5_for(meta))
+        deltas[pn] = rec if rec.get("has_fund") else None
+
+    if not deltas:
+        print("push_updates: no matching plans", flush=True)
+        return
+
+    def edit_fn(data):
+        n = 0
+        for pn, rec in deltas.items():
+            if rec:
+                if data.get(pn) != rec:
+                    data[pn] = rec
+                    n += 1
+            elif pn in data:                      # lost fund status → remove
+                del data[pn]
+                n += 1
+        return n
+
+    changed = [pn for pn, r in deltas.items() if r]
+    git_sync.update_json_and_push(
+        "data/maintenance_fund.json", edit_fn,
+        f"data: maintenance-fund recheck ({len(deltas)} plans, {len(changed)} funds)")
+    print(f"push_updates: {len(deltas)} rechecked, {len(changed)} funds "
+          f"({', '.join(changed) if changed else 'none'})", flush=True)
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
+    if "--push" in sys.argv:
+        push_updates([a for a in sys.argv[1:] if a.startswith("101-")])
+        return
     only = [a for a in sys.argv[1:] if a.startswith("101-")]
 
     plans = load_plans()

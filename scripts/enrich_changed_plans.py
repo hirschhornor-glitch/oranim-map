@@ -187,6 +187,21 @@ def run_staging(taba):
         return False
 
 
+def run_fund(plan_names):
+    """Re-check קרן תחזוקה (maintenance fund) for the enriched plans and push
+    data/maintenance_fund.json via git_sync. Runs on the freshly-ensured horaot,
+    so a plan that just changed status has its fund amount / conditional-units /
+    section re-extracted alongside the Table-5 check. Reuses the repo extractor's
+    --push (concurrency-safe delta write). best-effort."""
+    if not plan_names:
+        return False
+    fund_script = ROOT / "oranim-app" / "scripts" / "extract_maintenance_fund.py"
+    ok, tail = run_py([str(fund_script), "--push", *plan_names], 600, "fund")
+    if not ok:
+        print(f"  [fund] {tail.strip()[-200:]}")
+    return ok
+
+
 def run_table5(plan_names, allow_download, no_email=False):
     """Refresh Table 5 -> GS for the plans enriched this run by invoking the
     guarded Mavat sync (update_mavat_ui.py) scoped to just these plans via
@@ -381,6 +396,8 @@ def main():
     ap.add_argument("--no-email", action="store_true")
     ap.add_argument("--no-table5", action="store_true",
                     help="skip the Table 5 -> GS refresh (update_mavat_ui --plans-file)")
+    ap.add_argument("--no-fund", action="store_true",
+                    help="skip the קרן תחזוקה recheck (maintenance_fund.json)")
     ap.add_argument("--limit", type=int, help="process at most N plans")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -505,6 +522,11 @@ def main():
             print(tail[-400:])
 
     write_summary(rows)
+
+    # קרן תחזוקה recheck — re-extract the maintenance fund for the enriched plans
+    # from their (freshly-ensured) horaot and push data/maintenance_fund.json.
+    if not args.no_fund and rows:
+        run_fund([r["plan_name"] for r in rows])
 
     # One-email policy: hand our per-plan enrichment summary to update_mavat_ui,
     # which folds it into its single consolidated "עידכון ממבאת" email while it
