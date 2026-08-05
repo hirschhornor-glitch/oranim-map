@@ -32,6 +32,9 @@ _bootstrap/
 __pycache__/
 *.pyc
 
+# npm deps for local babel build (CI rebuilds app.js; not for deploy)
+node_modules/
+
 # execution-staging extractor checkpoint artifacts
 data/execution_staging.json.done
 data/execution_staging.json.tmp
