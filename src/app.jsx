@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-05-migrash-footprints';
+        const APP_VERSION = '2026-08-05-maintenance-fund';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -936,6 +936,7 @@
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                     { id: 'new_construction', name: 'בינוי חדש', desc: 'בינוי שהושלם בפועל — תב"עות שאוכלסו (טופס 4) ומבני תמ"א 38 עם תעודת גמר. הפריטים האלה מוצגים מלאים בשכבה זו, ומעומעמים ל-30% בשכבות תב"ע/תמ"א 38 הרגילות', on: false },
+                    { id: 'maintenance_fund', name: 'קרן תחזוקה', desc: 'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח. מקור: הוראות התכנית (מבא"ת) + טבלה 5', on: false },
                 ]
             },
             infrastructure: {
@@ -3182,6 +3183,9 @@
             const [overlapReport, setOverlapReport] = useState(false);
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
             const [shavazReportFilter, setShavazReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
+            // דוח קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה
+            const [fundReport, setFundReport] = useState(false);
+            const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
@@ -3648,6 +3652,7 @@
                         [meetingsReport, () => setMeetingsReport(false)],
                         [overlapReport, () => setOverlapReport(false)],
                         [shavazKayamReport, () => setShavazKayamReport(false)],
+                        [fundReport, () => setFundReport(false)],
                         [specialHousingReport, () => setSpecialHousingReport(false)],
                         [eduRenewalReport, () => setEduRenewalReport(false)],
                         [developersReport, () => { setDevelopersReport(false); setDevRepExpanded(null); }],
@@ -5177,6 +5182,7 @@
                 window.__extraPermits = {};
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
+                window.__maintenanceFund = {}; // קרן תחזוקה — by plan_name
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
                 window.__orthoQuarters = {};
@@ -5208,6 +5214,7 @@
                     ['__extraPermits', 'data/extra_permits.json'],
                     ['__executionStaging', 'data/execution_staging.json'],
                     ['__floorAllocations', 'data/floor_allocations.json'],
+                    ['__maintenanceFund', 'data/maintenance_fund.json'],
                     ['__hafrashaDelivery', 'data/hafrasha_delivery.json'],
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
@@ -5713,6 +5720,7 @@
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
+                            else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
@@ -13518,6 +13526,9 @@
                     { key: 'shavaz', isOpen: () => shavazKayamReport, open: () => setShavazKayamReport(true),
                         ser: () => ({ sub: shavazReportFilter.sub, minahak: shavazReportFilter.minahak, q: shavazReportFilter.q }),
                         apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
+                    { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
+                        ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, q: fundReportFilter.q }),
+                        apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
                     { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true) },
                     { key: 'newPlans', isOpen: () => newPlansReport, open: () => setNewPlansReport(true) },
@@ -18832,6 +18843,44 @@
                     });
                 }
 
+                // --- קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ---
+                // Highlights plan polygons whose horaot condition rights/units on establishing a
+                // long-term maintenance fund. Data in window.__maintenanceFund (by plan_name).
+                if (layers['maintenance_fund'] && gd.plans) {
+                    const fundMap = window.__maintenanceFund || {};
+                    const fundLayer = L.geoJSON(gd.plans, {
+                        filter: f => {
+                            const p = f.properties || {};
+                            const rec = fundMap[p.plan_name];
+                            if (!rec || !rec.has_fund) return false;
+                            const s = normalizeStatus((p.status_mavat || '').trim());
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
+                            return true;
+                        },
+                        style: () => ({ color: '#8a6d00', weight: 1.6, fillColor: '#e0a800', fillOpacity: 0.42 }),
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const rec = fundMap[p.plan_name] || {};
+                            layer.on('click', (e) => {
+                                const m = mapInstanceRef.current || map;
+                                const content = buildMaintenanceFundPopup(p, rec);
+                                const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                    .setLatLng(e.latlng).setContent(content);
+                                popup.openOn(m);
+                                bindPopupEvents(popup, [{ properties: p, type: 'plan' }], 0);
+                            });
+                            const cu = rec.conditional_units;
+                            layer.bindTooltip(
+                                '<div style="color:#6b5300;font-size:7.5pt;font-weight:bold;font-family:Assistant,sans-serif">💰 ' +
+                                (p.plan_summary || p.plan_name_he || p.plan_name || '') +
+                                (cu ? '<br>' + cu + ' יח"ד מותנות' : '') + '</div>',
+                                { permanent: false, direction: 'top', className: 'tama38-label', sticky: true }
+                            );
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.maintenance_fund = fundLayer;
+                }
+
                 // --- בינוי חדש: תב"עות מאוכלסות (טופס 4) + מבני תמ"א 38 עם תעודת גמר ---
                 // A dedicated layer that highlights construction that finished in reality. The same
                 // items recede to BUILT_FADE_OPACITY in the regular תב"ע / תמ"א 38 layers (see the
@@ -20829,6 +20878,44 @@
             // Rebuilt תמ"א 38 building popup — plan-popup-like. Prominent permit number +
             // tama type (38/1 חיזוק / 38/2 הריסה-ובנייה), reconciled status, units נכנס→יוצא,
             // floors, developer, cross-source banners. `permits` = getPermitsForTama38(fid).
+            // Popup for the קרן תחזוקה (maintenance-fund) layer. `fund` is the
+            // window.__maintenanceFund record for this plan.
+            function buildMaintenanceFundPopup(props, fund) {
+                const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                fund = fund || {};
+                const title = props.plan_summary || props.plan_name_he || props.plan_name || '';
+                const cu = fund.conditional_units;
+                const amt = fund.fund_amount_ils;
+                const sec = fund.fund_section;
+                const floors = fund.max_floors;
+                const status = normalizeStatus((props.status_mavat || '').trim()) || (props.status_mavat || '');
+                let html = '<div style="font-family:Assistant,sans-serif;min-width:230px;max-width:350px">';
+                html += '<div style="background:#e0a800;color:#3d2f00;font-weight:800;padding:6px 10px;border-radius:6px 6px 0 0;font-size:11.5pt">💰 קרן תחזוקה</div>';
+                html += '<div style="padding:8px 10px 4px">';
+                html += '<div style="font-weight:800;font-size:11pt;color:#222;margin-bottom:2px">' + esc(title) + '</div>';
+                html += '<div style="font-size:8.5pt;color:#777;margin-bottom:6px">תב"ע ' + esc(props.plan_name || '') + (status ? ' · ' + esc(status) : '') + (floors ? ' · ' + floors + ' קומות' : '') + '</div>';
+                if (amt) {
+                    html += '<div style="background:#eef8ef;border:1px solid #b7dcc0;border-radius:6px;padding:7px 10px;margin-bottom:6px">'
+                        + '<div style="font-size:8pt;color:#4a7a58;font-weight:700">גובה הקרן</div>'
+                        + '<div style="font-size:15pt;font-weight:800;color:#2d6a4f">₪' + Number(amt).toLocaleString('en-US') + '</div></div>';
+                } else {
+                    html += '<div style="background:#fdf8e8;border:1px solid #e8d9a8;border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:8.5pt;color:#7a6320">'
+                        + '<b>גובה הקרן:</b> נקבע בהסכם נאמנות' + (sec ? ' (סעיף ' + esc(sec) + ')' : '') + ' — לפי הערכת עלויות התחזוקה של הרשות להתחדשות עירונית</div>';
+                }
+                const row = (label, val) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-top:1px solid #f0e6c8;font-size:9.5pt"><span style="color:#8a6d00;font-weight:700">' + label + '</span><span style="color:#222;text-align:left">' + val + '</span></div>';
+                if (cu) html += row('יח"ד מותנות', '<b style="font-size:11pt;color:#b5651d">' + cu + '</b>');
+                if (props.units_total) html += row('סה"כ יח"ד בתכנית', esc(props.units_total));
+                if (props.sub_neighborhood || props.SUB_N) html += row('תת-שכונה', esc(props.sub_neighborhood || props.SUB_N));
+                if (fund.fund_amount_text) {
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:#f2f7f2;border-right:3px solid #2d6a4f;border-radius:4px;font-size:8pt;color:#3a5a44;line-height:1.5;max-height:120px;overflow:auto">“' + esc(fund.fund_amount_text) + '”</div>';
+                } else if (fund.mechanism_text) {
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:#fdf8e8;border-radius:5px;font-size:8pt;color:#5a4a1a;line-height:1.5;max-height:120px;overflow:auto">' + esc(fund.mechanism_text) + '</div>';
+                }
+                if (props.mavat_url) html += '<div style="margin-top:6px"><a href="' + esc(props.mavat_url) + '" target="_blank" style="color:#0a6cff;font-size:8.5pt;font-weight:700">↗ פתח במבא"ת</a></div>';
+                html += '</div></div>';
+                return html;
+            }
+
             function buildTama38RichPopup(props, permits, navInfo) {
                 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
                 permits = permits || [];
@@ -25768,6 +25855,7 @@
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
                                 { icon:'🏘️', title:'דיור להשכרה ומותנה', desc:'יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
+                                { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', q: '' }); setFundReport(true); }) },
                             ]},
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
@@ -32705,6 +32793,276 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             </table>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
+
+                    {/* ── קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ── */}
+                    {fundReport && (() => {
+                        const gd = geoDataRef.current;
+                        const fundMap = window.__maintenanceFund || {};
+                        // denominator = our TOWER plans (>13 floors); the fund is a tower
+                        // mechanism, so the ratio is "fund plans out of tower plans".
+                        const planFloors = (p) => {
+                            let ln = parseFloat(p.level_num); if (!(ln > 0 && ln < 200)) ln = 0;
+                            let h = parseFloat(p.High); let hf = (h > 0) ? Math.round(h / 3.1) : 0;
+                            return Math.max(ln, hf);
+                        };
+                        let totalPlans = 0;
+                        if (gd.plans && gd.plans.features) {
+                            const seen = new Set();
+                            gd.plans.features.forEach(f => {
+                                const p = f.properties || {};
+                                if (!p.plan_name || seen.has(p.plan_name)) return;
+                                seen.add(p.plan_name);
+                                const s = normalizeStatus((p.status_mavat || '').trim());
+                                if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                                if (planFloors(p) > 13) totalPlans++;
+                            });
+                        }
+                        const rows = [];
+                        Object.values(fundMap).forEach(rec => {
+                            if (!rec || !rec.has_fund) return;
+                            const s = normalizeStatus((rec.status_mavat || '').trim());
+                            if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                            rows.push({
+                                plan_name: rec.plan_name,
+                                title: rec.plan_summary || rec.plan_name_he || rec.plan_name || '',
+                                sub: rec.sub_neighborhood || '',
+                                minahak: rec.minahak || '',
+                                status: s || (rec.status_mavat || ''),
+                                cu: rec.conditional_units || 0,
+                                cuSrc: rec.conditional_units_src || '',
+                                amount: rec.fund_amount_ils || null,
+                                amountText: rec.fund_amount_text || '',
+                                floors: rec.max_floors || null,
+                                section: rec.fund_section || '',
+                                mechanism: rec.mechanism_text || '',
+                                units_total: rec.units_total || '',
+                                mavat_url: rec.mavat_url || '',
+                            });
+                        });
+
+                        const allSubs = [...new Set(rows.map(r => r.sub).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
+                        const allMinahaks = [...new Set(rows.map(r => r.minahak).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
+
+                        const f = fundReportFilter;
+                        const q = (f.q || '').trim().toLowerCase();
+                        const filtered = rows.filter(r => {
+                            if (f.sub !== 'all' && r.sub !== f.sub) return false;
+                            if (f.minahak !== 'all' && r.minahak !== f.minahak) return false;
+                            if (q) {
+                                const joined = [r.plan_name, r.title, r.sub, r.mechanism, r.section].join(' ').toLowerCase();
+                                if (!joined.includes(q)) return false;
+                            }
+                            return true;
+                        });
+
+                        const totalCU = filtered.reduce((s,r) => s + (Number(r.cu) || 0), 0);
+                        const withAmount = filtered.filter(r => r.amount).length;
+                        const totalAmount = filtered.reduce((s,r) => s + (Number(r.amount) || 0), 0);
+                        const fmtIls = (v) => '₪' + Number(v).toLocaleString('en-US');
+                        const fmtIlsShort = (v) => v >= 1e6 ? '₪' + (v/1e6).toFixed(1).replace(/\.0$/,'') + ' מ׳' : '₪' + Number(v).toLocaleString('en-US');
+
+                        const groups = {};
+                        filtered.forEach(r => {
+                            const key = r.sub || '— ללא תת-שכונה —';
+                            if (!groups[key]) groups[key] = { sub: key, minahak: r.minahak, items: [], cu: 0, amt: 0 };
+                            groups[key].items.push(r);
+                            groups[key].cu += Number(r.cu) || 0;
+                            groups[key].amt += Number(r.amount) || 0;
+                        });
+                        const groupList = Object.values(groups).sort((a,b) => b.amt - a.amt || b.cu - a.cu || b.items.length - a.items.length);
+
+                        const fundSizeText = (r) => r.amount
+                            ? '₪ ' + Number(r.amount).toLocaleString('en-US')
+                            : ('מותנה בהסכם נאמנות' + (r.section ? ' (סעיף ' + r.section + ')' : ''));
+
+                        const jumpToFund = (r) => {
+                            const gd2 = geoDataRef.current;
+                            const map = mapInstanceRef.current;
+                            if (!map || !gd2.plans) return;
+                            const feat = gd2.plans.features.find(x => x.properties && x.properties.plan_name === r.plan_name && x.geometry);
+                            if (!feat) { alert('אין גיאומטריה לתכנית זו במפה'); return; }
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            const center = L.latLng((bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2);
+                            setFundReport(false);
+                            setLayers(prev => ({ ...prev, maintenance_fund: true }));
+                            setTimeout(() => {
+                                map.fitBounds(bounds, { padding:[60,60], maxZoom: 18 });
+                                setTimeout(() => {
+                                    const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
+                                        .setLatLng(center)
+                                        .setContent(buildMaintenanceFundPopup(feat.properties, fundMap[r.plan_name] || {}));
+                                    popup.openOn(map);
+                                }, 500);
+                            }, 100);
+                        };
+
+                        function exportFundCSV() {
+                            if (!filtered.length) { alert('אין שורות לייצוא'); return; }
+                            const cols = ['תת-שכונה','מינהל','תב"ע','שם תכנית','סטטוס','קומות','יח"ד מותנות','מקור ספירה','גובה הקרן (₪)','נוסח גובה הקרן בהוראות','סעיף קרן','סה"כ יח"ד','מנגנון/תנאי','קישור מבא"ת'];
+                            const out = [cols.join(',')];
+                            groupList.forEach(gr => {
+                                gr.items.slice().sort((a,b) => (b.amount||0)-(a.amount||0) || (b.cu||0)-(a.cu||0)).forEach(r => {
+                                    const row = [
+                                        gr.sub, r.minahak || '', r.plan_name || '', r.title || '', r.status || '',
+                                        r.floors || '', r.cu || '', r.cuSrc || '', r.amount || '', r.amountText || '',
+                                        r.section || '', r.units_total || '', r.mechanism || '', r.mavat_url || ''
+                                    ];
+                                    out.push(row.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','));
+                                });
+                            });
+                            const blob = new Blob(['﻿' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'קרן_תחזוקה.csv';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        }
+
+                        function printFundReport() {
+                            const win = window.open('', '_blank');
+                            const today = new Date().toLocaleDateString('he-IL');
+                            let body = '<h2>💰 קרן תחזוקה — תכניות עם זכויות/יח"ד מותנות · ' + today + '</h2>';
+                            body += '<p class="summary"><b>' + filtered.length + '</b> תכניות מתוך ' + totalPlans + ' תכניות מגדלים (>13 ק\') (' +
+                                (totalPlans ? (100*filtered.length/totalPlans).toFixed(1) : '0') + '%) · סה"כ <b>' + totalCU + '</b> יח"ד מותנות · ' +
+                                'סה"כ גובה הקרנות <b>' + (totalAmount ? '₪' + totalAmount.toLocaleString('en-US') : '—') + '</b> (' + withAmount + ' תכניות עם סכום מפורש)</p>';
+                            if (f.sub !== 'all' || f.minahak !== 'all' || q) {
+                                const parts = [];
+                                if (f.sub !== 'all') parts.push('תת-שכונה: ' + f.sub);
+                                if (f.minahak !== 'all') parts.push('מינהל: ' + f.minahak);
+                                if (q) parts.push('חיפוש: ' + f.q);
+                                body += '<p class="summary" style="color:#888">סינון: ' + parts.join(' · ') + '</p>';
+                            }
+                            groupList.forEach(gr => {
+                                body += '<h3>' + gr.sub + ' <span class="meta">· ' + gr.items.length + ' תכניות · ' + gr.cu + ' יח"ד מותנות' +
+                                    (gr.amt ? ' · ₪' + gr.amt.toLocaleString('en-US') : '') +
+                                    (gr.minahak ? ' · ' + gr.minahak : '') + '</span></h3>';
+                                const rowsHtml = gr.items.slice().sort((a,b) => (b.amount||0)-(a.amount||0) || (b.cu||0)-(a.cu||0)).map(r =>
+                                    '<tr>' +
+                                    '<td>' + r.plan_name + '</td>' +
+                                    '<td>' + (r.title || '-') + '</td>' +
+                                    '<td>' + (r.status || '-') + '</td>' +
+                                    '<td style="text-align:center">' + (r.floors || '-') + '</td>' +
+                                    '<td style="text-align:center">' + (r.cu || '-') + '</td>' +
+                                    '<td style="font-weight:bold">' + (r.amount ? '₪' + r.amount.toLocaleString('en-US') : fundSizeText(r)) + '</td>' +
+                                    '<td style="font-size:9px;color:#555">' + (r.amountText || r.mechanism || '') + '</td>' +
+                                    '</tr>').join('');
+                                body += '<table><thead><tr><th>תב"ע</th><th>שם תכנית</th><th>סטטוס</th><th>קומות</th><th>יח"ד מותנות</th><th>גובה הקרן</th><th>נוסח/מנגנון</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+                            });
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>קרן תחזוקה</title>' +
+                                '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}' +
+                                'h2{color:#8a6d00;margin-bottom:6px}' +
+                                'h3{color:#6b5300;margin:18px 0 6px;font-size:14px;border-bottom:1px solid #e0c56a;padding-bottom:3px}' +
+                                'h3 .meta{color:#666;font-weight:400;font-size:12px}' +
+                                '.summary{color:#555;margin-bottom:16px}' +
+                                'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}' +
+                                'th,td{border:1px solid #ccc;padding:5px;text-align:right;vertical-align:top}' +
+                                'th{background:#faedc4}' +
+                                '@media print { h3 { page-break-after: avoid } table { page-break-inside: avoid } }' +
+                                '</style></head><body>' + body + '</body></html>');
+                            win.document.close();
+                            setTimeout(() => win.print(), 250);
+                        }
+
+                        return (
+                        <div className="units-overlay" onClick={() => setFundReport(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'min(1040px,96vw)',maxHeight:'88vh',display:'flex',flexDirection:'column'}}>
+                                <div className="units-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+                                    <h2 style={{margin:0,color:'#f0d878',fontSize:17}}>💰 קרן תחזוקה</h2>
+                                    <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                                        <button onClick={printFundReport} style={{background:'#3a5a8c',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📄 הדפסה / PDF</button>
+                                        <button onClick={exportFundCSV} style={{background:'#2d6a4f',color:'#fff',border:'none',padding:'5px 10px',borderRadius:4,cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>📊 ייצוא אקסל</button>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setFundReport(false)}>&times;</button>
+                                    </div>
+                                </div>
+                                <div style={{display:'flex',gap:10,padding:'10px 16px',flexWrap:'wrap',borderBottom:'1px solid #2a2a4a'}}>
+                                    <div style={{background:'rgba(224,168,0,0.14)',border:'1px solid rgba(224,168,0,0.4)',borderRadius:8,padding:'8px 14px',minWidth:150}}>
+                                        <div style={{fontSize:22,fontWeight:800,color:'#f0d878'}}>{filtered.length} <span style={{fontSize:13,color:'#b9a95a',fontWeight:500}}>מתוך {totalPlans}</span></div>
+                                        <div style={{fontSize:11,color:'#c9bd80'}}>תכניות עם קרן תחזוקה ({totalPlans ? (100*filtered.length/totalPlans).toFixed(1) : '0'}% מתכניות המגדלים ‏>13 ק')</div>
+                                    </div>
+                                    <div style={{background:'rgba(181,101,29,0.14)',border:'1px solid rgba(181,101,29,0.4)',borderRadius:8,padding:'8px 14px',minWidth:130}}>
+                                        <div style={{fontSize:22,fontWeight:800,color:'#e6a86a'}}>{totalCU.toLocaleString()}</div>
+                                        <div style={{fontSize:11,color:'#d3b48c'}}>סה"כ יח"ד מותנות</div>
+                                    </div>
+                                    <div style={{background:'rgba(60,160,90,0.13)',border:'1px solid rgba(60,160,90,0.4)',borderRadius:8,padding:'8px 14px',minWidth:170}}>
+                                        <div style={{fontSize:22,fontWeight:800,color:'#8fdca8'}}>{totalAmount ? fmtIlsShort(totalAmount) : '—'}</div>
+                                        <div style={{fontSize:11,color:'#a9cbb5'}}>סה"כ גובה הקרנות ({withAmount} תכניות עם סכום מפורש)</div>
+                                    </div>
+                                </div>
+                                <div style={{padding:'8px 16px',borderBottom:'1px solid #2a2a4a',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',fontSize:11}}>
+                                    <span style={{color:'#aab'}}>תת-שכונה:</span>
+                                    <select value={f.sub} onChange={e => setFundReportFilter(prev => ({...prev, sub: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                        <option value="all">הכל ({allSubs.length})</option>
+                                        {allSubs.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                    <span style={{color:'#aab',marginRight:6}}>מינהל:</span>
+                                    <select value={f.minahak} onChange={e => setFundReportFilter(prev => ({...prev, minahak: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                        <option value="all">הכל</option>
+                                        {allMinahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <input type="text" placeholder="חיפוש (תב״ע / שם / מנגנון)" value={f.q}
+                                        onChange={e => setFundReportFilter(prev => ({...prev, q: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit',flex:'1 1 160px',minWidth:120}} />
+                                </div>
+                                <div style={{overflowY:'auto',flex:1,padding:'8px 12px'}}>
+                                    {groupList.length === 0 && (
+                                        <div style={{padding:30,textAlign:'center',color:'#aab'}}>אין תכניות התואמות את הסינון.</div>
+                                    )}
+                                    {groupList.map(gr => (
+                                        <div key={gr.sub} style={{marginBottom:14,border:'1px solid #2a2a4a',borderRadius:6,background:'#16162a'}}>
+                                            <div style={{padding:'7px 12px',background:'rgba(224,168,0,0.14)',borderBottom:'1px solid #2a2a4a',display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                                                <span style={{color:'#e0c56a',fontWeight:600,fontSize:13}}>🏘️ {gr.sub}</span>
+                                                {gr.minahak && <span style={{color:'#ce93d8',fontSize:11}}>{gr.minahak}</span>}
+                                                <span style={{color:'#9ca3af',fontSize:11,marginRight:'auto'}}>
+                                                    {gr.items.length} תכניות · {gr.cu} יח"ד מותנות{gr.amt ? ' · ' + fmtIlsShort(gr.amt) : ''}
+                                                </span>
+                                            </div>
+                                            <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse'}}>
+                                                <thead>
+                                                    <tr style={{borderBottom:'1px solid #2a2a4a',background:'#1c1c30'}}>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600,width:110}}>תב״ע</th>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600}}>שם תכנית</th>
+                                                        <th style={{textAlign:'center',padding:'5px 8px',color:'#bbb',fontWeight:600,width:70}}>קומות</th>
+                                                        <th style={{textAlign:'center',padding:'5px 8px',color:'#bbb',fontWeight:600,width:80}}>יח"ד מותנות</th>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600,width:190}}>גובה הקרן</th>
+                                                        <th style={{textAlign:'right',padding:'5px 8px',color:'#bbb',fontWeight:600,width:90}}>סטטוס</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {gr.items.slice().sort((a,b) => (b.amount||0)-(a.amount||0) || (b.cu||0)-(a.cu||0)).map((r, i) => (
+                                                        <tr key={i} style={{borderBottom:'1px solid #1a1a2e',cursor:'pointer'}}
+                                                            onClick={() => jumpToFund(r)}
+                                                            title="קליק להצגה על המפה">
+                                                            <td style={{padding:'5px 8px',color:'#64b5f6',whiteSpace:'nowrap'}}>{r.plan_name}</td>
+                                                            <td style={{padding:'5px 8px',color:'#e0e0e0'}}>{r.title || '-'}
+                                                                {r.mechanism ? <div style={{fontSize:10,color:'#8a9bc0',marginTop:2,maxWidth:360,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} title={r.mechanism}>{r.mechanism}</div> : null}
+                                                            </td>
+                                                            <td style={{padding:'5px 8px',color:'#9bb4d6',textAlign:'center'}}>{r.floors || '—'}</td>
+                                                            <td style={{padding:'5px 8px',color:'#e6a86a',textAlign:'center',fontWeight:700}}>{r.cu || '—'}{r.cu && r.cuSrc==='horaot' ? <span style={{color:'#777',fontWeight:400}}> *</span> : null}</td>
+                                                            <td style={{padding:'5px 8px',color: r.amount ? '#a5d6a7' : '#c9bd80'}} title={r.amountText || ''}>
+                                                                {r.amount
+                                                                    ? <span style={{fontWeight:700}}>{fmtIls(r.amount)}</span>
+                                                                    : <span style={{fontSize:10.5}}>{fundSizeText(r)}</span>}
+                                                            </td>
+                                                            <td style={{padding:'5px 8px',color:'#bbb',whiteSpace:'nowrap'}}>{r.status || '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ))}
+                                    <div style={{fontSize:10,color:'#777',padding:'4px 8px'}}>גובה הקרן חולץ מנוסח ההוראות של כל תכנית (מעבר עכבר על הסכום מציג את הציטוט המדויק). כשההוראות אינן נוקבות בסכום ₪ מפורש, הסכום נקבע בהסכם נאמנות לפי הערכת עלויות התחזוקה של הרשות להתחדשות עירונית. יח"ד מותנות מסומנות ב-* חולצו מההוראות (השאר מטבלה 5). ההיקף: תכניות התחדשות עירונית/מגדלים מעל 13 קומות בלבד.</div>
                                 </div>
                             </div>
                         </div>);
