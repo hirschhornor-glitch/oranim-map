@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-05-project-outline';
+        const APP_VERSION = '2026-08-05-fund-neighborhoods';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3186,6 +3186,7 @@
             // דוח קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה
             const [fundReport, setFundReport] = useState(false);
             const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
+            const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
             const [eduRenewalReport, setEduRenewalReport] = useState(false);
@@ -32817,7 +32818,16 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             let h = parseFloat(p.High); let hf = (h > 0) ? Math.round(h / 3.1) : 0;
                             return Math.max(ln, hf);
                         };
+                        // same-neighbourhood aliases → canonical (matches the extractor)
+                        const SUB_CANON = { 'רסקו': 'רסקו - גבעת הורדים', 'א.ת. תלפיות': 'תלפיות - תעשייה ומסחר' };
+                        const FUND_SUB_OVERRIDE = { '101-1563642': 'פת' };
+                        const NOSUB = '— ללא תת-שכונה —';
+                        const canonSub = (s) => SUB_CANON[s] || s || NOSUB;
+                        // bucket every tower plan by canonical sub, splitting fund / non-fund.
+                        // a fund plan is filed under its fund-record sub so the per-neighbourhood
+                        // counts line up with the fund rows below.
                         let totalPlans = 0;
+                        const towerBySub = {}; // sub -> { total, fund, nonFund:[{plan_name,title,floors,status,feature}] }
                         if (gd.plans && gd.plans.features) {
                             const seen = new Set();
                             gd.plans.features.forEach(f => {
@@ -32826,7 +32836,16 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 seen.add(p.plan_name);
                                 const s = normalizeStatus((p.status_mavat || '').trim());
                                 if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
-                                if (planFloors(p) > 13) totalPlans++;
+                                if (planFloors(p) <= 13) return;
+                                totalPlans++;
+                                const rec = fundMap[p.plan_name];
+                                const isFund = !!(rec && rec.has_fund);
+                                const cs = isFund ? (rec.sub_neighborhood || NOSUB)
+                                    : (FUND_SUB_OVERRIDE[p.plan_name] || canonSub(p.sub_neighborhood || p.SUB_N || ''));
+                                const b = towerBySub[cs] || (towerBySub[cs] = { total: 0, fund: 0, nonFund: [] });
+                                b.total++;
+                                if (isFund) b.fund++;
+                                else b.nonFund.push({ plan_name: p.plan_name, title: p.plan_summary || p.plan_name_he || p.plan_name, floors: planFloors(p), status: s, feature: f });
                             });
                         }
                         const rows = [];
@@ -32912,6 +32931,21 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     popup.openOn(map);
                                 }, 500);
                             }, 100);
+                        };
+
+                        // zoom to a non-fund tower plan on the map (from the expandable list)
+                        const zoomToFeature = (feat) => {
+                            const map = mapInstanceRef.current;
+                            if (!map || !feat || !feat.geometry) return;
+                            const coords = [];
+                            const g = feat.geometry;
+                            if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => poly.forEach(ring => coords.push(...ring)));
+                            else if (g.type === 'Polygon') g.coordinates.forEach(ring => coords.push(...ring));
+                            if (!coords.length) return;
+                            const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+                            const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+                            setFundReport(false);
+                            setTimeout(() => map.fitBounds(bounds, { padding:[60,60], maxZoom: 18 }), 100);
                         };
 
                         function exportFundCSV() {
@@ -33033,7 +33067,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <span style={{color:'#e0c56a',fontWeight:600,fontSize:13}}>🏘️ {gr.sub}</span>
                                                 {gr.minahak && <span style={{color:'#ce93d8',fontSize:11}}>{gr.minahak}</span>}
                                                 <span style={{color:'#9ca3af',fontSize:11,marginRight:'auto'}}>
-                                                    {gr.items.length} תכניות · {gr.cu} יח"ד מותנות{gr.amt ? ' · ' + fmtIlsShort(gr.amt) : ''}
+                                                    <b style={{color:'#e0c56a'}}>{gr.items.length}</b> עם קרן מתוך {(towerBySub[gr.sub] ? towerBySub[gr.sub].total : gr.items.length)} מגדלים · {gr.cu} יח"ד מותנות{gr.amt ? ' · ' + fmtIlsShort(gr.amt) : ''}
                                                 </span>
                                             </div>
                                             <table style={{width:'100%',fontSize:11.5,borderCollapse:'collapse'}}>
@@ -33053,9 +33087,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                             onClick={() => jumpToFund(r)}
                                                             title="קליק להצגה על המפה">
                                                             <td style={{padding:'5px 8px',color:'#64b5f6',whiteSpace:'nowrap'}}>{r.plan_name}</td>
-                                                            <td style={{padding:'5px 8px',color:'#e0e0e0'}}>{r.title || '-'}
-                                                                {r.mechanism ? <div style={{fontSize:10,color:'#8a9bc0',marginTop:2,maxWidth:360,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} title={r.mechanism}>{r.mechanism}</div> : null}
-                                                            </td>
+                                                            <td style={{padding:'5px 8px',color:'#e0e0e0'}}>{r.title || '-'}</td>
                                                             <td style={{padding:'5px 8px',color:'#9bb4d6',textAlign:'center'}}>{r.floors || '—'}</td>
                                                             <td style={{padding:'5px 8px',color:'#e6a86a',textAlign:'center',fontWeight:700}}>{r.cu || '—'}{r.cu && r.cuSrc==='horaot' ? <span style={{color:'#777',fontWeight:400}}> *</span> : null}</td>
                                                             <td style={{padding:'5px 8px',color: r.amount ? '#a5d6a7' : '#c9bd80'}} title={r.amountText || ''}>
@@ -33068,6 +33100,33 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     ))}
                                                 </tbody>
                                             </table>
+                                            {(() => {
+                                                const tb = towerBySub[gr.sub];
+                                                const nf = tb ? tb.nonFund : [];
+                                                if (!nf.length) return null;
+                                                const open = !!fundExpanded[gr.sub];
+                                                return (
+                                                    <div style={{borderTop:'1px solid #2a2a4a'}}>
+                                                        <div onClick={() => setFundExpanded(prev => ({...prev, [gr.sub]: !prev[gr.sub]}))}
+                                                            style={{padding:'6px 12px',cursor:'pointer',color:'#9aa7c0',fontSize:11,userSelect:'none',fontWeight:600}}>
+                                                            {open ? '▾' : '▸'} {nf.length} מגדלים בשכונה ללא קרן תחזוקה
+                                                        </div>
+                                                        {open && (
+                                                            <div style={{padding:'0 12px 8px'}}>
+                                                                {nf.slice().sort((a,b) => (b.floors||0)-(a.floors||0)).map((p, i) => (
+                                                                    <div key={i} onClick={() => zoomToFeature(p.feature)} title="קליק להצגה על המפה"
+                                                                        style={{display:'flex',gap:8,alignItems:'center',padding:'3px 6px',cursor:'pointer',fontSize:11,borderTop:i?'1px solid #1a1a2e':'none'}}>
+                                                                        <span style={{color:'#64b5f6',whiteSpace:'nowrap',minWidth:92}}>{p.plan_name}</span>
+                                                                        <span style={{color:'#cfd3e6',flex:1}}>{p.title || '-'}</span>
+                                                                        <span style={{color:'#8a9bc0',whiteSpace:'nowrap'}}>{p.floors} ק'</span>
+                                                                        <span style={{color:'#888',minWidth:66,textAlign:'left',whiteSpace:'nowrap'}}>{p.status || ''}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     ))}
                                     <div style={{fontSize:10,color:'#777',padding:'4px 8px'}}>גובה הקרן חולץ מנוסח ההוראות של כל תכנית (מעבר עכבר על הסכום מציג את הציטוט המדויק). כשההוראות אינן נוקבות בסכום ₪ מפורש, הסכום נקבע בהסכם נאמנות לפי הערכת עלויות התחזוקה של הרשות להתחדשות עירונית. יח"ד מותנות מסומנות ב-* חולצו מההוראות (השאר מטבלה 5). ההיקף: תכניות התחדשות עירונית/מגדלים מעל 13 קומות בלבד.</div>

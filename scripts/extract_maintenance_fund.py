@@ -51,6 +51,12 @@ EXCLUDE_PLANS = {
 SUB_OVERRIDE = {
     "101-1563642": "פת",   # התחדשות עירונית אריה בעהם
 }
+#   canonical sub-neighborhood names (same neighbourhood stored under aliases —
+#   canonical form taken from the authoritative sub_neighborhoods layer)
+SUB_CANON = {
+    "רסקו": "רסקו - גבעת הורדים",
+    "א.ת. תלפיות": "תלפיות - תעשייה ומסחר",
+}
 MIN_FLOORS = 13   # scope: urban-renewal / tower plans of MORE THAN 13 floors
 
 
@@ -279,7 +285,7 @@ def load_plans():
         out[pn] = {
             "plan_name": pn,
             "plan_name_he": p.get("plan_name_he") or "",
-            "sub_neighborhood": SUB_OVERRIDE.get(pn) or p.get("sub_neighborhood") or p.get("SUB_N") or "",
+            "sub_neighborhood": (lambda s: SUB_CANON.get(s, s))(SUB_OVERRIDE.get(pn) or p.get("sub_neighborhood") or p.get("SUB_N") or ""),
             "minahak": p.get("minahak") or "",
             "status_mavat": p.get("status_mavat") or "",
             "mavat_url": p.get("mavat_url") or "",
