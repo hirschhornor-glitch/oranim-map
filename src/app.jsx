@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-05-fund-geo-subs';
+        const APP_VERSION = '2026-08-05-fund-status-filter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3185,7 +3185,7 @@
             const [shavazReportFilter, setShavazReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
             // דוח קרן תחזוקה: תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה
             const [fundReport, setFundReport] = useState(false);
-            const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', q: '' });
+            const [fundReportFilter, setFundReportFilter] = useState({ sub: 'all', minahak: 'all', status: 'all', q: '' });
             const [fundExpanded, setFundExpanded] = useState({}); // sub -> show non-fund tower list
             const [specialHousingReport, setSpecialHousingReport] = useState(false);
             // דוח מוסדות חינוך בקרבת התחדשות עירונית מאושרת (עד 50 מ')
@@ -13528,8 +13528,8 @@
                         ser: () => ({ sub: shavazReportFilter.sub, minahak: shavazReportFilter.minahak, q: shavazReportFilter.q }),
                         apply: p => setShavazReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
                     { key: 'fund', isOpen: () => fundReport, open: () => setFundReport(true),
-                        ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, q: fundReportFilter.q }),
-                        apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', q: p.q || '' }) },
+                        ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
+                        apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
                     { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true) },
                     { key: 'newPlans', isOpen: () => newPlansReport, open: () => setNewPlansReport(true) },
@@ -25864,7 +25864,7 @@
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
                                 { icon:'🏘️', title:'דיור להשכרה ומותנה', desc:'יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
-                                { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', q: '' }); setFundReport(true); }) },
+                                { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }) },
                             ]},
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
@@ -32905,12 +32905,14 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
 
                         const allSubs = [...new Set(rows.map(r => r.sub).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
                         const allMinahaks = [...new Set(rows.map(r => r.minahak).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
+                        const allStatuses = [...new Set(rows.map(r => r.status).filter(Boolean))].sort((a,b) => a.localeCompare(b,'he'));
 
                         const f = fundReportFilter;
                         const q = (f.q || '').trim().toLowerCase();
                         const filtered = rows.filter(r => {
                             if (f.sub !== 'all' && r.sub !== f.sub) return false;
                             if (f.minahak !== 'all' && r.minahak !== f.minahak) return false;
+                            if (f.status && f.status !== 'all' && r.status !== f.status) return false;
                             if (q) {
                                 const joined = [r.plan_name, r.title, r.sub, r.mechanism, r.section].join(' ').toLowerCase();
                                 if (!joined.includes(q)) return false;
@@ -33009,10 +33011,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             body += '<p class="summary"><b>' + filtered.length + '</b> תכניות מתוך ' + totalPlans + ' תכניות מגדלים (>13 ק\') (' +
                                 (totalPlans ? (100*filtered.length/totalPlans).toFixed(1) : '0') + '%) · סה"כ <b>' + totalCU + '</b> יח"ד מותנות · ' +
                                 'סה"כ גובה הקרנות <b>' + (totalAmount ? '₪' + totalAmount.toLocaleString('en-US') : '—') + '</b> (' + withAmount + ' תכניות עם סכום מפורש)</p>';
-                            if (f.sub !== 'all' || f.minahak !== 'all' || q) {
+                            if (f.sub !== 'all' || f.minahak !== 'all' || (f.status && f.status !== 'all') || q) {
                                 const parts = [];
                                 if (f.sub !== 'all') parts.push('תת-שכונה: ' + f.sub);
                                 if (f.minahak !== 'all') parts.push('מינהל: ' + f.minahak);
+                                if (f.status && f.status !== 'all') parts.push('סטטוס: ' + f.status);
                                 if (q) parts.push('חיפוש: ' + f.q);
                                 body += '<p class="summary" style="color:#888">סינון: ' + parts.join(' · ') + '</p>';
                             }
@@ -33084,6 +33087,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
                                         <option value="all">הכל</option>
                                         {allMinahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <span style={{color:'#aab',marginRight:6}}>סטטוס:</span>
+                                    <select value={f.status || 'all'} onChange={e => setFundReportFilter(prev => ({...prev, status: e.target.value}))}
+                                        style={{background:'#2a2a4a',color:'#fff',border:'1px solid #444',padding:'3px 6px',borderRadius:4,fontSize:11,fontFamily:'inherit'}}>
+                                        <option value="all">הכל</option>
+                                        {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                     <input type="text" placeholder="חיפוש (תב״ע / שם / מנגנון)" value={f.q}
                                         onChange={e => setFundReportFilter(prev => ({...prev, q: e.target.value}))}
