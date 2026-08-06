@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-08-06-tama-trees-subhood';
+const APP_VERSION = '2026-08-06-neekarim-label';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -8855,7 +8855,7 @@ function App() {
             dark: true
           }) + '<div style="margin:10px 0"></div>';
         }
-        html += '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' + '<table style="width:100%;font-size:11px;border-collapse:collapse">' + '<thead><tr style="border-bottom:1px solid #2a2a4a">' + '<th style="text-align:right;padding:4px;color:#fff">שם</th>' + '<th style="text-align:center;padding:4px;color:#fff">נעקרים</th>' + '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' + '<th style="text-align:center;padding:4px;color:#fff">%</th>' + '</tr></thead><tbody>' + stats.plans.slice(0, 15).map(row => {
+        html += '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות לפי עצים נעקרים:</div>' + '<table style="width:100%;font-size:11px;border-collapse:collapse">' + '<thead><tr style="border-bottom:1px solid #2a2a4a">' + '<th style="text-align:right;padding:4px;color:#fff">שם</th>' + '<th style="text-align:center;padding:4px;color:#fff">נעקרים/מועתקים</th>' + '<th style="text-align:center;padding:4px;color:#fff">סה"כ</th>' + '<th style="text-align:center;padding:4px;color:#fff">%</th>' + '</tr></thead><tbody>' + stats.plans.slice(0, 15).map(row => {
           const dataAttr = row.isTama ? 'data-tik="' + row.tik + '"' : 'data-taba="' + row.taba + '"';
           return '<tr style="border-bottom:1px solid #1a1a2e">' + '<td style="padding:4px"><a href="#" class="tree-plan-link" ' + dataAttr + ' style="color:#64b5f6;text-decoration:underline;cursor:pointer">' + row.name + '</a></td>' + '<td style="text-align:center;padding:4px;color:#e94560;font-weight:bold">' + row.removed + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.total + '</td>' + '<td style="text-align:center;padding:4px;color:#aaa">' + row.pct + '%</td>' + '</tr>';
         }).join('') + '</tbody></table>' + renderSuppressedTreeNotice(stats.suppressed);
@@ -25110,7 +25110,7 @@ function App() {
       });
     }
     html += '<h3 style="margin-top:18px;margin-bottom:4px;font-size:14px">תכניות לפי עצים נעקרים</h3>';
-    html += '<table><thead><tr><th>#</th><th>שם תכנית</th><th>נעקרים</th><th>סה"כ</th><th>%</th></tr></thead><tbody>';
+    html += '<table><thead><tr><th>#</th><th>שם תכנית</th><th>נעקרים/מועתקים</th><th>סה"כ</th><th>%</th></tr></thead><tbody>';
     stats.plans.forEach((row, i) => {
       html += '<tr><td>' + (i + 1) + '</td><td style="text-align:right">' + esc(row.name) + '</td><td>' + row.removed + '</td><td>' + row.total + '</td><td>' + row.pct + '%</td></tr>';
     });
@@ -25119,7 +25119,7 @@ function App() {
     if (stats.suppressed && stats.suppressed.length) {
       html += '<div style="margin-top:14px;font-size:11px;color:#888">⚠ ' + stats.suppressed.length + ' סקרי עצים הוחרגו כדי למנוע כפילות (תכניות חופפות עם אותם עצים).</div>';
     }
-    const csvRows = ['"#","שם תכנית","נעקרים","סה""כ","%"'];
+    const csvRows = ['"#","שם תכנית","נעקרים/מועתקים","סה""כ","%"'];
     stats.plans.forEach((row, i) => {
       const cell = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       csvRows.push([cell(i + 1), cell(row.name), cell(row.removed), cell(row.total), cell(row.pct + '%')].join(','));
