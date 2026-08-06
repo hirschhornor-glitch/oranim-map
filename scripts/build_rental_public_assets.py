@@ -76,6 +76,14 @@ DOMAINS = [
 DOMAIN_RES = [(k, lbl, re.compile(rx)) for k, lbl, rx in DOMAINS]
 DOMAIN_LABEL = {k: lbl for k, lbl, _ in DOMAINS}
 
+# "שימוש חורג" = an INSTITUTIONAL public activity operating on land whose
+# statutory zoning is residential. Shelters (מקלט — normal inside residential
+# blocks), religion, commerce, actual housing and infra are NOT flagged (per
+# user decision 2026-08-06). Residential zoning is read from our
+# yiud_karka_kayam layer (Descr), not the property book (its יעוד is blank).
+NONCONFORMING_DOMAINS = {"education", "welfare", "community", "admin", "health"}
+RESIDENTIAL_RE = re.compile(r"מגורים|מגורי|דיור")
+
 
 def classify_domain(use, name):
     text = f"{use or ''} {name or ''}"
@@ -251,8 +259,37 @@ def main():
     infra = [a for a in assets.values() if a["domain"] == "infra"]
     public = [a for a in assets.values() if a["domain"] != "infra"]
 
+    # ── zoning enrichment: place each asset on our land-use layer to read its
+    # statutory designation, and flag שימוש חורג (institutional use on מגורים).
+    yk = _load(_find(["..", "data", "yiud_karka_kayam.geojson"]))["features"]
+    zpolys, zdescr = [], []
+    for f in yk:
+        if not f.get("geometry"):
+            continue
+        try:
+            g = shape(f["geometry"])
+            if not g.is_valid:
+                g = g.buffer(0)
+        except Exception:
+            continue
+        zpolys.append(g)
+        zdescr.append((f["properties"].get("Descr") or "").strip())
+    ztree = STRtree(zpolys)
+    for a in public:
+        p = Point(a["pt"])
+        z = None
+        for idx in ztree.query(p, predicate="intersects"):
+            z = zdescr[idx]
+            if z:
+                break
+        a["zoning"] = z or None
+        a["residential"] = bool(z and RESIDENTIAL_RE.search(z))
+        a["nonconforming"] = bool(a["residential"]
+                                  and a["domain"] in NONCONFORMING_DOMAINS)
+
     tenure_counts = collections.Counter(a["tenure"] for a in public)
     domain_counts = collections.Counter(a["domain"] for a in public)
+    n_nonconf = sum(1 for a in public if a["nonconforming"])
 
     features = []
     for a in sorted(public, key=lambda x: (x["domain"], str(x["asset_id"]))):
@@ -260,7 +297,8 @@ def main():
         props = {k: a[k] for k in (
             "asset_id", "name", "use", "domain", "tenure", "state", "owner",
             "status", "status_date", "opened", "built_sqm", "neighborhood",
-            "parcels", "allocations")}
+            "parcels", "allocations", "zoning", "residential",
+            "nonconforming")}
         props["domain_label"] = DOMAIN_LABEL.get(a["domain"], "אחר")
         props["address"] = addr or None
         features.append({
@@ -283,6 +321,7 @@ def main():
             "source_refresh": prop.get("meta", {}).get("fetched_at"),
             "public_assets": len(features),
             "infra_excluded": len(infra),
+            "nonconforming": n_nonconf,
             "tenure": dict(tenure_counts),
             "by_domain": {DOMAIN_LABEL.get(k, k): v
                           for k, v in domain_counts.most_common()},
