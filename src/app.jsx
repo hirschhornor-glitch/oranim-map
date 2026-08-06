@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-t5-229252';
+        const APP_VERSION = '2026-08-06-t5-95612';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -5194,6 +5194,7 @@
                 window.__excavationPermits = {};
                 window.__orthoQuarters = {};
                 window.__assetAllocations = {};
+                window.__rentalFlags = {};
                 window.__binuiPlans = [];
                 window.__binuiByTabaMigrash = {};
                 window.__tama38Developers = {}; // by_tik: {developer, architect, units, minahak, is_residents}
@@ -5226,6 +5227,7 @@
                     ['__excavationPermits', 'data/excavation_permits.json'],
                     ['__orthoQuarters', 'data/ortho_quarters.json'],
                     ['__assetAllocations', 'data/asset_allocations.json'],
+                    ['__rentalFlags', 'data/rental_flags.json'],
                     ['__fuelBarriers', 'data/fuel_barriers.json'],
                     ['__binuiPlans', 'data/binui_plans.json'],
                     ['__tama38Developers', 'data/tama38_developers.json'],
@@ -5733,6 +5735,7 @@
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
                             else if (key === '__orthoQuarters') { window.__orthoQuarters = data || {}; }
                             else if (key === '__assetAllocations') { window.__assetAllocations = data || {}; }
+                            else if (key === '__rentalFlags') { window.__rentalFlags = data || {}; }
                             else if (key === '__fuelBarriers') { window.__fuelBarriers = data || {}; }
                             else if (key === '__binuiPlans') {
                                 // תכניות בינוי — design plans for public מגרשים inside an approved תב"ע.
@@ -22207,6 +22210,31 @@
                             '</div>';
                     });
                     html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר ההקצאות העירוני (מתעדכן שבועית)</div>';
+                    html += '</div>';
+                }
+                // ── מוחזק בשכירות (ספר הנכסים) ──
+                // The city does not OWN this building — it holds it via a rental
+                // (שכירות) or long-lease (חכירה) contract. Joined offline by asset-
+                // centroid-in-polygon (build_rental_public_assets → rental_flags.json).
+                // A rented דירה is delivered as הפרשה מבונה in our model — labeled so.
+                const _rentRecs = props.fid != null
+                    ? (((window.__rentalFlags || {}).by_fid || {})[String(props.fid)] || [])
+                    : [];
+                if (_rentRecs.length) {
+                    const _escR = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += '<div style="margin-top:6px;padding:6px 8px;background:rgba(0,150,136,0.10);border:1px solid rgba(0,150,136,0.40);border-radius:5px">';
+                    html += '<div style="font-weight:bold;color:#26a69a;font-size:11px;margin-bottom:3px">🔑 מוחזק בשכירות — לא בבעלות העירייה</div>';
+                    _rentRecs.forEach(r => {
+                        const _tcol = r.tenure === 'שכירות' ? '#80cbc4' : '#ffcc80';
+                        html += '<div style="font-size:10px;color:#e6e9ef;margin:2px 0">' +
+                            '<b style="color:' + _tcol + '">' + _escR(r.tenure) + '</b>' +
+                            (r.state ? ' <span style="color:#8a8a9a">(' + _escR(r.state) + ')</span>' : '') +
+                            (r.owner ? ' · משכיר: ' + _escR(r.owner) : '') +
+                            (r.use ? ' · ' + _escR(r.use) : '') +
+                            (r.is_hafrasha_dira ? ' <span style="color:#ce93d8">· דירה — הפרשה מבונה</span>' : '') +
+                            '</div>';
+                    });
+                    html += '<div style="font-size:9px;color:#8a8a9a;margin-top:2px">מקור: ספר הנכסים העירוני (מתעדכן שבועית)</div>';
                     html += '</div>';
                 }
 
