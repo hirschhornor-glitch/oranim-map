@@ -420,7 +420,7 @@ function visualCenter(geometry, excludeRings) {
 
 // Bump when data files change to invalidate browser/SW caches.
 // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-const APP_VERSION = '2026-08-06-neekarim-label';
+const APP_VERSION = '2026-08-06-tree-export-cols';
 const GEOJSON_FILES = {
   plans: 'data/plans.geojson',
   tama38: 'data/tama38.geojson',
@@ -25110,21 +25110,25 @@ function App() {
       });
     }
     html += '<h3 style="margin-top:18px;margin-bottom:4px;font-size:14px">תכניות לפי עצים נעקרים</h3>';
-    html += '<table><thead><tr><th>#</th><th>שם תכנית</th><th>נעקרים/מועתקים</th><th>סה"כ</th><th>%</th></tr></thead><tbody>';
+    // identifier = תב"ע number for plans, permit file-number (tik) for תמ"א 38;
+    // status = plan's effective status, or the tama38 permit status.
+    const rowIdent = row => row.isTama ? row.tik || '' : row.taba || '';
+    const rowStatus = row => row.isTama ? row.props.status || row.props.status_1 || '' : effectiveStatus(row.props);
+    html += '<table><thead><tr><th>#</th><th>שם תכנית</th><th>מס\' תב"ע / היתר</th><th>סטטוס</th><th>נעקרים/מועתקים</th><th>סה"כ</th><th>%</th></tr></thead><tbody>';
     stats.plans.forEach((row, i) => {
-      html += '<tr><td>' + (i + 1) + '</td><td style="text-align:right">' + esc(row.name) + '</td><td>' + row.removed + '</td><td>' + row.total + '</td><td>' + row.pct + '%</td></tr>';
+      html += '<tr><td>' + (i + 1) + '</td><td style="text-align:right">' + esc(row.name) + '</td><td>' + esc(rowIdent(row)) + '</td><td>' + esc(rowStatus(row)) + '</td><td>' + row.removed + '</td><td>' + row.total + '</td><td>' + row.pct + '%</td></tr>';
     });
-    html += '<tr style="background:#fafafa;font-weight:700"><td colspan="2">סה"כ</td><td>' + stats.removed + '</td><td>' + stats.total + '</td><td>' + stats.pct + '%</td></tr>';
+    html += '<tr style="background:#fafafa;font-weight:700"><td colspan="4">סה"כ</td><td>' + stats.removed + '</td><td>' + stats.total + '</td><td>' + stats.pct + '%</td></tr>';
     html += '</tbody></table>';
     if (stats.suppressed && stats.suppressed.length) {
       html += '<div style="margin-top:14px;font-size:11px;color:#888">⚠ ' + stats.suppressed.length + ' סקרי עצים הוחרגו כדי למנוע כפילות (תכניות חופפות עם אותם עצים).</div>';
     }
-    const csvRows = ['"#","שם תכנית","נעקרים/מועתקים","סה""כ","%"'];
+    const csvRows = ['"#","שם תכנית","מס\' תב""ע / היתר","סטטוס","נעקרים/מועתקים","סה""כ","%"'];
     stats.plans.forEach((row, i) => {
       const cell = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      csvRows.push([cell(i + 1), cell(row.name), cell(row.removed), cell(row.total), cell(row.pct + '%')].join(','));
+      csvRows.push([cell(i + 1), cell(row.name), cell(rowIdent(row)), cell(rowStatus(row)), cell(row.removed), cell(row.total), cell(row.pct + '%')].join(','));
     });
-    csvRows.push('"","סה""כ","' + stats.removed + '","' + stats.total + '","' + stats.pct + '%"');
+    csvRows.push('"","סה""כ","","","' + stats.removed + '","' + stats.total + '","' + stats.pct + '%"');
     if (valencyAgg) {
       csvRows.push('');
       csvRows.push('"פילוח ערכיות × המלצה"');
