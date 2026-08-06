@@ -25928,6 +25928,7 @@
                             const csv = ['תב"ע,תיאור,מגרש,יח"ד תב"ע,יח"ד היתר,פער,מס\' היתרים'].concat(rows.map(r => [r.plan, r.summary, r.mig, r.planU, r.permU, r.gap, r.n].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
                             const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
                             const win = window.open('', '_blank');
+                            if (!win) { alert('הדפדפן חסם את חלון הדוח. אפשר חלונות קופצים (popups) לאתר ונסה שוב.'); return; }
                             win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מיצוי יח"ד לפי מגרש</title>'
                                 + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#1e88e5;margin:0 0 4px}p.sub{color:#666;margin:0 0 14px;font-size:13px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:right}th{background:#eef}tfoot td{font-weight:bold;background:#f6f6f6}.btns{margin:12px 0}.btns a,.btns button{background:#1e88e5;color:#fff;border:none;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;cursor:pointer;margin-left:8px}@media print{.btns{display:none}}</style></head><body>'
                                 + '<h2>מיצוי יח"ד — היתר מול תב"ע לפי מגרש</h2>'
