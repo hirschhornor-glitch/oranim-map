@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-units-compare';
+        const APP_VERSION = '2026-08-06-units-fallback';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25917,11 +25917,27 @@
                         // footprint groups computed by the permits layer (window.__footprintGroups),
                         // each carrying planUnits (Table-5) / permitUnits (deduped) / gap.
                         function openMigrashUnitsReport() {
-                            const groups = (window.__footprintGroups || []).filter(g => (g.planUnits > 0 || g.permitUnits > 0));
-                            if (!groups.length) { alert('הפעל את שכבת "היתרים" תחילה כדי לחשב מיצוי יח"ד לפי מגרש.'); return; }
-                            groups.sort((a, b) => String(a.planName).localeCompare(String(b.planName)) || String(a.nums).localeCompare(String(b.nums)));
+                            const all = (window.__footprintGroups || []);
+                            if (!all.length) { alert('הפעל את שכבת "היתרים" תחילה כדי לחשב מיצוי יח"ד לפי מגרש.'); return; }
                             const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            const rows = groups.map(g => ({ plan: g.planName, summary: g.planSummary, mig: g.nums.join(','), planU: g.planUnits, permU: g.permitUnits, gap: g.unitsGap, n: g.tiks.length }));
+                            // Per-מגרש where Table-5 exists; else fall back to a plan-total row
+                            // (units_total from plans.geojson) — covers scanned/old plans with no
+                            // per-מגרש Table 5.
+                            const byTaba = {};
+                            all.forEach(g => { (byTaba[g.taba] = byTaba[g.taba] || []).push(g); });
+                            const rows = [];
+                            Object.keys(byTaba).forEach(taba => {
+                                const gs = byTaba[taba], nm = gs[0].planName, sm = gs[0].planSummary;
+                                if (gs.some(g => g.planUnits > 0)) {
+                                    gs.filter(g => g.planUnits > 0 || g.permitUnits > 0).forEach(g => rows.push({ plan: nm, summary: sm, mig: g.nums.join(','), planU: g.planUnits, permU: g.permitUnits, gap: g.unitsGap, n: g.tiks.length }));
+                                } else {
+                                    const permU = gs.reduce((s, g) => s + g.permitUnits, 0);
+                                    if (permU <= 0) return;
+                                    const planU = Number((window.__planByTaba && window.__planByTaba[taba] || {}).units_total) || 0;
+                                    rows.push({ plan: nm, summary: sm, mig: '(כלל התכנית)', planU, permU, gap: planU > 0 ? permU - planU : 0, n: gs.reduce((s, g) => s + g.tiks.length, 0) });
+                                }
+                            });
+                            rows.sort((a, b) => String(a.plan).localeCompare(String(b.plan)) || String(a.mig).localeCompare(String(b.mig)));
                             const tP = rows.reduce((s, r) => s + r.planU, 0), tR = rows.reduce((s, r) => s + r.permU, 0);
                             const gc = g => g > 0 ? '#2e7d32' : (g < 0 ? '#c62828' : '#555');
                             const trHtml = rows.map(r => '<tr><td>' + esc(r.plan) + '</td><td>' + esc(r.summary) + '</td><td style="text-align:center">' + esc(r.mig) + '</td><td style="text-align:center">' + (r.planU || '—') + '</td><td style="text-align:center">' + (r.permU || '—') + '</td><td style="text-align:center;color:' + gc(r.gap) + ';font-weight:bold">' + (r.planU > 0 ? (r.gap > 0 ? '+' : '') + r.gap : '—') + '</td><td style="text-align:center">' + r.n + '</td></tr>').join('');
@@ -32961,6 +32977,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 else b.nonFund.push({ plan_name: p.plan_name, title: p.plan_summary || p.plan_name_he || p.plan_name, floors: planFloors(p), status: s, feature: f });
                             });
                         }
+                        // approved variants are one status for this report
+                        const STATUS_CANON = { 'תבע מאושרת': 'אישור', 'מאושרת': 'אישור', 'תחילת תוקף': 'אישור' };
+                        const canonStatus = (s) => STATUS_CANON[s] || s;
                         const rows = [];
                         Object.values(fundMap).forEach(rec => {
                             if (!rec || !rec.has_fund) return;
@@ -32971,7 +32990,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 title: rec.plan_summary || rec.plan_name_he || rec.plan_name || '',
                                 sub: rec.sub_neighborhood || '',
                                 minahak: rec.minahak || '',
-                                status: s || (rec.status_mavat || ''),
+                                status: canonStatus(s) || (rec.status_mavat || ''),
                                 cu: rec.conditional_units || 0,
                                 cuSrc: rec.conditional_units_src || '',
                                 amount: rec.fund_amount_ils || null,
