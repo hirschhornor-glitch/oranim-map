@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-units-fallback';
+        const APP_VERSION = '2026-08-06-gap-drilldown';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26392,6 +26392,43 @@
                                                     <div style={{fontSize:10, color:'#777', marginTop:6}}>💡 יח"ד בהיתרים וסכום חישוב — מאוחדים ברמת המקבץ (היתר שמופיע במספר תב"עות נספר פעם אחת).</div>
                                                 </div>
                                             )}
+
+                                            {/* Per-מגרש breakdown — permit vs Table-5 יח"ד on each planning plot
+                                                (from the footprint groups the permits layer computes). Hidden
+                                                unless this plan's permits were split onto מגרשים. */}
+                                            {(() => {
+                                                const fg = (window.__footprintGroups || []).filter(g => String(g.taba) === String(row.taba) && (g.planUnits > 0 || g.permitUnits > 0));
+                                                if (!fg.length) return null;
+                                                fg.sort((a, b) => String(a.nums).localeCompare(String(b.nums)));
+                                                return (
+                                                    <div style={{marginBottom:14, padding:'10px 14px', background:'#141f18', border:'1px solid #2e6a4f', borderRadius:8, fontSize:12, color:'#e0ffe8'}}>
+                                                        <div style={{fontWeight:700, color:'#7fd1a3', marginBottom:8}}>📐 פירוק לפי מגרש (טבלה 5 מול היתר)</div>
+                                                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                                                            <thead>
+                                                                <tr style={{color:'#9ca3af',borderBottom:'1px solid #2a5a3f'}}>
+                                                                    <th style={{textAlign:'right',padding:'4px'}}>מגרש</th>
+                                                                    <th style={{textAlign:'center',padding:'4px'}}>יח"ד תב"ע</th>
+                                                                    <th style={{textAlign:'center',padding:'4px'}}>יח"ד היתר</th>
+                                                                    <th style={{textAlign:'center',padding:'4px'}}>פער</th>
+                                                                    <th style={{textAlign:'center',padding:'4px'}}>היתרים</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {fg.map((g, i) => (
+                                                                    <tr key={i} style={{borderBottom:'1px solid #22402f'}}>
+                                                                        <td style={{padding:'4px',color:'#a8e6c0',fontWeight:600}}>{g.nums.join(',')}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px'}}>{g.planUnits || '—'}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px'}}>{g.permitUnits || '—'}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px',color: g.unitsGap > 0 ? '#7fd1a3' : (g.unitsGap < 0 ? '#ff9aa8' : '#999'),fontWeight:700}}>{g.planUnits > 0 ? (g.unitsGap > 0 ? '+' : '') + g.unitsGap : '—'}</td>
+                                                                        <td style={{textAlign:'center',padding:'4px'}}>{g.tiks.length}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                        <div style={{fontSize:10, color:'#777', marginTop:6}}>💡 כל היתר על המגרש התכנוני שלו (permit_footprints); יח"ד תב"ע מטבלה 5 פר מגרש.</div>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             <table className="units-table">
                                                 <thead>
