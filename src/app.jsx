@@ -21289,12 +21289,20 @@
                     html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc(_bonus.note) + '</div>';
                     html += '</div>';
                 }
-                // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units)
-                const htlRooms = v(props.hotels);
-                if (htlRooms) {
+                // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units).
+                // The `hotels` field mixes two source semantics from table 5: a room/unit COUNT
+                // (small integer, when the hotel row lists יח"ד/חדר) and, when the row has no
+                // room count, the hotel FLOOR AREA in מ"ר (main_above — large and/or fractional).
+                // Label each correctly so a floor-area value like 25,912 isn't shown as "חדרי מלון".
+                const htlVal = v(props.hotels);
+                if (htlVal) {
+                    const htlNum = parseFloat(String(htlVal).replace(/[^\d.]/g, ''));
+                    const htlIsSqm = isFinite(htlNum) && (htlNum >= 1000 || htlNum % 1 !== 0);
+                    const htlLabel = htlIsSqm ? 'שטח (מ"ר)' : 'חדרי מלון';
+                    const htlDisp = isFinite(htlNum) ? fmt(htlNum) : htlVal;
                     html += '<div class="popup-section-title">מלונאות</div>';
                     html += '<div class="popup-pair">';
-                    html += `<div class="popup-pair-item"><span class="popup-pair-label">חדרי מלון</span><span class="popup-pair-value">${fmt(htlRooms)}</span></div>`;
+                    html += `<div class="popup-pair-item"><span class="popup-pair-label">${htlLabel}</span><span class="popup-pair-value">${htlDisp}</span></div>`;
                     html += '</div>';
                 }
 
