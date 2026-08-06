@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-rental-operator';
+        const APP_VERSION = '2026-08-06-drop-rental-layer';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -982,7 +982,6 @@
                     { id: 'mosadot_moch_welfare_health', name: 'רווחה ובריאות', desc: 'לשכת רווחה/קשישים/מרפאה/טיפת חלב (משב"ש 2021)', on: false },
                     { id: 'mosadot_moch_emergency_municipal', name: 'חירום וכלל-עירוני', desc: 'מקלטים/מבני עירייה (משב"ש 2021)', on: false },
                     { id: 'shavaz_kayam', name: 'אזורי שב"צ ברקע', desc: 'פוליגונים מתב"עות (קיים) — fill בעצמה נמוכה', on: false },
-                    { id: 'rental_public_assets', name: 'נכסי ציבור בשכירות', desc: 'מבני ומוסדות ציבור שהעירייה מחזיקה בשכירות/חכירה (לא בבעלותה) — מספר הנכסים העירוני. צבע לפי תחום, מסגרת מקווקוות = חכירה', on: false },
                 ]
             },
             shavaz_atid_group: {
@@ -18033,23 +18032,6 @@
                     geoLayersRef.current.sara_march_2026 = saraLayer;
                 }
 
-                // --- נכסי ציבור בשכירות: marker fill by use-domain (keys match the
-                // build script's DOMAINS). Report legend reads from the same map. ---
-                const RENTAL_DOMAIN_COLORS = {
-                    education:  '#ab47bc', // purple — חינוך
-                    welfare:    '#fb8c00', // orange — רווחה
-                    health:     '#d32f2f', // red — בריאות
-                    community:  '#7e57c2', // violet — קהילה ותרבות
-                    religion:   '#ffb300', // amber — דת
-                    sport:      '#388e3c', // green — ספורט
-                    emergency:  '#546e7a', // blue-gray — חירום
-                    open_space: '#66bb6a', // light green — שטח פתוח
-                    housing:    '#5c6bc0', // indigo — מגורים
-                    commerce:   '#8e24aa', // magenta — מסחר
-                    admin:      '#00897b', // teal — מנהל ומשרדים
-                    other:      '#90a4ae', // gray — אחר
-                };
-
                 // --- Mivnei Lashimur (רשימת השימור העירונית, enriched, in district) ---
                 // Fill color  ← mp_grade (הגדרת שימור) from master-plan enrichment.
                 // Outline     ← status (מאושרת/מוצעת/הוצא) per the legend.
@@ -18106,55 +18088,8 @@
                     geoLayersRef.current.mivnei_lashimur = mlLayer;
                 }
 
-                // --- נכסי ציבור בשכירות (public assets the municipality holds via rent/lease, not ownership) ---
-                if (layers['rental_public_assets'] && gd.rental_public_assets) {
-                    const rpaClean = { ...gd.rental_public_assets, features: (gd.rental_public_assets.features || []).filter(f => f.geometry && f.geometry.coordinates) };
-                    const rpaLayer = L.geoJSON(rpaClean, {
-                        pane: 'stationsPane',
-                        pointToLayer: (f, latlng) => {
-                            const p = f.properties || {};
-                            const fill = RENTAL_DOMAIN_COLORS[p.domain] || RENTAL_DOMAIN_COLORS.other;
-                            // solid ring = שכירות (tenant), dashed ring = חכירה (long lease)
-                            const border = p.tenure === 'חכירה' ? `2px dashed #263238` : `2px solid #263238`;
-                            // שימוש חורג (institutional public use on residential land) → red halo ring
-                            const halo = p.nonconforming ? 'box-shadow:0 0 0 2px #d32f2f,0 0 5px rgba(0,0,0,0.7);' : 'box-shadow:0 0 3px rgba(0,0,0,0.7);';
-                            const html = `<div style="background:${fill};border:${border};width:11px;height:11px;border-radius:50%;${halo}"></div>`;
-                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'rpa-icon', iconSize: [17, 17], iconAnchor: [8, 8], popupAnchor: [0, -9] }) });
-                        },
-                        onEachFeature: (f, layer) => {
-                            const p = f.properties || {};
-                            layer.on('click', (e) => {
-                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
-                                const accent = RENTAL_DOMAIN_COLORS[p.domain] || RENTAL_DOMAIN_COLORS.other;
-                                const row = (label, value) => (value !== null && value !== undefined && value !== '' && value !== 'None') ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
-                                let html = '<div style="font-family:inherit">';
-                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">${p.name || p.use || 'נכס ציבור בשכירות'}</div>`;
-                                const sub = [p.domain_label, p.address].filter(Boolean).join(' · ');
-                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
-                                html += '</div><div class="popup-body">';
-                                if (p.nonconforming) html += `<div style="margin:0 0 5px;padding:4px 7px;background:rgba(211,47,47,0.12);border:1px solid rgba(211,47,47,0.5);border-radius:5px;font-size:11px;color:#e57373;font-weight:bold">⚠ שימוש חורג — פעילות ציבורית על קרקע בייעוד מגורים</div>`;
-                                html += row('החזקה', `<b>${p.tenure || ''}</b>${p.state ? ' · ' + p.state : ''}`);
-                                html += row('שימוש', p.use);
-                                html += row('ייעוד קרקע', p.zoning ? (p.residential ? `<span style="color:#e57373">${p.zoning}</span>` : p.zoning) : null);
-                                html += row('בעלים (משכיר)', p.owner);
-                                html += row('שטח בנוי', p.built_sqm ? `${p.built_sqm} מ"ר` : '');
-                                html += row('שכונה', p.neighborhood);
-                                html += row('גוש/חלקה', (p.parcels || []).join(', '));
-                                html += row('סטטוס', p.status);
-                                html += row('תאריך סטטוס', p.status_date);
-                                html += row('פתיחת נכס', p.opened);
-                                html += row('מספר נכס', p.asset_id);
-                                const act = (p.allocations || []).filter(a => a && a.active !== 0 && a.active !== '0' && a.org);
-                                if (act.length) html += row('מוקצה ל', act.map(a => a.org + (a.use ? ` (${a.use})` : '')).join('<br>'));
-                                if ((p.pikuach || []).length) html += row('פיקוח', p.pikuach.map(pk => /ממלכתי/.test(pk) ? `<span style="color:#86b89a">${pk} (רשמי)</span>` : pk).join(', '));
-                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: ספר הנכסים העירוני · עודכן ${((gd.rental_public_assets.meta || {}).source_refresh) || ''}</div>`;
-                                html += '</div></div>';
-                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
-                            });
-                        }
-                    }).addTo(map);
-                    geoLayersRef.current.rental_public_assets = rpaLayer;
-                }
+                // (שכבת המפה "נכסי ציבור בשכירות" הוסרה לבקשת המשתמש 2026-08-06 —
+                // הדוח "🔑 נכסי ציבור בשכירות" + דגל "מוחזק בשכירות" בפופאפ שב"צ נשמרו.)
 
                 // --- Mosadot MOCH (Ministry of Construction & Housing public institutions DB, 2021) ---
                 // Split into 5 sub-toggles by category (religion / sport / culture / welfare+health / emergency+municipal).
@@ -25677,7 +25612,7 @@
                                                 <input type="checkbox" checked={rentalNonconfOnly} onChange={e => setRentalNonconfOnly(e.target.checked)} />
                                                 ⚠ רק שימוש חורג ({nNonconf})
                                             </label>
-                                            <span style={{ fontSize: 11, color: '#8a9bc0' }}>מסגרת מלאה = שכירות · מקווקוות = חכירה · טבעת אדומה = שימוש חורג</span>
+                                            <span style={{ fontSize: 11, color: '#8a9bc0' }}>⚠ = שימוש חורג (פעילות ציבורית בקרקע מגורים)</span>
                                         </div>
                                         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
                                             <thead><tr style={{ background: '#0d2b28', color: '#80cbc4' }}>
