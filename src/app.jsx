@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-tree-export-cols';
+        const APP_VERSION = '2026-08-06-units-compare';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -5227,6 +5227,7 @@
                     ['__tama38MpCheck', 'data/tama38_master_plan_check.json'],
                     ['__pikuahStatus', 'data/pikuah_status.json'],
                     ['__unitBonus', 'data/unit_bonus.json'],
+                    ['__table5Units', 'data/table5_units.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5761,6 +5762,7 @@
                             else if (key === '__fieldObs') { window.__fieldObs = (data && data.by_file) ? data.by_file : {}; }
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
+                            else if (key === '__table5Units') { window.__table5Units = data || {}; }
                             else if (key === '__pikuahStatus') {
                                 // per-permit building-supervision status (pikuah_status.json).
                                 // Index the completed ones (תעודת גמר) by the REVISION-AGNOSTIC
@@ -18397,7 +18399,18 @@
                             // dominant stage = most active permit on the plot
                             let stage = 'pre_licensing', best = -1;
                             permits.forEach(p => { const s = getPermitStage(p); const pr = _STAGE_PRIO[s] != null ? _STAGE_PRIO[s] : 0; if (pr > best) { best = pr; stage = s; } });
-                            _footprintGroups.push({ taba, nums: feats[0].properties.migrash_nums || [], geom: feats[0].geometry, tiks, permits, stage, planProps: (window.__planByTaba || {})[taba] || feats[0].properties });
+                            const _nums = feats[0].properties.migrash_nums || [];
+                            // Units realized vs planned, per building group. Plan side =
+                            // Table-5 residential יח"ד summed over this group's מגרשים
+                            // (__table5Units holds ONLY residential rows, so public plots
+                            // contribute 0). Permit side = units_added, de-duped by base tik
+                            // (revisions .00/.01/.02 are one permit). Gap>0 ⇒ realized above
+                            // the base table (e.g. an increased-rights overlay / bonus).
+                            const _t5u = (window.__table5Units || {})[String(taba)] || {};
+                            const _planUnits = _nums.reduce((s, n) => s + (Number(_t5u[n]) || 0), 0);
+                            const _seenBase = {}; let _permitUnits = 0;
+                            permits.forEach(p => { const m = masterPermit(p.file_number); if (!m || _seenBase[m.tik]) return; _seenBase[m.tik] = 1; _permitUnits += Number(m.units_added) || 0; });
+                            _footprintGroups.push({ taba, nums: _nums, geom: feats[0].geometry, tiks, permits, stage, planProps: (window.__planByTaba || {})[taba] || feats[0].properties, planUnits: _planUnits, permitUnits: _permitUnits, unitsGap: _permitUnits - _planUnits });
                         });
                     }
                     const permitsLayer = L.geoJSON(gd.plans, {
@@ -18608,7 +18621,14 @@
                             layer.on('click', (e) => {
                                 const mapped = mapPlanProps(g.planProps);
                                 const title = (mapped.plan_summary || mapped.plan_name_he || 'תוכנית') + ' · מגרש ' + g.nums.join(',');
-                                const subtitle = (mapped.plan_name || g.taba) + ' · ' + g.permits.length + ' היתרים על המגרש';
+                                // יח"ד: תב"ע (טבלה 5) מול היתר, פר קבוצת-בניין
+                                let _uc = '';
+                                if (g.planUnits > 0 || g.permitUnits > 0) {
+                                    const gp = g.unitsGap;
+                                    const gapTxt = g.planUnits > 0 ? (' · פער ' + (gp > 0 ? '+' : '') + gp) : '';
+                                    _uc = ' · יח"ד: תב"ע ' + (g.planUnits || '—') + ' / היתר ' + (g.permitUnits || '—') + gapTxt;
+                                }
+                                const subtitle = (mapped.plan_name || g.taba) + ' · ' + g.permits.length + ' היתרים על המגרש' + _uc;
                                 const featureJson = JSON.stringify({ properties: mapped, type: 'plan' }).replace(/'/g, '&#39;');
                                 const popup = L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                     .setLatLng(e.latlng)
