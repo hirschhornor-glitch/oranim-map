@@ -18412,6 +18412,8 @@
                             permits.forEach(p => { const m = masterPermit(p.file_number); if (!m || _seenBase[m.tik]) return; _seenBase[m.tik] = 1; _permitUnits += Number(m.units_added) || 0; });
                             _footprintGroups.push({ taba, nums: _nums, geom: feats[0].geometry, tiks, permits, stage, planProps: (window.__planByTaba || {})[taba] || feats[0].properties, planUnits: _planUnits, permitUnits: _permitUnits, unitsGap: _permitUnits - _planUnits });
                         });
+                        // Expose for the "מיצוי יח\"ד לפי מגרש" report (computed once here).
+                        window.__footprintGroups = _footprintGroups.map(g => ({ taba: g.taba, nums: g.nums, tiks: g.tiks, stage: g.stage, planUnits: g.planUnits, permitUnits: g.permitUnits, unitsGap: g.unitsGap, planName: (g.planProps && (g.planProps.plan_name || g.planProps.plan_name_he)) || g.taba, planSummary: (g.planProps && (g.planProps.plan_summary || g.planProps.plan_name_he)) || '' }));
                     }
                     const permitsLayer = L.geoJSON(gd.plans, {
                         pane: 'permitsPane',
@@ -25911,6 +25913,31 @@
                             };
                             tick();
                         };
+                        // מיצוי יח"ד — היתר מול תב"ע לפי מגרש (per building-group). Reads the
+                        // footprint groups computed by the permits layer (window.__footprintGroups),
+                        // each carrying planUnits (Table-5) / permitUnits (deduped) / gap.
+                        function openMigrashUnitsReport() {
+                            const groups = (window.__footprintGroups || []).filter(g => (g.planUnits > 0 || g.permitUnits > 0));
+                            if (!groups.length) { alert('הפעל את שכבת "היתרים" תחילה כדי לחשב מיצוי יח"ד לפי מגרש.'); return; }
+                            groups.sort((a, b) => String(a.planName).localeCompare(String(b.planName)) || String(a.nums).localeCompare(String(b.nums)));
+                            const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const rows = groups.map(g => ({ plan: g.planName, summary: g.planSummary, mig: g.nums.join(','), planU: g.planUnits, permU: g.permitUnits, gap: g.unitsGap, n: g.tiks.length }));
+                            const tP = rows.reduce((s, r) => s + r.planU, 0), tR = rows.reduce((s, r) => s + r.permU, 0);
+                            const gc = g => g > 0 ? '#2e7d32' : (g < 0 ? '#c62828' : '#555');
+                            const trHtml = rows.map(r => '<tr><td>' + esc(r.plan) + '</td><td>' + esc(r.summary) + '</td><td style="text-align:center">' + esc(r.mig) + '</td><td style="text-align:center">' + (r.planU || '—') + '</td><td style="text-align:center">' + (r.permU || '—') + '</td><td style="text-align:center;color:' + gc(r.gap) + ';font-weight:bold">' + (r.planU > 0 ? (r.gap > 0 ? '+' : '') + r.gap : '—') + '</td><td style="text-align:center">' + r.n + '</td></tr>').join('');
+                            const csv = ['תב"ע,תיאור,מגרש,יח"ד תב"ע,יח"ד היתר,פער,מס\' היתרים'].concat(rows.map(r => [r.plan, r.summary, r.mig, r.planU, r.permU, r.gap, r.n].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                            const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+                            const win = window.open('', '_blank');
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מיצוי יח"ד לפי מגרש</title>'
+                                + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#1e88e5;margin:0 0 4px}p.sub{color:#666;margin:0 0 14px;font-size:13px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:right}th{background:#eef}tfoot td{font-weight:bold;background:#f6f6f6}.btns{margin:12px 0}.btns a,.btns button{background:#1e88e5;color:#fff;border:none;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;cursor:pointer;margin-left:8px}@media print{.btns{display:none}}</style></head><body>'
+                                + '<h2>מיצוי יח"ד — היתר מול תב"ע לפי מגרש</h2>'
+                                + '<p class="sub">השוואה פר קבוצת-בניין: יח"ד בטבלה 5 מול יח"ד בהיתר. פער חיובי = מימוש מעל הבסיס (למשל תכנית הגדלת זכויות). ' + rows.length + ' קבוצות · ' + new Date().toLocaleDateString('he-IL') + '</p>'
+                                + '<div class="btns"><a href="' + csvUri + '" download="מיצוי_יחד_לפי_מגרש.csv">📊 CSV</a><button onclick="window.print()">🖨️ הדפסה</button></div>'
+                                + '<table><thead><tr><th>תב"ע</th><th>תיאור</th><th>מגרש</th><th>יח"ד תב"ע</th><th>יח"ד היתר</th><th>פער</th><th>היתרים</th></tr></thead><tbody>'
+                                + trHtml + '</tbody><tfoot><tr><td colspan="3">סה"כ</td><td style="text-align:center">' + tP + '</td><td style="text-align:center">' + tR + '</td><td style="text-align:center">' + ((tR - tP) > 0 ? '+' : '') + (tR - tP) + '</td><td></td></tr></tfoot></table>'
+                                + '</body></html>');
+                            win.document.close();
+                        }
                         const CATS = [
                             { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
@@ -25934,6 +25961,7 @@
                             { key:'permits', title:'🔵 היתרים', color:'#1e88e5', bg:'rgba(30,136,229,0.06)', items:[
                                 { icon:'🏘️', title:'היתרים לפי תת-שכונה', desc:'פילוח שלב + יח"ד לכל תת-שכונה', onClick:() => go(() => { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }) },
                                 { icon:'📑', title:'היתרים מול תב"ע', desc:'פערים בין יח"ד מאושרות ליח"ד בהיתרים', onClick:() => go(() => { setPermitsGapDrilldown(null); setShowPermitsGap(true); }) },
+                                { icon:'📐', title:'מיצוי יח"ד לפי מגרש', desc:'יח"ד בהיתר מול תב"ע (טבלה 5) פר מגרש/קבוצת-בניין — דורש שכבת היתרים', onClick:() => { openMigrashUnitsReport(); } },
                                 { icon:'⚖️', title:'היתרים פתוחים להתנגדויות', desc:'בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון', onClick:() => go(() => setPermitObjectionsReport(true)) },
                             ]},
                             { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
