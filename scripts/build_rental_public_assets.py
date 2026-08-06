@@ -286,6 +286,43 @@ def main():
         a["residential"] = bool(z and RESIDENTIAL_RE.search(z))
         a["nonconforming"] = bool(a["residential"]
                                   and a["domain"] in NONCONFORMING_DOMAINS)
+        a["pikuach"] = None
+
+    # ── operator hint: for educational assets, read פיקוח (ממלכתי/מוכר…) from
+    # the nearest education_shanaton institution (≤60m). Lets the user judge
+    # whether the activity is municipally run — combined app-side with the
+    # allocation-book org (which עמותה operates it). No auto-classification.
+    edu = _load(_find(["..", "data", "education_shanaton.geojson"]))["features"]
+    edu_pts = []
+    for f in edu:
+        gg = f.get("geometry")
+        if not gg or gg.get("type") != "Point":
+            continue
+        piks = [i.get("pikuach") for i in (f["properties"].get("institutions")
+                or []) if i.get("pikuach")]
+        if piks:
+            edu_pts.append((gg["coordinates"], piks))
+
+    def _pikuach_near(pt):
+        best, bestd = None, 60.0
+        for c, piks in edu_pts:
+            dx = (pt[0] - c[0]) * 93000.0
+            dy = (pt[1] - c[1]) * 111000.0
+            d = (dx * dx + dy * dy) ** 0.5
+            if d < bestd:
+                bestd, best = d, piks
+        return best
+
+    for a in public:
+        if a["domain"] == "education":
+            piks = _pikuach_near(a["pt"])
+            if piks:
+                # dedupe, keep order
+                seen_p = []
+                for x in piks:
+                    if x not in seen_p:
+                        seen_p.append(x)
+                a["pikuach"] = seen_p
 
     tenure_counts = collections.Counter(a["tenure"] for a in public)
     domain_counts = collections.Counter(a["domain"] for a in public)
@@ -298,7 +335,7 @@ def main():
             "asset_id", "name", "use", "domain", "tenure", "state", "owner",
             "status", "status_date", "opened", "built_sqm", "neighborhood",
             "parcels", "allocations", "zoning", "residential",
-            "nonconforming")}
+            "nonconforming", "pikuach")}
         props["domain_label"] = DOMAIN_LABEL.get(a["domain"], "אחר")
         props["address"] = addr or None
         features.append({
