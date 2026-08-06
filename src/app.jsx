@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-gap-drilldown';
+        const APP_VERSION = '2026-08-06-t5-229252';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -416,6 +416,7 @@
             construction_yb: 'data/construction_yearbook.geojson',
             unassigned_permits: 'data/unassigned_permits.geojson',
             permit_footprints: 'data/permit_footprints.geojson',
+            rental_public_assets: 'data/rental_public_assets.geojson',
         };
 
         // Sum of existing housing units (NUM_APTS_C from municipal buildings layer)
@@ -981,6 +982,7 @@
                     { id: 'mosadot_moch_welfare_health', name: 'רווחה ובריאות', desc: 'לשכת רווחה/קשישים/מרפאה/טיפת חלב (משב"ש 2021)', on: false },
                     { id: 'mosadot_moch_emergency_municipal', name: 'חירום וכלל-עירוני', desc: 'מקלטים/מבני עירייה (משב"ש 2021)', on: false },
                     { id: 'shavaz_kayam', name: 'אזורי שב"צ ברקע', desc: 'פוליגונים מתב"עות (קיים) — fill בעצמה נמוכה', on: false },
+                    { id: 'rental_public_assets', name: 'נכסי ציבור בשכירות', desc: 'מבני ומוסדות ציבור שהעירייה מחזיקה בשכירות/חכירה (לא בבעלותה) — מספר הנכסים העירוני. צבע לפי תחום, מסגרת מקווקוות = חכירה', on: false },
                 ]
             },
             shavaz_atid_group: {
@@ -3220,6 +3222,10 @@
             const [flrDoms, setFlrDoms] = useState([]); // [] = all domains
             // Use-gaps report: asset uses (ספר הנכסים) vs plan program, overlap-aware.
             const [showUseGaps, setShowUseGaps] = useState(false);
+            // Rental public-assets report: public assets held via rent/lease (not owned).
+            const [showRentalAssets, setShowRentalAssets] = useState(false);
+            const [rentalDomFilter, setRentalDomFilter] = useState('all');
+            const [rentalTenureFilter, setRentalTenureFilter] = useState('all');
             // Fuel-barriers report: public-building lots within TAMA-18 distance of a fuel station.
             const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
@@ -5156,7 +5162,7 @@
                     'givat_hamatos_companies', 'givat_hamatos_jewish',
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
                     'easements', 'construction_yb',
-                    'bike_paths', 'transit_bus',
+                    'bike_paths', 'transit_bus', 'rental_public_assets',
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -6078,6 +6084,22 @@
                         .finally(() => window.__inFlightLoads.delete(key));
                 });
             }, [layers]);
+
+            // The rental-assets report can be opened without toggling the layer —
+            // ensure its on-demand geojson is fetched so the modal isn't empty.
+            useEffect(() => {
+                if (!showRentalAssets) return;
+                if (geoDataRef.current.rental_public_assets) return;
+                const url = (window.__geojsonFilesMap || {}).rental_public_assets;
+                if (!url) return;
+                if (!window.__inFlightLoads) window.__inFlightLoads = new Set();
+                if (window.__inFlightLoads.has('rental_public_assets')) return;
+                window.__inFlightLoads.add('rental_public_assets');
+                fetch(url + '?v=' + APP_VERSION).then(r => r.json()).then(data => {
+                    if (data) { geoDataRef.current.rental_public_assets = data; setDeferredTick(t => t + 1); }
+                }).catch(e => console.warn('[rental] report fetch failed', e))
+                  .finally(() => window.__inFlightLoads.delete('rental_public_assets'));
+            }, [showRentalAssets]);
 
             // ── Landuse compare: plan selection mode ──
             useEffect(() => {
@@ -13588,6 +13610,9 @@
                         ser: () => ({ from: flrFrom, to: flrTo, doms: (flrDoms || []).join('|') }),
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
                     { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true) },
+                    { key: 'rentalAssets', isOpen: () => showRentalAssets, open: () => setShowRentalAssets(true),
+                        ser: () => ({ dom: rentalDomFilter, ten: rentalTenureFilter }),
+                        apply: p => { if (p.dom) setRentalDomFilter(p.dom); if (p.ten) setRentalTenureFilter(p.ten); } },
                     { key: 'fuelBarriers', isOpen: () => showFuelBarriers, open: () => setShowFuelBarriers(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
@@ -18004,6 +18029,23 @@
                     geoLayersRef.current.sara_march_2026 = saraLayer;
                 }
 
+                // --- נכסי ציבור בשכירות: marker fill by use-domain (keys match the
+                // build script's DOMAINS). Report legend reads from the same map. ---
+                const RENTAL_DOMAIN_COLORS = {
+                    education:  '#ab47bc', // purple — חינוך
+                    welfare:    '#fb8c00', // orange — רווחה
+                    health:     '#d32f2f', // red — בריאות
+                    community:  '#7e57c2', // violet — קהילה ותרבות
+                    religion:   '#ffb300', // amber — דת
+                    sport:      '#388e3c', // green — ספורט
+                    emergency:  '#546e7a', // blue-gray — חירום
+                    open_space: '#66bb6a', // light green — שטח פתוח
+                    housing:    '#5c6bc0', // indigo — מגורים
+                    commerce:   '#8e24aa', // magenta — מסחר
+                    admin:      '#00897b', // teal — מנהל ומשרדים
+                    other:      '#90a4ae', // gray — אחר
+                };
+
                 // --- Mivnei Lashimur (רשימת השימור העירונית, enriched, in district) ---
                 // Fill color  ← mp_grade (הגדרת שימור) from master-plan enrichment.
                 // Outline     ← status (מאושרת/מוצעת/הוצא) per the legend.
@@ -18058,6 +18100,51 @@
                         }
                     }).addTo(map);
                     geoLayersRef.current.mivnei_lashimur = mlLayer;
+                }
+
+                // --- נכסי ציבור בשכירות (public assets the municipality holds via rent/lease, not ownership) ---
+                if (layers['rental_public_assets'] && gd.rental_public_assets) {
+                    const rpaClean = { ...gd.rental_public_assets, features: (gd.rental_public_assets.features || []).filter(f => f.geometry && f.geometry.coordinates) };
+                    const rpaLayer = L.geoJSON(rpaClean, {
+                        pane: 'stationsPane',
+                        pointToLayer: (f, latlng) => {
+                            const p = f.properties || {};
+                            const fill = RENTAL_DOMAIN_COLORS[p.domain] || RENTAL_DOMAIN_COLORS.other;
+                            // solid ring = שכירות (tenant), dashed ring = חכירה (long lease)
+                            const border = p.tenure === 'חכירה' ? `2px dashed #263238` : `2px solid #263238`;
+                            const html = `<div style="background:${fill};border:${border};width:11px;height:11px;border-radius:50%;box-shadow:0 0 3px rgba(0,0,0,0.7)"></div>`;
+                            return L.marker(latlng, { icon: L.divIcon({ html, className: 'rpa-icon', iconSize: [15, 15], iconAnchor: [7, 7], popupAnchor: [0, -8] }) });
+                        },
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            layer.on('click', (e) => {
+                                if (areaModeRef.current || radiusModeRef.current || markerCoordsModeRef.current) return;
+                                const accent = RENTAL_DOMAIN_COLORS[p.domain] || RENTAL_DOMAIN_COLORS.other;
+                                const row = (label, value) => (value !== null && value !== undefined && value !== '' && value !== 'None') ? `<div class="popup-row"><span class="popup-label">${label}</span><span class="popup-value">${value}</span></div>` : '';
+                                let html = '<div style="font-family:inherit">';
+                                html += `<div class="popup-header" style="border-bottom:3px solid ${accent}"><div class="popup-header-title">${p.name || p.use || 'נכס ציבור בשכירות'}</div>`;
+                                const sub = [p.domain_label, p.address].filter(Boolean).join(' · ');
+                                if (sub) html += `<div class="popup-header-subtitle" style="opacity:0.85">${sub}</div>`;
+                                html += '</div><div class="popup-body">';
+                                html += row('החזקה', `<b>${p.tenure || ''}</b>${p.state ? ' · ' + p.state : ''}`);
+                                html += row('שימוש', p.use);
+                                html += row('בעלים (משכיר)', p.owner);
+                                html += row('שטח בנוי', p.built_sqm ? `${p.built_sqm} מ"ר` : '');
+                                html += row('שכונה', p.neighborhood);
+                                html += row('גוש/חלקה', (p.parcels || []).join(', '));
+                                html += row('סטטוס', p.status);
+                                html += row('תאריך סטטוס', p.status_date);
+                                html += row('פתיחת נכס', p.opened);
+                                html += row('מספר נכס', p.asset_id);
+                                const act = (p.allocations || []).filter(a => a && a.active !== 0 && a.active !== '0' && a.org);
+                                if (act.length) html += row('מוקצה ל', act.map(a => a.org + (a.use ? ` (${a.use})` : '')).join('<br>'));
+                                html += `<div style="margin-top:6px;font-size:10.5px;opacity:0.55">מקור: ספר הנכסים העירוני · עודכן ${((gd.rental_public_assets.meta || {}).source_refresh) || ''}</div>`;
+                                html += '</div></div>';
+                                L.popup({ maxWidth: popupMaxWidth(), className: 'plans-popup' }).setLatLng(e.latlng).setContent(html).openOn(map);
+                            });
+                        }
+                    }).addTo(map);
+                    geoLayersRef.current.rental_public_assets = rpaLayer;
                 }
 
                 // --- Mosadot MOCH (Ministry of Construction & Housing public institutions DB, 2021) ---
@@ -25458,6 +25545,126 @@
                         );
                     })()}
 
+                    {/* ── נכסי ציבור בשכירות — public assets the municipality holds via rent/lease ── */}
+                    {showRentalAssets && (() => {
+                        const RPA = (geoDataRef.current || {}).rental_public_assets || null;
+                        const DCOL = {
+                            education:'#ab47bc', welfare:'#fb8c00', health:'#d32f2f', community:'#7e57c2',
+                            religion:'#ffb300', sport:'#388e3c', emergency:'#546e7a', open_space:'#66bb6a',
+                            housing:'#5c6bc0', commerce:'#8e24aa', admin:'#00897b', other:'#90a4ae',
+                        };
+                        const DLBL = {
+                            education:'חינוך', welfare:'רווחה', health:'בריאות', community:'קהילה ותרבות',
+                            religion:'דת', sport:'ספורט', emergency:'חירום', open_space:'שטח פתוח',
+                            housing:'מגורים', commerce:'מסחר', admin:'מנהל ומשרדים', other:'אחר',
+                        };
+                        const all = RPA ? (RPA.features || []).map(f => ({ ...f.properties, pt: f.geometry && f.geometry.coordinates })) : [];
+                        // domain order by frequency (stable, most-common first)
+                        const domCount = {}; all.forEach(a => { domCount[a.domain] = (domCount[a.domain] || 0) + 1; });
+                        const domOrder = Object.keys(DLBL).filter(k => domCount[k]).sort((a, b) => domCount[b] - domCount[a]);
+                        const rows = all.filter(a =>
+                            (rentalDomFilter === 'all' || a.domain === rentalDomFilter) &&
+                            (rentalTenureFilter === 'all' || a.tenure === rentalTenureFilter));
+                        rows.sort((a, b) => (domOrder.indexOf(a.domain) - domOrder.indexOf(b.domain)) || String(a.name || '').localeCompare(String(b.name || ''), 'he'));
+                        const nRent = all.filter(a => a.tenure === 'שכירות').length;
+                        const nLease = all.filter(a => a.tenure === 'חכירה').length;
+                        const totalSqm = rows.reduce((s, a) => s + (Number(a.built_sqm) || 0), 0);
+                        const meta = (RPA && RPA.meta) || {};
+                        const allocOf = (a) => (a.allocations || []).filter(x => x && x.active !== 0 && x.active !== '0' && x.org).map(x => x.org + (x.use ? ` (${x.use})` : '')).join('; ');
+                        const goToAsset = (a) => {
+                            const map = mapInstanceRef.current;
+                            if (!map || !a.pt) return;
+                            setShowRentalAssets(false);
+                            map.flyTo([a.pt[1], a.pt[0]], 18, { duration: 0.5 });
+                        };
+                        const td = { border: '1px solid #234', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
+                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                        const csv = () => {
+                            const head = ['תחום', 'שם הנכס', 'החזקה', 'מצב', 'שימוש', 'בעלים (משכיר)', 'שטח בנוי (מ"ר)', 'שכונה', 'גוש/חלקה', 'פתיחת נכס', 'מוקצה ל', 'מספר נכס'];
+                            const lines = [head.map(csvQ).join(',')];
+                            rows.forEach(a => lines.push([DLBL[a.domain] || a.domain, a.name, a.tenure, a.state, a.use, a.owner, a.built_sqm || '', a.neighborhood, (a.parcels || []).join(' '), a.opened || '', allocOf(a), a.asset_id].map(csvQ).join(',')));
+                            const el = document.createElement('a'); el.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); el.download = 'rental_public_assets.csv'; document.body.appendChild(el); el.click(); el.remove();
+                        };
+                        const prnt = () => {
+                            const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                            let h = '<html dir="rtl"><head><meta charset="utf-8"><title>נכסי ציבור בשכירות</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#00695c;color:#fff}</style></head><body><h1>🔑 נכסי ציבור בשכירות — ספר הנכסים העירוני</h1>';
+                            h += `<p>${rows.length} נכסים · שכירות ${nRent} · חכירה ${nLease} · שטח בנוי ${totalSqm.toLocaleString()} מ"ר · עדכון ${e2(meta.source_refresh || '')}</p>`;
+                            h += '<table><thead><tr><th>תחום</th><th>שם הנכס</th><th>החזקה</th><th>שימוש</th><th>בעלים (משכיר)</th><th>שטח (מ"ר)</th><th>שכונה</th><th>גוש/חלקה</th><th>מוקצה ל</th></tr></thead><tbody>';
+                            rows.forEach(a => { h += '<tr><td>' + e2(DLBL[a.domain] || a.domain) + '</td><td>' + e2(a.name) + '</td><td>' + e2(a.tenure + ' · ' + a.state) + '</td><td>' + e2(a.use) + '</td><td>' + e2(a.owner) + '</td><td>' + e2(a.built_sqm || '') + '</td><td>' + e2(a.neighborhood) + '</td><td>' + e2((a.parcels || []).join(' ')) + '</td><td>' + e2(allocOf(a)) + '</td></tr>'; });
+                            h += '</tbody></table></body></html>';
+                            const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
+                        };
+                        const chip = (bg, fg, txt) => <span style={{ display: 'inline-block', margin: '1px 0 1px 4px', padding: '1px 8px', borderRadius: 10, fontSize: 11, background: bg, color: fg }}>{txt}</span>;
+                        return (
+                            <div className="units-overlay" onClick={() => setShowRentalAssets(false)}>
+                                <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 1200, width: '96%' }}>
+                                    <div className="units-header" style={{ background: '#00695c' }}>
+                                        <h2>🔑 נכסי ציבור בשכירות</h2>
+                                        <ReportLinkBtn /><button className="units-close" onClick={() => setShowRentalAssets(false)}>&times;</button>
+                                    </div>
+                                    <div style={{ padding: '10px 16px', overflow: 'auto', maxHeight: 'calc(90vh - 70px)' }}>
+                                        <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
+                                            מבני ומוסדות ציבור שהעירייה <b>אינה בעלת הקרקע/המבנה</b> אלא מחזיקה בהם בחוזה <b>שכירות</b> (העירייה כשוכרת) או <b>חכירה</b> ארוכת-טווח.
+                                            מקור: ספר הנכסים העירוני, מסונן לתחום אורנים. תשתית-קרקע (כבישים/שבילים) אינה נכללת{meta.infra_excluded ? ` (${meta.infra_excluded} רשומות תשתית לא נכללו)` : ''}.
+                                        </div>
+                                        {!RPA && <div style={{ padding: 20, textAlign: 'center', color: '#9fb0d0' }}>טוען נתונים…</div>}
+                                        {RPA && (<>
+                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                                            {[['נכסים (בסינון)', rows.length, '#d8def0'], ['שכירות', nRent, '#80cbc4'], ['חכירה', nLease, '#ffcc80'], ['שטח בנוי (מ"ר)', totalSqm.toLocaleString(), '#b0bec5']].map((k, i) => (
+                                                <div key={i} style={{ border: '1px solid #234', borderRadius: 10, padding: '8px 14px', minWidth: 90 }}>
+                                                    <div style={{ fontSize: 22, fontWeight: 800, color: k[2] }}>{k[1]}</div>
+                                                    <div style={{ fontSize: 11, color: '#9fb0d0' }}>{k[0]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+                                            <label style={{ fontSize: 12, color: '#9fb0d0' }}>תחום:{' '}
+                                                <select value={rentalDomFilter} onChange={e => setRentalDomFilter(e.target.value)} style={{ background: '#16162a', color: '#e0e0e0', border: '1px solid #3a3a50', borderRadius: 5, padding: '3px 6px', fontSize: 12 }}>
+                                                    <option value="all">הכל ({all.length})</option>
+                                                    {domOrder.map(k => <option key={k} value={k}>{DLBL[k]} ({domCount[k]})</option>)}
+                                                </select>
+                                            </label>
+                                            <label style={{ fontSize: 12, color: '#9fb0d0' }}>החזקה:{' '}
+                                                <select value={rentalTenureFilter} onChange={e => setRentalTenureFilter(e.target.value)} style={{ background: '#16162a', color: '#e0e0e0', border: '1px solid #3a3a50', borderRadius: 5, padding: '3px 6px', fontSize: 12 }}>
+                                                    <option value="all">הכל</option>
+                                                    <option value="שכירות">שכירות ({nRent})</option>
+                                                    <option value="חכירה">חכירה ({nLease})</option>
+                                                </select>
+                                            </label>
+                                            <span style={{ fontSize: 11, color: '#8a9bc0' }}>מסגרת מלאה = שכירות · מקווקוות = חכירה</span>
+                                        </div>
+                                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
+                                            <thead><tr style={{ background: '#0d2b28', color: '#80cbc4' }}>
+                                                <th style={td}>תחום</th><th style={td}>שם הנכס</th><th style={td}>החזקה</th><th style={td}>שימוש</th><th style={td}>בעלים (משכיר)</th><th style={td}>שטח (מ"ר)</th><th style={td}>שכונה</th><th style={td}>מוקצה ל</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {rows.map((a, i) => (
+                                                    <tr key={i}>
+                                                        <td style={td}>{chip(DCOL[a.domain] || '#90a4ae', '#fff', DLBL[a.domain] || a.domain)}</td>
+                                                        <td style={td} title={a.status || ''}><a href="#" onClick={e => { e.preventDefault(); goToAsset(a); }} title="קפיצה לנכס במפה" style={{ color: '#64b5f6', textDecoration: 'none' }}>{a.name || '—'}</a></td>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}><b style={{ color: a.tenure === 'שכירות' ? '#80cbc4' : '#ffcc80' }}>{a.tenure}</b><div style={{ fontSize: 10, color: a.state === 'פעיל' ? '#86b89a' : '#e0c08a' }}>{a.state}</div></td>
+                                                        <td style={td}>{a.use}</td>
+                                                        <td style={td}>{a.owner}</td>
+                                                        <td style={{ ...td, whiteSpace: 'nowrap' }}>{a.built_sqm ? Number(a.built_sqm).toLocaleString() : '—'}</td>
+                                                        <td style={td}>{a.neighborhood}</td>
+                                                        <td style={{ ...td, fontSize: 11, color: allocOf(a) ? '#ce93d8' : '#6a7a95' }}>{allocOf(a) || '—'}</td>
+                                                    </tr>
+                                                ))}
+                                                {!rows.length && <tr><td colSpan={8} style={{ ...td, textAlign: 'center', color: '#9fb0d0' }}>אין נכסים בסינון זה</td></tr>}
+                                            </tbody>
+                                        </table>
+                                        <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>מקור: ספר הנכסים העירוני (עדכון {meta.source_refresh || ''}). "מוקצה ל" מוצלב מספר ההקצאות לפי מספר נכס. סיווג התחום אוטומטי מטקסט חופשי.</div>
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                            <button onClick={csv} style={{ background: '#00695c', border: 'none', color: '#fff', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>📊 ייצוא CSV</button>
+                                            <button onClick={prnt} style={{ background: '#1b3b37', border: '1px solid #00695c', color: '#cfe8e3', padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>🖨️ הדפסה</button>
+                                        </div>
+                                        </>)}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* ── חסמים למבני ציבור — public lots blocked/delayed by a nearby fuel station (תמ"א 18) ── */}
                     {showFuelBarriers && (() => {
                         const FB = window.__fuelBarriers || {};
@@ -25976,6 +26183,7 @@
                                 { icon:'🏛️', title:'שב"צ קיים לפי תת-שכונה', desc:'מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל', onClick:() => go(() => { setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }) },
                                 { icon:'📋', title:'תנאים והפרשות ציבוריות', desc:'תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)', onClick:() => go(() => setConditionsReport(true)) },
                                 { icon:'⚖️', title:'פערי שימוש — ספר הנכסים', desc:'שימוש בפועל מול טבלה 5, עם טיפול בתכניות חופפות', onClick:() => go(() => setShowUseGaps(true)) },
+                                { icon:'🔑', title:'נכסי ציבור בשכירות', desc:'מבני ומוסדות ציבור שהעירייה מחזיקה בשכירות/חכירה (לא בבעלותה) — לפי תחום ובעלים', onClick:() => go(() => setShowRentalAssets(true)) },
                                 { icon:'🏘️', title:'פרוגרמה שכונתית', desc:'חישוב כיתות ושירותים קהילתיים לפי מינהל', onClick:() => go(() => openPublicNeedsModal()) },
                                 { icon:'⛽', title:'חסמים למבני ציבור', desc:'מגרשי ציבור בקרבת תחנת דלק — תמ"א 18 (80 מ\' ממוסדות חינוך)', onClick:() => go(() => setShowFuelBarriers(true)) },
                             ]},
