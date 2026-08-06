@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-binui-250563';
+        const APP_VERSION = '2026-08-06-tama-trees-subhood';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -7407,10 +7407,38 @@
                             if (inside) plansInside.push({ ...p });
                         });
                     }
-                    // Deduplicate by taba
+                    // Add TAMA 38 buildings whose point falls inside the sub-neighborhood —
+                    // same as the polygon "אזור נבחר" report. Without this the שכונה view
+                    // silently drops every תמ"א 38 tree survey (why area showed 38, שכונה 15).
+                    if (gd.tama38 && gd.tama38.features) {
+                        gd.tama38.features.forEach(f => {
+                            const p = f.properties;
+                            const geo = f.geometry;
+                            if (!geo || !geo.coordinates) return;
+                            let lng, lat;
+                            try {
+                                if (geo.type === 'Point') { [lng, lat] = geo.coordinates; }
+                                else if (geo.type === 'MultiPoint') { [lng, lat] = geo.coordinates[0]; }
+                                else return;
+                            } catch(ex) { return; }
+                            if (typeof lng !== 'number' || typeof lat !== 'number') return;
+                            let inside = false;
+                            for (let i = 0, j = subCoords.length - 1; i < subCoords.length; j = i++) {
+                                const [xi, yi] = subCoords[i], [xj, yj] = subCoords[j];
+                                if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+                                    inside = !inside;
+                            }
+                            if (inside) plansInside.push({ ...p, _source: 'tama38' });
+                        });
+                    }
+                    // Deduplicate תב"ע by taba; תמ"א 38 pass through (aggregate dedups by tik).
                     const seen = new Set();
                     const deduped = [];
-                    plansInside.forEach(p => { const t = p.taba || ''; if (t && !seen.has(t)) { seen.add(t); deduped.push(p); } });
+                    plansInside.forEach(p => {
+                        if (p._source === 'tama38') { deduped.push(p); return; }
+                        const t = p.taba || '';
+                        if (t && !seen.has(t)) { seen.add(t); deduped.push(p); }
+                    });
                     const stats = aggregateTreeStats(deduped);
 
                     const prev = document.getElementById('tree-panel');
