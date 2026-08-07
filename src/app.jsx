@@ -33151,7 +33151,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // mechanism, so the ratio is "fund plans out of tower plans".
                         const planFloors = (p) => {
                             let ln = parseFloat(p.level_num); if (!(ln > 0 && ln < 200)) ln = 0;
-                            let h = parseFloat(p.High); let hf = (h > 0) ? Math.round(h / 3.1) : 0;
+                            // High is building height in metres for towers, but for some plans it is
+                            // ground elevation above sea level (Jerusalem ≈ 650-820 m), not a height.
+                            // Only convert plausible building heights (< 400 m); otherwise the ÷3.1
+                            // conversion invents 200+ "floors" (e.g. High=678 → 219).
+                            let h = parseFloat(p.High); let hf = (h > 0 && h < 400) ? Math.round(h / 3.1) : 0;
                             return Math.max(ln, hf);
                         };
                         const FUND_SUB_OVERRIDE = { '101-1563642': 'פת' };
