@@ -4,3 +4,12 @@
 {"ts": "2026-08-02 18:31:54", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "units_in", "old": 0, "new": ""}
 {"ts": "2026-08-02 18:31:54", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-08-02 18:31:54", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-08 23:50:53", "taba": 842567, "plan_name": "101-0842567", "status": "אישור", "field": "High", "old": 678, "new": ""}
+{"ts": "2026-08-08 23:50:53", "taba": 256529, "plan_name": "101-0256529", "status": "בהליך אישור", "field": "High", "old": 775, "new": ""}
+{"ts": "2026-08-08 23:50:53", "taba": 256529, "plan_name": "101-0256529", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-08 23:50:53", "taba": 1160019, "plan_name": "101-1160019", "status": "אישור", "field": "High", "old": 802.2, "new": ""}
+{"ts": "2026-08-08 23:50:53", "taba": 1225218, "plan_name": "101-1225218", "status": "אישור", "field": "overlapping_plans", "old": "", "new": 0}
+{"ts": "2026-08-08 23:50:53", "taba": 1225218, "plan_name": "101-1225218", "status": "אישור", "field": "rental_inclusion", "old": "", "new": "additional"}
+{"ts": "2026-08-08 23:50:53", "taba": 1231257, "plan_name": "101-1231257", "status": "אישור", "field": "High", "old": 741.3, "new": ""}
+{"ts": "2026-08-08 23:50:53", "taba": 1380765, "plan_name": "101-1380765", "status": "בבדיקה תכנונית", "field": "High", "old": 805.1, "new": ""}
+{"ts": "2026-08-08 23:50:53", "taba": 1380765, "plan_name": "101-1380765", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
