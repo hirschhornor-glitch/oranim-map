@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-rental-address';
+        const APP_VERSION = '2026-08-06-rental-renewal';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25528,6 +25528,18 @@
                             housing:'מגורים', commerce:'מסחר', admin:'מנהל ומשרדים', other:'אחר',
                         };
                         const all = RPA ? (RPA.features || []).map(f => ({ ...f.properties, pt: f.geometry && f.geometry.coordinates })) : [];
+                        // התחדשות עירונית — renewal plans (התחדשות עירונית/פינוי בינוי/עיבוי)
+                        // whose boundary contains the asset. Computed against the live plans
+                        // layer (tracks current status); memoized per session (static after load).
+                        if (RPA && (geoDataRef.current || {}).plans && !window.__rentalRenewalByAsset) {
+                            const pf = (geoDataRef.current.plans.features || []).filter(f => f.geometry && RENEWAL_PLAN_TYPES.includes(normalizePlanType(f.properties.plan_type)));
+                            const ringHit = (pt, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi + 1e-15) + xi)) inside = !inside; } return inside; };
+                            const inFeat = (pt, f) => { const g = f.geometry; if (g.type === 'Polygon') return ringHit(pt, g.coordinates[0]); if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) if (ringHit(pt, poly[0])) return true; } return false; };
+                            const rmap = {};
+                            all.forEach(a => { if (!a.pt) return; const hits = []; pf.forEach(f => { if (inFeat(a.pt, f)) hits.push({ taba: f.properties.taba, status: normalizeStatus(f.properties.status_mavat) || f.properties.status_mavat || '', type: normalizePlanType(f.properties.plan_type) }); }); if (hits.length) rmap[a.asset_id] = hits; });
+                            window.__rentalRenewalByAsset = rmap;
+                        }
+                        const renewalOf = (a) => (window.__rentalRenewalByAsset || {})[a.asset_id] || [];
                         // domain order by frequency (stable, most-common first)
                         const domCount = {}; all.forEach(a => { domCount[a.domain] = (domCount[a.domain] || 0) + 1; });
                         const domOrder = Object.keys(DLBL).filter(k => domCount[k]).sort((a, b) => domCount[b] - domCount[a]);
@@ -25553,20 +25565,27 @@
                             setShowRentalAssets(false);
                             map.flyTo([a.pt[1], a.pt[0]], 18, { duration: 0.5 });
                         };
+                        const goToPlan = (taba) => {
+                            const gd = geoDataRef.current || {}, map = mapInstanceRef.current;
+                            if (!gd.plans || !map) return;
+                            const f = gd.plans.features.find(ft => String(ft.properties.taba || '').trim() === String(taba).trim());
+                            if (!f || !f.geometry) return;
+                            try { const b = L.geoJSON(f.geometry).getBounds(); if (!b.isValid()) return; setShowRentalAssets(false); map.flyToBounds(b, { padding: [40, 40], maxZoom: 17, duration: 0.5 }); } catch (e) { /* geometry edge case */ }
+                        };
                         const td = { border: '1px solid #234', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
                         const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                         const csv = () => {
-                            const head = ['תחום', 'שם הנכס', 'החזקה', 'מצב', 'שימוש', 'ייעוד קרקע', 'שימוש חורג', 'בעלים (משכיר)', 'שטח בנוי (מ"ר)', 'שכונה', 'כתובת', 'גוש/חלקה', 'פתיחת נכס', 'מפעיל (עמותה)', 'פיקוח', 'מספר נכס'];
+                            const head = ['תחום', 'שם הנכס', 'החזקה', 'מצב', 'שימוש', 'ייעוד קרקע', 'שימוש חורג', 'בעלים (משכיר)', 'שטח בנוי (מ"ר)', 'שכונה', 'כתובת', 'גוש/חלקה', 'פתיחת נכס', 'מפעיל (עמותה)', 'פיקוח', 'התחדשות עירונית', 'מספר נכס'];
                             const lines = [head.map(csvQ).join(',')];
-                            rows.forEach(a => lines.push([DLBL[a.domain] || a.domain, a.name, a.tenure, a.state, a.use, a.zoning || '', a.nonconforming ? 'כן' : '', a.owner, a.built_sqm || '', a.neighborhood, a.address || '', (a.parcels || []).join(' '), a.opened || '', orgsOf(a).join('; '), (a.pikuach || []).join('/'), a.asset_id].map(csvQ).join(',')));
+                            rows.forEach(a => lines.push([DLBL[a.domain] || a.domain, a.name, a.tenure, a.state, a.use, a.zoning || '', a.nonconforming ? 'כן' : '', a.owner, a.built_sqm || '', a.neighborhood, a.address || '', (a.parcels || []).join(' '), a.opened || '', orgsOf(a).join('; '), (a.pikuach || []).join('/'), renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '), a.asset_id].map(csvQ).join(',')));
                             const el = document.createElement('a'); el.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); el.download = 'rental_public_assets.csv'; document.body.appendChild(el); el.click(); el.remove();
                         };
                         const prnt = () => {
                             const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
                             let h = '<html dir="rtl"><head><meta charset="utf-8"><title>נכסי ציבור בשכירות</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#00695c;color:#fff}</style></head><body><h1>🔑 נכסי ציבור בשכירות — ספר הנכסים העירוני</h1>';
                             h += `<p>${rows.length} נכסים · שכירות ${nRent} · חכירה ${nLease} · שטח בנוי ${totalSqm.toLocaleString()} מ"ר · עדכון ${e2(meta.source_refresh || '')}</p>`;
-                            h += '<table><thead><tr><th>תחום</th><th>שם הנכס</th><th>החזקה</th><th>שימוש</th><th>ייעוד קרקע</th><th>שימוש חורג</th><th>בעלים (משכיר)</th><th>שטח (מ"ר)</th><th>שכונה</th><th>כתובת</th><th>גוש/חלקה</th><th>מפעיל / פיקוח</th></tr></thead><tbody>';
-                            rows.forEach(a => { const op = [orgsOf(a).join(', '), (a.pikuach || []).join('/')].filter(Boolean).join(' · '); h += '<tr' + (a.nonconforming ? ' style="background:#fde7e7"' : '') + '><td>' + e2(DLBL[a.domain] || a.domain) + '</td><td>' + e2(a.name) + '</td><td>' + e2(a.tenure + ' · ' + a.state) + '</td><td>' + e2(a.use) + '</td><td>' + e2(a.zoning || '') + '</td><td>' + (a.nonconforming ? '⚠ כן' : '') + '</td><td>' + e2(a.owner) + '</td><td>' + e2(a.built_sqm || '') + '</td><td>' + e2(a.neighborhood) + '</td><td>' + e2(a.address || '') + '</td><td>' + e2((a.parcels || []).join(' ')) + '</td><td>' + e2(op) + '</td></tr>'; });
+                            h += '<table><thead><tr><th>תחום</th><th>שם הנכס</th><th>החזקה</th><th>שימוש</th><th>ייעוד קרקע</th><th>שימוש חורג</th><th>בעלים (משכיר)</th><th>שטח (מ"ר)</th><th>שכונה</th><th>כתובת</th><th>גוש/חלקה</th><th>מפעיל / פיקוח</th><th>התחדשות עירונית</th></tr></thead><tbody>';
+                            rows.forEach(a => { const op = [orgsOf(a).join(', '), (a.pikuach || []).join('/')].filter(Boolean).join(' · '); const ren = renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '); h += '<tr' + (a.nonconforming ? ' style="background:#fde7e7"' : '') + '><td>' + e2(DLBL[a.domain] || a.domain) + '</td><td>' + e2(a.name) + '</td><td>' + e2(a.tenure + ' · ' + a.state) + '</td><td>' + e2(a.use) + '</td><td>' + e2(a.zoning || '') + '</td><td>' + (a.nonconforming ? '⚠ כן' : '') + '</td><td>' + e2(a.owner) + '</td><td>' + e2(a.built_sqm || '') + '</td><td>' + e2(a.neighborhood) + '</td><td>' + e2(a.address || '') + '</td><td>' + e2((a.parcels || []).join(' ')) + '</td><td>' + e2(op) + '</td><td>' + e2(ren) + '</td></tr>'; });
                             h += '</tbody></table></body></html>';
                             const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
                         };
@@ -25616,7 +25635,7 @@
                                         </div>
                                         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12, color: '#d8def0' }}>
                                             <thead><tr style={{ background: '#0d2b28', color: '#80cbc4' }}>
-                                                <th style={td}>תחום</th><th style={td}>שם הנכס</th><th style={td}>החזקה</th><th style={td}>שימוש</th><th style={td}>ייעוד קרקע</th><th style={td}>בעלים (משכיר)</th><th style={td}>שטח (מ"ר)</th><th style={td}>שכונה</th><th style={td}>כתובת</th><th style={td} title="עמותה מוקצית + פיקוח חינוך (ממלכתי=רשמי/עירוני, מוכר=פרטי)">מפעיל</th>
+                                                <th style={td}>תחום</th><th style={td}>שם הנכס</th><th style={td}>החזקה</th><th style={td}>שימוש</th><th style={td}>ייעוד קרקע</th><th style={td}>בעלים (משכיר)</th><th style={td}>שטח (מ"ר)</th><th style={td}>שכונה</th><th style={td}>כתובת</th><th style={td} title="עמותה מוקצית + פיקוח חינוך (ממלכתי=רשמי/עירוני, מוכר=פרטי)">מפעיל</th><th style={td} title="תב&quot;ע התחדשות עירונית/פינוי-בינוי/עיבוי שהנכס בתחומה — תב&quot;ע | סטטוס">התחדשות עירונית</th>
                                             </tr></thead>
                                             <tbody>
                                                 {rows.map((a, i) => (
@@ -25635,9 +25654,17 @@
                                                             {(a.pikuach || []).map((pk, j) => { const off = /ממלכתי/.test(pk); return <span key={j} style={{ display: 'inline-block', marginRight: 4, padding: '0 6px', borderRadius: 8, fontSize: 10, background: off ? '#1b3a2a' : '#3a2a1b', color: off ? '#86b89a' : '#e0b080' }} title={off ? 'פיקוח ממלכתי — מוסד רשמי/עירוני' : 'פיקוח מוכר/עצמאי — פרטי'}>{pk}</span>; })}
                                                             {!orgsOf(a).length && !(a.pikuach || []).length ? <span style={{ color: '#6a7a95' }}>—</span> : null}
                                                         </td>
+                                                        <td style={{ ...td, fontSize: 11 }}>
+                                                            {renewalOf(a).length ? renewalOf(a).map((rp, j) => (
+                                                                <div key={j} style={{ whiteSpace: 'nowrap', marginBottom: 1 }}>
+                                                                    <a href="#" onClick={e => { e.preventDefault(); goToPlan(rp.taba); }} title={'קפיצה לתכנית · ' + (rp.type || '')} style={{ color: '#64b5f6', textDecoration: 'none' }}>{rp.taba}</a>
+                                                                    {' | '}<span style={{ color: STATUS_COLORS[rp.status] || '#9fb0d0' }}>{rp.status || '—'}</span>
+                                                                </div>
+                                                            )) : <span style={{ color: '#6a7a95' }}>—</span>}
+                                                        </td>
                                                     </tr>
                                                 ))}
-                                                {!rows.length && <tr><td colSpan={10} style={{ ...td, textAlign: 'center', color: '#9fb0d0' }}>אין נכסים בסינון זה</td></tr>}
+                                                {!rows.length && <tr><td colSpan={11} style={{ ...td, textAlign: 'center', color: '#9fb0d0' }}>אין נכסים בסינון זה</td></tr>}
                                             </tbody>
                                         </table>
                                         <div style={{ fontSize: 10.5, color: '#8a9bc0', marginTop: 10 }}>מקור: ספר הנכסים העירוני (עדכון {meta.source_refresh || ''}). "מוקצה ל" מוצלב מספר ההקצאות לפי מספר נכס. סיווג התחום אוטומטי מטקסט חופשי.</div>
