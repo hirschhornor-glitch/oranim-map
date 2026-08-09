@@ -14623,7 +14623,11 @@
                         const latlng = L.latLng(mt.lat, mt.lng);
                         const marker = L.circleMarker(latlng, {
                             pane: 'topicsPane', radius: 6, color: '#ff8c00', weight: 2,
-                            fillColor: '#ff8c00', fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false
+                            fillColor: '#ff8c00', fillOpacity: 0.25, dashArray: '3,3', bubblingMouseEvents: false,
+                            // topics-pane paths are pointer-events:none (hollow highlight outlines
+                            // must not steal clicks from the plan polygons beneath). This class
+                            // re-enables clicks for the marker dot only — see index.html.
+                            className: 'topics-clickable'
                         });
                         marker.on('click', () => {
                             openCommitteePermitPopup(mt, latlng, map);
@@ -14656,10 +14660,12 @@
                         const marker = L.circleMarker(latlng, {
                             pane: 'topicsPane', radius: 6, color: '#e91e63', weight: 2,
                             fillColor: '#e91e63', fillOpacity: 0.9, bubblingMouseEvents: false,
-                            title: (p.address || p.tik || '') + ' — תמ״א 38 חדשה'
+                            title: (p.address || p.tik || '') + ' — תמ״א 38 חדשה',
+                            // topics-pane paths are pointer-events:none by default; this class
+                            // re-enables clicks for the marker dot only (see index.html).
+                            className: 'topics-clickable'
                         });
                         marker.on('click', () => {
-                            drawPlanOutline(c);
                             const fid = String(p.fid != null ? p.fid : '');
                             L.popup({ maxWidth: popupMaxWidth(), className: 'plan-popup' })
                                 .setLatLng(latlng)
@@ -30807,10 +30813,27 @@
                         }).map(f => {
                             const pr = f.properties; const g = f.geometry;
                             const c = g ? (g.type === 'MultiPoint' ? (g.coordinates || [])[0] : g.coordinates) : null;
+                            // מינה"ק: resolve the real sub-area by point-in-polygon (same as plan rows).
+                            // tama permits span the whole rova, so many fall outside the 6 minahak
+                            // boundaries — fall back to the permit's neighborhood name (neighborho).
+                            const minahakLayersT = [
+                                { name: 'בית צפאפא',         layer: gd.minahak_beit_tzfafa },
+                                { name: 'גוננים',             layer: gd.minahak_gonen },
+                                { name: 'בקעה רבתי',         layer: gd.minahak_baka },
+                                { name: 'א.ת. תלפיות',       layer: gd.minahak_talpiot },
+                                { name: 'מינהל מוסדי מלחה', layer: gd.minahak_malha },
+                                { name: 'גינות העיר',         layer: gd.minahak_ganot },
+                            ].filter(x => x.layer && x.layer.features);
+                            let minahakT = '';
+                            if (c && c.length >= 2) {
+                                const hit = minahakLayersT.find(({layer}) => pointInLayer([c[0], c[1]], layer));
+                                if (hit) minahakT = hit.name;
+                            }
+                            if (!minahakT) minahakT = String(pr.neighborho || '').trim();
                             return { _tama: true, _fid: String(pr.fid != null ? pr.fid : ''),
                                 _ll: (c && c.length >= 2) ? [c[1], c[0]] : null, _props: pr,
                                 plan_name: pr.tik || '', plan_summary: pr.address || '', plan_name_he: pr.address || '',
-                                minahak: 'תמ"א 38', status_mavat: pr.status || '',
+                                minahak: minahakT || '-', status_mavat: pr.status || '',
                                 units_in: pr.units_in, units_total: pr.units_out,
                                 shavatz_out_sqm: null, shatzap_out: null, first_detected: pr.first_detected };
                         });

@@ -1134,9 +1134,16 @@
             pointer-events: auto !important;
             cursor: pointer;
         }
-        /* Topics pane: never interactive (hatch overlays only) */
+        /* Topics pane: highlight outlines are never interactive (hatch overlays
+           only) so they don't steal clicks from the plan polygons beneath. */
         .leaflet-topics-pane path {
             pointer-events: none !important;
+        }
+        /* ...except point markers explicitly opted-in (new תמ"א 38 dots, meeting
+           dots) — these carry their own click handler and must be clickable. */
+        .leaflet-topics-pane path.topics-clickable {
+            pointer-events: auto !important;
+            cursor: pointer;
         }
         /* Popups and controls must be interactive */
         .leaflet-popup-pane,
