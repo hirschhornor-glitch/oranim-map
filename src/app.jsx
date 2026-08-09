@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-fund-layer-outline';
+        const APP_VERSION = '2026-08-06-rental-no-conditional';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -23467,7 +23467,7 @@
                                  onClick={() => setPlanningTopics(prev => ({...prev, rental: !prev.rental}))}>
                                 <input type="checkbox" checked={planningTopics.rental} onChange={() => {}} />
                                 <label style={{flex:1}}>פרוייקטים עם דירות להשכרה</label>
-                                <button className="layer-legend-btn" title="דוח דיור להשכרה ומותנה"
+                                <button className="layer-legend-btn" title="דוח דיור להשכרה"
                                     onClick={(e) => { e.stopPropagation(); setSpecialHousingReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
@@ -26199,7 +26199,7 @@
                         const CATS = [
                             { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
-                                { icon:'🏘️', title:'דיור להשכרה ומותנה', desc:'יח"ד להשכרה (+משך) ויח"ד מותנות מ-טבלה 5', onClick:() => go(() => setSpecialHousingReport(true)) },
+                                { icon:'🏘️', title:'דיור להשכרה', desc:'יח"ד להשכרה + משך השכרה מ-טבלה 5 (יח"ד מותנות עברו לדוח קרן תחזוקה)', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
                                 { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }) },
                             ]},
@@ -31189,8 +31189,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const st = (p.status_mavat || '').trim();
                             if (/נדחתה|בטלה|מבוטל|ארכיון/.test(st)) continue;
                             const rental = num(p.rental);
-                            const conditional = num(p.conditional_housing);
-                            if (rental === 0 && conditional === 0) continue;
+                            if (rental === 0) continue;
                             seenPN.add(pn);
                             rows.push({
                                 plan_name: pn,
@@ -31200,19 +31199,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 units_total: num(p.units_total),
                                 rental,
                                 rental_duration: (p.rental_duration || '').toString().trim(),
-                                conditional,
                             });
                         }
-                        rows.sort((a, b) => {
-                            const sA = a.rental + a.conditional;
-                            const sB = b.rental + b.conditional;
-                            if (sB !== sA) return sB - sA;
-                            return b.units_total - a.units_total;
-                        });
+                        rows.sort((a, b) => (b.rental - a.rental) || (b.units_total - a.units_total));
 
                         const tot = {
                             rental: rows.reduce((s, r) => s + r.rental, 0),
-                            conditional: rows.reduce((s, r) => s + r.conditional, 0),
                         };
                         const fmtDur = (d) => !d ? '-' : (d === 'צמיתות' ? 'צמיתות' : `${d} שנים`);
                         const fmt = (n) => n > 0 ? n.toLocaleString() : '-';
@@ -31222,8 +31214,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(980px, 96vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column'}}>
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setSpecialHousingReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
-                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏘️ דיור להשכרה ומותנה</h2>
-                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{rows.length} תכניות · סה"כ יח"ד להשכרה: {tot.rental.toLocaleString()} · יח"ד מותנות: {tot.conditional.toLocaleString()}</p>
+                                    <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>🏘️ דיור להשכרה</h2>
+                                    <p style={{color:'#aaa',fontSize:12,marginBottom:4}}>{rows.length} תכניות · סה"כ יח"ד להשכרה: {tot.rental.toLocaleString()}</p>
                                     <p style={{color:'#888',fontSize:11,marginBottom:12}}>קליק על שורה פותח את התכנית במפה · מקור: טבלה 5 ב-Mavat + ניתוח הוראות התכנית</p>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a',background:'#1a1a2e',position:'sticky',top:0}}>
@@ -31235,7 +31227,6 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#fff'}}>סה"כ יח"ד</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#90caf9'}}>יח"ד להשכרה</th>
                                             <th style={{textAlign:'center',padding:'6px 4px',color:'#90caf9'}}>משך השכרה</th>
-                                            <th style={{textAlign:'center',padding:'6px 4px',color:'#ffb74d'}}>יח"ד מותנות</th>
                                         </tr></thead>
                                         <tbody>
                                             {rows.map((r, i) => (
@@ -31273,7 +31264,6 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     <td style={{textAlign:'center',padding:'4px',color:'#fff'}}>{fmt(r.units_total)}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#90caf9',fontWeight:r.rental>0?600:400}}>{fmt(r.rental)}</td>
                                                     <td style={{textAlign:'center',padding:'4px',color:'#81c784',fontSize:11}}>{fmtDur(r.rental_duration)}</td>
-                                                    <td style={{textAlign:'center',padding:'4px',color:'#ffb74d',fontWeight:r.conditional>0?600:400}}>{fmt(r.conditional)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -31282,7 +31272,6 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                 <td colSpan={6} style={{padding:'6px 4px',color:'#fff'}}>סה"כ ({rows.length} תכניות)</td>
                                                 <td style={{textAlign:'center',padding:'6px 4px',color:'#90caf9'}}>{fmt(tot.rental)}</td>
                                                 <td/>
-                                                <td style={{textAlign:'center',padding:'6px 4px',color:'#ffb74d'}}>{fmt(tot.conditional)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -31290,7 +31279,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                         <button onClick={() => {
                                             const printWin = window.open('', '_blank');
                                             const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח דיור להשכרה ומותנה</title>');
+                                            printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח דיור להשכרה</title>');
                                             printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}th,td{padding:5px 6px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700;border-bottom:2px solid #333}tfoot td{border-top:2px solid #333;font-weight:700;background:#fafafa}.header{margin-bottom:16px}.header h2{margin:0 0 4px}.header p{color:#666;margin:0;font-size:13px}.num{text-align:center}@media print{.no-print{display:none!important}body{padding:0}}</style>');
                                             printWin.document.write('</head><body>');
                                             printWin.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">');
@@ -31298,10 +31287,10 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             printWin.document.write('<button onclick="window.print()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128196; שמור PDF</button>');
                                             printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
                                             printWin.document.write('</div>');
-                                            printWin.document.write('<div class="header"><h2>דיור להשכרה ומותנה</h2>');
-                                            printWin.document.write('<p>' + rows.length + ' תכניות · סה"כ יח"ד להשכרה: ' + tot.rental + ' · יח"ד מותנות: ' + tot.conditional + '</p>');
+                                            printWin.document.write('<div class="header"><h2>דיור להשכרה</h2>');
+                                            printWin.document.write('<p>' + rows.length + ' תכניות · סה"כ יח"ד להשכרה: ' + tot.rental + '</p>');
                                             printWin.document.write('<p style="color:#999;font-size:11px;margin-top:4px">מקור: טבלה 5 ב-Mavat. משך השכרה הוסק מקריאת הוראות התכנית.</p></div>');
-                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר</th><th>שם תכנית</th><th>מינה"ק</th><th>סטטוס</th><th class="num">סה"כ יח"ד</th><th class="num">יח"ד להשכרה</th><th class="num">משך השכרה</th><th class="num">יח"ד מותנות</th></tr></thead><tbody>');
+                                            printWin.document.write('<table><thead><tr><th>#</th><th>מספר</th><th>שם תכנית</th><th>מינה"ק</th><th>סטטוס</th><th class="num">סה"כ יח"ד</th><th class="num">יח"ד להשכרה</th><th class="num">משך השכרה</th></tr></thead><tbody>');
                                             const fmtCell = (n) => n > 0 ? String(n) : '-';
                                             rows.forEach((r, i) => {
                                                 printWin.document.write('<tr>' +
@@ -31313,26 +31302,23 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                     '<td class="num">' + fmtCell(r.units_total) + '</td>' +
                                                     '<td class="num">' + fmtCell(r.rental) + '</td>' +
                                                     '<td class="num">' + (r.rental_duration ? (r.rental_duration === 'צמיתות' ? 'צמיתות' : r.rental_duration + ' שנים') : '-') + '</td>' +
-                                                    '<td class="num">' + fmtCell(r.conditional) + '</td>' +
                                                 '</tr>');
                                             });
                                             printWin.document.write('</tbody><tfoot><tr><td colspan="6">סה"כ</td>' +
                                                 '<td class="num">' + tot.rental + '</td><td></td>' +
-                                                '<td class="num">' + tot.conditional + '</td>' +
                                                 '</tr></tfoot></table>');
-                                            const csvHead = ['#','מספר','שם תכנית','מינה"ק','סטטוס','סה"כ יח"ד','יח"ד להשכרה','משך השכרה','יח"ד מותנות'];
+                                            const csvHead = ['#','מספר','שם תכנית','מינה"ק','סטטוס','סה"כ יח"ד','יח"ד להשכרה','משך השכרה'];
                                             const csvLines = [csvHead.map(h => '"' + h.replace(/"/g,'""') + '"').join(',')];
                                             rows.forEach((r, i) => {
                                                 const c = [
                                                     i+1, r.plan_name, r.plan_summary || '', r.minahak || '', r.status || '',
                                                     r.units_total || '', r.rental || '',
                                                     r.rental_duration ? (r.rental_duration === 'צמיתות' ? 'צמיתות' : r.rental_duration + ' שנים') : '',
-                                                    r.conditional || '',
                                                 ];
                                                 csvLines.push(c.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
                                             });
                                             const csvContent = csvLines.join('\n');
-                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="דיור_להשכרה_ומותנה.csv";a.click()});<\/script>');
+                                            printWin.document.write('<script>document.getElementById("csvBtn").addEventListener("click",function(){var b=new Blob(["\\uFEFF"+' + JSON.stringify(csvContent) + '],{type:"text/csv;charset=utf-8"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="דיור_להשכרה.csv";a.click()});<\/script>');
                                             printWin.document.write('</body></html>');
                                             printWin.document.close();
                                             printWin.focus();
