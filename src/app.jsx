@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-rental-renewal';
+        const APP_VERSION = '2026-08-06-renewal-nogenuza';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -25532,7 +25532,9 @@
                         // whose boundary contains the asset. Computed against the live plans
                         // layer (tracks current status); memoized per session (static after load).
                         if (RPA && (geoDataRef.current || {}).plans && !window.__rentalRenewalByAsset) {
-                            const pf = (geoDataRef.current.plans.features || []).filter(f => f.geometry && RENEWAL_PLAN_TYPES.includes(normalizePlanType(f.properties.plan_type)));
+                            // Shelved/rejected plans aren't a live threat — excluded (user request).
+                            const RENEWAL_SHELVED = ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'];
+                            const pf = (geoDataRef.current.plans.features || []).filter(f => f.geometry && RENEWAL_PLAN_TYPES.includes(normalizePlanType(f.properties.plan_type)) && !RENEWAL_SHELVED.includes(normalizeStatus(f.properties.status_mavat)));
                             const ringHit = (pt, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi + 1e-15) + xi)) inside = !inside; } return inside; };
                             const inFeat = (pt, f) => { const g = f.geometry; if (g.type === 'Polygon') return ringHit(pt, g.coordinates[0]); if (g.type === 'MultiPolygon') { for (const poly of g.coordinates) if (ringHit(pt, poly[0])) return true; } return false; };
                             const rmap = {};
