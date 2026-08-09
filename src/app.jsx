@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-rental-no-conditional';
+        const APP_VERSION = '2026-08-09-muni-cosubmitter';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3200,6 +3200,8 @@
             const [devRepQ, setDevRepQ] = useState('');
             const [devRepSort, setDevRepSort] = useState('plans'); // 'plans' | 'units'
             const [devRepTama38, setDevRepTama38] = useState(false); // include TAMA 38 developers
+            const [devRepType, setDevRepType] = useState('all'); // 'all' | 'renewal' | 'other'
+            const [devRepMuniCo, setDevRepMuniCo] = useState(false); // only plans where the municipality is a co-submitter
             const [devRepExpanded, setDevRepExpanded] = useState(null);
             // הדגשת כל תכניות יזם על המפה: {name, plans, units} + שכבת Leaflet זמנית
             const [devMapSel, setDevMapSel] = useState(null);
@@ -5236,6 +5238,7 @@
                     ['__pikuahStatus', 'data/pikuah_status.json'],
                     ['__unitBonus', 'data/unit_bonus.json'],
                     ['__table5Units', 'data/table5_units.json'],
+                    ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5772,6 +5775,7 @@
                             else if (key === '__occupancy') { window.__occupancy = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__unitBonus') { window.__unitBonus = (data && data.by_plan) ? data.by_plan : {}; }
                             else if (key === '__table5Units') { window.__table5Units = data || {}; }
+                            else if (key === '__muniCoSubmitter') { window.__muniCoSubmitter = data || {}; }
                             else if (key === '__pikuahStatus') {
                                 // per-permit building-supervision status (pikuah_status.json).
                                 // Index the completed ones (תעודת גמר) by the REVISION-AGNOSTIC
@@ -6013,7 +6017,7 @@
                 shavazKayamReport, shavazReportFilter,
                 overlapReport, objectionsReport, permitObjectionsReport, treePermitsReport,
                 meetingsReport, specialHousingReport, masterPlanReport,
-                developersReport, devRepMinahak, devRepQ, devRepSort,
+                developersReport, devRepMinahak, devRepQ, devRepSort, devRepTama38, devRepType, devRepMuniCo,
                 showEduForecast, eduForecastChumash, eduForecastNb,
                 showPermitsBySub, permitsBySubDrilldown, permitsBySubMinahakFilter,
                 showPermitsGap, permitsGapDrilldown,
@@ -13596,8 +13600,8 @@
                         ser: () => ({ f: eduRenewalFilter, mnk: eduRenewalMinahak }),
                         apply: p => { if (p.f) setEduRenewalFilter(p.f); if (p.mnk) setEduRenewalMinahak(p.mnk); } },
                     { key: 'developers', isOpen: () => developersReport, open: () => setDevelopersReport(true),
-                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort, t38: devRepTama38 ? 1 : 0 }),
-                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); if (p.t38) setDevRepTama38(true); } },
+                        ser: () => ({ min: devRepMinahak, q: devRepQ, sort: devRepSort, t38: devRepTama38 ? 1 : 0, ptype: devRepType, muni: devRepMuniCo ? 1 : 0 }),
+                        apply: p => { if (p.min) setDevRepMinahak(p.min); if (p.q) setDevRepQ(p.q); if (p.sort) setDevRepSort(p.sort); if (p.t38) setDevRepTama38(true); if (p.ptype) setDevRepType(p.ptype); if (p.muni) setDevRepMuniCo(true); } },
                     { key: 'masterPlan', isOpen: () => !!masterPlanReport, open: p => setMasterPlanReport((p && p.mp) || 'מושבות'),
                         ser: () => ({ mp: masterPlanReport }) },
                     { key: 'eduForecast', isOpen: () => showEduForecast, open: () => setShowEduForecast(true),
@@ -31603,6 +31607,10 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             return null; // unknown status — skip
                         };
 
+                        // --- מסווג סוג תכנית: התחדשות עירונית מול "תכניות נוספות" (עיבוי/בנייה חדשה/אחר) ---
+                        const isMunicipal = (n) => /עיריית|עירית|ועדה מקומית|הועדה המקומית|הוועדה המקומית|רשות מקומית/.test(n);
+                        const planTypeGroup = (pt) => (String(pt || '').includes('התחדשות') ? 'renewal' : 'other');
+
                         // --- collect rows: developer -> aggregates ---
                         const seenPN = new Set();
                         const devMap = {};
@@ -31621,18 +31629,28 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const minahak = (p.minahak || '').trim() || 'ללא שיוך';
                             allMinahaks.add(minahak);
                             if (devRepMinahak !== 'all' && minahak !== devRepMinahak) continue;
+                            // סינון סוג תכנית (התחדשות / נוספות)
+                            if (devRepType !== 'all' && planTypeGroup(p.plan_type) !== devRepType) continue;
                             const bucket = bucketOf(p);
                             if (!bucket) continue;
                             const devs = splitDevelopers(p.developer);
                             let names = devs.length ? devs.map(canonOf).filter(Boolean) : ['לא ידוע'];
                             // מגיש משותף של רשות מקומית + יזם פרטי: היזם הפרטי הוא היזם בפועל
-                            const isMunicipal = (n) => /עיריית|עירית|ועדה מקומית|הועדה המקומית|הוועדה המקומית|רשות מקומית/.test(n);
+                            const municipalNames = names.filter(isMunicipal);
                             const privateNames = names.filter(n => !isMunicipal(n));
+                            // העירייה שותפה כמגישה משנית. המקור הסמכותי הוא muni_cosubmitter.json —
+                            // נגזר מסריקת טבלת המגיש (1.8.1) בהוראות, כי שדה developer מנקה את
+                            // העירייה (prefer_private + עדיפות 1.8.2). fallback: זיהוי מתוך developer.
+                            const coInfo = (window.__muniCoSubmitter || {})[pn];
+                            const muniCo = !!coInfo || (municipalNames.length > 0 && privateNames.length > 0);
+                            const muniName = coInfo ? (coInfo.muni || []).join(', ') : municipalNames.join(', ');
                             if (privateNames.length && privateNames.length < names.length) names = privateNames;
+                            // סינון "העירייה כמגישה משנית"
+                            if (devRepMuniCo && !muniCo) continue;
                             const shared = names.length > 1;
                             names.forEach(name => {
                                 const d = devMap[name] || (devMap[name] = { name, plans: [], units: 0, buckets: {}, minahaks: {}, shared: 0 });
-                                d.plans.push({ pn, summary: p.plan_summary || p.plan_name_he || '', minahak, status: st, bucket, units, shared });
+                                d.plans.push({ pn, summary: p.plan_summary || p.plan_name_he || '', minahak, status: st, bucket, units, shared, muniCo, muniName: muniCo ? muniName : '' });
                                 d.units += units;
                                 d.buckets[bucket] = (d.buckets[bucket] || 0) + units;
                                 d.minahaks[minahak] = (d.minahaks[minahak] || 0) + units;
@@ -31646,7 +31664,9 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         // minahak = point-in-polygon precomputed; bucket from the permit status.
                         // Kept behind a toggle so the SPV-heavy TAMA 38 names don't dilute the
                         // תב"ע-based report by default.
-                        if (devRepTama38 && gd.tama38 && gd.tama38.features) {
+                        // תמ"א 38 = התחדשות עירונית; אין בה עירייה כמגישה משנית —
+                        // ולכן מדולגת כש-devRepType='other' או כשמסנן "עירייה כמגישה" דלוק.
+                        if (devRepTama38 && devRepType !== 'other' && !devRepMuniCo && gd.tama38 && gd.tama38.features) {
                             const devsByTik = window.__tama38Developers || {};
                             const t38Bucket = (s) => (/הופק|הוצא היתר|אושר בוועד|אושר בועד/.test(s || '') ? 'ברישוי/היתר' : 'בתכנון');
                             const seenTik = new Set();
@@ -31773,6 +31793,8 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const printWin = window.open('', '_blank');
                             const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                             const minLbl = devRepMinahak === 'all' ? 'כל המינה"קים' : devRepMinahak;
+                            const typeLbl = devRepType === 'renewal' ? 'התחדשות עירונית בלבד' : (devRepType === 'other' ? 'תכניות נוספות (עיבוי/בנייה חדשה)' : 'כל סוגי התכניות');
+                            const filtLbl = typeLbl + (devRepMuniCo ? ' · העירייה כמגישה שותפה' : '');
                             printWin.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>דוח יזמים</title>');
                             printWin.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}th,td{padding:5px 6px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700;border-bottom:2px solid #333}tfoot td{border-top:2px solid #333;font-weight:700;background:#fafafa}.num{text-align:center}.subrow td{background:#fbfbfb;font-size:11px;color:#555}@media print{.no-print{display:none!important}body{padding:0}}</style>');
                             printWin.document.write('</head><body>');
@@ -31782,7 +31804,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
                             printWin.document.write('</div>');
                             printWin.document.write('<h2>דוח יזמים — יח"ד מתוכננות לפי יזם ושלב</h2>');
-                            printWin.document.write('<p style="color:#666;font-size:13px">' + minLbl + ' · ' + rows.length + ' יזמים · ' + totals.plans + ' תכניות · ' + Math.round(totals.units).toLocaleString() + ' יח"ד</p>');
+                            printWin.document.write('<p style="color:#666;font-size:13px">' + minLbl + ' · ' + filtLbl + ' · ' + rows.length + ' יזמים · ' + totals.plans + ' תכניות · ' + Math.round(totals.units).toLocaleString() + ' יח"ד</p>');
                             printWin.document.write('<p style="color:#999;font-size:11px">מקור שם היזם: הוראות התכנית (סעיף 1.8) / אתר עיר-קדם. תכנית משותפת לכמה יזמים נספרת אצל כל שותף; שורת הסה"כ סופרת כל תכנית פעם אחת.</p>');
                             printWin.document.write('<table><thead><tr><th>#</th><th>יזם</th><th class="num">תכניות</th><th>מינה"קים</th>' + BUCKETS.map(b => '<th class="num">' + b + '</th>').join('') + '<th class="num">סה"כ יח"ד</th></tr></thead><tbody>');
                             rows.forEach((r, i) => {
@@ -31790,16 +31812,16 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                     BUCKETS.map(b => '<td class="num">' + (r.buckets[b] ? Math.round(r.buckets[b]).toLocaleString() : '-') + '</td>').join('') +
                                     '<td class="num">' + Math.round(r.units).toLocaleString() + '</td></tr>');
                                 r.plans.forEach(pl => {
-                                    printWin.document.write('<tr class="subrow"><td></td><td colspan="3">' + esc(pl.pn) + ' — ' + esc(pl.summary || '') + (pl.shared ? ' (משותפת)' : '') + '</td><td colspan="' + BUCKETS.length + '">' + esc(pl.minahak) + ' · ' + esc(pl.status) + ' · ' + esc(pl.bucket) + '</td><td class="num">' + Math.round(pl.units).toLocaleString() + '</td></tr>');
+                                    printWin.document.write('<tr class="subrow"><td></td><td colspan="3">' + esc(pl.pn) + ' — ' + esc(pl.summary || '') + (pl.shared ? ' (משותפת)' : '') + (pl.muniCo ? ' 🏛️ עירייה כמגישה' : '') + '</td><td colspan="' + BUCKETS.length + '">' + esc(pl.minahak) + ' · ' + esc(pl.status) + ' · ' + esc(pl.bucket) + '</td><td class="num">' + Math.round(pl.units).toLocaleString() + '</td></tr>');
                                 });
                             });
                             printWin.document.write('</tbody><tfoot><tr><td colspan="4">סה"כ (' + totals.plans + ' תכניות ייחודיות)</td>' +
                                 BUCKETS.map(b => '<td class="num">' + (bucketTotals[b] ? Math.round(bucketTotals[b]).toLocaleString() : '-') + '</td>').join('') +
                                 '<td class="num">' + Math.round(totals.units).toLocaleString() + '</td></tr></tfoot></table>');
-                            const csvHead = ['יזם', 'תכנית', 'שם תכנית', 'מינה"ק', 'סטטוס', 'שלב', 'יח"ד', 'משותפת'];
+                            const csvHead = ['יזם', 'תכנית', 'שם תכנית', 'מינה"ק', 'סטטוס', 'שלב', 'יח"ד', 'משותפת', 'עירייה כמגישה שותפה'];
                             const csvLines = [csvHead.map(h => '"' + h.replace(/"/g, '""') + '"').join(',')];
                             rows.forEach(r => r.plans.forEach(pl => {
-                                const c = [r.name, pl.pn, pl.summary || '', pl.minahak, pl.status, pl.bucket, Math.round(pl.units), pl.shared ? 'כן' : ''];
+                                const c = [r.name, pl.pn, pl.summary || '', pl.minahak, pl.status, pl.bucket, Math.round(pl.units), pl.shared ? 'כן' : '', pl.muniCo ? pl.muniName : ''];
                                 csvLines.push(c.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','));
                             }));
                             const csvContent = csvLines.join('\n');
@@ -31830,9 +31852,19 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                             <option value="plans">מיון: מס' תכניות</option>
                                             <option value="units">מיון: סה"כ יח"ד</option>
                                         </select>
+                                        <select value={devRepType} onChange={e => { setDevRepType(e.target.value); setDevRepExpanded(null); }}
+                                            style={{background:'#16162a',color:'#e0e0e0',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px',fontSize:12}}>
+                                            <option value="all">כל סוגי התכניות</option>
+                                            <option value="renewal">התחדשות עירונית בלבד</option>
+                                            <option value="other">תכניות נוספות (עיבוי/בנייה חדשה)</option>
+                                        </select>
                                         <label style={{display:'flex',alignItems:'center',gap:5,color:'#e0e0e0',fontSize:12,cursor:'pointer',background:'#16162a',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px'}}>
                                             <input type="checkbox" checked={devRepTama38} onChange={e => { setDevRepTama38(e.target.checked); setDevRepExpanded(null); }} style={{cursor:'pointer'}} />
                                             כולל תמ"א 38
+                                        </label>
+                                        <label title="תכניות שבהן העירייה / הוועדה המקומית רשומה כמגישה נוספת לצד יזם פרטי" style={{display:'flex',alignItems:'center',gap:5,color:'#e0e0e0',fontSize:12,cursor:'pointer',background:'#16162a',border:'1px solid #3a3a50',borderRadius:6,padding:'5px 8px'}}>
+                                            <input type="checkbox" checked={devRepMuniCo} onChange={e => { setDevRepMuniCo(e.target.checked); setDevRepExpanded(null); }} style={{cursor:'pointer'}} />
+                                            🏛️ העירייה כמגישה שותפה
                                         </label>
                                     </div>
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
@@ -31874,6 +31906,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                                                     ? <span style={{color:'#5dade2'}}>🏢 תמ"א 38 · <span style={{textDecoration:'underline'}}>{pl.tik}</span></span>
                                                                     : <span style={{color:'#64b5f6',textDecoration:'underline'}}>{pl.pn}</span>}
                                                                 <span style={{color:'#bbb'}}> — {(pl.summary||'').slice(0,48)}{pl.shared?' ⊕':''}</span>
+                                                                {pl.muniCo && <span title={'העירייה שותפה כמגישה: ' + pl.muniName} style={{color:'#ffb74d',fontSize:10,marginRight:4}}> 🏛️</span>}
                                                             </td>
                                                             <td/>
                                                             <td style={{padding:'3px 4px',color:'#ce93d8',fontSize:10}}>{pl.minahak}</td>
