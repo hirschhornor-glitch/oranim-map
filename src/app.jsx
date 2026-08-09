@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-06-renewal-nogenuza';
+        const APP_VERSION = '2026-08-06-fund-layer-outline';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -937,7 +937,7 @@
                     { id: 'permits', name: 'היתרים', desc: 'תוכניות עם היתר בנייה', on: false, isFilter: true },
                     { id: 'tama38', name: 'תמ"א 38', desc: 'חיזוק ותוספת קומות', on: false },
                     { id: 'new_construction', name: 'בינוי חדש', desc: 'בינוי שהושלם בפועל — תב"עות שאוכלסו (טופס 4) ומבני תמ"א 38 עם תעודת גמר. הפריטים האלה מוצגים מלאים בשכבה זו, ומעומעמים ל-30% בשכבות תב"ע/תמ"א 38 הרגילות', on: false },
-                    { id: 'maintenance_fund', name: 'קרן תחזוקה', desc: 'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח. מקור: הוראות התכנית (מבא"ת) + טבלה 5', on: false },
+                    { id: 'maintenance_fund', name: 'קרן תחזוקה', desc: 'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח. מקור: הוראות התכנית (מבא"ת) + טבלה 5', on: false, hiddenFromList: true },
                 ]
             },
             infrastructure: {
@@ -18947,7 +18947,7 @@
                             if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return false;
                             return true;
                         },
-                        style: () => ({ color: '#8a6d00', weight: 1.6, fillColor: '#e0a800', fillOpacity: 0.42 }),
+                        style: () => ({ color: '#c98a00', weight: 2.4, fill: false, fillOpacity: 0 }),
                         onEachFeature: (f, layer) => {
                             const p = f.properties || {};
                             const rec = fundMap[p.plan_name] || {};
@@ -23469,6 +23469,16 @@
                                 <label style={{flex:1}}>פרוייקטים עם דירות להשכרה</label>
                                 <button className="layer-legend-btn" title="דוח דיור להשכרה ומותנה"
                                     onClick={(e) => { e.stopPropagation(); setSpecialHousingReport(true); }}
+                                    style={{marginRight:4,fontSize:11}}>📊</button>
+                            </div>
+                            <div className="layer-item"
+                                 title='תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה ארוכת-טווח (מגדלים)'
+                                 style={{display:'flex',alignItems:'center'}}
+                                 onClick={() => toggleLayer('maintenance_fund')}>
+                                <input type="checkbox" checked={layers.maintenance_fund || false} onChange={() => {}} onClick={e => e.stopPropagation()} />
+                                <label style={{flex:1}}>קרן תחזוקה</label>
+                                <button className="layer-legend-btn" title="דוח קרן תחזוקה"
+                                    onClick={(e) => { e.stopPropagation(); setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }}
                                     style={{marginRight:4,fontSize:11}}>📊</button>
                             </div>
                             </div>)}
