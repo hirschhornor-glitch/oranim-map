@@ -28,6 +28,9 @@ OUT_FILE = r"C:\ORANIM\_developer_extract_results.json"
 
 GARBAGE_DEVS = {'כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד',
                 'ניסיון', 'אדריכלים ומתכנני ערים', 'אדריכלים', 'פרטי'}
+# עירייה / ועדה מקומית / רשות מקומית — גורם ציבורי-מוניציפלי בבעלי העניין
+MUNI_RE = re.compile(r'עיריית|עירית|ועדה מקומית|הועדה המקומית|'
+                     r'הוועדה המקומית|רשות מקומית')
 # ערך שנראה כמו כתובת ("בלפור 16 , טלביה") — הסקרייפר הישן כתב כתובות בשדות
 ADDR_RE = re.compile(r'\d+\s*,\s*\S|^(רחוב|שד|דרך|ככר)\b')
 
@@ -229,8 +232,7 @@ def extract_one(pdf_path):
 
             # מגיש משותף של רשות מקומית + יזם פרטי: היזם הפרטי הוא היזם בפועל
             def prefer_private(names):
-                priv = [n for n in names if not re.search(
-                    r'עיריית|עירית|ועדה מקומית|הועדה המקומית|הוועדה המקומית|רשות מקומית', n)]
+                priv = [n for n in names if not MUNI_RE.search(n)]
                 return priv if priv and len(priv) < len(names) else names
 
             if yazam_names:
@@ -240,6 +242,20 @@ def extract_one(pdf_path):
                 result['developer'] = ' / '.join(prefer_private(magish_names)[:3])
                 result['source'] = 'horaot_1.8.1_magish'
             result['architect'] = architect
+
+            # "העירייה כמגישה שותפה": מאגר בעלי-העניין (1.8.2 יזם + 1.8.1 מגיש)
+            # כולל גם עירייה/ועדה מקומית וגם גורם פרטי. שדה developer מנקה את
+            # העירייה (prefer_private), לכן תופסים כאן ומזינים muni_cosubmitter.json.
+            pool = []
+            for n in (yazam_names + magish_names):
+                if n not in pool:
+                    pool.append(n)
+            muni = [n for n in pool if MUNI_RE.search(n)]
+            priv = [n for n in pool if not MUNI_RE.search(n)]
+            if muni and priv:
+                dev_priv = ([n for n in yazam_names if not MUNI_RE.search(n)]
+                            or [n for n in magish_names if not MUNI_RE.search(n)])
+                result['muni_co'] = {'muni': muni, 'dev': dev_priv}
             if not result['developer'] and not architect:
                 result['error'] = 'section_found_no_names'
     except Exception as e:

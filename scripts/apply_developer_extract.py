@@ -27,7 +27,10 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-from git_sync import pull_before_read, commit_and_push_after_write
+from git_sync import (pull_before_read, commit_and_push_after_write,
+                      update_json_and_push)
+
+MUNI_CO_JSON = "data/muni_cosubmitter.json"  # relative to the repo (oranim-app)
 
 CREDS_FILE    = r"C:\ORANIM\oranim-490018-ceaf784afe61.json"
 SHEET_ID      = "1_AcuuA1CNPh6jXc_lZKNghfpEF1aDPV8Zci8QPz2WVE"
@@ -128,6 +131,59 @@ def dev_action(current, r):
     return 'review'
 
 
+def _dedup(seq):
+    out = []
+    for x in seq:
+        x = (x or '').strip()
+        if x and x not in out:
+            out.append(x)
+    return out
+
+
+def apply_muni_cosubmitter(results, dry):
+    """Fold "העירייה כמגישה שותפה" (result['muni_co'] from section 1.8) into
+    data/muni_cosubmitter.json. Upsert-only, keyed by plan_name; never deletes
+    existing rows (the 1.8.1-table + OCR backfill stays intact). src='horaot'
+    marks pipeline-derived rows. Concurrency-safe via update_json_and_push."""
+    upserts = {}
+    for pn, r in results.items():
+        mc = r.get('muni_co')
+        if not mc:
+            continue
+        muni = _dedup(mc.get('muni') or [])
+        dev = _dedup(mc.get('dev') or [])
+        if not muni or not dev:
+            continue
+        row = {'muni': muni, 'dev': dev, 'src': 'horaot'}
+        u = r.get('units')
+        if u:
+            try:
+                row['units'] = int(float(u))
+            except (TypeError, ValueError):
+                pass
+        upserts[pn] = row
+    print(f"muni-cosubmitter rows from horaot 1.8: {len(upserts)}")
+    if not upserts:
+        return
+    if dry:
+        for pn, row in list(upserts.items())[:20]:
+            print(f"  muni_co {pn}: {row['muni']} + {row['dev']}")
+        return
+
+    def edit(data):
+        changed = False
+        for pn, row in upserts.items():
+            if data.get(pn) != row:
+                data[pn] = row
+                changed = True
+        return changed
+
+    ok = update_json_and_push(
+        MUNI_CO_JSON, edit,
+        f'data: muni-cosubmitter from horaot 1.8 for {len(upserts)} plans')
+    print(f"muni_cosubmitter.json: {'pushed' if ok else 'FAILED'}")
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     dry = '--dry' in sys.argv
@@ -225,6 +281,10 @@ def main():
             'data/plans.geojson',
             f'data: developer/architect from horaot section 1.8 for {geo_updated} plans')
         print("geojson written + pushed.")
+
+    # "העירייה כמגישה שותפה" — full 1.8 info (יזם + אדריכל כבר נכתבו למעלה; כאן
+    # המגיש-העירוני) → data/muni_cosubmitter.json. רץ תמיד (גם כשאין שינוי GS).
+    apply_muni_cosubmitter(results, dry)
 
 
 if __name__ == '__main__':
