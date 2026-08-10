@@ -29,14 +29,22 @@ Usage (legacy, for files already written to disk):
     # ... read plans.geojson, modify it, write it back ...
     commit_and_push_after_write('data/plans.geojson', 'fix: update X')
 """
+import glob
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
 from contextlib import contextmanager
 
 REPO_DIR = r"C:\ORANIM\oranim-app"
+
+# Script mirroring: the working copies at SCRIPTS_ROOT_DIR are the declared
+# source of truth (that is where scripts actually run and get edited); the
+# repo's scripts/ folder is an archive that is kept in sync FROM root.
+SCRIPTS_ROOT_DIR = r"C:\ORANIM"
+SCRIPTS_REPO_SUBDIR = "scripts"
 
 LOCK_FILE = r"C:\ORANIM\.git_sync.lock"
 LOCK_STALE_SEC = 300   # steal a lock older than this (holder crashed)
@@ -275,6 +283,105 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
                 _pop_wip(repo_dir, wip)
 
 
+def _norm_bytes(path: str):
+    """File bytes with line endings normalised to LF, or None if absent.
+
+    Used so a pure CRLF/LF difference never counts as a real change — the repo's
+    .gitattributes already checks scripts out as LF, but the working root may hold
+    either, and we must not mirror (or commit) a line-ending-only difference.
+    """
+    try:
+        with open(path, 'rb') as f:
+            return f.read().replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+    except OSError:
+        return None
+
+
+def _commit_and_push_paths(relative_paths: list, message: str,
+                           repo_dir: str = REPO_DIR) -> bool:
+    """Stage, commit and push a set of already-written files, rebase-safe.
+
+    Multi-file sibling of commit_and_push_after_write. Commits ONLY the given
+    pathspec (unrelated staged work is left alone). On a rebase conflict the
+    rebase is aborted and the commit undone (changes kept in the working tree);
+    the repo is never left mid-rebase.
+    """
+    with repo_lock('mirror scripts'):
+        wip = None
+        try:
+            _run(['git', 'add', '--'] + relative_paths, cwd=repo_dir)
+            staged = _run(['git', 'diff', '--cached', '--quiet', '--'] + relative_paths,
+                          cwd=repo_dir, check=False)
+            if staged.returncode == 0:
+                print("[git_sync] nothing staged after add — skipping push.")
+                return True
+            _run(['git', 'commit', '-m', message, '--'] + relative_paths, cwd=repo_dir)
+            for p in relative_paths:
+                _assert_committed_matches_disk(repo_dir, p)
+            # Stash unrelated WIP so the pre-push rebase runs on a clean tree.
+            wip = _stash_wip(repo_dir, 'git_sync auto-pre-mirror-push')
+            rebase = _run(['git', 'pull', '--rebase', 'origin', 'master'], cwd=repo_dir, check=False)
+            if rebase.returncode != 0:
+                print("[git_sync] pull --rebase failed during mirror — aborting rebase",
+                      file=sys.stderr)
+                _run(['git', 'rebase', '--abort'], cwd=repo_dir, check=False)
+                _run(['git', 'reset', '--mixed', 'HEAD~1'], cwd=repo_dir, check=False)
+                print("[git_sync] ERROR: mirror push skipped; changes left in working tree.",
+                      file=sys.stderr)
+                return False
+            _run(['git', 'push', 'origin', 'master'], cwd=repo_dir)
+            return True
+        except Exception as e:
+            print(f"[git_sync] ERROR: {e}", file=sys.stderr)
+            return False
+        finally:
+            if wip:
+                _pop_wip(repo_dir, wip)
+
+
+def mirror_scripts_to_repo(root_dir: str = SCRIPTS_ROOT_DIR,
+                           repo_dir: str = REPO_DIR,
+                           push: bool = True) -> list:
+    """Mirror the working-copy scripts at `root_dir` INTO the repo's scripts/ folder.
+
+    Direction is FIXED: root is the declared source of truth. Only files that
+    ALREADY exist in the repo's scripts/ folder are mirrored — a new, un-archived
+    root script is never auto-added, so this can never flood the repo with the
+    hundreds of loose scripts at root. To start tracking a new script, copy it into
+    scripts/ once (and commit); it stays mirrored thereafter.
+
+    Content is compared line-ending-insensitively, so a pure CRLF/LF difference is
+    never mirrored. Returns the list of repo-relative paths updated (empty if in
+    sync). When push=False the files are copied but not committed (dry inspection).
+    """
+    # Refresh repo copies first so the comparison and the push start from the tip.
+    pull_before_read(repo_dir)
+    repo_scripts = os.path.join(repo_dir, SCRIPTS_REPO_SUBDIR)
+    changed = []
+    for repo_path in sorted(glob.glob(os.path.join(repo_scripts, '*.py'))):
+        name = os.path.basename(repo_path)
+        root_path = os.path.join(root_dir, name)
+        root_bytes = _norm_bytes(root_path)
+        if root_bytes is None:
+            continue  # no working copy for this archived script — leave it be
+        if root_bytes == _norm_bytes(repo_path):
+            continue  # identical content (ignoring line endings)
+        shutil.copyfile(root_path, repo_path)
+        changed.append(f"{SCRIPTS_REPO_SUBDIR}/{name}")
+    if not changed:
+        print("[git_sync] scripts already in sync — nothing to mirror.")
+        return []
+    print(f"[git_sync] mirrored {len(changed)} script(s) root -> repo: "
+          + ", ".join(os.path.basename(c) for c in changed))
+    if push:
+        ok = _commit_and_push_paths(
+            changed, f"chore: mirror {len(changed)} script(s) from working root", repo_dir)
+        if not ok:
+            print("[git_sync] WARNING: files copied but push failed — see errors above.",
+                  file=sys.stderr)
+    return changed
+
+
 def commit_and_push_after_write(
     relative_path: str, message: str, repo_dir: str = REPO_DIR
 ) -> bool:
@@ -325,3 +432,17 @@ def commit_and_push_after_write(
         finally:
             if wip:
                 _pop_wip(repo_dir, wip)
+
+
+if __name__ == '__main__':
+    import argparse
+
+    ap = argparse.ArgumentParser(description="git_sync utilities")
+    ap.add_argument('command', nargs='?', default='mirror', choices=['mirror'],
+                    help="mirror: sync working-root scripts into repo scripts/ and push")
+    ap.add_argument('--no-push', action='store_true',
+                    help="copy changed scripts into the repo but do not commit/push")
+    _args = ap.parse_args()
+    if _args.command == 'mirror':
+        _changed = mirror_scripts_to_repo(push=not _args.no_push)
+        print(f"[git_sync] mirror done: {len(_changed)} script(s) updated.")
