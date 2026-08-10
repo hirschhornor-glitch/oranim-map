@@ -4,7 +4,10 @@ name: Build app.js from JSX source
 # Builds app.js and commits it back to master, so GitHub Pages
 # (which deploys from master root) serves the compiled file.
 #
-# The commit-back message contains [skip ci] to avoid recursion.
+# The commit-back only touches app.js/junction.js, which match no push-path
+# filter (deploy.yml triggers on src/**, validate.yml on data/**), so it can't
+# re-trigger this build. It intentionally omits [skip ci] so pages.yml picks it
+# up and deploys the freshly built bundles immediately.
 
 on:
   push:
@@ -53,7 +56,7 @@ jobs:
             echo "bundles unchanged — nothing to commit."
             exit 0
           fi
-          git commit -m "build: rebuild app.js + junction.js [skip ci]"
+          git commit -m "build: rebuild app.js + junction.js"
           # Push-back is racy: other bots (summary/data updates) push to master
           # during the build window, so a bare push can be rejected non-fast-forward.
           # On rejection, resync to the latest master and rebuild the bundles on top.
@@ -74,7 +77,7 @@ jobs:
               echo "bundles already up to date on master — nothing to push."
               exit 0
             fi
-            git commit -m "build: rebuild app.js + junction.js [skip ci]"
+            git commit -m "build: rebuild app.js + junction.js"
           done
           echo "failed to push built bundles after 5 attempts" >&2
           exit 1

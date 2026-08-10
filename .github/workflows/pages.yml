@@ -1,0 +1,56 @@
+name: Deploy site to Pages
+
+# Actions-based GitHub Pages deployment (replaces the legacy "deploy from a
+# branch" builder). The legacy builder ran on GitHub's Pages backend and would
+# sporadically leave the build job stuck "queued" -> reported as a failure and
+# emailed, even though nothing in the repo was wrong (~4% of runs, 2026-08).
+# Deploying via Actions gives real logs, retryable runs, and a concurrency
+# group so bunched-up pushes are cancelled cleanly instead of failing.
+#
+# Requires: Settings -> Pages -> Source = "GitHub Actions".
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Serialize deployments. When pushes bunch up (update_data runs every 10 min),
+# a superseded *pending* run is cancelled — not failed — so no false-alarm
+# emails. cancel-in-progress:false lets an in-flight deploy finish safely.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Drop VCS metadata from the deploy payload
+        # The site is the repo root. Removing .git keeps the uploaded artifact
+        # to just the ~119 MB of served files instead of bundling git history.
+        run: rm -rf .git
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
