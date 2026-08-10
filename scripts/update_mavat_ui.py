@@ -948,15 +948,22 @@ def _yk_compute_objection_end(taba, status_date=None):
     pub_dates = []
     for step in deposit_steps:
         step_text = step.get('stepCodeText') or ''
-        d = _parse_dmy(step.get('execDateStr') or step.get('planDateStr'))
-        if not d: continue
+        exec_d = _parse_dmy(step.get('execDateStr'))
         if 'תום תקופת' in step_text:
+            d = exec_d or _parse_dmy(step.get('planDateStr'))
+            if not d: continue
             if status_date and d < status_date:
                 # Stale explicit end-date from a previous cycle. Skip.
                 continue
             return d.strftime('%d/%m/%Y'), 'explicit'
         if 'פרסום ההפקדה' in step_text:
-            pub_dates.append(d)
+            # The 60-day objection clock starts only once the publication is ACTUALLY
+            # executed. A planned/future ילקוט date (planDateStr with no execDateStr) is a
+            # placeholder and must NOT extend the deadline — plan 1185578: ילקוט planned
+            # 05/10 while deposited 05/08 → planDateStr+60 wrongly gave 04/12 (~4 months).
+            # With exec-only, no executed ילקוט → fall back to status_date(deposit)+60.
+            if exec_d:
+                pub_dates.append(exec_d)
 
     # Filter pub_dates to current cycle (>= status_date - 7d grace).
     if status_date:

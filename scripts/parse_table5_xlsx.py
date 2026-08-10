@@ -29,6 +29,25 @@ PUBLIC_KEYS     = ["מבנים ומוסדות ציבור", "מוסדות ציב�
                    "מבני ציבור", "מבנה ציבור"]
 SHATZAP_KEYS    = ["שטח ציבורי פתוח", "שטח פרטי פתוח", 'שצ"פ', "שצפ", "שצ”פ"]
 
+# A row's built area counts as public program (שב"צ / הפרשה מבונה) ONLY when its
+# שימוש names a genuine public-building use per the public-allocation guide
+# (מדריך להקצאת שטחי ציבור). On a lot zoned מבני ציבור, NON-program uses — parking,
+# storage, roads, "אחר" — must NOT be counted (user 2026-08-09: "חניון הוא לא הפרשה
+# ציבורית — רק מה שסיכמנו לפי המדריך למבני ציבור"). A blank שימוש on a pure-public
+# lot still counts (unspecified public building). Mirrors _extract_t5_public.WL.
+_PUBLIC_USE_RE = re.compile(
+    r'מבנ.{0,4}ציבור|מוסדות ציבור|מוסד ציבור|בית.?כנסת|בתי כנסת|מקווה|כניסי|מסגד|בית מדרש|כולל|'
+    r'גן ילדים|גני ילדים|גנון|מעון|פעוטון|כיתת? גן|חינוך|בית.?ספר|תיכון|חטיב|ישיב|אולפנ|מדרשי|'
+    r'מרפאה|בריאות|טיפת חלב|רווחה|מועדון|נוער|קשיש|שיקום|נכים|חברתי|'
+    r'מתנ|קהיל|תרבות|ספרי|מוזיאון|פנאי|דת|ספורט|בריכ|מקלט|חירום|מיגון|נופש')
+
+
+def _is_public_program_use(use: str) -> bool:
+    """True when the שימוש names a genuine public facility (guide list), or is blank
+    (unspecified use on a public lot). Parking/storage/roads/"אחר" → False."""
+    u = (use or "").strip()
+    return u == "" or bool(_PUBLIC_USE_RE.search(u))
+
 # ── Shared-tenant ("חדר דיירים") spaces ──────────────────────────────────────
 # Private common areas that serve the building's OWN residents — shared leisure
 # floors, shared balconies, a tenants' club room. These are NOT public program
@@ -213,6 +232,20 @@ def _bldg_area(row: "XlsxRow") -> float:
     if detailed:
         return detailed
     return row.total_above_sqm + row.total_below_sqm
+
+
+def _above_grade_area(row: "XlsxRow") -> float:
+    """Above-grade building area (מעל הכניסה הקובעת) ONLY — for public program.
+    Below-grade floors (מתחת לכניסה הקובעת) are parking/service and never count as
+    שב"צ / הפרשה (user 2026-08-09; plan 1236579: 78,000 above + 130,000 below-parking →
+    real שב"צ is the 78,000, not 208,000). Falls back to the single total-building
+    column only when the layout has no above/below split (parking can't be separated)."""
+    if row.total_above_sqm or row.total_below_sqm:
+        return row.total_above_sqm
+    if (row.primary_above_sqm or row.service_above_sqm
+            or row.primary_below_sqm or row.service_below_sqm):
+        return row.primary_above_sqm + row.service_above_sqm
+    return row.total_building_sqm
 
 
 def _norm_level(s) -> str:
@@ -451,22 +484,37 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
         # שצ"פ is open land — use plot area, not built area, and count even if mixed.
         if "shatzap" in cats:
             result.shatzap_sqm += r.plot_size_sqm
-        # Hafrash override: institutional space inside a residential lot.
-        if "public" in use_cats and "resid" in yiyud_cats and "public" not in yiyud_cats:
-            result.hafrash_built_sqm += area
-        else:
-            non_resid = cats - {"resid", "shatzap"}
-            if len(non_resid) == 1 and "resid" not in cats:
-                c = next(iter(non_resid))
-                if c == "commerce":
-                    result.commerce_sqm += area
-                elif c == "employment":
-                    result.employment_sqm += area
-                elif c == "public":
-                    result.public_building_sqm += area
-            elif non_resid:
-                # 2+ non-residential categories, or non-resid mixed with residential
-                result.mixed_use_sqm += area
+        # שב"צ vs הפרשה מבונה — decided by ייעוד PURITY (user definition, 2026-08-09):
+        #   שב"צ            = the lot's ייעוד IS public (standalone מבני ציבור; no מגורים/מסחר/תעסוקה).
+        #   הפרשה מבונה     = a public use sitting inside a MIXED ייעוד (מגורים/מסחר/... + ציבור, or
+        #                     עירוני מעורב / מרכז תחבורה — a ייעוד that carries no pure-public marker).
+        # This SUPERSEDES the earlier use-based rule (2026-06-07), which wrongly booked mixed-ייעוד
+        # public buildings as שב"צ (e.g. 657593, 1350255, 1366053). A MIXED שימוש row
+        # ("מגורים מסחר ומבנים ומוסדות ציבור") reports the whole parcel area across uses → it is not a
+        # single public allocation and falls to mixed_use_sqm.
+        non_resid = cats - {"resid", "shatzap"}
+        if len(non_resid) == 1 and "resid" not in cats:
+            c = next(iter(non_resid))
+            if c == "commerce":
+                result.commerce_sqm += area
+            elif c == "employment":
+                result.employment_sqm += area
+            elif c == "public":
+                # Only genuine public-building program counts. On a public lot, a
+                # non-program שימוש (חניון/אחסנה/דרך/אחר) is NOT a הקצאה ציבורית —
+                # skip it (it stays in total_building_sqm_all but no program bucket).
+                if _is_public_program_use(r.use):
+                    # Above-grade only — below-grade is parking/service, not program.
+                    pub_area = _above_grade_area(r)
+                    if pub_area:
+                        yiyud_pure_public = "public" in yiyud_cats and not (yiyud_cats & {"resid", "commerce", "employment"})
+                        if yiyud_pure_public:
+                            result.public_building_sqm += pub_area
+                        else:
+                            result.hafrash_built_sqm += pub_area
+        elif non_resid:
+            # 2+ non-residential categories, or non-resid mixed with residential
+            result.mixed_use_sqm += area
 
     # Consistency: compare the declared "סך הכל" row(s) against the summed detail
     # rows (result.total_units = all residential detail rows incl rental+cond).

@@ -94,27 +94,97 @@ def _run(cmd: list, cwd: str = REPO_DIR, check: bool = True) -> subprocess.Compl
     return result
 
 
-def _stash_wip(repo_dir: str, label: str) -> bool:
-    """Stash all uncommitted work (incl. untracked). Returns True if stashed."""
+def _stash_wip(repo_dir: str, label: str):
+    """Stash all uncommitted work (incl. untracked) so a pull/rebase can run on a
+    clean tree. Returns the created stash's commit SHA (str) if anything was
+    stashed, else None.
+
+    The SHA is returned — not a bool — so _pop_wip can restore *this exact* stash
+    even if the stash stack changes underneath us, and so that on a conflicting pop
+    we can recover the stashed (freshly-written) file content authoritatively
+    instead of silently leaving stale HEAD content in the working tree
+    (the data-loss bug of 2026-08-05: a failed `stash pop` orphaned the stash and
+    reverted a freshly-scraped data file to the old committed version).
+    """
     wt_check = _run(['git', 'diff', '--quiet'], cwd=repo_dir, check=False)
     staged_check = _run(['git', 'diff', '--cached', '--quiet'], cwd=repo_dir, check=False)
     untracked = _run(['git', 'ls-files', '--others', '--exclude-standard'],
                      cwd=repo_dir, check=False)
     if wt_check.returncode == 0 and staged_check.returncode == 0 and not untracked.stdout.strip():
-        return False
+        return None
     stash_res = _run(['git', 'stash', 'push', '-u', '-m', label], cwd=repo_dir, check=False)
-    stashed = 'no local changes' not in (stash_res.stdout + stash_res.stderr).lower()
-    if stashed:
-        print("[git_sync] stashed other working-tree changes temporarily")
-    return stashed
+    if 'no local changes' in (stash_res.stdout + stash_res.stderr).lower():
+        return None
+    sha = _run(['git', 'rev-parse', 'stash@{0}'], cwd=repo_dir, check=False).stdout.strip()
+    print("[git_sync] stashed other working-tree changes temporarily")
+    return sha or 'stash@{0}'
 
 
-def _pop_wip(repo_dir: str):
+def _pop_wip(repo_dir: str, stash_ref) -> bool:
+    """Restore WIP saved by _stash_wip. Returns True on a clean restore.
+
+    NEVER leaves freshly-written working-tree content reverted to old HEAD content,
+    and NEVER orphans the stash. `git stash pop` keeps the stash on the stack when
+    it conflicts; the old code only logged that and returned, so a fresh data file
+    could be left reverted while its new content sat trapped in an orphan stash
+    (the 2026-08-05 pikuah_status.json incident). Here, on any pop trouble we:
+      1. take the STASHED (fresh) version of every file the stash carried —
+         authoritative, because these are files a writer had just produced,
+      2. drop the reconciled stash so nothing orphans,
+      3. return False and shout on stderr so the caller aborts loudly.
+    """
+    if not stash_ref:
+        return True
     pop_res = _run(['git', 'stash', 'pop'], cwd=repo_dir, check=False)
-    if pop_res.returncode != 0:
-        print("[git_sync] stash pop reported issues — review with 'git stash list'")
-    else:
+    out = (pop_res.stdout + pop_res.stderr)
+    if pop_res.returncode == 0 and 'conflict' not in out.lower():
         print("[git_sync] restored other working-tree changes")
+        return True
+
+    # Conflict / failure: reconcile in favour of the stashed (fresh) content.
+    print("[git_sync] WARNING: stash pop conflicted — restoring stashed (fresh) "
+          "content authoritatively so nothing is reverted to stale HEAD",
+          file=sys.stderr)
+    files = _run(['git', 'stash', 'show', '--include-untracked', '--name-only', stash_ref],
+                 cwd=repo_dir, check=False).stdout.split()
+    _run(['git', 'reset', '-q'], cwd=repo_dir, check=False)  # clear half-applied conflict index
+    for f in files:
+        r = _run(['git', 'checkout', stash_ref, '--', f], cwd=repo_dir, check=False)
+        if r.returncode != 0:
+            # untracked-in-stash file lives on the stash's 3rd parent
+            _run(['git', 'checkout', f'{stash_ref}^3', '--', f], cwd=repo_dir, check=False)
+    # The conflicting pop kept the stash on the stack; drop it now that we've
+    # reconciled. `git stash drop` needs a stash@{N} ref, not a raw SHA — resolve
+    # our SHA to its current stack position (defensive against concurrent entries).
+    listing = _run(['git', 'stash', 'list', '--format=%gd %H'], cwd=repo_dir, check=False).stdout
+    for line in listing.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[1] == stash_ref:
+            _run(['git', 'stash', 'drop', parts[0]], cwd=repo_dir, check=False)
+            break
+    print("[git_sync] ERROR: WIP restored from stash but the pop conflicted — "
+          "review the working tree. No stale data was pushed; no stash was orphaned.",
+          file=sys.stderr)
+    return False
+
+
+def _assert_committed_matches_disk(repo_dir: str, relative_path: str):
+    """Guard against pushing stale content: verify the just-committed content for
+    relative_path matches what is on disk. Uses `git diff --quiet HEAD` so git's own
+    line-ending / .gitattributes normalisation applies (a raw byte compare gives
+    false mismatches on Windows autocrlf). Raises on divergence so a
+    reverted/clobbered file is caught BEFORE it is pushed, never silently.
+    """
+    abs_path = os.path.join(repo_dir, relative_path)
+    if not os.path.exists(abs_path):
+        return
+    diff = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--', relative_path],
+                          cwd=repo_dir, capture_output=True)
+    if diff.returncode != 0:
+        raise RuntimeError(
+            f"[git_sync] ABORT: working-tree {relative_path} does NOT match the commit "
+            "just made — refusing to push possibly-stale content. (Was the file "
+            "reverted by a stash pop between write and commit?)")
 
 
 def pull_before_read(repo_dir: str = REPO_DIR) -> bool:
@@ -127,10 +197,10 @@ def pull_before_read(repo_dir: str = REPO_DIR) -> bool:
     """
     print(f"[git_sync] Pulling latest from origin in {repo_dir}...")
     with repo_lock('pull_before_read'):
-        stashed = False
+        wip = None
         try:
             _run(['git', 'fetch', 'origin'], cwd=repo_dir)
-            stashed = _stash_wip(repo_dir, 'git_sync auto-pre-pull')
+            wip = _stash_wip(repo_dir, 'git_sync auto-pre-pull')
             result = _run(['git', 'pull', '--ff-only', 'origin', 'master'], cwd=repo_dir, check=False)
             if result.returncode != 0:
                 print("[git_sync] WARNING: Could not fast-forward. Local may be diverged.")
@@ -140,8 +210,8 @@ def pull_before_read(repo_dir: str = REPO_DIR) -> bool:
             print(f"[git_sync] ERROR: {e}", file=sys.stderr)
             return False
         finally:
-            if stashed:
-                _pop_wip(repo_dir)
+            if wip:
+                _pop_wip(repo_dir, wip)
 
 
 def update_json_and_push(relative_path: str, edit_fn, message: str,
@@ -163,9 +233,9 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
     abs_path = os.path.join(repo_dir, relative_path)
     print(f"[git_sync] update_json_and_push: {relative_path}...")
     with repo_lock(f'update {relative_path}'):
-        stashed = False
+        wip = None
         try:
-            stashed = _stash_wip(repo_dir, f'git_sync auto-update: {relative_path}')
+            wip = _stash_wip(repo_dir, f'git_sync auto-update: {relative_path}')
             for attempt in range(1, max_attempts + 1):
                 _run(['git', 'fetch', 'origin'], cwd=repo_dir)
                 ff = _run(['git', 'pull', '--ff-only', 'origin', 'master'], cwd=repo_dir, check=False)
@@ -186,6 +256,7 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
                     return True
                 _run(['git', 'add', relative_path], cwd=repo_dir)
                 _run(['git', 'commit', '-m', message], cwd=repo_dir)
+                _assert_committed_matches_disk(repo_dir, relative_path)
                 push = _run(['git', 'push', 'origin', 'master'], cwd=repo_dir, check=False)
                 if push.returncode == 0:
                     return True
@@ -200,8 +271,8 @@ def update_json_and_push(relative_path: str, edit_fn, message: str,
             print(f"[git_sync] ERROR: {e}", file=sys.stderr)
             return False
         finally:
-            if stashed:
-                _pop_wip(repo_dir)
+            if wip:
+                _pop_wip(repo_dir, wip)
 
 
 def commit_and_push_after_write(
@@ -218,7 +289,7 @@ def commit_and_push_after_write(
     """
     print(f"[git_sync] Committing + pushing {relative_path}...")
     with repo_lock(f'push {relative_path}'):
-        stashed = False
+        wip = None
         try:
             status = _run(['git', 'status', '--porcelain', relative_path], cwd=repo_dir, check=False)
             if not status.stdout.strip():
@@ -226,9 +297,12 @@ def commit_and_push_after_write(
                 return True
             _run(['git', 'add', relative_path], cwd=repo_dir)
             _run(['git', 'commit', '-m', message], cwd=repo_dir)
+            # Verify the commit captured the on-disk content BEFORE we touch the
+            # working tree (stash) — catches a file reverted between write & commit.
+            _assert_committed_matches_disk(repo_dir, relative_path)
 
             # Stash other unstaged work (incl. untracked) so pull --rebase succeeds
-            stashed = _stash_wip(repo_dir, f'git_sync auto-pre-push: {relative_path}')
+            wip = _stash_wip(repo_dir, f'git_sync auto-pre-push: {relative_path}')
 
             # Pull any new remote commits first (in case something landed meanwhile)
             rebase = _run(['git', 'pull', '--rebase', 'origin', 'master'], cwd=repo_dir, check=False)
@@ -249,5 +323,5 @@ def commit_and_push_after_write(
             print(f"[git_sync] ERROR: {e}", file=sys.stderr)
             return False
         finally:
-            if stashed:
-                _pop_wip(repo_dir)
+            if wip:
+                _pop_wip(repo_dir, wip)
