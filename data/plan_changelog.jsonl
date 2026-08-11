@@ -160,3 +160,4 @@
 {"ts": "2026-08-11 12:36:57", "taba": 1474931, "plan_name": "101-1474931", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-11 12:36:57", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "commerce_out", "old": 8650.0, "new": 5450}
 {"ts": "2026-08-11 12:36:57", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 16:39:28", "taba": 351411, "plan_name": "101-0351411", "status": "אישור", "field": "commerce_in", "old": 9002.66, "new": 14279}
