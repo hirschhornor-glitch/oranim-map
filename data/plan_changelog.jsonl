@@ -40,3 +40,100 @@
 {"ts": "2026-08-09 08:07:03", "taba": 1551324, "plan_name": "101-1551324", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-09 08:07:03", "taba": 1252998, "plan_name": "101-1252998", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-09 08:07:03", "taba": 1207158, "plan_name": "101-1207158", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 132944, "plan_name": "101-0132944", "status": "אישור", "field": "employment", "old": 605, "new": 1500}
+{"ts": "2026-08-11 11:33:25", "taba": 216614, "plan_name": "101-0216614", "status": "אישור", "field": "commerce_out", "old": 1557, "new": 1815}
+{"ts": "2026-08-11 11:33:25", "taba": 216614, "plan_name": "101-0216614", "status": "אישור", "field": "employment", "old": 5203, "new": 4935}
+{"ts": "2026-08-11 11:33:25", "taba": 56952, "plan_name": "101-0056952", "status": "אישור", "field": "commerce_out", "old": 221.0, "new": 153}
+{"ts": "2026-08-11 11:33:25", "taba": 56952, "plan_name": "101-0056952", "status": "אישור", "field": "employment", "old": 220.7, "new": 217}
+{"ts": "2026-08-11 11:33:25", "taba": 515635, "plan_name": "101-0515635", "status": "אישור", "field": "commerce_out", "old": 92, "new": 80}
+{"ts": "2026-08-11 11:33:25", "taba": 836809, "plan_name": "101-0836809", "status": "אישור", "field": "commerce_out", "old": 6782, "new": 560}
+{"ts": "2026-08-11 11:33:25", "taba": 836809, "plan_name": "101-0836809", "status": "אישור", "field": "employment", "old": 3870, "new": 1260}
+{"ts": "2026-08-11 11:33:25", "taba": 673897, "plan_name": "101-0673897", "status": "אישור", "field": "employment", "old": 30020, "new": 28975}
+{"ts": "2026-08-11 11:33:25", "taba": 690859, "plan_name": "101-0690859", "status": "תבע מאושרת", "field": "commerce_out", "old": 500, "new": 200}
+{"ts": "2026-08-11 11:33:25", "taba": 855585, "plan_name": "101-0855585", "status": "אישור", "field": "commerce_out", "old": 2537, "new": 4420}
+{"ts": "2026-08-11 11:33:25", "taba": 550541, "plan_name": "101-0550541", "status": "אישור", "field": "employment", "old": 1115, "new": 1395}
+{"ts": "2026-08-11 11:33:25", "taba": 810796, "plan_name": "101-0810796", "status": "אישור", "field": "employment", "old": 34425, "new": 27540}
+{"ts": "2026-08-11 11:33:25", "taba": 867317, "plan_name": "101-0867317", "status": "אישור", "field": "employment", "old": 5341, "new": 4541}
+{"ts": "2026-08-11 11:33:25", "taba": 926105, "plan_name": "101-0926105", "status": "אישור", "field": "commerce_out", "old": 2000, "new": 2910}
+{"ts": "2026-08-11 11:33:25", "taba": 970764, "plan_name": "101-0970764", "status": "תבע מאושרת", "field": "commerce_out", "old": 700, "new": 1300}
+{"ts": "2026-08-11 11:33:25", "taba": 950493, "plan_name": "101-0950493", "status": "תבע מאושרת", "field": "commerce_out", "old": 500, "new": 430}
+{"ts": "2026-08-11 11:33:25", "taba": 1008176, "plan_name": "101-1008176", "status": "אישור", "field": "commerce_out", "old": 760, "new": 2360}
+{"ts": "2026-08-11 11:33:25", "taba": 1002054, "plan_name": "101-1002054", "status": "תבע מאושרת", "field": "commerce_out", "old": 1230, "new": 1025}
+{"ts": "2026-08-11 11:33:25", "taba": 1010123, "plan_name": "101-1010123", "status": "אישור", "field": "commerce_out", "old": 1500, "new": 1150}
+{"ts": "2026-08-11 11:33:25", "taba": 1062645, "plan_name": "101-1062645", "status": "תבע מאושרת", "field": "commerce_out", "old": 2698, "new": 2436}
+{"ts": "2026-08-11 11:33:25", "taba": 1062645, "plan_name": "101-1062645", "status": "תבע מאושרת", "field": "employment", "old": 10792, "new": 9744}
+{"ts": "2026-08-11 11:33:25", "taba": 1069764, "plan_name": "101-1069764", "status": "אישור", "field": "Machpil", "old": 4.938461538, "new": 4.738461538}
+{"ts": "2026-08-11 11:33:25", "taba": 1069764, "plan_name": "101-1069764", "status": "אישור", "field": "commerce_out", "old": 1000, "new": 800}
+{"ts": "2026-08-11 11:33:25", "taba": 1117159, "plan_name": "101-1117159", "status": "אישור", "field": "commerce_out", "old": 327, "new": 287}
+{"ts": "2026-08-11 11:33:25", "taba": 1063957, "plan_name": "101-1063957", "status": "אישור", "field": "commerce_out", "old": 890, "new": 2090}
+{"ts": "2026-08-11 11:33:25", "taba": 256529, "plan_name": "101-0256529", "status": "בהליך אישור", "field": "commerce_out", "old": 19980, "new": 12800}
+{"ts": "2026-08-11 11:33:25", "taba": 1025295, "plan_name": "101-1025295", "status": "אישור", "field": "commerce_out", "old": 800, "new": 640}
+{"ts": "2026-08-11 11:33:25", "taba": 1159722, "plan_name": "101-1159722", "status": "אישור", "field": "commerce_out", "old": 1000, "new": 950}
+{"ts": "2026-08-11 11:33:25", "taba": 1159722, "plan_name": "101-1159722", "status": "אישור", "field": "employment", "old": 850, "new": 585}
+{"ts": "2026-08-11 11:33:25", "taba": 657593, "plan_name": "101-0657593", "status": "אישור", "field": "commerce_out", "old": 65354, "new": 1340}
+{"ts": "2026-08-11 11:33:25", "taba": 1161439, "plan_name": "101-1161439", "status": "אישור", "field": "commerce_out", "old": 390, "new": 350}
+{"ts": "2026-08-11 11:33:25", "taba": 1167410, "plan_name": "101-1167410", "status": "אישור", "field": "commerce_out", "old": 620, "new": 570}
+{"ts": "2026-08-11 11:33:25", "taba": 1121920, "plan_name": "101-1121920", "status": "אישור", "field": "commerce_out", "old": 1800, "new": 3000}
+{"ts": "2026-08-11 11:33:25", "taba": 1121920, "plan_name": "101-1121920", "status": "אישור", "field": "employment", "old": 3638, "new": 2458}
+{"ts": "2026-08-11 11:33:25", "taba": 1016229, "plan_name": "101-1016229", "status": "אישור", "field": "commerce_out", "old": 494, "new": 407}
+{"ts": "2026-08-11 11:33:25", "taba": 1103571, "plan_name": "101-1103571", "status": "אישור", "field": "commerce_out", "old": 550, "new": 560}
+{"ts": "2026-08-11 11:33:25", "taba": 1114305, "plan_name": "101-1114305", "status": "אישור", "field": "commerce_out", "old": 560, "new": 1380}
+{"ts": "2026-08-11 11:33:25", "taba": 1037670, "plan_name": "101-1037670", "status": "אישור", "field": "commerce_out", "old": 200, "new": 175}
+{"ts": "2026-08-11 11:33:25", "taba": 1037670, "plan_name": "101-1037670", "status": "אישור", "field": "employment", "old": 100, "new": 98}
+{"ts": "2026-08-11 11:33:25", "taba": 1095330, "plan_name": "101-1095330", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 3933, "new": 3180}
+{"ts": "2026-08-11 11:33:25", "taba": 1095330, "plan_name": "101-1095330", "status": "במילוי תנאים להפקדה", "field": "employment", "old": 23265, "new": 17910}
+{"ts": "2026-08-11 11:33:25", "taba": 1095330, "plan_name": "101-1095330", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1026574, "plan_name": "101-1026574", "status": "אישור", "field": "commerce_out", "old": 2000, "new": 1800}
+{"ts": "2026-08-11 11:33:25", "taba": 1026574, "plan_name": "101-1026574", "status": "אישור", "field": "employment", "old": 2500, "new": 2700}
+{"ts": "2026-08-11 11:33:25", "taba": 1191014, "plan_name": "101-1191014", "status": "אישור", "field": "commerce_out", "old": 1892, "new": 722}
+{"ts": "2026-08-11 11:33:25", "taba": 1191014, "plan_name": "101-1191014", "status": "אישור", "field": "employment", "old": 7570, "new": 2888}
+{"ts": "2026-08-11 11:33:25", "taba": 1250026, "plan_name": "101-1250026", "status": "תבע מאושרת", "field": "commerce_out", "old": 1623, "new": 1616}
+{"ts": "2026-08-11 11:33:25", "taba": 1250026, "plan_name": "101-1250026", "status": "תבע מאושרת", "field": "employment", "old": 7865, "new": 8080}
+{"ts": "2026-08-11 11:33:25", "taba": 1115450, "plan_name": "101-1115450", "status": "אישור", "field": "commerce_out", "old": 625, "new": 530}
+{"ts": "2026-08-11 11:33:25", "taba": 1115450, "plan_name": "101-1115450", "status": "אישור", "field": "employment", "old": 1725, "new": 1350}
+{"ts": "2026-08-11 11:33:25", "taba": 1247485, "plan_name": "101-1247485", "status": "בהליך אישור", "field": "employment", "old": 653, "new": 491}
+{"ts": "2026-08-11 11:33:25", "taba": 1247485, "plan_name": "101-1247485", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1158146, "plan_name": "101-1158146", "status": "בבדיקה תכנונית", "field": "commerce_out", "old": 800, "new": 560}
+{"ts": "2026-08-11 11:33:25", "taba": 1158146, "plan_name": "101-1158146", "status": "בבדיקה תכנונית", "field": "employment", "old": 1800, "new": 1260}
+{"ts": "2026-08-11 11:33:25", "taba": 1158146, "plan_name": "101-1158146", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1219724, "plan_name": "101-1219724", "status": "אישור", "field": "commerce_out", "old": 4476, "new": 3354}
+{"ts": "2026-08-11 11:33:25", "taba": 1219724, "plan_name": "101-1219724", "status": "אישור", "field": "employment", "old": 23382, "new": 17536}
+{"ts": "2026-08-11 11:33:25", "taba": 1160019, "plan_name": "101-1160019", "status": "אישור", "field": "commerce_out", "old": 310, "new": 316}
+{"ts": "2026-08-11 11:33:25", "taba": 1278407, "plan_name": "101-1278407", "status": "אישור", "field": "commerce_out", "old": 340, "new": 180}
+{"ts": "2026-08-11 11:33:25", "taba": 1249572, "plan_name": "101-1249572", "status": "אישור", "field": "commerce_out", "old": 744, "new": 757}
+{"ts": "2026-08-11 11:33:25", "taba": 1249572, "plan_name": "101-1249572", "status": "אישור", "field": "employment", "old": 345, "new": 342}
+{"ts": "2026-08-11 11:33:25", "taba": 1300003, "plan_name": "101-1300003", "status": "בהליך אישור", "field": "commerce_out", "old": 400, "new": 200}
+{"ts": "2026-08-11 11:33:25", "taba": 1300003, "plan_name": "101-1300003", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 130310, "plan_name": "101-0130310", "status": "אישור", "field": "commerce_out", "old": 284, "new": 272}
+{"ts": "2026-08-11 11:33:25", "taba": 778035, "plan_name": "101-0778035", "status": "אישור", "field": "commerce_out", "old": 1105, "new": 850}
+{"ts": "2026-08-11 11:33:25", "taba": 778035, "plan_name": "101-0778035", "status": "אישור", "field": "employment", "old": 810, "new": 620}
+{"ts": "2026-08-11 11:33:25", "taba": 1301753, "plan_name": "101-1301753", "status": "הכרעה בהתנגדויות / אישור", "field": "commerce_out", "old": 910, "new": 535}
+{"ts": "2026-08-11 11:33:25", "taba": 1301753, "plan_name": "101-1301753", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1350255, "plan_name": "101-1350255", "status": "אישור", "field": "commerce_out", "old": 41251, "new": 28876}
+{"ts": "2026-08-11 11:33:25", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 633, "new": 609}
+{"ts": "2026-08-11 11:33:25", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "employment", "old": 7130, "new": 4775}
+{"ts": "2026-08-11 11:33:25", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1336049, "plan_name": "101-1336049", "status": "בבדיקה תכנונית", "field": "commerce_out", "old": 1150, "new": 920}
+{"ts": "2026-08-11 11:33:25", "taba": 1336049, "plan_name": "101-1336049", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1386671, "plan_name": "101-1386671", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 95, "new": 60}
+{"ts": "2026-08-11 11:33:25", "taba": 1386671, "plan_name": "101-1386671", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 248, "new": 218}
+{"ts": "2026-08-11 11:33:25", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1394444, "plan_name": "101-1394444", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 610, "new": 400}
+{"ts": "2026-08-11 11:33:25", "taba": 1394444, "plan_name": "101-1394444", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1249358, "plan_name": "101-1249358", "status": "אישור", "field": "commerce_out", "old": 236, "new": 237}
+{"ts": "2026-08-11 11:33:25", "taba": 1398130, "plan_name": "101-1398130", "status": "במילוי תנאים להפקדה", "field": "commerce_out", "old": 435, "new": 450}
+{"ts": "2026-08-11 11:33:25", "taba": 1398130, "plan_name": "101-1398130", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1024645, "plan_name": "101-1024645", "status": "בהליך אישור", "field": "commerce_out", "old": 1208, "new": 1050}
+{"ts": "2026-08-11 11:33:25", "taba": 1024645, "plan_name": "101-1024645", "status": "בהליך אישור", "field": "employment", "old": 474, "new": 412}
+{"ts": "2026-08-11 11:33:25", "taba": 1024645, "plan_name": "101-1024645", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-11 11:33:25", "taba": 1257633, "plan_name": "101-1257633", "status": "אישור", "field": "commerce_out", "old": 1753, "new": 1132}
+{"ts": "2026-08-11 11:33:25", "taba": 1329770, "plan_name": "101-1329770", "status": "אישור", "field": "commerce_out", "old": 64.5, "new": 51}
+{"ts": "2026-08-11 11:33:25", "taba": 1526193, "plan_name": "101-1526193", "status": "הפקדה להתנגדויות/השגות", "field": "commerce_out", "old": 286, "new": 250}
+{"ts": "2026-08-11 11:33:25", "taba": 1198613, "plan_name": "101-1198613", "status": "אישור", "field": "commerce_out", "old": 295, "new": 434}
+{"ts": "2026-08-11 11:33:25", "taba": 1252998, "plan_name": "101-1252998", "status": "הפקדה להתנגדויות/השגות", "field": "commerce_out", "old": 3730, "new": 2610}
+{"ts": "2026-08-11 11:33:25", "taba": 1252998, "plan_name": "101-1252998", "status": "הפקדה להתנגדויות/השגות", "field": "employment", "old": 14970, "new": 10480}
+{"ts": "2026-08-11 11:33:25", "taba": 1252980, "plan_name": "101-1252980", "status": "אישור", "field": "commerce_out", "old": 5270, "new": 3690}
+{"ts": "2026-08-11 11:33:25", "taba": 1252980, "plan_name": "101-1252980", "status": "אישור", "field": "employment", "old": 5680, "new": 3980}
+{"ts": "2026-08-11 11:33:25", "taba": 808840, "plan_name": "101-0808840", "status": "אישור", "field": "commerce_out", "old": 2095, "new": 1944}
+{"ts": "2026-08-11 11:33:25", "taba": 1320233, "plan_name": "101-1320233", "status": "אישור", "field": "commerce_out", "old": 1312, "new": 1048}
