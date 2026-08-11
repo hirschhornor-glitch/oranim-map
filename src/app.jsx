@@ -5172,7 +5172,8 @@
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
                     'easements', 'construction_yb',
                     'bike_paths', 'transit_bus', 'rental_public_assets',
-                    'commerce_employment_migrash',
+                    // commerce_employment_migrash is NOT on-demand: it's small and the
+                    // area-select report aggregates it even when the layer is off.
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -11697,6 +11698,25 @@
                 const commerceRows = [];
                 plansInside.forEach(x => { const ci = parseFloat(x.props.commerce_in) || 0, em = parseFloat(x.props.employment) || 0; commerceIn += ci; employment += em; if (ci || em) commerceRows.push({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '', taba: x.props.plan_name || '', commerce: ci, employment: em, feat: x.feat }); });
                 commerceRows.sort((a, b) => (b.commerce + b.employment) - (a.commerce + a.employment));
+                // Proposed commerce/employment from the corrected per-parcel splits
+                // (commerce_employment_migrash) — the authoritative מצב-מוצע split.
+                const ceByPlanFull = {};
+                ((gd.commerce_employment_migrash && gd.commerce_employment_migrash.features) || []).forEach(f => {
+                    const pr = f.properties || {}, pn = pr.plan_name;
+                    if (!pn) return;
+                    (ceByPlanFull[pn] = ceByPlanFull[pn] || { c: 0, e: 0 });
+                    ceByPlanFull[pn].c += (parseFloat(pr.commerce_sqm) || 0);
+                    ceByPlanFull[pn].e += (parseFloat(pr.employment_sqm) || 0);
+                });
+                let commerceProposed = 0, employmentProposed = 0;
+                const _seenCE = new Set();
+                plansInside.forEach(x => {
+                    const pn = x.props && x.props.plan_name;
+                    if (!pn || _seenCE.has(pn)) return;
+                    _seenCE.add(pn);
+                    const c = ceByPlanFull[pn];
+                    if (c) { commerceProposed += c.c; employmentProposed += c.e; }
+                });
                 const consCity = { total: 0, byGrade: {}, byType: {}, list: [] };
                 feats('mivnei_lashimur').forEach(f => { if (!inPoly(f)) return; const p = f.properties || {}; consCity.total++; const g = ((p.mp_grade || 'ללא דרגה') + '').trim() || 'ללא דרגה'; consCity.byGrade[g] = (consCity.byGrade[g] || 0) + 1; const sug = ((p.sugMivne || '') + '').trim(); if (sug) consCity.byType[sug] = (consCity.byType[sug] || 0) + 1; const nm = ((p.shem || '') + '').trim(); const street = [p.mp_street, p.mp_house_num].filter(Boolean).join(' '); if (nm || street) { const cc = geomCentroid(f.geometry); consCity.list.push({ name: nm || street, street: nm ? street : '', grade: g, lng: cc && cc[0], lat: cc && cc[1] }); } });
                 const yiud = { total: 0, byYeud: {} };
@@ -11707,7 +11727,7 @@
                 feats('roads').forEach(f => { const c = geomCentroid(f.geometry); if (!c || !pip(c, polyCoords)) return; const s = (((f.properties || {}).street || '') + '').trim(); if (s) streetSet.add(s); });
                 const streets = [...streetSet].sort((a, b) => a.localeCompare(b, 'he'));
 
-                const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, demo, green, sportCount, trees, commerceIn, employment, commerceRows, consCity, yiud };
+                const existing = { moch, eduInst, eduStudents, eduList, shchunaCount, demo, green, sportCount, trees, commerceIn, employment, commerceProposed, employmentProposed, commerceRows, consCity, yiud };
 
                 setFullAreaReport({
                     title: fullReportTitleRef.current || 'סיכום אזור נבחר', areaSqm, streets,
@@ -11803,6 +11823,26 @@
                 const totalUnits = totalPlanUnits + totalTamaUnits;
                 const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
 
+                // --- Commerce / employment per area (from the corrected per-parcel
+                //     splits in commerce_employment_migrash) ---
+                const ceByPlan = {};
+                if (gd.commerce_employment_migrash && gd.commerce_employment_migrash.features) {
+                    gd.commerce_employment_migrash.features.forEach(f => {
+                        const pr = f.properties || {};
+                        const pn = pr.plan_name;
+                        if (!pn) return;
+                        if (!ceByPlan[pn]) ceByPlan[pn] = { commerce: 0, employment: 0 };
+                        ceByPlan[pn].commerce += (parseFloat(pr.commerce_sqm) || 0);
+                        ceByPlan[pn].employment += (parseFloat(pr.employment_sqm) || 0);
+                    });
+                }
+                const planNamesInside = new Set(plansInside.map(p => p.plan_name));
+                let totalCommerce = 0, totalEmployment = 0;
+                planNamesInside.forEach(pn => {
+                    const c = ceByPlan[pn];
+                    if (c) { totalCommerce += c.commerce; totalEmployment += c.employment; }
+                });
+
                 // Status breakdown (plans only, with merged approved)
                 const byStatus = {};
                 plansInside.forEach(p => {
@@ -11818,13 +11858,19 @@
                     type: 'תב"ע',
                     name: p.plan_summary || p.plan_name || '',
                     status: normalizeStatus(p.status_mavat || ''),
+                    units_in: parseFloat(p.units_in) || 0,
                     units_add: parseFloat(p.units_add) || 0,
+                    commerce: Math.round((ceByPlan[p.plan_name] || {}).commerce || 0),
+                    employment: Math.round((ceByPlan[p.plan_name] || {}).employment || 0),
                     minahak: p.minahak || ''
                 })).concat(tamaInside.map(p => ({
                     type: 'תמ"א 38',
                     name: p.address || p.tik || '',
                     status: p.status || '',
+                    units_in: 0,
                     units_add: parseFloat(p.units_tose) || 0,
+                    commerce: 0,
+                    employment: 0,
                     minahak: ''
                 })));
 
@@ -11843,11 +11889,13 @@
                 div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:rgba(26,26,46,0.97);color:#e0e0e0;padding:28px;border-radius:14px;border:2px solid #e94560;direction:rtl;min-width:min(320px,90vw);max-width:min(480px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:Assistant,sans-serif';
                 div.innerHTML = '<button onclick="var el=document.getElementById(&quot;area-select-result&quot;);if(el)el.remove()" style="position:absolute;top:8px;left:8px;background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
                     '<h3 id="area-result-title" contenteditable="true" style="color:#e94560;margin:0 0 12px;font-size:16px;outline:none;border-bottom:1px dashed transparent;cursor:text" title="לחץ לעריכה" onfocus="this.style.borderBottomColor=\'#e94560\'" onblur="this.style.borderBottomColor=\'transparent\'">סיכום אזור נבחר</h3>' +
-                    '<div style="display:flex;gap:24px;margin-bottom:14px">' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:14px 20px;margin-bottom:14px;justify-content:center">' +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות תב"ע</div></div>' +
                     (tamaInside.length > 0 ? '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#FF9800">' + tamaInside.length + '</div><div style="font-size:11px;color:#aaa">תמ"א 38</div></div>' : '') +
                     '<div style="text-align:center"><div style="font-size:28px;font-weight:bold;color:#4CAF50">' + Math.round(totalUnits).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד תוספת</div></div>' +
-                    '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים בשטח (לפי שכבת מבנים עירונית)"><div style="font-size:28px;font-weight:bold;color:#5dade2">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div></div>' +
+                    '<div style="text-align:center" title="מצב נכנס: סכום יח&quot;ד במבנים קיימים בשטח (לפי שכבת מבנים עירונית)"><div style="font-size:28px;font-weight:bold;color:#5dade2">' + existingUnits.toLocaleString() + '</div><div style="font-size:11px;color:#aaa">יח"ד קיימות</div></div>' +
+                    '<div style="text-align:center" title="מסחר מוצע (מ&quot;ר עיקרי, טבלה 5) בתכניות שבאזור"><div style="font-size:28px;font-weight:bold;color:#a569c9">' + Math.round(totalCommerce).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">מסחר מ"ר</div></div>' +
+                    '<div style="text-align:center" title="תעסוקה מוצעת (מ&quot;ר עיקרי, טבלה 5) בתכניות שבאזור"><div style="font-size:28px;font-weight:bold;color:#e06bc0">' + Math.round(totalEmployment).toLocaleString() + '</div><div style="font-size:11px;color:#aaa">תעסוקה מ"ר</div></div></div>' +
                     (statusHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">פילוח סטטוס:</div>' + statusHtml + '</div>' : '') +
                     (topHtml ? '<div style="border-top:1px solid #333;padding-top:8px;margin-bottom:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">תכניות מובילות:</div>' + topHtml + '</div>' : '') +
                     '<div style="border-top:1px solid #333;padding-top:10px;display:flex;gap:8px;justify-content:center">' +
@@ -11863,10 +11911,10 @@
                 document.getElementById('area-export-excel').addEventListener('click', () => {
                     const rows = window.__areaExportData || [];
                     const title = document.getElementById('area-result-title')?.textContent || 'סיכום אזור';
-                    const cols = ['סוג', 'שם', 'סטטוס', 'יח"ד תוספת', 'מינהק'];
+                    const cols = ['סוג', 'שם', 'סטטוס', 'יח"ד קיים', 'יח"ד תוספת', 'מסחר מ"ר', 'תעסוקה מ"ר', 'מינהק'];
                     const header = cols.join(',');
                     const csvRows = rows.map(r =>
-                        [r.type, r.name, r.status, r.units_add, r.minahak].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
+                        [r.type, r.name, r.status, r.units_in, r.units_add, r.commerce, r.employment, r.minahak].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')
                     );
                     const bom = '\uFEFF';
                     const blob = new Blob([bom + header + '\n' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -29441,7 +29489,7 @@
                                 {(() => {
                                     const d = fullAreaReport;
                                     const ex = d.existing || null;
-                                    const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.consCity.total || ex.yiud.total));
+                                    const hasExisting = !!(ex && (ex.moch.total || ex.eduInst || ex.shchunaCount || ex.green.count || ex.sportCount || (ex.trees.shimur + ex.trees.krita + ex.trees.haataka) || ex.commerceIn || ex.employment || ex.commerceProposed || ex.employmentProposed || ex.consCity.total || ex.yiud.total));
                                     const eduByType = {};
                                     if (ex && ex.eduList) ex.eduList.forEach(m => { const t = (m.type || 'אחר').trim() || 'אחר'; eduByType[t] = (eduByType[t] || 0) + 1; });
                                     const fmt = n => (n && n > 0 ? Math.round(n).toLocaleString() : '0');
@@ -29517,7 +29565,7 @@
                                         (d.masterPlans.length>0 || (ex&&ex.consCity.total)) && {k:'master', label:'אב ושימור'},
                                         ex && (ex.moch.total||ex.eduInst||ex.shchunaCount) && {k:'inst', label:'מבני ציבור'},
                                         ex && (ex.green.count||ex.sportCount||(ex.trees.shimur+ex.trees.krita+ex.trees.haataka)) && {k:'green', label:'ירוק ועצים'},
-                                        ex && (ex.commerceIn||ex.employment||ex.yiud.total) && {k:'commerce', label:'מסחר/יעודים'},
+                                        ex && (ex.commerceIn||ex.employment||ex.commerceProposed||ex.employmentProposed||ex.yiud.total) && {k:'commerce', label:'מסחר/יעודים'},
                                     ].filter(Boolean);
                                     const navTo = k => { setFullAreaCollapsed(s => ({ ...s, [k]: false })); const el = document.getElementById('fa-' + k); if (el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 30); };
                                     return (
@@ -29695,8 +29743,9 @@
                                                     {(ex.trees.shimur + ex.trees.krita + ex.trees.haataka) > 0 && <div style={rowStyle}><span style={{color:'#cfd3dc'}}>עצים (סקר)</span><span style={{color:'#aaa'}}>שימור {ex.trees.shimur} · כריתה {ex.trees.krita} · העתקה {ex.trees.haataka}</span></div>}
                                             </>)}
 
-                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, תעסוקה ויעודי קרקע', <>
-                                                    {(ex.commerceIn > 0 || ex.employment > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
+                                            {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.commerceProposed > 0 || ex.employmentProposed > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, תעסוקה ויעודי קרקע', <>
+                                                    {(ex.commerceProposed > 0 || ex.employmentProposed > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה מוצע (טבלה 5)</span><span style={{color:'#c2c9d4'}}>מסחר <b style={{color:'#a569c9'}}>{fmt(ex.commerceProposed)}</b> · תעסוקה <b style={{color:'#e06bc0'}}>{fmt(ex.employmentProposed)}</b> מ"ר</span></div>}
+                                                    {(ex.commerceIn > 0 || ex.employment > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר קיים (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
                                                     {ex.commerceRows && ex.commerceRows.length > 0 && detailRow('commerce', 'פירוט לפי תכנית (' + ex.commerceRows.length + ')')}
                                                     {fullReportTables['commerce'] && ex.commerceRows && (
                                                         <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>מסחר (מ"ר)</th><th style={th}>תעסוקה (מ"ר)</th></tr></thead>
