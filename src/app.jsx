@@ -389,6 +389,7 @@
             sport_kayam: 'data/sport_kayam.geojson',
             yiud_karka_kayam: 'data/yiud_karka_kayam.geojson',
             landuse_xplan: 'data/landuse_xplan.geojson',
+            commerce_employment_migrash: 'data/commerce_employment_migrash.geojson',
             mosadot_shchuna: 'data/mosadot_shchuna.geojson',
             sara_march_2026: 'data/sara_march_2026.geojson',
             education_shanaton: 'data/education_shanaton.geojson',
@@ -1011,6 +1012,12 @@
                     { id: 'master_plan_gonenim', name: 'גוננים', desc: 'תכנית אב גוננים — שלד התחדשות עירונית (~867 ד׳, 286 יעודי קרקע); מקור: jergisng', on: false },
                     { id: 'master_plan_talpiot', name: 'א.ת. תלפיות', desc: 'תכנית אב א.ת. תלפיות — הסבת תעשייה למעורב, גרסת 2021 (~881 ד׳, 96 יעודי קרקע); מקור: jergisng + ArcGIS Online', on: false },
                     { id: 'mivnei_lashimur', name: 'מבנים לשימור', desc: '1,817 מבנים ברשימת השימור העירונית (עיריית י-ם) בתוך הרובע — נקודות', on: false },
+                ]
+            },
+            commerce_employment: {
+                title: 'מסחר ותעסוקה',
+                layers: [
+                    { id: 'commerce_employment_migrash', name: 'מסחר ותעסוקה — מגרשי', desc: 'שטחי מסחר ותעסוקה מתוכננים (מ"ר עיקרי מטבלה 5) לפי מגרש (תא שטח). צבע לפי שימוש דומיננטי; בתלפיות — השוואה למכסת תכנית האב', on: false },
                 ]
             },
             projector: {
@@ -5165,6 +5172,7 @@
                     'givat_hamatos_christian', 'givat_hamatos_unknown',
                     'easements', 'construction_yb',
                     'bike_paths', 'transit_bus', 'rental_public_assets',
+                    'commerce_employment_migrash',
                 ];
                 const _NOT_INITIAL = new Set([...DEFERRED_FILES, ...ON_DEMAND_FILES]);
                 const entries = Object.entries(GEOJSON_FILES).filter(([k]) => !_NOT_INITIAL.has(k));
@@ -15081,6 +15089,126 @@
                     sub.on('mouseover', () => sub.setStyle({ weight: 3, fillOpacity: 0.82 }));
                     sub.on('mouseout', () => { try { grpGetter().resetStyle(sub); } catch (e) { } });
                 };
+
+                // --- Commerce & Employment per-migrash (מסחר ותעסוקה מגרשי) ---
+                //     Proposed commerce/employment sqm per תא-שטח from Table 5, joined to
+                //     landuse_xplan geometry. Talpiot parcels also show the master-plan
+                //     zone allowance. Self-cleaning via a window ref so re-runs don't dup.
+                if (window.__ceMigrashLayer) {
+                    try { map.removeLayer(window.__ceMigrashLayer); } catch (e) { }
+                    window.__ceMigrashLayer = null;
+                }
+                if (layers['commerce_employment_migrash'] && gd.commerce_employment_migrash) {
+                    const CE_PURPLE = '#8e44ad', CE_MAGENTA = '#d81b9a';
+                    const _cen = (v) => (v == null || v === '' ? '—' : Number(v).toLocaleString());
+                    // Commerce/employment ONLY. Pure single-use = solid color; a parcel that
+                    // combines commerce+employment (or mixes with other uses) = diagonal hatch
+                    // PATTERN of both colors — residential is never shown as a fill.
+                    const ceStyle = (f) => {
+                        const p = f.properties || {};
+                        const solid = p.dominant === 'employment' ? CE_MAGENTA : CE_PURPLE;
+                        return { fillColor: p.combined ? 'url(#ceHatch)' : solid, fillOpacity: 0.62,
+                                 color: '#2a1740', weight: 1, opacity: 0.8 };
+                    };
+                    const ceLayer = L.geoJSON(gd.commerce_employment_migrash, {
+                        style: ceStyle,
+                        onEachFeature: (f, layer) => {
+                            const p = f.properties || {};
+                            const chip = p.combined ? '#e8830c' : (p.dominant === 'employment' ? CE_MAGENTA : CE_PURPLE);
+                            let html = '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:238px;color:#eceff4;line-height:1.45">' +
+                                '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">' +
+                                    '<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' + chip + '"></span>' +
+                                    '<span style="font-weight:700;font-size:14px;color:#d7b8ef">מסחר ותעסוקה מתוכננים</span>' +
+                                '</div>' +
+                                '<div style="font-size:11px;color:#9aa5b1;margin-bottom:9px">מגרש ' + (p.parcel || '—') + ' · תכנית ' + (p.plan_name || '') +
+                                    (p.combined ? ' · <span style="color:#f0a441;font-weight:600">מעורב</span>' : '') + '</div>' +
+                                '<div style="display:flex;gap:9px;margin-bottom:7px">' +
+                                    '<div style="flex:1;background:rgba(142,68,173,0.18);border:1px solid ' + CE_PURPLE + ';border-radius:8px;padding:6px 9px">' +
+                                        '<div style="font-size:10px;color:#c9a8e6">מסחר</div>' +
+                                        '<div style="font-size:17px;font-weight:700">' + _cen(p.commerce_sqm) + '<span style="font-size:10px;font-weight:400;color:#9aa5b1"> מ״ר</span></div>' +
+                                    '</div>' +
+                                    '<div style="flex:1;background:rgba(216,27,154,0.18);border:1px solid ' + CE_MAGENTA + ';border-radius:8px;padding:6px 9px">' +
+                                        '<div style="font-size:10px;color:#f2a8d6">תעסוקה</div>' +
+                                        '<div style="font-size:17px;font-weight:700">' + _cen(p.employment_sqm) + '<span style="font-size:10px;font-weight:400;color:#9aa5b1"> מ״ר</span></div>' +
+                                    '</div>' +
+                                '</div>' +
+                                (function () {
+                                    const ss = p.split_source || '';
+                                    if (ss.indexOf('טרם') >= 0)
+                                        return '<div style="font-size:10px;color:#f0a441">⚠ מסחר+תעסוקה מאוחד — טרם פוצל (' + (p.ce_uses || '') + ')</div>';
+                                    const lbl = ss === 'table5' ? 'מ״ר עיקרי (טבלה 5)'
+                                        : ss.indexOf('GS') >= 0 ? 'פיצול נושאי: פופאפ תב״ע'
+                                        : ss ? 'פיצול נושאי: ' + ss : 'מ״ר עיקרי (טבלה 5)';
+                                    return '<div style="font-size:10px;color:#7f8a99">' + (p.ce_uses || '') + ' · ' + lbl + '</div>';
+                                })() +
+                                (p.other_sqm ? '<div style="font-size:11px;color:#c7cfda;margin-top:3px">' + (p.other_label || 'שימוש נוסף') + ': <b>' + _cen(p.other_sqm) + '</b> מ״ר <span style="color:#7f8a99">(בנפרד)</span></div>' : '');
+                            if (p.is_talpiot) {
+                                // proposed (Table 5) vs allowed (zone FAR% × plot) per use
+                                const cmpRow = (lbl, proposed, allowed, farPct) => {
+                                    if (allowed == null) {
+                                        return farPct != null
+                                            ? '<div style="font-size:10px;color:#9aa5b1;margin-top:2px">' + lbl + ': ' + farPct + '% FAR מותר</div>' : '';
+                                    }
+                                    const pct = allowed > 0 ? Math.round(proposed / allowed * 100) : 0;
+                                    const over = pct > 100;
+                                    const col = over ? '#ff7a7a' : '#66d9a3';
+                                    return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-top:3px">' +
+                                        '<span style="color:#c7cfda">' + lbl + '</span>' +
+                                        '<span style="color:#9aa5b1">מוצע <b style="color:#eceff4">' + _cen(proposed) + '</b> / מותר ' + _cen(allowed) +
+                                        ' · <b style="color:' + col + '">' + pct + '%</b>' + (over ? ' ⚠' : '') + '</span></div>';
+                                };
+                                html += '<div style="margin-top:9px;border-top:1px solid rgba(77,208,225,0.45);padding-top:7px">' +
+                                    '<div style="font-weight:700;font-size:12px;color:#4dd0e1;margin-bottom:3px">תכנית אב א.ת. תלפיות' + (p.mp_mtchm ? ' · מתחם ' + p.mp_mtchm : '') + '</div>';
+                                if (p.mp_zone_use) {
+                                    html += '<div style="font-size:12px;color:#dfe6ee">' + p.mp_zone_use +
+                                        (p.plot_size_sqm ? ' <span style="color:#9aa5b1;font-size:10px">· מגרש ' + _cen(p.plot_size_sqm) + ' מ״ר</span>' : '') + '</div>' +
+                                        '<div style="font-size:10px;color:#6f7b8a;margin-bottom:1px">מוצע (טבלה 5) מול מותר (אחוזי בנייה × מגרש):</div>' +
+                                        cmpRow('מסחר', p.commerce_sqm, p.mp_allowed_commerce_sqm, p.mp_commerce_far_pct) +
+                                        cmpRow('תעסוקה', p.employment_sqm, p.mp_allowed_employment_sqm, p.mp_employment_far_pct) +
+                                        '<div style="font-size:10px;color:#6f7b8a;margin-top:3px">FAR כולל ' + (p.mp_zone_far_pct || '—') + '% · ' + (p.mp_zone_max_floors || '—') + ' ק׳ · תכסית ' + (p.mp_zone_coverage_pct || '—') + '%</div>';
+                                } else {
+                                    html += '<div style="font-size:10px;color:#6f7b8a">מכסת האזור: תעסוקה ' + _cen(p.mp_employment_max_sqm) + ' · מסחר ייעודי ' + _cen(p.mp_commerce_extra_sqm) + ' מ״ר</div>';
+                                }
+                                html += '</div>';
+                            }
+                            html += '</div>';
+                            layer.bindPopup(html, { maxWidth: popupMaxWidth() });
+                            layer.on('mouseover', () => layer.setStyle({ weight: 3, fillOpacity: 0.82 }));
+                            layer.on('mouseout', () => { try { ceLayer.resetStyle(layer); } catch (e) { } });
+                        },
+                    }).addTo(map);
+                    // Inject the diagonal hatch pattern into the renderer's SVG <defs>, then
+                    // re-apply style so combined parcels resolve the pattern fill.
+                    try {
+                        // The group has no _renderer; walk up from a feature's <path> to its <svg>.
+                        let svg = null;
+                        ceLayer.eachLayer(l => {
+                            if (!svg && l._path) {
+                                let n = l._path.parentNode;
+                                while (n && (!n.tagName || n.tagName.toLowerCase() !== 'svg')) n = n.parentNode;
+                                svg = n;
+                            }
+                        });
+                        if (svg && svg.tagName && svg.tagName.toLowerCase() === 'svg' && !svg.querySelector('#ceHatch')) {
+                            const NS = 'http://www.w3.org/2000/svg';
+                            const defs = document.createElementNS(NS, 'defs');
+                            const pat = document.createElementNS(NS, 'pattern');
+                            pat.setAttribute('id', 'ceHatch');
+                            pat.setAttribute('patternUnits', 'userSpaceOnUse');
+                            pat.setAttribute('width', '7'); pat.setAttribute('height', '7');
+                            pat.setAttribute('patternTransform', 'rotate(45)');
+                            const r1 = document.createElementNS(NS, 'rect');
+                            r1.setAttribute('width', '7'); r1.setAttribute('height', '7'); r1.setAttribute('fill', CE_PURPLE);
+                            const r2 = document.createElementNS(NS, 'rect');
+                            r2.setAttribute('width', '3.5'); r2.setAttribute('height', '7'); r2.setAttribute('fill', CE_MAGENTA);
+                            pat.appendChild(r1); pat.appendChild(r2); defs.appendChild(pat);
+                            svg.insertBefore(defs, svg.firstChild);
+                            ceLayer.setStyle(ceStyle);
+                        }
+                    } catch (e) { /* pattern is cosmetic */ }
+                    window.__ceMigrashLayer = ceLayer;
+                    geoLayersRef.current.commerce_employment_migrash = ceLayer;
+                }
 
                 // --- Construction activity (yearbook ט/7) — choropleth of building STARTS
                 //     (number of dwellings, 2022-2025) per sub-quarter (תת-רובע). ---
