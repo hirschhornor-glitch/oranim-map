@@ -1622,8 +1622,8 @@
             shavaz_kayam_stroke:   '#5C2E0A',
             shavaz_future_fill:    '#D2B48C',
             shavaz_future_stroke:  '#C4956A',
-            moch_kayam_fill:       '#9575CD',  // lilac for existing public buildings
-            moch_kayam_stroke:     '#4527A0',  // deep purple border (normal existing)
+            moch_kayam_fill:       '#A0522D',  // sienna brown for existing public buildings (public family = brown)
+            moch_kayam_stroke:     '#5C2E0A',  // deep brown border (normal existing)
             moch_demolition_stroke:'#D32F2F',  // red border (slated for demolition)
             edu_mamlachti:         '#0d47a1',
             edu_mamlachti_dati:    '#d63384',
@@ -2802,8 +2802,8 @@
         const SHAVAZ_LEGEND = [
             // ── Type (fill) ──
             { label: 'סוג', style: 'header' },
-            { label: 'מבנה ציבור קיים', style: 'svg', svg: _legendPin('#9575CD', '#4527A0') },
-            { label: 'קיים — מיועד להריסה', style: 'svg', svg: _legendPin('#9575CD', '#D32F2F', '', true) },
+            { label: 'מבנה ציבור קיים', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.moch_kayam_fill, PUBLIC_PALETTE.moch_kayam_stroke) },
+            { label: 'קיים — מיועד להריסה', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.moch_kayam_fill, PUBLIC_PALETTE.moch_demolition_stroke, '', true) },
             { label: 'שב"צ עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_future_fill, '#888') },
             { label: 'הפרשה מבונה עתידי', style: 'svg', svg: _legendPin(PUBLIC_PALETTE.shavaz_kayam_fill, '#888') },
             { label: 'מבני ציבור קיים (שטח)', color: PUBLIC_PALETTE.shavaz_kayam_fill },
