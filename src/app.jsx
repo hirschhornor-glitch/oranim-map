@@ -8489,22 +8489,26 @@
                     (ceByPlan[pn] = ceByPlan[pn] || { c: 0, e: 0 });
                     ceByPlan[pn].c += (parseFloat(pr.commerce_sqm) || 0); ceByPlan[pn].e += (parseFloat(pr.employment_sqm) || 0);
                 });
-                let totalCommerce = 0, totalEmployment = 0, unitsIn = 0, unitsTotal = 0;
+                let totalCommerce = 0, totalEmployment = 0, unitsIn = 0, unitsTotal = 0, unitsAdd = 0;
                 const rows = [];
                 plansInside.forEach(p => {
                     const ce = ceByPlan[p.plan_name] || { c: 0, e: 0 };
-                    const ui = parseFloat(p.units_in) || 0, ut = parseFloat(p.units_total) || 0;
-                    unitsIn += ui; unitsTotal += ut; totalCommerce += ce.c; totalEmployment += ce.e;
+                    const ui = parseFloat(p.units_in) || 0, ut = parseFloat(p.units_total) || 0, ua = parseFloat(p.units_add) || 0;
+                    unitsIn += ui; unitsTotal += ut; unitsAdd += ua; totalCommerce += ce.c; totalEmployment += ce.e;
                     if (ce.c || ce.e) rows.push({ name: p.plan_summary || p.plan_name_he || p.plan_name || '', taba: p.plan_name || '', commerce: Math.round(ce.c), employment: Math.round(ce.e), units_in: ui, units_total: ut });
                 });
                 rows.sort((a, b) => (b.commerce + b.employment) - (a.commerce + a.employment));
                 const fmt = v => Math.round(v).toLocaleString();
-                // Household size (CBS census 2022) over the polygon: Σpop / Σhh of stat areas inside; fallback 3.5.
-                let hh = 3.5, hhSource = 'ברירת מחדל';
+                // Population: EXISTING = actual census (Σ pop_approx of stat areas in the polygon —
+                // varies per statistical area). FUTURE = existing + added-units × household size,
+                // where the household size (default = census Σpop/Σhh of the area) is user-adjustable
+                // and applies only to the future addition.
+                let hh = 3.5, hhSource = 'ברירת מחדל', censusPop = 0;
                 { const sa = (gd.stat_areas && gd.stat_areas.features) || []; let sPop = 0, sHH = 0;
                   sa.forEach(f => { const g = f.geometry; let cc; try { cc = g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiPolygon' ? g.coordinates[0][0] : null; } catch (e) { return; } if (!cc) return; let cx = 0, cy = 0, n = 0; for (const c of cc) { cx += c[0]; cy += c[1]; n++; } cx /= n; cy /= n; if (pip([cx, cy], polyCoords)) { sPop += parseFloat(f.properties.pop_approx) || 0; sHH += parseFloat(f.properties.hh_total) || 0; } });
+                  censusPop = Math.round(sPop);
                   if (sPop > 0 && sHH > 0) { hh = Math.round((sPop / sHH) * 10) / 10; hhSource = 'מפקד 2022'; } }
-                const popExist = Math.round(unitsIn * hh), popProj = Math.round(unitsTotal * hh);
+                const popExist = censusPop, popProj = censusPop + Math.round(unitsAdd * hh);
                 const prev = document.getElementById('ce-panel'); if (prev) prev.remove();
                 const panel = document.createElement('div'); panel.id = 'ce-panel';
                 panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #8e44ad;border-radius:12px;padding:20px;z-index:10000;min-width:min(400px,92vw);max-width:min(560px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
@@ -8523,10 +8527,10 @@
                         '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
                         '</div>' +
                         '<div style="padding:10px;background:rgba(93,173,226,0.08);border:1px solid rgba(93,173,226,0.3);border-radius:8px;margin-bottom:12px">' +
-                            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:#9ab">👥 אוכלוסייה · משק בית ממוצע: <input id="ce-hh" type="number" step="0.1" min="1" value="' + hh + '" style="width:56px;background:#141426;border:1px solid #5dade2;color:#fff;border-radius:4px;padding:2px 5px;font-family:inherit;text-align:center"> נפש <span style="color:#667;font-size:10px">(' + hhSource + ')</span></div>' +
+                            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:#9ab">👥 אוכלוסייה · משק בית לעתידית: <input id="ce-hh" type="number" step="0.1" min="1" value="' + hh + '" style="width:56px;background:#141426;border:1px solid #5dade2;color:#fff;border-radius:4px;padding:2px 5px;font-family:inherit;text-align:center"> נפש <span style="color:#667;font-size:10px">(ברירת מחדל: ' + hhSource + ')</span></div>' +
                             '<div style="display:flex;gap:20px;justify-content:center">' +
-                                '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#5dade2"><span id="ce-pop-exist">' + fmt(popExist) + '</span></div><div style="font-size:11px;color:#aaa">אוכלוסייה קיימת</div></div>' +
-                                '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#4CAF50"><span id="ce-pop-proj">' + fmt(popProj) + '</span></div><div style="font-size:11px;color:#aaa">אוכלוסייה צפויה</div></div>' +
+                                '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#5dade2"><span id="ce-pop-exist">' + fmt(popExist) + '</span></div><div style="font-size:11px;color:#aaa">קיימת (מפקד 2022)</div></div>' +
+                                '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#4CAF50"><span id="ce-pop-proj">' + fmt(popProj) + '</span></div><div style="font-size:11px;color:#aaa">צפויה (קיים + תוספת)</div></div>' +
                             '</div>' +
                         '</div>' +
                         '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות עם מסחר/תעסוקה מוצע:</div>' +
@@ -8540,9 +8544,9 @@
                 const hhInput = document.getElementById('ce-hh');
                 if (hhInput) hhInput.oninput = () => {
                     const v = parseFloat(hhInput.value) || 0;
-                    const pe = document.getElementById('ce-pop-exist'), pp = document.getElementById('ce-pop-proj');
-                    if (pe) pe.textContent = Math.round(unitsIn * v).toLocaleString();
-                    if (pp) pp.textContent = Math.round(unitsTotal * v).toLocaleString();
+                    const pp = document.getElementById('ce-pop-proj');
+                    // existing stays fixed (census); only the future addition uses the input HH
+                    if (pp) pp.textContent = (censusPop + Math.round(unitsAdd * v)).toLocaleString();
                 };
                 const exp = document.getElementById('ce-export');
                 if (exp) exp.onclick = () => {
@@ -8550,7 +8554,7 @@
                     const cols = ['תכנית', 'מס\' תב"ע', 'מסחר מ"ר', 'תעסוקה מ"ר', 'יח"ד קיים', 'יח"ד סה"כ'];
                     const csv = [cols.join(',')].concat(rows.map(r => [r.name, r.taba, r.commerce, r.employment, r.units_in, r.units_total].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')))
                         .concat(['', 'סיכום אזור,,מסחר ' + Math.round(totalCommerce) + ',תעסוקה ' + Math.round(totalEmployment) + ',קיים ' + Math.round(unitsIn) + ',סה"כ ' + Math.round(unitsTotal),
-                                 'אוכלוסייה (משק בית ' + hhv + '),,קיימת ' + Math.round(unitsIn * hhv) + ',צפויה ' + Math.round(unitsTotal * hhv)]).join('\n');
+                                 'אוכלוסייה (משק בית עתידי ' + hhv + '),,קיימת(מפקד) ' + censusPop + ',צפויה ' + (censusPop + Math.round(unitsAdd * hhv))]).join('\n');
                     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob);
                     const a = document.createElement('a'); a.href = url; a.download = 'מסחר_תעסוקה_אזור.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                 };
@@ -12179,6 +12183,29 @@
                 setFullAreaReport(null);
                 // Zoom the map to the selected sub so the highlighted boundary + report have context.
                 try { const map = mapInstanceRef.current; if (map) map.fitBounds(ring.map(p => [p.lat, p.lng]), { padding: [40, 40], animate: false }); } catch (e) {}
+                setAreaFinished(ring);
+            }, [cancelAllModes]);
+
+            // Run the commerce/employment report over a sub-neighborhood polygon (like
+            // startSubNeighborhoodReport but routes to the ce-area effect).
+            const startCeSubReport = useCallback((subName) => {
+                subName = (subName || '').trim();
+                const gd = geoDataRef.current;
+                const layer = gd && gd.sub_neighborhoods;
+                if (!layer || !layer.features) { alert('שכבת תת-השכונות עדיין נטענת — נסה שוב בעוד רגע.'); return; }
+                const feat = layer.features.find(f => (((f.properties || {}).schn_nama) || '').trim() === subName);
+                const g = feat && feat.geometry;
+                if (!g) { alert('לא נמצאה תת-שכונה בשם: ' + subName); return; }
+                const ringArea = r => { let a = 0; for (let i = 0; i < r.length; i++) { const j = (i + 1) % r.length; a += r[i][0] * r[j][1] - r[j][0] * r[i][1]; } return Math.abs(a) / 2; };
+                let best = null, bestA = -1;
+                if (g.type === 'Polygon') best = g.coordinates[0];
+                else if (g.type === 'MultiPolygon') g.coordinates.forEach(poly => { const a = ringArea(poly[0]); if (a > bestA) { bestA = a; best = poly[0]; } });
+                if (!best || best.length < 3) { alert('גיאומטריה לא נתמכת עבור: ' + subName); return; }
+                const ring = best.map(c => ({ lng: c[0], lat: c[1] }));
+                cancelAllModes('area');
+                const prev = document.getElementById('ce-panel'); if (prev) prev.remove();
+                try { const map = mapInstanceRef.current; if (map) map.fitBounds(ring.map(p => [p.lat, p.lng]), { padding: [40, 40], animate: false }); } catch (e) {}
+                ceAreaActiveRef.current = true; setCeAreaActive(true);
                 setAreaFinished(ring);
             }, [cancelAllModes]);
 
@@ -24504,6 +24531,23 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
                                         <span className="sub-label">בחירת אזור</span>
                                     </button>
+                                    <button className="toolbar-dropdown-item" data-tip="בחירת תת-שכונה לסיכום מסחר ותעסוקה + אוכלוסייה" onClick={() => {
+                                        setActiveDropdown(null);
+                                        const gd = geoDataRef.current || {};
+                                        const subs = (gd.sub_neighborhoods && gd.sub_neighborhoods.features) || [];
+                                        const names = [...new Set(subs.map(f => ((f.properties || {}).schn_nama || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+                                        const old = document.getElementById('ce-sub-picker'); if (old) old.remove();
+                                        const pk = document.createElement('div'); pk.id = 'ce-sub-picker';
+                                        pk.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.98);border:1px solid #8e44ad;border-radius:12px;padding:16px;z-index:10001;min-width:min(260px,88vw);max-height:70vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+                                        pk.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:700;color:#a569c9">בחר תת-שכונה</span><button id="ce-sub-x" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
+                                            names.map(n => '<button class="ce-sub-opt" data-sub="' + n.replace(/"/g, '&quot;') + '" style="display:block;width:100%;text-align:right;background:rgba(142,68,173,0.12);border:1px solid rgba(142,68,173,0.35);color:#eceff4;border-radius:6px;padding:7px 10px;margin:3px 0;cursor:pointer;font-family:inherit;font-size:12px">' + n + '</button>').join('');
+                                        document.body.appendChild(pk);
+                                        pk.querySelector('#ce-sub-x').onclick = () => pk.remove();
+                                        pk.querySelectorAll('.ce-sub-opt').forEach(b => b.onclick = () => { const nm = b.getAttribute('data-sub'); pk.remove(); startCeSubReport(nm); });
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l5-4 5 4v14"/><path d="M19 21V11l-4-3"/></svg>
+                                        <span className="sub-label">בחירת תת שכונה</span>
+                                    </button>
                                 </div>
                             )}
                             </div>
@@ -29881,7 +29925,8 @@
                                             </>)}
 
                                             {ex && (ex.commerceIn > 0 || ex.employment > 0 || ex.commerceProposed > 0 || ex.employmentProposed > 0 || ex.yiud.total > 0) && section('commerce', '🏪 מסחר, תעסוקה ויעודי קרקע', <>
-                                                    {(ex.commerceProposed > 0 || ex.employmentProposed > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה מוצע (טבלה 5)</span><span style={{color:'#c2c9d4'}}>מסחר <b style={{color:'#a569c9'}}>{fmt(ex.commerceProposed)}</b> · תעסוקה <b style={{color:'#e06bc0'}}>{fmt(ex.employmentProposed)}</b> מ"ר</span></div>}
+                                                    {(ex.commerceProposed > 0 || ex.employmentProposed > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה מוצע — סה"כ (טבלה 5)</span><span style={{color:'#c2c9d4'}}>מסחר <b style={{color:'#a569c9'}}>{fmt(ex.commerceProposed)}</b> · תעסוקה <b style={{color:'#e06bc0'}}>{fmt(ex.employmentProposed)}</b> מ"ר</span></div>}
+                                                    {(Math.max(0, ex.commerceProposed - ex.commerceIn) + Math.max(0, ex.employmentProposed - ex.employment)) > 0 &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר/תעסוקה עתידי (תוספת נטו)</span><span style={{color:'#c2c9d4'}}>מסחר <b style={{color:'#a569c9'}}>{fmt(Math.max(0, ex.commerceProposed - ex.commerceIn))}</b> · תעסוקה <b style={{color:'#e06bc0'}}>{fmt(Math.max(0, ex.employmentProposed - ex.employment))}</b> מ"ר</span></div>}
                                                     {(ex.commerceIn > 0 || ex.employment > 0) &&<div style={rowStyle}><span style={{color:'#cfd3dc'}}>מסחר קיים (מתב"עות)</span><span style={{color:'#c2c9d4'}}>מסחר {fmt(ex.commerceIn)} · תעסוקה {fmt(ex.employment)} מ"ר</span></div>}
                                                     {ex.commerceRows && ex.commerceRows.length > 0 && detailRow('commerce', 'פירוט לפי תכנית (' + ex.commerceRows.length + ')')}
                                                     {fullReportTables['commerce'] && ex.commerceRows && (
