@@ -15244,7 +15244,7 @@
                         onEachFeature: (f, layer) => {
                             const p = f.properties || {};
                             const chip = p.combined ? '#e8830c' : (p.dominant === 'employment' ? CE_MAGENTA : CE_PURPLE);
-                            let html = '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:238px;color:#eceff4;line-height:1.45">' +
+                            let html = '<div style="direction:rtl;font-family:Assistant,sans-serif;min-width:238px;color:#eceff4;line-height:1.45;padding:4px 8px 6px">' +
                                 '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">' +
                                     '<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' + chip + '"></span>' +
                                     '<span style="font-weight:700;font-size:14px;color:#d7b8ef">מסחר ותעסוקה מתוכננים</span>' +
