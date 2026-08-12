@@ -3113,6 +3113,8 @@
             const treeModeRef = useRef(false);
             const [treeAreaActive, setTreeAreaActive] = useState(false); // true when polygon draw is for trees
             const treeAreaActiveRef = useRef(false);
+            const [ceAreaActive, setCeAreaActive] = useState(false); // true when polygon draw is for commerce/employment
+            const ceAreaActiveRef = useRef(false);
             // Programa-direct mode: when true, area/radius selection bypasses the regular plans/permits modal
             // and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
             const programaAreaActiveRef = useRef(false);
@@ -8458,6 +8460,81 @@
                 if (window.__treePanelAttach) window.__treePanelAttach(panel);
             }, [areaFinished]);
 
+            // ── Commerce/employment area report (מסחר ותעסוקה — אזור נבחר) ──
+            useEffect(() => {
+                if (!areaFinished || areaFinished.length < 3 || !ceAreaActiveRef.current) return;
+                ceAreaActiveRef.current = false; setCeAreaActive(false);
+                window.__ceHandledArea = true;   // tell the generic area report to stand down
+                const gd = geoDataRef.current || {};
+                if (!gd.plans || !gd.plans.features) return;
+                const polyCoords = areaFinished.map(p => [p.lng, p.lat]);
+                polyCoords.push(polyCoords[0]);
+                function pip(pt, ring) { let x = pt[0], y = pt[1], inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
+                const plansInside = [];
+                const seen = new Set();
+                gd.plans.features.forEach(f => {
+                    const p = f.properties;
+                    const s = normalizeStatus((p.status_mavat || '').trim());
+                    if (s === 'נגנזה' || s === 'נדחתה' || s === 'נגנזה/נדחתה') return;
+                    if (['תשתיות', 'מוסתר'].includes(normalizePlanType(p.plan_type || ''))) return;
+                    const geom = f.geometry; if (!geom || !geom.coordinates) return;
+                    let coords; try { coords = geom.type === 'Polygon' ? geom.coordinates[0] : geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null; } catch (e) { return; }
+                    if (!coords || !coords.length) return;
+                    let cx = 0, cy = 0, n = 0; for (const c of coords) { if (c && c.length >= 2) { cx += c[0]; cy += c[1]; n++; } } if (!n) return; cx /= n; cy /= n;
+                    if (pip([cx, cy], polyCoords)) { const pn = p.plan_name; if (pn && !seen.has(pn)) { seen.add(pn); plansInside.push(p); } }
+                });
+                const ceByPlan = {};
+                ((gd.commerce_employment_migrash && gd.commerce_employment_migrash.features) || []).forEach(f => {
+                    const pr = f.properties || {}, pn = pr.plan_name; if (!pn) return;
+                    (ceByPlan[pn] = ceByPlan[pn] || { c: 0, e: 0 });
+                    ceByPlan[pn].c += (parseFloat(pr.commerce_sqm) || 0); ceByPlan[pn].e += (parseFloat(pr.employment_sqm) || 0);
+                });
+                let totalCommerce = 0, totalEmployment = 0, unitsIn = 0, unitsAdd = 0;
+                const rows = [];
+                plansInside.forEach(p => {
+                    const ce = ceByPlan[p.plan_name] || { c: 0, e: 0 };
+                    const ui = parseFloat(p.units_in) || 0, ua = parseFloat(p.units_add) || 0;
+                    unitsIn += ui; unitsAdd += ua; totalCommerce += ce.c; totalEmployment += ce.e;
+                    if (ce.c || ce.e) rows.push({ name: p.plan_summary || p.plan_name_he || p.plan_name || '', taba: p.plan_name || '', commerce: Math.round(ce.c), employment: Math.round(ce.e), units_in: ui, units_add: ua });
+                });
+                rows.sort((a, b) => (b.commerce + b.employment) - (a.commerce + a.employment));
+                const fmt = v => Math.round(v).toLocaleString();
+                const prev = document.getElementById('ce-panel'); if (prev) prev.remove();
+                const panel = document.createElement('div'); panel.id = 'ce-panel';
+                panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.97);border:1px solid #8e44ad;border-radius:12px;padding:20px;z-index:10000;min-width:min(400px,92vw);max-width:min(560px,95vw);max-height:85vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+                let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' +
+                    '<h3 style="color:#a569c9;margin:0;font-size:16px;flex:1">🏪 מסחר ותעסוקה — אזור נבחר</h3>' +
+                    '<button id="ce-export" title="ייצוא לאקסל" style="background:#6a2d6f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 ייצוא</button>' +
+                    '<button id="ce-close" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>';
+                if (rows.length === 0) {
+                    html += '<div style="color:#e94560;font-size:13px;text-align:center;padding:20px 0">אין תכניות עם מסחר/תעסוקה מתוכננים באזור זה</div>';
+                } else {
+                    html += '<div style="display:flex;flex-wrap:wrap;gap:12px 18px;justify-content:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:12px">' +
+                        '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#a569c9">' + fmt(totalCommerce) + '</div><div style="font-size:11px;color:#aaa">מסחר מ"ר</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#e06bc0">' + fmt(totalEmployment) + '</div><div style="font-size:11px;color:#aaa">תעסוקה מ"ר</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#5dade2">' + fmt(unitsIn) + '</div><div style="font-size:11px;color:#aaa">יח"ד קיים</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:26px;font-weight:bold;color:#4CAF50">' + fmt(unitsAdd) + '</div><div style="font-size:11px;color:#aaa">יח"ד מתוכנן</div></div>' +
+                        '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
+                        '</div>' +
+                        '<div style="font-size:12px;color:#888;margin-bottom:6px">תכניות עם מסחר/תעסוקה מוצע:</div>' +
+                        '<table style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr style="border-bottom:1px solid #2a2a4a">' +
+                        '<th style="text-align:right;padding:4px;color:#fff">תכנית</th><th style="text-align:center;padding:4px;color:#fff">מסחר</th><th style="text-align:center;padding:4px;color:#fff">תעסוקה</th><th style="text-align:center;padding:4px;color:#fff">יח"ד+</th></tr></thead><tbody>' +
+                        rows.slice(0, 20).map(r => '<tr style="border-bottom:1px solid #1a1a2e"><td style="padding:4px;color:#cfd3dc">' + r.name + '</td><td style="text-align:center;padding:4px;color:#a569c9">' + (r.commerce ? r.commerce.toLocaleString() : '—') + '</td><td style="text-align:center;padding:4px;color:#e06bc0">' + (r.employment ? r.employment.toLocaleString() : '—') + '</td><td style="text-align:center;padding:4px;color:#aaa">' + (r.units_add || '—') + '</td></tr>').join('') +
+                        '</tbody></table>';
+                }
+                panel.innerHTML = html; document.body.appendChild(panel);
+                const exp = document.getElementById('ce-export');
+                if (exp) exp.onclick = () => {
+                    const cols = ['תכנית', 'מס\' תב"ע', 'מסחר מ"ר', 'תעסוקה מ"ר', 'יח"ד קיים', 'יח"ד מתוכנן'];
+                    const csv = [cols.join(',')].concat(rows.map(r => [r.name, r.taba, r.commerce, r.employment, r.units_in, r.units_add].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'מסחר_תעסוקה_אזור.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                };
+                const rr = areaRef.current; const map = mapInstanceRef.current;
+                function clearDraw() { if (map && rr) { rr.markers.forEach(m => map.removeLayer(m)); if (rr.polygon) map.removeLayer(rr.polygon); } if (rr) { rr.points = []; rr.markers = []; rr.polygon = null; } }
+                const cl = document.getElementById('ce-close'); if (cl) cl.onclick = () => { panel.remove(); clearDraw(); };
+            }, [areaFinished]);
+
             // ── Open the rich programa modal scoped to a sub-neighborhood polygon ──
             // Looks up sub by name (with SUB_NORMALIZE alias support), builds candidatePlans + edu features,
             // and reuses renderProgramaModal. Used from the minahak-level פרוגרמה drilldown.
@@ -11751,6 +11828,7 @@
                 if (landuseCompareModeRef.current === 'area') return;
                 if (window.__landuseHandledArea) { window.__landuseHandledArea = false; return; }
                 if (window.__treeHandledArea) { window.__treeHandledArea = false; return; }
+                if (window.__ceHandledArea) { window.__ceHandledArea = false; return; }
                 if (window.__programaHandledArea) { window.__programaHandledArea = false; return; }
                 if (window.__fullReportHandledArea) { window.__fullReportHandledArea = false; return; }
                 const gd = geoDataRef.current;
@@ -12000,6 +12078,8 @@
                 programaAreaActiveRef.current = false;
                 treeAreaActiveRef.current = false;
                 setTreeAreaActive(false);
+                ceAreaActiveRef.current = false;
+                setCeAreaActive(false);
                 fullReportAreaActiveRef.current = false;
                 fullReportTitleRef.current = null;
                 setFullAreaReport(null);
@@ -12009,6 +12089,7 @@
                 const prev1 = document.getElementById('area-select-result'); if (prev1) prev1.remove();
                 const prev2 = document.getElementById('programa-result'); if (prev2) prev2.remove();
                 const prev3 = document.getElementById('tree-panel'); if (prev3) prev3.remove();
+                const prev3b = document.getElementById('ce-panel'); if (prev3b) prev3b.remove();
                 // 3. Radius: always wipe center + sub-flags + result panel.
                 if (!isRadiusExcept) setRadiusMode(false);
                 setRadiusCenter(null);
@@ -24347,12 +24428,27 @@
                             {/* ══ מסחר ══ */}
                             <div style={{position:'relative'}}>
                             <button
-                                className={`toolbar-btn ${(showCommerceTable || showCommerceHeatMap) ? 'active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); setActiveDropdown(prev => prev === 'commerce-group' ? null : 'commerce-group'); }}
+                                className={`toolbar-btn ${(showCommerceTable || showCommerceHeatMap || ceAreaActive) ? 'active' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (ceAreaActive && areaMode) {
+                                        const r = areaRef.current;
+                                        if (r.points.length >= 3) { setAreaFinished([...r.points]); setAreaMode(false); }
+                                        else {
+                                            const map = mapInstanceRef.current;
+                                            if (map) { r.markers.forEach(m => map.removeLayer(m)); if (r.polygon) map.removeLayer(r.polygon); map.getContainer().classList.remove('measuring'); }
+                                            r.points = []; r.markers = []; r.polygon = null; setAreaMode(false);
+                                            ceAreaActiveRef.current = false; setCeAreaActive(false);
+                                        }
+                                        setActiveDropdown(null);
+                                    } else {
+                                        setActiveDropdown(prev => prev === 'commerce-group' ? null : 'commerce-group');
+                                    }
+                                }}
                                 title="מסחר ותעסוקה"
                             >
                                 <span className="toolbar-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="7" width="18" height="13" rx="2" opacity="0.3" fill="currentColor" stroke="none"/><rect x="6" y="4" width="12" height="4" rx="1" opacity="0.5" fill="currentColor" stroke="none"/><line x1="12" y1="11" x2="12" y2="17" strokeWidth="2"/><line x1="9" y1="14" x2="15" y2="14" strokeWidth="2"/></svg></span>
-                                <span className="toolbar-label">מסחר ▾</span>
+                                <span className="toolbar-label">{(ceAreaActive && areaMode) ? (areaPts >= 3 ? 'סיום ✓' : areaPts + ' נק\'') : 'מסחר ▾'}</span>
                             </button>
                             {activeDropdown === 'commerce-group' && (
                                 <div className="toolbar-dropdown-panel" onClick={e => e.stopPropagation()}>
@@ -24366,6 +24462,23 @@
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="7" width="18" height="13" rx="2" opacity="0.3" fill="currentColor" stroke="none"/><rect x="6" y="4" width="12" height="4" rx="1" opacity="0.5" fill="currentColor" stroke="none"/><line x1="12" y1="11" x2="12" y2="17" strokeWidth="2"/><line x1="9" y1="14" x2="15" y2="14" strokeWidth="2"/></svg>
                                         <span className="sub-label">מפת חום</span>
+                                    </button>
+                                    <button className={`toolbar-dropdown-item ${ceAreaActive ? 'sub-active' : ''}`} data-tip="ציור אזור על המפה לסיכום מסחר ותעסוקה מתוכננים + יח״ד קיים/מתוכנן" onClick={() => {
+                                        if (ceAreaActive) {
+                                            ceAreaActiveRef.current = false; setCeAreaActive(false);
+                                            if (areaMode) setAreaMode(false);
+                                            mapInstanceRef.current?.getContainer().classList.remove('measuring');
+                                        } else {
+                                            cancelAllModes('area');
+                                            setAreaFinished(null);
+                                            const prev = document.getElementById('ce-panel'); if (prev) prev.remove();
+                                            ceAreaActiveRef.current = true; setCeAreaActive(true);
+                                            setAreaMode(true);
+                                        }
+                                        setActiveDropdown(null);
+                                    }}>
+                                        <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                        <span className="sub-label">בחירת אזור</span>
                                     </button>
                                 </div>
                             )}
