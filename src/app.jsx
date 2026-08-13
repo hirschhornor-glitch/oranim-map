@@ -3115,6 +3115,8 @@
             const treeAreaActiveRef = useRef(false);
             const [ceAreaActive, setCeAreaActive] = useState(false); // true when polygon draw is for commerce/employment
             const ceAreaActiveRef = useRef(false);
+            const [ceSubPick, setCeSubPick] = useState(false); // true when click-on-map sub-neighborhood pick is armed (commerce/employment)
+            const ceSubPickRef = useRef(false);
             // Programa-direct mode: when true, area/radius selection bypasses the regular plans/permits modal
             // and opens the public-needs פרוגרמה report directly (entered from "מבני ציבור" menu).
             const programaAreaActiveRef = useRef(false);
@@ -7608,10 +7610,50 @@
                 }
                 container.addEventListener('click', onTreeSubDomClick, true);
 
+                // ── Commerce/employment: click a sub-neighborhood on the map to run its CE report ──
+                // Mirrors the trees sub-pick (hover highlight + click select), but routes to the
+                // commerce/employment area report via window.__startCeSubReport.
+                function onCeSubMouseMove(e) {
+                    if (!window.__ceSubPickRef || !window.__ceSubPickRef.current) {
+                        if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                        return;
+                    }
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const found = findSubAtPoint(pt);
+                    if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                    if (found) {
+                        treeSubHoverLayer = L.geoJSON(found, {
+                            style: { color: '#8e44ad', weight: 3, fillColor: '#8e44ad', fillOpacity: 0.1, dashArray: '' }
+                        }).addTo(map);
+                        treeSubHoverLayer.bindTooltip(found.properties.schn_nama, { sticky: true, direction: 'top', className: 'landuse-tooltip' }).openTooltip();
+                    }
+                }
+                container.addEventListener('mousemove', onCeSubMouseMove);
+
+                function onCeSubDomClick(e) {
+                    if (!window.__ceSubPickRef || !window.__ceSubPickRef.current) return;
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const rect = container.getBoundingClientRect();
+                    const pt = map.containerPointToLatLng([e.clientX - rect.left, e.clientY - rect.top]);
+                    const found = findSubAtPoint(pt);
+                    if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
+                    if (!found) return;
+                    window.__ceSubPickRef.current = false;
+                    if (window.__setCeSubPick) window.__setCeSubPick(false);
+                    container.classList.remove('measuring');
+                    const nm = (found.properties && found.properties.schn_nama || '').trim();
+                    if (nm && window.__startCeSubReport) window.__startCeSubReport(nm);
+                }
+                container.addEventListener('click', onCeSubDomClick, true);
+
                 return () => {
                     container.removeEventListener('click', onTreeDomClick, true);
                     container.removeEventListener('click', onTreeSubDomClick, true);
                     container.removeEventListener('mousemove', onTreeSubMouseMove);
+                    container.removeEventListener('click', onCeSubDomClick, true);
+                    container.removeEventListener('mousemove', onCeSubMouseMove);
                     if (treeSubHoverLayer) { map.removeLayer(treeSubHoverLayer); treeSubHoverLayer = null; }
                     if (treeSubSelectedLayer) { map.removeLayer(treeSubSelectedLayer); treeSubSelectedLayer = null; }
                 };
@@ -12138,6 +12180,9 @@
                     setTreeMode(false);
                     treeModeRef.current = false;
                 }
+                // 6.5 Commerce/employment sub-neighborhood click-pick
+                ceSubPickRef.current = false;
+                setCeSubPick(false);
                 // 7. Programa-active UI flag
                 if (except !== 'programa-area' && except !== 'programa-radius') {
                     setProgramaActive(null);
@@ -12208,6 +12253,12 @@
                 ceAreaActiveRef.current = true; setCeAreaActive(true);
                 setAreaFinished(ring);
             }, [cancelAllModes]);
+            // Expose for the click-on-map sub picker (handler lives in the [dataLoaded] map effect).
+            useEffect(() => {
+                window.__startCeSubReport = startCeSubReport;
+                window.__ceSubPickRef = ceSubPickRef;
+                window.__setCeSubPick = setCeSubPick;
+            }, [startCeSubReport]);
 
             // Format distance in m/km
             function fmtDist(m) {
@@ -24531,22 +24582,21 @@
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="4,4 20,2 22,14 12,22 2,16" strokeLinejoin="round"/><circle cx="4" cy="4" r="1.5" fill="currentColor" stroke="none"/><circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
                                         <span className="sub-label">בחירת אזור</span>
                                     </button>
-                                    <button className="toolbar-dropdown-item" data-tip="בחירת תת-שכונה לסיכום מסחר ותעסוקה + אוכלוסייה" onClick={() => {
+                                    <button className={`toolbar-dropdown-item ${ceSubPick ? 'sub-active' : ''}`} data-tip="בחירת תת-שכונה בלחיצה על המפה — סיכום מסחר ותעסוקה + אוכלוסייה" onClick={() => {
                                         setActiveDropdown(null);
-                                        const gd = geoDataRef.current || {};
-                                        const subs = (gd.sub_neighborhoods && gd.sub_neighborhoods.features) || [];
-                                        const names = [...new Set(subs.map(f => ((f.properties || {}).schn_nama || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
-                                        const old = document.getElementById('ce-sub-picker'); if (old) old.remove();
-                                        const pk = document.createElement('div'); pk.id = 'ce-sub-picker';
-                                        pk.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.98);border:1px solid #8e44ad;border-radius:12px;padding:16px;z-index:10001;min-width:min(260px,88vw);max-height:70vh;overflow-y:auto;color:#e0e0e0;font-family:Assistant,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
-                                        pk.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:700;color:#a569c9">בחר תת-שכונה</span><button id="ce-sub-x" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer">&times;</button></div>' +
-                                            names.map(n => '<button class="ce-sub-opt" data-sub="' + n.replace(/"/g, '&quot;') + '" style="display:block;width:100%;text-align:right;background:rgba(142,68,173,0.12);border:1px solid rgba(142,68,173,0.35);color:#eceff4;border-radius:6px;padding:7px 10px;margin:3px 0;cursor:pointer;font-family:inherit;font-size:12px">' + n + '</button>').join('');
-                                        document.body.appendChild(pk);
-                                        pk.querySelector('#ce-sub-x').onclick = () => pk.remove();
-                                        pk.querySelectorAll('.ce-sub-opt').forEach(b => b.onclick = () => { const nm = b.getAttribute('data-sub'); pk.remove(); startCeSubReport(nm); });
+                                        if (ceSubPickRef.current) {
+                                            ceSubPickRef.current = false; setCeSubPick(false);
+                                            mapInstanceRef.current?.getContainer().classList.remove('measuring');
+                                            return;
+                                        }
+                                        cancelAllModes('area');
+                                        setAreaFinished(null);
+                                        const prev = document.getElementById('ce-panel'); if (prev) prev.remove();
+                                        ceSubPickRef.current = true; setCeSubPick(true);
+                                        mapInstanceRef.current?.getContainer().classList.add('measuring');
                                     }}>
                                         <svg className="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"/><path d="M5 21V7l5-4 5 4v14"/><path d="M19 21V11l-4-3"/></svg>
-                                        <span className="sub-label">בחירת תת שכונה</span>
+                                        <span className="sub-label">{ceSubPick ? 'לחצו על המפה…' : 'בחירת תת שכונה'}</span>
                                     </button>
                                 </div>
                             )}
