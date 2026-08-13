@@ -20,11 +20,18 @@ permissions:
   id-token: write
 
 # Serialize deployments. When pushes bunch up (update_data runs every 10 min),
-# a superseded *pending* run is cancelled — not failed — so no false-alarm
-# emails. cancel-in-progress:false lets an in-flight deploy finish safely.
+# a superseded run is cancelled — not failed — so no false-alarm emails.
+#
+# cancel-in-progress:true is deliberate: a deploy takes ~1-2 min while pushes
+# are minutes-to-tens-of-minutes apart, so there's no risk of starving a real
+# deploy — but it IS what makes the queue self-healing. With :false a single
+# run stuck in "queued" (a GitHub-side glitch, seen 2026-08-12) wedged the
+# whole group for ~24h: every later push queued behind it and was cancelled by
+# the next, so nothing deployed and the live site froze. With :true the next
+# push clears any stuck predecessor automatically.
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
