@@ -251,6 +251,10 @@ def main():
                 "tenure": ten,
                 "state": tenure_state(r.get("סטטוס")),
                 "owner": r.get("בעלים"),
+                # אחראי תפעול נכס — the municipal dept operating the asset
+                # (אגף חינוך/חברה/חירום…). Asset-level, from the OPEN property
+                # book — the authoritative "operated-by-the-city" signal.
+                "operator_dept": (r.get("אחראי תפעול נכס") or "").strip() or None,
                 "status": r.get("סטטוס"),
                 "status_date": _date(r.get("תאריך סטטוס")),
                 "opened": _date(r.get("תאריך פתיחת נכס")),
@@ -350,7 +354,7 @@ def main():
             "asset_id", "name", "use", "domain", "tenure", "state", "owner",
             "status", "status_date", "opened", "built_sqm", "neighborhood",
             "parcels", "allocations", "zoning", "residential",
-            "nonconforming", "pikuach")}
+            "nonconforming", "pikuach", "operator_dept")}
         props["domain_label"] = DOMAIN_LABEL.get(a["domain"], "אחר")
         props["address"] = addr or None
         features.append({

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-09-rental-owner-fix';
+        const APP_VERSION = '2026-08-13-rental-operator-dept';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3239,6 +3239,7 @@
             const [rentalDomFilter, setRentalDomFilter] = useState('all');
             const [rentalTenureFilter, setRentalTenureFilter] = useState('all');
             const [rentalNonconfOnly, setRentalNonconfOnly] = useState(false);
+            const [rentalOpFilter, setRentalOpFilter] = useState('all');
             // Fuel-barriers report: public-building lots within TAMA-18 distance of a fuel station.
             const [showFuelBarriers, setShowFuelBarriers] = useState(false);
             const [reportsMenuMP, setReportsMenuMP] = useState('מושבות');
@@ -13868,8 +13869,8 @@
                         apply: p => { if (p.from) setFlrFrom(p.from); if (p.to) setFlrTo(p.to); if (p.doms) setFlrDoms(p.doms.split('|').filter(Boolean)); } },
                     { key: 'useGaps', isOpen: () => showUseGaps, open: () => setShowUseGaps(true) },
                     { key: 'rentalAssets', isOpen: () => showRentalAssets, open: () => setShowRentalAssets(true),
-                        ser: () => ({ dom: rentalDomFilter, ten: rentalTenureFilter, nc: rentalNonconfOnly ? 1 : 0 }),
-                        apply: p => { if (p.dom) setRentalDomFilter(p.dom); if (p.ten) setRentalTenureFilter(p.ten); if (p.nc) setRentalNonconfOnly(true); } },
+                        ser: () => ({ dom: rentalDomFilter, ten: rentalTenureFilter, op: rentalOpFilter, nc: rentalNonconfOnly ? 1 : 0 }),
+                        apply: p => { if (p.dom) setRentalDomFilter(p.dom); if (p.ten) setRentalTenureFilter(p.ten); if (p.op) setRentalOpFilter(p.op); if (p.nc) setRentalNonconfOnly(true); } },
                     { key: 'fuelBarriers', isOpen: () => showFuelBarriers, open: () => setShowFuelBarriers(true) },
                     { key: 'publicNeeds', isOpen: () => showPublicNeeds, open: () => openPublicNeedsModal(),
                         ser: () => ({ min: publicNeedsMinahak }),
@@ -26009,9 +26010,13 @@
                         // domain order by frequency (stable, most-common first)
                         const domCount = {}; all.forEach(a => { domCount[a.domain] = (domCount[a.domain] || 0) + 1; });
                         const domOrder = Object.keys(DLBL).filter(k => domCount[k]).sort((a, b) => domCount[b] - domCount[a]);
+                        // אחראי תפעול נכס (מהמקור הפתוח) — האגף העירוני המפעיל את הנכס.
+                        const opDeptCount = {}; all.forEach(a => { if (a.operator_dept) opDeptCount[a.operator_dept] = (opDeptCount[a.operator_dept] || 0) + 1; });
+                        const opDeptOrder = Object.keys(opDeptCount).sort((a, b) => opDeptCount[b] - opDeptCount[a]);
                         const rows = all.filter(a =>
                             (rentalDomFilter === 'all' || a.domain === rentalDomFilter) &&
                             (rentalTenureFilter === 'all' || a.tenure === rentalTenureFilter) &&
+                            (rentalOpFilter === 'all' || a.operator_dept === rentalOpFilter) &&
                             (!rentalNonconfOnly || a.nonconforming));
                         rows.sort((a, b) => (Number(b.nonconforming || 0) - Number(a.nonconforming || 0)) || (domOrder.indexOf(a.domain) - domOrder.indexOf(b.domain)) || String(a.name || '').localeCompare(String(b.name || ''), 'he'));
                         const nRent = all.filter(a => a.tenure === 'שכירות').length;
@@ -26041,17 +26046,17 @@
                         const td = { border: '1px solid #234', padding: '5px 7px', textAlign: 'right', verticalAlign: 'top' };
                         const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
                         const csv = () => {
-                            const head = ['תחום', 'שם הנכס', 'החזקה', 'מצב', 'שימוש', 'ייעוד קרקע', 'שימוש חורג', 'בעלים (משכיר)', 'שטח בנוי (מ"ר)', 'שכונה', 'כתובת', 'גוש/חלקה', 'פתיחת נכס', 'מפעיל (עמותה)', 'פיקוח', 'התחדשות עירונית', 'מספר נכס'];
+                            const head = ['תחום', 'שם הנכס', 'החזקה', 'מצב', 'שימוש', 'ייעוד קרקע', 'שימוש חורג', 'בעלים (משכיר)', 'שטח בנוי (מ"ר)', 'שכונה', 'כתובת', 'גוש/חלקה', 'פתיחת נכס', 'אחראי תפעול', 'מפעיל (עמותה)', 'פיקוח', 'התחדשות עירונית', 'מספר נכס'];
                             const lines = [head.map(csvQ).join(',')];
-                            rows.forEach(a => lines.push([DLBL[a.domain] || a.domain, a.name, a.tenure, a.state, a.use, a.zoning || '', a.nonconforming ? 'כן' : '', a.owner, a.built_sqm || '', a.neighborhood, a.address || '', (a.parcels || []).join(' '), a.opened || '', orgsOf(a).join('; '), (a.pikuach || []).join('/'), renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '), a.asset_id].map(csvQ).join(',')));
+                            rows.forEach(a => lines.push([DLBL[a.domain] || a.domain, a.name, a.tenure, a.state, a.use, a.zoning || '', a.nonconforming ? 'כן' : '', a.owner, a.built_sqm || '', a.neighborhood, a.address || '', (a.parcels || []).join(' '), a.opened || '', a.operator_dept || '', orgsOf(a).join('; '), (a.pikuach || []).join('/'), renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '), a.asset_id].map(csvQ).join(',')));
                             const el = document.createElement('a'); el.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n')); el.download = 'rental_public_assets.csv'; document.body.appendChild(el); el.click(); el.remove();
                         };
                         const prnt = () => {
                             const e2 = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
                             let h = '<html dir="rtl"><head><meta charset="utf-8"><title>נכסי ציבור בשכירות</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:20px}table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:right}th{background:#00695c;color:#fff}</style></head><body><h1>🔑 נכסי ציבור בשכירות — ספר הנכסים העירוני</h1>';
                             h += `<p>${rows.length} נכסים · שכירות ${nRent} · חכירה ${nLease} · שטח בנוי ${totalSqm.toLocaleString()} מ"ר · עדכון ${e2(meta.source_refresh || '')}</p>`;
-                            h += '<table><thead><tr><th>תחום</th><th>שם הנכס</th><th>החזקה</th><th>שימוש</th><th>ייעוד קרקע</th><th>שימוש חורג</th><th>בעלים (משכיר)</th><th>שטח (מ"ר)</th><th>שכונה</th><th>כתובת</th><th>גוש/חלקה</th><th>מפעיל / פיקוח</th><th>התחדשות עירונית</th></tr></thead><tbody>';
-                            rows.forEach(a => { const op = [orgsOf(a).join(', '), (a.pikuach || []).join('/')].filter(Boolean).join(' · '); const ren = renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '); h += '<tr' + (a.nonconforming ? ' style="background:#fde7e7"' : '') + '><td>' + e2(DLBL[a.domain] || a.domain) + '</td><td>' + e2(a.name) + '</td><td>' + e2(a.tenure + ' · ' + a.state) + '</td><td>' + e2(a.use) + '</td><td>' + e2(a.zoning || '') + '</td><td>' + (a.nonconforming ? '⚠ כן' : '') + '</td><td>' + e2(a.owner) + '</td><td>' + e2(a.built_sqm || '') + '</td><td>' + e2(a.neighborhood) + '</td><td>' + e2(a.address || '') + '</td><td>' + e2((a.parcels || []).join(' ')) + '</td><td>' + e2(op) + '</td><td>' + e2(ren) + '</td></tr>'; });
+                            h += '<table><thead><tr><th>תחום</th><th>שם הנכס</th><th>החזקה</th><th>שימוש</th><th>ייעוד קרקע</th><th>שימוש חורג</th><th>בעלים (משכיר)</th><th>שטח (מ"ר)</th><th>שכונה</th><th>כתובת</th><th>גוש/חלקה</th><th>אחראי תפעול</th><th>מפעיל / פיקוח</th><th>התחדשות עירונית</th></tr></thead><tbody>';
+                            rows.forEach(a => { const op = [orgsOf(a).join(', '), (a.pikuach || []).join('/')].filter(Boolean).join(' · '); const ren = renewalOf(a).map(rp => rp.taba + ' | ' + rp.status).join('; '); h += '<tr' + (a.nonconforming ? ' style="background:#fde7e7"' : '') + '><td>' + e2(DLBL[a.domain] || a.domain) + '</td><td>' + e2(a.name) + '</td><td>' + e2(a.tenure + ' · ' + a.state) + '</td><td>' + e2(a.use) + '</td><td>' + e2(a.zoning || '') + '</td><td>' + (a.nonconforming ? '⚠ כן' : '') + '</td><td>' + e2(a.owner) + '</td><td>' + e2(a.built_sqm || '') + '</td><td>' + e2(a.neighborhood) + '</td><td>' + e2(a.address || '') + '</td><td>' + e2((a.parcels || []).join(' ')) + '</td><td>' + e2(a.operator_dept || '') + '</td><td>' + e2(op) + '</td><td>' + e2(ren) + '</td></tr>'; });
                             h += '</tbody></table></body></html>';
                             const w = window.open('', '_blank'); if (w) { w.document.write(h); w.document.close(); w.print(); }
                         };
@@ -26093,6 +26098,12 @@
                                                     <option value="חכירה">חכירה ({nLease})</option>
                                                 </select>
                                             </label>
+                                            <label style={{ fontSize: 12, color: '#9fb0d0' }} title="האגף העירוני המפעיל את הנכס (ספר הנכסים, מקור פתוח)">אחראי תפעול:{' '}
+                                                <select value={rentalOpFilter} onChange={e => setRentalOpFilter(e.target.value)} style={{ background: '#16162a', color: '#e0e0e0', border: '1px solid #3a3a50', borderRadius: 5, padding: '3px 6px', fontSize: 12 }}>
+                                                    <option value="all">כל האגפים</option>
+                                                    {opDeptOrder.map(k => <option key={k} value={k}>{k} ({opDeptCount[k]})</option>)}
+                                                </select>
+                                            </label>
                                             <label style={{ fontSize: 12, color: nNonconf ? '#e57373' : '#9fb0d0', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
                                                 <input type="checkbox" checked={rentalNonconfOnly} onChange={e => setRentalNonconfOnly(e.target.checked)} />
                                                 ⚠ רק שימוש חורג ({nNonconf})
@@ -26116,9 +26127,10 @@
                                                         <td style={td}>{a.neighborhood}</td>
                                                         <td style={{ ...td, fontSize: 11 }}>{a.address || '—'}</td>
                                                         <td style={{ ...td, fontSize: 11 }}>
-                                                            {orgsOf(a).length ? <span style={{ color: '#ce93d8' }}>{orgsOf(a).join(', ')}</span> : null}
+                                                            {a.operator_dept ? <div style={{ color: '#e8d9c8', fontWeight: 600 }} title="אחראי תפעול נכס (ספר הנכסים)">{a.operator_dept}</div> : null}
+                                                            {orgsOf(a).length ? <div style={{ color: '#ce93d8' }}>{orgsOf(a).join(', ')}</div> : null}
                                                             {(a.pikuach || []).map((pk, j) => { const off = /ממלכתי/.test(pk); return <span key={j} style={{ display: 'inline-block', marginRight: 4, padding: '0 6px', borderRadius: 8, fontSize: 10, background: off ? '#1b3a2a' : '#3a2a1b', color: off ? '#86b89a' : '#e0b080' }} title={off ? 'פיקוח ממלכתי — מוסד רשמי/עירוני' : 'פיקוח מוכר/עצמאי — פרטי'}>{pk}</span>; })}
-                                                            {!orgsOf(a).length && !(a.pikuach || []).length ? <span style={{ color: '#6a7a95' }}>—</span> : null}
+                                                            {!a.operator_dept && !orgsOf(a).length && !(a.pikuach || []).length ? <span style={{ color: '#6a7a95' }}>—</span> : null}
                                                         </td>
                                                         <td style={{ ...td, fontSize: 11 }}>
                                                             {renewalOf(a).length ? renewalOf(a).map((rp, j) => (
