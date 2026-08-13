@@ -8569,7 +8569,10 @@
                         '<div style="text-align:center"><div style="font-size:26px;font-weight:bold">' + plansInside.length + '</div><div style="font-size:11px;color:#aaa">תכניות</div></div>' +
                         '</div>' +
                         '<div style="padding:10px;background:rgba(93,173,226,0.08);border:1px solid rgba(93,173,226,0.3);border-radius:8px;margin-bottom:12px">' +
-                            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:#9ab">👥 אוכלוסייה · משק בית לעתידית: <input id="ce-hh" type="number" step="0.1" min="1" value="' + hh + '" style="width:56px;background:#141426;border:1px solid #5dade2;color:#fff;border-radius:4px;padding:2px 5px;font-family:inherit;text-align:center"> נפש <span style="color:#667;font-size:10px">(ברירת מחדל: ' + hhSource + ')</span></div>' +
+                            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:#9ab">👥 אוכלוסייה · משק בית לעתידית:' +
+                                '<input id="ce-hh" type="range" min="2" max="8" step="0.1" value="' + hh + '" style="flex:1;min-width:110px;accent-color:#5dade2">' +
+                                '<span id="ce-hh-val" style="font-size:14px;color:#e0e0ff;font-weight:bold;min-width:30px;text-align:center">' + Number(hh).toFixed(1) + '</span> נפש' +
+                                '<span style="color:#667;font-size:10px">(ברירת מחדל: ' + hhSource + ')</span></div>' +
                             '<div style="display:flex;gap:20px;justify-content:center">' +
                                 '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#5dade2"><span id="ce-pop-exist">' + fmt(popExist) + '</span></div><div style="font-size:11px;color:#aaa">קיימת (מפקד 2022)</div></div>' +
                                 '<div style="text-align:center"><div style="font-size:23px;font-weight:bold;color:#4CAF50"><span id="ce-pop-proj">' + fmt(popProj) + '</span></div><div style="font-size:11px;color:#aaa">צפויה (קיים + תוספת)</div></div>' +
@@ -8586,8 +8589,9 @@
                 const hhInput = document.getElementById('ce-hh');
                 if (hhInput) hhInput.oninput = () => {
                     const v = parseFloat(hhInput.value) || 0;
+                    const vs = document.getElementById('ce-hh-val'); if (vs) vs.textContent = v.toFixed(1);
                     const pp = document.getElementById('ce-pop-proj');
-                    // existing stays fixed (census); only the future addition uses the input HH
+                    // existing stays fixed (census); only the future addition uses the slider HH
                     if (pp) pp.textContent = (censusPop + Math.round(unitsAdd * v)).toLocaleString();
                 };
                 const exp = document.getElementById('ce-export');
