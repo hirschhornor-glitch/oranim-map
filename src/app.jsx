@@ -8843,15 +8843,21 @@
                 // minhak's statistical areas — same source as the "אוכלוסייה קיימת" dashboard.
                 // PN_MINAHAK_PRESETS (hand-tuned, pre-census) is only an emergency fallback if
                 // stat_areas hasn't loaded.
-                const minhakBlend = isMinhakMode ? computeMinhakDemography(minahakName) : null;
+                // Census blend for the scope's minhak — used to seed the slider defaults in BOTH
+                // minhak and radius mode, so the controls agree with the units-weighted household
+                // size the calc actually reports (the "📊 … למ"ס 2022" banner). Radius mode still
+                // overrides per stat-area inside each bucket; this only sets the base/fallback +
+                // the initial slider values, replacing the stale pre-census preset (e.g. גוננים 3.5).
+                const minhakBlend = minahakName ? computeMinhakDemography(minahakName) : null;
                 const minhakDemoSource = isMinhakMode ? (minhakBlend ? 'census' : 'preset') : null;
+                const censusSeed = minhakBlend
+                    ? { haredi: minhakBlend.haredi, religious: minhakBlend.religious,
+                        ageYearPctGeneral: minhakBlend.ageYearPctGeneral, ageYearPctHaredi: minhakBlend.ageYearPctHaredi,
+                        ...(minhakBlend.householdSize != null ? { householdSize: minhakBlend.householdSize } : {}) }
+                    : null;
                 const minhakSeed = isMinhakMode
-                    ? (minhakBlend
-                        ? { haredi: minhakBlend.haredi, religious: minhakBlend.religious,
-                            ageYearPctGeneral: minhakBlend.ageYearPctGeneral, ageYearPctHaredi: minhakBlend.ageYearPctHaredi,
-                            ...(minhakBlend.householdSize != null ? { householdSize: minhakBlend.householdSize } : {}) }
-                        : (PN_MINAHAK_PRESETS[minahakName] || null))
-                    : (minahakName ? (PN_MINAHAK_PRESETS[minahakName] || null) : null);
+                    ? (censusSeed || PN_MINAHAK_PRESETS[minahakName] || null)
+                    : (minahakName ? (censusSeed || PN_MINAHAK_PRESETS[minahakName] || null) : null);
                 const assumptionsScopeKey = isMinhakMode ? ('minhak:' + minahakName) : (minahakName ? 'radius:' + minahakName : '__custom__');
                 if (!window.__programaUserAssumptions || window.__programaAssumptionsScope !== assumptionsScopeKey) {
                     const prevYear = (window.__programaUserAssumptions && window.__programaUserAssumptions.targetYear) || 'existing';
@@ -9936,7 +9942,8 @@
                 if (ah) ah.addEventListener('change', e => { assumpt.ageYearPctHaredi = parseFloat(e.target.value) || 3.0; reRender(); });
                 const rst = document.getElementById('pa-reset');
                 if (rst) rst.addEventListener('click', () => {
-                    // Minhak programme resets to the census blend; area/radius resets to the global default.
+                    // Resets to the scope's census blend (minhakSeed) — minhak and radius alike — or
+                    // to the global default when no minhak/census applies (arbitrary polygon scope).
                     window.__programaUserAssumptions = { ...PN_DEFAULT_ASSUMPTIONS, ...(minhakSeed || {}), targetYear: 'existing' };
                     reRender();
                 });
