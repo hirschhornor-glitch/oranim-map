@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-09-muni-cosubmitter-ocr52';
+        const APP_VERSION = '2026-08-09-rental-owner-fix';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -26067,7 +26067,7 @@
                                         <div style={{ fontSize: 12, color: '#9fb0d0', marginBottom: 10 }}>
                                             מבני ומוסדות ציבור שהעירייה <b>אינה בעלת הקרקע/המבנה</b> אלא מחזיקה בהם בחוזה <b>שכירות</b> (העירייה כשוכרת) או <b>חכירה</b> ארוכת-טווח.
                                             <b style={{ color: '#e57373' }}> ⚠ שימוש חורג</b> = פעילות ציבורית מוסדית (חינוך/רווחה/קהילה/מנהל/בריאות) המתקיימת על קרקע בייעוד <b>מגורים</b> — למשל גן "רשמי" בדירת מגורים שכורה. הייעוד מוצלב משכבת ייעודי הקרקע.
-                                            מקור: ספר הנכסים העירוני, מסונן לתחום אורנים. תשתית-קרקע (כבישים/שבילים) אינה נכללת{meta.infra_excluded ? ` (${meta.infra_excluded} רשומות תשתית לא נכללו)` : ''}.
+                                            מקור: ספר הנכסים העירוני, מסונן לתחום אורנים. בהתאם להגדרת המקור, נכללים רק נכסים <b>שאינם בבעלות העירייה</b> (מקור זכות = שכירות/חכירה/רשות שימוש){meta.city_owned_excluded ? ` — ${meta.city_owned_excluded} נכסים בבעלות עירייה לא נכללו` : ''}. תשתית-קרקע (כבישים/שבילים) אינה נכללת{meta.infra_excluded ? ` (${meta.infra_excluded})` : ''}.
                                         </div>
                                         {!RPA && <div style={{ padding: 20, textAlign: 'center', color: '#9fb0d0' }}>טוען נתונים…</div>}
                                         {RPA && (<>

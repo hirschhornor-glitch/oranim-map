@@ -57,6 +57,17 @@ def tenure_state(status):
     return "פעיל" if SIGNED_RE.search(status or "") else "בתהליך"
 
 
+# The municipal source defines a "held" asset by מקור זכות (רשות שימוש / שכירות
+# חופשית / שכירות מוגנת) — i.e. the city has a USE right, NOT ownership. That
+# field is absent from the public Power BI model, so we approximate it with the
+# owner: an asset the city OWNS (בעלים = עירית ירושלים) is not held-via-rental
+# and is excluded — matching the source. RMI / רשות הפיתוח / מדינה / private
+# owners stay (the city rents/holds from them). See PROMPT_municipal_rentals_logic.
+def is_city_owned(owner):
+    o = owner or ""
+    return "עירי" in o and "ירושלים" in o
+
+
 # --- use-domain taxonomy (order matters: first match wins) ---------------
 # label shown in the UI, plus the machine key the app styles/filters by.
 DOMAINS = [
@@ -255,9 +266,13 @@ def main():
         if gh not in rec["parcels"]:
             rec["parcels"].append(gh)
 
-    # Split infrastructure land-tenure (roads/paths/utility) from public assets.
+    # Split infrastructure land-tenure (roads/paths/utility) from public assets,
+    # and drop city-OWNED assets (not held-via-rental) to match the source's
+    # מקור-זכות filter (see is_city_owned).
     infra = [a for a in assets.values() if a["domain"] == "infra"]
-    public = [a for a in assets.values() if a["domain"] != "infra"]
+    non_infra = [a for a in assets.values() if a["domain"] != "infra"]
+    city_owned = [a for a in non_infra if is_city_owned(a["owner"])]
+    public = [a for a in non_infra if not is_city_owned(a["owner"])]
 
     # ── zoning enrichment: place each asset on our land-use layer to read its
     # statutory designation, and flag שימוש חורג (institutional use on מגורים).
@@ -358,6 +373,7 @@ def main():
             "source_refresh": prop.get("meta", {}).get("fetched_at"),
             "public_assets": len(features),
             "infra_excluded": len(infra),
+            "city_owned_excluded": len(city_owned),
             "nonconforming": n_nonconf,
             "tenure": dict(tenure_counts),
             "by_domain": {DOMAIN_LABEL.get(k, k): v
