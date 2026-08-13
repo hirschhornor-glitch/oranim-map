@@ -21806,6 +21806,19 @@
                             const partialNote = valency.status === 'partial' ? ' <span style="color:#999;font-size:10px">(חלקי)</span>' : '';
                             html += `<div class="popup-sub-row" style="margin-top:4px">ערכיות גבוהה+: <span style="color:${pctColor};font-weight:700">${highRemoved} מתוך ${highTotal} (${highPct}%)</span> נעקרים/מועתקים${partialNote}</div>`;
                         }
+                        // Small toggle → full valency × recommendation cross-tab (kept
+                        // collapsed to keep the popup compact; same table the tama38 popup
+                        // and the neighborhood report show).
+                        const pivotHtml = renderValencyPivotHTML(valency, { dark: true });
+                        if (pivotHtml) {
+                            const partialTag = valency.status === 'partial' ? ' <span style="font-size:9px;color:#8a93a6;font-weight:normal">(חלקי)</span>' : '';
+                            html += '<div class="valency-toggle-wrap" style="margin-top:5px">';
+                            html += '<button class="popup-btn-valency" data-action="toggle-valency" style="background:none;border:1px solid #3a3a5a;color:#9fb3d1;font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;white-space:nowrap">&#128202; טבלת ערכיות מלאה</button>';
+                            html += '<div class="valency-fulltable" style="display:none;margin-top:6px">';
+                            html += '<div class="popup-section-title" style="margin-top:0">ערכיות &times; המלצה' + partialTag + '</div>';
+                            html += pivotHtml;
+                            html += '</div></div>';
+                        }
                     }
                 }
 
@@ -22801,6 +22814,19 @@
                         if (navBtn.dataset.nav === 'next') currentIdx = (currentIdx + 1) % allFeatures.length;
                         else currentIdx = (currentIdx - 1 + allFeatures.length) % allFeatures.length;
                         popup.setContent(buildForIndex(currentIdx));
+                        return;
+                    }
+                    // ── Toggle the full valency × recommendation table (inline, no re-render) ──
+                    const valToggle = ev.target.closest('[data-action="toggle-valency"]');
+                    if (valToggle) {
+                        ev.stopPropagation();
+                        const wrap = valToggle.parentElement.querySelector('.valency-fulltable');
+                        if (wrap) {
+                            const hidden = wrap.style.display === 'none';
+                            wrap.style.display = hidden ? 'block' : 'none';
+                            valToggle.innerHTML = hidden ? '▲ הסתר טבלה' : '\u{1F4CA} טבלת ערכיות מלאה';
+                            popup.update();
+                        }
                         return;
                     }
                     const permitBtn = ev.target.closest('.popup-btn-permit') || ev.target.closest('.popup-icon-btn');
