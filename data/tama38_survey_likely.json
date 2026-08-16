@@ -1,0 +1,1421 @@
+{
+  "2024/0190.00": {
+    "address": "הרב הרצוג 15",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "שפ''ע - הגשת תכנית נטיעות לשלמה דניאל",
+      "שפ''ע - הגשת ערבות בנקאית נוספת בסך 21,547 ₪ עבור פיצוי נופי.",
+      "שפ''ע - הגשת ערבות בנקאית בסך 4,091 ₪ עבור שימור העצים."
+    ]
+  },
+  "2019/0595.00": {
+    "address": "לופו שמואל 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2019/0594.00": {
+    "address": "רבדים 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2019/0594.01": {
+    "address": "רבדים 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 17
+  },
+  "2019/0590.00": {
+    "address": "עמינדב 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2019/0571.00": {
+    "address": "עוזיה 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2019/0571.01": {
+    "address": "עוזיה 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 29
+  },
+  "2019/0551.00": {
+    "address": "טשרניחובסקי 42",
+    "flag": "no_tree_conditions",
+    "conditions_total": 72
+  },
+  "2019/0537.00": {
+    "address": "שמעוני 43",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2019/0536.00": {
+    "address": "אוסישקין 31",
+    "flag": "no_tree_conditions",
+    "conditions_total": 49
+  },
+  "2019/0501.00": {
+    "address": "נתאי הארבלי 48",
+    "flag": "no_tree_conditions",
+    "conditions_total": 55
+  },
+  "2019/0466.01": {
+    "address": "רבדים 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 34
+  },
+  "2019/0374.00": {
+    "address": "מחלקי המים 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 80
+  },
+  "2019/0283.00": {
+    "address": "קורא הדורות 38",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2019/0229.00": {
+    "address": "דרך חברון 39",
+    "flag": "no_tree_conditions",
+    "conditions_total": 50
+  },
+  "2019/0228.00": {
+    "address": "הפלמח 27",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "יש להשלים סימון עצים לשימור ונטיעות עצים חדשים בשטח שכונת עיר גנים"
+    ]
+  },
+  "2019/0088.01": {
+    "address": "הפלמח 66",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2019/0055.00": {
+    "address": "עזה 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2019/0055.01": {
+    "address": "עזה 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 53
+  },
+  "2019/0042.00": {
+    "address": "י.ל. דיסקין 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2019/0011.01": {
+    "address": "עזה 34",
+    "flag": "no_tree_conditions",
+    "conditions_total": 27
+  },
+  "2018/0827.01": {
+    "address": "הפלמ\"ח 40",
+    "flag": "no_tree_conditions",
+    "conditions_total": 50
+  },
+  "2018/0800.01": {
+    "address": "אבן עזרא 19",
+    "flag": "no_tree_conditions",
+    "conditions_total": 41
+  },
+  "2018/0757.01": {
+    "address": "הרב חיים ברלין 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2018/0752.00": {
+    "address": "בן טבאי 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2018/0698.01": {
+    "address": "שערי ירושלים 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 42
+  },
+  "2018/0684.00": {
+    "address": "יאיר 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2018/0635.00": {
+    "address": "יהושע בן נון 28א",
+    "flag": "no_tree_conditions",
+    "conditions_total": 52
+  },
+  "2018/0619.00": {
+    "address": "בני בתירא 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2018/0611.00": {
+    "address": "הרב חיים ברלין 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2018/0606.00": {
+    "address": "דרך בית לחם 67",
+    "flag": "no_tree_conditions",
+    "conditions_total": 51
+  },
+  "2018/0606.01": {
+    "address": "דרך בית לחם 67",
+    "flag": "no_tree_conditions",
+    "conditions_total": 16
+  },
+  "2018/0584.00": {
+    "address": "דוד מרכוס 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 76
+  },
+  "2018/0565.00": {
+    "address": "הפלמח 36",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2018/0544.00": {
+    "address": "החי\"ם 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2018/0543.00": {
+    "address": "דרך חברון 160",
+    "flag": "no_tree_conditions",
+    "conditions_total": 70
+  },
+  "2018/0483.00": {
+    "address": "רמבן 46",
+    "flag": "no_tree_conditions",
+    "conditions_total": 40
+  },
+  "2018/0357.00": {
+    "address": "עזה 44",
+    "flag": "no_tree_conditions",
+    "conditions_total": 71
+  },
+  "2018/0295.00": {
+    "address": "דרך חברון 150",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2018/0247.03": {
+    "address": "עין גדי 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2018/0197.00": {
+    "address": "אברבנאל 27",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "יש לקבל חו\"ד אגף שפ\"ע לדו\"ח העצים שהוגש ולהציע במסגרת התכנית פיצוי על העצים שהתכנית מבקשת לעקור."
+    ]
+  },
+  "2018/0195.00": {
+    "address": "אמציה 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2018/0195.01": {
+    "address": "אמציה 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 33
+  },
+  "2018/0185.00": {
+    "address": "דרך חברון 53",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2018/0176.00": {
+    "address": "הרב הרצוג 49",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2018/0176.01": {
+    "address": "הרב הרצוג 49",
+    "flag": "no_tree_conditions",
+    "conditions_total": 29
+  },
+  "2018/0170.00": {
+    "address": "הרב חיים ברלין 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2018/0136.00": {
+    "address": "דרך בית לחם 69",
+    "flag": "no_tree_conditions",
+    "conditions_total": 71
+  },
+  "2018/0100.00": {
+    "address": "אשר 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2018/0089.00": {
+    "address": "יששכר 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2018/0046.00": {
+    "address": "אלעזר המודעי 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 67
+  },
+  "2018/0045.00": {
+    "address": "חרלפ 44",
+    "flag": "no_tree_conditions",
+    "conditions_total": 69
+  },
+  "2017/1035.00": {
+    "address": "רד\"ק 19",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "עורך הבקשה יציע נטיעת עצים בוגרים כמניין העצים שיוצעו לעקירה בהתאם לסקר עצים שיגיש למח' גננות"
+    ]
+  },
+  "2017/1010.00": {
+    "address": "חיל נשים 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 72
+  },
+  "2017/0928.00": {
+    "address": "ישראל אהרוני 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2017/0924.00": {
+    "address": "הפלמ\"ח 40",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2017/0857.00": {
+    "address": "עמק רפאים 6",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "תנאי לטופס 4 יהיה נטיעת שלושה עצים בוגרים בתחום החלקה בשטח הפונה לחזית הראשית של המגרש בתיאום עם שפ\""
+    ]
+  },
+  "2017/0813.00": {
+    "address": "שמשון פולונסקי 18",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2017/0800.00": {
+    "address": "מ.נ. כהנוב 28",
+    "flag": "no_tree_conditions",
+    "conditions_total": 72
+  },
+  "2017/0788.00": {
+    "address": "שמעוני 45",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2017/0768.00": {
+    "address": "הרצוג 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2017/0699.00": {
+    "address": "הגנדע 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2017/0684.00": {
+    "address": "החי\"ש 10",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "השלמת עותק מודפס של סקר עצים לידי מח' התכנון",
+      "המשך תיאום סוגיית העצים לשימור עפ\"י הסקר ועומק הנטיעות הנדרש מעל גג החניון עם מח' תכנון ואגף שפ\"ע"
+    ]
+  },
+  "2017/0683.00": {
+    "address": "עמק רפאים 29",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2017/0645.00": {
+    "address": "בית הערבה 21",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2017/0645.01": {
+    "address": "בית הערבה 21",
+    "flag": "no_tree_conditions",
+    "conditions_total": 18
+  },
+  "2017/0606.00": {
+    "address": "אלוף שמחוני 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2017/0606.01": {
+    "address": "אלוף שמחוני 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2017/0592.00": {
+    "address": "שדרות בין מימון (הרמב\"ם) 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2017/0589.00": {
+    "address": "שמשון 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2017/0581.00": {
+    "address": "הפלמ\"ח 61",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2017/0569.00": {
+    "address": "השיירות 26",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2017/0530.00": {
+    "address": "מכור 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 49
+  },
+  "2017/0480.00": {
+    "address": "רשב\"ג 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2017/0478.00": {
+    "address": "אבן שפרוט 20",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "19. נושא העצים יבחן ע\"י מחלקת שפ\"ע, יש להציע נטיעות בתחום המגרש בהתאם לאופי השכונה ככל הניתן."
+    ]
+  },
+  "2017/0341.00": {
+    "address": "בורלא יהודה 21",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2017/0325.00": {
+    "address": "יהושע בן נון 19",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2017/0322.00": {
+    "address": "ושיץ 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2017/0296.00": {
+    "address": "שמעוני דוד 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2017/0291.00": {
+    "address": "עין גדי 21",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2017/0291.01": {
+    "address": "עין גדי 21",
+    "flag": "no_tree_conditions",
+    "conditions_total": 32
+  },
+  "2017/0247.00": {
+    "address": "ל.י. פינסקר 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2017/0184.00": {
+    "address": "רמבן 14",
+    "flag": "no_tree_conditions",
+    "conditions_total": 48
+  },
+  "2017/0160.00": {
+    "address": "אוסישקין 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 71
+  },
+  "2017/0158.00": {
+    "address": "הרב חן 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2017/0118.00": {
+    "address": "רחל אמנו 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2017/0073.00": {
+    "address": "כ\"ט בנובמבר 33",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2017/0062.00": {
+    "address": "וינדהם דידס 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2017/0002.00": {
+    "address": "שמעוני דוד 33",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2017/0002.01": {
+    "address": "שמעוני דוד 33",
+    "flag": "no_tree_conditions",
+    "conditions_total": 37
+  },
+  "2017/0002.02": {
+    "address": "שמעוני דוד 33",
+    "flag": "no_tree_conditions",
+    "conditions_total": 29
+  },
+  "2016/1295.00": {
+    "address": "דרך בית לחם 127",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "השלמת סקר עצים ותכנון חניה בהתאם"
+    ]
+  },
+  "2016/1280.00": {
+    "address": "הפלמח 48",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2016/1241.00": {
+    "address": "האר\"י 25",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2016/1241.01": {
+    "address": "האר\"י 25",
+    "flag": "no_tree_conditions",
+    "conditions_total": 14
+  },
+  "2016/1189.00": {
+    "address": "הרב  ברודי 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2016/1149.00": {
+    "address": "חרלפ 18, 20",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "סימון עצים לשימור בתחום החלקה בתיאום מח' שפ\"ע (עפ\"י החלטת וועדת ערר)",
+      "סקר עצים וקבלת אישור פקיד היערות"
+    ]
+  },
+  "2016/1107.00": {
+    "address": "הרצוג 79",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2016/1107.01": {
+    "address": "הרצוג 79",
+    "flag": "no_tree_conditions",
+    "conditions_total": 14
+  },
+  "2016/1106.00": {
+    "address": "הרצוג 81",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2016/1105.00": {
+    "address": "הרצוג 77",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2016/1105.01": {
+    "address": "הרצוג 77",
+    "flag": "no_tree_conditions",
+    "conditions_total": 14
+  },
+  "2016/1083.01": {
+    "address": "רחל אמנו 11",
+    "flag": "no_tree_conditions",
+    "conditions_total": 29
+  },
+  "2016/1056.00": {
+    "address": "יפתח 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2016/0984.00": {
+    "address": "קליין 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2016/0867.00": {
+    "address": "יהושפט 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2016/0811.00": {
+    "address": "אמיל זולא 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2016/0803.00": {
+    "address": "מרדכי כספי 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2016/0683.00": {
+    "address": "מרדכי היהודי 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2016/0683.01": {
+    "address": "מרדכי היהודי 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 33
+  },
+  "2016/0683.02": {
+    "address": "מרדכי היהודי 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 14
+  },
+  "2016/0682.00": {
+    "address": "עין גדי 19",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2016/0495.00": {
+    "address": "חזקיהו המלך 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2016/0440.00": {
+    "address": "באכר זאב 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2016/0397.00": {
+    "address": "טשרניחובסקי 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2016/0309.00": {
+    "address": "האר\"י 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2016/0309.01": {
+    "address": "האר\"י 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 11
+  },
+  "2016/0077.00": {
+    "address": "אבן שפרוט 19",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2015/0935.00": {
+    "address": "עין גדי 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2015/0921.00": {
+    "address": "רחל אמנו 44",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2015/0871.00": {
+    "address": "הטייסים 31",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2015/0865.00": {
+    "address": "ניקנור 39",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2015/0859.00": {
+    "address": "הרב יוסף קאפח 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2015/0823.00": {
+    "address": "חתם סופר 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2015/0763.00": {
+    "address": "סן מרטין 32",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2015/0763.01": {
+    "address": "סן מרטין 32",
+    "flag": "no_tree_conditions",
+    "conditions_total": 7
+  },
+  "2015/0763.02": {
+    "address": "סן מרטין 32",
+    "flag": "no_tree_conditions",
+    "conditions_total": 15
+  },
+  "2015/0651.01": {
+    "address": "אפרתה 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2015/0591.00": {
+    "address": "בר יוחאי 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2015/0585.00": {
+    "address": "ריש לקיש 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2015/0568.00": {
+    "address": "השומר 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2015/0562.00": {
+    "address": "רשב\"א 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2015/0562.01": {
+    "address": "רשב\"א 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 36
+  },
+  "2015/0545.00": {
+    "address": "לינקולן 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2015/0534.00": {
+    "address": "בן טבאי 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 48
+  },
+  "2015/0534.02": {
+    "address": "בן טבאי 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 40
+  },
+  "2015/0519.00": {
+    "address": "יהודה 42",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2015/0518.00": {
+    "address": "יהושע בן נון 16",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2015/0505.00": {
+    "address": "עין רוגל 8",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "5. יש להגיש סקר עצים ולסמן עצים לשימור בחלקה",
+      "להגיש סקר עצים ולסמן עצים לשימור והריסה"
+    ]
+  },
+  "2015/0346.00": {
+    "address": "כספי 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2015/0337.00": {
+    "address": "שמעוני 36",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2015/0320.00": {
+    "address": "יוסי בן יועזר 19",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2015/0318.00": {
+    "address": "עין גדי 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2015/0318.01": {
+    "address": "עין גדי 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 41
+  },
+  "2015/0210.00": {
+    "address": "עובדיה מברטנורה 1",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "עצים להעתקה/שימור: על פי סעיף 6.11 נדרש אישור עקרוני של מחלקת גננות. תנאי למתן היתר בניה יהיה מתן הו"
+    ]
+  },
+  "2015/0209.00": {
+    "address": "בן מימון 39",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2015/0161.00": {
+    "address": "לייב יפה 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2015/0107.00": {
+    "address": "התיבונים 16",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2015/0065.00": {
+    "address": "אפרתה 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2015/0065.01": {
+    "address": "אפרתה 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 49
+  },
+  "2015/0062.00": {
+    "address": "יפתח 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2015/0031.00": {
+    "address": "האר\"י 16",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2015/0031.01": {
+    "address": "האר\"י 16",
+    "flag": "no_tree_conditions",
+    "conditions_total": 7
+  },
+  "2015/0004.00": {
+    "address": "לייב יפה 52",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2014/1008.00": {
+    "address": "שמשון 14",
+    "flag": "no_tree_conditions",
+    "conditions_total": 55
+  },
+  "2014/1000.00": {
+    "address": "חובבי ציון 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2014/0889.00": {
+    "address": "לינקולן 12",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2014/0889.02": {
+    "address": "לינקולן 12",
+    "flag": "no_tree_conditions",
+    "conditions_total": 42
+  },
+  "2014/0801.00": {
+    "address": "עזה 48",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2014/0640.00": {
+    "address": "אחד העם 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 69
+  },
+  "2014/0490.00": {
+    "address": "אבא חלקיה 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2014/0388.00": {
+    "address": "קק\"ל 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2014/0358.00": {
+    "address": "אלעזר המודעי 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2014/0256.00": {
+    "address": "בר יוחאי 18",
+    "flag": "no_tree_conditions",
+    "conditions_total": 43
+  },
+  "2014/0225.00": {
+    "address": "גד 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2014/0132.00": {
+    "address": "גדליהו בן אחיקם 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2014/0048.00": {
+    "address": "שופן 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2013/1072.00": {
+    "address": "רבקה 22",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2013/1017.00": {
+    "address": "ביתר 42",
+    "flag": "no_tree_conditions",
+    "conditions_total": 39
+  },
+  "2013/1016.00": {
+    "address": "ביתר 42",
+    "flag": "no_tree_conditions",
+    "conditions_total": 31
+  },
+  "2013/1000.00": {
+    "address": "הפלמ\"ח 63",
+    "flag": "no_tree_conditions",
+    "conditions_total": 70
+  },
+  "2013/0823.00": {
+    "address": "אלפסי 18",
+    "flag": "no_tree_conditions",
+    "conditions_total": 37
+  },
+  "2013/0779.00": {
+    "address": "כספי 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 75
+  },
+  "2013/0658.00": {
+    "address": "ריש לקיש 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2013/0512.01": {
+    "address": "רבן יוחנן בן זכאי 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2013/0179.01": {
+    "address": "נפתלי 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 36
+  },
+  "2013/0179.00": {
+    "address": "נפתלי 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2013/0081.01": {
+    "address": "דוד שמעוני 35",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2013/0081.00": {
+    "address": "שמעוני דוד 35",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2012/0809.00": {
+    "address": "הל\"ה 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 54
+  },
+  "2012/0511.00": {
+    "address": "מל\"ל 10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2012/0205.00": {
+    "address": "אלבק 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 56
+  },
+  "2012/0205.01": {
+    "address": "אלבק 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 45
+  },
+  "2012/0205.02": {
+    "address": "אלבק 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 45
+  },
+  "2011/1034.00": {
+    "address": "הל\"ה 34",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2011/0967.00": {
+    "address": "בן מימון 31",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2011/0967.01": {
+    "address": "בן מימון 31",
+    "flag": "no_tree_conditions",
+    "conditions_total": 26
+  },
+  "2011/0496.00": {
+    "address": "בן סירא 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2010/0771.00": {
+    "address": "השיירות 16",
+    "flag": "no_tree_conditions",
+    "conditions_total": 52
+  },
+  "2010/0671.00": {
+    "address": "עין גדי 27",
+    "flag": "no_tree_conditions",
+    "conditions_total": 51
+  },
+  "2010/0671.01": {
+    "address": "עין גדי 27",
+    "flag": "no_tree_conditions",
+    "conditions_total": 8
+  },
+  "2010/0604.00": {
+    "address": "שמשון 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2010/0602.01": {
+    "address": "לייב יפה 38",
+    "flag": "no_tree_conditions",
+    "conditions_total": 18
+  },
+  "2009/0808.01": {
+    "address": "דור דור ודורשיו 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 52
+  },
+  "2009/0061.01": {
+    "address": "יהושע בן גמלא 12",
+    "flag": "no_tree_conditions",
+    "conditions_total": 20
+  },
+  "2008/0624.00": {
+    "address": "כובשי קטמון 24",
+    "flag": "no_tree_conditions",
+    "conditions_total": 52
+  },
+  "2008/0624.02": {
+    "address": "כובשי קטמון 24",
+    "flag": "no_tree_conditions",
+    "conditions_total": 24
+  },
+  "2008/0499.01": {
+    "address": "יותם 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 24
+  },
+  "1996/0566.02": {
+    "address": "רד\"ק 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "1996/0566.04": {
+    "address": "רד\"ק 17",
+    "flag": "no_tree_conditions",
+    "conditions_total": 8
+  },
+  "1988/0250.03": {
+    "address": "שד בן מימון (הרמב\"ם) 22",
+    "flag": "no_tree_conditions",
+    "conditions_total": 46
+  },
+  "1984/0855.01": {
+    "address": "חזקיהו המלך 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 28
+  },
+  "1971/1425.03": {
+    "address": "דוסתאי 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 74
+  },
+  "2019/0589.00": {
+    "address": "אברבנאל 27",
+    "flag": "no_tree_conditions",
+    "conditions_total": 82
+  },
+  "2018/0853.00": {
+    "address": "כיכר מגנס 1",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "חו\"ד מח' גננות ושפ\"ע להשלמת תוכנית שימור עצים ונטיעות חדשות של עצים משמעותיים בשטח החלקה - שכונת עיר"
+    ]
+  },
+  "2018/0558.00": {
+    "address": "הל\"ה 30",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2026/0372.00": {
+    "address": "אוסישקין 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 38
+  },
+  "2026/0266.00": {
+    "address": "קרן היסוד 7",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2026/0235.00": {
+    "address": "קורא הדורות 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2026/0226.00": {
+    "address": "קרן היסוד 27",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2026/0223.00": {
+    "address": "אלעזר בן יאיר 24",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2026/0212.00": {
+    "address": "יהודה הנשיא 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2026/0211.00": {
+    "address": "יוסי בן יועזר 18",
+    "flag": "no_tree_conditions",
+    "conditions_total": 69
+  },
+  "2026/0190.00": {
+    "address": "הרב הרצוג 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2026/0181.00": {
+    "address": "אלי כהן 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2026/0157.00": {
+    "address": "עמק רפאים 76",
+    "flag": "no_tree_conditions",
+    "conditions_total": 67
+  },
+  "2026/0146.00": {
+    "address": "שופן 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 60
+  },
+  "2026/0106.00": {
+    "address": "חובבי ציון 13",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2026/0075.00": {
+    "address": "אברבנאל 30",
+    "flag": "no_tree_conditions",
+    "conditions_total": 68
+  },
+  "2026/0066.00": {
+    "address": "מלכי ישראל 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2025/0569.00": {
+    "address": "עמק רפאים 50",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2025/0428.00": {
+    "address": "חרלפ 26",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2025/0378.00": {
+    "address": "יוסי בן יועזר 65",
+    "flag": "no_tree_conditions",
+    "conditions_total": 55
+  },
+  "2025/0252.00": {
+    "address": "יוסי בן יועזר 1",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "בכפוף לאגף שפ\"ע- 1. הגשת ערבות בנקאית בסך 2,083 עבור פיצוי נופי. 2. הגשת תכנית נטיעות לשלמה דניאל.\"",
+      "תנאי לטופס 4 לבניין יהיה נטיעה של עצים בוגרים בתחום החלקה בתאום עם אגף שפ\"ע."
+    ]
+  },
+  "2025/0022.00": {
+    "address": "קרן היסוד 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2024/0622.00": {
+    "address": "אוסישקין 41",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "הגשת ערבות בנקאית בסך 94,988 ₪ עבור שימור העצים."
+    ]
+  },
+  "2024/0621.00": {
+    "address": "אברהם לינקולן 14",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "שפ''ע - הגשת ערבות בנקאית בסך 26,741.496 ש\"ח עבור שימור העצים."
+    ]
+  },
+  "2024/0615.00": {
+    "address": "אוסישקין 51",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2024/0541.00": {
+    "address": "אחד העם 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 64
+  },
+  "2024/0484.00": {
+    "address": "נילי 11",
+    "flag": "no_tree_conditions",
+    "conditions_total": 71
+  },
+  "2024/0322.00": {
+    "address": "דוסתאי 14",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2023/0618.00": {
+    "address": "רוקח שמעון 23",
+    "flag": "no_tree_conditions",
+    "conditions_total": 83
+  },
+  "2023/0196.00": {
+    "address": "עזריאל הילדסהיימר  10",
+    "flag": "no_tree_conditions",
+    "conditions_total": 75
+  },
+  "2023/0179.00": {
+    "address": "נחום סוקולוב 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2023/0166.00": {
+    "address": "מ.נ. כהנוב 30",
+    "flag": "no_tree_conditions",
+    "conditions_total": 39
+  },
+  "2022/0585.00": {
+    "address": "דרך עזה 49",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  },
+  "2022/0583.00": {
+    "address": "דן 1",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2022/0459.01": {
+    "address": "בנימין מטודלה 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 44
+  },
+  "2022/0424.00": {
+    "address": "הל\"ה 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2022/0422.00": {
+    "address": "רבי מאיר 8",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "יש להגיש ערבות בנקאית על סך 100,000 ₪ (פיצוי נופי 50,000 ₪ שימור העצים 50.000 ₪)"
+    ]
+  },
+  "2022/0334.00": {
+    "address": "קורא הדורות 10",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "סיכום סקר עצים כתאי להיתר בנייה:  6 27 עצים לשימור, 0 עצים להעתקה, 9 עצים לכריתה  7 . שווי עצים לשימור: 117,224 ש\"ח, שווי עצים להעתקה: 0 ש\"ח, שווי עצים לכריתה: 21,487 ש\"ח  8 . שווי עצים מוצעים לנטיעה"
+    ]
+  },
+  "2022/0294.00": {
+    "address": "עמק רפאים 63",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2022/0292.00": {
+    "address": "עין גדי 12",
+    "flag": "no_tree_conditions",
+    "conditions_total": 77
+  },
+  "2022/0289.00": {
+    "address": "ברניקי 6",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "נטיעת עצים בוגרים ע\"פ דרישות מחלקת שפע כתנאי טופס אכלוס"
+    ]
+  },
+  "2022/0287.00": {
+    "address": "בנימין מטודלה 30",
+    "flag": "no_tree_conditions",
+    "conditions_total": 35
+  },
+  "2022/0229.00": {
+    "address": "עין רוגל 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 73
+  },
+  "2022/0132.00": {
+    "address": "שמשון פולונסקי 9",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2022/0127.00": {
+    "address": "הרן 2",
+    "flag": "no_tree_conditions",
+    "conditions_total": 78
+  },
+  "2022/0124.00": {
+    "address": "אפרתה 30",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "יש להגיש למחלקת שפ\"ע ערבות בנקאית על סך 175.000 ש\"ח בעבור פיצוי נופי"
+    ]
+  },
+  "2022/0021.00": {
+    "address": "הפלמ\"ח 7",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "יש להגיש ערבות בנקאית על סך 30,000 ₪ בעבור פיצוי נופי ושימור העצים (14,825 ₪ לפיצוי נופי)"
+    ]
+  },
+  "2021/0442.00": {
+    "address": "הרב יוסף קאפח 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 80
+  },
+  "2021/0064.00": {
+    "address": "טשרניחובסקי 5",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2021/0061.00": {
+    "address": "בית הערבה 24",
+    "flag": "no_tree_conditions",
+    "conditions_total": 58
+  },
+  "2020/0765.00": {
+    "address": "מלכי ישראל 47",
+    "flag": "no_tree_conditions",
+    "conditions_total": 75
+  },
+  "2020/0681.01": {
+    "address": "הרכבת 55",
+    "flag": "no_tree_conditions",
+    "conditions_total": 12
+  },
+  "2020/0626.00": {
+    "address": "רוקח שמעון 30",
+    "flag": "no_tree_conditions",
+    "conditions_total": 69
+  },
+  "2020/0578.00": {
+    "address": "מקור חיים 15",
+    "flag": "no_tree_conditions",
+    "conditions_total": 61
+  },
+  "2020/0529.00": {
+    "address": "הורקניה 20",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2020/0470.00": {
+    "address": "דן 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2020/0458.00": {
+    "address": "מטודלה 8",
+    "flag": "no_tree_conditions",
+    "conditions_total": 63
+  },
+  "2020/0451.00": {
+    "address": "הרב ברלין 22",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "בעניין עץ מס' 8 לפי סקר העצים ולפי תמונות העץ עולה כי הוא אינו בעל ערכיות גבוהה. יחד עם זאת, יש לבחו"
+    ]
+  },
+  "2020/0440.00": {
+    "address": "תל חי 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 57
+  },
+  "2020/0426.00": {
+    "address": "אברהם לינקולן 5",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "להציע פתרון שימורי בתאום אגרונום עבור 9 עצים מסוג ברוש קיימים המסומנים לשימור עפ\"י סקר עצים."
+    ]
+  },
+  "2020/0333.00": {
+    "address": "הפלמח 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 65
+  },
+  "2020/0270.02": {
+    "address": "הנשיא 4",
+    "flag": "no_tree_conditions",
+    "conditions_total": 20
+  },
+  "2020/0240.00": {
+    "address": "איתמר בן אב''י 6",
+    "flag": "no_tree_conditions",
+    "conditions_total": 66
+  },
+  "2020/0165.00": {
+    "address": "עמינדב 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 67
+  },
+  "2020/0165.01": {
+    "address": "עמינדב 3",
+    "flag": "no_tree_conditions",
+    "conditions_total": 9
+  },
+  "2020/0141.00": {
+    "address": "אל בטן 5",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "מתן הוראות לסיווג עצים, ביצוע העתקה וקביעת הטיפולים בהם."
+    ]
+  },
+  "2020/0131.00": {
+    "address": "הרב הרצוג 83",
+    "flag": "no_tree_conditions",
+    "conditions_total": 50
+  },
+  "2020/0056.00": {
+    "address": "בלפור 17",
+    "flag": "survey_likely",
+    "tree_conditions": [
+      "ת.1. אישור סופי של מחלקת גננות לעניין פתרון שמירת עצים לשימור"
+    ]
+  },
+  "2020/0017.00": {
+    "address": "דוד שמעוני 347",
+    "flag": "no_tree_conditions",
+    "conditions_total": 59
+  },
+  "2020/0011.00": {
+    "address": "הל\"ה 37",
+    "flag": "no_tree_conditions",
+    "conditions_total": 62
+  }
+}
