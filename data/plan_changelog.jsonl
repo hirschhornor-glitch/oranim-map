@@ -183,3 +183,7 @@
 {"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "mavat_date", "old": "", "new": "11/08/2026"}
 {"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "units_add", "old": "", "new": 0}
 {"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 10:40:40", "taba": 1614130, "plan_name": "101-1614130", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-08-16 10:40:40", "taba": 1614130, "plan_name": "101-1614130", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
+{"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
