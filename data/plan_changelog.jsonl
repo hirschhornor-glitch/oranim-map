@@ -161,3 +161,25 @@
 {"ts": "2026-08-11 12:36:57", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "commerce_out", "old": 8650.0, "new": 5450}
 {"ts": "2026-08-11 12:36:57", "taba": 1590793, "plan_name": "101-1590793", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-11 16:39:28", "taba": 351411, "plan_name": "101-0351411", "status": "אישור", "field": "commerce_in", "old": 9002.66, "new": 14279}
+{"ts": "2026-08-16 07:09:53", "taba": 1372788, "plan_name": "101-1372788", "status": "אישור", "field": "status_mavat", "old": "הכרעה בהתנגדויות / אישור", "new": "אישור"}
+{"ts": "2026-08-16 07:09:53", "taba": 1372788, "plan_name": "101-1372788", "status": "אישור", "field": "mavat_date", "old": "07/08/2026", "new": "10/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 1372788, "plan_name": "101-1372788", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 07:09:53", "taba": 1439413, "plan_name": "101-1439413", "status": "בבדיקה תכנונית", "field": "status_mavat", "old": "נקלטה מקובץ מבאת", "new": "בבדיקה תכנונית"}
+{"ts": "2026-08-16 07:09:53", "taba": 1439413, "plan_name": "101-1439413", "status": "בבדיקה תכנונית", "field": "mavat_date", "old": "25/06/2025", "new": "10/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 1439413, "plan_name": "101-1439413", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 07:09:53", "taba": 1443126, "plan_name": "101-1443126", "status": "הכרעה בהתנגדויות / אישור", "field": "status_mavat", "old": "הפקדה להתנגדויות/השגות", "new": "הכרעה בהתנגדויות / אישור"}
+{"ts": "2026-08-16 07:09:53", "taba": 1443126, "plan_name": "101-1443126", "status": "הכרעה בהתנגדויות / אישור", "field": "mavat_date", "old": "09/06/2026", "new": "12/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 1443126, "plan_name": "101-1443126", "status": "הכרעה בהתנגדויות / אישור", "field": "units_add", "old": 160, "new": 0}
+{"ts": "2026-08-16 07:09:53", "taba": 1443126, "plan_name": "101-1443126", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 07:09:53", "taba": 1504364, "plan_name": "101-1504364", "status": "בבדיקה תכנונית", "field": "status_mavat", "old": "נקלטה מקובץ מבאת", "new": "בבדיקה תכנונית"}
+{"ts": "2026-08-16 07:09:53", "taba": 1504364, "plan_name": "101-1504364", "status": "בבדיקה תכנונית", "field": "mavat_date", "old": "08/12/2025", "new": "11/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 1504364, "plan_name": "101-1504364", "status": "בבדיקה תכנונית", "field": "shatzap_out", "old": 2569, "new": 2880}
+{"ts": "2026-08-16 07:09:53", "taba": 1504364, "plan_name": "101-1504364", "status": "בבדיקה תכנונית", "field": "hafrash_sqm", "old": 779, "new": 636}
+{"ts": "2026-08-16 07:09:53", "taba": 1504364, "plan_name": "101-1504364", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 07:09:53", "taba": 965152, "plan_name": "101-0965152", "status": "נדחתה", "field": "status_mavat", "old": "בבדיקה תכנונית", "new": "נדחתה"}
+{"ts": "2026-08-16 07:09:53", "taba": 965152, "plan_name": "101-0965152", "status": "נדחתה", "field": "mavat_date", "old": "", "new": "09/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 965152, "plan_name": "101-0965152", "status": "נדחתה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "status_mavat", "old": "בהליך אישור", "new": "אישור"}
+{"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "mavat_date", "old": "", "new": "11/08/2026"}
+{"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "units_add", "old": "", "new": 0}
+{"ts": "2026-08-16 07:09:53", "taba": 766154, "plan_name": "101-0766154", "status": "אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
