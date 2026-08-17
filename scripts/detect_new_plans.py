@@ -40,6 +40,10 @@ from google.oauth2.service_account import Credentials
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scope_filter import EXCLUDE_PLAN_NUMBERS, load_exclusion_geometry, plan_majority_in
 from mavat_auth_js import MAVAT_AUTH_JS
+# Geometry → minahak / sub_neighborhood. Both used to go out empty, which made
+# the plan invisible to app.jsx's isPlanVisible() — and with it the plan's
+# ייעודי-קרקע polygons (see minahak_pip's module docstring).
+import minahak_pip
 
 # Table 5 XLSX download + parsing. Shared with update_mavat_ui's status-change path.
 # For new plans we do the same thing status-change plans get: download the
@@ -695,6 +699,27 @@ async def enrich_from_mavat(new_plans):
 
 # ─── Step 4: Update Google Sheets ─────────────────────────────────────────────
 
+def admin_for(info):
+    """(minahak, sub_neighborhood) derived from the plan's XPLAN geometry.
+
+    Cached on the info dict so the Google-Sheets row (step 4) and the
+    plans.geojson feature (step 5) always get the same pair — a divergence
+    between the two would show up as a phantom diff in the GS↔geojson sync.
+    Derived from info['features'] alone (not the blue-line-augmented geometry
+    of create_plan_geometry) because step 4 runs first; the difference doesn't
+    change which minahak holds most of the plan.
+
+    Falls back to ('', '') on any failure, which is exactly the old behaviour.
+    """
+    if '_admin' not in info:
+        try:
+            info['_admin'] = minahak_pip.derive_from_features(info.get('features') or [])
+        except Exception as e:
+            print(f"  minahak derive failed for {info.get('pl_number')}: {e}")
+            info['_admin'] = ('', '')
+    return info['_admin']
+
+
 def update_sheets(new_plans):
     """Add new plans as rows in Google Sheets."""
     plans_to_add = {k: v for k, v in new_plans.items() if v.get('mavat_details') or v.get('mp_ids')}
@@ -765,8 +790,18 @@ def update_sheets(new_plans):
         # map layer can show plans detected within a rolling window.
         set_col('first_detected', get_israel_time().strftime('%Y-%m-%d'))
         set_col('plan_type', '')
-        set_col('minahak', '')
-        set_col('sub_neighborhood', '')
+        # minahak/sub_neighborhood by largest overlap with the municipal boundary
+        # layers. Still hand-curatable in the sheet afterwards — this only fills
+        # what used to be left blank, and a blank minahak hides the plan's
+        # land-use parcels on the map.
+        # NOTE: the sheet's sub-neighborhood column is 'SUB_N' — there is no
+        # 'sub_neighborhood' header, so the old set_col('sub_neighborhood', '')
+        # was a silent no-op (set_col skips unknown headers). geojson keeps the
+        # long name; both get the raw layer value and app.jsx's SUB_NORMALIZE
+        # folds the aliases at read time.
+        _minahak, _sub = admin_for(info)
+        set_col('minahak', _minahak)
+        set_col('SUB_N', _sub)
 
         # Table 5 OUT fields — parsed in enrich_from_mavat via download_xlsx.
         # Only write non-zero values to avoid clobbering with sparse-table zeros.
@@ -986,8 +1021,8 @@ def update_geojson(new_plans, push_to_github=False):
                 'conditional_housing': '',
                 'employment': '',
                 'plan_type': '',
-                'minahak': '',
-                'sub_neighborhood': '',
+                'minahak': admin_for(info)[0],          # see admin_for() — same
+                'sub_neighborhood': admin_for(info)[1],  # pair as the GS row
                 'overlapping_plans': 0.0,
                 'status_mavat': status,
                 'mavat_date': status_date,
