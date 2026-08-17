@@ -68,12 +68,20 @@ except ImportError as _t5_import_err:
 # שצ"פ יוצא are the land-use legal areas, so read them here and let them win.
 XPLAN_LANDUSE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
 
-def fetch_landuse_shavaz_shatzap(pl_number):
-    """Return (shavatz_out_sqm, shatzap_out) — legal areas of the מבנים ומוסדות
-    ציבור (שב"צ) and שטח ציבורי פתוח (שצ"פ) land-uses for a plan, or (None, None)
-    on failure. Aggregates XPLAN MapServer/4 legal_area by mavat_name."""
+def fetch_landuse(pl_number):
+    """Return (names, shavatz_out_sqm, shatzap_out) for a plan from XPLAN
+    MapServer/4 (יעודי קרקע), or ([], None, None) on failure.
+
+    `names` is the plan's distinct land-use designations (mavat_name), largest
+    legal_area first. Detection itself reads MapServer/1 (קוים כחולים), which
+    carries no mavat_name at all — see the XPLAN_URL note in Config — so without
+    this call every new plan was reported with an empty land-use list.
+
+    שב"צ / שצ"פ יוצא come from the same response: the land-use legal areas are
+    authoritative where Table 5 reports 0 for a mixed-use plan.
+    """
     if not pl_number:
-        return None, None
+        return [], None, None
     try:
         params = {'where': f"pl_number='{pl_number}'",
                   'outFields': 'mavat_name,legal_area,shape_area',
@@ -81,9 +89,10 @@ def fetch_landuse_shavaz_shatzap(pl_number):
         resp = _SESSION.get(XPLAN_LANDUSE_URL, params=params, timeout=60, verify=False)
         feats = resp.json().get('features', [])
         if not feats:
-            return None, None
+            return [], None, None
         shavaz = 0.0
         shatzap = 0.0
+        by_name = {}
         for f in feats:
             a = f.get('attributes', {})
             nm = (a.get('mavat_name') or '').strip()
@@ -92,10 +101,13 @@ def fetch_landuse_shavaz_shatzap(pl_number):
                 shavaz += area
             elif 'שטח ציבורי פתוח' in nm:
                 shatzap += area
-        return round(shavaz, 1), round(shatzap, 1)
+            if nm:
+                by_name[nm] = by_name.get(nm, 0) + (area or 0)
+        names = [n for n, _ in sorted(by_name.items(), key=lambda kv: -kv[1])]
+        return names, round(shavaz, 1), round(shatzap, 1)
     except Exception as e:
         print(f"    land-use fetch failed for {pl_number}: {e}")
-        return None, None
+        return [], None, None
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -128,6 +140,11 @@ EMAIL_RECIPIENT = os.environ.get("EMAIL_RECIPIENT") or "Or_hi@jerusalem.muni.il"
 # NOTE (2026-06): iplan emptied the old land-use layer /MapServer/4. The plan
 # polygons (one blue-line boundary per plan, with pl_number/mp_id/pl_name) now
 # live in /MapServer/1, so detection queries that for both id + geometry.
+# NOTE (2026-08-17): /MapServer/4 (יעודי קרקע) is populated again. /MapServer/1
+# is still the right layer to DETECT from (one row per plan), but it carries no
+# mavat_name — so from 2026-06 until this note every new plan was reported with
+# land_uses=[] (verified across the 2026-07-05 … 2026-08-16 detection reports).
+# fetch_landuse() re-reads the designations per plan from /MapServer/4.
 XPLAN_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 XPLAN_BLUE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/1/query"
 MAX_PER_REQUEST = 1000
@@ -676,19 +693,6 @@ async def enrich_from_mavat(new_plans):
                 except Exception as e:
                     print(f"    balance fetch failed for {norm}: {e}")
 
-                # שב"צ יוצא / שצ"פ יוצא — from XPLAN land-use (authoritative; Table 5
-                # gives 0 for mixed-use plans where שב"צ is a separate designation).
-                try:
-                    lu_shavaz, lu_shatzap = fetch_landuse_shavaz_shatzap(info.get('pl_number', ''))
-                    if lu_shavaz is not None:
-                        info['landuse_shavatz_out'] = lu_shavaz
-                    if lu_shatzap is not None:
-                        info['landuse_shatzap_out'] = lu_shatzap
-                    if lu_shavaz or lu_shatzap:
-                        print(f"    land-use: שב\"צ={lu_shavaz} שצ\"פ={lu_shatzap}")
-                except Exception as e:
-                    print(f"    land-use fetch failed for {norm}: {e}")
-
                 await asyncio.sleep(0.5)
 
             except Exception as e:
@@ -812,7 +816,7 @@ def update_sheets(new_plans):
                 set_col(gs_col, v)
 
         # יח"ד נכנס (accordion) + derived tosefet; land-use שב"צ/שצ"פ יוצא override
-        # the Table 5 zeros (they win — see fetch_landuse_shavaz_shatzap).
+        # the Table 5 zeros (they win — see fetch_landuse).
         units_in = info.get('units_in')
         if units_in is not None and units_in != '':
             set_col('units_in', units_in)
@@ -1157,6 +1161,11 @@ def send_email(new_plans):
         except:
             pass
 
+        # ייעודי קרקע from XPLAN MapServer/4 (fetch_landuse). Cap the list so a
+        # large plan doesn't blow up the row; the count says what's hidden.
+        _uses = info.get('mavat_names') or []
+        land_uses = ', '.join(_uses[:4]) + (f' (+{len(_uses) - 4})' if len(_uses) > 4 else '')
+
         is_objection = 'הפקדה להתנגדויות' in status
         row_style = 'background:#e3f2fd;' if is_objection else ''
         rows_html += f"""<tr style="{row_style}">
@@ -1165,6 +1174,7 @@ def send_email(new_plans):
             <td style="padding:6px;border:1px solid #ddd" dir="rtl">{status}{'<br><b style=&quot;color:#1976d2&quot;>פתוחה להתנגדויות</b>' if is_objection else ''}</td>
             <td style="padding:6px;border:1px solid #ddd" dir="rtl">{minahak}</td>
             <td style="padding:6px;border:1px solid #ddd" dir="rtl">{sub_neigh}</td>
+            <td style="padding:6px;border:1px solid #ddd" dir="rtl">{land_uses}</td>
             <td style="padding:6px;border:1px solid #ddd">
                 {'<a href="' + mavat_link + '">מבא&quot;ת</a>' if mavat_link else ''}
             </td>
@@ -1180,6 +1190,7 @@ def send_email(new_plans):
             <th style="padding:8px;border:1px solid #ddd">סטטוס</th>
             <th style="padding:8px;border:1px solid #ddd">מינה"ק</th>
             <th style="padding:8px;border:1px solid #ddd">תת-שכונה</th>
+            <th style="padding:8px;border:1px solid #ddd">ייעודי קרקע</th>
             <th style="padding:8px;border:1px solid #ddd">קישור</th>
         </tr>
         {rows_html}
@@ -1337,6 +1348,19 @@ async def run(do_update=False, skip_mavat=False):
         print("\nNo new plans detected. Everything is up to date!")
         write_report({}, 0, 0, False)
         return
+
+    # Land-use designations per plan, from MapServer/4. Deliberately NOT inside
+    # enrich_from_mavat: that whole step is skipped under --no-mavat (CI has no
+    # browser), and the land-uses are a plain REST read that CI can do. Also
+    # fills שב"צ/שצ"פ יוצא, which used to be Mavat-only for the same reason.
+    for norm, info in new_plans.items():
+        names, lu_shavaz, lu_shatzap = fetch_landuse(info.get('pl_number', ''))
+        if names and not info['mavat_names']:
+            info['mavat_names'] = names
+        if lu_shavaz is not None:
+            info['landuse_shavatz_out'] = lu_shavaz
+        if lu_shatzap is not None:
+            info['landuse_shatzap_out'] = lu_shatzap
 
     # Display new plans
     for norm, info in new_plans.items():
