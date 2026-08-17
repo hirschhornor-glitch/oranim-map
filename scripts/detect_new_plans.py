@@ -68,7 +68,29 @@ except ImportError as _t5_import_err:
 # שצ"פ יוצא are the land-use legal areas, so read them here and let them win.
 XPLAN_LANDUSE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
 
-def _legal_area_m2(attrs):
+def _legal_area_usable(feats):
+    """False when a plan's legal_area column can't be read as a per-parcel area.
+
+    XPLAN repeats ONE legal_area across several parcels of the same plan, and it
+    means different things when it does:
+      · 101-1516707 — שצ"פ and דרך both carry 1.472, and 787.2 + 685.1 = 1472.3,
+        i.e. it's their COMBINED area written on each row (Table 5 confirms the
+        שצ"פ alone is 787).
+      · 101-0666594 / 101-0059410 — every parcel carries 1140.9704 regardless of
+        designation or size; it matches nothing (the הוראות give 1,177.24 and
+        585.16, i.e. shape_area).
+    Either way the value is unusable per parcel, so fall back to shape_area —
+    which matched the הוראות in both plans above.
+    """
+    seen = {}
+    for a in feats:
+        legal = a.get('legal_area') or 0
+        if legal > 0:
+            seen[round(legal, 4)] = seen.get(round(legal, 4), 0) + 1
+    return not any(c > 1 for c in seen.values())
+
+
+def _legal_area_m2(attrs, legal_usable=True):
     """Land-use parcel area in m², normalising XPLAN's inconsistent legal_area unit.
 
     legal_area is m² on some plans and DUNAM on others — 101-1590793 reports
@@ -81,7 +103,7 @@ def _legal_area_m2(attrs):
     """
     shape = attrs.get('shape_area') or 0
     legal = attrs.get('legal_area') or 0
-    if legal <= 0:
+    if legal <= 0 or not legal_usable:
         return shape or 0
     # shape_area only decides the UNIT, never replaces legal_area: the two
     # legitimately differ in m² (101-1563642 מגרש 840 is legal=753 / shape=350),
@@ -118,10 +140,11 @@ def fetch_landuse(pl_number):
         shavaz = 0.0
         shatzap = 0.0
         by_name = {}
-        for f in feats:
-            a = f.get('attributes', {})
+        attrs = [f.get('attributes', {}) for f in feats]
+        usable = _legal_area_usable(attrs)
+        for a in attrs:
             nm = (a.get('mavat_name') or '').strip()
-            area = _legal_area_m2(a)
+            area = _legal_area_m2(a, usable)
             if nm == 'מבנים ומוסדות ציבור':
                 shavaz += area
             elif 'שטח ציבורי פתוח' in nm:
