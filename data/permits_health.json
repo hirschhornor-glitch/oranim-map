@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-08-16T07:25:26",
+  "generated_at": "2026-08-17T09:18:02",
   "sources": [
     {
       "file": "all_permits.json",
       "label": "היתרים לפי תב\"ע",
       "refresh": "דו-שבועי (סריקה)",
       "records": 772,
-      "last_publish": "2026-08-05",
-      "age_days": 11,
+      "last_publish": "2026-08-16",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -16,8 +16,8 @@
       "label": "היתרי תמ\"א 38",
       "refresh": "דו-שבועי + §149 שבועי",
       "records": 1351,
-      "last_publish": "2026-08-09",
-      "age_days": 7,
+      "last_publish": "2026-08-16",
+      "age_days": 1,
       "status": "green",
       "notes": []
     },
@@ -27,7 +27,7 @@
       "refresh": "לפי צורך",
       "records": 18,
       "last_publish": "2026-06-29",
-      "age_days": 48,
+      "age_days": 49,
       "status": "info",
       "notes": []
     },
@@ -35,9 +35,9 @@
       "file": "meetings.json",
       "label": "ישיבות ועדה קרובות",
       "refresh": "שבועי (ועדות)",
-      "records": 15,
+      "records": 1,
       "last_publish": "2026-08-10",
-      "age_days": 6,
+      "age_days": 7,
       "status": "green",
       "notes": []
     },
@@ -47,7 +47,7 @@
       "refresh": "שבועי",
       "records": 1,
       "last_publish": "2026-08-09",
-      "age_days": 7,
+      "age_days": 8,
       "status": "green",
       "notes": []
     },
@@ -57,7 +57,7 @@
       "refresh": "לפי צורך",
       "records": 13,
       "last_publish": "2026-07-03",
-      "age_days": 44,
+      "age_days": 45,
       "status": "info",
       "notes": []
     },
@@ -67,7 +67,7 @@
       "refresh": "יומי (CI)",
       "records": 1,
       "last_publish": "2026-08-14",
-      "age_days": 2,
+      "age_days": 3,
       "status": "green",
       "notes": []
     },
@@ -77,7 +77,7 @@
       "refresh": "לפי צורך",
       "records": 247,
       "last_publish": "2026-06-21",
-      "age_days": 56,
+      "age_days": 57,
       "status": "info",
       "notes": []
     },
@@ -87,26 +87,26 @@
       "refresh": "לפי צורך",
       "records": 46,
       "last_publish": "2026-08-05",
-      "age_days": 11,
+      "age_days": 12,
       "status": "info",
       "notes": []
     }
   ],
   "scan": {
-    "date": "2026-08-02",
+    "date": "2026-08-16",
     "removed_flag": false,
-    "raw": "2026-08-02T06:46:49 | date=2026-08-02 | all=new:4,status:11,removed:0 | tama38=new:10,status:48,removed:0",
+    "raw": "2026-08-16T07:25:30 | date=2026-08-16 | all=new:5,status:18,removed:0 | tama38=new:0,status:10,removed:0",
     "all": {
-      "new": 4,
-      "status": 11,
+      "new": 5,
+      "status": 18,
       "removed": 0
     },
     "tama38": {
-      "new": 10,
-      "status": 48,
+      "new": 0,
+      "status": 10,
       "removed": 0
     },
-    "age_days": 14
+    "age_days": 1
   },
   "committee_audit": {
     "date": "2026-07-27",
@@ -215,11 +215,6 @@
     {
       "log": "objections_last_run.log",
       "sample": "[2026-06-26T06:31:19] Scrape loop finished without throttle — done.",
-      "count": 13
-    },
-    {
-      "log": "tama38_dev_backfill_last.log",
-      "sample": "YK throttled this run — will retry tomorrow.",
       "count": 13
     },
     {
