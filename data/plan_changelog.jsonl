@@ -187,3 +187,4 @@
 {"ts": "2026-08-16 10:40:40", "taba": 1614130, "plan_name": "101-1614130", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-17 10:31:03", "taba": 1474931, "plan_name": "101-1474931", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
