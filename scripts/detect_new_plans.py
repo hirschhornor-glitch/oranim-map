@@ -81,11 +81,16 @@ def _legal_area_m2(attrs):
     """
     shape = attrs.get('shape_area') or 0
     legal = attrs.get('legal_area') or 0
-    if legal > 0 and shape > 0:
-        for candidate in (legal, legal * 1000):
-            if 0.5 <= candidate / shape <= 2:
-                return candidate
-    return shape or legal or 0
+    if legal <= 0:
+        return shape or 0
+    # shape_area only decides the UNIT, never replaces legal_area: the two
+    # legitimately differ in m² (101-1563642 מגרש 840 is legal=753 / shape=350),
+    # and legal_area is the authoritative figure. A ~1000× gap is the dunam
+    # tell; the band is deliberately wide so it still fires when the two also
+    # disagree on magnitude.
+    if shape > 0 and 100 <= shape / legal <= 10000:
+        return legal * 1000
+    return legal
 
 
 def fetch_landuse(pl_number):
