@@ -68,6 +68,26 @@ except ImportError as _t5_import_err:
 # שצ"פ יוצא are the land-use legal areas, so read them here and let them win.
 XPLAN_LANDUSE_URL = "https://ags.iplan.gov.il/arcgisiplan/rest/services/PlanningPublic/Xplan/MapServer/4/query"
 
+def _legal_area_m2(attrs):
+    """Land-use parcel area in m², normalising XPLAN's inconsistent legal_area unit.
+
+    legal_area is m² on some plans and DUNAM on others — 101-1590793 reports
+    legal_area=0.4959 for a parcel whose shape_area is 495.9 m², while
+    101-1614130 reports legal_area=597.14 against shape_area=597.1. Summing them
+    blindly (what this code did before 2026-08-17) understates such a plan's
+    שב"צ by 1000×. shape_area is always m², so use it as the referee: take
+    legal_area if it agrees, scale it by 1000 if that's what agrees, else fall
+    back to shape_area (also covers legal_area=0/None, e.g. 101-1460088).
+    """
+    shape = attrs.get('shape_area') or 0
+    legal = attrs.get('legal_area') or 0
+    if legal > 0 and shape > 0:
+        for candidate in (legal, legal * 1000):
+            if 0.5 <= candidate / shape <= 2:
+                return candidate
+    return shape or legal or 0
+
+
 def fetch_landuse(pl_number):
     """Return (names, shavatz_out_sqm, shatzap_out) for a plan from XPLAN
     MapServer/4 (יעודי קרקע), or ([], None, None) on failure.
@@ -96,7 +116,7 @@ def fetch_landuse(pl_number):
         for f in feats:
             a = f.get('attributes', {})
             nm = (a.get('mavat_name') or '').strip()
-            area = a.get('legal_area') or a.get('shape_area') or 0
+            area = _legal_area_m2(a)
             if nm == 'מבנים ומוסדות ציבור':
                 shavaz += area
             elif 'שטח ציבורי פתוח' in nm:
