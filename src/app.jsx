@@ -5224,6 +5224,7 @@
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
                 window.__hafrashPermitUse = {}; // סוג ההפרשה המבונה כפי שנקרא מגרמושקת ההיתר — by bare taba
+                window.__planContainment = {}; // taba → {superseded_by} (detect_plan_containment.py)
                 window.__maintenanceFund = {}; // קרן תחזוקה — by plan_name
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
@@ -5273,6 +5274,7 @@
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
                     ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
+                    ['__planContainment', 'data/plan_containment.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5768,6 +5770,7 @@
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
                             else if (key === '__hafrashPermitUse') { window.__hafrashPermitUse = (data && data.by_plan) || {}; }
+                            else if (key === '__planContainment') { window.__planContainment = (data && data.superseded) || {}; }
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
@@ -17976,7 +17979,26 @@
                     const _lotKey = (pf) => { const s = String(pf.properties.pl_number || pf.properties.TABA || ''); const t = s.includes('-') ? String(parseInt(s.split('-')[1])) : s; return t + '|' + String(pf.properties.num || ''); };
                     const _byLot = {};
                     pointFeatures.forEach(pf => { const k = _lotKey(pf); if (!_byLot[k]) _byLot[k] = []; _byLot[k].push(pf); });
-                    const _mergeGroup = (group) => {
+                    // One physical lot can be described by two nested plans — 101-0095612 and
+                    // 101-0571190 both record מגרש 201 / 1,631 מ"ר, because the 2018 plan sits
+                    // wholly inside the 2016 one. Merging their pins is right (one lot, one pin);
+                    // adding their figures is not, and produced a 3,262 מ"ר total for a 1,631 מ"ר
+                    // allocation. When the plan in force is present in the group, drop the
+                    // superseded plan's entries. (data/plan_containment.json)
+                    const _tabaOf = (pf) => { const t = String(pf.properties.pl_number || pf.properties.TABA || ''); return t.includes('-') ? String(parseInt(t.split('-')[1])) : t; };
+                    const _dropSuperseded = (group) => {
+                        const cont = window.__planContainment || {};
+                        const present = new Set(group.map(_tabaOf));
+                        const kept = group.filter(pf => {
+                            const rec = cont[_tabaOf(pf)];
+                            if (!rec) return true;
+                            const op = String(rec.superseded_by || '').replace(/^101-?0*/, '');
+                            return !present.has(op);   // keep unless the operative plan is right here
+                        });
+                        return kept.length ? kept : group;
+                    };
+                    const _mergeGroup = (rawGroup) => {
+                        const group = _dropSuperseded(rawGroup);
                         if (group.length === 1) return group[0];
                         const allEntries = [];
                         group.forEach(pf => { const e = pf.properties._hafrash_lot_entries; if (Array.isArray(e) && e.length) allEntries.push(...e); });
@@ -22362,14 +22384,20 @@
                     // 4,000 מ"ר as an open shell. Showing that as a use row would just
                     // repeat hafrash_prg, so it becomes a note instead: the space exists,
                     // the use is still open.
+                    // Same allocation, two plans: 101-0095612 and 101-0571190 both record
+                    // מגרש 201 / 1,631 מ"ר because one sits wholly inside the other. Say so,
+                    // so the two popups are never read as two separate allocations.
+                    const dup = r.superseded_by
+                        ? ` · אותה הפרשה מופיעה גם בתכנית ${esc(r.superseded_by)}, שהיא התכנית בתוקף כאן — לא לסכום את שתיהן`
+                        : '';
                     if (r.use_specified === false) {
                         return { row: null, tip,
-                            note: `* ${src} מראה שההפרשה נבנתה${sqm ? ' (' + sqm + ' מ"ר)' : ''} אך לא נקבע בה שימוש` };
+                            note: `* ${src} מראה שההפרשה נבנתה${sqm ? ' (' + sqm + ' מ"ר)' : ''} אך לא נקבע בה שימוש` + dup };
                     }
                     return {
                         row: true, sqm, tip,
                         label: esc(r.label_he || (r.uses || []).join(', ') || 'מבנה ציבור') + ' *' + (sqmOff ? ' ⚠' : ''),
-                        note: `* לפי ${src}` + (sqmOff ? ' — ⚠ המ"ר בהיתר שונה מהמצוין בתכנית' : ''),
+                        note: `* לפי ${src}` + (sqmOff ? ' — ⚠ המ"ר בהיתר שונה מהמצוין בתכנית' : '') + dup,
                     };
                 })();
                 const _permitNote = (m) => m ? `<div style="font-size:10px;color:#8a8a9a;margin-top:4px;word-wrap:break-word">${m.note}</div>` : '';
@@ -26708,13 +26736,15 @@
                                     mismatch: r.sqm_match === false,
                                     tik: p.tik || '', kind: p.doc_kind || '', date: p.doc_date || '',
                                     conf: CONF[r.confidence] || r.confidence || '',
+                                    dup: r.superseded_by || '',
                                     quote: r.quote_he || '',
                                 };
                             }).sort((a, b) => (b.permitSqm || 0) - (a.permitSqm || 0));
                             const nNamed = rows.filter(r => r.named).length;
                             const nApproved = rows.filter(r => r.kind === 'מאושר').length;
                             const cols = ['תב"ע', 'תיאור', 'שכונה', 'מגרש', 'סוג ההפרשה לפי ההיתר',
-                                'מ"ר בהיתר', 'מ"ר בתכנית', 'תיק היתר', 'סוג המסמך', 'תאריך', 'ביטחון', 'ציטוט מהשרטוט'];
+                                'מ"ר בהיתר', 'מ"ר בתכנית', 'תיק היתר', 'סוג המסמך', 'תאריך', 'ביטחון',
+                                'נספר גם בתכנית', 'ציטוט מהשרטוט'];
                             const trHtml = rows.map(r =>
                                 '<tr' + (r.named ? '' : ' class="unnamed"') + '>'
                                 + '<td>' + esc(r.taba) + '</td><td>' + esc(r.summary) + '</td><td>' + esc(r.sub) + '</td>'
@@ -26726,9 +26756,10 @@
                                 + '<td style="text-align:center' + (r.kind === 'מאושר' ? ';color:#2e7d32;font-weight:bold' : ';color:#777') + '">' + esc(r.kind) + '</td>'
                                 + '<td style="text-align:center;direction:ltr">' + esc(r.date) + '</td>'
                                 + '<td style="text-align:center">' + esc(r.conf) + '</td>'
+                                + '<td style="text-align:center;color:#c62828">' + esc(r.dup) + '</td>'
                                 + '<td style="font-size:11px;color:#555">' + esc(r.quote) + '</td></tr>').join('');
                             const csv = [cols.join(',')].concat(rows.map(r => [r.taba, r.summary, r.sub, r.lot, r.use,
-                                r.permitSqm, r.planSqm, r.tik, r.kind, r.date, r.conf, r.quote]
+                                r.permitSqm, r.planSqm, r.tik, r.kind, r.date, r.conf, r.dup, r.quote]
                                 .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','))).join('\n');
                             const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\ufeff' + csv);
                             const win = window.open('', '_blank');
@@ -26751,6 +26782,7 @@
                                 + '<div class="note"><b>איך לקרוא:</b> "מ"ר בהיתר" הוא מה שמודפס בטבלת השטחים של השרטוט. ⚠ מסמן פער מעל 15% מול המ"ר שבתכנית — '
                                 + 'לעתים טעות בטבלה 5 ולא אי-ביצוע (101-0342170: 106 מ"ר נבנו מול 1,176 שנדרשו, כשהמגרש כולו 1,435 מ"ר).<br>'
                                 + '<b>סוג המסמך:</b> "מאושר" = הרמוניקה חתומה/מאושרת. "הגשה" = הגשה מקוונת — התכנון עשוי עוד להשתנות.<br>'
+                                + '<b>נספר גם בתכנית:</b> אותה הפרשה רשומה גם על תכנית אחרת שמכסה את אותו שטח — לספור פעם אחת בלבד.<br>'
                                 + '<b>ביטחון:</b> גבוה = תווית מודפסת שנקראה מילולית מתוך הגדלה, מ"ר בטווח ±15%, ותב"ע מאומתת על השרטוט. '
                                 + 'בינוני = תווית ברורה אך המ"ר חסר/חורג או שהתב"ע לא אומתה.<br>'
                                 + 'הקריאה אינה מחליפה את הוראות התכנית — זו מה שהיתר אחד מראה, והיא עשויה לחלוק עליהן.</div>'

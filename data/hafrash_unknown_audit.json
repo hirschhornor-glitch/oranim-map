@@ -1,12 +1,18 @@
 {
- "built_at": "2026-08-18 08:32:47",
+ "built_at": "2026-08-18 15:31:35",
  "scope": "approved plans carrying a הפרשה מבונה",
  "counts": {
-  "known_text": 133,
+  "known_text": 130,
   "known_delivery": 6,
   "plot_not_hafrasha": 1,
+  "superseded": 5,
   "no_permit": 22,
-  "queued": 12
+  "queued": 10
+ },
+ "hafrash_sqm": {
+  "gross": 142668,
+  "double_counted": 2573,
+  "net": 140095
  },
  "buckets": {
   "known_text": [
@@ -185,17 +191,6 @@
     ]
    },
    {
-    "taba": "533711",
-    "plan_name": "101-0533711",
-    "sub_neighborhood": "מקור חיים",
-    "status": "תבע מאושרת",
-    "hafrash_sqm": 202.0,
-    "hafrash_prg": "מועדון קשישים (202)",
-    "domains": [
-     "welfare"
-    ]
-   },
-   {
     "taba": "518159",
     "plan_name": "101-0518159",
     "sub_neighborhood": "מקור חיים",
@@ -291,17 +286,6 @@
     ]
    },
    {
-    "taba": "630772",
-    "plan_name": "101-0630772",
-    "sub_neighborhood": "בית צפאפא",
-    "status": "תבע מאושרת",
-    "hafrash_sqm": 200.0,
-    "hafrash_prg": "מגרש 2 - מוקד לקשיש / מרכז למיצוי זכויות (200)",
-    "domains": [
-     "welfare"
-    ]
-   },
-   {
     "taba": "415992",
     "plan_name": "101-0415992",
     "sub_neighborhood": "מתחם הרכבת",
@@ -369,17 +353,6 @@
     "hafrash_prg": "מגרש 1 - מועדון גיל שלישי (200)",
     "domains": [
      "welfare"
-    ]
-   },
-   {
-    "taba": "691667",
-    "plan_name": "101-0691667",
-    "sub_neighborhood": "בית צפאפא,שרפת",
-    "status": "אישור",
-    "hafrash_sqm": 440.0,
-    "hafrash_prg": "מגרש 1 - מעונות יום/רוחה וקהילה 1 בניין (440)",
-    "domains": [
-     "culture"
     ]
    },
    {
@@ -1704,6 +1677,58 @@
     }
    }
   ],
+  "superseded": [
+   {
+    "taba": "95612",
+    "plan_name": "101-0095612",
+    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
+    "status": "אישור",
+    "hafrash_sqm": 1631.0,
+    "hafrash_prg": "מגרש 201 - מגורים מסחר ומבנים ומוסדות ציבור (1631)",
+    "superseded_by": "101-0571190",
+    "containment": 1.0
+   },
+   {
+    "taba": "533711",
+    "plan_name": "101-0533711",
+    "sub_neighborhood": "מקור חיים",
+    "status": "תבע מאושרת",
+    "hafrash_sqm": 202.0,
+    "hafrash_prg": "מועדון קשישים (202)",
+    "superseded_by": "101-1249358",
+    "containment": 0.9999
+   },
+   {
+    "taba": "630772",
+    "plan_name": "101-0630772",
+    "sub_neighborhood": "בית צפאפא",
+    "status": "תבע מאושרת",
+    "hafrash_sqm": 200.0,
+    "hafrash_prg": "מגרש 2 - מוקד לקשיש / מרכז למיצוי זכויות (200)",
+    "superseded_by": "101-1037670",
+    "containment": 1.0
+   },
+   {
+    "taba": "691667",
+    "plan_name": "101-0691667",
+    "sub_neighborhood": "בית צפאפא,שרפת",
+    "status": "אישור",
+    "hafrash_sqm": 440.0,
+    "hafrash_prg": "מגרש 1 - מעונות יום/רוחה וקהילה 1 בניין (440)",
+    "superseded_by": "101-1103571",
+    "containment": 0.9977
+   },
+   {
+    "taba": "779546",
+    "plan_name": "101-0779546",
+    "sub_neighborhood": "גינות העיר",
+    "status": "אישור",
+    "hafrash_sqm": 100.0,
+    "hafrash_prg": "מבנים ומוסדות ציבור (100)",
+    "superseded_by": "101-1443126",
+    "containment": 0.9894
+   }
+  ],
   "no_permit": [
    {
     "taba": "216614",
@@ -1884,45 +1909,6 @@
   ],
   "queued": [
    {
-    "taba": "95612",
-    "plan_name": "101-0095612",
-    "sub_neighborhood": "עמק רפאים - המושבה הגרמנית",
-    "status": "אישור",
-    "hafrash_sqm": 1631.0,
-    "hafrash_prg": "מגרש 201 - מגורים מסחר ומבנים ומוסדות ציבור (1631)",
-    "candidates": [
-     {
-      "tik": "2017/0384.00",
-      "descr": "בנין מגורים חדש הכולל קומת מסחר ושטחים ציבוריים - בריכת ירושלים - 44 יח\"ד",
-      "permit_status": "הבקשה נסגרה",
-      "status_date": "09/02/2023",
-      "score": 65
-     },
-     {
-      "tik": "2017/0384.02",
-      "descr": "בנין מגורים חדש הכולל 45 יח\"ד קומת מסחר, שטחים ציבוריים ובריכת שחיה- בריכת ירושלים",
-      "permit_status": "הופק-הוצא היתר בניה",
-      "status_date": "27/10/2020",
-      "score": 65
-     },
-     {
-      "tik": "2017/0384.03",
-      "descr": "שינוים בבניין ,בחלוקת הדירות, במרפסות ואיחוד דירות ,42 יח\"ד במקום 45",
-      "permit_status": "הופק-הוצא היתר בניה",
-      "status_date": "10/10/2023",
-      "score": 10
-     },
-     {
-      "tik": "2017/0384.01",
-      "descr": "חפירה דיפון ויסודות לבנין חדש הכולל קומת מסחר ושטחים ציבוריים, בריכת ירושלים",
-      "permit_status": "הופק-הוצא היתר בניה",
-      "status_date": "28/03/2018",
-      "score": -10
-     }
-    ],
-    "low_prospect": false
-   },
-   {
     "taba": "205674",
     "plan_name": "101-0205674",
     "sub_neighborhood": "בית צפאפא,שרפת",
@@ -2032,24 +2018,6 @@
       "permit_status": "הופק-הוצא היתר בניה",
       "status_date": "25/08/2025",
       "score": -15
-     }
-    ],
-    "low_prospect": false
-   },
-   {
-    "taba": "779546",
-    "plan_name": "101-0779546",
-    "sub_neighborhood": "גינות העיר",
-    "status": "אישור",
-    "hafrash_sqm": 100.0,
-    "hafrash_prg": "מבנים ומוסדות ציבור (100)",
-    "candidates": [
-     {
-      "tik": "2024/0561.00",
-      "descr": "מבנה חדש בן 8 קומות למלון של 116 חדרים ולמגורים - 18 יח\"ד",
-      "permit_status": "נדונה ברשות הרישוי",
-      "status_date": "25/03/2026",
-      "score": 45
      }
     ],
     "low_prospect": false

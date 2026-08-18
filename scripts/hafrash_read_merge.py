@@ -165,6 +165,22 @@ def derive_doc_kind(doc_descr):
     return "מאושר" if _APPROVED_DOC.search(str(doc_descr or "")) else "הגשה"
 
 
+# Two plans can describe ONE allocation: 101-0095612 and 101-0571190 both carry
+# מגרש 201 / 1,631 מ"ר because the 2018 plan sits wholly inside the 2016 one. Both
+# reads are correct and both are worth showing, but a reader must not add them up —
+# so each record carries the plan actually in force here.
+_CONTAINMENT = None
+
+
+def superseded_by(taba):
+    global _CONTAINMENT
+    if _CONTAINMENT is None:
+        _CONTAINMENT = (load(os.path.join(DATA, "plan_containment.json"), {})
+                        .get("superseded") or {})
+    rec = _CONTAINMENT.get(str(taba))
+    return rec.get("superseded_by") if rec else None
+
+
 def build_record(taba, r, index_rec, write_evidence=True):
     ch = (index_rec or {}).get("chosen") or {}
     ev = (r.get("evidence") or [{}])[0]
@@ -194,6 +210,7 @@ def build_record(taba, r, index_rec, write_evidence=True):
         #   py zoom_hafrash.py <taba> --sheet <sheet> --bbox <x0 y0 x1 y1> --scale 3
         "evidence_bbox": ev.get("bbox_frac"),
         "evidence_jpg": (save_evidence(taba, ev) if (write_evidence and ev.get("png")) else None),
+        "superseded_by": superseded_by(taba),
         "read_at": date.today().strftime("%Y-%m-%d"),
         "reader": "claude-vision",
         "verified_by": r.get("verified_by"),

@@ -16,6 +16,8 @@ Every plan carrying a hafrasha lands in exactly one bucket:
                    statutory text (hafrashahFeatureDomains), so it IS the answer.
   plot_not_hafrasha  not a built allocation at all: the plan has a standalone public
                    LOT of that exact area, so the row is a misclassified שב"צ plot.
+  superseded       the same obligation is recorded on a later plan covering the same
+                   ground (detect_plan_containment.py) — counting both doubles it.
   no_permit        generic, no asset, and no licensing file exists → nothing to read.
   queued           generic, no asset, but a permit file exists → the גרמושקה in that
                    file can answer it. This is the work.
@@ -186,8 +188,13 @@ def main():
     all_permits = _load(os.path.join(DATA, "all_permits.json"), {})
 
     public_lots = index_public_lots(os.path.join(DATA, "landuse_xplan.geojson"))
+    # Obligations recorded twice on nested plans. 101-0095612 and 101-0571190 both
+    # carry מגרש 201 / 1,631 מ"ר / 60 יח"ד and the same licensing file, because the
+    # 2018 plan sits wholly inside the 2016 one — the audit must count it once.
+    containment = _load(os.path.join(DATA, "plan_containment.json"), {})
+    superseded_map = containment.get("superseded") or {}
     buckets = {"known_text": [], "known_delivery": [], "plot_not_hafrasha": [],
-               "no_permit": [], "queued": []}
+               "superseded": [], "no_permit": [], "queued": []}
     queue_items = []
 
     for feat in plans:
@@ -204,6 +211,14 @@ def main():
         row = {"taba": taba, "plan_name": p.get("plan_name"),
                "sub_neighborhood": p.get("sub_neighborhood") or p.get("minahak") or "",
                "status": status, "hafrash_sqm": sqm, "hafrash_prg": prg}
+
+        # 0. the same obligation is already counted on the plan in force here
+        sup = superseded_map.get(taba)
+        if sup:
+            row["superseded_by"] = sup.get("superseded_by")
+            row["containment"] = sup.get("containment")
+            buckets["superseded"].append(row)
+            continue
 
         # 1. the statutory text already names a use
         uses = [u.strip() for u in re.split(r";", prg) if u.strip()]
@@ -264,9 +279,13 @@ def main():
 
     eq.enqueue_hafrash(queue_items)
 
+    gross = sum(r["hafrash_sqm"] for v in buckets.values() for r in v)
+    dropped = sum(r["hafrash_sqm"] for r in buckets["superseded"])
     audit = {"built_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
              "scope": "approved plans carrying a הפרשה מבונה",
              "counts": {k: len(v) for k, v in buckets.items()},
+             "hafrash_sqm": {"gross": round(gross), "double_counted": round(dropped),
+                             "net": round(gross - dropped)},
              "buckets": buckets}
     with io.open(AUDIT_OUT, "w", encoding="utf-8") as f:
         json.dump(audit, f, ensure_ascii=False, indent=1)
@@ -276,9 +295,13 @@ def main():
         for k, label in [("known_text", "סוג ידוע מהוראות התכנית"),
                          ("known_delivery", "סוג ידוע מספר הנכסים"),
                          ("plot_not_hafrasha", "מגרש ציבורי, לא הפרשה מבונה"),
+                         ("superseded", "נספר כבר בתכנית מאוחרת יותר"),
                          ("queued", "לקריאה מגרמושקת ההיתר"),
                          ("no_permit", "לא ידוע, ואין היתר לקרוא ממנו")]:
             print("  %-28s %3d" % (label, len(buckets[k])))
+        print('  %-28s %s מ"ר ברוטו · %s נספרים פעמיים · %s נטו'
+              % ("סה\"כ הפרשה:", format(int(gross), ","), format(int(dropped), ","),
+                 format(int(gross - dropped), ",")))
         print()
         for r in sorted(buckets["queued"], key=lambda r: -r["hafrash_sqm"]):
             top = r["candidates"][0]

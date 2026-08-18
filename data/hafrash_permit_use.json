@@ -36,6 +36,7 @@
     0.26
    ],
    "evidence_jpg": "data/hafrash_evidence/1037670_2023_0109.01_d12_p01_z90.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -72,6 +73,7 @@
     0.66
    ],
    "evidence_jpg": "data/hafrash_evidence/1161439_zlabel300.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -109,6 +111,7 @@
     0.612
    ],
    "evidence_jpg": "data/hafrash_evidence/175232_01_b0665_0550_0715_1000a.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -149,6 +152,7 @@
     0.215
    ],
    "evidence_jpg": "data/hafrash_evidence/204743_ev_p04_taba_migrash.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -185,6 +189,7 @@
     0.4
    ],
    "evidence_jpg": "data/hafrash_evidence/224477_p01_b0805_0260_0925_0400.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -222,6 +227,7 @@
     0.295
    ],
    "evidence_jpg": "data/hafrash_evidence/342170_ev_taba_lot.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -259,6 +265,7 @@
     0.32
    ],
    "evidence_jpg": "data/hafrash_evidence/571190_ev_permit_form.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -297,6 +304,7 @@
     0.34
    ],
    "evidence_jpg": "data/hafrash_evidence/696104_11_b0200_0270_0300_0480a.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -333,6 +341,7 @@
     0.63
    ],
    "evidence_jpg": "data/hafrash_evidence/779546_2024_0561.00_d42_p03_z90.jpg",
+   "superseded_by": "101-1443126",
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -370,6 +379,7 @@
     0.275
    ],
    "evidence_jpg": "data/hafrash_evidence/798439_ev_floorplan_komah_a.jpg",
+   "superseded_by": null,
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
@@ -417,6 +427,7 @@
     0.295
    ],
    "evidence_jpg": "data/hafrash_evidence/95612_2017_0384.00_d00_p01_z90.jpg",
+   "superseded_by": "101-0571190",
    "read_at": "2026-08-18",
    "reader": "claude-vision",
    "verified_by": null
