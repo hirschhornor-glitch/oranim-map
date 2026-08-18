@@ -26681,6 +26681,82 @@
                             };
                             tick();
                         };
+                        // סוג ההפרשה המבונה לפי גרמושקת ההיתר. Lists what each permit's
+                        // approved drawing shows for allocations the PLAN described only as
+                        // "מבנים ומוסדות ציבור". Reads window.__hafrashPermitUse (bare taba),
+                        // produced by the vision pipeline in scripts/process_hafrash_queue.md.
+                        // Shows the plan figure beside the permit figure on purpose — the gaps
+                        // (101-0342170: 106 built against 1,176 allocated) are the point.
+                        function openHafrashPermitUseReport() {
+                            const src = window.__hafrashPermitUse || {};
+                            const keys = Object.keys(src).filter(k => !k.startsWith('_'));
+                            if (!keys.length) { alert('טרם נקראו סוגי הפרשה מגרמושקות ההיתר.'); return; }
+                            const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const nf = v => (v == null || v === '') ? '' : (parseFloat(v) || 0).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+                            const CONF = { high: 'גבוה', medium: 'בינוני', low: 'נמוך' };
+                            const rows = keys.map(k => {
+                                const r = src[k], p = r.permit || {};
+                                const pr = (window.__planByTaba || {})[k] || {};
+                                return {
+                                    taba: r.plan_name || ('101-' + k),
+                                    summary: pr.plan_summary || pr.plan_name_he || '',
+                                    sub: pr.sub_neighborhood || pr.minahak || '',
+                                    lot: r.lot || '',
+                                    named: r.use_specified !== false,
+                                    use: r.use_specified === false ? '(נבנה — השימוש לא נקבע)' : (r.label_he || ''),
+                                    permitSqm: r.sqm_read, planSqm: r.sqm_expected,
+                                    mismatch: r.sqm_match === false,
+                                    tik: p.tik || '', kind: p.doc_kind || '', date: p.doc_date || '',
+                                    conf: CONF[r.confidence] || r.confidence || '',
+                                    quote: r.quote_he || '',
+                                };
+                            }).sort((a, b) => (b.permitSqm || 0) - (a.permitSqm || 0));
+                            const nNamed = rows.filter(r => r.named).length;
+                            const nApproved = rows.filter(r => r.kind === 'מאושר').length;
+                            const cols = ['תב"ע', 'תיאור', 'שכונה', 'מגרש', 'סוג ההפרשה לפי ההיתר',
+                                'מ"ר בהיתר', 'מ"ר בתכנית', 'תיק היתר', 'סוג המסמך', 'תאריך', 'ביטחון', 'ציטוט מהשרטוט'];
+                            const trHtml = rows.map(r =>
+                                '<tr' + (r.named ? '' : ' class="unnamed"') + '>'
+                                + '<td>' + esc(r.taba) + '</td><td>' + esc(r.summary) + '</td><td>' + esc(r.sub) + '</td>'
+                                + '<td style="text-align:center">' + esc(r.lot || '—') + '</td>'
+                                + '<td' + (r.named ? '' : ' style="color:#8a6d3b"') + '>' + esc(r.use) + '</td>'
+                                + '<td style="text-align:center' + (r.mismatch ? ';color:#c62828;font-weight:bold' : '') + '">' + (nf(r.permitSqm) || '—') + (r.mismatch ? ' ⚠' : '') + '</td>'
+                                + '<td style="text-align:center">' + (nf(r.planSqm) || '—') + '</td>'
+                                + '<td style="text-align:center;direction:ltr">' + esc(r.tik) + '</td>'
+                                + '<td style="text-align:center' + (r.kind === 'מאושר' ? ';color:#2e7d32;font-weight:bold' : ';color:#777') + '">' + esc(r.kind) + '</td>'
+                                + '<td style="text-align:center;direction:ltr">' + esc(r.date) + '</td>'
+                                + '<td style="text-align:center">' + esc(r.conf) + '</td>'
+                                + '<td style="font-size:11px;color:#555">' + esc(r.quote) + '</td></tr>').join('');
+                            const csv = [cols.join(',')].concat(rows.map(r => [r.taba, r.summary, r.sub, r.lot, r.use,
+                                r.permitSqm, r.planSqm, r.tik, r.kind, r.date, r.conf, r.quote]
+                                .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                            const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\ufeff' + csv);
+                            const win = window.open('', '_blank');
+                            if (!win) { alert('הדפדפן חסם את חלון הדוח. אפשר חלונות קופצים (popups) לאתר ונסה שוב.'); return; }
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>סוג ההפרשה המבונה לפי היתר</title>'
+                                + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#b5651d;margin:0 0 4px}'
+                                + 'p.sub{color:#666;margin:0 0 10px;font-size:13px;line-height:1.7}table{width:100%;border-collapse:collapse;font-size:12px}'
+                                + 'th,td{border:1px solid #ccc;padding:6px;text-align:right;vertical-align:top}th{background:#f3e9e0}'
+                                + 'tr.unnamed{background:#fffbf0}.btns{margin:12px 0}.btns a,.btns button{background:#b5651d;color:#fff;border:none;'
+                                + 'padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;cursor:pointer;margin-left:8px}'
+                                + '.note{margin-top:14px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;line-height:1.8}'
+                                + '@media print{.btns{display:none}}</style></head><body>'
+                                + '<h2>סוג ההפרשה המבונה — לפי גרמושקת ההיתר</h2>'
+                                + '<p class="sub">תכניות מאושרות שההוראות שלהן תיארו את ההפרשה רק כ"מבנים ומוסדות ציבור" או "בתיאום עם מחלקת מבני ציבור", '
+                                + 'והשימוש בפועל נקרא מתוך השרטוט שבתיק ההיתר.<br>'
+                                + '<b>' + rows.length + '</b> תכניות · <b>' + nNamed + '</b> עם שימוש מפורש · <b>' + (rows.length - nNamed) + '</b> נבנו והשימוש נותר פתוח · '
+                                + '<b>' + nApproved + '</b> מתוך גרמושקה חתומה (השאר הרמוניקת הגשה) · ' + new Date().toLocaleDateString('he-IL') + '</p>'
+                                + '<div class="btns"><a href="' + csvUri + '" download="hafrash_permit_use.csv">📊 CSV</a><button onclick="window.print()">🖨️ הדפסה</button></div>'
+                                + '<table><thead><tr>' + cols.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>' + trHtml + '</tbody></table>'
+                                + '<div class="note"><b>איך לקרוא:</b> "מ"ר בהיתר" הוא מה שמודפס בטבלת השטחים של השרטוט. ⚠ מסמן פער מעל 15% מול המ"ר שבתכנית — '
+                                + 'לעתים טעות בטבלה 5 ולא אי-ביצוע (101-0342170: 106 מ"ר נבנו מול 1,176 שנדרשו, כשהמגרש כולו 1,435 מ"ר).<br>'
+                                + '<b>סוג המסמך:</b> "מאושר" = הרמוניקה חתומה/מאושרת. "הגשה" = הגשה מקוונת — התכנון עשוי עוד להשתנות.<br>'
+                                + '<b>ביטחון:</b> גבוה = תווית מודפסת שנקראה מילולית מתוך הגדלה, מ"ר בטווח ±15%, ותב"ע מאומתת על השרטוט. '
+                                + 'בינוני = תווית ברורה אך המ"ר חסר/חורג או שהתב"ע לא אומתה.<br>'
+                                + 'הקריאה אינה מחליפה את הוראות התכנית — זו מה שהיתר אחד מראה, והיא עשויה לחלוק עליהן.</div>'
+                                + '</body></html>');
+                            win.document.close();
+                        }
                         // מיצוי יח"ד — היתר מול תב"ע לפי מגרש (per building-group). Reads the
                         // footprint groups computed by the permits layer (window.__footprintGroups),
                         // each carrying planUnits (Table-5) / permitUnits (deduped) / gap.
@@ -26732,6 +26808,7 @@
                             ]},
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
+                                { icon:'📐', title:'סוג ההפרשה לפי היתר', desc:'מה נבנה בפועל בהפרשות שההוראות תיארו רק כ"מבנים ומוסדות ציבור" — נקרא מגרמושקת ההיתר', onClick:() => { openHafrashPermitUseReport(); } },
                                 { icon:'🏗️', title:'הפרשות מבונות ומבני ציבור עתידיים', desc:'שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל', onClick:() => go(() => setShowAllocChooser(true)) },
                                 { icon:'🏛️', title:'שב"צ קיים לפי תת-שכונה', desc:'מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל', onClick:() => go(() => { setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }) },
                                 { icon:'📋', title:'תנאים והפרשות ציבוריות', desc:'תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)', onClick:() => go(() => setConditionsReport(true)) },
