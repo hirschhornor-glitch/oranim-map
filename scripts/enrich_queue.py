@@ -11,6 +11,7 @@ Files (local root, gitignored — transient operational state, like the
 extract_execution_staging .done/.cur checkpoints):
   pending_enrichment.json   {taba: {taba, agam_id, plan_name, reason, queued_at}}
   floor_read_queue.json     {taba: {taba, plan_name, png_paths, source_hint, queued_at}}
+  hafrash_read_queue.json   {taba: {taba, plan_name, hafrash_sqm, candidates, queued_at}}
 
 Keyed by *bare* taba so re-queuing the same plan de-dups naturally. Writes are
 atomic (.tmp -> os.replace) so a killed trigger can never corrupt the queue.
@@ -23,6 +24,7 @@ import re
 ROOT = r"C:\ORANIM"
 QUEUE_PATH = os.path.join(ROOT, "pending_enrichment.json")
 FLOOR_QUEUE_PATH = os.path.join(ROOT, "floor_read_queue.json")
+HAFRASH_QUEUE_PATH = os.path.join(ROOT, "hafrash_read_queue.json")
 
 
 def norm_taba(t):
@@ -89,3 +91,17 @@ def enqueue_floor(items):
 
 def dequeue_floor(tabas):
     return dequeue(tabas, path=FLOOR_QUEUE_PATH)
+
+
+# Same for the hafrasha permit-use read queue (build_hafrash_read_queue.py fills
+# it, process_hafrash_queue.md drains it).
+def load_hafrash_queue():
+    return _load(HAFRASH_QUEUE_PATH)
+
+
+def enqueue_hafrash(items):
+    return enqueue(items, path=HAFRASH_QUEUE_PATH)
+
+
+def dequeue_hafrash(tabas):
+    return dequeue(tabas, path=HAFRASH_QUEUE_PATH)

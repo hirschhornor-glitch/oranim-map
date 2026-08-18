@@ -607,13 +607,16 @@
         // specific / higher-priority domains are tested first (e.g. חירום before רווחה/קהילה).
         // Ordered domain regexes. A single use string may contain more than one domain
         // (e.g. "טיפת חלב ומעון יום" = health + education), so callers can collect ALL matches.
+        // KEEP IN STEP with HAFRASH_DOMAIN_RX in scripts/hafrash_classify.py — that port is what
+        // decides which plans count as "allocation type unknown" in the hafrasha audit, and a
+        // divergence would make the map symbology and the audit disagree silently.
         const HAFRASH_DOMAIN_RX = [
             ['education', /(תיכון|חטיב|אולפנ|מדרשי|ישיב|על[\- ]?יסודי|בתי ספר|בית ספר|בי"?ס|בי״ס|ביה"?ס|ביה״ס|בית-ספר|יסודי|מעון|פעוטון|גן ילדים|גני ילדים|גנון|כיתת? גן|כיתות גן|חינוך)/],
             ['religion',  /(בית[- ]?כנסת|בתי כנסת|ביכ"?נ|ביכ״נ|מקווה|מקוואות|כנסיי|מנזר|מסגד|בית מדרש|כולל|דת)/],
             ['sport',     /(ספורט|בריכ|התעמלות|איצטדיון|מגרש משחק|מגרש כדור|אולם התעמלות)/],
             ['health',    /(מרפאה|קופת חולים|טיפת חלב|תחנת בריאות|בריאות|רפוא)/],
             ['emergency', /(חירום|מקלט|מקלוט|מיגון|תפעול|פיקוד העורף|כיבוי אש)/],
-            ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|אזרחים ותיקים|תשוש|מרכז יום|נכים|שיקום|דירת קלט|דיור ציבורי|דיור מוגן)/],
+            ['welfare',   /(רווחה|שירותים חברתיים|חברתי|שימושי חברה|שירותי חברה|חברה וקהיל|מועדון נוער|מועדונית|נוער|קשיש|גיל שלישי|אזרחים ותיקים|תשוש|מרכז יום|נכים|מוגבלויות|שיקום|דיר(?:ת|ות) קלט|דיור ציבורי|דיור מוגן)/],
             ['culture',   /(מתנ"?ס|מתנ״ס|מרכז קהילתי|מועדון קהילתי|שלוחת מתנ|קהיל|ספריי|ספריה|תרבות|אמנות|אומנות|אולם מופעים|פנאי|מוזיאון|שימושי ציבור|שימ.*קהיל)/],
         ];
         // Education sub-topic classifier (מעון / גן / יסודי / על-יסודי) for the future
@@ -1292,6 +1295,21 @@
             return (k && o[k]) ? o[k] : null;
         }
         function isOccupied(props) { return !!planOccupancy(props); }
+        // ── סוג ההפרשה המבונה לפי גרמושקת ההיתר ──────────────────────────────
+        // An approved plan can impose public floor area inside a private building and
+        // describe it only as "מבנים ומוסדות ציבור" / "*בתיאום עם מחלקת מבני ציבור*".
+        // The permit's approved drawing names what was actually chosen. That is a
+        // DIFFERENT fact from what the plan allocated and may disagree with it, so it
+        // lives in its own file (hafrash_permit_use.json → window.__hafrashPermitUse,
+        // keyed by BARE taba) and is only ever shown alongside the statutory text,
+        // marked with a * and the tik it came from — it never overwrites hafrash_prg.
+        // Reads that were not confidently located are withheld (see hafrash_read_merge.py).
+        function planPermitHafrashUse(taba) {
+            const o = window.__hafrashPermitUse || {};
+            const k = String(taba || '').replace(/^101-?0*/, '').replace(/^0+/, '').trim();
+            const r = k && o[k];
+            return (r && r.outcome === 'found' && r.confidence !== 'low') ? r : null;
+        }
         // Table 5 "unit bonus" note (תותר תוספת של עד N% ממספר יחידות הדיור...) —
         // a note at the bottom of טבלה 5 permitting MORE יח"ד at building-permit
         // stage without a further planning process. From unit_bonus.json
@@ -5205,6 +5223,7 @@
                 window.__extraPermits = {};
                 window.__executionStaging = {};
                 window.__floorAllocations = {};
+                window.__hafrashPermitUse = {}; // סוג ההפרשה המבונה כפי שנקרא מגרמושקת ההיתר — by bare taba
                 window.__maintenanceFund = {}; // קרן תחזוקה — by plan_name
                 window.__hafrashaDelivery = {};
                 window.__excavationPermits = {};
@@ -5253,6 +5272,7 @@
                     ['__unitBonus', 'data/unit_bonus.json'],
                     ['__table5Units', 'data/table5_units.json'],
                     ['__muniCoSubmitter', 'data/muni_cosubmitter.json'],
+                    ['__hafrashPermitUse', 'data/hafrash_permit_use.json'],
                 ];
                 setLoadProgress({ done: 0, total: allEntries.length });
                 let doneCount = 0;
@@ -5747,6 +5767,7 @@
                             else if (key === '__decisionSummaries') { window.__decisionSummaries = data || {}; }
                             else if (key === '__executionStaging') { window.__executionStaging = data || {}; }
                             else if (key === '__floorAllocations') { window.__floorAllocations = data || {}; }
+                            else if (key === '__hafrashPermitUse') { window.__hafrashPermitUse = (data && data.by_plan) || {}; }
                             else if (key === '__maintenanceFund') { window.__maintenanceFund = data || {}; }
                             else if (key === '__hafrashaDelivery') { window.__hafrashaDelivery = data || {}; }
                             else if (key === '__excavationPermits') { window.__excavationPermits = data || {}; }
@@ -22316,6 +22337,42 @@
                 if (isFuture && !isHafrashah && !hasLotEntries && formattedUses.length) {
                     html += `<div class="popup-row"><span class="popup-row-label">שימושים מותרים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${formattedUses.join('<br>')}</span></div>`;
                 }
+                // The permit-read use, shaped for whichever of the two hafrasha layouts
+                // below is in play. It renders as one MORE use line in the same list as
+                // the plan's own — the user asked for it to look like the תב"ע rows — but
+                // carries a * and a footnote naming the tik, so a reader can always tell
+                // which line came from the statutory text and which from a drawing.
+                const _permitUse = (() => {
+                    // Hafrasha only — a שב"צ lot's use comes from its own designation.
+                    // Gate on the subtitle the popup already resolved, NOT on the isHafrashah
+                    // argument: only 3 of the 9 buildShavazPopup call sites pass that flag, and
+                    // for landuse_xplan lots the type actually comes from HAFRASHAH_LOT_CODES.
+                    if (subtitle !== 'הפרשה מבונה' || props._shavatz_fallback) return null;
+                    const r = planPermitHafrashUse(taba);
+                    if (!r) return null;
+                    const p = r.permit || {};
+                    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                    const kind = p.doc_kind === 'הגשה' ? 'הרמוניקת הגשה' : 'גרמושקה מאושרת';
+                    const sqmOff = r.sqm_match === false;
+                    const sqm = (r.sqm_read != null && r.sqm_read !== '') ? (parseInt(r.sqm_read) || 0).toLocaleString() : '';
+                    const src = `${kind} של היתר ${esc(p.tik || '')}${p.doc_date ? ' (' + esc(p.doc_date) + ')' : ''}`;
+                    const tip = esc([r.quote_he, p.doc_descr, p.permit_subject].filter(Boolean).join(' · '));
+                    // use_specified === false: the drawing locates and quantifies the
+                    // allocation but never names a facility — 101-0696104 builds all
+                    // 4,000 מ"ר as an open shell. Showing that as a use row would just
+                    // repeat hafrash_prg, so it becomes a note instead: the space exists,
+                    // the use is still open.
+                    if (r.use_specified === false) {
+                        return { row: null, tip,
+                            note: `* ${src} מראה שההפרשה נבנתה${sqm ? ' (' + sqm + ' מ"ר)' : ''} אך לא נקבע בה שימוש` };
+                    }
+                    return {
+                        row: true, sqm, tip,
+                        label: esc(r.label_he || (r.uses || []).join(', ') || 'מבנה ציבור') + ' *' + (sqmOff ? ' ⚠' : ''),
+                        note: `* לפי ${src}` + (sqmOff ? ' — ⚠ המ"ר בהיתר שונה מהמצוין בתכנית' : ''),
+                    };
+                })();
+                const _permitNote = (m) => m ? `<div style="font-size:10px;color:#8a8a9a;margin-top:4px;word-wrap:break-word">${m.note}</div>` : '';
                 // Lot entries — from hafrash_prg or shavatz_out_prog (matched by taba+lot).
                 // Each entry has either {use, sqm} (sqm-based) or {use, count, unit} (e.g., "9 כיתות מעון").
                 if (isHafrashah || hasLotEntries) {
@@ -22377,7 +22434,9 @@
                             const floorCell = _fm && _fm.fs ? _fmtFloor(_fm.fs) + _confDot(_fm.cf) : '';
                             const _floorTitle = _fm && _fm.lb ? ` title="${_attr(_fm.lb)}"` : '';
                             return `<tr><td style="padding:3px 4px;text-align:right">${e.use || ''}</td><td style="padding:3px 4px;text-align:center;font-size:10px;white-space:nowrap"${_floorTitle}>${floorCell || '—'}</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">${cntCell || '—'}</td><td style="padding:3px 4px;text-align:left;direction:ltr">${sqmCell || '—'}</td></tr>`;
-                        }).join('');
+                        }).join('') + (_permitUse && _permitUse.row
+                            ? `<tr title="${_permitUse.tip}"><td style="padding:3px 4px;text-align:right">${_permitUse.label}</td><td style="padding:3px 4px;text-align:center;font-size:10px">—</td><td style="padding:3px 4px;text-align:center;color:#a59ad6">—</td><td style="padding:3px 4px;text-align:left;direction:ltr">${_permitUse.sqm || '—'}</td></tr>`
+                            : '');
                         if (lotTotalEntry) total = parseInt(lotTotalEntry.sqm) || 0;
                         // Field-authoritative total: Table 5 (the GS field) is the source of truth for
                         // totals. When this is the plan's SOLE lot and the parsed entries sum to LESS
@@ -22402,7 +22461,7 @@
                             ((merged.length > 1 || total > 0)
                                 ? `<tfoot><tr style="border-top:1px solid #555;font-weight:bold"><td style="padding:4px;text-align:right">${totalLabel}${totalHint}</td><td style="padding:4px"></td><td style="padding:4px;text-align:center;color:#a59ad6;font-size:10px">${cntFoot.join(' · ')}</td><td style="padding:4px;text-align:left;direction:ltr">${total > 0 ? total.toLocaleString() + ' מ"ר' : ''}</td></tr></tfoot>`
                                 : '') +
-                            `</table>`;
+                            `</table>` + _permitNote(_permitUse);
                     } else {
                         const hfSqm = cleanNull(props.hafrash_sqm);
                         const hfPrgRaw = cleanNull(props.hafrash_prg);
@@ -22411,7 +22470,7 @@
                         const _noteSplit = hfPrgRaw ? hfPrgRaw.split(/\s*\|\s*הערה:?\s*/) : [''];
                         const hfPrg = _noteSplit[0].trim();
                         const hfNote = (_noteSplit[1] || '').trim();
-                        if (hfSqm || hfPrg) {
+                        if (hfSqm || hfPrg || _permitUse) {
                             html += '<div style="font-size:10px;color:#6a6a8a;padding-top:6px;border-top:1px solid #444">' + (props._shavatz_fallback ? 'שב"צ עתידי (תכנית)' : 'הפרשה מבונה (תכנית)') + '</div>';
                             if (hfSqm) html += `<div class="popup-row"><span class="popup-row-label">סה"כ מ"ר</span><span class="popup-row-value">${parseInt(hfSqm).toLocaleString()}</span></div>`;
                             // Parse the free-text prg into a per-use list (handles comma-only formats with
@@ -22427,6 +22486,8 @@
                             } else if (hfPrg) {
                                 html += `<div class="popup-row"><span class="popup-row-label">שימושים</span><span class="popup-row-value" style="font-size:11px;max-width:200px;word-wrap:break-word">${hfPrg}</span></div>`;
                             }
+                            if (_permitUse && _permitUse.row) html += `<div class="popup-row" title="${_permitUse.tip}"><span class="popup-row-label">${_permitUse.label}</span><span class="popup-row-value">${_permitUse.sqm ? _permitUse.sqm + ' מ"ר' : ''}</span></div>`;
+                            html += _permitNote(_permitUse);
                             if (hfNote) html += `<div style="font-size:10px;color:#8a8a9a;margin-top:4px;word-wrap:break-word">הערה: ${hfNote}</div>`;
                         }
                     }

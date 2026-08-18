@@ -8,6 +8,7 @@ const FRESH_DATA_FILES = [
   '/data/last_update.txt',
   '/data/last_run_summary.txt',
   '/data/developer_aliases.json',
+  '/data/hafrash_permit_use.json',
 ];
 const STATIC_CACHE = `oranim-static-${CACHE_VERSION}`;
 const CDN_CACHE = `oranim-cdn-${CACHE_VERSION}`;
