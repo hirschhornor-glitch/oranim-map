@@ -154,6 +154,17 @@ def save_evidence(taba, ev):
     return "%s/%s" % (EVID_REL, name)
 
 
+# doc_kind is re-derived here rather than trusted from the index, so a ranking bug is
+# corrected in published data without re-downloading anything. "הרמוניקה מלאה ומפורטת"
+# reads as approved but is not: 101-1218999's is a submission set for a file still at
+# ג-רישוי בתהליך.
+_APPROVED_DOC = re.compile(r"חתומ|מאושרת|הדף כחול|היתר בניה\s+והרמוניקה")
+
+
+def derive_doc_kind(doc_descr):
+    return "מאושר" if _APPROVED_DOC.search(str(doc_descr or "")) else "הגשה"
+
+
 def build_record(taba, r, index_rec, write_evidence=True):
     ch = (index_rec or {}).get("chosen") or {}
     ev = (r.get("evidence") or [{}])[0]
@@ -172,7 +183,7 @@ def build_record(taba, r, index_rec, write_evidence=True):
         "lot": r.get("lot"),
         "taba_on_sheet": r.get("taba_on_sheet"),
         "taba_match": r.get("taba_match"),
-        "permit": {"tik": ch.get("tik"), "doc_kind": ch.get("doc_kind"),
+        "permit": {"tik": ch.get("tik"), "doc_kind": derive_doc_kind(ch.get("doc_descr")),
                    "doc_descr": ch.get("doc_descr"), "doc_date": ch.get("doc_date"),
                    "permit_subject": r.get("permit_subject") or ch.get("permit_descr"),
                    "sheet": ev.get("sheet"), "panel": ev.get("panel")},
