@@ -217,3 +217,73 @@
 {"ts": "2026-08-20 13:26:24", "taba": 141010, "plan_name": "101-0141010", "status": "תבע מאושרת", "field": "units_in", "old": 0, "new": 2}
 {"ts": "2026-08-20 13:26:24", "taba": 918490, "plan_name": "101-0918490", "status": "תבע מאושרת", "field": "units_add", "old": 11, "new": 2}
 {"ts": "2026-08-20 13:26:24", "taba": 1515410, "plan_name": "101-1515410", "status": "נקלטה מקובץ מבאת", "field": "units_add", "old": 0, "new": 1}
+{"ts": "2026-08-20 16:34:23", "taba": 690859, "plan_name": "101-0690859", "status": "תבע מאושרת", "field": "units_total", "old": 298, "new": 292}
+{"ts": "2026-08-20 16:34:23", "taba": 690859, "plan_name": "101-0690859", "status": "תבע מאושרת", "field": "units_add", "old": 190, "new": 184}
+{"ts": "2026-08-20 16:34:23", "taba": 690859, "plan_name": "101-0690859", "status": "תבע מאושרת", "field": "conditional_housing", "old": "", "new": 6}
+{"ts": "2026-08-20 16:34:23", "taba": 808451, "plan_name": "101-0808451", "status": "תבע מאושרת", "field": "units_total", "old": 51, "new": 50}
+{"ts": "2026-08-20 16:34:23", "taba": 808451, "plan_name": "101-0808451", "status": "תבע מאושרת", "field": "units_add", "old": 31, "new": 30}
+{"ts": "2026-08-20 16:34:23", "taba": 857086, "plan_name": "101-0857086", "status": "אישור", "field": "units_total", "old": 90, "new": 270}
+{"ts": "2026-08-20 16:34:23", "taba": 857086, "plan_name": "101-0857086", "status": "אישור", "field": "units_add", "old": 90, "new": 270}
+{"ts": "2026-08-20 16:34:23", "taba": 550541, "plan_name": "101-0550541", "status": "אישור", "field": "units_total", "old": 104, "new": 122}
+{"ts": "2026-08-20 16:34:23", "taba": 550541, "plan_name": "101-0550541", "status": "אישור", "field": "units_add", "old": 73, "new": 91}
+{"ts": "2026-08-20 16:34:23", "taba": 550541, "plan_name": "101-0550541", "status": "אישור", "field": "Machpil", "old": 3.35483871, "new": 3.935483871}
+{"ts": "2026-08-20 16:34:23", "taba": 876649, "plan_name": "101-0876649", "status": "אישור", "field": "units_total", "old": 441, "new": 437}
+{"ts": "2026-08-20 16:34:23", "taba": 876649, "plan_name": "101-0876649", "status": "אישור", "field": "units_add", "old": 313, "new": 309}
+{"ts": "2026-08-20 16:34:23", "taba": 932152, "plan_name": "101-0932152", "status": "תבע מאושרת", "field": "units_total", "old": 55, "new": 53}
+{"ts": "2026-08-20 16:34:23", "taba": 932152, "plan_name": "101-0932152", "status": "תבע מאושרת", "field": "units_add", "old": 34, "new": 32}
+{"ts": "2026-08-20 16:34:23", "taba": 969162, "plan_name": "101-0969162", "status": "אישור", "field": "units_total", "old": 575, "new": 695}
+{"ts": "2026-08-20 16:34:23", "taba": 969162, "plan_name": "101-0969162", "status": "אישור", "field": "units_add", "old": 575, "new": 695}
+{"ts": "2026-08-20 16:34:23", "taba": 969519, "plan_name": "101-0969519", "status": "אישור", "field": "units_total", "old": 8, "new": 7}
+{"ts": "2026-08-20 16:34:23", "taba": 969519, "plan_name": "101-0969519", "status": "אישור", "field": "units_add", "old": 1, "new": 0}
+{"ts": "2026-08-20 16:34:23", "taba": 935189, "plan_name": "101-0935189", "status": "אישור", "field": "units_total", "old": 145, "new": 127}
+{"ts": "2026-08-20 16:34:23", "taba": 935189, "plan_name": "101-0935189", "status": "אישור", "field": "units_add", "old": 105, "new": 87}
+{"ts": "2026-08-20 16:34:23", "taba": 1049972, "plan_name": "101-1049972", "status": "אישור", "field": "units_total", "old": 8, "new": 9}
+{"ts": "2026-08-20 16:34:23", "taba": 1049972, "plan_name": "101-1049972", "status": "אישור", "field": "units_add", "old": 4, "new": 5}
+{"ts": "2026-08-20 16:34:23", "taba": 1117159, "plan_name": "101-1117159", "status": "אישור", "field": "units_total", "old": 32, "new": 34}
+{"ts": "2026-08-20 16:34:23", "taba": 1117159, "plan_name": "101-1117159", "status": "אישור", "field": "units_add", "old": 22, "new": 24}
+{"ts": "2026-08-20 16:34:23", "taba": 1142629, "plan_name": "101-1142629", "status": "אישור", "field": "units_total", "old": 6, "new": 5}
+{"ts": "2026-08-20 16:34:23", "taba": 1142629, "plan_name": "101-1142629", "status": "אישור", "field": "units_add", "old": 2, "new": 1}
+{"ts": "2026-08-20 16:34:23", "taba": 657593, "plan_name": "101-0657593", "status": "אישור", "field": "hotels", "old": 1700, "new": 1300}
+{"ts": "2026-08-20 16:34:23", "taba": 1161439, "plan_name": "101-1161439", "status": "אישור", "field": "units_total", "old": 30, "new": 60}
+{"ts": "2026-08-20 16:34:23", "taba": 1161439, "plan_name": "101-1161439", "status": "אישור", "field": "units_add", "old": 30, "new": 60}
+{"ts": "2026-08-20 16:34:23", "taba": 1114040, "plan_name": "101-1114040", "status": "תחילת תוקף", "field": "units_total", "old": 29, "new": 31}
+{"ts": "2026-08-20 16:34:23", "taba": 1114040, "plan_name": "101-1114040", "status": "תחילת תוקף", "field": "units_add", "old": 3, "new": 5}
+{"ts": "2026-08-20 16:34:23", "taba": 1211838, "plan_name": "101-1211838", "status": "אישור", "field": "units_total", "old": 9, "new": 14}
+{"ts": "2026-08-20 16:34:23", "taba": 1211838, "plan_name": "101-1211838", "status": "אישור", "field": "units_add", "old": 5, "new": 10}
+{"ts": "2026-08-20 16:34:23", "taba": 1175926, "plan_name": "101-1175926", "status": "בהליך אישור", "field": "units_total", "old": 19, "new": 24}
+{"ts": "2026-08-20 16:34:23", "taba": 1175926, "plan_name": "101-1175926", "status": "בהליך אישור", "field": "units_add", "old": 15, "new": 20}
+{"ts": "2026-08-20 16:34:23", "taba": 1175926, "plan_name": "101-1175926", "status": "בהליך אישור", "field": "Machpil", "old": 4.75, "new": 6}
+{"ts": "2026-08-20 16:34:23", "taba": 1317205, "plan_name": "101-1317205", "status": "אישור", "field": "units_total", "old": 28, "new": 30}
+{"ts": "2026-08-20 16:34:23", "taba": 1317205, "plan_name": "101-1317205", "status": "אישור", "field": "units_add", "old": 0.0, "new": 2}
+{"ts": "2026-08-20 16:34:23", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": 120, "new": 134}
+{"ts": "2026-08-20 16:34:23", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "units_add", "old": 111, "new": 125}
+{"ts": "2026-08-20 16:34:23", "taba": 833038, "plan_name": "101-0833038", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1401348, "plan_name": "101-1401348", "status": "הכרעה בהתנגדויות / אישור", "field": "hotels", "old": 18, "new": 12}
+{"ts": "2026-08-20 16:34:23", "taba": 1401348, "plan_name": "101-1401348", "status": "הכרעה בהתנגדויות / אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1380765, "plan_name": "101-1380765", "status": "בבדיקה תכנונית", "field": "units_total", "old": 15, "new": 1}
+{"ts": "2026-08-20 16:34:23", "taba": 1380765, "plan_name": "101-1380765", "status": "בבדיקה תכנונית", "field": "units_add", "old": 1, "new": -13}
+{"ts": "2026-08-20 16:34:23", "taba": 1380765, "plan_name": "101-1380765", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "units_total", "old": 102, "new": 106}
+{"ts": "2026-08-20 16:34:23", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "units_add", "old": 59, "new": 63}
+{"ts": "2026-08-20 16:34:23", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "Machpil", "old": 2.372093023, "new": 2.465116279}
+{"ts": "2026-08-20 16:34:23", "taba": 1377753, "plan_name": "101-1377753", "status": "במילוי תנאים להפקדה", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1244417, "plan_name": "101-1244417", "status": "אישור", "field": "units_total", "old": 65, "new": 60}
+{"ts": "2026-08-20 16:34:23", "taba": 1244417, "plan_name": "101-1244417", "status": "אישור", "field": "units_add", "old": 65, "new": 60}
+{"ts": "2026-08-20 16:34:23", "taba": 1443126, "plan_name": "101-1443126", "status": "הכרעה בהתנגדויות / אישור", "field": "hotels", "old": "", "new": 160}
+{"ts": "2026-08-20 16:34:23", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "units_total", "old": 6, "new": 4}
+{"ts": "2026-08-20 16:34:23", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "units_add", "old": 2, "new": 0}
+{"ts": "2026-08-20 16:34:23", "taba": 1439520, "plan_name": "101-1439520", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1496504, "plan_name": "101-1496504", "status": "בבדיקה תכנונית", "field": "units_total", "old": 10, "new": 9}
+{"ts": "2026-08-20 16:34:23", "taba": 1496504, "plan_name": "101-1496504", "status": "בבדיקה תכנונית", "field": "units_add", "old": 1, "new": 0}
+{"ts": "2026-08-20 16:34:23", "taba": 1496504, "plan_name": "101-1496504", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 1080597, "plan_name": "101-1080597", "status": "נדחתה", "field": "units_total", "old": 954, "new": 1204}
+{"ts": "2026-08-20 16:34:23", "taba": 1080597, "plan_name": "101-1080597", "status": "נדחתה", "field": "units_add", "old": 954, "new": 1204}
+{"ts": "2026-08-20 16:34:23", "taba": 973958, "plan_name": "101-0973958", "status": "אישור", "field": "hotels", "old": 15, "new": 34}
+{"ts": "2026-08-20 16:34:23", "taba": 917138, "plan_name": "101-0917138", "status": "אישור", "field": "units_total", "old": 220, "new": 240}
+{"ts": "2026-08-20 16:34:23", "taba": 917138, "plan_name": "101-0917138", "status": "אישור", "field": "units_add", "old": 220, "new": 240}
+{"ts": "2026-08-20 16:34:23", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "units_total", "old": 5, "new": 2}
+{"ts": "2026-08-20 16:34:23", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "units_add", "old": 0, "new": -3}
+{"ts": "2026-08-20 16:34:23", "taba": 1205715, "plan_name": "101-1205715", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 16:34:23", "taba": 808840, "plan_name": "101-0808840", "status": "אישור", "field": "units_total", "old": 1728, "new": 1483}
+{"ts": "2026-08-20 16:34:23", "taba": 808840, "plan_name": "101-0808840", "status": "אישור", "field": "units_add", "old": 1728, "new": 1483}
+{"ts": "2026-08-20 16:34:23", "taba": 808840, "plan_name": "101-0808840", "status": "אישור", "field": "SUB_N", "old": "", "new": "תלפיות - תעשייה ומסחר"}
