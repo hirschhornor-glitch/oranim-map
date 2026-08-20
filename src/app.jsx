@@ -21790,6 +21790,12 @@
                 // floors_unverified = שורת "מספר קומות" ב-454 השאירה את עמודת "קיים" ריקה בבניין
                 // שיש לו שטח בנוי קיים → המספר אינו הסך שאחרי (ראה refetch_tama38_floors.py).
                 const flUnv = !!props.floors_unverified;
+                // floors_src: table_lower_bound = לפחות כך (חסם תחתון) · text/unread = נשלף
+                // מטקסט הבקשה ויכול לשגות לשני הכיוונים · table_total/manual = סך מאומת.
+                const flSrc = props.floors_src || '';
+                const flNote = flSrc === 'table_lower_bound'
+                    ? 'YK דיווח ' + fl + ' קומות בלי הקומות הקיימות — הסך בפועל גבוה יותר'
+                    : 'מספר הקומות נשלף מטקסט הבקשה (אין שורת "מספר קומות" בטבלת השטחים) — לא מאומת';
                 const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
                 const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
 
@@ -21831,7 +21837,7 @@
                         html += '<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">&#215;' + (uout / uin).toFixed(1) + '</span></div>';
                     }
                     if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value"' +
-                        (flUnv ? ' style="color:#ffb74d" title="שורת מספר-הקומות ב-YK לא כוללת את הקומות הקיימות — המספר עשוי להיות התוספת בלבד"' : '') +
+                        (flUnv ? ' style="color:#ffb74d" title="' + esc(flNote) + '"' : '') +
                         '>' + fl + (flUnv ? '?' : '') + '</span></div>';
                     html += '</div>';
                     // תמ"א 38 usually adds units. יוצא≤נכנס with no authoritative total = suspect
@@ -21892,7 +21898,7 @@
                     }
                     if (mpc.flag === 'הפרה') html += '<div style="font-size:12px;font-weight:bold;color:#ef5350">&#128308; חריגת קומות מתכנית האב</div>';
                     else if (mpc.flag === 'אזהרה') html += '<div style="font-size:12px;font-weight:bold;color:#ffb74d">&#128993; אזהרת קומות (כלל גס)</div>';
-                    else if (mpc.cap != null && flUnv && fl) html += '<div style="font-size:11px;color:#ffb74d">&#9888;&#65039; לא ניתן לאמת תאימות קומות — YK דיווח ' + fl + ' בלי הקומות הקיימות, כך שהסך בפועל גבוה יותר</div>';
+                    else if (mpc.cap != null && flUnv && fl) html += '<div style="font-size:11px;color:#ffb74d">&#9888;&#65039; לא ניתן לאמת תאימות קומות — ' + esc(flNote) + '</div>';
                     else if (mpc.cap != null) html += '<div style="font-size:12px;color:#81c784">&#128994; תואם קומות</div>';
                     if (mpc.conservation_kind === 'מבנה לשימור') html += '<div style="font-size:12px;font-weight:bold;color:#ce93d8;margin-top:3px">&#127963;&#65039; מבנה לשימור' + (mpc.conservation && mpc.conservation !== '?' ? ' · ' + esc(mpc.conservation) : '') + '</div>';
                     else if (mpc.conservation_kind === 'באזור שימור') html += '<div style="font-size:11px;color:#b39ddb;margin-top:3px">&#127963;&#65039; באזור שימור</div>';
@@ -30836,6 +30842,9 @@
                                     const t38mp = Object.values(window.__tama38MpCheck || {}).filter(r => r && r.master_plan === masterPlanReport);
                                     const t38Viol = t38mp.filter(r => r.flag === 'הפרה');
                                     const t38Cons = t38mp.filter(r => r.conservation_kind === 'מבנה לשימור');
+                                    // מספר הקומות שדווח ב-YK הוא לפעמים חסם תחתון (עמודת "קיים"
+                                    // ריקה) — מתחת לתקרה הוא לא מוכיח תאימות, מעליה הוא עדיין מוכיח חריגה.
+                                    const t38Unv = t38mp.filter(r => r.floors_unverified && r.flag !== 'הפרה' && r.cap != null && r.floors_tama != null);
 
                                     // Master-plan context: subzone counts, floor range, conservation totals, no-densif zones
                                     const mpFeatures = (mpFc && mpFc.features) || [];
@@ -30961,12 +30970,13 @@
                                             </div>
 
                                             {/* תמ"א 38 buildings — floor & conservation compliance vs the master plan */}
-                                            {(t38Viol.length > 0 || t38Cons.length > 0) && (
+                                            {(t38Viol.length > 0 || t38Cons.length > 0 || t38Unv.length > 0) && (
                                                 <div style={{background:'#15152a',border:'1px solid #2a2a3e',borderRadius:6,padding:'8px 12px',marginTop:10}}>
                                                     <div style={{fontSize:10,color:'#7a8a9a',textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>🏢 מבני תמ"א 38 מול תכנית האב</div>
                                                     <div style={{display:'flex',gap:18,marginBottom:6}}>
                                                         <span style={{fontSize:12,color:'#ef5350'}}>🔴 חריגת קומות: <b>{t38Viol.length}</b></span>
                                                         <span style={{fontSize:12,color:'#ce93d8'}}>🏛️ מבנה לשימור: <b>{t38Cons.length}</b></span>
+                                                        {t38Unv.length > 0 && <span style={{fontSize:12,color:'#ffb74d'}} title='YK דיווח מספר קומות בלי הקומות הקיימות — הסך בפועל גבוה יותר'>⚠️ קומות לא מאומתות: <b>{t38Unv.length}</b></span>}
                                                     </div>
                                                     {t38Viol.slice(0,6).map((r,i) => (
                                                         <div key={'v'+i} style={{fontSize:11,color:'#e0a0a0',margin:'2px 0'}}>• {r.address} — {r.floors_tama} קומות מול תקרה {r.cap}{r.conservation_kind==='מבנה לשימור'?' · 🏛️ שימור':''}</div>
