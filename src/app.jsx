@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-16-permits';
+        const APP_VERSION = '2026-08-20-audit-fixes';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -495,7 +495,8 @@
         const MOCH_TYPE_TO_PARSER_KEY = {
             'בית כנסת': 'synagogue',
             'מקווה טוהרה': 'mikve',
-            'מגרש ספורט': 'sport_hall',
+            // 'מגרש ספורט' לא ממופה בכוונה: מגרש פתוח (לרוב חצר בי"ס) אינו מענה לדרישת אולם ספורט,
+            // וספירתו כאולם יצרה עודף מדומה במאזן. ראה פירוט קיים → אולם ספורט.
             'אולם ספורט, התעמלות': 'sport_hall',
             'בריכת שחייה ציבורית או עירונית': 'sport_hall',
             'איצטדיון': 'sport_hall',
@@ -1620,8 +1621,132 @@
             'נגנזה': '#888888',
             'נדחתה': '#888888',
             'נגנזה/נדחתה': '#888888',
+            // Rare statuses that used to fall through to the '#f0e0d0' default —
+            // an unlabelled peach polygon that appears in no legend.
+            'הכנת הודעה 77/78': '#eb0000',
+            'נקלטה': '#eb0000',
+            'ביטול פרסום': '#b0b0b0',
             'מאוכלס': '#0d9488',
         };
+
+        // ── Status grouping: ONE source of truth ───────────────────────────
+        // Four separate status→group maps used to live inside the units, commerce
+        // and minahak reports. They disagreed: 'תכנית עומדת בתנאי סף' was
+        // "conditions" in one and "open" in another; the commerce map matched
+        // strings that appear nowhere in the sheet ('אושרה', 'תנאים לפני הפקדה')
+        // so 24% of the floor area landed in an unrendered bucket; the units map
+        // spelled 'נפתח תיק תבע' without gershayim so 140 יח"ד were dropped.
+        //
+        // Rules for this table:
+        //  1. Every status_mavat value observed in the sheet must be listed.
+        //  2. Colors follow STATUS_COLORS above, so a report bar and the map
+        //     polygon for the same plan never disagree.
+        //  3. Anything unlisted falls to 'other', which IS rendered (label 'אחר').
+        //     Unknown statuses must surface, never vanish.
+        const STATUS_GROUP_DEFS = [
+            { key: 'approved',    label: 'אישור / מאושרת',        color: '#50d25a',
+              match: ['אישור', 'מאושרת', 'תבע מאושרת', 'תחילת תוקף'] },
+            { key: 'in_approval', label: 'בהליך אישור',           color: '#50d25a',
+              match: ['בהליך אישור', 'תבע - טרום אישור'] },
+            { key: 'objections',  label: 'התנגדויות',             color: '#fafa3c',
+              match: ['דיון בהתנגדויות ותיקונים', 'הכרעה בהתנגדויות / אישור'] },
+            { key: 'deposit',     label: 'הפקדה',                 color: '#fafa3c',
+              match: ['הפקדה להתנגדויות/השגות'] },
+            { key: 'conditions',  label: 'במילוי תנאים להפקדה',   color: '#f56e05',
+              match: ['במילוי תנאים להפקדה'] },
+            // תנאי סף (both variants) sit BEFORE deposit conditions, and STATUS_COLORS
+            // already paints them red — so they belong with פתיחת תיק, not with
+            // 'במילוי תנאים להפקדה'. Same for הודעה 77/78, which precedes intake.
+            { key: 'open',        label: 'פתיחת תיק / בבדיקה',    color: '#eb0000',
+              match: ['נפתח תיק למתכנן', 'נפתח תיק תב"ע', 'נפתח תיק תבע', 'בבדיקה תכנונית',
+                      'נקלטה מקובץ מבאת', 'נקלטה', 'תכנית עומדת בתנאי סף', 'בבדיקת תנאי סף',
+                      'הכנת הודעה 77/78'] },
+            { key: 'rejected',    label: 'נגנזה / נדחתה',         color: '#888888',
+              match: ['נגנזה', 'נדחתה', 'נגנזה/נדחתה'] },
+            { key: 'other',       label: 'אחר',                   color: '#b0b0b0', match: [] },
+        ];
+        const _STATUS_GROUP_INDEX = (() => {
+            const m = {};
+            STATUS_GROUP_DEFS.forEach(g => g.match.forEach(s => { m[s] = g.key; m[s.replace(/\s+/g, '')] = g.key; }));
+            return m;
+        })();
+        // Returns a group key — always a string, never null. Callers must not drop
+        // rows on a falsy return; that is exactly the bug this replaced.
+        function statusGroupKey(status) {
+            const s = normalizeStatus(String(status || '').trim());
+            return _STATUS_GROUP_INDEX[s] || _STATUS_GROUP_INDEX[s.replace(/\s+/g, '')] || 'other';
+        }
+        function statusGroupDef(key) {
+            return STATUS_GROUP_DEFS.find(g => g.key === key) || STATUS_GROUP_DEFS[STATUS_GROUP_DEFS.length - 1];
+        }
+        // Label-keyed variant for the older reports that bucket by Hebrew label.
+        function statusGroupLabel(status) { return statusGroupDef(statusGroupKey(status)).label; }
+
+        // ── TAMA 38 licensing stage → color ───────────────────────────────
+        // tama38.geojson carries 17 distinct `status` strings, but the map used to
+        // test exact equality against 4 of them. 45 of 488 points fell through to a
+        // '#e94560' default — including 12 reading 'הופק-הוצא היתר בניה', i.e. a
+        // permit that HAS been issued, painted as if unclassified next to the
+        // 'הופק הוצא היתר' points that were green. Elsewhere the app buckets the same
+        // field with status.includes('הופק'), so one project could be green in a
+        // report and pink on the map. Substring rules now cover every observed value,
+        // and anything genuinely unrecognised gets neutral grey rather than a color
+        // that reads as a real category.
+        const TAMA38_STAGE_COLORS = {
+            planning:  'rgb(215,25,28)',    // תכנון — טרם כניסה לרישוי
+            licensing: 'rgb(253,174,97)',   // תיק רישוי פתוח / בתהליך
+            approved:  'rgb(255,255,192)',  // ההיתר אושר — טרם הופק
+            issued:    'rgb(166,217,106)',  // ההיתר הופק
+            unknown:   '#9aa0a6',
+        };
+        function tama38Stage(rawStatus) {
+            const s = String(rawStatus || '').trim().replace(/\s+/g, '');
+            if (!s) return 'unknown';
+            // Order matters: 'תכנון - טרם כניסה לרישוי' contains 'רישוי', and
+            // 'היתר אושר בועדת רישוי' contains 'ועדת' — both must be classified
+            // before the broad licensing rule below.
+            if (s.includes('הופק') || s.includes('הוצאהיתר') || s.includes('תעודתגמר') || s.includes('גמרבנייה')) return 'issued';
+            if (s.includes('היתראושר') || s.includes('טיוטתהיתר')) return 'approved';
+            if (s.includes('תכנון') || s.includes('טרםכניסהלרישוי')) return 'planning';
+            if (s.includes('נפתחתיק') || s.includes('רישוי') || s.includes('ועדת') || s.includes('וועדת')
+                || s.includes('פרסום') || s.includes('מקדמה') || s.includes('הגשה') || s.includes('חידוש')
+                || s.includes('הקלה') || s.includes('בקשה')) return 'licensing';
+            return 'unknown';
+        }
+        function tama38StatusColor(rawStatus) { return TAMA38_STAGE_COLORS[tama38Stage(rawStatus)] || TAMA38_STAGE_COLORS.unknown; }
+
+        // ── Junk rows in the published sheet ───────────────────────────────
+        // Oranim_Taba publishes 1,089 non-empty rows for 1,085 real plans. Row 3 is a
+        // duplicated header sitting inside the data (plan_name === 'plan_name',
+        // minahak === 'minahak'), which surfaced as a literal "minahak" column in the
+        // commerce report. Rows 844/846/847 carry only mavat_url + last_modified —
+        // orphans a March-2026 sync script left behind, all pointing at 101-1549260.
+        // The sheet is hand-edited, so filter defensively here as well as cleaning it.
+        function isJunkPlanRow(obj) {
+            if (!obj) return true;
+            const pn = String(obj.plan_name || '').trim();
+            if (!pn) return true;                 // orphan rows with no plan
+            return pn === 'plan_name';            // repeated header row
+        }
+
+        // ── Nested plans: don't count the same allocation twice ────────────
+        // detect_plan_containment.py finds older plans sitting ≥95% inside a newer
+        // one where BOTH rows carry the same hafrash_sqm — e.g. 101-0095612 and
+        // 101-0571190 both record מגרש 201 / 1,631 מ"ר. Five such pairs inflate the
+        // public-allocation totals by 2,573 מ"ר. The map pins already merged them,
+        // but every aggregate just printed an advisory "לא לסכום את שתיהן" note and
+        // then summed both anyway. Aggregates now call this and skip the superseded
+        // side — but only when the operative plan is actually loaded, so a duplicate
+        // is dropped and a genuine standalone allocation never is.
+        function _bareTaba(v) { return String(v == null ? '' : v).trim().replace(/^101\s*-?\s*/, '').replace(/^0+/, ''); }
+        function hafrashIsDuplicate(taba) {
+            const rec = (window.__planContainment || {})[_bareTaba(taba)];
+            if (!rec) return false;
+            const op = _bareTaba(rec.superseded_by);
+            if (!op) return false;
+            const byTaba = window.__planByTaba || {};
+            return !!(byTaba[op] || byTaba[String(rec.superseded_by || '').trim()]);
+        }
 
         // === THEMATIC COLOR FAMILIES (added 2026-05-01) ===
         // Four families with internal shades preserving information.
@@ -2723,11 +2848,14 @@
             { label: 'ו-גמר בנייה', color: PERMITS_PALETTE.done },
         ];
 
+        // Labels describe the STAGE, not one exact status string — the layer holds 17
+        // status wordings that tama38Stage() folds into these four buckets.
         const TAMA38_LEGEND = [
-            { label: 'תכנון - טרם כניסה לרישוי', color: 'rgb(215,25,28)' },
-            { label: 'נפתח תיק היתר', color: 'rgb(253,174,97)' },
-            { label: 'היתר אושר בועדת רישוי', color: 'rgb(255,255,192)' },
-            { label: 'הופק/הוצא היתר', color: 'rgb(166,217,106)' },
+            { label: 'תכנון - טרם כניסה לרישוי', color: TAMA38_STAGE_COLORS.planning },
+            { label: 'תיק רישוי פתוח / בתהליך (כולל דיון בוועדה, פרסום, הקלה)', color: TAMA38_STAGE_COLORS.licensing },
+            { label: 'ההיתר אושר בוועדת רישוי — טרם הופק', color: TAMA38_STAGE_COLORS.approved },
+            { label: 'הופק/הוצא היתר', color: TAMA38_STAGE_COLORS.issued },
+            { label: 'סטטוס לא מזוהה', color: TAMA38_STAGE_COLORS.unknown },
             { label: 'בנוי/הושלם (תעודת גמר) — מעומעם ל-30%; מוצג מלא בשכבת "בינוי חדש"', color: 'rgb(13,148,136)' },
             { label: 'בקשה שבוטלה/נסגרה (מוסתר כברירת מחדל)', color: '#888' },
         ];
@@ -3188,6 +3316,7 @@
             const [showCommerceTable, setShowCommerceTable] = useState(false);
             const [commerceData, setCommerceData] = useState(null);
             const [commerceLoading, setCommerceLoading] = useState(false);
+            const [commerceError, setCommerceError] = useState(null); // message when the sheet fetch fails
             const [commerceExpanded, setCommerceExpanded] = useState(null); // null | 'status'
             const [commerceDrilldown, setCommerceDrilldown] = useState(null);
             const [commerceCellReport, setCommerceCellReport] = useState(null);
@@ -5730,7 +5859,7 @@
                                 const obj = {};
                                 header.forEach((h, idx) => { obj[h] = r[idx] || ''; });
                                 return obj;
-                            });
+                            }).filter(o => !isJunkPlanRow(o));
                             console.log('[CSV] Cached', window.__plansCsvRows.length, 'plan rows for reports');
                         } catch (e) { console.warn('[CSV] Row cache parse failed:', e); }
                         applyMinahakOverrides(gd); // CSV may have re-introduced stale minahak; re-correct.
@@ -9149,6 +9278,86 @@
                     al_yesodi: existingEdu.alyesodi_classes,
                     maon: existingEdu.maon_classes || 0,
                 };
+                // ── קיים לשירותי קהילה/רווחה/דת/בריאות ──
+                // שכבת "מבני ציבור — מצב קיים" (סקר מוסדות משב"ש 2021, mosadot_moch.geojson) נספרת פר-שירות
+                // בתוך גבולות הסקופ. בלעדיה השורות האלה הראו "—" כאילו אין נתוני קיים, בעוד שבפועל ידוע
+                // איפה נמצאות טיפות החלב, המרפאות, המתנ"סים וכו'. שירות שהסקר לא מסווג (למשל מרכז יום לקשיש,
+                // שנבלע בסיווג "מועדון קשישים") נשאר "—" ולא 0 — כדי לא להמציא נתון.
+                // הסיווג עצמו הוא MOCH_TYPE_TO_PARSER_KEY הגלובלי — אותו מיפוי שמשמש את מאזן
+                // תת-השכונות, כדי ששתי הטבלאות לא יתפצלו.
+                // שירות שהמיפוי לא מכסה (למשל מרכז יום לקשיש, שנבלע ב"מועדון קשישים") נשאר "—" ולא 0.
+                const MOCH_COVERED = new Set(Object.keys(MOCH_TYPE_TO_PARSER_KEY).map(t => MOCH_TYPE_TO_PARSER_KEY[t]));
+                const mochLayer = (gdBkt && gdBkt.mosadot_moch && gdBkt.mosadot_moch.features)
+                    ? gdBkt.mosadot_moch
+                    : ((window.__fullReportCache || {}).mosadot_moch || null);
+                const mochReady = !!(mochLayer && mochLayer.features);
+                const existingMochByKey = {}, existingMochFeatsByKey = {};
+                if (mochReady) {
+                    mochLayer.features.forEach(f => {
+                        const g = f.geometry;
+                        if (!g || g.type !== 'Point' || !g.coordinates || !inScope(g.coordinates)) return;
+                        const key = MOCH_TYPE_TO_PARSER_KEY[String((f.properties || {}).type || '').trim()];
+                        if (!key) return;
+                        existingMochByKey[key] = (existingMochByKey[key] || 0) + 1;
+                        (existingMochFeatsByKey[key] = existingMochFeatsByKey[key] || []).push(f);
+                    });
+                } else if (!window.__mochProgLoading) {
+                    // lazy-loaded layer — fetch once, cache, and re-render the modal with real "קיים"
+                    window.__mochProgLoading = true;
+                    fetch(GEOJSON_FILES.mosadot_moch)
+                        .then(r => r.ok ? r.json() : null)
+                        .then(j => {
+                            window.__mochProgLoading = false;
+                            if (!j) return;
+                            (window.__fullReportCache = window.__fullReportCache || {}).mosadot_moch = j;
+                            if (document.getElementById('programa-result')) reRender();
+                        })
+                        .catch(() => { window.__mochProgLoading = false; });
+                }
+                // מוסדות הקיים שמאחורי כל תא "קיים" — חינוך מהשנתון (existingEdu.byKey), שאר מסקר משב"ש.
+                // מזין את הדריל-דאון שנפתח בלחיצה על התא, כדי שיהיה אפשר לראות *אילו* מוסדות נספרו.
+                const EDU_KEYS_EX = ['maon', 'gan', 'yesodi', 'al_yesodi'];
+                const _eduPtByAddr = {};
+                (eduFeats || []).forEach(f => {
+                    const a = (f.properties || {}).address;
+                    const co = f.geometry && f.geometry.coordinates;
+                    if (a && co && !_eduPtByAddr[a]) _eduPtByAddr[a] = co;
+                });
+                function existingItemsFor(svcKey) {
+                    if (EDU_KEYS_EX.indexOf(svcKey) >= 0) {
+                        return (((existingEdu || {}).byKey || {})[svcKey] || []).map(x => ({
+                            name: x.name || '—',
+                            kind: x.type || '',
+                            address: x.address || '',
+                            qty: x.classes || 0,
+                            extra: [
+                                x.semel ? 'סמל ' + x.semel : '',
+                                x.pikuach || '',
+                                x.students ? x.students + ' תלמידים' : '',
+                                x.special ? 'חינוך מיוחד' : '',
+                                x.classes_estimated ? 'כיתות מוערכות מתלמידים' : '',
+                            ].filter(Boolean).join(' · '),
+                            pt: _eduPtByAddr[x.address] || null,
+                            src: 'שנתון מנח"י',
+                        }));
+                    }
+                    return (existingMochFeatsByKey[svcKey] || []).map(f => {
+                        const pr = f.properties || {};
+                        return {
+                            name: pr.name || pr.type || '—',
+                            kind: pr.type || '',
+                            address: pr.address || '',
+                            qty: 1,
+                            extra: [
+                                pr.gross_area ? Number(pr.gross_area).toLocaleString() + ' מ"ר' : '',
+                                pr.target_population || '',
+                                pr.planning_plot ? 'מגרש ' + pr.planning_plot : '',
+                            ].filter(Boolean).join(' · '),
+                            pt: (f.geometry && f.geometry.coordinates) || null,
+                            src: pr.information_source || 'סקר משב"ש 2021',
+                        };
+                    });
+                }
                 function deltaColor(delta, req) {
                     if (delta === null) return '#888';
                     if (req === 0) return delta > 0 ? '#4CAF50' : '#888';
@@ -9191,7 +9400,9 @@
                 nonEdu.forEach(s => { nonEduReqByKey[s.key] = s.count; });
 
                 function getServiceCounts(svc) {
-                    const exGross = (svc.kind === 'edu') ? existingByKey[svc.key] : null; // existing — only edu has data from שנתון
+                    const exGross = (svc.kind === 'edu')
+                        ? existingByKey[svc.key]
+                        : (mochReady && MOCH_COVERED.has(svc.key) ? (existingMochByKey[svc.key] || 0) : null);
                     const demolished = demolishedClasses[svc.key] || 0;
                     // For edu (have קיים): existing_net = שנתון - להריסה. For non-edu: existing is unknown (-) but if Q has text we infer the demolish makes existing < 0 (deficit before plans).
                     let exNet;
@@ -9214,8 +9425,10 @@
 
                 // Future-balance rows: per-service "מוצע" vs "נדרש". The "= מוצע" cell is clickable
                 // (data-svc-drill) — opens a per-service cross-horizon drilldown.
+                // מחוץ לגוננים פירוט המוסדות המוצעים פר-תב"ע טרם אומת — לכן עמודת "= מוצע" מוסתרת שם.
+                // הפער כן מוצג — הוא (קיים נטו + מתוכנן) − נדרש, ושניהם מאותה צנרת S/AR + שנתון בכל המינהלים.
                 const proposedWip = !inGonen;
-                const wipCell = '<span style="color:#d4a574;font-size:10px;font-style:italic" title="חישוב פירוט המוסדות המוצעים פר-תב\'ע מאומת כרגע רק בגוננים — בעבודה לשאר המינהלים">🚧 בעבודה</span>';
+                const nBalCols = proposedWip ? 5 : 6;
                 // Helper: planned-cell content. Format: "+N" with "S/AR" breakdown below (e.g. "+12" then "3 / 8").
                 const _plannedCellHtml = (planned, plannedS, plannedAR) => {
                     if (planned <= 0) return '—';
@@ -9232,20 +9445,22 @@
                             ? c.exGross + ' <span style="color:#e57373;font-size:10px">−' + c.demolished + '</span>'
                             : (c.exNet < 0 ? '<span style="color:#e57373">' + c.exNet + '</span>' : c.exNet);
                     const proposedClickable = !proposedWip && (c.proposed > 0 || c.planned > 0 || c.demolished > 0);
-                    const plannedClickable = !proposedWip && c.planned > 0;
+                    const plannedClickable = c.planned > 0;
+                    const existItems = existingItemsFor(svc.key);
+                    const existClickable = existItems.length > 0;
                     return '<tr style="border-bottom:1px solid #222">' +
                         '<td style="padding:6px;font-weight:bold;color:#e0e0ff">' + svc.label + '</td>' +
-                        '<td style="padding:6px;text-align:center;color:#bdb6e8" title="קיים מ-שנתון פחות הריסות מ-Q">' + exDisplay + '</td>' +
+                        '<td' + (existClickable ? ' data-exist-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#bdb6e8;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת המוסדות הקיימים (' + existItems.length + ') — שנתון מנח׳י (חינוך) / סקר משב׳ש 2021 (שאר), פחות הריסות מ-Q"' : ' style="padding:6px;text-align:center;color:#bdb6e8" title="קיים: שנתון מנח׳י (חינוך) / סקר מוסדות משב׳ש 2021 (שאר) — פחות הריסות מ-Q"') + '>' + exDisplay + (existClickable ? ' <span style="font-size:9px;color:#7b6cf0">›</span>' : '') + '</td>' +
                         '<td' + (plannedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#7b6cf0;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות"' : ' style="padding:6px;text-align:center;color:#7b6cf0" title="מתוכנן מטקסט S+AR (משוקלל %מימוש)"') + '>' + _plannedCellHtml(c.planned, planS, planAR) + '</td>' +
-                        '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + (proposedWip ? wipCell : (c.proposed + (proposedClickable ? ' ›' : ''))) + '</td>' +
+                        (proposedWip ? '' : '<td' + (proposedClickable ? ' data-svc-drill="' + svc.key + '" style="padding:6px;text-align:center;font-weight:bold;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות (כולל אופקים אחרים)"' : ' style="padding:6px;text-align:center;font-weight:bold;color:#fff"') + '>' + c.proposed + (proposedClickable ? ' ›' : '') + '</td>') +
                         '<td' + (svc.kind === 'edu' && c.required > 0 ? ' data-req-drill="' + svc.key + '" style="padding:6px;text-align:center;color:#aaa;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט חישוב כיתות נדרשות (גילאים, אוכלוסייה, גודל כיתה)"' : ' style="padding:6px;text-align:center;color:#aaa"') + '>' + c.required + '</td>' +
-                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + (proposedWip ? '#666' : deltaColor(c.delta, c.required)) + '">' + (proposedWip ? '—' : (c.required === 0 && c.proposed === 0 ? '—' : (c.delta >= 0 ? '+' : '') + c.delta)) + '</td>' +
+                        '<td style="padding:6px;text-align:center;font-weight:bold;color:' + deltaColor(c.delta, c.required) + '" title="' + (c.exNet === null ? 'אין נתוני קיים לשירות זה — הפער מחושב כאילו קיים=0' : 'פער = (קיים נטו + מתוכנן) − נדרש') + '">' + (c.required === 0 && c.proposed === 0 ? '—' : (c.exNet === null ? '~' : '') + (c.delta >= 0 ? '+' : '') + c.delta) + '</td>' +
                         '</tr>';
                 }).join('');
                 // Top "uncategorized public area" row — appears above per-service rows, clickable for drilldown
                 const uncatTopRow = '<tr style="background:#0f0f24;border-bottom:1px solid #555">' +
                     '<td colspan="2" style="padding:8px;color:#e0e0ff;font-style:italic">שטחי ציבור שעדיין לא נקבע להם ייעוד מפורט <span style="color:#888;font-size:10px">(*בתיאום אגף מבני ציבור — מ"ר משוקלל)</span></td>' +
-                    '<td colspan="4" data-svc-drill="__uncat__" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות לשטח גנרי (כולל אופקים אחרים)">' + plannedUncatSqm.toLocaleString() + ' מ"ר ›</td>' +
+                    '<td colspan="' + (nBalCols - 2) + '" data-svc-drill="__uncat__" style="padding:8px;text-align:center;color:#f59e0b;font-weight:bold;cursor:pointer;text-decoration:underline dashed" title="לחץ לרשימת תכניות תורמות לשטח גנרי (כולל אופקים אחרים)">' + plannedUncatSqm.toLocaleString() + ' מ"ר ›</td>' +
                     '</tr>';
                 const totalProposedClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).proposed, 0);
                 const totalRequiredClasses = BALANCE_SERVICES.reduce((s, svc) => s + getServiceCounts(svc).required, 0);
@@ -9357,30 +9572,30 @@
                     // === BALANCE TABLE === branches by horizon
                     (showFutureBalance ?
                         // Future: classes-based balance — מוצע = קיים (שנתון) + מתוכנן (S+AR text, weighted by %mimush) vs נדרש לאופק
-                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(' + (tY === 'full' ? '100% מימוש · כל התב"עות נכללות ללא סינון שנה' : 'אופק ' + tY + ' · משוקלל %מימוש') + ' · בכיתות · מוצע = קיים מ-שנתון + מתוכנן מתב"עות S/AR פחות הריסות מ-Q)</span></h4>' +
+                        '<h4 style="margin:8px 0 6px;color:#e0e0ff;font-size:13px">🏫 מאזן ציבור עתידי — מוצע מול נדרש <span style="color:#888;font-size:10px;font-weight:normal">(' + (tY === 'full' ? '100% מימוש · כל התב"עות נכללות ללא סינון שנה' : 'אופק ' + tY + ' · משוקלל %מימוש') + ' · בכיתות · קיים = שנתון מנח׳י (חינוך) + סקר מוסדות משב׳ש 2021 (קהילה/רווחה/דת/בריאות) · מתוכנן = S/AR פחות הריסות מ-Q)</span></h4>' +
                         '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">' +
                             '<thead><tr style="background:#1a1a2e;color:#aaa">' +
                                 '<th style="padding:6px;text-align:right">שירות</th>' +
                                 '<th style="padding:6px;text-align:center">קיים</th>' +
                                 '<th style="padding:6px;text-align:center" title="מתוכנן בתב"עות משוקלל %מימוש">+ מתוכנן<div style="font-size:9px;color:#a59ad6;font-weight:normal">שב"צ / הפרשה מבונה</div></th>' +
-                                '<th style="padding:6px;text-align:center;color:#7b6cf0" id="programa-proposed-header" style="cursor:pointer">= מוצע ›</th>' +
+                                (proposedWip ? '' : '<th id="programa-proposed-header" style="padding:6px;text-align:center;color:#7b6cf0">= מוצע ›</th>') +
                                 '<th style="padding:6px;text-align:center">נדרש' + (tY === 'full' ? '' : ' ' + tY) + '</th>' +
                                 '<th style="padding:6px;text-align:center">פער</th>' +
                             '</tr></thead><tbody>' + uncatTopRow + futureBalanceRows +
                             '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #4CAF50">' +
                                 '<td style="padding:8px;color:#fff">סה"כ (לפי קטגוריה)</td>' +
                                 '<td style="padding:8px;text-align:center;color:#bdb6e8">' + totalExistingNet + (totalDemolished > 0 ? ' <span style="color:#e57373;font-size:10px;font-weight:normal">(-' + totalDemolished + ' להריסה)</span>' : '') + '</td>' +
-                                '<td style="padding:8px;text-align:center;color:#7b6cf0">' + (() => {
+                                '<td' + (proposedWip ? ' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#7b6cf0;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"' : ' style="padding:8px;text-align:center;color:#7b6cf0"') + '>' + (() => {
                                     const tp = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClasses[svc.key] || 0), 0);
                                     const tpS = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesS[svc.key] || 0), 0);
                                     const tpAR = BALANCE_SERVICES.reduce((s, svc) => s + (plannedClassesAR[svc.key] || 0), 0);
                                     return _plannedCellHtml(tp, tpS, tpAR);
                                 })() + '</td>' +
-                                '<td' + (proposedWip ? ' style="padding:8px;text-align:center;color:#d4a574"' : ' id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות"') + '>' + (proposedWip ? wipCell : (totalProposedClasses + ' ›')) + '</td>' +
+                                (proposedWip ? '' : '<td id="programa-proposed-cell" style="padding:8px;text-align:center;color:#fff;cursor:pointer;text-decoration:underline dashed" title="לחץ לפירוט מקורות">' + totalProposedClasses + ' ›</td>') +
                                 '<td style="padding:8px;text-align:center;color:#aaa">' + totalRequiredClasses + '</td>' +
-                                '<td style="padding:8px;text-align:center;color:' + (proposedWip ? '#666' : deltaColor(totalGapClasses, totalRequiredClasses)) + '">' + (proposedWip ? '—' : ((totalGapClasses >= 0 ? '+' : '') + totalGapClasses)) + '</td>' +
+                                '<td style="padding:8px;text-align:center;color:' + deltaColor(totalGapClasses, totalRequiredClasses) + '">' + ((totalGapClasses >= 0 ? '+' : '') + totalGapClasses) + '</td>' +
                             '</tr>' +
-                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="6" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>. לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.</td></tr>' +
+                            '<tr style="background:#1a1a2e;color:#888;font-size:10px"><td colspan="' + nBalCols + '" style="padding:6px">קיזוז להריסה: כיתות שנמצאות בתוך פוליגון של תכנית תורמת (חיתוך מרחבי שנתון מנח"י × גבולות תב"ע) מנוכות מ"קיים" משוקלל לפי %מימוש. סה"כ הריסות: <b>' + totalDemolished + ' כיתות</b>. <b>~</b> בעמודת הפער = השירות אינו מסווג בסקר מוסדות משב׳ש (למשל מרכז יום לקשיש, שנבלע בסיווג "מועדון קשישים׳) — הפער מחושב כאילו קיים=0. ' + (proposedWip ? 'לחץ על תא "מתוכנן" או "מ"ר טרם נקבע" לרשימת תכניות תורמות. עמודת "מוצע" (פירוט המוסדות פר-תב"ע) מאומתת כרגע רק בגוננים ולכן אינה מוצגת כאן; הפער מחושב כ-(קיים נטו + מתוכנן) − נדרש.' : 'לחץ על תא "מוצע" או "מ"ר טרם נקבע" לרשימת תכניות תורמות.') + '</td></tr>' +
                         '</tbody></table>'
                     : (hasExistingEdu ?
                         // Existing: classes-based balance using שנתון מנח"י
@@ -9646,7 +9861,8 @@
                     if (oldDrill) oldDrill.remove();
                     const isUncat = svcKey === '__uncat__';
                     const svcLabel = isUncat ? 'שטח ציבורי גנרי (טרם נקבע ייעוד)' : (SVC_LABELS_FULL[svcKey] || svcKey);
-                    const unit = isUncat ? 'מ"ר' : 'כיתות';
+                    const _svcDef = BALANCE_SERVICES.filter(s => s.key === svcKey)[0];
+                    const unit = isUncat ? 'מ"ר' : ((_svcDef && _svcDef.unit) || 'כיתות');
                     // Filter ALL plans in scope (not just current-horizon contributors) that have any non-zero raw count for this category
                     const items = allParsedPlans.filter(p => {
                         if (isUncat) return (p.rawUncatSqm || 0) > 0;
@@ -9664,7 +9880,9 @@
                     // existing baseline; without it a cell whose מוצע is driven by existing institutions
                     // opens an all-zero "0 תכניות" table that doesn't reconcile with the balance cell.
                     const EDU_SVC_KEYS = ['maon', 'gan', 'yesodi', 'al_yesodi'];
-                    const existingGross = (!isUncat && EDU_SVC_KEYS.includes(svcKey)) ? (existingByKey[svcKey] || 0) : 0;
+                    const existingGross = isUncat ? 0
+                        : EDU_SVC_KEYS.includes(svcKey) ? (existingByKey[svcKey] || 0)
+                        : (mochReady && MOCH_COVERED.has(svcKey) ? (existingMochByKey[svcKey] || 0) : 0);
                     // Per-horizon totals (weighted, rounded to integer). Existing is present in full at every horizon.
                     const horTotals = {};
                     HORIZONS.forEach(h => {
@@ -9822,9 +10040,105 @@
                         });
                     });
                 }
+                // ── דריל-דאון "קיים" ──
+                // נפתח מלחיצה על תא קיים ומפרט את המוסדות עצמם: שם, סוג, כתובת, כמות ומקור.
+                // לחיצה על שורה סוגרת את המודאל ועושה זום למוסד על המפה.
+                function openExistingDrilldown(svcKey) {
+                    const oldDrill = document.getElementById('programa-drilldown');
+                    if (oldDrill) oldDrill.remove();
+                    const items = existingItemsFor(svcKey);
+                    if (!items.length) return;
+                    const isEdu = EDU_KEYS_EX.indexOf(svcKey) >= 0;
+                    const _svcDefE = BALANCE_SERVICES.filter(s => s.key === svcKey)[0];
+                    const svcLabel = (_svcDefE && _svcDefE.label) || SVC_LABELS_FULL[svcKey] || svcKey;
+                    const unit = isEdu ? 'כיתות' : ((_svcDefE && _svcDefE.unit) || 'מוסדות');
+                    const totalQty = items.reduce((s, x) => s + (x.qty || 0), 0);
+                    const dem = demolishedClasses[svcKey] || 0;
+                    items.sort((a, b) => (b.qty || 0) - (a.qty || 0));
+                    const rows = items.map((x, idx) => {
+                        const clickable = !!x.pt;
+                        return '<tr data-exist-row="' + idx + '"' + (clickable ? ' data-pt="' + x.pt[0] + ',' + x.pt[1] + '" style="border-bottom:1px solid #222;cursor:pointer" title="לחץ לזום למוסד על המפה"' : ' style="border-bottom:1px solid #222"') + '>' +
+                            '<td style="padding:5px 6px;color:#e0e0ff;font-weight:bold">' + (x.name || '—') + (clickable ? ' <span style="color:#7b6cf0;font-size:10px">📍</span>' : '') + '</td>' +
+                            '<td style="padding:5px 6px;color:#bdb6e8">' + (x.kind || '—') + '</td>' +
+                            '<td style="padding:5px 6px;color:#aaa">' + (x.address || '—') + '</td>' +
+                            '<td style="padding:5px 6px;text-align:center;color:#8fbf8f;font-weight:bold">' + (x.qty || 0) + '</td>' +
+                            '<td style="padding:5px 6px;color:#888;font-size:10px">' + (x.extra || '') + '</td>' +
+                            '<td style="padding:5px 6px;color:#666;font-size:10px">' + (x.src || '') + '</td>' +
+                        '</tr>';
+                    }).join('');
+                    const drill = document.createElement('div');
+                    drill.id = 'programa-drilldown';
+                    drill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10002;background:rgba(15,15,36,0.99);color:#e0e0e0;padding:18px;border-radius:12px;border:2px solid #8fbf8f;direction:rtl;width:min(940px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.85);font-family:Assistant,sans-serif';
+                    drill.innerHTML =
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #333;gap:10px">' +
+                            '<h3 id="drill-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#e0e0ff;font-size:14px;outline:none;border-bottom:1px dashed #555;padding-bottom:2px;cursor:text">🏛️ פירוט קיים — ' + svcLabel + ' (' + items.length + ' מוסדות · ' + totalQty + ' ' + unit + (dem > 0 ? ' · ' + dem + ' להריסה בתב"עות' : '') + ')</h3>' +
+                            '<button id="drill-csv" title="ייצוא ל-CSV" style="background:#2d6a4f;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">📊 CSV</button>' +
+                            '<button id="drill-print" title="הדפסה" style="background:#1a5276;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit">🖨️ הדפסה</button>' +
+                            '<button id="drill-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                        '</div>' +
+                        '<div style="overflow-x:auto"><table id="drill-table" style="width:100%;border-collapse:collapse;font-size:11px">' +
+                            '<thead><tr style="background:#1a1a2e;color:#aaa">' +
+                                '<th style="padding:5px;text-align:right">שם המוסד</th>' +
+                                '<th style="padding:5px;text-align:right">סוג</th>' +
+                                '<th style="padding:5px;text-align:right">כתובת</th>' +
+                                '<th style="padding:5px;text-align:center">' + unit + '</th>' +
+                                '<th style="padding:5px;text-align:right">פרטים</th>' +
+                                '<th style="padding:5px;text-align:right">מקור</th>' +
+                            '</tr></thead><tbody>' + rows +
+                            '<tr style="background:#1a1a2e;font-weight:bold;border-top:2px solid #8fbf8f">' +
+                                '<td colspan="3" style="padding:6px;color:#fff">סה"כ</td>' +
+                                '<td style="padding:6px;text-align:center;color:#8fbf8f">' + totalQty + '</td>' +
+                                '<td colspan="2"></td>' +
+                            '</tr>' +
+                        '</tbody></table></div>' +
+                        '<div style="font-size:10px;color:#888;margin-top:10px">' +
+                            (isEdu
+                                ? 'מקור: שנתון מנח"י — מוסדות חינוך שכתובתם נפלה בתוך גבולות הסקופ. כיתות מוערכות מחושבות מתלמידים כשאין ספירת כיתות.'
+                                : 'מקור: סקר מוסדות משב"ש 2021 (מבני ציבור — מצב קיים), נקודות שנפלו בתוך גבולות הסקופ. הסקר משקף את מועד הסקירה ולא בהכרח שינויים מאוחרים.') +
+                            (dem > 0 ? ' <b style="color:#e57373">' + dem + '</b> מתוכם מסומנים להריסה בתב"עות תורמות ומקוזזים מ"קיים".' : '') +
+                        '</div>';
+                    document.body.appendChild(drill);
+                    document.getElementById('drill-close').addEventListener('click', () => drill.remove());
+                    // Row click → zoom the map to the institution
+                    drill.querySelectorAll('tr[data-pt]').forEach(tr => {
+                        tr.addEventListener('click', () => {
+                            const map = mapInstanceRef.current;
+                            if (!map) return;
+                            const pt = tr.dataset.pt.split(',').map(Number);
+                            map.setView([pt[1], pt[0]], 18);
+                            drill.remove();
+                            div.remove();
+                        });
+                    });
+                    document.getElementById('drill-csv').addEventListener('click', () => {
+                        const title = (document.getElementById('drill-title') || {}).textContent || ('פירוט קיים — ' + svcLabel);
+                        const csvQ = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                        const lines = [['שם המוסד', 'סוג', 'כתובת', unit, 'פרטים', 'מקור'].map(csvQ).join(',')];
+                        items.forEach(x => lines.push([x.name, x.kind, x.address, x.qty, x.extra, x.src].map(csvQ).join(',')));
+                        lines.push(['סה"כ', '', '', totalQty, '', ''].map(csvQ).join(','));
+                        const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = title.replace(/[^\w\u0590-\u05ff]+/g, '_').slice(0, 80) + '.csv';
+                        document.body.appendChild(a); a.click(); a.remove();
+                        URL.revokeObjectURL(url);
+                    });
+                    document.getElementById('drill-print').addEventListener('click', () => {
+                        const title = (document.getElementById('drill-title') || {}).textContent || ('פירוט קיים — ' + svcLabel);
+                        const tableHtml = document.getElementById('drill-table').outerHTML;
+                        const win = window.open('', '_blank');
+                        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + title + '</title>' +
+                            '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h2{color:#1b5e20;font-size:14px}table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}th,td{border:1px solid #bbb;padding:4px 6px;text-align:right}th{background:#e8f5e9}</style>' +
+                            '</head><body><h2>' + title + '</h2>' + tableHtml + '</body></html>');
+                        win.document.close(); win.print();
+                    });
+                }
                 // Wire all drill cells (per-service + uncategorized)
                 div.querySelectorAll('[data-svc-drill]').forEach(cell => {
                     cell.addEventListener('click', () => openServiceDrilldown(cell.dataset.svcDrill));
+                });
+                div.querySelectorAll('[data-exist-drill]').forEach(cell => {
+                    cell.addEventListener('click', () => openExistingDrilldown(cell.dataset.existDrill));
                 });
 
                 // "Required" cell drilldown — shows the public-needs computation per service (children, class size, dunam)
@@ -10226,7 +10540,8 @@
                     const ut = parseInt(p.units_total) || 0, ua = parseFloat(p.units_add) || 0;
                     unitsPlanned += ut; unitsAdd += ua;
                     futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
-                    hafSqm += parseFloat(p.hafrash_sqm) || 0;
+                    // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                    if (!hafrashIsDuplicate(taba)) hafSqm += parseFloat(p.hafrash_sqm) || 0;
                     commerceOut += parseFloat(p.commerce_out) || 0;
                     employment += parseFloat(p.employment) || 0;
                     byStatus[st] = (byStatus[st] || 0) + 1;
@@ -10470,7 +10785,9 @@
                     plansCount++;
                     const ua = parseFloat(p.units_add) || 0, ut = parseInt(p.units_total) || 0;
                     unitsAdd += ua; unitsPlanned += ut;
-                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0; hafSqm += parseFloat(p.hafrash_sqm) || 0;
+                    futureSqm += parseFloat(p.shavatz_out_sqm) || 0;
+                    // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                    if (!hafrashIsDuplicate(p.taba)) hafSqm += parseFloat(p.hafrash_sqm) || 0;
                     commerceOut += parseFloat(p.commerce_out) || 0; employment += parseFloat(p.employment) || 0;
                     const stN = normalizeStatus(st) || 'לא ידוע'; byStatus[stN] = (byStatus[stN] || 0) + 1;
                     const taba = String(p.taba || '').trim();
@@ -10527,20 +10844,13 @@
                     '<div style="font-size:21px;font-weight:bold;color:' + color + '">' + val + '</div>' +
                     (sub2 ? '<div style="font-size:10px;color:#789">' + sub2 + '</div>' : '') + '</div>';
 
-                // Status breakdown (grouped) — same grouping as the old minahak report.
-                const STATUS_GROUPS = {
-                    'אישור': 'אישור / מאושרת', 'מאושרת': 'אישור / מאושרת', 'תבע מאושרת': 'אישור / מאושרת',
-                    'תבע - טרום אישור': 'אישור / מאושרת', 'תחילת תוקף': 'אישור / מאושרת', 'בהליך אישור': 'בהליך אישור',
-                    'דיון בהתנגדויות ותיקונים': 'התנגדויות', 'הכרעה בהתנגדויות / אישור': 'התנגדויות', 'הפקדה להתנגדויות/השגות': 'הפקדה',
-                    'במילוי תנאים להפקדה': 'במילוי תנאים להפקדה', 'נפתח תיק למתכנן': 'פתיחת תיק / בבדיקה',
-                    'נפתח תיק תב"ע': 'פתיחת תיק / בבדיקה', 'בבדיקה תכנונית': 'פתיחת תיק / בבדיקה',
-                    'תכנית עומדת בתנאי סף': 'פתיחת תיק / בבדיקה', 'נקלטה מקובץ מבאת': 'פתיחת תיק / בבדיקה',
-                    'בבדיקת תנאי סף': 'פתיחת תיק / בבדיקה',
-                };
-                const GROUP_COLORS = { 'אישור / מאושרת': '#50d25a', 'בהליך אישור': '#50d25a', 'התנגדויות': '#fafa3c', 'הפקדה': '#f56e05', 'במילוי תנאים להפקדה': '#f56e05', 'פתיחת תיק / בבדיקה': '#eb0000' };
-                const GROUP_ORDER = ['אישור / מאושרת', 'בהליך אישור', 'התנגדויות', 'הפקדה', 'במילוי תנאים להפקדה', 'פתיחת תיק / בבדיקה'];
+                // Status breakdown (grouped) — via the global STATUS_GROUP_DEFS so this
+                // report, the units table and the commerce table always agree.
+                const GROUP_COLORS = {};
+                STATUS_GROUP_DEFS.forEach(g => { GROUP_COLORS[g.label] = g.color; });
+                const GROUP_ORDER = STATUS_GROUP_DEFS.filter(g => g.key !== 'rejected').map(g => g.label);
                 const grouped = {};
-                Object.keys(byStatus).forEach(s => { const g = STATUS_GROUPS[s] || s; grouped[g] = (grouped[g] || 0) + byStatus[s]; });
+                Object.keys(byStatus).forEach(s => { const g = statusGroupLabel(s); grouped[g] = (grouped[g] || 0) + byStatus[s]; });
                 const maxCount = Math.max(...Object.values(grouped), 1);
                 const statusBars = [...GROUP_ORDER.filter(g => grouped[g]), ...Object.keys(grouped).filter(s => !GROUP_ORDER.includes(s))].map(s =>
                     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
@@ -12752,10 +13062,18 @@
                 });
             }, []);
 
+            // Same rule as fetchCommerceData: EVERY entry point goes through here.
+            // There is no eager units fetch on mount — ensureUnitsData() only runs when
+            // some other feature asks for it — so opening the modal with a bare
+            // setShowUnits(true) (reports menu, Ctrl+K search, hash restore) left it on
+            // "טוען נתוני תוכניות..." indefinitely.
             const fetchUnitsData = useCallback(() => {
                 if (unitsData) { setShowUnits(true); return; } // cached
-                setUnitsLoading(true);
                 setShowUnits(true);
+                if (window.__unitsData) { setUnitsData(window.__unitsData); return; }
+                setUnitsLoading(true);
+                if (window.__unitsFetching) return; // a silent ensureUnitsData() is already in flight
+                window.__unitsFetching = true;
                 fetchUnitsDataInternal();
             }, [unitsData]);
 
@@ -12800,7 +13118,7 @@
                             const obj = {};
                             header.forEach((h, i) => { obj[h] = r[i] || ''; });
                             return obj;
-                        });
+                        }).filter(o => !isJunkPlanRow(o));
                     }).catch(() => []);
 
                 // Tama38: read directly from loaded GeoJSON
@@ -12820,26 +13138,15 @@
                     const bySub = {}; // { minahak: { subNeighborhood: { ... } } }
                     // Plan-status breakdown only — approved plans aggregate under one row regardless
                     // of permit progress (no separate גמר בנייה/בבנייה/היתר בנייה/רישוי בתהליך rows).
-                    const STATUS_GROUPS = [
-                        { key: 'approved', label: 'אישור / מאושרת', color: '#4CAF50',
-                          match: ['אישור','מאושרת','תבע מאושרת','תחילת תוקף'] },
-                        { key: 'in_approval', label: 'בהליך אישור', color: '#66BB6A',
-                          match: ['בהליך אישור','תבע - טרום אישור'] },
-                        { key: 'objections', label: 'התנגדויות', color: '#FDD835',
-                          match: ['דיון בהתנגדויות ותיקונים','הכרעה בהתנגדויות / אישור'] },
-                        { key: 'deposit', label: 'הפקדה', color: '#FDD835',
-                          match: ['הפקדה להתנגדויות/השגות'] },
-                        { key: 'conditions', label: 'במילוי תנאים להפקדה', color: '#FF9800',
-                          match: ['במילוי תנאים להפקדה','תכנית עומדת בתנאי סף'] },
-                        { key: 'open', label: 'פתיחת תיק / בדיקה', color: '#F44336',
-                          match: ['נפתח תיק למתכנן','נפתח תיק תבע','בבדיקה תכנונית','נקלטה מקובץ מבאת'] },
-                    ];
-                    function getStatusGroup(status) {
-                        for (const g of STATUS_GROUPS) {
-                            if (g.match.includes(status)) return g.key;
-                        }
-                        return null;
-                    }
+                    // Grouping comes from the global STATUS_GROUP_DEFS. The local copy that
+                    // used to live here spelled 'נפתח תיק תבע' without gershayim while the
+                    // sheet writes 'נפתח תיק תב"ע', and getStatusGroup returned null for
+                    // anything unlisted — which the caller then silently skipped, dropping
+                    // 216 יח"ד across 4 plans out of the breakdown while the total still
+                    // counted them. 'rejected' is excluded because rejected plans are
+                    // filtered upstream; 'other' stays so nothing can vanish again.
+                    const STATUS_GROUPS = STATUS_GROUP_DEFS.filter(g => g.key !== 'rejected');
+                    const getStatusGroup = statusGroupKey;
                     const TYPE_GROUPS = [
                         { key: 'התחדשות עירונית', label: 'התחדשות עירונית', color: '#4CAF50' },
                         { key: 'עיבוי ובניה חדשה', label: 'עיבוי ובניה חדשה', color: '#2196F3' },
@@ -12917,7 +13224,10 @@
                         const subForLookup = SUB_NORMALIZE[subRawCsv] || subRawCsv;
                         const minahakFromSub = SUB_TO_MINAHAK[subRawCsv] || SUB_TO_MINAHAK[subForLookup];
                         const mRaw = (minahakFromSub || p.minahak || '').trim();
-                        const m = effectiveMinahakInScope(MINAHAK_NORMALIZE[mRaw] || mRaw);
+                        // Plans whose minahak cannot be resolved used to land in a '' bucket that
+                        // was counted in the סה"כ column but had no column of its own. Give them a
+                        // named bucket so they are visible instead of only implied by a gap.
+                        const m = effectiveMinahakInScope(MINAHAK_NORMALIZE[mRaw] || mRaw) || 'ללא מינהל';
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
                         // Skip rejected/archived plans for units_add
                         const status = (p.status_mavat || '').trim();
@@ -13082,7 +13392,12 @@
                     }
 
                     const EXCLUDE_MINAHAK_REPORT = ['גבעת המטוס'];
+                    // Show EVERY minahak that carries data, not just the six canonical ones.
+                    // The סה"כ column sums Object.values(byMinahak), so dropping a populated
+                    // minahak from the columns made the row un-addable: 12,068 units_add (20% of
+                    // the total) sat in 'גבעת המטוס' and the unresolved bucket with no column.
                     const minahaks = minahakOrder.filter(m => byMinahak[m]);
+                    Object.keys(byMinahak).forEach(m => { if (m && !minahaks.includes(m)) minahaks.push(m); });
                     Object.keys(byMinahak).forEach(m => {
                         if (!minahaks.includes(m) && m && !EXCLUDE_MINAHAK_REPORT.includes(m)) minahaks.push(m);
                     });
@@ -13107,11 +13422,24 @@
                         window.__unitsDataCallbacks = [];
                     }
                     setUnitsLoading(false);
+                }).catch(err => {
+                    // Without this the chain rejected silently: unitsData stayed null, the
+                    // `unitsLoading || !unitsData` gate kept showing the spinner, and
+                    // __unitsFetching stayed true so no later attempt could recover.
+                    console.error('[Units] Fetch error:', err);
+                    window.__unitsFetching = false;
+                    window.__unitsDataCallbacks = [];
+                    setUnitsLoading(false);
                 });
             }, []);
 
-            // Commerce/Employment table — fetch + aggregate
+            // Commerce/Employment table — fetch + aggregate.
+            // EVERY entry point must go through here, not through setShowCommerceTable
+            // directly: unlike unitsData there is no eager load on mount, so opening the
+            // modal without kicking off the fetch leaves it on "טוען..." forever. That
+            // was the case for the reports menu, the Ctrl+K search and hash restore.
             const fetchCommerceData = useCallback(() => {
+                setCommerceError(null);
                 if (commerceData) { setShowCommerceTable(true); return; }
                 setCommerceLoading(true);
                 setShowCommerceTable(true);
@@ -13155,7 +13483,7 @@
                             const obj = {};
                             header.forEach((h, i) => { obj[h] = r[i] || ''; });
                             return obj;
-                        });
+                        }).filter(o => !isJunkPlanRow(o));
                     });
 
                 rowsPromise.then(planRows => {
@@ -13170,39 +13498,21 @@
                     const plansAllSub = {}; // { minahak: { sub: [all plans] } }
                     const emptyRow = () => ({ commerce_in: 0, commerce_out: 0, employment: 0, byStatus: {} });
 
-                    const STATUS_GROUPS = [
-                        { key: 'approved', label: 'אושרה', color: '#50d25a', match: ['אושרה', 'פרסום ברשומות', 'תנאים לפני אישור'] },
-                        { key: 'objections', label: 'הפקדה', color: '#fafa3c', match: ['הפקדה להתנגדויות', 'הפקדה להתנגדויות/השגות'] },
-                        { key: 'conditions', label: 'תנאים', color: '#f56e05', match: ['תנאים לפני הפקדה', 'בדיקת תנאי סף'] },
-                        { key: 'review', label: 'בדיקה', color: '#eb0000', match: ['בדיקה תכנונית', 'פתיחת תיק'] },
-                    ];
-                    function getStatusGroup(status) {
-                        const s = normalizeStatus(status);
-                        for (const g of STATUS_GROUPS) {
-                            if (g.match.some(m => s.includes(m) || m.includes(s))) return g.key;
-                        }
-                        return 'other';
-                    }
+                    // Grouping comes from the global STATUS_GROUP_DEFS. The local table that
+                    // used to live here matched strings that appear nowhere in the sheet
+                    // ('אושרה', 'פרסום ברשומות', 'תנאים לפני הפקדה', 'בדיקת תנאי סף'), so
+                    // 74 plans / 450,877 מ"ר — every תבע מאושרת, מאושרת, תחילת תוקף,
+                    // בהליך אישור, במילוי תנאים להפקדה, נקלטה מקובץ מבאת and
+                    // הכרעה בהתנגדויות — fell into an 'other' key that the renderer never
+                    // drew, so the status rows summed to 76% of the total row above them.
+                    const STATUS_GROUPS = STATUS_GROUP_DEFS.filter(g => g.key !== 'rejected');
+                    const getStatusGroup = statusGroupKey;
 
-                    // Use the same SUB_NORMALIZE from the units table context
-                    const SUB_NORMALIZE = Object.assign({
-                        'תלפיות - תעשייה ומסחר': 'א.ת. תלפיות',
-                        'תלפיות תעשייה ומסחר': 'א.ת. תלפיות',
-                        'תלפיות תעשיה ומסחר': 'א.ת. תלפיות',
-                        'קטמונים ח-ט': 'קטמונים',
-                        'רסקו - גבעת הורדים': 'רסקו',
-                        'גבעת הורדים': 'רסקו',
-                        'גבעת חורדים - רסקו': 'רסקו',
-                        'גבעת הורדים - רסקו': 'רסקו',
-                        'ארנונה': 'תלפיות ארנונה',
-                        'תלפיות': 'תלפיות ארנונה',
-                        'עמק רפאים': 'המושבה הגרמנית',
-                        'עמק רפאים - המושבה הגרמנית': 'המושבה הגרמנית',
-                        'עמק רפאים- המושבה הגרמנית': 'המושבה הגרמנית',
-                        'בית צפאפא,שרפת': 'בית צפאפא',
-                        'בית צפאפא, שרפת': 'בית צפאפא',
-                        'שרפת': 'בית צפאפא',
-                    }, window.__subNormalize || {});
+                    // Sub-neighborhood aliases: use the global SUB_NORMALIZE. The local copy
+                    // that used to be here was missing 6 aliases the global has — notably
+                    // 'קוממיות - טלביה' (8 plans), which therefore showed as its own column
+                    // next to 'טלביה' instead of merging into it. The Object.assign with
+                    // window.__subNormalize was dead: nothing ever writes that global.
 
                     planRows.forEach(p => {
                         if (!planPassesReportScope(p.plan_name)) return;
@@ -13278,6 +13588,10 @@
                     console.log('[Commerce] Aggregated data:', minahaks.length, 'minahaks');
                 }).catch(err => {
                     console.error('[Commerce] Fetch error:', err);
+                    // Surface the failure. Clearing `loading` alone left commerceData null,
+                    // and the modal's `commerceLoading || !commerceData` gate then showed
+                    // the spinner forever — a dead sheet looked identical to a slow one.
+                    setCommerceError(err && err.message ? String(err.message) : 'שגיאה לא ידועה');
                     setCommerceLoading(false);
                 });
             }, []);
@@ -13843,10 +14157,10 @@
             // פרוגרמה — open in a separate browser window and are not deep-linkable.)
             function reportDefs() {
                 return [
-                    { key: 'units', isOpen: () => showUnits, open: () => setShowUnits(true),
+                    { key: 'units', isOpen: () => showUnits, open: () => fetchUnitsData(),
                         ser: () => ({ exp: unitsExpanded, drill: unitsDrilldown }),
                         apply: p => { if (p.exp) setUnitsExpanded(p.exp); if (p.drill) setUnitsDrilldown(p.drill); } },
-                    { key: 'commerce', isOpen: () => showCommerceTable, open: () => setShowCommerceTable(true),
+                    { key: 'commerce', isOpen: () => showCommerceTable, open: () => fetchCommerceData(),
                         ser: () => ({ exp: commerceExpanded, drill: commerceDrilldown }),
                         apply: p => { if (p.exp) setCommerceExpanded(p.exp); if (p.drill) setCommerceDrilldown(p.drill); } },
                     { key: 'mimush', isOpen: () => showMimush, open: () => openMimushModal(),
@@ -19293,19 +19607,7 @@
                         },
                         pointToLayer: (f, latlng) => {
                             const rawStatus = (f.properties.status || '').trim();
-                            // Normalize spaceless variants
-                            const TAMA_STATUS_NORM = {
-                                'תכנון-טרםכניסהלרישוי': 'תכנון - טרם כניסה לרישוי',
-                                'נפתחתיקהיתר': 'נפתח תיק היתר',
-                                'היתראושרבועדתרישוי': 'היתר אושר בועדת רישוי',
-                                'הופקהוצאהיתר': 'הופק הוצא היתר',
-                            };
-                            const status = TAMA_STATUS_NORM[rawStatus] || rawStatus;
-                            let fillColor = '#e94560';
-                            if (status === 'תכנון - טרם כניסה לרישוי') fillColor = 'rgb(215,25,28)';
-                            else if (status === 'נפתח תיק היתר') fillColor = 'rgb(253,174,97)';
-                            else if (status === 'היתר אושר בועדת רישוי') fillColor = 'rgb(255,255,192)';
-                            else if (status === 'הופק הוצא היתר') fillColor = 'rgb(166,217,106)';
+                            const fillColor = tama38StatusColor(rawStatus);
                             const z = map.getZoom();
                             const r = z >= 16 ? 6 : z >= 14 ? 4 : z >= 13 ? 3 : 2;
                             const _fid = String(f.properties.fid != null ? f.properties.fid : '');
@@ -21658,17 +21960,30 @@
                 }
                 let objectionStillOpen = false;
                 if (isObjectionStatus) {
+                    // A parsable end date is AUTHORITATIVE — open if it is today or later,
+                    // closed if it has passed. Only when there is no usable end date do we
+                    // fall back to "status changed in Mavat within the last 60 days".
+                    let endDateKnown = false;
                     if (objEndDate) {
                         const dateOnly = objEndDate.split(' ')[0];
                         const parts = dateOnly.split('/');
                         if (parts.length === 3) {
                             const end = new Date(parts[2], parts[1]-1, parts[0]);
-                            const today = new Date(); today.setHours(0,0,0,0);
-                            if (end >= today) objectionStillOpen = true;
+                            if (!isNaN(end.getTime())) {
+                                endDateKnown = true;
+                                const today = new Date(); today.setHours(0,0,0,0);
+                                if (end >= today) objectionStillOpen = true;
+                            }
                         }
                     }
                     const hasBtnPopup = props.has_objection_btn === true || String(props.has_objection_btn).toUpperCase() === 'TRUE';
-                    if (!objectionStillOpen && hasBtnPopup) {
+                    // The fallback used to run even when objEndDate explicitly said the
+                    // window had closed, so 22 plans — some already אישור, with windows that
+                    // ended in 2023–2025 — were shown as "open for objections" merely because
+                    // their Mavat status date was recent. has_objection_btn is TRUE on 251
+                    // plans but only ~10 windows are genuinely open, so the flag on its own
+                    // proves nothing; `endDateKnown` is the guard that matters.
+                    if (!objectionStillOpen && !endDateKnown && hasBtnPopup) {
                         const md = (props.mavat_date || '').split('/');
                         if (md.length === 3) {
                             const statusDate = new Date(md[2], md[1]-1, md[0]);
@@ -23303,9 +23618,9 @@
                     toggleLayer(item.data.id);
                 } else if (item.kind === 'report') {
                     const id = item.data.id;
-                    if (id === 'units') setShowUnits(true);
+                    if (id === 'units') fetchUnitsData();
                     else if (id === 'permits_gap') { setPermitsGapDrilldown(null); setShowPermitsGap(true); }
-                    else if (id === 'commerce') setShowCommerceTable(true);
+                    else if (id === 'commerce') fetchCommerceData();
                     else if (id === 'mimush') openMimushModal();
                     else if (id === 'overlap') setOverlapReport(true);
                     else if (id === 'objections') setObjectionsReport(true);
@@ -26833,7 +27148,7 @@
                         }
                         const CATS = [
                             { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
-                                { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => setShowUnits(true)) },
+                                { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => fetchUnitsData()) },
                                 { icon:'🏘️', title:'דיור להשכרה', desc:'יח"ד להשכרה + משך השכרה מ-טבלה 5 (יח"ד מותנות עברו לדוח קרן תחזוקה)', onClick:() => go(() => setSpecialHousingReport(true)) },
                                 { icon:'🏗️', title:'דוח יזמים', desc:'יח"ד מתוכננות לפי יזם, מינה"ק ושלב', onClick:() => go(() => { setDevRepExpanded(null); setDevelopersReport(true); }) },
                                 { icon:'💰', title:'קרן תחזוקה', desc:'תכניות עם זכויות/יח"ד מותנות בהקמת קרן תחזוקה — גובה הקרן ומספר יח"ד מותנות', onClick:() => go(() => { setFundReportFilter({ sub: 'all', minahak: 'all', status: 'all', q: '' }); setFundReport(true); }) },
@@ -26860,7 +27175,7 @@
                                 { icon:'⚖️', title:'היתרים פתוחים להתנגדויות', desc:'בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון', onClick:() => go(() => setPermitObjectionsReport(true)) },
                             ]},
                             { key:'commerce', title:'🟣 מסחר ותעסוקה', color:'#8e24aa', bg:'rgba(142,36,170,0.06)', items:[
-                                { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => setShowCommerceTable(true)) },
+                                { icon:'🏪', title:'סיכום מסחר ותעסוקה', desc:'שטחי מסחר ותעסוקה לפי מינהל', onClick:() => go(() => fetchCommerceData()) },
                             ]},
                             { key:'status', title:'📋 סטטוס ותהליך תכנוני', color:'#78909c', bg:'rgba(120,144,156,0.06)', items:[
                                 { icon:'🚧', title:'דוח מימוש', desc:'שלביות ביצוע לפי מינהל ותכנית', onClick:() => go(() => openMimushModal()) },
@@ -29580,7 +29895,17 @@
                                     <ReportLinkBtn /><button className="modal-close" onClick={() => { setShowCommerceTable(false); setCommerceDrilldown(null); }}>&times;</button>
                                 </div>
                                 <div className="units-body">
-                                    {commerceLoading || !commerceData ? (
+                                    {(!commerceLoading && !commerceData && commerceError) ? (
+                                        <div className="units-loading">
+                                            <p style={{fontSize: '28px', marginBottom: '10px'}}>⚠️</p>
+                                            <p>טעינת נתוני המסחר נכשלה</p>
+                                            <p style={{fontSize: '11px', color: '#9a9aae', marginTop: 6}}>{commerceError}</p>
+                                            <button className="units-toggle-btn" style={{marginTop: 12}}
+                                                onClick={() => { setCommerceError(null); setCommerceLoading(true); fetchCommerceDataInternal(); }}>
+                                                נסה שוב
+                                            </button>
+                                        </div>
+                                    ) : commerceLoading || !commerceData ? (
                                         <div className="units-loading">
                                             <p style={{fontSize: '28px', marginBottom: '10px'}}>⏳</p>
                                             <p>טוען נתוני מסחר ותעסוקה...</p>
@@ -30306,37 +30631,15 @@
                                     const tamaCount = tamaFeatures.length;
                                     const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.units_add) || 0) - (parseFloat(a.properties.units_add) || 0)).slice(0, 10);
-                                    const STATUS_GROUPS = {
-                                        'אישור': 'אישור / מאושרת',
-                                        'מאושרת': 'אישור / מאושרת',
-                                        'תבע מאושרת': 'אישור / מאושרת',
-                                        'תבע - טרום אישור': 'אישור / מאושרת',
-                                        'תחילת תוקף': 'אישור / מאושרת',
-                                        'בהליך אישור': 'בהליך אישור',
-                                        'דיון בהתנגדויות ותיקונים': 'התנגדויות',
-                                        'הכרעה בהתנגדויות / אישור': 'התנגדויות',
-                                        'הפקדה להתנגדויות/השגות': 'הפקדה',
-                                        'במילוי תנאים להפקדה': 'במילוי תנאים להפקדה',
-                                        'נפתח תיק למתכנן': 'פתיחת תיק / בבדיקה',
-                                        'נפתח תיק תב"ע': 'פתיחת תיק / בבדיקה',
-                                        'בבדיקה תכנונית': 'פתיחת תיק / בבדיקה',
-                                        'תכנית עומדת בתנאי סף': 'פתיחת תיק / בבדיקה',
-                                        'נקלטה מקובץ מבאת': 'פתיחת תיק / בבדיקה',
-                                        'בבדיקת תנאי סף': 'פתיחת תיק / בבדיקה',
-                                    };
-                                    const GROUP_COLORS = {
-                                        'אישור / מאושרת': '#50d25a',
-                                        'בהליך אישור': '#50d25a',
-                                        'התנגדויות': '#fafa3c',
-                                        'הפקדה': '#f56e05',
-                                        'במילוי תנאים להפקדה': '#f56e05',
-                                        'פתיחת תיק / בבדיקה': '#eb0000',
-                                    };
-                                    const GROUP_ORDER = ['אישור / מאושרת','בהליך אישור','התנגדויות','הפקדה','במילוי תנאים להפקדה','פתיחת תיק / בבדיקה'];
+                                    // Grouping + colors from the global STATUS_GROUP_DEFS, so this
+                                    // report's bars match the map legend and the other reports.
+                                    const GROUP_COLORS = {};
+                                    STATUS_GROUP_DEFS.forEach(g => { GROUP_COLORS[g.label] = g.color; });
+                                    const GROUP_ORDER = STATUS_GROUP_DEFS.filter(g => g.key !== 'rejected').map(g => g.label);
                                     const statusCounts = {};
                                     plans.forEach(f => {
-                                        const raw = normalizeStatus((f.properties.status_mavat || '').trim()) || 'לא ידוע';
-                                        const s = STATUS_GROUPS[raw] || raw;
+                                        const raw = (f.properties.status_mavat || '').trim();
+                                        const s = raw ? statusGroupLabel(raw) : 'לא ידוע';
                                         statusCounts[s] = (statusCounts[s] || 0) + 1;
                                     });
                                     const maxCount = Math.max(...Object.values(statusCounts), 1);
@@ -30529,7 +30832,8 @@
                                         agg.commerce_in += parseFloat(pr.commerce_in) || 0;
                                         agg.employment  += parseFloat(pr.employment)  || 0;
                                         agg.shavatz_out += parseFloat(pr.shavatz_out_sqm) || 0;
-                                        agg.hafrash     += parseFloat(pr.hafrash_sqm) || 0;
+                                        // skip the superseded half of a nested pair — see hafrashIsDuplicate()
+                                        if (!hafrashIsDuplicate(pr.taba)) agg.hafrash += parseFloat(pr.hafrash_sqm) || 0;
                                     });
 
                                     // Top-N violators — rank by severity

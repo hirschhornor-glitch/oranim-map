@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v13-new-tama-clickable';
+const CACHE_VERSION = 'v14-status-unify';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
@@ -94,8 +94,16 @@ self.addEventListener('fetch', (event) => {
   // Serve from cache instantly (perf!), refresh in background for next visit.
   // GeoJSON data is large; network-first was making repeat visits as slow as
   // first visits. SWR gives instant UI + freshness on the next reload.
+  //
+  // `versioned: true` keeps the app's ?v=APP_VERSION in the cache KEY. Without it
+  // stripCacheBuster() deleted `v` before the lookup, so a cached copy always won
+  // and bumping APP_VERSION had NO effect on data for anyone with the SW installed
+  // — the documented remedy for stale data simply did not work. Keeping the version
+  // in the key makes a bump a guaranteed miss (→ fresh fetch), while same-version
+  // repeat visits keep the instant-from-cache behaviour. Superseded versions of the
+  // same file are pruned on write so the cache does not grow per release.
   if (url.pathname.includes('/data/') && (url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json') || url.pathname.endsWith('.js'))) {
-    event.respondWith(staleWhileRevalidate(event.request, DATA_CACHE));
+    event.respondWith(staleWhileRevalidate(event.request, DATA_CACHE, { versioned: true }));
     return;
   }
 
@@ -152,14 +160,18 @@ function networkFirst(request, cacheName) {
     .catch(() => caches.match(cacheRequest).then((cached) => cached || offlineFallback()));
 }
 
-// Helper: stale-while-revalidate — cache-first for speed, refresh in background
-function staleWhileRevalidate(request, cacheName) {
-  const cacheRequest = stripCacheBuster(request);
+// Helper: stale-while-revalidate — cache-first for speed, refresh in background.
+// opts.versioned keeps ?v= in the cache key so an APP_VERSION bump is a real miss.
+function staleWhileRevalidate(request, cacheName, opts) {
+  const versioned = !!(opts && opts.versioned);
+  const cacheRequest = versioned ? request : stripCacheBuster(request);
   const fetchPromise = fetch(request)
     .then((response) => {
       if (response.ok) {
         const clone = response.clone();
-        caches.open(cacheName).then((cache) => cache.put(cacheRequest, clone));
+        caches.open(cacheName).then((cache) =>
+          cache.put(cacheRequest, clone).then(() => (versioned ? pruneOtherVersions(cache, request.url) : null))
+        );
       }
       return response;
     })
@@ -171,6 +183,20 @@ function staleWhileRevalidate(request, cacheName) {
     // No cache yet — wait for network
     return fetchPromise.then((net) => net || offlineFallback());
   });
+}
+
+// Drop cached copies of the same file under a previous ?v=, so keeping the
+// version in the cache key costs one copy per file, not one per release.
+function pruneOtherVersions(cache, currentUrl) {
+  const cur = new URL(currentUrl);
+  return cache.keys().then((keys) =>
+    Promise.all(
+      keys.map((k) => {
+        const u = new URL(k.url);
+        return u.pathname === cur.pathname && u.search !== cur.search ? cache.delete(k) : null;
+      })
+    )
+  );
 }
 
 // Strip ?v=timestamp cache busters used in the app's fetch calls
