@@ -1452,6 +1452,24 @@
             const real = tama38RawPermits(fid).filter(p => p && !p.filtered && !_tama38PermitTest(p));
             return real.length > 0 && real.every(_tama38PermitClosed);
         }
+        // ── יח"ד שתמ"א 38 מוסיפה — מקור אחד לכל הדוחות ──────────────────────────────
+        // units_tose הוא שדה העירייה, והוא **ריק** ב-44 מבנים שנקלטו דרך street_harvest
+        // (כל התיקים החדשים, למשל הרב הרצוג 6) — הם נספרו 0 בכל דוח. במקרה כזה נופלים על
+        // מה שנאסף מ-YK: units_add (תוספת מפורשת, כשעמודת "קיים" בטבלת 454 ריקה) או
+        // יוצא-נכנס. סדר העדיפויות משמר את המספרים הקיימים — units_tose עדיין קודם כשהוא מלא.
+        function tama38AddedUnits(props) {
+            const p = props || {};
+            const tose = parseFloat(p.units_tose);
+            if (isFinite(tose) && tose > 0) return tose;
+            // units_no_add = אומת מטקסט ההיתר שאין תוספת יח"ד (חיזוק/שימור) — לא לדרוס באומדן.
+            if (p.units_no_add) return isFinite(tose) ? tose : 0;
+            const add = parseFloat(p.units_add);
+            if (isFinite(add) && add > 0) return add;
+            const uin = parseFloat(p.units_in), uout = parseFloat(p.units_out);
+            if (isFinite(uin) && isFinite(uout) && uout > uin) return uout - uin;
+            return isFinite(tose) ? tose : 0;
+        }
+        window.tama38AddedUnits = tama38AddedUnits;
         function ensureOccHatchDefs() {
             if (typeof document === 'undefined' || document.getElementById('occHatch')) return;
             const NS = 'http://www.w3.org/2000/svg';
@@ -8286,7 +8304,7 @@
                         if (radiusCenter.distanceTo(L.latLng(lat, lng)) > radiusMeters) return;
                         const permits = getPermitsForTama38(fid);
                         if (permits.length === 0) return;
-                        const planUnits = parsePlanUnits(p.units_tose);
+                        const planUnits = tama38AddedUnits(p);
                         const scopeKey = 'tama:' + fid;
                         const inclusion = getEffectivePermitInclusion(permits, scopeKey, planUnits);
                         const includedUnits = permits.reduce((s, x, i) => s + (inclusion[i] ? (Number(x.units) || 0) : 0), 0);
@@ -10815,7 +10833,7 @@
                     return subsList.includes(n) || subsList.includes(nn);
                 });
                 const tamaCount = tamaFeatures.length;
-                const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
+                const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + tama38AddedUnits(f.properties), 0);
                 // The minhak's own sub-neighborhoods only: the declared list, plus any sub
                 // that carries plans AND canonically belongs to this minhak (drops cross-minhak
                 // subs that leak in via plans tagged to this minhak but located elsewhere).
@@ -12037,7 +12055,7 @@
                         if (!c || !pip(c, polyCoords)) return;
                         const p = f.properties || {};
                         if (tama38IsClosedFile(p.fid)) return; // תיק סגור — לא נספר כמוסיף יח"ד
-                        const u = parseFloat(p.units_tose) || 0;
+                        const u = tama38AddedUnits(p);
                         tamaCount++; tamaUnits += u;
                         tamaRows.push({ address: p.address || p.tik || p.kvuzat_id || '', status: p.status || '', units: u, lng: c[0], lat: c[1] });
                     });
@@ -12313,7 +12331,7 @@
                 }
 
                 const totalPlanUnits = plansInside.reduce((s, p) => s + (parseFloat(p.units_add) || 0), 0);
-                const totalTamaUnits = tamaInside.reduce((s, p) => s + (parseFloat(p.units_tose) || 0), 0);
+                const totalTamaUnits = tamaInside.reduce((s, p) => s + tama38AddedUnits(p), 0);
                 const totalUnits = totalPlanUnits + totalTamaUnits;
                 const existingUnits = sumExistingUnitsInPolygon(polyCoords, gd.buildings);
 
@@ -12362,7 +12380,7 @@
                     name: p.address || p.tik || '',
                     status: p.status || '',
                     units_in: 0,
-                    units_add: parseFloat(p.units_tose) || 0,
+                    units_add: tama38AddedUnits(p),
                     commerce: 0,
                     employment: 0,
                     minahak: ''
@@ -13337,7 +13355,7 @@
                         const m = NEIGHBORHOOD_TO_MINAHAK[neighborho] || '';
                         if (!m) return;
                         if (!byMinahak[m]) { byMinahak[m] = emptyRow(); bySub[m] = {}; }
-                        const tose = parseInt(p.units_tose) || 0;
+                        const tose = tama38AddedUnits(p);
                         byMinahak[m].units_add += tose;
                         byMinahak[m].renewal += tose; // tama38 = התחדשות עירונית
 
@@ -19642,7 +19660,7 @@
                                 bindPopupEvents(popup, [feat], 0);
                             });
                             const addr = f.properties.address || '';
-                            const tose = parseFloat(f.properties.units_tose) || 0;
+                            const tose = tama38AddedUnits(f.properties);
                             if (addr && tose > 0) {
                                 layer.bindTooltip(
                                     '<div style="color:#727272;font-size:7pt;font-weight:bold;font-family:Assistant,sans-serif">' + addr + '<br>+' + tose + ' יח"ד</div>',
@@ -21769,6 +21787,9 @@
                 // units_add = YK's שטחים table gave only the תוספת (its קיים column was blank),
                 // so there is no honest יוצא — show the addition instead of passing it off as a total.
                 const uadd = parseFloat(props.units_add) || 0;
+                // floors_unverified = שורת "מספר קומות" ב-454 השאירה את עמודת "קיים" ריקה בבניין
+                // שיש לו שטח בנוי קיים → המספר אינו הסך שאחרי (ראה refetch_tama38_floors.py).
+                const flUnv = !!props.floors_unverified;
                 const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
                 const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
 
@@ -21809,7 +21830,9 @@
                     if (uin && uout && uin > 0) {
                         html += '<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">&#215;' + (uout / uin).toFixed(1) + '</span></div>';
                     }
-                    if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value">' + fl + '</span></div>';
+                    if (fl) html += '<div class="popup-pair-item"><span class="popup-pair-label">קומות</span><span class="popup-pair-value"' +
+                        (flUnv ? ' style="color:#ffb74d" title="שורת מספר-הקומות ב-YK לא כוללת את הקומות הקיימות — המספר עשוי להיות התוספת בלבד"' : '') +
+                        '>' + fl + (flUnv ? '?' : '') + '</span></div>';
                     html += '</div>';
                     // תמ"א 38 usually adds units. יוצא≤נכנס with no authoritative total = suspect
                     // data (review); confirmed by the permit text = a legit no-added-units permit.
@@ -21863,12 +21886,13 @@
                     if (mpc.cap != null) {
                         html += '<div style="display:flex;gap:14px;font-size:11px;color:#aab;margin-bottom:4px">' +
                             '<span><b>קומות מותר:</b> ' + mpc.cap + '</span>' +
-                            (fl ? '<span><b>בהיתר:</b> ' + fl + '</span>' : '') + '</div>';
+                            (fl ? '<span><b>בהיתר:</b> ' + fl + (flUnv ? ' <span style="color:#ffb74d">(לא מאומת)</span>' : '') + '</span>' : '') + '</div>';
                     } else {
                         html += '<div style="font-size:10px;color:#8a93a6;margin-bottom:4px">אין תקרת-קומות מדויקת באזור זה בתכנית האב</div>';
                     }
                     if (mpc.flag === 'הפרה') html += '<div style="font-size:12px;font-weight:bold;color:#ef5350">&#128308; חריגת קומות מתכנית האב</div>';
                     else if (mpc.flag === 'אזהרה') html += '<div style="font-size:12px;font-weight:bold;color:#ffb74d">&#128993; אזהרת קומות (כלל גס)</div>';
+                    else if (mpc.cap != null && flUnv && fl) html += '<div style="font-size:11px;color:#ffb74d">&#9888;&#65039; לא ניתן לאמת תאימות קומות — YK דיווח ' + fl + ' בלי הקומות הקיימות, כך שהסך בפועל גבוה יותר</div>';
                     else if (mpc.cap != null) html += '<div style="font-size:12px;color:#81c784">&#128994; תואם קומות</div>';
                     if (mpc.conservation_kind === 'מבנה לשימור') html += '<div style="font-size:12px;font-weight:bold;color:#ce93d8;margin-top:3px">&#127963;&#65039; מבנה לשימור' + (mpc.conservation && mpc.conservation !== '?' ? ' · ' + esc(mpc.conservation) : '') + '</div>';
                     else if (mpc.conservation_kind === 'באזור שימור') html += '<div style="font-size:11px;color:#b39ddb;margin-top:3px">&#127963;&#65039; באזור שימור</div>';
@@ -30638,7 +30662,7 @@
                                         return subs.includes(n) || subs.includes(normalized);
                                     }) : [];
                                     const tamaCount = tamaFeatures.length;
-                                    const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + (parseFloat(f.properties.units_tose) || 0), 0);
+                                    const tamaUnitsAdd = tamaFeatures.reduce((s, f) => s + tama38AddedUnits(f.properties), 0);
                                     const top10 = [...plans].sort((a, b) => (parseFloat(b.properties.units_add) || 0) - (parseFloat(a.properties.units_add) || 0)).slice(0, 10);
                                     // Grouping + colors from the global STATUS_GROUP_DEFS, so this
                                     // report's bars match the map legend and the other reports.
@@ -30807,7 +30831,7 @@
                                         });
                                     }
                                     const tamaCount = tama38InsideMp.length;
-                                    const tamaUnitsAdd = tama38InsideMp.reduce((s, tf) => s + (parseFloat(tf.properties.units_tose) || 0), 0);
+                                    const tamaUnitsAdd = tama38InsideMp.reduce((s, tf) => s + tama38AddedUnits(tf.properties), 0);
                                     // תמ"א 38 buildings' compliance vs this master plan (tama38_master_plan_check.json)
                                     const t38mp = Object.values(window.__tama38MpCheck || {}).filter(r => r && r.master_plan === masterPlanReport);
                                     const t38Viol = t38mp.filter(r => r.flag === 'הפרה');
@@ -32624,7 +32648,7 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                                 if (devRepMinahak !== 'all' && minahak !== devRepMinahak) continue;
                                 const st = (info.status || p.status || '').trim();
                                 const bucket = t38Bucket(st);
-                                const units = num(info.units) || num(p.units_tose);
+                                const units = num(info.units) || tama38AddedUnits(p);
                                 let names = splitDevelopers(info.developer).map(canonOf).filter(Boolean);
                                 if (!names.length) names = [info.is_residents ? 'דיירים (ללא יזם)' : 'לא ידוע'];
                                 const priv = names.filter(n => !/עיריית|עירית|ועדה מקומית|הוועדה המקומית|רשות מקומית/.test(n));
