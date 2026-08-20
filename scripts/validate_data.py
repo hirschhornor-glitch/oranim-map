@@ -123,6 +123,33 @@ def check_plans(data) -> None:
         err(f"plans.geojson: {missing_status} features missing status_mavat")
     if bbox_fails:
         warn(f"plans.geojson: {bbox_fails} features outside Jerusalem bbox")
+
+    # units_total must equal units_in + units_add. When it does not, one of the three
+    # was mistyped and every units report is wrong for that plan. The common failure
+    # is add == total while in > 0, which counts existing flats as new ones. These
+    # need checking against Mavat/Table 5 to know WHICH field is wrong, so this warns
+    # with names rather than "fixing" one side and inventing a number.
+    def _num(v):
+        try:
+            return float(str(v).replace(",", "").strip())
+        except Exception:
+            return None
+
+    mismatch, negative = [], []
+    for f in feats:
+        p = f.get("properties", {}) or {}
+        t, i, a = _num(p.get("units_total")), _num(p.get("units_in")), _num(p.get("units_add"))
+        name = str(p.get("plan_name") or "?")
+        if None not in (t, i, a) and abs(t - (i + a)) > 0.5:
+            mismatch.append(f"{name}({t:g}≠{i:g}+{a:g})")
+        if a is not None and a < 0:
+            negative.append(f"{name}({a:g})")
+    if mismatch:
+        warn(f"plans.geojson: {len(mismatch)} plans where units_total != units_in + "
+             f"units_add: {mismatch[:8]}")
+    if negative:
+        warn(f"plans.geojson: {len(negative)} plans with negative units_add: {negative[:8]}")
+
     print(f"plans.geojson: {len(feats)} features, taba OK: {len(feats) - missing_taba}")
 
 
