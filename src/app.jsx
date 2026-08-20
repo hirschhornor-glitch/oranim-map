@@ -21766,6 +21766,9 @@
                 const statusColor = getPermitStatusColor(status);
                 const statusDate = (mp && mp.status_date) || pri.status_date || '';
                 const uin = parseFloat(props.units_in) || 0, uout = parseFloat(props.units_out) || 0, fl = parseFloat(props.floors_tama) || 0;
+                // units_add = YK's שטחים table gave only the תוספת (its קיים column was blank),
+                // so there is no honest יוצא — show the addition instead of passing it off as a total.
+                const uadd = parseFloat(props.units_add) || 0;
                 const dev = (window.__tama38Developers || {})[String(fileNum).trim()] || {};
                 const ykUrl = fileNum ? 'https://ykpubdata.jerusalem.muni.il/#/TikDetails?TikNum=' + encodeURIComponent(fileNum) + '&SystemCode=26400046' : '';
 
@@ -21795,11 +21798,14 @@
                     (ykUrl ? '<a href="' + ykUrl + '" target="_blank" rel="noopener" style="color:#5dade2;font-weight:bold;direction:ltr;text-decoration:underline">' + esc(fileNum) + '</a>'
                            : '<span class="popup-row-value" style="direction:ltr;font-weight:bold">' + esc(fileNum) + '</span>') + '</div>';
                 // ── יח"ד + קומות tiles (same format as the plan popup) ──
-                if (uin || uout || fl) {
+                if (uin || uout || fl || uadd) {
                     html += '<div class="popup-section-title" style="border-top:none;margin-top:0">יח"ד</div>';
                     html += '<div class="popup-pair">';
                     html += '<div class="popup-pair-item"><span class="popup-pair-label">נכנס</span><span class="popup-pair-value">' + (uin ? uin : '-') + '</span></div>';
                     html += '<div class="popup-pair-item"><span class="popup-pair-label">יוצא</span><span class="popup-pair-value">' + (uout ? uout : '-') + '</span></div>';
+                    if (uadd && !uout) {
+                        html += '<div class="popup-pair-item"><span class="popup-pair-label">תוספת</span><span class="popup-pair-value" style="color:#66bb6a">+' + uadd + '</span></div>';
+                    }
                     if (uin && uout && uin > 0) {
                         html += '<div class="popup-pair-item"><span class="popup-pair-label">מכפיל</span><span class="popup-pair-value" style="color:#5dade2">&#215;' + (uout / uin).toFixed(1) + '</span></div>';
                     }
@@ -21807,6 +21813,9 @@
                     html += '</div>';
                     // תמ"א 38 usually adds units. יוצא≤נכנס with no authoritative total = suspect
                     // data (review); confirmed by the permit text = a legit no-added-units permit.
+                    if (uadd && !uout) {
+                        html += '<div style="font-size:11px;color:#8a93a6;margin-top:3px">&#8505;&#65039; ב-YK נרשמה רק התוספת (' + uadd + ' יח"ד) — מספר היח"ד הקיימות לא דווח, ולכן היוצא אינו ידוע</div>';
+                    }
                     if (props.units_review) {
                         html += '<div style="font-size:11px;color:#ffb74d;margin-top:3px">&#9888;&#65039; יוצא ≤ נכנס — נתון לבדיקה</div>';
                     } else if (props.units_no_add) {

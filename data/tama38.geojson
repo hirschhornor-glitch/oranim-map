@@ -3826,7 +3826,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 18
+    "units_add": 18
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4086,7 +4086,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5662,7 +5662,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 6
+    "units_add": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6138,8 +6138,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 6,
-    "floors_tama": 3
+    "floors_tama": 3,
+    "units_add": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6689,7 +6689,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 19
+    "units_add": 19
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7086,7 +7086,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 7
+    "units_add": 7
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7415,7 +7415,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8106,8 +8106,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4,
-    "floors_tama": 4
+    "floors_tama": 4,
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8358,8 +8358,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 5,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_add": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8503,8 +8503,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 3,
-    "floors_tama": 6
+    "floors_tama": 6,
+    "units_add": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8613,8 +8613,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9236,7 +9236,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 6
+    "units_add": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9489,8 +9489,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 4,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9564,8 +9564,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 6,
-    "floors_tama": 6
+    "floors_tama": 6,
+    "units_add": 6
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9713,7 +9713,7 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "units_out": 3
+    "units_add": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12029,7 +12029,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_out": 10
+    "units_add": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12653,7 +12653,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_out": 4
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13358,7 +13358,7 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "units_out": 5
+    "units_add": 5
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13775,8 +13775,8 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4,
-    "floors_tama": 6
+    "floors_tama": 6,
+    "units_add": 4
    }
   },
   {
@@ -14108,7 +14108,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 3
+    "units_add": 3
    }
   },
   {
@@ -14293,7 +14293,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 26
+    "units_add": 26
    }
   },
   {
@@ -14329,7 +14329,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4
+    "units_add": 4
    }
   },
   {
@@ -14402,7 +14402,7 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4
+    "units_add": 4
    }
   },
   {
@@ -14438,8 +14438,8 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 10,
-    "floors_tama": 5
+    "floors_tama": 5,
+    "units_add": 10
    }
   },
   {
@@ -14853,10 +14853,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 3,
     "floors_tama": 7,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2024/0225.00 נסח תת-חלקות"
+    "units_pdf_source": "2024/0225.00 נסח תת-חלקות",
+    "units_add": 3
    }
   },
   {
@@ -15161,10 +15161,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 32,
     "floors_tama": 7,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2024/0429.00 נסח"
+    "units_pdf_source": "2024/0429.00 נסח",
+    "units_add": 32
    }
   },
   {
@@ -15239,10 +15239,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 3,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2024/0432.00 נסח"
+    "units_pdf_source": "2024/0432.00 נסח",
+    "units_add": 3
    }
   },
   {
@@ -15278,10 +15278,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 2,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2024/0455.00 נסח"
+    "units_pdf_source": "2024/0455.00 נסח",
+    "units_add": 2
    }
   },
   {
@@ -15393,10 +15393,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 5,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2024/0520.00 נסח"
+    "units_pdf_source": "2024/0520.00 נסח",
+    "units_add": 5
    }
   },
   {
@@ -15624,9 +15624,9 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 19,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0129.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0129.00 נסח תת-חלקות",
+    "units_add": 19
    }
   },
   {
@@ -15853,10 +15853,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 6,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0418.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0418.00 נסח תת-חלקות",
+    "units_add": 4
    }
   },
   {
@@ -15892,10 +15892,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0428.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0428.00 נסח תת-חלקות",
+    "units_add": 4
    }
   },
   {
@@ -15931,10 +15931,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 6,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0473.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0473.00 נסח תת-חלקות",
+    "units_add": 4
    }
   },
   {
@@ -15970,10 +15970,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0511.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0511.00 נסח תת-חלקות",
+    "units_add": 4
    }
   },
   {
@@ -16047,10 +16047,10 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "units_out": 2,
     "floors_tama": 3,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2025/0569.00 נסח תת-חלקות"
+    "units_pdf_source": "2025/0569.00 נסח תת-חלקות",
+    "units_add": 2
    }
   },
   {
@@ -16429,10 +16429,10 @@
     "last_edite": "weekly149",
     "last_edi_1": "2026-07-19",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 5,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2026/0146.00 נסח 12 פחות 2 לא-מגורים"
+    "units_pdf_source": "2026/0146.00 נסח 12 פחות 2 לא-מגורים",
+    "units_add": 4
    }
   },
   {
@@ -16468,10 +16468,10 @@
     "last_edite": "weekly149",
     "last_edi_1": "2026-07-19",
     "__rec_stat": null,
-    "units_out": 9,
     "floors_tama": 6,
     "units_in_src": "pdf_attach",
-    "units_pdf_source": "2026/0258.00 נסח 16"
+    "units_pdf_source": "2026/0258.00 נסח 16",
+    "units_add": 9
    }
   },
   {
@@ -16768,8 +16768,8 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 3,
-    "floors_tama": 7
+    "floors_tama": 7,
+    "units_add": 3
    },
    "geometry": {
     "type": "MultiPoint",
@@ -16882,9 +16882,10 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 4,
-    "floors_tama": 4,
-    "first_detected": "2026-07-30"
+    "units_out": 12,
+    "floors_tama": 7,
+    "first_detected": "2026-07-30",
+    "units_in": 8
    },
    "geometry": {
     "type": "MultiPoint",
@@ -16920,9 +16921,9 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 5,
-    "first_detected": "2026-07-30"
+    "first_detected": "2026-07-30",
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
@@ -17184,8 +17185,8 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 28,
-    "floors_tama": 8
+    "floors_tama": 8,
+    "units_add": 28
    },
    "geometry": {
     "type": "MultiPoint",
@@ -17483,8 +17484,8 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 10,
-    "floors_tama": 8
+    "floors_tama": 8,
+    "units_add": 10
    },
    "geometry": {
     "type": "MultiPoint",
@@ -17785,8 +17786,8 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 2,
-    "floors_tama": 4
+    "floors_tama": 4,
+    "units_add": 2
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18086,9 +18087,9 @@
     "last_edite": "street_harvest",
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
-    "units_out": 4,
     "floors_tama": 5,
-    "first_detected": "2026-07-30"
+    "first_detected": "2026-07-30",
+    "units_add": 4
    },
    "geometry": {
     "type": "MultiPoint",
