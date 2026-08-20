@@ -188,3 +188,29 @@
 {"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "overlapping_plans", "old": 0.0, "new": ""}
 {"ts": "2026-08-16 10:40:40", "taba": 1460088, "plan_name": "101-1460088", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
 {"ts": "2026-08-17 10:31:03", "taba": 1474931, "plan_name": "101-1474931", "status": "בבדיקה תכנונית", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 12:53:55", "taba": 262717, "plan_name": "101-0262717", "status": "אישור", "field": "units_in", "old": 0, "new": 5}
+{"ts": "2026-08-20 12:53:55", "taba": 250563, "plan_name": "101-0250563", "status": "אישור", "field": "units_in", "old": 0, "new": 90}
+{"ts": "2026-08-20 12:53:55", "taba": 790360, "plan_name": "101-0790360", "status": "אישור", "field": "units_in", "old": 43, "new": 0}
+{"ts": "2026-08-20 12:53:55", "taba": 790360, "plan_name": "101-0790360", "status": "אישור", "field": "units_add", "old": 39, "new": 84}
+{"ts": "2026-08-20 12:53:55", "taba": 790360, "plan_name": "101-0790360", "status": "אישור", "field": "rental", "old": 43, "new": 47}
+{"ts": "2026-08-20 12:53:55", "taba": 843797, "plan_name": "101-0843797", "status": "אישור", "field": "units_in", "old": 0, "new": 9}
+{"ts": "2026-08-20 12:53:55", "taba": 855585, "plan_name": "101-0855585", "status": "אישור", "field": "units_add", "old": 566, "new": 488}
+{"ts": "2026-08-20 12:53:55", "taba": 838219, "plan_name": "101-0838219", "status": "אישור", "field": "units_add", "old": -14, "new": 0}
+{"ts": "2026-08-20 12:53:55", "taba": 1062645, "plan_name": "101-1062645", "status": "תבע מאושרת", "field": "units_total", "old": 148, "new": 157}
+{"ts": "2026-08-20 12:53:55", "taba": 1091438, "plan_name": "101-1091438", "status": "אישור", "field": "units_add", "old": 19, "new": 16}
+{"ts": "2026-08-20 12:53:55", "taba": 657593, "plan_name": "101-0657593", "status": "אישור", "field": "units_total", "old": 2450, "new": 3500}
+{"ts": "2026-08-20 12:53:55", "taba": 1189281, "plan_name": "101-1189281", "status": "אישור", "field": "units_add", "old": 23, "new": 25}
+{"ts": "2026-08-20 12:53:55", "taba": 1026574, "plan_name": "101-1026574", "status": "אישור", "field": "units_add", "old": 67, "new": 84}
+{"ts": "2026-08-20 12:53:55", "taba": 1146505, "plan_name": "101-1146505", "status": "אישור", "field": "units_add", "old": 22, "new": 21}
+{"ts": "2026-08-20 12:53:55", "taba": 1256684, "plan_name": "101-1256684", "status": "תבע מאושרת", "field": "units_add", "old": 30, "new": 15}
+{"ts": "2026-08-20 12:53:55", "taba": 1115450, "plan_name": "101-1115450", "status": "אישור", "field": "units_total", "old": 93, "new": 117}
+{"ts": "2026-08-20 12:53:55", "taba": 1115450, "plan_name": "101-1115450", "status": "אישור", "field": "Machpil", "old": 15.5, "new": 19.5}
+{"ts": "2026-08-20 12:53:55", "taba": 1242700, "plan_name": "101-1242700", "status": "אישור", "field": "units_add", "old": 99, "new": 93}
+{"ts": "2026-08-20 12:53:55", "taba": 1175926, "plan_name": "101-1175926", "status": "בהליך אישור", "field": "units_add", "old": 10, "new": 15}
+{"ts": "2026-08-20 12:53:55", "taba": 1175926, "plan_name": "101-1175926", "status": "בהליך אישור", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 12:53:55", "taba": 1354356, "plan_name": "101-1354356", "status": "הפקדה להתנגדויות/השגות", "field": "units_add", "old": 34, "new": 26}
+{"ts": "2026-08-20 12:53:55", "taba": 1354356, "plan_name": "101-1354356", "status": "הפקדה להתנגדויות/השגות", "field": "has_objection_btn", "old": true, "new": "TRUE"}
+{"ts": "2026-08-20 12:53:55", "taba": 1266170, "plan_name": "101-1266170", "status": "אישור", "field": "units_total", "old": 2, "new": 9}
+{"ts": "2026-08-20 12:53:55", "taba": 1266170, "plan_name": "101-1266170", "status": "אישור", "field": "units_add", "old": -5.0, "new": 2}
+{"ts": "2026-08-20 12:53:55", "taba": 581850, "plan_name": "101-0581850", "status": "אישור", "field": "units_total", "old": 0, "new": 250}
+{"ts": "2026-08-20 12:53:55", "taba": 581850, "plan_name": "101-0581850", "status": "אישור", "field": "units_add", "old": -31, "new": 202}
