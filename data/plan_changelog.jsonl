@@ -214,3 +214,6 @@
 {"ts": "2026-08-20 12:53:55", "taba": 1266170, "plan_name": "101-1266170", "status": "אישור", "field": "units_add", "old": -5.0, "new": 2}
 {"ts": "2026-08-20 12:53:55", "taba": 581850, "plan_name": "101-0581850", "status": "אישור", "field": "units_total", "old": 0, "new": 250}
 {"ts": "2026-08-20 12:53:55", "taba": 581850, "plan_name": "101-0581850", "status": "אישור", "field": "units_add", "old": -31, "new": 202}
+{"ts": "2026-08-20 13:26:24", "taba": 141010, "plan_name": "101-0141010", "status": "תבע מאושרת", "field": "units_in", "old": 0, "new": 2}
+{"ts": "2026-08-20 13:26:24", "taba": 918490, "plan_name": "101-0918490", "status": "תבע מאושרת", "field": "units_add", "old": 11, "new": 2}
+{"ts": "2026-08-20 13:26:24", "taba": 1515410, "plan_name": "101-1515410", "status": "נקלטה מקובץ מבאת", "field": "units_add", "old": 0, "new": 1}
