@@ -126,6 +126,25 @@ def check_plans(data) -> None:
     print(f"plans.geojson: {len(feats)} features, taba OK: {len(feats) - missing_taba}")
 
 
+def _tama38_stage_known(raw_status: str) -> bool:
+    """Mirror of tama38Stage() in src/app.jsx — keep the two in sync.
+
+    Returns False for a status the map would paint with the neutral 'unknown'
+    color, so CI flags a new municipal wording before it shows up as a grey dot.
+    """
+    t = re.sub(r"\s+", "", str(raw_status or ""))
+    if not t:
+        return False
+    groups = [
+        ("הופק", "הוצאהיתר", "תעודתגמר", "גמרבנייה"),
+        ("היתראושר", "טיוטתהיתר"),
+        ("תכנון", "טרםכניסהלרישוי"),
+        ("נפתחתיק", "רישוי", "ועדת", "וועדת", "פרסום", "מקדמה", "הגשה", "חידוש",
+         "הקלה", "בקשה"),
+    ]
+    return any(any(k in t for k in g) for g in groups)
+
+
 def check_tama38(tama_data, permits_data) -> None:
     if not tama_data or "features" not in tama_data:
         return
@@ -149,7 +168,45 @@ def check_tama38(tama_data, permits_data) -> None:
         warn(f"tama38.geojson: {missing_status} features missing status")
     if bad_addr:
         err(f"tama38.geojson: {bad_addr} features with control chars in address")
+
+    # Duplicate tik = the same permit file recorded twice, so its units and its map
+    # pin are counted twice. Found 5 such pairs in an audit; only one (2016/0440,
+    # same address ~0.5 m apart, two licensing stages) was an unambiguous duplicate —
+    # the others may be distinct projects sharing a legacy tik, so this WARNS and
+    # names them for a human rather than guessing.
+    by_tik: dict[str, list[str]] = {}
+    for f in feats:
+        p = f.get("properties", {}) or {}
+        t = str(p.get("tik") or "").strip()
+        if t:
+            by_tik.setdefault(t, []).append(str(p.get("address") or "?"))
+    dup_tiks = {t: a for t, a in by_tik.items() if len(a) > 1}
+    if dup_tiks:
+        detail = "; ".join(f"{t} ({', '.join(a)})" for t, a in sorted(dup_tiks.items())[:6])
+        warn(f"tama38.geojson: {len(dup_tiks)} duplicate tik values — {detail}")
+
+    # Every status must map to a licensing stage the map can color. The map used to
+    # test exact equality against 4 of the 17 status strings present, so 45 features
+    # were painted with a fallback color as if unclassified.
+    unknown_statuses = sorted({
+        str((f.get("properties") or {}).get("status") or "").strip()
+        for f in feats
+        if str((f.get("properties") or {}).get("status") or "").strip()
+        and not _tama38_stage_known(str((f.get("properties") or {}).get("status")))
+    })
+    if unknown_statuses:
+        warn(f"tama38.geojson: {len(unknown_statuses)} status values the map cannot "
+             f"classify: {unknown_statuses[:6]}")
+
     print(f"tama38.geojson: {len(feats)} features")
+
+    # Orphan permit keys: tama38_permits.json is keyed by properties.fid, so a key
+    # that matches no feature is dead weight from the old index-based keying.
+    if permits_data:
+        fids = {str((f.get("properties") or {}).get("fid")) for f in feats}
+        orphans = [k for k in permits_data if k not in fids]
+        if orphans:
+            warn(f"tama38_permits.json: {len(orphans)} keys match no feature fid: {orphans[:8]}")
 
     # Cross-check: if tama38 status says 'הופק*' / 'היתר*', permits JSON should have entries.
     # This catches the scraper bug (address autocomplete ambiguity) we found for רבקה 22.
