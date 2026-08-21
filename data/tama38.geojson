@@ -14995,9 +14995,10 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 14,
-    "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "עזריאל הילדסהיימר 10, חזית מזרחית 1:100: 0.00=+737.60 ואז +3.20, +6.35, +9.35, +12.71, +16.21, +19.71, +22.71 → 7 קומות מעל הקרקע (דירות מסומנות 1,4,7,10,13 בעלייה). נרשם 6; החריגה מול תקרה 5 מאושרת ואף גדולה יותר",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -16110,8 +16111,9 @@
     "units_in": 4,
     "units_out": 8,
     "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "permit_doc",
+    "floors_note": "אלוף שמחוני 2, חזית צפונית 1:100: קומת עמודים -2.61 (769.06), קרקע 0.00 (771.67), קומה א +3.00, ב +6.07, ג +9.04, ד +12.04, ה +15.04, גגות +19.47, גג מדרגות +21.59 → 6 קומות מעל הקרקע מעל קומת עמודים. הנתון שנרשם (6) נכון — בדיוק על תקרה 6",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -16590,7 +16592,9 @@
     "units_out": 14,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "table_lower_bound",
+    "floors_note": "עזריאל הילדסהיימר (450): הגיליון בנוי מבלוקי חישוב פר-קומה; הבלוק העליון \"בניין 1, גובה 16.03, קומה: גג טכני\" — כלומר הגג הטכני ב+16.03. טבלת מפלסים מסכמת/חזית לא אותרה, ולכן הסך לא נקבע (נרשם 5, תקרה 5)",
+    "permit_kind": "tama_add"
    }
   },
   {
