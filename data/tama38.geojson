@@ -617,9 +617,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 1.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2015/0209.01 (שד בן מימון/הרמבם 39): \"תוספת בניה לבנין קיים - הרחבות יחידות דיור בהתאם לתכנית 9988\" — הרחבות דירות לפי תכנית 9988, לא תמא 38 ולא תוספת קומות (נרשם 1.5)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2183,10 +2182,9 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
     "units_out": 12,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2018/0650.01 (חזקיהו המלך 42): \"תכנית שינויים לביטול יחידת דיור והשלמת 5% דירת גג, שינויים בחזיתות ובפיתוח\" — בקשת שינויים, לא תוספת קומות (נרשם 3)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2225,7 +2223,9 @@
     "units_out": 12,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "חרלפ 18-20 (קרית שמואל, גוש 30023 חלקה 243): המסמך שנמצא הוא מפת מדידה 1:250 — אין דף היתר (נרשם 4)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2342,7 +2342,9 @@
     "units_out": 30,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "אותו תיק כמו fid 107 (2016/1056.00, אפרים 8 = יפתח 1): \"בניית תוספות בהתאם לתמא 38 ותכנית 10038\"; מפלסי קומות ב,ג,ד = +2.75/+5.50/+8.25. סך הקומות לא מצוין (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2907,9 +2909,10 @@
     "__rec_stat": null,
     "units_in": 11,
     "units_out": 16,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "וינדהם דידס 6 — אותו גיליון בדיוק כמו fid 154 (וינדהם דידס 9), חזית מערבית 1:100 עם מפלסים -0.36=742.75 עד +19.05=762.11 → כ-5 קומות מעל הקרקע. נרשם 3",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3178,7 +3181,9 @@
     "units_out": 4,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "שדרות בן מימון (הרמבם): הגיליון הוא תכניות קומה והדמיות (ההדמיה מראה מבנה בן ~5 קומות) — אין דף היתר ואין טבלת מפלסים (נרשם 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3676,7 +3681,9 @@
     "units_out": 32,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0142.00 (גדעון 15): \"בניית תוספות בהתאם לתמא 38 ותכנית 10038 - חיזוק הבניין\" — אין ציון מספר קומות (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3712,9 +3719,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_note": "היתר 2018/0247.03 (עין גדי 7): \"תוכנית שינויים לתמא 38\" — בקשת שינויים, אין נתון קומות (נרשם 4)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3751,9 +3757,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 16,
-    "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "אבן עזרא 19: המסמך בתיק הוא \"רשיון בנין מס 9029\" בכתב יד מ-27.10.1958 — היתר היסטורי, לא תמא 38. אין נתון קומות רלוונטי (נרשם 5)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3868,9 +3873,10 @@
     "__rec_stat": null,
     "units_in": 8,
     "units_out": 13,
-    "floors_tama": 10,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2017/0683.00 (עמק רפאים 29): \"תמא 38 חיזוק המבנה ושיפוצו, הוספת ממד לכל דירה, הוספת 2 קומות עליונות מעל בניין בן 3 קומות קיימות וקומת מחסנים\" → 3 קיימות + 2 = 5, מעל קומת מחסנים. ⚠ נרשם 10 — גבוה בהרבה מהמציאות",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4141,7 +4147,9 @@
     "units_out": 30,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2016/1056.00: \"בניית תוספות בהתאם לתמא 38 ותכנית 10038 - חיזוק הבניין\". בתנאים: \"דיירי קומות ב,ג,ד (מפלסים +2.75, +5.50, +8.25)\" — כלומר קומה א ב-0.00. סך הקומות לא מצוין. ⚠ אותו תיק בדיוק כמו fid 60 (אפרים 8) — בניין פינתי שנרשם פעמיים בשכבה (יפתח 1 / אפרים 8)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4407,8 +4415,9 @@
     "units_in": 12,
     "units_out": 17,
     "floors_tama": 4.5,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2017/1035.00 (רדק 19): \"תמא 38 חיזוק הנדסי. הוספת ממדים, מרפסות ומעלית. תוספת 1.5 קומות למבנה קיים בן 3 קומות מעל קומת מחסנים\" → 3 + 1.5 = 4.5, מעל קומת מחסנים. הנתון שנרשם (4.5) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4631,7 +4640,9 @@
     "units_out": 17,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0452.00 (דוד מרכוס 14): \"ניתן בזה היתר ל: תמא 38\" בלי פירוט; בתנאים מוזכרת יציקת תקרה במפלס +18.39/+17.09 (כלומר הבניין מגיע לכ-18.4 מ). מספר קומות לא מצוין (נרשם 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4710,7 +4721,9 @@
     "units_out": 8,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0768.00 (הרב הרצוג 23): \"תוספת ממדים וחיזוק מבנה לפי תמא 38-1\" — חיזוק וממדים בלבד, אין ציון תוספת קומות ואין נתון קומות (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4789,7 +4802,9 @@
     "units_out": 5,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2018/0807.00 (חרלפ 27): \"תוספת תואמת תמא 38 תיקון 3\" — אין ציון מספר קומות (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4966,9 +4981,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2017/0614.00 (הרכבת 29 דירה 1): \"הרחבת יחידת דיור קיימת\" — הרחבת דירה, לא תמא ולא תוספת קומות (נרשם 3)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5316,7 +5330,9 @@
     "units_out": 9,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2019/0169.00 (רבדים 28): \"תוספת בניה עפי תמא 10038 - חיזוק מבנים בפני רעידות אדמה\" — אין ציון מספר קומות (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5394,7 +5410,9 @@
     "__rec_stat": null,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "table_lower_bound",
+    "floors_note": "היתר 2019/0086.01 (משמר העם 14): \"תוספת בניית קומות, חיזוק שתי קומות קיימות\" — הבניין הקיים בן 2 קומות; מספר הקומות הנוספות לא צוין (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5920,9 +5938,10 @@
     "__rec_stat": null,
     "units_in": 11,
     "units_out": 16,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "וינדהם דידס 9, חזית מערבית 1:100: מפלסים מסומנים -0.36=742.75 ועד +19.05=762.11, והחזית מראה 4 שורות פתחים ומעליהן מפלס נסוג/גג → כ-5 קומות מעל הקרקע. נרשם 3",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6530,7 +6549,9 @@
     "floors_tama": 5,
     "units_out": 7,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2018/0424.00 (אברהם מאפו 1): \"שדרוג הנדסי מלא במסגרת תמא 38, הרחבת יחידות דיור קיימות ותוספת של סהכ שש יחידות בשתי קומות חדשות. הרחבת שטחי החנייה התתק\" — +2 קומות ו-6 יחד; הסך לא מצוין (נרשם 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6906,8 +6927,9 @@
     "__rec_stat": null,
     "units_out": 11,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2016/0919.00 (דרך חברון 53): \"הריסת מבנה חד קומתי למעט קירות לשימור והקמת בניין בן 4 קומות מעל קומת מחסנים בהתאם לתמא 38 ותכנית 10038\" — 4 קומות מעל קומת מחסנים. הנתון שנרשם (4) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11773,7 +11795,9 @@
     "units_out": 8,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2016/0803.00 (מרדכי כספי 6): \"חיזוק וחידוש הבניין עפ תמא 38 ותכנית 10038 והוספת 2 יחד ב-2 קומות חדשות\" — תוספת 2 קומות ו-2 יחד; הסך לא מצוין (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11929,7 +11953,9 @@
     "units_out": 112,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2016/1295.00 (דרך בית לחם 127): \"חיזוק וחידוש הבנין עי תמא 38\" — אין ציון מספר קומות (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12081,9 +12107,10 @@
     "__rec_stat": null,
     "units_in": 5,
     "units_out": 8,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5.5,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2017/0160.00 (אוסישקין 13): \"שימור בניין קיים בין 2.5 קומות + קומת קרקע ותוספת 2 קומות עפ תמא 38-1\" → 2.5 + קרקע = 3.5 קיימות, ועוד 2 = 5.5. נרשם 3",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12612,8 +12639,9 @@
     "units_in": 3,
     "units_out": 13,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2019/0229.00 (דרך חברון 39): \"הריסת חלקי מבנה קיים והקמת בניין חדש בן 4 קומות עפ תמא 38 ותכנית 10038\" — 4 קומות. הנתון שנרשם (4) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13179,7 +13207,9 @@
     "units_out": 98,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "בר יוחאי 18: גיליון קונסטרוקציה עם עמודת מפלסים בצד (+5.40, +8.11, +10.79, +13.72, +16.84, +19.96) — כ-6 מפלסים עליונים, אך מפלס הקרקע נחתך ולא ניתן לקבוע סך (נרשם 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13340,7 +13370,9 @@
     "units_out": 14,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2018/0611.00 (הרב חיים ברלין 3): \"תוספת ליחידות דיור + קומה וחצי, במסגרת תמא 38\" — תוספת 1.5 קומות; הסך לא מצוין (נרשם 3)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13573,7 +13605,9 @@
     "units_out": 43,
     "floors_tama": 8,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "מקור חיים 17 (גוש 30141/30142): הגיליון שנמצא הוא תכניות קומה ומפת מדידה — אין דף היתר ואין טבלת מפלסים (נרשם 8)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13731,7 +13765,9 @@
     "units_out": 149,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "דרך חברון 160 (תיק סגור בשכבה): הגיליון שנמצא הוא פרטי קונסטרוקציה; בחתך בצד נראים מפלסים עד +21.69 אך לא ניתן לספור קומות (נרשם 3)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -14044,7 +14080,9 @@
     "units_out": 6,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "רמבן 14 (רחביה, גוש 30038 חלקה 15): המסמך שנמצא הוא מפת מדידה בלבד — אין דף היתר ואין טבלת מפלסים (נרשם 4)",
+    "permit_kind": "unclear"
    }
   },
   {
@@ -14119,7 +14157,9 @@
     "units_out": 5,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2018/0853.00 (כיכר מגנס 1): \"תוספת בניה הכוללת ממדים לדירות הקיימות וכן תוספת קומה וחצי, עפי תמא 38/1\" — תוספת 1.5 קומות; הסך לא מצוין (נרשם 5)",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -16832,9 +16872,8 @@
     "last_edite": "audit149",
     "last_edi_1": "2026-07-08",
     "__rec_stat": null,
-    "floors_tama": 1.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2013/0179.01 (נפתלי 23): \"תוכנית שינויים\" — בקשת שינויים בלבד, אין נתון קומות (נרשם 1.5)",
+    "permit_kind": "other"
    }
   },
   {
@@ -17703,8 +17742,9 @@
     "units_out": 1,
     "floors_tama": 2,
     "units_review": true,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2017/0800.00 (מ.נ. כהנוב 28): \"הריסת חלקי מבנה קיים והקמת בניין בן 2 קומות + חלל גג רעפים לשימוש למגורים מעל קומת מרתף בהתאם לתמא 38 ותכנית 10038\" — 2 קומות + חלל גג, מעל מרתף. הנתון שנרשם (2) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18487,7 +18527,9 @@
     "units_out": 14,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "הרב יוסף קאפח 8: הגיליון שנמצא הוא פרטי קונסטרוקציה (ריתום/זיון) בלבד — אין דף היתר ואין טבלת מפלסים (נרשם 5)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
