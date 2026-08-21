@@ -2144,9 +2144,10 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 34,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "חזית מסומנת בגיליון (המגיד 6-10): הקומות ממוספרות 0,1,2,3,4,5,6 ומעליהן פני מעקה +25.17, ומתחת UG1 ו-UG2 (חניון) → 7 קומות מעל הקרקע. ⚠ נרשם 3 ונראה תואם; בפועל 7 מול תקרה 5 = חריגה משמעותית שלא סומנה",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3517,7 +3518,9 @@
     "units_out": 7,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "לייב יפה 42: סריקה ישנה של תשריט בכתב יד; החזית מראה כ-3 מפלסים אך ללא סימון קומות — לא ניתן לקבוע (נרשם 4, תקרה 6)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7419,9 +7422,10 @@
     "__rec_stat": null,
     "units_in": 14,
     "units_out": 26,
-    "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "בקשה 2021/0476 (עמק רפאים 66, במסגרת תמא 38-1): טבלת מפלסים — קומה -1 ב-3.79 (מתחת לקרקע), ואז קרקע 0.00, 01 +3.02, 02 +6.04, 03 +9.06, 04 +12.35, 05 +15.55, 06 +18.75 → 7 קומות מעל הקרקע + מרתף. ⚠ נרשם 6 ונראה תואם; בפועל 7 מול תקרה 6 = חריגה שלא סומנה",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10018,7 +10022,9 @@
     "units_out": 14,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "שופן 6: הגיליון שנקרא מכיל פרטי מתקן חניה אוטומטי ותכנית מגרש; טבלת המפלסים/חזית לא אותרה (נרשם 3, תקרה 6)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10396,7 +10402,9 @@
     "units_out": 11,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "table_lower_bound",
+    "floors_note": "יונתן 10 (תמא 38): הגיליון שנקרא מכיל פרטי בנייה וחתכי גינון; טבלת המפלסים לא אותרה (נרשם 4, תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10474,9 +10482,10 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 14,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "כובשי קטמון 11, חזית 1:100 עם מפלסים מסומנים: מרתף 736.60, מפלס קרקע +1.50 (739.00), א +4.58, ב +7.61, ג \"תמא א\" +10.92, ד \"תמא ב\" +14.42, ומעליהם +17.92 ומפלס גגות +20.45 → 5 קומות נקובות (קרקע,א,ב + ג,ד שנוספו בתמא) + מפלס גג. נרשם 3, תקרה 6 — תואם",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13795,9 +13804,10 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 10,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "הפלמח 27: טבלת מפלסים — קומת קרקע 0.00, קומת מרתף 2.82 (מתחת לקרקע), קומה א 3.50, ב 7.39, ג 10.60, ד 13.90 → 5 קומות מעל הקרקע + מרתף. נרשם 4, תקרה 6 — תואם",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -15496,9 +15506,10 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 12,
-    "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "הפלמח 71, חתך א-א 1:100: 0.00=766.82 (לובי כניסה + מחסנים), ואז +3.00, +6.00, +9.00, +12.00, +15.00 ו+17.90 (\"דירה מוצעת טופינג\"), גג +20.40/+21.00 → 7 מפלסים מעל הקרקע (התחתון לובי/מחסנים, 6 קומות מגורים). ⚠ נרשם 6; ב-7 זו חריגה מול תקרה 6",
+    "permit_kind": "tama_add"
    }
   },
   {
