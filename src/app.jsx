@@ -21845,6 +21845,15 @@
                     if (uadd && !uout) {
                         html += '<div style="font-size:11px;color:#8a93a6;margin-top:3px">&#8505;&#65039; ב-YK נרשמה רק התוספת (' + uadd + ' יח"ד) — מספר היח"ד הקיימות לא דווח, ולכן היוצא אינו ידוע</div>';
                     }
+                    // What the permit document itself says this file is FOR. Read by hand off the
+                    // גרמושקה; an elevator/balcony/changes permit adds no floors at all, which is
+                    // why such files carry no קומות figure any more.
+                    const PK = { elevator: 'מעלית', balcony: 'מרפסת', other: 'שינויים / הרחבה',
+                                 unclear: 'לא ניתן לקבוע מהמסמך' };
+                    if (props.permit_kind && props.permit_kind !== 'tama_add' && PK[props.permit_kind]) {
+                        html += '<div style="font-size:11px;color:#8a93a6;margin-top:3px" title="' + esc(props.floors_note || '') + '">' +
+                            '&#128196; ההיתר בתיק: <b style="color:#aab">' + esc(PK[props.permit_kind]) + '</b> — אינו היתר תוספת קומות</div>';
+                    }
                     if (props.units_review) {
                         html += '<div style="font-size:11px;color:#ffb74d;margin-top:3px">&#9888;&#65039; יוצא ≤ נכנס — נתון לבדיקה</div>';
                     } else if (props.units_no_add) {

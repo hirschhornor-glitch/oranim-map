@@ -75,7 +75,9 @@
     "units_out": 25,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "המסמך שנמצא בתיק הוא תשריט משנת 1996, לא היתר התמא של 2011/1034; תאור הבקשה לא נקרא. הנתון שנרשם (3) הגיע מטקסט ונשאר לא מאומת. מבנה לשימור, תקרה 6 — אין חשש חריגה",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -308,7 +310,9 @@
     "units_out": 56,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2013/1072.00 (רבקה 22): \"בניית תוספות בהתאם לתמא 38 לחיזוק המבנה\" — אין נתון קומות (נרשם 4; אין תקרה)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -348,7 +352,9 @@
     "units_out": 10,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 109939: \"בניית תוספות בהתאם לתמא 38 לצורך חיזוק הבניין + מעלית והפיכת מקלט קיים למחסן\" — אין ציון תוספת קומות ואין נתון קומות במסמך (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -385,9 +391,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 26,
-    "floors_tama": 2,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 117711 (2014/0358.01, בקשת עדכון): \"עדכון מיקום מעלית וחדרי מדרגות, תוספת ממדים ומרפסות\" — עבודות חיזוק בלי תוספת קומות; אין נתון קומות במסמך",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -427,7 +432,9 @@
     "units_out": 18,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 110911: \"תוספת בניה בהתאם לתמא 38\"; בתשריט תאור הבקשה: \"תוספת בניה וקומה חדשה בהתאם לתמא 38\" — קומה אחת נוספת. מספר הקומות הכולל לא מצוין במסמך (נרשם 3 במאגר)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -499,9 +506,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 39,
-    "floors_tama": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2014/0889.02 (לינקולן 12): \"תכנית שינויים לתמא 38 למבנה מגורים מאושר בהיתר 2014/0889.00\" — בקשת שינויים; אין נתון קומות (נרשם 7; אין תקרה)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -651,9 +657,10 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 5,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 103997 \"תוספת בניה לפי תמא 38\"; טבלת השטחים לפי מפלס: ק.ק/ק.א/ק.ב/ק.ג קיימות (50.08/116.26/117.96/116.26) + ק.ד מוצעת 141.13 בלי קיים = קומה חדשה. 4 קיימות + 1 חדשה = 5",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -691,8 +698,9 @@
     "__rec_stat": null,
     "units_in": 8,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "unread"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 107991: \"עדכון חלוקות פנים בדירות ושינוי קונטור קומה ג, ביטול יציאות לגג, עדכון חניה ומרתף\" — שינויים פנימיים, אין תוספת קומות. הבניין בן 4 קומות מעל קומת חניה (לפי תיאור הבקשה)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -838,9 +846,10 @@
     "__rec_stat": null,
     "units_in": 4,
     "units_out": 5,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 106581 (13/81): תאור הבקשה \"תמא 38 - חיזוק בניין הוספת ממדים חיפוי אבן והוספת קומה\". טבלת השטחים: 4 שורות קיים (75.18/171.18/163.8/159.5) + שורה מוצע בלבד 182.95 = 4+1 → 5. נרשם 4",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -915,9 +924,10 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 18,
-    "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 106224: \"הריסת 2 בניינים והקמת 2 בניינים חדשים מעל קומת חניה במסגרת תמא 38\" (38/2, תכנית 10038). טבלת מפלסים: עמודים(חניה) -3.12 ואז 0.00/+3.38/+6.50/+9.62/+12.74/+16.12 = 6 קומות מעל הקרקע מעל קומת עמודים",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -990,9 +1000,10 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 8,
-    "floors_tama": 10,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 107837: \"חיזוק בניין לפי תמא 38, תוספת ממדים ומעלית והרחבת מרפסות. תוספת 2 יחד בקומה וחצי\". טבלת מפלסים: קרקע/ראשונה/שניה/שלישית קיימות + רביעית (226.39) וחמישית (113.59) מוצעות בלבד = 4+2 → 6. ⚠ נרשם 10 והופיע כחריגה מול תקרה 6 — בפועל תואם",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1032,7 +1043,9 @@
     "units_out": 15,
     "floors_tama": 6,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2014/0388.00 (קק\"ל 37): \"הריסת בניין קיים תוך שימור החזיתות הפונות לרחוב ובניית בניין בהתאם לתמא 38\" — 38/2 עם שימור חזיתות; אין נתון קומות (נרשם 6)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1072,7 +1085,9 @@
     "units_out": 36,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2014/0225.00 (גד 13): \"בניית תוספות בהתאם לתמא 38 לצורך חיזוק הבניין\" — אין נתון קומות (נרשם 4; אין תקרה)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1295,9 +1310,10 @@
     "__rec_stat": null,
     "units_in": 22,
     "units_out": 37,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 114109: \"תוספות בניה בהתאם לתמא 38 ותכנית 10038 - חיזוק הבניין\". טבלת חישוב שטחים לפי קומה: מרתף, ראשונה, שניה, שלישית, רביעית, חמישית, שישית, שביעית, גג → 7 קומות מעל הקרקע + מרתף + גג. נרשם 3",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1444,9 +1460,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2012/0504.01 (מרדכי כספי 3): \"תוספת מעלית בבניין קיים\" — מעלית, לא תוספת קומות (נרשם 3)",
+    "permit_kind": "elevator"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1519,9 +1534,10 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 10,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 5,
+    "floors_src": "permit_doc",
+    "floors_note": "חישוב שטחים (שינויים, עין גדי 17): קומה א +3.00, ב +6.00, ג +9.00, ד +12.16, ה +15.66 — כולן \"מתחת לקרקע: לא\" → 5 קומות מעל הקרקע. נרשם 3",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1596,9 +1612,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "תאור הבקשה בתשריט (2002/0534.01): \"תוכנית שינויים למעליות עבור נכים המתגוררים בבניין\" — התקנת מעליות, לא תוספת קומות (נרשם 4)",
+    "permit_kind": "elevator"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1639,7 +1654,9 @@
     "floors_tama": 2.5,
     "units_no_add": true,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 110236: \"הריסת בניין קיים ובנייה בהתאם לתמא 38 ותכנית 10038\" (38/2, עם תנאי מחלקת שימור) — אין ציון מספר קומות במסמך ואין גיליון הרמוניקה בתיק (נרשם 2.5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1714,9 +1731,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 8,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 115348 (2015/0585.01): \"תוספת שטחי שירות, שינויים גודל חלונות בחזית, שינויים בקירות פנים\" — בקשת שינויים, אין תוספת קומות ואין נתון קומות (נרשם 4)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1756,7 +1772,9 @@
     "units_out": 25,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2015/0545.00 (לינקולן 9): \"תוספת 2.5 קומות מגורים וחיזוק המבנה עפ תמא 38 ותיקוניה\" — תוספת 2.5 קומות; הסך לא מצוין (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1906,9 +1924,10 @@
     "__rec_stat": null,
     "units_in": 7,
     "units_out": 8,
-    "floors_tama": 5.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2015/0210.00 (עובדיה מברטינורה 1): \"הריסת מבנה קיים למעט קירות לשימור והקמת בניין חדש בן 6 קומות בהתאם לתמא 38 ותכנית 10038\" — 6 קומות. נרשם 5.5",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -1981,10 +2000,9 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3,
     "units_out": 10,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2017/0291.02: \"שינוי קירות פנים במחסנים קיימים\" — שינויים פנימיים במחסנים, לא תוספת קומות (נרשם 3)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2363,7 +2381,9 @@
     "units_out": 8,
     "floors_tama": 2,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "טופס חניה בתיק: \"סוג הבקשה: תמא 38\", \"מס יחד קיים בבניין: 2\", \"תוספת יחד מבוקשת: 6 יחד+מסחר\" — תמא אמיתית (2→8 יחד) אך אין נתון קומות במסמך (נרשם 2)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2438,9 +2458,10 @@
     "__rec_stat": null,
     "units_in": 7,
     "units_out": 11,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2021/0064.00: \"תוספת ממדים וחיזוק מבנה לפי תמא 38, תוספת 2 קומות מעל המבנה בן 4 קומות מעל 0.00\" — 4 קיימות + 2 = 6. נרשם 4 (תקרה 9)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2477,10 +2498,9 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3,
     "units_out": 9,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2016/0495.01: \"תכנית שינויים הגבהת מבנה ושינוי בפתחים\" — בקשת שינויים; אין ציון מספר קומות (נרשם 3)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2735,10 +2755,11 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 11,
-    "floors_tama": 3,
+    "floors_tama": 5,
     "units_in": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2016/0867.00: \"תוספות בניה בהתאם לתמא 38 ותכנית 10038\". טבלת השטחים: 3 שורות קיים 168.07 (+תוספות 26.22/25.95/25.89) ועוד 2 שורות מוצע בלבד (199.74, 105.70) → 3 קיימות + 2 חדשות = 5. נרשם 3; תקרת תכנית האב 5 — בדיוק על הגבול",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -2925,9 +2946,8 @@
     "__rec_stat": null,
     "units_in": 24,
     "units_out": 38,
-    "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2016/0984.01: \"תכנית שינויים ללא תוספת שטחים להיתר 113112, ותוספת תטז לפי דרישת חח, עדכון גבול חלקה לפי תצר\" — אין תוספת ואין נתון קומות (נרשם 5)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3040,9 +3060,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 07/0213.0 (האר\"י 25): \"בניית מחסן לדירה קיימת\" — מחסן, לא תמא ולא תוספת קומות (נרשם 4)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3117,8 +3136,9 @@
     "__rec_stat": null,
     "units_out": 2,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "בקשה 495087 (יששכר 9): \"תמא 38-2 תוך שימור מבנה קיים\", מגרש 366 מר, בנייה מבוקשת 555.32 מר (151.7%). עמודת מפלסים: -3.40, 0.00, +3.60, +7.00, +10.00 → 4 קומות מעל הקרקע + מרתף. תואם את הרשום (4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3308,8 +3328,9 @@
     "__rec_stat": null,
     "units_out": 4,
     "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 118495: \"הריסת חלקי בניין והקמת בניין חדש בין 4-5 קומות וקומה במובלעת גג רעפים מעל קומת מחסנים וחניה למגורים בהתאם לתמא 38 ותכנית 10038\" — 5 קומות + קומת גג-רעפים מעל קומת מחסנים/חניה. הנתון 6 שנרשם עקבי עם התיאור; החריגה מול תקרה 5 עומדת (הקומה העליונה במובלעת גג)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3418,9 +3439,10 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_out": 8,
-    "floors_tama": 2.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "בקשה 2018/0197.0 (אברבנאל 27): \"הריסת בניין קיים ובניית בניין חדש לפי תמא 38/2 ותכנית 10038\", מגרש 622 מר, מבוקש 1915.49 מר (308%). מפלסים: חניה -10.50, חניה -7.00, מרתף -3.50; מעל הקרקע קרקע 0.00, ראשונה +3.50, שניה +7.00, שלישית +10.50, רביעית +14.00, קומת גג +17.50 → 6 מפלסים מעל הקרקע. נרשם 2.5",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3570,7 +3592,9 @@
     "units_out": 16,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0073.00: \"בניית תוספות בהתאם לתמא 38 ותכנית 10038\" — אין גיליון הרמוניקה בתיק ואין נתון קומות בדף ההיתר (נרשם 3, תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3801,8 +3825,9 @@
     "__rec_stat": null,
     "floors_tama": 5,
     "units_out": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2018/0253.00: \"הריסת מבנה קיים ובניית מבנה חדש בן 5 קומות מעל קומת חניות ומחסנים לפי תמא 38-2 ותכנית 10038\" — 5 קומות מעל קומת חניה/מחסנים. הנתון שנרשם (5) נכון; בדיוק על תקרת תכנית האב (5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3879,10 +3904,11 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 4,
+    "floors_tama": 5,
     "units_out": 10,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 101241 (2017/0606.01): \"תכנית שינויים בניית תוספת בהתאם לתמא 38 ותכנית 10038\". טבלת מפלסים: קומת מרתף -2.84, קומת קרקע 0.00, קומה א +3.06, ב +6.12, ג +9.35, ד +12.51 → 5 קומות מעל הקרקע + מרתף. בכל הקומות יש עמודת קיים — תוספת לקומות קיימות, לא קומה חדשה. נרשם 4",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3919,9 +3945,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 6,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2017/0928.01: \"תכנית שינויים להיתר 2017/928 - שינוי קומה ד ללא שינוי שטחים\" — בקשת שינויים; מהניסוח עולה שקיימת קומה ד (כלומר לפחות 5 קומות), אך אין ספירה מפורשת (נרשם 3, תקרה 6)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -3997,7 +4022,9 @@
     "units_out": 20,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0296.00: \"הרחבת 10 דירות קיימות ותוספת 10 דירות חדשות לפי תמא 38 ותכנית 10038\" — 10→20 יחד; מספר קומות לא מצוין (נרשם 4, תקרה 9)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4186,9 +4213,10 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 15,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2017/0788.00: \"תוספת בנייה בהתאם לתמא 38 ותכנית 100038 - חיזוק מבנה. 2 קומות חדשות מעל מבנה קיים בן 4 קומות וקומת חנייה ומחסנים קיימת\" — 4 קיימות + 2 חדשות = 6, מעל קומת חניה. נרשם 3 (תקרה 9)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4260,9 +4288,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2018/0176.01: \"שינויים לתמא 38 - עדכון תוספות בניה, הגדלת מרפסות, שינויי פנים\" — בקשת שינויים בלי תוספת קומות (נרשם 3, תקרה 9)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4449,9 +4476,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "unread"
+    "floors_note": "היתר 1991/0197.2 (בילו 6, 1995): \"שינויים בחזיתות\" — לא תמא ולא תוספת קומות (נרשם 3)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4488,9 +4514,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "floors_tama": 5.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2018/0565.01: \"תכנית שינויים, תוספת מחסנים והרחבת מרפסות בחזית דרום מערבית\" — אין תוספת קומות (נרשם 5.5, תקרה 6)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -4527,9 +4552,8 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "units_in": 12,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2018/0195.01: \"שינויים לתמא 38 - תוספת מרפסת ופרגולה, שינויים בפתחים, ביטול קומת מרתף, פיצול מחסנים\" — בקשת שינויים בלי תוספת קומות (נרשם 3, תקרה 5)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5093,9 +5117,10 @@
     "__rec_stat": null,
     "units_in": 9,
     "units_out": 14,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "בקשה 2018/0606.00 (דרך בית לחם 67): \"חיזוק הבניין עפי תמא 38 ותכנית 10038 והוספת 5 יחד ב-1.5 קומות חדשות\", מגרש 824 מר, מבוקש 2011.19 מר (244%). מפלסים: מרתף -3.08; קרקע +0.93, א +3.82, ב +6.91, ג +9.98, ואז \"קומה ד - תמא 1\" +13.27 ו\"קומה ה - תמא 2\" +16.72, גג חדש +18.84 → 4 קיימות + 2 תמא = 6. נרשם 4",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5246,8 +5271,9 @@
     "units_in": 12,
     "units_out": 36,
     "floors_tama": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2018/0544.00: \"הריסה ובניית בניין חדש במסגרת תמא 38-2 פינוי בינוי\". טבלת מפלסים: חניון -3/-2/-1 (-9.92/-6.46/-3.49), קומת ביניים -1.80, ואז קרקע 0.00 + קומות א-ו (+3.32 עד +20.29) = 7 קומות מעל הקרקע. מגרש 1541 מר, בנייה מבוקשת 7261.93 מר (471%). הנתון שנרשם (7) נכון — החריגה מול תקרה 6 עומדת",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5512,10 +5538,9 @@
     "__rec_stat": null,
     "units_in": 11,
     "units_out": 11,
-    "floors_tama": 2,
     "units_no_add": true,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 112696 (2015/0065.01): \"תוכנית שינויים ללא תוספת שטחים\" — אין תוספת בכלל, ואין נתון קומות (נרשם 2)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -5667,7 +5692,9 @@
     "units_out": 36,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2019/0537.00: \"חיזוק מבנה מגורים מפני רעידות אדמה, עפ תמא 38, תוספת 2.5 קומות חדשות\" — תוספת של 2.5 קומות; הסך לא מצוין (נרשם 4, תקרה 9)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6001,8 +6028,9 @@
     "units_in": 24,
     "units_out": 48,
     "floors_tama": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 229858 (2020/0556.00): \"הריסת מבנה מגורים קיים והקמת מבנה מגורים חדש\", סוג העבודה תמא 38 הריסה ובניה. טבלת מפלסים: חניה -3/-2/-1 וחדר משאבות מתחת לקרקע; מעל הקרקע קומת קרקע 0.00 + קומות 1-6 (+3 עד +18) + קומת גג +21.00 → 7 קומות (8 עם קומת הגג). נרשם 7 — נכון, והחריגה מול תקרה 5 מאושרת",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6265,7 +6293,9 @@
     "__rec_stat": null,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2019/0571.01: \"שינוי תמא38 תיקון טעות בהזנת היתר קיים, עדכון חיזוק לפי קיים והתאמת קומות חדשות\" — בקשת תיקון; טבלת המפלסים לא אותרה בגיליון (נרשם 3, תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6344,7 +6374,9 @@
     "floors_tama": 3,
     "units_add": 6,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "גיליון תכניות דיגיטלי בלי דף היתר; טבלת מפלסים לא אותרה (נרשם 3, תקרה 10 — אין חשש חריגה)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6454,9 +6486,8 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 10,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 60/0611.1: \"סגירת שתי מרפסות בקומה שלישית\" — לא תמא ולא תוספת קומות (נרשם 3)",
+    "permit_kind": "balcony"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -6949,7 +6980,9 @@
     "units_out": 11,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2021/0218.00: \"תוספת שתי קומות לבניין, סגירת קומת עמודים ותוספות לדירות קיימות עפי תמא 38\" — +2 קומות וסגירת קומת עמודים; הסך לא מצוין (נרשם 3, תקרה 7)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7093,9 +7126,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 6,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_note": "היתר 2020/0653.01: \"תכנית שינויים בקומות הפנטהאוז בלבד, הכולל ביטול שתי יחד, ושינוי בהתפלגות השטחים\" — בקשת שינויים; מהניסוח עולה שיש יותר מקומת פנטהאוז אחת, אך אין ספירה (נרשם 6, בדיוק על תקרה 6)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7462,9 +7494,10 @@
     "__rec_stat": null,
     "units_in": 7,
     "units_out": 11,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "אותו תיק כמו fid 63 (ש. טשרניחובסקי 5, היתר 2021/0064.00): \"תוספת 2 קומות מעל המבנה בן 4 קומות מעל 0.00\" = 6. נרשם 4; תקרת תכנית האב 6 — בדיוק על הגבול",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7723,9 +7756,10 @@
     "__rec_stat": null,
     "units_in": 6,
     "units_out": 12,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2021/0075.00 (ש. טשרניחובסקי 3): \"תוספת ממדים וחיזוק מבנה לפי תמא 38, תוספת 2 קומות מעל המבנה בן 4 קומות מעל 0.00\" = 6. נרשם 3; תקרה 6 — בדיוק על הגבול",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -7951,8 +7985,9 @@
     "units_in": 19,
     "units_out": 28,
     "floors_tama": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "חישוב שטחים (הפלמח 7): קומה תחתונה -3.00 מתחת לקרקע; מעל הקרקע קומת כניסה 0.00, א +3.25, ב +6.55, ג +9.75, ד +13.15, ה +16.35, וקומת גג +19.55 (13.03 מר) = 7 מפלסים מעל הקרקע. נרשם 7 — נכון; החריגה מול תקרה 6 מאושרת",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8061,9 +8096,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר בניה 43092: \"ניתן בזה היתר ל: בניית מרפסת\" — היתר מרפסת, אין נתון קומות ואין תוספת",
+    "permit_kind": "balcony"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8289,7 +8323,9 @@
     "units_out": 28,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "גיליון חתכים בלבד (שלום יהודה 5) — אין דף היתר ואין טבלת מפלסים נגישה (נרשם 5, תקרה 7)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8506,9 +8542,10 @@
     "__rec_stat": null,
     "units_in": 19,
     "units_out": 32,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2022/0462.00: \"תוספת בניה כולל תוספת 2 קומות על בנין 4 קומות, במסגרת תמא 38-1\" — 4 קיימות + 2 = 6. נרשם 4; תקרה 6 — בדיוק על הגבול",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8660,7 +8697,9 @@
     "units_out": 13,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2022/0294.00: \"תמא 38 הריסה ובניה מחדש תוך שימור חזיתות\" — 38/2 עם שימור חזיתות; אין נתון קומות בדף ההיתר (נרשם 5, בדיוק על תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8732,8 +8771,9 @@
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "unread"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר בניה 53924: \"התקנת מעלית פנימית בבנין קיים בן 4 קומות\" — אין תוספת קומות בהיתר הזה",
+    "permit_kind": "elevator"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -8812,7 +8852,9 @@
     "units_out": 14,
     "floors_tama": 4.5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2022/0290.00: \"הרחבות בניה עפ תכנית 10038 ותוספת קומה וחצי חדשות\" — תוספת 1.5 קומות; הסך לא מצוין (נרשם 4.5, תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9630,9 +9672,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_note": "היתר 1953/0670.03 (אחד העם 6): \"הפיכת משרד בבית מגורים לדירה - שימוש חורג לצמיתות\" — שינוי שימוש, לא תמא (נרשם 4)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -9703,9 +9744,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 105832: \"תוספת בניה לדירה מס 9\"; תנאי 3: \"החדר בגג יהווה תוספת לדירה קיימת ולא יגרום להגדלת מספר יחידות הדיור\" — חדר גג, לא תוספת קומות",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10476,7 +10516,9 @@
     "units_out": 16,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "table_lower_bound",
+    "floors_note": "היתר 2023/0386.00: \"חיזוק הבניין עפי תמא 38/1 ותכנית 10038 והוספת 4 יחד ב-1.5 קומות חדשות\" — תוספת 1.5 קומות ו-4 יחד; הסך לא מצוין (נרשם 5, בדיוק על תקרה 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10550,9 +10592,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "unread"
+    "floors_note": "היתר 58543: \"סגירת מרפסת בקומה א\" — לא תמא 38 ולא תוספת קומות",
+    "permit_kind": "balcony"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -10588,9 +10629,8 @@
     "last_edite": "SDE",
     "last_edi_1": "2023-05-04",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 2008/0152.00 (אחד העם 21): \"הרחבת מרפסת קיימת\" — לא תמא (נרשם 4)",
+    "permit_kind": "balcony"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11070,7 +11110,9 @@
     "units_out": 16,
     "floors_tama": 7,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "המסמך היחיד בתיק הוא תשריט מפת-מדידה (מכור 7, גוש 30143 חלקה 199, 0.587 דונם) — אין דף היתר; לא ניתן לאמת (נרשם 7, בדיוק על תקרה 7)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11143,9 +11185,10 @@
     "__rec_stat": null,
     "units_in": 1,
     "units_out": 18,
-    "floors_tama": 5.5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 111769: \"הריסת חלקי מבנה קיים ובניית תוספת 2 קומות וגג רעפים, הוספת מבנה חדש בן 6 קומות מעל קומת חניה במסגרת תמא 38 ותכנית 10038\" — המבנה החדש 6 קומות מעל חניה. נרשם 5.5; החריגה מול תקרה 4 עומדת ואף גדולה יותר",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11183,9 +11226,10 @@
     "__rec_stat": null,
     "units_in": 12,
     "units_out": 20,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2021/0089.00: \"חיזוק בנין בתוספת 2 קומות עג בניין קיים בו 4 קומות וקומת מחסנים עפ תמא 38\" — 4 קיימות + 2 = 6, מעל קומת מחסנים. נרשם 3; תקרה 6 — בדיוק על הגבול",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11412,7 +11456,9 @@
     "units_out": 40,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2016/1106.00: \"בניית תוספות בהתאם לתמא 38 ותכנית 10038 - חיזוק הבניין\" — תמא אמיתית; מספר קומות לא מצוין בדף ההיתר (נרשם 4, תקרה 10)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11564,8 +11610,9 @@
     "__rec_stat": null,
     "units_out": 11,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2016/1280.00: \"הריסת מבנה קיים והקמת בניין בן 4 קומות מעל 2 קומות חניה ומחסנים למגורים בהתאם לתמא 38 ותכנית 10038\" — 4 קומות מעל 2 קומות חניה/מחסנים. הנתון שנרשם (4) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11637,9 +11684,8 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "floors_tama": 2,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 1991/0255.07 (בלפור 16): \"תוספת יחידת דיור ומעלית\" — יחד+מעלית, אין ציון תוספת קומות (נרשם 2)",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -11792,7 +11838,9 @@
     "units_out": 8,
     "floors_tama": 4,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "יאיר 7 (38/2): טבלת המפלסים בגיליון קריאה גרועה בקנה-מידה הזה — נראות 2 קומות חניון ומעליהן כ-4 מפלסים וגג, אך לא ניתן לקבוע במדויק (נרשם 4)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12065,8 +12113,9 @@
     "units_in": 4,
     "units_out": 13,
     "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 114902: \"הריסת בניין ובנית בניין בן 4 קומות מעל 3 קומות חניה בהתאם לתמא 38 ותכנית 10038\" — 4 קומות מגורים מעל 3 קומות חניה. הנתון שנרשם (4) נכון",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12216,9 +12265,10 @@
     "__rec_stat": null,
     "units_in": 7,
     "units_out": 12,
-    "floors_tama": 3,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 4,
+    "floors_src": "permit_doc",
+    "floors_note": "טופס ישן בכתב יד (הפלמח 58): טבלת שטח כולל לפי קומה — קרקע 67.45, א 147.30, ב 147.30, ג 147.30, סך הכל 509.35, ומעליהן שורות מרתף/קומת חניות → כ-4 קומות מעל הקרקע. הטופס מטושטש (נרשם 3, תקרה 6)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12327,7 +12377,9 @@
     "units_in": 2,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "המסמך היחיד בתיק הוא תשריט מפת-מדידה (רשבג 37, חלקה 38, 786 מר) — אין דף היתר ואין גיליון הרמוניקה; לא ניתן לאמת (נרשם 3, תקרה 7)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12699,9 +12751,8 @@
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
     "units_out": 25,
-    "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "היתר 55670: \"תוספת מעקה ושמוש בגג תוספות כמרפסות, ריצוף גינה ושינוי בפתחים\" — מעקה/גג, לא תוספת קומות",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12739,9 +12790,10 @@
     "__rec_stat": null,
     "units_in": 76,
     "units_out": 110,
-    "floors_tama": 82,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "⚠ נרשם 82 קומות — נתון אבסורדי. חתך בגיליון (בר יוחאי 15): קומה ה +13.86 עם \"גג קיים +13.50\", ומעליה קומה ו +17.10, קומה ז +20.34, גג +23.58 → הבניין הקיים הסתיים בקומה ה (5) ונוספו ו-ז → 7 קומות",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12777,9 +12829,8 @@
     "last_edite": "city_gis_sync",
     "last_edi_1": "2026-05-28",
     "__rec_stat": null,
-    "floors_tama": 4,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_note": "בקשה 2012: \"תוספת בנייה עפי תבע מאושרת\", טבלת השטחים כותרתה \"דירה 3 קומת קרקע\" — הרחבת דירת קרקע, לא תוספת קומות",
+    "permit_kind": "other"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -12966,8 +13017,9 @@
     "__rec_stat": null,
     "units_out": 4,
     "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "בקשה 2018/0170.00 (הרב חיים ברלין 5): \"הריסה ובניה מחדש מכח תכנית 10038/2\", תמא 38 הריסה ובניה, מגרש 293 מר, מבוקש 803.36 מר (274%). מפלסים: חניה -7.90, חניה 1 -5.40, מרתף -2.90, ואז קרקע 0.00, ראשונה +3.20, שניה +6.40, שלישית +9.60, רביעית +12.80 → 5 קומות מעל הקרקע. תואם את הרשום (5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13319,7 +13371,9 @@
     "units_out": 30,
     "floors_tama": 3,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2017/0102.00: \"בניית תוספות בהתאם לתמא 38 ותכנית 10038\" — אין נתון קומות בדף ההיתר (נרשם 3, תקרה 8)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13469,7 +13523,9 @@
     "__rec_stat": null,
     "floors_tama": 6,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 2014/0640.00 (אחד העם 5): \"הריסת מבנה קיים והקמת מלון במסגרת תמא 38\" — ⚠ מלון, לא מגורים; אין נתון קומות (נרשם 6)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13548,7 +13604,9 @@
     "units_out": 20,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "הגיליון שנמצא הוא פרטי קונסטרוקציה בלבד (יהודה 42) — אין דף היתר ואין טבלת מפלסים (נרשם 5)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -13587,7 +13645,9 @@
     "units_out": 34,
     "floors_tama": 9,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "הרמוניקה היתר חתומה (2017/0332.01): תאור הבקשה \"תוספת 2 קומות על ק...\" (ההמשך נחתך) — תוספת של 2 קומות; הסך לא נקרא. נרשם 9 מול תקרה 7 — החריגה נשענת על מספר מטקסט ולא אומתה",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -14126,8 +14186,9 @@
     "units_in": 4,
     "units_out": 29,
     "floors_tama": 8,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2019/0501.00: \"הריסת בניין קיים והקמת בניין בן 8 קומות מעל קומת מסחר ומחסנים וארבע קומות חניון\" — 8 קומות מגורים מעל קומת מסחר, ומעל 4 קומות חניון. נרשם 8 — נכון; החריגה מול תקרה 7 מאושרת (ואף גדולה יותר אם סופרים את קומת המסחר)",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -14244,9 +14305,10 @@
     "__rec_stat": null,
     "units_in": 14,
     "units_out": 20,
-    "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 7,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 2020/0333.00: \"תוספת ממדים וחיזוק מבנה לפי תמא38, תוספת 2 קומות מעל המבנה בן 5 קומות מעל 0.00\" — 5 קיימות + 2 חדשות = 7. ⚠ נרשם 5 ולכן נראה תואם; בפועל 7 מול תקרה 6 = חריגה שלא סומנה",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -16717,7 +16779,9 @@
     "units_out": 5,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "היתר 107927 (2013/0081.01): \"תכנית שינויים במסגרת תמא 38 לקומה נוספת ויחד חדשה\" — קומה אחת נוספת; הסך לא מצוין (נרשם 5)",
+    "permit_kind": "tama_add"
    }
   },
   {
@@ -17346,7 +17410,9 @@
     "units_in_src": "pdf_attach",
     "units_pdf_source": "2024/0435.00 נסח",
     "floors_unverified": true,
-    "floors_src": "table_lower_bound"
+    "floors_src": "table_lower_bound",
+    "floors_note": "המסמך היחיד הוא מפה להיתר בניה (מדידה) — אין דף היתר (נרשם 3, תקרה 6)",
+    "permit_kind": "unclear"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -17933,8 +17999,9 @@
     "units_in": 13,
     "units_out": 21,
     "floors_tama": 5,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "permit_doc",
+    "floors_note": "חזיתות בגיליון (רבן יוחנן בן זכאי): מפלסים 0.00/+3.10/+6.20/+9.30/+12.40 ומעליהם מפלס חלקי — כ-5 קומות מעל הקרקע. תואם את הרשום (5); אין תקרת תכנית אב באזור",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18247,9 +18314,10 @@
     "last_edi_1": "2026-07-30",
     "__rec_stat": null,
     "units_out": 30,
-    "floors_tama": 7,
-    "floors_unverified": true,
-    "floors_src": "text"
+    "floors_tama": 6,
+    "floors_src": "permit_doc",
+    "floors_note": "היתר 872142 (2019/0608.00): \"הריסת בניין קיים ובניית בניין חדש בן 30 יחד בהתאם לסעיף 13 לתמא 38\"; בפירוט ההקלות: \"הריסת מבנה קיים בן 4 קומות ובניית מבנה חדש בן 6 קומות מעל הקרקע ו-4 קומות חניון\". טבלת מפלסים: 4 קומות חניון מתחת לקרקע, ומעל הקרקע קומת כניסה + קומות 1-5 + קומת גגות. ⚠ נרשם 7 והופיע כחריגה מול תקרה 6 — בפועל 6, תואם",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
@@ -18444,7 +18512,9 @@
     "units_out": 26,
     "floors_tama": 5,
     "floors_unverified": true,
-    "floors_src": "text"
+    "floors_src": "text",
+    "floors_note": "שערי ירושלים 5: הגיליון שנקרא הוא חישוב שטחים פר-קומה (קומה 2 ב+7.25, קומה 3 ב+10.31) ולא טבלת המפלסים המסכמת — לא ניתן לקבוע סך קומות (נרשם 5)",
+    "permit_kind": "tama_add"
    },
    "geometry": {
     "type": "MultiPoint",
