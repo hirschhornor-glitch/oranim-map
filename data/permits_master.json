@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-17T09:18:00",
+ "generated_at": "2026-08-26T22:07:47",
  "count": 1304,
  "bucket_counts": {
   "zchuyot": 348,
@@ -2001,8 +2001,8 @@
     "all_permits"
    ],
    "in_tama38_registry": false,
-   "lat": null,
-   "lng": null,
+   "lat": 31.748807,
+   "lng": 35.193067,
    "on_committee_agenda": false,
    "open_for_objections": false,
    "has_field_obs": false,
@@ -8511,8 +8511,8 @@
     "all_permits"
    ],
    "in_tama38_registry": false,
-   "lat": null,
-   "lng": null,
+   "lat": 31.757798,
+   "lng": 35.22224,
    "on_committee_agenda": false,
    "open_for_objections": false,
    "has_field_obs": false,
