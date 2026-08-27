@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-20-audit-fixes';
+        const APP_VERSION = '2026-08-27-masterplan-rights';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3412,6 +3412,8 @@
             const [objRecencyDays, setObjRecencyDays] = useState(0);
             const [permObjRecencyDays, setPermObjRecencyDays] = useState(0);
             const [treePermitsReport, setTreePermitsReport] = useState(false);
+            const [publicRatioReport, setPublicRatioReport] = useState(false);
+            const [prFilter, setPrFilter] = useState({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 });
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
             const [shavazKayamReport, setShavazKayamReport] = useState(false);
@@ -4190,6 +4192,13 @@
                     .then(r => r.ok ? r.json() : {})
                     .then(idx => { window.__crossSectionsIndex = idx || {}; })
                     .catch(() => { window.__crossSectionsIndex = {}; });
+
+                // שבילים, כיכרות ומ"ר מגורים פר-תב"ע — מטבלה 5, לדוח
+                // "מ\"ר הפרשה ציבורית ליח\"ד". אינם בגיליון ולכן גם לא ב-plans.geojson.
+                fetch('data/plan_public_areas.json?v=' + APP_VERSION)
+                    .then(r => r.ok ? r.json() : {})
+                    .then(x => { window.__planPublicAreas = x || {}; })
+                    .catch(() => { window.__planPublicAreas = {}; });
 
                 // ---- Projector filter panel (תחום + חומש interactive chips) ----
                 // Shown only when projector_gonenim or projector_gonenim_tzatal is active.
@@ -14420,6 +14429,262 @@
                     style={{ fontSize: 15, marginLeft: 4 }}>🔗</button>
             );
 
+            // ── מ"ר הפרשה ציבורית ליח"ד ────────────────────────
+            // שלושה ערוצים נפרדים שאסור לערבב: שטח חום מבונה (מ"ר בנוי),
+            // קרקע חומה (שטח מגרש) ושטח ציבורי פתוח (קרקע).
+            // החריגות נמדדות מול חציון קבוצת הגודל ולא מול מספר אחד, כי
+            // התרומה ליח"ד עולה שיטתית עם גודל התכנית (5.7 ב-10-29 יח"ד
+            // מול 11.7 ב-300+): תכנית של 20 יח"ד לא נמדדת מול מתחם של 1,500.
+            const RATIO_BANDS = [
+                { lo: 1,   hi: 9,        label: '1-9 יח"ד' },
+                { lo: 10,  hi: 29,       label: '10-29' },
+                { lo: 30,  hi: 99,       label: '30-99' },
+                { lo: 100, hi: 299,      label: '100-299' },
+                { lo: 300, hi: Infinity, label: '300+' },
+            ];
+            const RATIO_MIN_UNITS = 20;   // מתחת לזה תכנית קטנה מכדי לחייב הקצאה
+            const RATIO_LOW = 0.25;       // חריגה מטה: פחות מרבע מחציון הקבוצה
+            const RATIO_HIGH = 3;         // חריגה מעלה: פי 3 ומעלה
+
+            // ביקוש קרקע לחינוך שמייצרות יח"ד חדשות, לפי מכסות הדונם
+            // שבמדריך מינהל התכנון 2018 (מקודדות כבר ב-PUBLIC_NEEDS_SERVICES)
+            // ולפי פרופיל האוכלוסייה של המינהל (PN_MINAHAK_PRESETS).
+            // מוחזר במ"ר קרקע, כדי להשוות מול קרקע חומה — לא מול שטח בנוי.
+            function eduLandDemand(units, minahak) {
+                const A = PN_MINAHAK_PRESETS[minahak] || PN_DEFAULT_ASSUMPTIONS;
+                const pop = Math.max(0, units) * A.householdSize;
+                const hFrac = Math.max(0, Math.min(1, A.haredi || 0));
+                // שנתון בודד, בנפרד לחרדי ולכללי — אחוזי הילודה שונים
+                const cohortGen = pop * (1 - hFrac) * (A.ageYearPctGeneral || 0) / 100;
+                const cohortHar = pop * hFrac * (A.ageYearPctHaredi || 0) / 100;
+                let sqm = 0;
+                PUBLIC_NEEDS_SERVICES.forEach(svc => {
+                    const yrs = Math.max(0, (svc.ageTo || 0) - (svc.ageFrom || 0));
+                    if (!yrs) return;
+                    const part = svc.participation == null ? 1 : svc.participation;
+                    const perStream = {
+                        mamlakhti: cohortGen * yrs * part,
+                        haredi_b: cohortHar * yrs * part / 2,
+                        haredi_g: cohortHar * yrs * part / 2,
+                    };
+                    Object.keys(svc.streams || {}).forEach(k => {
+                        const st = svc.streams[k];
+                        const kids = perStream[k] || 0;
+                        if (!kids || !st.classSize) return;
+                        const dpc = st.dunamPerClass != null ? st.dunamPerClass : svc.dunamPerClass;
+                        if (!dpc) return;
+                        sqm += (kids / st.classSize) * dpc * 1000;
+                    });
+                });
+                return sqm;
+            }
+
+            function ratioRows() {
+                const gd = geoDataRef.current;
+                if (!gd || !gd.plans) return null;
+                const aux = window.__planPublicAreas || {};
+                const n = v => {
+                    const x = parseFloat(String(v == null ? '' : v).replace(/,/g, ''));
+                    return isFinite(x) ? x : 0;
+                };
+                const isBlank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
+                // mavat_date מגיע כ-dd/mm/yyyy; שנת האישור היא שנת הסטטוס הנוכחי
+                const yearOf = v => {
+                    const m = String(v == null ? '' : v).match(/(19|20)\d\d/);
+                    return m ? parseInt(m[0], 10) : null;
+                };
+                const seen = {}, rows = [];
+                (gd.plans.features || []).forEach(f => {
+                    const p = f.properties || {};
+                    const gk = statusGroupKey(p.status_mavat);
+                    if (gk === 'rejected') return;               // נגנזה/נדחתה — אין הקצאה עתידית
+                    const ua = n(p.units_add);
+                    if (ua <= 0) return;                          // רק תכניות שמוסיפות יח"ד
+                    const pn = String(p.plan_name || '').trim();
+                    if (!pn || seen[pn]) return;                  // כפילויות שורה באותה תב"ע
+                    seen[pn] = 1;
+                    const a = aux[String(p.taba || '').trim()] || {};
+                    const out = n(p.shavatz_out_sqm), haf = n(p.hafrash_sqm);
+                    // כששני השדות זהים בדיוק מדובר כמעט תמיד באותה הקצאה שנרשמה
+                    // פעמיים (אומת ב-101-0857086 ו-101-1002625) — נספרת פעם אחת.
+                    const dup = out > 0 && out === haf;
+                    // סוג בינוי לפי plan_type, דרך אותו normalizePlanType/
+                    // RENEWAL_PLAN_TYPES שמשמשים את דוח החינוך — לא סיווג מקביל.
+                    // ב-58 תכניות השדה ריק, ואז יח"ד קיימות מכריעות: קיימות =
+                    // המבנה נהרס ונבנה מחדש = התחדשות.
+                    const bt = (() => {
+                        const pt = normalizePlanType(String(p.plan_type || '').trim());
+                        if (RENEWAL_PLAN_TYPES.includes(pt) || pt === 'עיבוי שטחים חומים'
+                            || pt === 'תוספת זכויות תבע התחדשות עירונית')
+                            return { key: 'renewal', label: 'התחדשות' };
+                        if (pt === 'בנייה חדשה') return { key: 'new', label: 'בינוי חדש' };
+                        if (!pt) return n(p.units_in) > 0
+                            ? { key: 'renewal', label: 'התחדשות*' }
+                            : { key: 'new', label: 'בינוי חדש*' };
+                        return { key: 'other', label: pt.length > 14 ? pt.slice(0, 14) : pt };
+                    })();
+                    // שצ"פ: ייעודי הקרקע (landuse_xplan) ראשונים — הם נמדדים
+                    // מהגיאומטריה, מכסים 167 תכניות מול 139, ובאימות מול
+                    // shavatz_out_plot 72 מתוך 73 תואמים ±15%. הגיליון מכיל כאן
+                    // ערכי-דמה (101-0242560 רשום "1" מול 1,192 מ"ר בפועל), ולכן
+                    // הוא גיבוי ולא מאסטר — בניגוד לשדות הלא-מרחביים.
+                    const gsShatzap = p.shatzap_out;
+                    const shatzap = a.lu_open || (isBlank(gsShatzap) ? (a.open_t5 || 0) : n(gsShatzap));
+                    const pathSq = (a.lu_path || a.open_path || 0) + (a.lu_square || a.open_square || 0);
+                    rows.push({
+                        plan: pn,
+                        he: p.plan_name_he || p.plan_summary || '',
+                        status: String(p.status_mavat || '').trim(),
+                        group: statusGroupDef(gk).label,
+                        year: yearOf(p.mavat_date),
+                        minahak: p.minahak || '', sub: p.sub_neighborhood || '',
+                        ua: ua, ut: n(p.units_total),
+                        out: out, haf: haf,
+                        brown: dup ? out : out + haf,
+                        // קרקע חומה: הגיליון מאסטר, טבלה 5 משלימה את החסר.
+                        // הכיסוי עולה מ-81 ל-131 תב"עות; במקומות החופפים
+                        // 42 מתוך 48 תואמים ±10%.
+                        brownPlot: a.lu_brown || n(p.shavatz_out_plot) || (a.brown_land || 0),
+                        brownPlotFromT5: !a.lu_brown && !n(p.shavatz_out_plot) && !!(a.brown_land),
+                        shatzap: shatzap, pathSq: pathSq, open: shatzap + pathSq,
+                        openFromT5: isBlank(gsShatzap) && !!(a.open_t5),
+                        buildType: bt.key, buildLabel: bt.label,
+                        resid: a.resid_sqm || 0,
+                        // פרסור טבלה 5 לעתים תופס רק חלק משורות המגורים (שורות מעורבות
+                        // אי-אפשר לפצל). פחות מ-40 מ"ר ליח"ד אינו סביר — המכנה חלקי,
+                        // ואז אחוז ה-%% מנופח (101-0657593 הציג 108%% לפני הבדיקה הזו).
+                        residWeak: !!(a.resid_sqm) && (a.resid_sqm / ua) < 40,
+                        known: !(isBlank(p.shavatz_out_sqm) && isBlank(p.hafrash_sqm)),
+                        prg: p.hafrash_prg || p.shavatz_out_prog || '',
+                    });
+                });
+                const bandOf = u => RATIO_BANDS.find(b => u >= b.lo && u <= b.hi) || RATIO_BANDS[0];
+                const median = arr => {
+                    if (!arr.length) return 0;
+                    const s = arr.slice().sort((x, y) => x - y), m = s.length >> 1;
+                    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+                };
+                const known = rows.filter(r => r.known);
+                // הבסיס להשוואה מחושב תמיד על כל התכניות, גם כשהמשתמש מסנן —
+                // אחרת סינון למינה"ק אחד היה משנה מי נחשב חריג, והמדד היה
+                // מאבד משמעות בין תצוגות.
+                RATIO_BANDS.forEach(b => {
+                    const g = known.filter(r => bandOf(r.ua) === b);
+                    b.n = g.length;
+                    b.median = median(g.map(r => r.brown / r.ua));
+                });
+                known.forEach(r => {
+                    const b = bandOf(r.ua);
+                    r.ratio = r.brown / r.ua;
+                    r.med = b.median;
+                    r.index = b.median ? r.ratio / b.median : null;
+                    r.flag = (r.ua < RATIO_MIN_UNITS || !b.median) ? ''
+                        : (r.ratio < RATIO_LOW * b.median ? 'low'
+                        : (r.ratio > RATIO_HIGH * b.median ? 'high' : ''));
+                });
+                rows.filter(r => !r.known).forEach(r => { r.flag = 'missing'; });
+
+                // ── מאזן לפי תת-שכונה ────────────────────────────────
+                // מבנה ציבור משרת מרחב, לא מגרש: תכנית בלי הפרשה ליד בית
+                // ספר פנוי תקינה, ואותה תכנית באזור רווי אינה. לכן היחס
+                // הפר-תכניתי מוצלב כאן עם המצב המצטבר של תת-השכונה.
+                //
+                // זהו מאזן *תוספתי*: הביקוש מחושב מהיח"ד שהתכניות מוסיפות
+                // וההיצע ממה שאותן תכניות נותנות. מלאי מבני הציבור הקיים
+                // והאוכלוסייה הוותיקה אינם בחישוב — ולכן אין לקרוא את
+                // התוצאה כגירעון מוחלט של תת-השכונה.
+                const overallMedian = median(known.map(r => r.brown / r.ua));
+                const subs = {};
+                known.forEach(r => {
+                    const key = r.sub || r.minahak || '(לא משויך)';
+                    const t = subs[key] || (subs[key] = {
+                        sub: key, minahak: r.minahak, n: 0, units: 0,
+                        brown: 0, brownLand: 0, open: 0, plans: [],
+                    });
+                    t.n++; t.units += r.ua; t.brown += r.brown;
+                    t.brownLand += r.brownPlot; t.open += r.open;
+                    t.plans.push(r.plan);
+                });
+                // יח"ד שיושבות בתכניות ללא נתון — מסייג את הכיסוי פר תת-שכונה
+                rows.filter(r => !r.known).forEach(r => {
+                    const key = r.sub || r.minahak || '(לא משויך)';
+                    if (subs[key]) subs[key].unitsNoData = (subs[key].unitsNoData || 0) + r.ua;
+                });
+                const subList = Object.keys(subs).map(k => {
+                    const t = subs[k];
+                    t.brownPerUnit = t.units ? t.brown / t.units : 0;
+                    t.landDemand = eduLandDemand(t.units, t.minahak);
+                    t.landBalance = t.brownLand - t.landDemand;
+                    t.landCover = t.landDemand ? t.brownLand / t.landDemand : null;
+                    return t;
+                }).sort((a, b) => b.units - a.units);
+                // הסף להשוואה הוא החציון של אגרגטי תת-השכונות — לא החציון
+                // הפר-תכניתי (6.6). האגרגטים משוקללים ביח"ד ולכן יושבים
+                // גבוה בהרבה (חציון ~15.6), והשוואה מולו הופכת כמעט כל
+                // תת-שכונה ל"תקינה" ומחמיצה את האזורים החלשים באמת.
+                // תת-שכונות מתחת ל-SUB_MIN_UNITS נשארות בטבלה אך אינן
+                // נכנסות לחישוב הסף ואינן מסומנות — אגרגט של עשרות יח"ד רועש.
+                const SUB_MIN_UNITS = 100;
+                const sigSubs = subList.filter(t => t.units >= SUB_MIN_UNITS);
+                const subMedian = median(sigSubs.map(t => t.brownPerUnit));
+                subList.forEach(t => {
+                    t.significant = t.units >= SUB_MIN_UNITS;
+                    t.weak = t.significant && t.brownPerUnit < subMedian;
+                });
+                const weakSubs = {};
+                subList.forEach(t => { if (t.weak) weakSubs[t.sub] = 1; });
+                // מוקד = גם התכנית נותנת מעט וגם תת-השכונה סביבה חלשה.
+                // זה ההבדל בין "התכנית הזו נותנת מעט" לבין "נותנת מעט
+                // במקום שבו כבר חסר".
+                known.forEach(r => {
+                    r.hotspot = r.flag === 'low' && !!weakSubs[r.sub || r.minahak || '(לא משויך)'];
+                });
+
+                return {
+                    rows: rows,
+                    bands: RATIO_BANDS.map(b => ({ label: b.label, lo: b.lo, hi: b.hi === Infinity ? 1e9 : b.hi, median: b.median, n: b.n })),
+                    subs: subList.map(t => ({
+                        sub: t.sub, minahak: t.minahak, n: t.n, units: t.units,
+                        unitsNoData: t.unitsNoData || 0, brown: t.brown,
+                        brownLand: t.brownLand, open: t.open,
+                        brownPerUnit: t.brownPerUnit, landDemand: t.landDemand,
+                        landBalance: t.landBalance, landCover: t.landCover,
+                        weak: t.weak, significant: t.significant,
+                    })),
+                    overallMedian: overallMedian,
+                    subMedian: subMedian,
+                };
+            }
+
+            // מצייר מתאר על המפה הראשית לתכניות שסומנו בדוח. נקרא גם מחלון
+            // הדוח דרך window.opener, ולכן חייב לשבת על window.
+            window.__markRatioOutliers = function (plans, kind) {
+                const map = mapInstanceRef.current, gd = geoDataRef.current;
+                if (!map || !gd || !gd.plans) return;
+                if (window.__ratioOutlierLayer) {
+                    map.removeLayer(window.__ratioOutlierLayer);
+                    window.__ratioOutlierLayer = null;
+                }
+                if (!plans || !plans.length) return;
+                const want = {};
+                plans.forEach(p => { want[String(p).trim()] = 1; });
+                const feats = (gd.plans.features || []).filter(f =>
+                    f.geometry && want[String((f.properties || {}).plan_name || '').trim()]);
+                if (!feats.length) return;
+                const color = kind === 'high' ? '#2e7d32' : '#c62828';
+                const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
+                    style: { color: color, weight: 4, fillColor: color, fillOpacity: 0.12, dashArray: '8 5' },
+                    onEachFeature: (f, l) => {
+                        const p = f.properties || {};
+                        l.bindTooltip(String(p.plan_name || '') + ' — ' +
+                            (p.plan_summary || p.plan_name_he || ''), { sticky: true });
+                    },
+                }).addTo(map);
+                window.__ratioOutlierLayer = layer;
+                try { map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 15 }); } catch (e) {}
+            };
+
+
             // פס סינון לפי טריות הפרסום — "מה נוסף בימים האחרונים".
             // משמש את דוח ההפקדות ואת דוח ההיתרים הפתוחים להתנגדויות.
             const RECENCY_OPTS = [
@@ -16385,6 +16650,8 @@
                         zone_far_pct: 'אחוזי בנייה', zone_far_pct_max: 'אחוזי בנייה (מקס׳)',
                         zone_far_pct_min: 'אחוזי בנייה (מינ׳)',
                         zone_coverage_pct: 'תכסית', zone_max_height_m: 'גובה מקסימלי (מ׳)',
+                        zone_floors_note: 'פירוט קומות', zone_floors_source: 'מקור',
+                        floors_note: 'פירוט קומות', floors_source: 'מקור', coverage_pct: 'תכסית',
                         zone_commercial_frontage: 'חזית מסחרית חובה',
                         zone_existing_units: 'יח״ד קיימות', zone_realistic_units: 'יח״ד ריאלי',
                         zone_realization_pct: 'אחוז מימוש (%)',
@@ -27359,230 +27626,6 @@
                                 + '</body></html>');
                             win.document.close();
                         }
-                        // ── מ"ר הפרשה ציבורית ליח"ד ─────────────────────────────────
-                        // מודד כמה שטח ציבור (שב"צ יוצא + הפרשה מבונה) כל תכנית מגורים
-                        // מייצרת ביחס ליח"ד שהיא מוסיפה, ומסמן חריגות מול חציון קבוצת
-                        // הגודל שלה. ההשוואה היא פר-קבוצת-גודל ולא מול מספר אחד, כי
-                        // התרומה ליח"ד עולה באופן שיטתי עם גודל התכנית (5.9 בקטנות מול
-                        // 12.1 במתחמי 300+): תכנית של 20 יח"ד לא נמדדת מול מתחם של 1,500.
-                        const RATIO_BANDS = [
-                            { lo: 1,   hi: 9,        label: '1-9 יח"ד' },
-                            { lo: 10,  hi: 29,       label: '10-29' },
-                            { lo: 30,  hi: 99,       label: '30-99' },
-                            { lo: 100, hi: 299,      label: '100-299' },
-                            { lo: 300, hi: Infinity, label: '300+' },
-                        ];
-                        const RATIO_MIN_UNITS = 20;   // מתחת לזה תכנית קטנה מכדי לחייב הקצאה
-                        const RATIO_LOW = 0.25;       // חריגה מטה: פחות מרבע מחציון הקבוצה
-                        const RATIO_HIGH = 3;         // חריגה מעלה: פי 3 ומעלה
-
-                        function ratioRows() {
-                            const gd = geoDataRef.current;
-                            if (!gd || !gd.plans) return null;
-                            const n = v => {
-                                const x = parseFloat(String(v == null ? '' : v).replace(/,/g, ''));
-                                return isFinite(x) ? x : 0;
-                            };
-                            const isBlank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
-                            const seen = {}, rows = [];
-                            (gd.plans.features || []).forEach(f => {
-                                const p = f.properties || {};
-                                const key = statusGroupKey(p.status_mavat);
-                                if (key === 'rejected') return;              // נגנזה/נדחתה — אין הקצאה עתידית
-                                const ua = n(p.units_add);
-                                if (ua <= 0) return;                          // רק תכניות שמוסיפות יח"ד
-                                const pn = String(p.plan_name || '').trim();
-                                if (!pn || seen[pn]) return;                  // כפילויות שורה באותה תב"ע
-                                seen[pn] = 1;
-                                const out = n(p.shavatz_out_sqm), haf = n(p.hafrash_sqm);
-                                // כששני השדות זהים בדיוק מדובר כמעט תמיד באותה הקצאה שנרשמה
-                                // פעמיים (אומת ב-101-0857086 ו-101-1002625) — נספרת פעם אחת.
-                                const dup = out > 0 && out === haf;
-                                rows.push({
-                                    plan: pn,
-                                    he: p.plan_name_he || p.plan_summary || '',
-                                    status: String(p.status_mavat || '').trim(),
-                                    minahak: p.minahak || '', sub: p.sub_neighborhood || '',
-                                    ua: ua, ut: n(p.units_total),
-                                    out: out, haf: haf, pub: dup ? out : out + haf, dup: dup,
-                                    known: !(isBlank(p.shavatz_out_sqm) && isBlank(p.hafrash_sqm)),
-                                    outPrg: p.shavatz_out_prog || '', hafPrg: p.hafrash_prg || '',
-                                });
-                            });
-                            const bandOf = u => RATIO_BANDS.find(b => u >= b.lo && u <= b.hi) || RATIO_BANDS[0];
-                            const known = rows.filter(r => r.known);
-                            const median = a => {
-                                if (!a.length) return 0;
-                                const s = a.slice().sort((x, y) => x - y), m = s.length >> 1;
-                                return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-                            };
-                            RATIO_BANDS.forEach(b => {
-                                const g = known.filter(r => bandOf(r.ua) === b);
-                                b.n = g.length;
-                                b.units = g.reduce((s, r) => s + r.ua, 0);
-                                b.sqm = g.reduce((s, r) => s + r.pub, 0);
-                                b.weighted = b.units ? b.sqm / b.units : 0;
-                                b.median = median(g.map(r => r.pub / r.ua));
-                            });
-                            known.forEach(r => {
-                                const b = bandOf(r.ua);
-                                r.ratio = r.pub / r.ua;
-                                r.med = b.median;
-                                r.index = b.median ? r.ratio / b.median : null;
-                                r.flag = r.ua < RATIO_MIN_UNITS || !b.median ? ''
-                                    : (r.ratio < RATIO_LOW * b.median ? 'low'
-                                    : (r.ratio > RATIO_HIGH * b.median ? 'high' : ''));
-                            });
-                            rows.filter(r => !r.known).forEach(r => { r.flag = 'missing'; });
-                            const tU = known.reduce((s, r) => s + r.ua, 0);
-                            const tS = known.reduce((s, r) => s + r.pub, 0);
-                            return {
-                                rows: rows, known: known, bands: RATIO_BANDS,
-                                totalUnits: tU, totalSqm: tS,
-                                weighted: tU ? tS / tU : 0,
-                                median: median(known.map(r => r.pub / r.ua)),
-                                low: known.filter(r => r.flag === 'low').sort((a, b) => b.ua - a.ua),
-                                high: known.filter(r => r.flag === 'high').sort((a, b) => b.ratio - a.ratio),
-                                missing: rows.filter(r => r.flag === 'missing').sort((a, b) => b.ua - a.ua),
-                            };
-                        }
-
-                        // מצייר מתאר על המפה הראשית לתכניות שסומנו בדוח. נקרא גם מחלון
-                        // הדוח דרך window.opener, ולכן חייב לשבת על window.
-                        window.__markRatioOutliers = function (plans, kind) {
-                            const map = mapInstanceRef.current, gd = geoDataRef.current;
-                            if (!map || !gd || !gd.plans) return;
-                            if (window.__ratioOutlierLayer) {
-                                map.removeLayer(window.__ratioOutlierLayer);
-                                window.__ratioOutlierLayer = null;
-                            }
-                            if (!plans || !plans.length) return;
-                            const want = {};
-                            plans.forEach(p => { want[String(p).trim()] = 1; });
-                            const feats = (gd.plans.features || []).filter(f =>
-                                f.geometry && want[String((f.properties || {}).plan_name || '').trim()]);
-                            if (!feats.length) return;
-                            const color = kind === 'high' ? '#2e7d32' : '#c62828';
-                            const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
-                                style: { color: color, weight: 4, fillColor: color, fillOpacity: 0.12, dashArray: '8 5' },
-                                onEachFeature: (f, l) => {
-                                    const p = f.properties || {};
-                                    l.bindTooltip(String(p.plan_name || '') + ' — ' +
-                                        (p.plan_summary || p.plan_name_he || ''), { sticky: true });
-                                },
-                            }).addTo(map);
-                            window.__ratioOutlierLayer = layer;
-                            try { map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 15 }); } catch (e) {}
-                        };
-
-                        function openPublicRatioReport() {
-                            const d = ratioRows();
-                            if (!d) { alert('שכבת התב"עות טרם נטענה.'); return; }
-                            const esc = v => String(v == null ? '' : v)
-                                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            const nf = v => Math.round(v || 0).toLocaleString('he-IL');
-                            const f1 = v => (v == null ? '—' : (Math.round(v * 10) / 10).toLocaleString('he-IL'));
-                            const kpi = (label, val, sub, color) =>
-                                '<div class="kpi"><div class="kv" style="color:' + color + '">' + val + '</div>'
-                                + '<div class="kl">' + label + '</div>'
-                                + (sub ? '<div class="ks">' + sub + '</div>' : '') + '</div>';
-                            const bandRows = d.bands.filter(b => b.n).map(b =>
-                                '<tr><td>' + b.label + '</td><td class="c">' + b.n + '</td>'
-                                + '<td class="c">' + nf(b.units) + '</td><td class="c">' + nf(b.sqm) + '</td>'
-                                + '<td class="c">' + f1(b.weighted) + '</td>'
-                                + '<td class="c b">' + f1(b.median) + '</td></tr>').join('');
-                            const FLAG = { low: 'חריגה מטה', high: 'חריגה מעלה', missing: 'חסר נתון', '': '' };
-                            const sorted = d.rows.slice().sort((a, b) => b.ua - a.ua);
-                            const trHtml = sorted.map(r =>
-                                '<tr class="' + (r.flag || '') + '">'
-                                + '<td>' + esc(r.plan) + '</td>'
-                                + '<td>' + esc(String(r.he).slice(0, 55)) + '</td>'
-                                + '<td>' + esc(r.minahak) + '</td>'
-                                + '<td class="c">' + nf(r.ua) + '</td>'
-                                + '<td class="c">' + (r.known ? nf(r.out) : '—') + '</td>'
-                                + '<td class="c">' + (r.known ? nf(r.haf) : '—') + '</td>'
-                                + '<td class="c b">' + (r.known ? nf(r.pub) : '—') + '</td>'
-                                + '<td class="c b">' + (r.known ? f1(r.ratio) : '—') + '</td>'
-                                + '<td class="c">' + (r.known ? f1(r.med) : '—') + '</td>'
-                                + '<td class="c">' + (r.index == null ? '—' : (Math.round(r.index * 100) / 100)) + '</td>'
-                                + '<td class="c">' + FLAG[r.flag || ''] + '</td>'
-                                + '<td>' + esc(String(r.hafPrg || r.outPrg || '').slice(0, 70)) + '</td></tr>').join('');
-                            const cols = ['תב"ע', 'שם התכנית', 'מינה"ק', 'יח"ד מתווספות', 'שב"צ יוצא',
-                                'הפרשה מבונה', 'סה"כ ציבור', 'מ"ר ליח"ד', 'חציון הקבוצה', 'מדד יחסי',
-                                'דגל', 'תיאור ההקצאה'];
-                            const csv = [cols.join(',')].concat(sorted.map(r => [r.plan, r.he, r.minahak,
-                                r.ua, r.known ? r.out : '', r.known ? r.haf : '', r.known ? r.pub : '',
-                                r.known ? Math.round(r.ratio * 10) / 10 : '',
-                                r.known ? Math.round(r.med * 10) / 10 : '',
-                                r.index == null ? '' : Math.round(r.index * 100) / 100,
-                                FLAG[r.flag || ''], r.hafPrg || r.outPrg]
-                                .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','))).join('\n');
-                            const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
-                            const lowList = JSON.stringify(d.low.map(r => r.plan));
-                            const highList = JSON.stringify(d.high.map(r => r.plan));
-                            const win = window.open('', '_blank');
-                            if (!win) { alert('הדפדפן חסם את חלון הדוח. אפשר חלונות קופצים (popups) לאתר ונסה שוב.'); return; }
-                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מ"ר הפרשה ציבורית ליח"ד</title>'
-                                + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}'
-                                + 'h2{color:#b5651d;margin:0 0 4px}h3{color:#8a5116;margin:18px 0 6px;font-size:15px}'
-                                + 'p.sub{color:#666;margin:0 0 12px;font-size:13px;line-height:1.7}'
-                                + '.kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}'
-                                + '.kpi{border:1px solid #e0d5c8;border-radius:6px;padding:8px 14px;background:#fdf9f5;min-width:120px}'
-                                + '.kv{font-size:22px;font-weight:bold}.kl{font-size:12px;color:#555}.ks{font-size:11px;color:#888}'
-                                + 'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}'
-                                + 'th,td{border:1px solid #ccc;padding:5px 6px;text-align:right;vertical-align:top}'
-                                + 'th{background:#f3e9e0}td.c{text-align:center}td.b{font-weight:bold}'
-                                + 'tr.low{background:#fdecea}tr.high{background:#e8f5e9}tr.missing{background:#f7f7f7;color:#777}'
-                                + '.btns{margin:12px 0}.btns a,.btns button{background:#b5651d;color:#fff;border:none;'
-                                + 'padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;cursor:pointer;margin-left:8px}'
-                                + '.btns button.alt{background:#c62828}.btns button.alt2{background:#2e7d32}.btns button.clear{background:#777}'
-                                + '.note{margin-top:16px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;line-height:1.9}'
-                                + '@media print{.btns{display:none}}</style></head><body>'
-                                + '<h2>מ"ר הפרשה ציבורית ליח"ד</h2>'
-                                + '<p class="sub">שב"צ יוצא + הפרשה מבונה, חלקי יח"ד מתווספות. נכללות תכניות מגורים פעילות בלבד '
-                                + '(units_add &gt; 0, לא נגנזו/נדחו). כשאותו מספר רשום גם בשב"צ וגם בהפרשה הוא נספר פעם אחת.<br>'
-                                + new Date().toLocaleDateString('he-IL') + '</p>'
-                                + '<div class="kpis">'
-                                + kpi('תכניות עם נתון', nf(d.known.length), 'מתוך ' + nf(d.rows.length) + ' תכניות מגורים', '#b5651d')
-                                + kpi('יח"ד מתווספות', nf(d.totalUnits), '', '#5c6bc0')
-                                + kpi('מ"ר ציבור', nf(d.totalSqm), '', '#2e7d32')
-                                + kpi('ממוצע משוקלל', f1(d.weighted), 'מ"ר ליח"ד', '#b5651d')
-                                + kpi('חציון', f1(d.median), 'מ"ר ליח"ד', '#8a5116')
-                                + kpi('חריגות', nf(d.low.length) + ' / ' + nf(d.high.length), 'מטה / מעלה', '#c62828')
-                                + '</div>'
-                                + '<div class="btns"><a href="' + csvUri + '" download="הפרשה_ציבורית_ליחד.csv">📊 CSV</a>'
-                                + '<button onclick="window.print()">🖨️ הדפסה</button>'
-                                + '<button class="alt" onclick="mark(' + "'low'" + ')">🔴 סמן חריגות מטה על המפה</button>'
-                                + '<button class="alt2" onclick="mark(' + "'high'" + ')">🟢 סמן חריגות מעלה</button>'
-                                + '<button class="clear" onclick="mark(null)">✖ נקה סימון</button></div>'
-                                + '<h3>לפי גודל תכנית</h3>'
-                                + '<table><thead><tr><th>גודל</th><th>תכניות</th><th>יח"ד</th><th>מ"ר ציבור</th>'
-                                + '<th>ממוצע משוקלל</th><th>חציון</th></tr></thead><tbody>' + bandRows + '</tbody>'
-                                + '<tfoot><tr><td>סה"כ</td><td class="c">' + d.known.length + '</td>'
-                                + '<td class="c">' + nf(d.totalUnits) + '</td><td class="c">' + nf(d.totalSqm) + '</td>'
-                                + '<td class="c">' + f1(d.weighted) + '</td><td class="c b">' + f1(d.median) + '</td></tr></tfoot></table>'
-                                + '<h3>כל התכניות</h3>'
-                                + '<table><thead><tr>' + cols.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>'
-                                + trHtml + '</tbody></table>'
-                                + '<div class="note"><b>איך לקרוא:</b> "מדד יחסי" הוא מ"ר ליח"ד חלקי חציון קבוצת הגודל. '
-                                + '1.0 = בדיוק כמו התכנית החציונית בגודל דומה.<br>'
-                                + '<b>חריגה מטה</b> (אדום) = מתחת לרבע מחציון הקבוצה, בתכניות של ' + RATIO_MIN_UNITS + '+ יח"ד. '
-                                + '<b>חריגה מעלה</b> (ירוק) = פי ' + RATIO_HIGH + ' ומעלה — לרוב תכניות שהציבור הוא לב העניין בהן '
-                                + '(מוקד אזרחי, בית הנוער העברי) ולא אנומליה.<br>'
-                                + '<b>הפער בין הממוצע לחציון</b> נובע מכך שההיצע הציבורי נשען על מיעוט תכניות גדולות; '
-                                + 'הרוב תורמות מעט. לכן ההשוואה היא מול החציון של קבוצת הגודל, לא מול הממוצע.<br>'
-                                + '<b>מגבלה:</b> "חסר נתון" אינו אפס — הוא שדה ריק שטרם חולץ. '
-                                + 'לפני מסקנה על תכנית בודדת יש לאמת מול טבלה 5 או ההוראות: בבדיקה של 13 החריגות-מטה, '
-                                + '12 אומתו כהקצאה נמוכה אמיתית ואחת (101-0813329) היתה שגיאת נתונים.<br>'
-                                + '<b>הפניה:</b> מדריך מינהל התכנון 2018 מציב טביעת רגל של 30-70 מ"ר ציבור למשק בית, '
-                                + 'אך סופר גם קרקע ולא רק שטח בנוי — ההשוואה מכוונת ולא חד-חד-ערכית.</div>'
-                                + '<script>function mark(k){var L=' + lowList + ',H=' + highList + ';'
-                                + 'if(!window.opener||!window.opener.__markRatioOutliers){alert("חלון המפה נסגר.");return;}'
-                                + 'window.opener.__markRatioOutliers(k===null?[]:(k==="low"?L:H),k);'
-                                + 'if(k!==null)window.opener.focus();}<\/script>'
-                                + '</body></html>');
-                            win.document.close();
-                        }
                         const CATS = [
                             { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => fetchUnitsData()) },
@@ -27593,7 +27636,7 @@
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
                                 { icon:'📐', title:'סוג ההפרשה לפי היתר', desc:'מה נבנה בפועל בהפרשות שההוראות תיארו רק כ"מבנים ומוסדות ציבור" — נקרא מגרמושקת ההיתר', onClick:() => { openHafrashPermitUseReport(); } },
-                                { icon:'⚖️', title:'מ"ר הפרשה ציבורית ליח"ד', desc:'כמה שטח ציבור כל תכנית מייצרת לכל יח"ד שהיא מוסיפה — ואיפה זה חורג מחציון קבוצת הגודל', onClick:() => { openPublicRatioReport(); } },
+                                { icon:'⚖️', title:'מ"ר הפרשה ציבורית ליח"ד', desc:'כמה שטח ציבור כל תכנית מייצרת לכל יח"ד שהיא מוסיפה — ואיפה זה חורג מחציון קבוצת הגודל', onClick:() => go(() => setPublicRatioReport(true)) },
                                 { icon:'🏗️', title:'הפרשות מבונות ומבני ציבור עתידיים', desc:'שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל', onClick:() => go(() => setShowAllocChooser(true)) },
                                 { icon:'🏛️', title:'שב"צ קיים לפי תת-שכונה', desc:'מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל', onClick:() => go(() => { setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }) },
                                 { icon:'📋', title:'תנאים והפרשות ציבוריות', desc:'תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)', onClick:() => go(() => setConditionsReport(true)) },
@@ -32502,6 +32545,303 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                     })()}
 
                     {/* ── Tree-cutting permits open for objection (אישורי כריתה פתוחים לערר) ── */}
+                    {publicRatioReport && (() => {
+                        const d = ratioRows();
+                        if (!d) return null;
+                        const F = prFilter;
+                        const nf = v => (v == null || v === '' || !isFinite(v)) ? '—' : Math.round(v).toLocaleString('he-IL');
+                        const f1 = v => (v == null || !isFinite(v)) ? '—' : (Math.round(v * 10) / 10).toLocaleString('he-IL');
+                        const pctOf = (a, b) => (!a || !b) ? '—' : (Math.round(a / b * 1000) / 10).toLocaleString('he-IL') + '%';
+                        const med = arr => {
+                            if (!arr.length) return 0;
+                            const s = arr.slice().sort((x, y) => x - y), m = s.length >> 1;
+                            return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+                        };
+                        const years = d.rows.map(r => r.year).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b - a);
+                        const groups = d.rows.map(r => r.group).filter((v, i, a) => a.indexOf(v) === i);
+                        const minahaks = d.rows.map(r => r.minahak).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a.localeCompare(b, 'he'));
+                        const rows = d.rows.filter(r => {
+                            if (F.year && String(r.year) !== F.year) return false;
+                            if (F.status && r.group !== F.status) return false;
+                            if (F.minahak && r.minahak !== F.minahak) return false;
+                            if (F.build && r.buildType !== F.build) return false;
+                            if (F.flag === 'hotspot' && !r.hotspot) return false;
+                            if (F.flag === 'known' && !r.known) return false;
+                            if (F.flag === 'missing' && r.known) return false;
+                            if ((F.flag === 'low' || F.flag === 'high') && r.flag !== F.flag) return false;
+                            if (r.ua < (F.minUnits || 0)) return false;
+                            return true;
+                        }).sort((a, b) => b.ua - a.ua);
+                        const kn = rows.filter(r => r.known);
+                        const tU = kn.reduce((s, r) => s + r.ua, 0);
+                        const tB = kn.reduce((s, r) => s + r.brown, 0);
+                        const tL = kn.reduce((s, r) => s + r.brownPlot, 0);
+                        const withOpen = rows.filter(r => r.open > 0);
+                        const tO = withOpen.reduce((s, r) => s + r.open, 0);
+                        const tOU = withOpen.reduce((s, r) => s + r.ua, 0);
+                        const resR = kn.filter(r => r.resid > 0 && !r.residWeak);
+                        const tR = resR.reduce((s, r) => s + r.resid, 0);
+                        const tBr = resR.reduce((s, r) => s + r.brown, 0);
+                        const nHot = rows.filter(r => r.hotspot).length;
+                        const set = (k, v) => setPrFilter({ ...F, [k]: v });
+                        const isDefault = !F.year && !F.status && !F.minahak && !F.build && !F.flag && !F.minUnits;
+
+                        const SEL = { background: '#0d1428', color: '#dbe4f5', border: '1px solid #2a3a5e',
+                            borderRadius: 5, padding: '4px 7px', fontSize: 12, fontFamily: 'inherit', minWidth: 116 };
+                        const LBL = { fontSize: 11, color: '#9fb0d0', display: 'block', marginBottom: 3 };
+                        const TH = { textAlign: 'center', padding: '5px 4px', color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' };
+                        const THR = { ...TH, textAlign: 'right' };
+                        const TD = { textAlign: 'center', padding: '4px', color: '#cfd8ea', whiteSpace: 'nowrap' };
+                        const TDR = { ...TD, textAlign: 'right', whiteSpace: 'normal' };
+                        const BROWN_BG = 'rgba(181,101,29,0.10)';
+                        const OPEN_BG = 'rgba(46,125,50,0.10)';
+                        const tile = (label, value, sub, accent) => (
+                            <div style={{ flex: '1 1 120px', minWidth: 112, background: '#10193a',
+                                border: '1px solid #2a3a5e', borderRadius: 9, padding: '8px 10px', textAlign: 'center' }}>
+                                <div style={{ fontSize: 11, color: '#9fb0d0', whiteSpace: 'nowrap' }}>{label}</div>
+                                <div style={{ fontSize: 23, fontWeight: 800, color: accent, lineHeight: 1.2 }}>{value}</div>
+                                <div style={{ fontSize: 10, color: '#8a9bc0', marginTop: 1 }}>{sub || ' '}</div>
+                            </div>
+                        );
+                        const rowBg = r => r.hotspot ? 'rgba(183,28,28,0.20)'
+                            : r.flag === 'low' ? 'rgba(198,40,40,0.11)'
+                            : r.flag === 'high' ? 'rgba(46,125,50,0.11)'
+                            : r.flag === 'missing' ? 'rgba(255,255,255,0.02)' : 'transparent';
+
+                        const COLS = ['תב"ע', 'שם התכנית', 'תת-שכונה', 'סוג', 'סטטוס', 'שנה', 'יח"ד+', 'מ"ר מגורים',
+                            'חום מבונה', 'חום ליח"ד', 'חום % ממגורים', 'קרקע חומה', 'קרקע ליח"ד', 'קרקע % ממגורים',
+                            'שצ"פ', 'שבילים+כיכרות', 'פתוח סה"כ', 'פתוח ליח"ד', 'פתוח % ממגורים', 'מדד יחסי', 'דגל', 'תיאור ההקצאה'];
+                        const csvEscape = s => '"' + String(s == null ? '' : s).replace(/"/g, '""').replace(/[\r\n]+/g, ' | ') + '"';
+                        const exportCSV = () => {
+                            const lines = [COLS.join(',')].concat(rows.map(r => [r.plan, r.he, r.sub || r.minahak,
+                                r.buildLabel, r.group, r.year || '', r.ua, r.resid || '',
+                                r.known ? r.brown : '', r.known ? Math.round(r.ratio * 10) / 10 : '',
+                                (r.known && r.resid && !r.residWeak) ? Math.round(r.brown / r.resid * 1000) / 10 : '',
+                                r.brownPlot || '', r.brownPlot ? Math.round(r.brownPlot / r.ua * 10) / 10 : '',
+                                (r.brownPlot && r.resid && !r.residWeak) ? Math.round(r.brownPlot / r.resid * 1000) / 10 : '',
+                                r.shatzap || '', r.pathSq || '', r.open || '',
+                                r.open ? Math.round(r.open / r.ua * 10) / 10 : '',
+                                (r.open && r.resid && !r.residWeak) ? Math.round(r.open / r.resid * 1000) / 10 : '',
+                                r.index == null ? '' : Math.round(r.index * 100) / 100,
+                                r.hotspot ? 'מוקד' : (r.flag === 'low' ? 'חריגה מטה' : r.flag === 'high' ? 'חריגה מעלה' : r.flag === 'missing' ? 'חסר נתון' : ''),
+                                r.prg].map(csvEscape).join(','))).join('\n');
+                            const blob = new Blob(['﻿' + lines], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'הפרשה_ציבורית_ליחד.csv'; a.click();
+                            URL.revokeObjectURL(url);
+                        };
+                        const markOnMap = kind => {
+                            const list = kind === null ? []
+                                : rows.filter(r => kind === 'hotspot' ? r.hotspot : r.flag === kind).map(r => r.plan);
+                            if (kind !== null && !list.length) { alert('אין תכניות מסוג זה בתצוגה הנוכחית.'); return; }
+                            window.__markRatioOutliers(list, kind);
+                            if (kind !== null) setPublicRatioReport(false);
+                        };
+                        const btn = (txt, onClick, bg) => (
+                            <button onClick={onClick} style={{ background: bg, color: '#fff', border: 'none',
+                                borderRadius: 5, padding: '5px 11px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{txt}</button>
+                        );
+
+                        return (
+                        <div className="units-overlay" onClick={() => setPublicRatioReport(false)}>
+                            <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()}
+                                style={{ maxWidth: 'min(1500px,97vw)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                                <ReportLinkBtn />
+                                <button className="units-close" onClick={() => setPublicRatioReport(false)}>&times;</button>
+                                <div className="cell-report-content" style={{ overflowY: 'auto', flex: 1 }}>
+                                    <h2 style={{ color: '#fff', fontSize: 18, marginBottom: 4 }}>&#9878;&#65039; מ"ר הפרשה ציבורית ליח"ד</h2>
+                                    <p style={{ color: '#aaa', fontSize: 12.5, marginBottom: 10, lineHeight: 1.65 }}>
+                                        שלושה ערוצים נפרדים: <b style={{ color: '#d9a066' }}>שטח חום מבונה</b> (מבנים ומוסדות ציבור, מ"ר בנוי) ·{' '}
+                                        <b style={{ color: '#d9a066' }}>קרקע חומה</b> (שטח מגרש) ·{' '}
+                                        <b style={{ color: '#7fc98a' }}>שטח ציבורי פתוח</b> (שצ"פ + שבילים + כיכרות, שטח קרקע).
+                                        אין לסכום ביניהם — מ"ר בנוי ושטח קרקע אינם אותה יחידה.
+                                        נכללות תכניות מגורים פעילות בלבד (יח"ד מתווספות &gt; 0, לא נגנזו/נדחו).
+                                    </p>
+
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end',
+                                        background: '#0d1428', border: '1px solid #2a3a5e', borderRadius: 8, padding: '9px 12px', marginBottom: 12 }}>
+                                        <div><label style={LBL}>סוג בינוי</label>
+                                            <select style={SEL} value={F.build} onChange={e => set('build', e.target.value)}>
+                                                <option value="">הכל</option>
+                                                <option value="renewal">התחדשות עירונית</option>
+                                                <option value="new">בינוי חדש</option>
+                                                <option value="other">אחר</option>
+                                            </select></div>
+                                        <div><label style={LBL}>שנת אישור</label>
+                                            <select style={SEL} value={F.year} onChange={e => set('year', e.target.value)}>
+                                                <option value="">כל השנים</option>
+                                                {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                            </select></div>
+                                        <div><label style={LBL}>סטטוס</label>
+                                            <select style={SEL} value={F.status} onChange={e => set('status', e.target.value)}>
+                                                <option value="">כל הסטטוסים</option>
+                                                {groups.map(g => <option key={g} value={g}>{g}</option>)}
+                                            </select></div>
+                                        <div><label style={LBL}>מינה"ק</label>
+                                            <select style={SEL} value={F.minahak} onChange={e => set('minahak', e.target.value)}>
+                                                <option value="">כל המינהלים</option>
+                                                {minahaks.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select></div>
+                                        <div><label style={LBL}>דגל</label>
+                                            <select style={SEL} value={F.flag} onChange={e => set('flag', e.target.value)}>
+                                                <option value="">הכל</option>
+                                                <option value="hotspot">מוקד (חריגה + אזור חלש)</option>
+                                                <option value="low">חריגה מטה</option>
+                                                <option value="high">חריגה מעלה</option>
+                                                <option value="known">עם נתון בלבד</option>
+                                                <option value="missing">חסר נתון</option>
+                                            </select></div>
+                                        <div><label style={LBL}>מינימום יח"ד</label>
+                                            <input type="number" min="0" step="10" style={{ ...SEL, minWidth: 76 }}
+                                                value={F.minUnits} onChange={e => set('minUnits', parseFloat(e.target.value) || 0)} /></div>
+                                        {!isDefault && btn('נקה סינון', () => setPrFilter({ year: '', status: '', minahak: '', build: '', flag: '', minUnits: 0 }), '#3a4a6e')}
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                                        {tile('תכניות', nf(rows.length), nf(kn.length) + ' עם נתון חום', '#d9a066')}
+                                        {tile('יח"ד מתווספות', nf(tU), '', '#7f9fe0')}
+                                        {tile('חום מבונה', nf(tB), 'מ"ר בנוי', '#d9a066')}
+                                        {tile('חום ליח"ד', f1(tU ? tB / tU : 0), 'חציון ' + f1(med(kn.map(r => r.brown / r.ua))), '#e0b080')}
+                                        {tile('חום % ממגורים', pctOf(tBr, tR), nf(resR.length) + ' עם טבלה 5', '#e0b080')}
+                                        {tile('קרקע חומה', nf(tL), nf(kn.filter(r => r.brownPlot).length) + ' תכניות', '#c98f5a')}
+                                        {tile('שטח פתוח', nf(tO), nf(withOpen.length) + ' תכניות · קרקע', '#7fc98a')}
+                                        {tile('פתוח ליח"ד', f1(tOU ? tO / tOU : 0), 'מבין אלו שיש בהן', '#7fc98a')}
+                                        {tile('מוקדים', nf(nHot), 'חריגה באזור חלש', '#e57373')}
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 14 }}>
+                                        {btn('\u{1F4CA} ייצוא CSV', exportCSV, '#b5651d')}
+                                        {btn('\u{1F3AF} סמן מוקדים על המפה', () => markOnMap('hotspot'), '#b71c1c')}
+                                        {btn('\u{1F534} סמן חריגות מטה', () => markOnMap('low'), '#c62828')}
+                                        {btn('\u{1F7E2} סמן חריגות מעלה', () => markOnMap('high'), '#2e7d32')}
+                                        {btn('✖ נקה סימון', () => markOnMap(null), '#555f77')}
+                                    </div>
+
+                                    <h3 style={{ color: '#d9a066', fontSize: 14, margin: '4px 0 6px' }}>לפי גודל תכנית</h3>
+                                    <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', marginBottom: 16 }}>
+                                        <thead><tr style={{ borderBottom: '2px solid #2a3a5e' }}>
+                                            <th style={THR}>גודל</th><th style={TH}>תכניות</th><th style={TH}>יח"ד</th>
+                                            <th style={TH}>חום מבונה</th><th style={TH}>חום ליח"ד</th>
+                                            <th style={TH}>חציון הקבוצה (בסיס)</th><th style={TH}>שטח פתוח</th>
+                                        </tr></thead>
+                                        <tbody>
+                                        {d.bands.map(b => {
+                                            const g = kn.filter(r => r.ua >= b.lo && r.ua <= b.hi);
+                                            if (!g.length) return null;
+                                            const u = g.reduce((s, r) => s + r.ua, 0);
+                                            const q = g.reduce((s, r) => s + r.brown, 0);
+                                            return (
+                                            <tr key={b.label} style={{ borderBottom: '1px solid #1a2340' }}>
+                                                <td style={TDR}>{b.label}</td><td style={TD}>{g.length}</td><td style={TD}>{nf(u)}</td>
+                                                <td style={TD}>{nf(q)}</td><td style={TD}>{f1(u ? q / u : 0)}</td>
+                                                <td style={{ ...TD, fontWeight: 700, color: '#fff' }}>{f1(b.median)}</td>
+                                                <td style={TD}>{nf(g.reduce((s, r) => s + r.open, 0))}</td>
+                                            </tr>);
+                                        })}
+                                        </tbody>
+                                    </table>
+
+                                    <h3 style={{ color: '#d9a066', fontSize: 14, margin: '4px 0 4px' }}>
+                                        מאזן לפי תת-שכונה — היכן שהתכניות נותנות מעט <i>ובאזור כבר חסר</i></h3>
+                                    <p style={{ color: '#8a9bc0', fontSize: 11.5, marginBottom: 8, lineHeight: 1.6 }}>
+                                        מאזן <b>תוספתי</b>: הביקוש מהיח"ד שהתכניות מוסיפות, ההיצע ממה שאותן תכניות נותנות.
+                                        מלאי מבני הציבור הקיים והאוכלוסייה הוותיקה אינם בחישוב — אין לקרוא "כיסוי 13%" כגירעון מוחלט של האזור.
+                                        ביקוש הקרקע מחושב ממכסות הדונם-לכיתה שבמדריך מינהל התכנון 2018 ולפי פרופיל האוכלוסייה של המינהל.
+                                        מושווה לקרקע חומה בלבד, והמדריך מתיר גם הקצאה מבונה במקום קרקע — לכן הדגל נקבע לפי התרומה היחסית ולא לפי הכיסוי.
+                                        הטבלה מחושבת תמיד על כלל התכניות ולא על התוצאה המסוננת.
+                                    </p>
+                                    <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', marginBottom: 16 }}>
+                                        <thead><tr style={{ borderBottom: '2px solid #2a3a5e' }}>
+                                            <th style={THR}>תת-שכונה</th><th style={TH}>תכניות</th><th style={TH}>יח"ד</th>
+                                            <th style={TH}>חום מבונה</th><th style={TH}>חום ליח"ד</th><th style={TH}>קרקע חומה</th>
+                                            <th style={TH}>ביקוש קרקע חינוך</th><th style={TH}>כיסוי</th><th style={TH}>שטח פתוח</th>
+                                            <th style={THR}>הערכה (חציון {f1(d.subMedian)})</th>
+                                        </tr></thead>
+                                        <tbody>
+                                        {d.subs.map(t => {
+                                            const covCol = t.landCover == null ? '#8a9bc0'
+                                                : t.landCover >= 1 ? '#7fc98a' : t.landCover >= 0.5 ? '#e0a458' : '#e57373';
+                                            return (
+                                            <tr key={t.sub} style={{ borderBottom: '1px solid #1a2340', background: t.weak ? 'rgba(198,40,40,0.10)' : 'transparent' }}>
+                                                <td style={TDR}>{t.sub}</td>
+                                                <td style={TD}>{t.n}{t.unitsNoData ? <span style={{ color: '#7a8299' }} title="יח&quot;ד בתכניות ללא נתון"> +{nf(t.unitsNoData)}</span> : null}</td>
+                                                <td style={TD}>{nf(t.units)}</td><td style={TD}>{nf(t.brown)}</td>
+                                                <td style={{ ...TD, fontWeight: 700, color: t.weak ? '#e57373' : '#7fc98a' }}>{f1(t.brownPerUnit)}</td>
+                                                <td style={TD}>{t.brownLand ? nf(t.brownLand) : '—'}</td>
+                                                <td style={TD}>{nf(t.landDemand)}</td>
+                                                <td style={{ ...TD, fontWeight: 700, color: covCol }}>{t.landCover == null ? '—' : Math.round(t.landCover * 100) + '%'}</td>
+                                                <td style={TD}>{t.open ? nf(t.open) : '—'}</td>
+                                                <td style={{ ...TDR, color: '#9fb0d0' }}>
+                                                    {!t.significant ? 'קטנה מדי להערכה' : (t.weak ? 'מתחת לחציון תת-השכונות' : 'מעל החציון')}</td>
+                                            </tr>);
+                                        })}
+                                        </tbody>
+                                    </table>
+
+                                    <h3 style={{ color: '#d9a066', fontSize: 14, margin: '4px 0 6px' }}>כל התכניות ({rows.length})</h3>
+                                    <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', fontSize: 11.5, borderCollapse: 'collapse', marginBottom: 14 }}>
+                                        <thead><tr style={{ borderBottom: '2px solid #2a3a5e' }}>
+                                            {COLS.map((c, i) => (
+                                                <th key={c} style={{ ...(i === 1 || i === 21 ? THR : TH),
+                                                    background: (i >= 8 && i <= 13) ? BROWN_BG : ((i >= 14 && i <= 18) ? OPEN_BG : 'transparent') }}>{c}</th>
+                                            ))}
+                                        </tr></thead>
+                                        <tbody>
+                                        {rows.map(r => (
+                                            <tr key={r.plan} style={{ borderBottom: '1px solid #1a2340', background: rowBg(r) }}>
+                                                <td style={TD}>{r.plan}</td>
+                                                <td style={{ ...TDR, maxWidth: 210 }}>{String(r.he).slice(0, 52)}</td>
+                                                <td style={TDR}>{r.sub || r.minahak}</td>
+                                                <td style={TD}>{r.buildLabel}</td>
+                                                <td style={TDR}>{r.group}</td>
+                                                <td style={TD}>{r.year || '—'}</td>
+                                                <td style={TD}>{nf(r.ua)}</td>
+                                                <td style={TD}>{r.resid ? nf(r.resid) + (r.residWeak ? ' ⚠' : '') : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG, fontWeight: 700, color: '#fff' }}>{r.known ? nf(r.brown) : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG }}>{r.known ? f1(r.ratio) : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG }}>{(r.known && !r.residWeak) ? pctOf(r.brown, r.resid) : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG }}>{r.brownPlot ? nf(r.brownPlot) : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG }}>{r.brownPlot ? f1(r.brownPlot / r.ua) : '—'}</td>
+                                                <td style={{ ...TD, background: BROWN_BG }}>{(r.brownPlot && !r.residWeak) ? pctOf(r.brownPlot, r.resid) : '—'}</td>
+                                                <td style={{ ...TD, background: OPEN_BG }}>{r.shatzap ? nf(r.shatzap) : '—'}</td>
+                                                <td style={{ ...TD, background: OPEN_BG }}>{r.pathSq ? nf(r.pathSq) : '—'}</td>
+                                                <td style={{ ...TD, background: OPEN_BG, fontWeight: 700, color: '#fff' }}>{r.open ? nf(r.open) : '—'}</td>
+                                                <td style={{ ...TD, background: OPEN_BG }}>{r.open ? f1(r.open / r.ua) : '—'}</td>
+                                                <td style={{ ...TD, background: OPEN_BG }}>{(r.open && !r.residWeak) ? pctOf(r.open, r.resid) : '—'}</td>
+                                                <td style={TD}>{r.index == null ? '—' : Math.round(r.index * 100) / 100}</td>
+                                                <td style={{ ...TD, fontWeight: 700, color: r.hotspot ? '#ff8a80' : (r.flag === 'low' ? '#e57373' : r.flag === 'high' ? '#7fc98a' : '#8a9bc0') }}>
+                                                    {r.hotspot ? 'מוקד' : (r.flag === 'low' ? 'חריגה מטה' : r.flag === 'high' ? 'חריגה מעלה' : r.flag === 'missing' ? 'חסר נתון' : '')}</td>
+                                                <td style={{ ...TDR, maxWidth: 230, color: '#9fb0d0' }}>{String(r.prg || '').slice(0, 60)}</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                    </div>
+
+                                    <div style={{ fontSize: 11.5, color: '#8a9bc0', borderTop: '1px solid #2a3a5e', paddingTop: 10, lineHeight: 1.85 }}>
+                                        <b style={{ color: '#cfd8ea' }}>מדד יחסי</b> = מ"ר חום ליח"ד חלקי חציון קבוצת הגודל. 1.0 = כמו התכנית החציונית בגודל דומה.
+                                        החציונים מחושבים תמיד על כל התכניות ולא על התוצאה המסוננת, כדי שהמדד יישאר בר-השוואה בין תצוגות.<br />
+                                        <b style={{ color: '#cfd8ea' }}>הדגל מתייחס לשטח החום בלבד</b>, כי רק שם קיים כיסוי נתונים מספיק להשוואה.
+                                        תכנית יכולה להיות חריגה בחום ותקינה בפתוח (101-1561513: אפס חום ל-360 יח"ד, אך 5,181 מ"ר שצ"פ).<br />
+                                        <b style={{ color: '#cfd8ea' }}>מוקד</b> = חריגה מטה <i>וגם</i> תת-שכונה שנותנת במצטבר פחות מהחציון —
+                                        ההבדל בין "התכנית נותנת מעט" לבין "נותנת מעט במקום שבו כבר חסר".<br />
+                                        <b style={{ color: '#cfd8ea' }}>סוג בינוי</b> נגזר מ-plan_type; כשהשדה ריק (58 תכניות) ההכרעה לפי יח"ד קיימות —
+                                        יש קיימות = התחדשות, אין = בינוי חדש.<br />
+                                        <b style={{ color: '#cfd8ea' }}>מקורות השטחים</b>: שצ"פ, קרקע חומה, שבילים וכיכרות מייעודי הקרקע (landuse_xplan, shape_area
+                                        מהגיאומטריה) — 72 מתוך 73 תואמים ±15% מול הגיליון, ובשצ"פ הגיליון מכיל ערכי-דמה. הגיליון וטבלה 5 משמשים כגיבוי.
+                                        חום מבונה מהגיליון. מ"ר מגורים מטבלה 5 — ⚠ מסמן פרסור חלקי, ואז עמודות ה-% מוסתרות.<br />
+                                        <b style={{ color: '#cfd8ea' }}>לא נספרים</b>: מערכות תנועה (דרך מוצעת/מאושרת, דרך משולבת, טיפול נופי) — בהתאם למדריך 2018,
+                                        ובתכניות מגורים הן ממילא 2.3 מ"ר ליח"ד בלבד. "דרך מאושרת" אף אינה הפרשה אלא כביש קיים.
+                                        "שטח פרטי פתוח" אינו ציבורי.<br />
+                                        <b style={{ color: '#cfd8ea' }}>מגבלה</b>: "חסר נתון" אינו אפס אלא שדה שטרם חולץ. בבדיקה ידנית של 13 חריגות-מטה,
+                                        12 אומתו כהקצאה נמוכה אמיתית מול טבלה 5 / ההוראות ואחת היתה שגיאת נתונים (תוקנה).
+                                    </div>
+                                </div>
+                            </div>
+                        </div>);
+                    })()}
                     {treePermitsReport && (() => {
                         const recs = Object.values(window.__treePermits || {}).filter(r => {
                             const d = objectionsDaysLeft(r.deadline); return d == null || d >= 0; // open for objection only
