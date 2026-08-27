@@ -1202,6 +1202,57 @@
             'layer': 'שכבה', 'path': 'נתיב',
         };
 
+        // Vector basemaps (MapLibre + OpenFreeMap). CARTO stopped serving its raster
+        // basemaps anonymously — every light_all/dark_all tile now comes back stamped
+        // "API KEY REQUIRED" — so the light/dark bases moved to OpenFreeMap's Positron
+        // and Dark styles (same OSM cartography, free, no key, no usage cap).
+        // MapLibre itself is ~1MB, so it is fetched on demand (see ensureMapLibre).
+        // Pinned to 5.x on purpose: maplibre-gl 6 ships ESM only, no UMD global.
+        const MAPLIBRE_CSS_URL = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css';
+        const MAPLIBRE_JS_URL = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js';
+        const MAPLIBRE_LEAFLET_URL = 'https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js';
+        // Without the RTL plugin MapLibre lays Hebrew/Arabic labels out in logical
+        // order, i.e. reversed on screen.
+        const MAPLIBRE_RTL_URL = 'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js';
+
+        let _maplibrePromise = null;
+        function loadExternalScript(src) {
+            return new Promise((resolve, reject) => {
+                const el = document.createElement('script');
+                el.src = src;
+                el.async = true;
+                el.onload = () => resolve();
+                el.onerror = () => reject(new Error('failed to load ' + src));
+                document.head.appendChild(el);
+            });
+        }
+        function ensureMapLibre() {
+            if (window.L && L.maplibreGL) return Promise.resolve(true);
+            if (!_maplibrePromise) {
+                const css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = MAPLIBRE_CSS_URL;
+                document.head.appendChild(css);
+                _maplibrePromise = loadExternalScript(MAPLIBRE_JS_URL)
+                    .then(() => {
+                        try {
+                            if (window.maplibregl && maplibregl.getRTLTextPluginStatus &&
+                                maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+                                maplibregl.setRTLTextPlugin(MAPLIBRE_RTL_URL, null, true);
+                            }
+                        } catch (e) { console.warn('[basemap] RTL plugin:', e); }
+                        return loadExternalScript(MAPLIBRE_LEAFLET_URL);
+                    })
+                    .then(() => true)
+                    .catch(e => {
+                        console.warn('[basemap] MapLibre failed to load, falling back to raster tiles:', e);
+                        _maplibrePromise = null;
+                        return false;
+                    });
+            }
+            return _maplibrePromise;
+        }
+
         const BASEMAPS = {
             osm: {
                 name: 'OpenStreetMap',
@@ -1212,14 +1263,16 @@
             cartoDark: {
                 name: 'כהה',
                 desc: 'מפת רקע כהה',
-                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                attribution: '&copy; CartoDB'
+                style: 'https://tiles.openfreemap.org/styles/dark',
+                fallbackUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '&copy; OpenFreeMap &copy; OpenMapTiles &copy; OpenStreetMap contributors'
             },
             cartoLight: {
                 name: 'בהיר',
                 desc: 'מפת רקע בהירה',
-                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                attribution: '&copy; CartoDB'
+                style: 'https://tiles.openfreemap.org/styles/positron',
+                fallbackUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '&copy; OpenFreeMap &copy; OpenMapTiles &copy; OpenStreetMap contributors'
             },
             satellite: {
                 name: 'תצ"א',
@@ -6136,6 +6189,7 @@
             useEffect(() => {
                 const map = mapInstanceRef.current;
                 if (!map) return;
+                let cancelled = false;
 
                 if (baseTileRef.current) {
                     map.removeLayer(baseTileRef.current);
@@ -6147,14 +6201,62 @@
                 }
 
                 const bm = BASEMAPS[basemap];
-                if (bm.url) {
-                    baseTileRef.current = L.tileLayer(bm.url, {
+                const addRasterBase = (url) => {
+                    baseTileRef.current = L.tileLayer(url, {
                         attribution: bm.attribution,
                         maxZoom: 22,
                         opacity: basemapOpacity,
                         crossOrigin: 'anonymous'
                     }).addTo(map);
                     baseTileRef.current.bringToBack();
+                };
+                if (bm.style) {
+                    // Vector base (OpenFreeMap via MapLibre). The library is loaded on
+                    // demand, so the add is async — `cancelled` guards a basemap switch
+                    // that happens while it is still in flight.
+                    ensureMapLibre().then(ok => {
+                        if (cancelled || !mapInstanceRef.current) return;
+                        if (!ok) { addRasterBase(bm.fallbackUrl || BASEMAPS.osm.url); return; }
+                        // preserveDrawingBuffer keeps the WebGL canvas readable for
+                        // html2canvas/dom-to-image (map printing and image export).
+                        // MapLibre 5 moved it under canvasContextAttributes; the
+                        // top-level flag stays for older builds.
+                        const glLayer = L.maplibreGL({
+                            style: bm.style,
+                            attribution: bm.attribution,
+                            interactive: false,
+                            preserveDrawingBuffer: true,
+                            canvasContextAttributes: { preserveDrawingBuffer: true },
+                        });
+                        baseTileRef.current = glLayer;
+                        glLayer.addTo(map);
+                        // OpenFreeMap's styles label everything twice (Latin + local).
+                        // Collapse that to Hebrew-first, one line per label.
+                        const glMap = glLayer.getMaplibreMap && glLayer.getMaplibreMap();
+                        if (glMap) {
+                            const hebrewLabels = () => {
+                                try {
+                                    (glMap.getStyle().layers || []).forEach(l => {
+                                        if (l.type !== 'symbol') return;
+                                        const tf = glMap.getLayoutProperty(l.id, 'text-field');
+                                        if (tf === undefined || !JSON.stringify(tf).includes('name')) return;
+                                        glMap.setLayoutProperty(l.id, 'text-field',
+                                            ['coalesce', ['get', 'name:he'], ['get', 'name:nonlatin'], ['get', 'name'], ['get', 'name:latin']]);
+                                    });
+                                    // The re-layout doesn't always schedule a frame on
+                                    // its own — without this the labels stay hidden
+                                    // until the user pans.
+                                    glMap.triggerRepaint();
+                                } catch (e) { console.warn('[basemap] label rewrite:', e); }
+                            };
+                            glMap.on('style.load', hebrewLabels);
+                            if (glMap.isStyleLoaded()) hebrewLabels();
+                        }
+                        const c = glLayer.getContainer && glLayer.getContainer();
+                        if (c) c.style.opacity = basemapOpacity;
+                    });
+                } else if (bm.url) {
+                    addRasterBase(bm.url);
                 }
                 // Composite basemap: a second tile source drawn over the base within its
                 // bounds (muni quarterly ortho mirror over Esri). Same pane as the base —
@@ -6166,12 +6268,20 @@
                         crossOrigin: 'anonymous',
                     }).addTo(map);
                 }
+
+                return () => { cancelled = true; };
             }, [basemap]);
 
             // Update basemap opacity without recreating layer
             useEffect(() => {
                 if (baseTileRef.current) {
-                    baseTileRef.current.setOpacity(basemapOpacity);
+                    if (baseTileRef.current.setOpacity) {
+                        baseTileRef.current.setOpacity(basemapOpacity);
+                    } else if (baseTileRef.current.getContainer) {
+                        // MapLibre vector base — no setOpacity, dim the GL container.
+                        const c = baseTileRef.current.getContainer();
+                        if (c) c.style.opacity = basemapOpacity;
+                    }
                 }
                 if (baseOverlayRef.current) {
                     baseOverlayRef.current.setOpacity(basemapOpacity);

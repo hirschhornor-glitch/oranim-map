@@ -418,7 +418,36 @@ function JunctionApp() {
     if (status !== 'ready' || mapRef.current) return;
     const map = L.map('jmap', { center: CENTER, zoom: ZOOM, zoomControl: false, maxZoom: 20, minZoom: 14 });
     L.control.zoom({ position: 'topleft' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd' }).addTo(map);
+    // CARTO's raster basemaps now watermark every anonymous tile ("API KEY REQUIRED"),
+    // so the base is OpenFreeMap's Bright style via MapLibre (free, keyless).
+    // The RTL plugin is what keeps Hebrew street labels from rendering reversed.
+    if (window.L && L.maplibreGL) {
+      try {
+        if (window.maplibregl && maplibregl.getRTLTextPluginStatus && maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+          maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js', null, true);
+        }
+      } catch (e) { console.warn('[basemap] RTL plugin:', e); }
+      const glLayer = L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/bright', attribution: '© OpenFreeMap © OpenMapTiles © OpenStreetMap contributors', interactive: false, preserveDrawingBuffer: true, canvasContextAttributes: { preserveDrawingBuffer: true } }).addTo(map);
+      // OpenFreeMap labels everything twice (Latin + local) — collapse to Hebrew-first.
+      const glMap = glLayer.getMaplibreMap && glLayer.getMaplibreMap();
+      if (glMap) {
+        const hebrewLabels = () => {
+          try {
+            (glMap.getStyle().layers || []).forEach(l => {
+              if (l.type !== 'symbol') return;
+              const tf = glMap.getLayoutProperty(l.id, 'text-field');
+              if (tf === undefined || !JSON.stringify(tf).includes('name')) return;
+              glMap.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get', 'name:he'], ['get', 'name:nonlatin'], ['get', 'name'], ['get', 'name:latin']]);
+            });
+            glMap.triggerRepaint();
+          } catch (e) { console.warn('[basemap] label rewrite:', e); }
+        };
+        glMap.on('style.load', hebrewLabels);
+        if (glMap.isStyleLoaded()) hebrewLabels();
+      }
+    } else {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OpenStreetMap contributors' }).addTo(map);
+    }
     map.on('click', (ev) => {
       const ll = { lat: ev.latlng.lat, lng: ev.latlng.lng };
       if (drawRef.current) { setDrawPts(pts => [...pts, [+ll.lng.toFixed(6), +ll.lat.toFixed(6)]]); return; }

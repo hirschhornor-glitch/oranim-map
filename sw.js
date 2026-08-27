@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v14-status-unify';
+const CACHE_VERSION = 'v15-openfreemap-basemap';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
@@ -68,6 +68,17 @@ self.addEventListener('fetch', (event) => {
 
   // Strategy 1: Cache-first for CDN assets (versioned, don't change)
   if (CDN_ASSETS.some((asset) => event.request.url.startsWith(asset.split('?')[0]))) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached || fetchAndCache(event.request, CDN_CACHE))
+    );
+    return;
+  }
+
+  // Strategy 1b: Cache-first for the MapLibre bundle + RTL plugin. They are
+  // fetched on demand (not <script> tags), so they are not in CDN_ASSETS and
+  // would otherwise hit the network on every load — and the vector basemap is
+  // the default, so that is every load.
+  if (url.hostname === 'unpkg.com' && /maplibre|mapbox-gl-rtl-text/.test(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then((cached) => cached || fetchAndCache(event.request, CDN_CACHE))
     );
