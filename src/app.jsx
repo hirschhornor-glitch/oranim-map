@@ -3408,6 +3408,9 @@
             const [residentSharedReport, setResidentSharedReport] = useState(false);
             const [newPlansReport, setNewPlansReport] = useState(false);
             const [permitObjectionsReport, setPermitObjectionsReport] = useState(false);
+            // מה חדש — צמצום דוחות הפקדות/היתרים לרשומות שפורסמו לאחרונה (0 = ללא סינון).
+            const [objRecencyDays, setObjRecencyDays] = useState(0);
+            const [permObjRecencyDays, setPermObjRecencyDays] = useState(0);
             const [treePermitsReport, setTreePermitsReport] = useState(false);
             const [meetingsReport, setMeetingsReport] = useState(false);
             const [overlapReport, setOverlapReport] = useState(false);
@@ -14307,9 +14310,13 @@
                         ser: () => ({ sub: fundReportFilter.sub, minahak: fundReportFilter.minahak, status: fundReportFilter.status, q: fundReportFilter.q }),
                         apply: p => setFundReportFilter({ sub: p.sub || 'all', minahak: p.minahak || 'all', status: p.status || 'all', q: p.q || '' }) },
                     { key: 'overlap', isOpen: () => overlapReport, open: () => setOverlapReport(true) },
-                    { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true) },
+                    { key: 'objections', isOpen: () => objectionsReport, open: () => setObjectionsReport(true),
+                        ser: () => ({ rec: objRecencyDays || '' }),
+                        apply: p => { if (p.rec) setObjRecencyDays(parseInt(p.rec) || 0); } },
                     { key: 'newPlans', isOpen: () => newPlansReport, open: () => setNewPlansReport(true) },
-                    { key: 'permitObjections', isOpen: () => permitObjectionsReport, open: () => setPermitObjectionsReport(true) },
+                    { key: 'permitObjections', isOpen: () => permitObjectionsReport, open: () => setPermitObjectionsReport(true),
+                        ser: () => ({ rec: permObjRecencyDays || '' }),
+                        apply: p => { if (p.rec) setPermObjRecencyDays(parseInt(p.rec) || 0); } },
                     { key: 'treePermits', isOpen: () => treePermitsReport, open: () => setTreePermitsReport(true) },
                     { key: 'meetings', isOpen: () => meetingsReport, open: () => setMeetingsReport(true) },
                     { key: 'specialHousing', isOpen: () => specialHousingReport, open: () => setSpecialHousingReport(true) },
@@ -14411,6 +14418,32 @@
                 <button className="modal-close" title="העתק קישור לדוח זה (כולל הסינון הנוכחי)"
                     onClick={shareCurrentLink}
                     style={{ fontSize: 15, marginLeft: 4 }}>🔗</button>
+            );
+
+            // פס סינון לפי טריות הפרסום — "מה נוסף בימים האחרונים".
+            // משמש את דוח ההפקדות ואת דוח ההיתרים הפתוחים להתנגדויות.
+            const RECENCY_OPTS = [
+                { d: 0,  t: 'הכל' },
+                { d: 2,  t: 'יומיים אחרונים' },
+                { d: 7,  t: 'שבוע אחרון' },
+                { d: 30, t: 'חודש אחרון' },
+            ];
+            const RecencyFilterBar = ({ value, onChange, shown, total, label }) => (
+                <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',marginBottom:12}}>
+                    <span style={{color:'#aaa',fontSize:12}}>{label || 'פורסם:'}</span>
+                    {RECENCY_OPTS.map(o => (
+                        <button key={o.d} onClick={() => onChange(o.d)}
+                            title={o.d ? ('רק רשומות שפורסמו ב-' + o.d + ' הימים האחרונים') : 'ללא סינון תאריך'}
+                            style={{background: value === o.d ? '#e94560' : '#1f1f3a',
+                                    color: value === o.d ? '#fff' : '#bbb',
+                                    border: '1px solid ' + (value === o.d ? '#e94560' : '#2a2a4a'),
+                                    borderRadius: 14, padding: '3px 12px', cursor: 'pointer',
+                                    fontSize: 12, fontWeight: value === o.d ? 700 : 400}}>
+                            {o.t}
+                        </button>
+                    ))}
+                    {value > 0 && <span style={{color:'#888',fontSize:11}}>{shown} מתוך {total}</span>}
+                </div>
             );
 
             // Activate the built-allocations report for a drawn area / radius (mirrors the
@@ -20394,6 +20427,28 @@
                 return out;
             }
             // ─── Open-for-objections permits (הקלות שפורסמו לפי סעיף 149) ──────────
+            // עזרי טריות-פרסום — משמשים את פס הסינון "יומיים אחרונים" בדוחות.
+            function daysSincePublish(dateStr) {
+                // 'dd/mm/yyyy' או 'yyyy-mm-dd' -> כמה ימים עברו מאז (0 = היום,
+                // שלילי = תאריך עתידי); null כשאין תאריך שניתן לפענוח.
+                const str = String(dateStr == null ? '' : dateStr).trim();
+                if (!str) return null;
+                let d = null;
+                let m = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (m) d = new Date(+m[3], +m[2] - 1, +m[1]);
+                else { m = str.match(/(\d{4})-(\d{2})-(\d{2})/); if (m) d = new Date(+m[1], +m[2] - 1, +m[3]); }
+                if (!d || isNaN(d.getTime())) return null;
+                d.setHours(0, 0, 0, 0);
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                return Math.round((today - d) / 86400000);
+            }
+            function publishedWithinDays(dateStr, days) {
+                // days = 0 -> ללא סינון. כשהסינון פעיל, רשומה בלי תאריך פרסום
+                // תקין יוצאת מהרשימה — אי אפשר לדעת אם היא חדשה. "יומיים" = היום ואתמול.
+                if (!days) return true;
+                const el = daysSincePublish(dateStr);
+                return el != null && el < days;
+            }
             function objectionsDaysLeft(deadlineStr) {
                 // 'dd/mm/yyyy' → whole days from today (negative = passed); null if unparseable
                 if (!deadlineStr) return null;
@@ -27304,6 +27359,230 @@
                                 + '</body></html>');
                             win.document.close();
                         }
+                        // ── מ"ר הפרשה ציבורית ליח"ד ─────────────────────────────────
+                        // מודד כמה שטח ציבור (שב"צ יוצא + הפרשה מבונה) כל תכנית מגורים
+                        // מייצרת ביחס ליח"ד שהיא מוסיפה, ומסמן חריגות מול חציון קבוצת
+                        // הגודל שלה. ההשוואה היא פר-קבוצת-גודל ולא מול מספר אחד, כי
+                        // התרומה ליח"ד עולה באופן שיטתי עם גודל התכנית (5.9 בקטנות מול
+                        // 12.1 במתחמי 300+): תכנית של 20 יח"ד לא נמדדת מול מתחם של 1,500.
+                        const RATIO_BANDS = [
+                            { lo: 1,   hi: 9,        label: '1-9 יח"ד' },
+                            { lo: 10,  hi: 29,       label: '10-29' },
+                            { lo: 30,  hi: 99,       label: '30-99' },
+                            { lo: 100, hi: 299,      label: '100-299' },
+                            { lo: 300, hi: Infinity, label: '300+' },
+                        ];
+                        const RATIO_MIN_UNITS = 20;   // מתחת לזה תכנית קטנה מכדי לחייב הקצאה
+                        const RATIO_LOW = 0.25;       // חריגה מטה: פחות מרבע מחציון הקבוצה
+                        const RATIO_HIGH = 3;         // חריגה מעלה: פי 3 ומעלה
+
+                        function ratioRows() {
+                            const gd = geoDataRef.current;
+                            if (!gd || !gd.plans) return null;
+                            const n = v => {
+                                const x = parseFloat(String(v == null ? '' : v).replace(/,/g, ''));
+                                return isFinite(x) ? x : 0;
+                            };
+                            const isBlank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
+                            const seen = {}, rows = [];
+                            (gd.plans.features || []).forEach(f => {
+                                const p = f.properties || {};
+                                const key = statusGroupKey(p.status_mavat);
+                                if (key === 'rejected') return;              // נגנזה/נדחתה — אין הקצאה עתידית
+                                const ua = n(p.units_add);
+                                if (ua <= 0) return;                          // רק תכניות שמוסיפות יח"ד
+                                const pn = String(p.plan_name || '').trim();
+                                if (!pn || seen[pn]) return;                  // כפילויות שורה באותה תב"ע
+                                seen[pn] = 1;
+                                const out = n(p.shavatz_out_sqm), haf = n(p.hafrash_sqm);
+                                // כששני השדות זהים בדיוק מדובר כמעט תמיד באותה הקצאה שנרשמה
+                                // פעמיים (אומת ב-101-0857086 ו-101-1002625) — נספרת פעם אחת.
+                                const dup = out > 0 && out === haf;
+                                rows.push({
+                                    plan: pn,
+                                    he: p.plan_name_he || p.plan_summary || '',
+                                    status: String(p.status_mavat || '').trim(),
+                                    minahak: p.minahak || '', sub: p.sub_neighborhood || '',
+                                    ua: ua, ut: n(p.units_total),
+                                    out: out, haf: haf, pub: dup ? out : out + haf, dup: dup,
+                                    known: !(isBlank(p.shavatz_out_sqm) && isBlank(p.hafrash_sqm)),
+                                    outPrg: p.shavatz_out_prog || '', hafPrg: p.hafrash_prg || '',
+                                });
+                            });
+                            const bandOf = u => RATIO_BANDS.find(b => u >= b.lo && u <= b.hi) || RATIO_BANDS[0];
+                            const known = rows.filter(r => r.known);
+                            const median = a => {
+                                if (!a.length) return 0;
+                                const s = a.slice().sort((x, y) => x - y), m = s.length >> 1;
+                                return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+                            };
+                            RATIO_BANDS.forEach(b => {
+                                const g = known.filter(r => bandOf(r.ua) === b);
+                                b.n = g.length;
+                                b.units = g.reduce((s, r) => s + r.ua, 0);
+                                b.sqm = g.reduce((s, r) => s + r.pub, 0);
+                                b.weighted = b.units ? b.sqm / b.units : 0;
+                                b.median = median(g.map(r => r.pub / r.ua));
+                            });
+                            known.forEach(r => {
+                                const b = bandOf(r.ua);
+                                r.ratio = r.pub / r.ua;
+                                r.med = b.median;
+                                r.index = b.median ? r.ratio / b.median : null;
+                                r.flag = r.ua < RATIO_MIN_UNITS || !b.median ? ''
+                                    : (r.ratio < RATIO_LOW * b.median ? 'low'
+                                    : (r.ratio > RATIO_HIGH * b.median ? 'high' : ''));
+                            });
+                            rows.filter(r => !r.known).forEach(r => { r.flag = 'missing'; });
+                            const tU = known.reduce((s, r) => s + r.ua, 0);
+                            const tS = known.reduce((s, r) => s + r.pub, 0);
+                            return {
+                                rows: rows, known: known, bands: RATIO_BANDS,
+                                totalUnits: tU, totalSqm: tS,
+                                weighted: tU ? tS / tU : 0,
+                                median: median(known.map(r => r.pub / r.ua)),
+                                low: known.filter(r => r.flag === 'low').sort((a, b) => b.ua - a.ua),
+                                high: known.filter(r => r.flag === 'high').sort((a, b) => b.ratio - a.ratio),
+                                missing: rows.filter(r => r.flag === 'missing').sort((a, b) => b.ua - a.ua),
+                            };
+                        }
+
+                        // מצייר מתאר על המפה הראשית לתכניות שסומנו בדוח. נקרא גם מחלון
+                        // הדוח דרך window.opener, ולכן חייב לשבת על window.
+                        window.__markRatioOutliers = function (plans, kind) {
+                            const map = mapInstanceRef.current, gd = geoDataRef.current;
+                            if (!map || !gd || !gd.plans) return;
+                            if (window.__ratioOutlierLayer) {
+                                map.removeLayer(window.__ratioOutlierLayer);
+                                window.__ratioOutlierLayer = null;
+                            }
+                            if (!plans || !plans.length) return;
+                            const want = {};
+                            plans.forEach(p => { want[String(p).trim()] = 1; });
+                            const feats = (gd.plans.features || []).filter(f =>
+                                f.geometry && want[String((f.properties || {}).plan_name || '').trim()]);
+                            if (!feats.length) return;
+                            const color = kind === 'high' ? '#2e7d32' : '#c62828';
+                            const layer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
+                                style: { color: color, weight: 4, fillColor: color, fillOpacity: 0.12, dashArray: '8 5' },
+                                onEachFeature: (f, l) => {
+                                    const p = f.properties || {};
+                                    l.bindTooltip(String(p.plan_name || '') + ' — ' +
+                                        (p.plan_summary || p.plan_name_he || ''), { sticky: true });
+                                },
+                            }).addTo(map);
+                            window.__ratioOutlierLayer = layer;
+                            try { map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 15 }); } catch (e) {}
+                        };
+
+                        function openPublicRatioReport() {
+                            const d = ratioRows();
+                            if (!d) { alert('שכבת התב"עות טרם נטענה.'); return; }
+                            const esc = v => String(v == null ? '' : v)
+                                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const nf = v => Math.round(v || 0).toLocaleString('he-IL');
+                            const f1 = v => (v == null ? '—' : (Math.round(v * 10) / 10).toLocaleString('he-IL'));
+                            const kpi = (label, val, sub, color) =>
+                                '<div class="kpi"><div class="kv" style="color:' + color + '">' + val + '</div>'
+                                + '<div class="kl">' + label + '</div>'
+                                + (sub ? '<div class="ks">' + sub + '</div>' : '') + '</div>';
+                            const bandRows = d.bands.filter(b => b.n).map(b =>
+                                '<tr><td>' + b.label + '</td><td class="c">' + b.n + '</td>'
+                                + '<td class="c">' + nf(b.units) + '</td><td class="c">' + nf(b.sqm) + '</td>'
+                                + '<td class="c">' + f1(b.weighted) + '</td>'
+                                + '<td class="c b">' + f1(b.median) + '</td></tr>').join('');
+                            const FLAG = { low: 'חריגה מטה', high: 'חריגה מעלה', missing: 'חסר נתון', '': '' };
+                            const sorted = d.rows.slice().sort((a, b) => b.ua - a.ua);
+                            const trHtml = sorted.map(r =>
+                                '<tr class="' + (r.flag || '') + '">'
+                                + '<td>' + esc(r.plan) + '</td>'
+                                + '<td>' + esc(String(r.he).slice(0, 55)) + '</td>'
+                                + '<td>' + esc(r.minahak) + '</td>'
+                                + '<td class="c">' + nf(r.ua) + '</td>'
+                                + '<td class="c">' + (r.known ? nf(r.out) : '—') + '</td>'
+                                + '<td class="c">' + (r.known ? nf(r.haf) : '—') + '</td>'
+                                + '<td class="c b">' + (r.known ? nf(r.pub) : '—') + '</td>'
+                                + '<td class="c b">' + (r.known ? f1(r.ratio) : '—') + '</td>'
+                                + '<td class="c">' + (r.known ? f1(r.med) : '—') + '</td>'
+                                + '<td class="c">' + (r.index == null ? '—' : (Math.round(r.index * 100) / 100)) + '</td>'
+                                + '<td class="c">' + FLAG[r.flag || ''] + '</td>'
+                                + '<td>' + esc(String(r.hafPrg || r.outPrg || '').slice(0, 70)) + '</td></tr>').join('');
+                            const cols = ['תב"ע', 'שם התכנית', 'מינה"ק', 'יח"ד מתווספות', 'שב"צ יוצא',
+                                'הפרשה מבונה', 'סה"כ ציבור', 'מ"ר ליח"ד', 'חציון הקבוצה', 'מדד יחסי',
+                                'דגל', 'תיאור ההקצאה'];
+                            const csv = [cols.join(',')].concat(sorted.map(r => [r.plan, r.he, r.minahak,
+                                r.ua, r.known ? r.out : '', r.known ? r.haf : '', r.known ? r.pub : '',
+                                r.known ? Math.round(r.ratio * 10) / 10 : '',
+                                r.known ? Math.round(r.med * 10) / 10 : '',
+                                r.index == null ? '' : Math.round(r.index * 100) / 100,
+                                FLAG[r.flag || ''], r.hafPrg || r.outPrg]
+                                .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(','))).join('\n');
+                            const csvUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+                            const lowList = JSON.stringify(d.low.map(r => r.plan));
+                            const highList = JSON.stringify(d.high.map(r => r.plan));
+                            const win = window.open('', '_blank');
+                            if (!win) { alert('הדפדפן חסם את חלון הדוח. אפשר חלונות קופצים (popups) לאתר ונסה שוב.'); return; }
+                            win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מ"ר הפרשה ציבורית ליח"ד</title>'
+                                + '<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}'
+                                + 'h2{color:#b5651d;margin:0 0 4px}h3{color:#8a5116;margin:18px 0 6px;font-size:15px}'
+                                + 'p.sub{color:#666;margin:0 0 12px;font-size:13px;line-height:1.7}'
+                                + '.kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}'
+                                + '.kpi{border:1px solid #e0d5c8;border-radius:6px;padding:8px 14px;background:#fdf9f5;min-width:120px}'
+                                + '.kv{font-size:22px;font-weight:bold}.kl{font-size:12px;color:#555}.ks{font-size:11px;color:#888}'
+                                + 'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}'
+                                + 'th,td{border:1px solid #ccc;padding:5px 6px;text-align:right;vertical-align:top}'
+                                + 'th{background:#f3e9e0}td.c{text-align:center}td.b{font-weight:bold}'
+                                + 'tr.low{background:#fdecea}tr.high{background:#e8f5e9}tr.missing{background:#f7f7f7;color:#777}'
+                                + '.btns{margin:12px 0}.btns a,.btns button{background:#b5651d;color:#fff;border:none;'
+                                + 'padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;cursor:pointer;margin-left:8px}'
+                                + '.btns button.alt{background:#c62828}.btns button.alt2{background:#2e7d32}.btns button.clear{background:#777}'
+                                + '.note{margin-top:16px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;line-height:1.9}'
+                                + '@media print{.btns{display:none}}</style></head><body>'
+                                + '<h2>מ"ר הפרשה ציבורית ליח"ד</h2>'
+                                + '<p class="sub">שב"צ יוצא + הפרשה מבונה, חלקי יח"ד מתווספות. נכללות תכניות מגורים פעילות בלבד '
+                                + '(units_add &gt; 0, לא נגנזו/נדחו). כשאותו מספר רשום גם בשב"צ וגם בהפרשה הוא נספר פעם אחת.<br>'
+                                + new Date().toLocaleDateString('he-IL') + '</p>'
+                                + '<div class="kpis">'
+                                + kpi('תכניות עם נתון', nf(d.known.length), 'מתוך ' + nf(d.rows.length) + ' תכניות מגורים', '#b5651d')
+                                + kpi('יח"ד מתווספות', nf(d.totalUnits), '', '#5c6bc0')
+                                + kpi('מ"ר ציבור', nf(d.totalSqm), '', '#2e7d32')
+                                + kpi('ממוצע משוקלל', f1(d.weighted), 'מ"ר ליח"ד', '#b5651d')
+                                + kpi('חציון', f1(d.median), 'מ"ר ליח"ד', '#8a5116')
+                                + kpi('חריגות', nf(d.low.length) + ' / ' + nf(d.high.length), 'מטה / מעלה', '#c62828')
+                                + '</div>'
+                                + '<div class="btns"><a href="' + csvUri + '" download="הפרשה_ציבורית_ליחד.csv">📊 CSV</a>'
+                                + '<button onclick="window.print()">🖨️ הדפסה</button>'
+                                + '<button class="alt" onclick="mark(' + "'low'" + ')">🔴 סמן חריגות מטה על המפה</button>'
+                                + '<button class="alt2" onclick="mark(' + "'high'" + ')">🟢 סמן חריגות מעלה</button>'
+                                + '<button class="clear" onclick="mark(null)">✖ נקה סימון</button></div>'
+                                + '<h3>לפי גודל תכנית</h3>'
+                                + '<table><thead><tr><th>גודל</th><th>תכניות</th><th>יח"ד</th><th>מ"ר ציבור</th>'
+                                + '<th>ממוצע משוקלל</th><th>חציון</th></tr></thead><tbody>' + bandRows + '</tbody>'
+                                + '<tfoot><tr><td>סה"כ</td><td class="c">' + d.known.length + '</td>'
+                                + '<td class="c">' + nf(d.totalUnits) + '</td><td class="c">' + nf(d.totalSqm) + '</td>'
+                                + '<td class="c">' + f1(d.weighted) + '</td><td class="c b">' + f1(d.median) + '</td></tr></tfoot></table>'
+                                + '<h3>כל התכניות</h3>'
+                                + '<table><thead><tr>' + cols.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>'
+                                + trHtml + '</tbody></table>'
+                                + '<div class="note"><b>איך לקרוא:</b> "מדד יחסי" הוא מ"ר ליח"ד חלקי חציון קבוצת הגודל. '
+                                + '1.0 = בדיוק כמו התכנית החציונית בגודל דומה.<br>'
+                                + '<b>חריגה מטה</b> (אדום) = מתחת לרבע מחציון הקבוצה, בתכניות של ' + RATIO_MIN_UNITS + '+ יח"ד. '
+                                + '<b>חריגה מעלה</b> (ירוק) = פי ' + RATIO_HIGH + ' ומעלה — לרוב תכניות שהציבור הוא לב העניין בהן '
+                                + '(מוקד אזרחי, בית הנוער העברי) ולא אנומליה.<br>'
+                                + '<b>הפער בין הממוצע לחציון</b> נובע מכך שההיצע הציבורי נשען על מיעוט תכניות גדולות; '
+                                + 'הרוב תורמות מעט. לכן ההשוואה היא מול החציון של קבוצת הגודל, לא מול הממוצע.<br>'
+                                + '<b>מגבלה:</b> "חסר נתון" אינו אפס — הוא שדה ריק שטרם חולץ. '
+                                + 'לפני מסקנה על תכנית בודדת יש לאמת מול טבלה 5 או ההוראות: בבדיקה של 13 החריגות-מטה, '
+                                + '12 אומתו כהקצאה נמוכה אמיתית ואחת (101-0813329) היתה שגיאת נתונים.<br>'
+                                + '<b>הפניה:</b> מדריך מינהל התכנון 2018 מציב טביעת רגל של 30-70 מ"ר ציבור למשק בית, '
+                                + 'אך סופר גם קרקע ולא רק שטח בנוי — ההשוואה מכוונת ולא חד-חד-ערכית.</div>'
+                                + '<script>function mark(k){var L=' + lowList + ',H=' + highList + ';'
+                                + 'if(!window.opener||!window.opener.__markRatioOutliers){alert("חלון המפה נסגר.");return;}'
+                                + 'window.opener.__markRatioOutliers(k===null?[]:(k==="low"?L:H),k);'
+                                + 'if(k!==null)window.opener.focus();}<\/script>'
+                                + '</body></html>');
+                            win.document.close();
+                        }
                         const CATS = [
                             { key:'housing', title:'🏠 דיור ויח"ד', color:'#5c6bc0', bg:'rgba(92,107,192,0.06)', items:[
                                 { icon:'🏠', title:'סיכום יח"ד', desc:'טבלת יחידות דיור לפי מינהל וסטטוס', onClick:() => go(() => fetchUnitsData()) },
@@ -27314,6 +27593,7 @@
                             { key:'public', title:'🏛️ מבני ציבור והפרשות', color:'#b5651d', bg:'rgba(181,101,29,0.06)', items:[
                                 { icon:'🏢', title:'קומות הפרשות מבונות', desc:'טבלת קומה לכל הפרשה + ייצוא', onClick:() => go(() => setShowFloorReport(true)) },
                                 { icon:'📐', title:'סוג ההפרשה לפי היתר', desc:'מה נבנה בפועל בהפרשות שההוראות תיארו רק כ"מבנים ומוסדות ציבור" — נקרא מגרמושקת ההיתר', onClick:() => { openHafrashPermitUseReport(); } },
+                                { icon:'⚖️', title:'מ"ר הפרשה ציבורית ליח"ד', desc:'כמה שטח ציבור כל תכנית מייצרת לכל יח"ד שהיא מוסיפה — ואיפה זה חורג מחציון קבוצת הגודל', onClick:() => { openPublicRatioReport(); } },
                                 { icon:'🏗️', title:'הפרשות מבונות ומבני ציבור עתידיים', desc:'שב"צ עתידי + הפרשה מבונה לפי רדיוס/אזור/תת-שכונה/מינהל', onClick:() => go(() => setShowAllocChooser(true)) },
                                 { icon:'🏛️', title:'שב"צ קיים לפי תת-שכונה', desc:'מגרשי ציבור קיימים — תכנית, שטח ושימוש בפועל', onClick:() => go(() => { setShavazReportFilter({ sub: 'all', minahak: 'all', q: '' }); setShavazKayamReport(true); }) },
                                 { icon:'📋', title:'תנאים והפרשות ציבוריות', desc:'תנאי היתר/אכלוס הקשורים בתשתית ציבורית + תנאים מקדימים (דרך/כביש)', onClick:() => go(() => setConditionsReport(true)) },
@@ -31738,7 +32018,7 @@
                         const allAdminOn2 = adminLayers2.every(l => layers[l.id]);
                         const checkMinahak = (props) => allAdminOn2 || selectedMinahaks2.includes(props.minahak || '');
                         const seenPlans = new Set();
-                        const plans = gd.plans.features.filter(f => {
+                        const allPlans = gd.plans.features.filter(f => {
                             if (!checkMinahak(f.properties)) return false;
                             const st = (f.properties.status_mavat || '').trim();
                             if (!st.includes('הפקדה להתנגדויות')) return false;
@@ -31781,13 +32061,20 @@
                             const tB = pB.length === 3 ? (pB[2] + pB[1] + pB[0]) : '';
                             return tB.localeCompare(tA);
                         });
+                        // סינון טריות: רק תכניות שתאריך ההפקדה שלהן נופל ב-N הימים האחרונים.
+                        const plans = allPlans.filter(pl => publishedWithinDays(pl.mavat_date, objRecencyDays));
                         return (
                         <div className="units-overlay" onClick={() => setObjectionsReport(false)}>
                             <div className="units-modal cell-report-modal" onClick={e => e.stopPropagation()} style={{maxWidth: 'min(750px, 95vw)', maxHeight: '85vh', display: 'flex', flexDirection: 'column'}}>
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setObjectionsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY: 'auto', flex: 1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#128203; תכניות המופקדות להתנגדויות</h2>
-                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{plans.length} תכניות</p>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:8}}>{plans.length} תכניות</p>
+                                    <RecencyFilterBar value={objRecencyDays} onChange={setObjRecencyDays}
+                                        shown={plans.length} total={allPlans.length} label={'הופקד:'} />
+                                    {plans.length === 0 && objRecencyDays > 0 && (
+                                        <p style={{color:'#888',fontSize:13,marginBottom:12}}>לא נוספו הפקדות בטווח שנבחר.</p>
+                                    )}
                                     <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
@@ -31849,7 +32136,7 @@
                                             printWin.document.write('<button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600">&#128202; שמור CSV</button>');
                                             printWin.document.write('</div>');
                                             printWin.document.write('<div class="header"><h2>תכניות המופקדות להתנגדויות</h2>');
-                                            printWin.document.write('<p>' + plans.length + ' תכניות</p></div>');
+                                            printWin.document.write('<p>' + plans.length + ' תכניות' + (objRecencyDays ? ' · הופקדו ב-' + objRecencyDays + ' הימים האחרונים (מתוך ' + allPlans.length + ')' : '') + '</p></div>');
                                             printWin.document.write('<table><thead><tr><th>#</th><th>מספר תכנית</th><th>שם תכנית</th><th>תאריך סטטוס</th><th>תום הפקדה</th><th>מינה"ק</th></tr></thead><tbody>');
                                             plans.forEach((p, i) => {
                                                 printWin.document.write('<tr><td>' + (i+1) + '</td><td>' + (p.plan_name||'') + '</td><td>' + (p.plan_summary||p.plan_name_he||'-') + '</td><td>' + (p.mavat_date||'-') + '</td><td>' + (p.objection_end_date||'-') + '</td><td>' + (p.minahak||'-').trim() + '</td></tr>');
@@ -32054,17 +32341,22 @@
                         const distRings = distFeat ? (distFeat.geometry.type === 'MultiPolygon'
                             ? distFeat.geometry.coordinates.map(poly => poly[0])
                             : [distFeat.geometry.coordinates[0]]) : null;
-                        const recs = Object.values(window.__objectionsPermits || {}).filter(r =>
+                        const allRecs = Object.values(window.__objectionsPermits || {}).filter(r =>
                             r.status !== 'תום תקופת פרסום' && !objectionIsExpired(r) &&
                             r.lnglat && (!distRings || distRings.some(ring => pointInPolygon(r.lnglat, ring))));
                         const dval = (s) => { const m = String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? (m[3]+m[2]+m[1]) : '99999999'; };
-                        recs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
-                        const pending = collectPendingObjectionPermits();
+                        allRecs.sort((a, b) => dval(a.deadline_publish).localeCompare(dval(b.deadline_publish)));
+                        // סינון טריות: רק בקשות שתאריך הפרסום שלהן נופל ב-N הימים האחרונים.
+                        const recs = allRecs.filter(r => publishedWithinDays(r.status_date, permObjRecencyDays));
+                        const allPending = collectPendingObjectionPermits();
+                        const pending = allPending.filter(r => publishedWithinDays(r.status_date, permObjRecencyDays));
                         // process-detected windows (YK תהליך) not already in the Rishui149 table
-                        const proc = [].concat(
+                        let proc = [].concat(
                             ((window.__objectionsProcess||{}).confirmed_open||[]).map(r => Object.assign({category:'confirmed'}, r)),
                             ((window.__objectionsProcess||{}).verify||[]).map(r => Object.assign({category:'verify'}, r))
                         ).filter(r => !(window.__objectionsPermits && window.__objectionsPermits[(r.tik||'').trim()]));
+                        const allProcCount = proc.length;
+                        proc = proc.filter(r => publishedWithinDays(r.status_date, permObjRecencyDays));
                         const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                         return (
                         <div className="units-overlay" onClick={() => setPermitObjectionsReport(false)}>
@@ -32072,9 +32364,12 @@
                                 <ReportLinkBtn /><button className="units-close" onClick={() => setPermitObjectionsReport(false)}>&times;</button>
                                 <div className="cell-report-content" style={{overflowY:'auto',flex:1}}>
                                     <h2 style={{color:'#fff',fontSize:18,marginBottom:4}}>&#9878;&#65039; היתרים פתוחים להתנגדויות</h2>
-                                    <p style={{color:'#aaa',fontSize:13,marginBottom:12}}>{recs.length} בקשות להיתר עם הקלות (סעיף 149) · ממוין לפי מועד אחרון</p>
+                                    <p style={{color:'#aaa',fontSize:13,marginBottom:8}}>{recs.length} בקשות להיתר עם הקלות (סעיף 149) · ממוין לפי מועד אחרון</p>
+                                    <RecencyFilterBar value={permObjRecencyDays} onChange={setPermObjRecencyDays}
+                                        shown={recs.length + pending.length + proc.length}
+                                        total={allRecs.length + allPending.length + allProcCount} />
                                     {recs.length === 0
-                                      ? <p style={{color:'#888',fontSize:13}}>לא נמצאו היתרים פתוחים להתנגדויות. (הסריקה עשויה עדיין לרוץ.)</p>
+                                      ? <p style={{color:'#888',fontSize:13}}>{permObjRecencyDays > 0 && allRecs.length > 0 ? 'לא פורסמו היתרים חדשים להתנגדויות בטווח שנבחר.' : 'לא נמצאו היתרים פתוחים להתנגדויות. (הסריקה עשויה עדיין לרוץ.)'}</p>
                                       : <table style={{width:'100%',fontSize:12,borderCollapse:'collapse',marginBottom:16}}>
                                         <thead><tr style={{borderBottom:'2px solid #2a2a4a'}}>
                                             <th style={{textAlign:'right',padding:'6px 4px',color:'#fff'}}>#</th>
@@ -32183,7 +32478,7 @@
                                             w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>היתרים פתוחים להתנגדויות</title>');
                                             w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:700}@media print{.no-print{display:none!important}}</style></head><body>');
                                             w.document.write('<div class="no-print" style="margin-bottom:16px;display:flex;gap:8px"><button onclick="window.print()" style="background:#e94560;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">הדפסה / PDF</button><button id="csvBtn" style="background:#2196F3;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">CSV</button></div>');
-                                            w.document.write('<h2>היתרים פתוחים להתנגדויות (סעיף 149)</h2><p>' + recs.length + ' בקשות</p>');
+                                            w.document.write('<h2>היתרים פתוחים להתנגדויות (סעיף 149)</h2><p>' + recs.length + ' בקשות' + (permObjRecencyDays ? ' · פורסמו ב-' + permObjRecencyDays + ' הימים האחרונים (מתוך ' + allRecs.length + ')' : '') + '</p>');
                                             w.document.write('<table><thead><tr><th>#</th><th>מס\' תיק</th><th>כתובת</th><th>מהות</th><th>מועד אחרון</th><th>פורסם</th><th>מינה"ק</th></tr></thead><tbody>');
                                             recs.forEach((r, i) => { w.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(r.tik)+'</td><td>'+esc(r.address||'-')+'</td><td>'+esc(r.request_description||r.request_type||'-')+'</td><td>'+esc(r.deadline_publish||'-')+'</td><td>'+esc(r.status_date||'-')+'</td><td>'+esc(objectionMinhak(r)||'-')+'</td></tr>'); });
                                             w.document.write('</tbody></table>');
