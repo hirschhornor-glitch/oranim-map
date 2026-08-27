@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v19-masterplan-rights';
+const CACHE_VERSION = 'v20-compliance-audit';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
