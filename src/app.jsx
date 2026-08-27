@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-27-masterplan-rights-2';
+        const APP_VERSION = '2026-08-27-masterplan-rights-3';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -16651,6 +16651,7 @@
                         zone_far_pct_min: 'אחוזי בנייה (מינ׳)',
                         zone_coverage_pct: 'תכסית', zone_max_height_m: 'גובה מקסימלי (מ׳)',
                         zone_floors_note: 'פירוט קומות', zone_floors_source: 'מקור',
+                        zone_rights_note: 'פירוט זכויות', rights_note: 'פירוט זכויות',
                         floors_note: 'פירוט קומות', floors_source: 'מקור', coverage_pct: 'תכסית',
                         zone_commercial_frontage: 'חזית מסחרית חובה',
                         zone_existing_units: 'יח״ד קיימות', zone_realistic_units: 'יח״ד ריאלי',
