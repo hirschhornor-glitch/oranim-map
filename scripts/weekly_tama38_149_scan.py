@@ -31,6 +31,8 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 import requests
+sys.path.insert(0, r"C:\ORANIM")
+from git_sync import _commit_and_push_paths
 
 ROOT = Path(r"C:\ORANIM")
 DATA = ROOT / "oranim-app" / "data"
@@ -241,10 +243,6 @@ def map_status(s):
     return "נפתח תיק היתר"
 
 
-def git(*args):
-    return subprocess.run(["git", "-C", str(ROOT / "oranim-app"), *args],
-                          capture_output=True, text=True, encoding="utf-8")
-
 
 def send_email(added):
     to = os.environ.get("PERMITS_EMAIL_TO", "Or_hi@jerusalem.muni.il")
@@ -395,16 +393,20 @@ def main():
         r = subprocess.run([sys.executable, str(ROOT / builder)], cwd=str(ROOT),
                            capture_output=True, text=True, encoding="utf-8", errors="replace")
         log(f"ran {builder}" + (f" (exit {r.returncode})" if r.returncode else ""))
-    git("add", "data/tama38.geojson", "data/tama38_permits.json", "data/tama38_developers.json",
-        "data/tama38_master_plan_check.json",
-        "data/permits_master.json", "data/permits_health.json", "src/app.jsx", "index.html")
+    files = ["data/tama38.geojson", "data/tama38_permits.json", "data/tama38_developers.json",
+             "data/tama38_master_plan_check.json",
+             "data/permits_master.json", "data/permits_health.json", "src/app.jsx", "index.html"]
     msg = f"תמ\"א 38: +{len(added)} מביקורת §149 שבועית ({date.today().isoformat()})\n\n" + \
           "\n".join(f"{a['tik']} {a['address']}" for a in added) + \
           "\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-    git("commit", "-m", msg)
-    git("fetch", "origin"); git("rebase", "origin/master")
-    push = git("push", "origin", "master")
-    log("push: " + (push.stderr or push.stdout).strip()[-200:])
+    # Via git_sync, never raw git: the unchecked `fetch; rebase origin/master` that
+    # used to live here wedged the repo mid-rebase for three days (2026-08-23) when
+    # it conflicted on a single-line JSON file. _commit_and_push_paths aborts the
+    # rebase, keeps the changes in the working tree, and returns False instead.
+    if _commit_and_push_paths(files, msg, str(ROOT / "oranim-app")):
+        log("push: ok")
+    else:
+        log("push: FAILED — changes kept in the working tree, retries next run")
 
     if args.email:
         try: send_email(added)

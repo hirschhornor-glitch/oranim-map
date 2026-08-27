@@ -11,6 +11,9 @@ Scheduled: Oranim_Tama38_Dev_Backfill (daily 04:30). Related: [[project_develope
 import json, subprocess, sys
 from pathlib import Path
 
+sys.path.insert(0, r"C:\ORANIM")
+from git_sync import commit_and_push_after_write
+
 ROOT = Path(r"C:\ORANIM")
 DATA = ROOT / "oranim-app" / "data"
 DEVS = DATA / "tama38_developers.json"
@@ -51,15 +54,16 @@ def main():
     # minahak + units on the file
     sh(PYEXE, "-X", "utf8", str(ROOT / "add_tama38_minahak.py"))
 
-    # data-only push (no version bump -> no CI rebuild; weekly §149 task busts cache)
-    repo = ROOT / "oranim-app"
-    sh("git", "-C", str(repo), "add", "data/tama38_developers.json")
+    # data-only push (no version bump -> no CI rebuild; weekly §149 task busts cache).
+    # Goes through git_sync, never raw git: a rebase conflicting on a single-line
+    # JSON file left this repo mid-rebase for three days (2026-08-23) because the
+    # bare subprocess git calls here never checked their exit code. git_sync aborts
+    # the rebase, keeps the data in the working tree, and reports False instead.
     msg = f"תמ\"א 38: backfill יזמים +{got} ({total - after}/{total})\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-    sh("git", "-C", str(repo), "commit", "-m", msg)
-    sh("git", "-C", str(repo), "fetch", "origin")
-    sh("git", "-C", str(repo), "-c", "rebase.autoStash=true", "rebase", "origin/master")
-    p = sh("git", "-C", str(repo), "push", "origin", "master")
-    print("push:", (p.stderr or p.stdout).strip()[-160:])
+    if commit_and_push_after_write("data/tama38_developers.json", msg):
+        print("push: ok")
+    else:
+        print("push: FAILED — data kept in working tree, retries next run")
     if after == 0:
         print("★ backfill DONE — all 229 developers enriched.")
 
