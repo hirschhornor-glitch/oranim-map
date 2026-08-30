@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-30-exec-funnel2';
+        const APP_VERSION = '2026-08-30-dev-spv-merge';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -33818,7 +33818,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             const bucket = bucketOf(p);
                             if (!bucket) continue;
                             const devs = splitDevelopers(p.developer);
-                            let names = devs.length ? devs.map(canonOf).filter(Boolean) : ['לא ידוע'];
+                            // Dedupe AFTER canonicalization: a JV can name two SPVs of the
+                            // same parent ("חברת טשרניחובסקי 52-54" / "...55", both on
+                            // 101-0899880). Once an alias folds them onto one group the
+                            // undeduped list credits that group twice — the plan shows up
+                            // twice in its drill-down and its units are double-counted.
+                            let names = devs.length ? [...new Set(devs.map(canonOf).filter(Boolean))] : ['לא ידוע'];
                             // מגיש משותף של רשות מקומית + יזם פרטי: היזם הפרטי הוא היזם בפועל
                             const municipalNames = names.filter(isMunicipal);
                             const privateNames = names.filter(n => !isMunicipal(n));

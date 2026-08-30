@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v25-exec-funnel';
+const CACHE_VERSION = 'v26-dev-spv-merge';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
