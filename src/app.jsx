@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-30-permits';
+        const APP_VERSION = '2026-08-30-protected-housing';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -1390,17 +1390,20 @@
         function effectiveStatus(props) {
             return isOccupied(props) ? 'מאוכלס' : normalizeStatus((props && props.status_mavat) || '');
         }
-        // ── Permit STAGE reconciliation from building-supervision (פיקוח על הבנייה) ──
+        // ── Permit STAGE reconciliation from רישוי + פיקוח על הבנייה ──
         // The GS-owned "שלב" column (permit stage: ג-רישוי בתהליך → ד-היתר בנייה →
         // ה-בבנייה → ו-גמר בנייה) is hand-maintained and lags reality — 85% blank, and
         // permits sit at "היתר בנייה" for years while construction actually finished.
-        // The building-supervision system (pikuah_status.json → window.__pikuahStatus,
-        // rolled up per taba into window.__pikuahStageByTaba) is the authoritative
-        // construction signal: an OPEN supervision file ⇒ ה-בבנייה, a תעודת גמר ⇒
-        // ו-גמר בנייה. reconcilePikuahStage() folds that into each plan's `stage` in
-        // place so every consumer (map color, permits filter, popup, reports) reflects
-        // it, WITHOUT clobbering the GS value (preserved on stage_gs). Advance-only:
-        // pikuah never downgrades a manually-set higher stage.
+        // Two live sources fill it, one per half of the ladder:
+        //   • licensing (permits_master.json → window.__licStageByTaba) ⇒ the two lower
+        //     rungs — an open תיק רישוי ⇒ ג-רישוי בתהליך, "הופק היתר" ⇒ ד-היתר בנייה.
+        //   • building-supervision (pikuah_status.json → window.__pikuahStatus, rolled
+        //     up per taba into window.__pikuahStageByTaba) ⇒ the two upper rungs — an
+        //     OPEN supervision file ⇒ ה-בבנייה, a תעודת גמר ⇒ ו-גמר בנייה.
+        // reconcilePermitStage() folds both into each plan's `stage` in place so every
+        // consumer (map color, permits filter, popup, reports) reflects it, WITHOUT
+        // clobbering the GS value (preserved on stage_gs). Advance-only: neither source
+        // ever downgrades a manually-set higher stage.
         const STAGE_LADDER = ['ג-רישוי בתהליך', 'ד-היתר בנייה', 'ה-בבנייה', 'ו-גמר בנייה'];
         function stageRank(s) { return STAGE_LADDER.indexOf(String(s || '').trim().replace(/\s+/g, ' ')); }
         function planPikuahStage(props) {
@@ -1408,20 +1411,35 @@
             const t = String((props && props.taba) || '').trim();
             return (t && m[t]) ? m[t].stage : '';
         }
-        function reconcilePikuahStage(gd) {
-            const m = window.__pikuahStageByTaba;
-            if (!m) return 0;
+        // The LICENSING half of the same problem: pikuah only starts once there is a
+        // permit, so it can never produce ג-רישוי בתהליך / ד-היתר בנייה — those two
+        // rungs used to come ONLY from the hand-kept GS column and were therefore
+        // almost always blank (e.g. 101-1133180 sat with no stage while its תיק
+        // 2025/530 was already "נדונה ברשות הרישוי"). __licStageByTaba (built in
+        // buildPermitStageIndex from permits_master.json) fills them from the actual
+        // licensing file. Rollup deliberately IGNORES תמ"א 38 permits (they belong to
+        // a building, not to the plan they happen to sit inside) and שימוש חורג
+        // (not execution of the plan — e.g. 101-0935189's only permit is a temporary
+        // kindergarten, which must NOT read as "the plan is in licensing").
+        function reconcilePermitStage(gd) {
+            const pkm = window.__pikuahStageByTaba, lcm = window.__licStageByTaba;
+            if (!pkm && !lcm) return 0;
             let n = 0;
             const advance = (obj) => {
                 // idempotent: recompute from the preserved GS base, not an already-advanced value
                 const base = (obj.stage_gs !== undefined) ? obj.stage_gs : (obj.stage || '');
                 obj.stage_gs = base;
-                const entry = m[String((obj.taba) || '').trim()];
-                if (entry && stageRank(entry.stage) > stageRank(base)) {
-                    obj.stage = entry.stage; obj.stage_source = 'pikuah'; return true;
-                }
-                obj.stage = base;
-                if (obj.stage_source === 'pikuah') delete obj.stage_source;
+                const t = String((obj.taba) || '').trim();
+                // advance-only, weakest source first: GS → licensing → pikuah, so an
+                // active supervision file always outranks a stale licensing status.
+                let best = base, src = '';
+                const lic = (lcm && t && lcm[t]) ? lcm[t].stage : '';
+                if (stageRank(lic) > stageRank(best)) { best = lic; src = 'licensing'; }
+                const pk = (pkm && t && pkm[t]) ? pkm[t].stage : '';
+                if (stageRank(pk) > stageRank(best)) { best = pk; src = 'pikuah'; }
+                obj.stage = best;
+                if (src) { obj.stage_source = src; return true; }
+                if (obj.stage_source) delete obj.stage_source;
                 return false;
             };
             if (gd && gd.plans && gd.plans.features) {
@@ -5952,7 +5970,7 @@
                         rebuildHafrashLookup(pbt); // depends on hafrash_prg from CSV
                         extractAvailablePlanTypes(gd); // CSV may add/change plan_type values
                         applyKayamFilter(); // re-apply if landuse_xplan + kayamTabaSet are ready
-                        reconcilePikuahStage(gd); // fold building-supervision stage into CSV+geojson (no-op until pikuah lands)
+                        reconcilePermitStage(gd); // fold רישוי+פיקוח stage into CSV+geojson (no-op until those land)
                         setDeferredTick(t => t + 1);
                     });
 
@@ -6044,7 +6062,7 @@
                                 });
                                 window.__pikuahGmarByFile = gmar;
                                 // Roll construction state up per taba → a coarse plan STAGE for the
-                                // permits map layer (see reconcilePikuahStage). REAL construction
+                                // permits map layer (see reconcilePermitStage). REAL construction
                                 // somewhere (טופס 2 / activity) → ה-בבנייה; else a completion → ו-גמר
                                 // בנייה. A merely-opened / enforcement file is NOT construction.
                                 const acc = {};
@@ -6118,15 +6136,12 @@
                             cur.permit_count = cur.permits.length;
                         }
                         window.__permitsByNorm = null; // stores changed — rebuild canonical-key index lazily
-                        // Now that pikuah_status.json has landed, fold the building-supervision
-                        // stage into the plan features (and CSV rows). Advance-only + idempotent,
-                        // so this is safe even though Stage 2a already called it (before pikuah).
-                        const _advStage = reconcilePikuahStage(geoDataRef.current);
-                        if (_advStage) console.log('[Pikuah] advanced permit stage on', _advStage, 'plans from building-supervision (פיקוח)');
                         // Per-taba set of permit stages + global per-stage counts, for the
                         // permits-layer STAGE filter. Uses the same rule as getPermitStage() but
                         // with literal stage ids — this runs at load, outside the component's
                         // PERMIT_STAGE_* const scope (which the permits layer can't reach: TDZ).
+                        // Also rolls the LICENSING half up to the plan ladder → __licStageByTaba,
+                        // which reconcilePermitStage() (called right after) folds into `stage`.
                         (function buildPermitStageIndex() {
                             const pm = window.__permitsMaster || {};
                             const pk = window.__pikuahByBaseTik || {};
@@ -6143,16 +6158,42 @@
                                 if (s.includes('אושר') || s.includes('טיוטת')) return 'licensing';
                                 return 'pre_licensing';
                             };
-                            const byTaba = {}, counts = {};
+                            // permit stage id → the plan-level ladder rung it proves. Only the
+                            // two LICENSING rungs: 'construction'/'built' are pikuah's evidence
+                            // and stay with __pikuahStageByTaba, so the popup's ◆ badge names the
+                            // source that actually proved the stage. 'done' (נסגר/בוטל/נגנז)
+                            // proves nothing and is dropped.
+                            const PERMIT_TO_PLAN_STAGE = {
+                                pre_licensing: 'ג-רישוי בתהליך', licensing: 'ג-רישוי בתהליך',
+                                issued: 'ד-היתר בנייה',
+                            };
+                            // buckets that do NOT say anything about executing the plan itself:
+                            // תמ"א 38 hangs off a building, שימוש חורג is a use permit.
+                            const STAGE_SKIP_BUCKETS = { tama38: 1, shimush_chorag: 1 };
+                            const byTaba = {}, counts = {}, licByTaba = {};
                             Object.values(pm).forEach(p => {
                                 const st = stageOf(p);
                                 counts[st] = (counts[st] || 0) + 1;
                                 const t = String(p.taba || '').trim(); if (!t) return;
                                 (byTaba[t] = byTaba[t] || {})[st] = true;
+                                if (STAGE_SKIP_BUCKETS[p.bucket]) return;
+                                const rung = PERMIT_TO_PLAN_STAGE[st] || '';
+                                if (!rung) return;
+                                const cur = licByTaba[t];
+                                if (!cur || stageRank(rung) > stageRank(cur.stage)) {
+                                    licByTaba[t] = { stage: rung, tik: p.tik, status: p.status };
+                                }
                             });
                             window.__permitStagesByTaba = byTaba;
                             window.__permitStageCounts = counts;
+                            window.__licStageByTaba = licByTaba;
                         })();
+                        // Now that permits_master + pikuah_status have landed, fold the licensing
+                        // and building-supervision stages into the plan features (and CSV rows).
+                        // Advance-only + idempotent, so this is safe even though Stage 2a already
+                        // called it (before either source was available).
+                        const _advStage = reconcilePermitStage(geoDataRef.current);
+                        if (_advStage) console.log('[Stage] advanced permit stage on', _advStage, 'plans from רישוי + פיקוח');
                         console.log('[Permits] stage2 loaded — all_permits:', Object.keys(window.__allPermits).length, 'tama38_permits:', Object.keys(window.__tama38Permits).length, 'tree_surveys:', Object.keys(window.__treeSurveys).length, 'tama38_tree_surveys:', Object.keys(window.__tama38TreeSurveys).length, 'extra_permits:', extraAdded);
                         // re-render open reports that consume stage-2 globals
                         // (e.g. developers report opened via deeplink reads
@@ -12168,6 +12209,29 @@
                 });
                 rentalRows.sort((a, b) => b.rental - a.rental);
 
+                // דיור מוגן — counted SEPARATELY from יח"ד, never folded into planUnitsAdd.
+                // User rule (2026-08-30): sheltered housing is not a housing unit, so those
+                // plans carry units_add = 0 and the count lives only in `protected_housing`.
+                // Without this block the area report shows nothing at all for them (בקעה רבתי
+                // alone has 417 such units across 3 plans).
+                // The column is hand-maintained and 101-1185099 holds free text instead of a
+                // number, so parse strictly and skip anything non-numeric rather than
+                // NaN-poisoning the total.
+                let protectedTotal = 0;
+                const protectedRows = [];
+                plansInside.forEach(x => {
+                    const raw = x.props.protected_housing;
+                    if (raw == null || raw === '') return;
+                    if (!/^\s*[\d,.]+\s*$/.test(String(raw))) return;
+                    const pv = parseFloat(String(raw).replace(/,/g, ''));
+                    if (!isFinite(pv) || pv <= 0) return;
+                    protectedTotal += pv;
+                    protectedRows.push({ name: x.props.plan_summary || x.props.plan_name_he || x.props.plan_name || '',
+                                         taba: x.props.plan_name || '', units: pv,
+                                         status: effectiveStatus(x.props), feat: x.feat });
+                });
+                protectedRows.sort((a, b) => b.units - a.units);
+
                 // ── 2. תמ"א 38 ──
                 let tamaCount = 0, tamaUnits = 0;
                 const tamaRows = [];
@@ -12364,7 +12428,7 @@
 
                 setFullAreaReport({
                     title: fullReportTitleRef.current || 'סיכום אזור נבחר', areaSqm, streets,
-                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll, rental: rentalTotal, rentalRows },
+                    plans: { count: plansInside.length, unitsAdd: planUnitsAdd, byStatus: planByStatus, top: topPlans, rows: planRowsAll, rental: rentalTotal, rentalRows, protected: protectedTotal, protectedRows },
                     tama: { count: tamaCount, units: tamaUnits, rows: tamaRows },
                     existingUnits: existingUnits + occupiedUnits,
                     occupiedUnits,
@@ -22540,6 +22604,34 @@
                     html += '<div style="margin-top:3px;color:#9ca3af;font-size:10px;line-height:1.35">' + _esc(_bonus.note) + '</div>';
                     html += '</div>';
                 }
+                // Section: דיור מוגן — its OWN section, deliberately not a sub-row of יח"ד.
+                // User rule (2026-08-30): sheltered housing does NOT count as יח"ד, so
+                // units_in/units_total/units_add are held at 0 for these plans and the
+                // count lives only in `protected_housing`. Nothing rendered it, which made
+                // 417 units invisible across 7 plans — hence this block.
+                // The column is hand-maintained and one row holds free TEXT rather than a
+                // number (101-1185099: 'דיור מיוחד לנכי צה"ל בזמן השיקום (אינו דיור מוגן)'),
+                // so show a number as a count and anything else verbatim as a note.
+                const protVal = v(props.protected_housing);
+                if (protVal) {
+                    const protNum = typeof protVal === 'number' ? protVal
+                                  : (/^\s*[\d,.]+\s*$/.test(String(protVal))
+                                     ? parseFloat(String(protVal).replace(/,/g, '')) : NaN);
+                    html += '<div class="popup-section-title">דיור מוגן</div>';
+                    if (isFinite(protNum)) {
+                        html += '<div class="popup-pair">';
+                        html += `<div class="popup-pair-item"><span class="popup-pair-label">יחידות</span><span class="popup-pair-value">${fmt(protNum)}</span></div>`;
+                        html += '</div>';
+                        html += '<div class="popup-sub-row" style="color:#8899bb">אינן נספרות ביח"ד</div>';
+                    } else {
+                        // Local escape on purpose: the only `esc` inside buildPlanPopup is
+                        // block-scoped to the unit-bonus branch above (the same shape of
+                        // ReferenceError that broke the tama marker click handler).
+                        const escP = s => String(s == null ? '' : s)
+                            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        html += `<div class="popup-sub-row">${escP(protVal)}</div>`;
+                    }
+                }
                 // Section: מלונאות — separate from יח"ד (hotel rooms are not housing units).
                 // The `hotels` field mixes two source semantics from table 5: a room/unit COUNT
                 // (small integer, when the hotel row lists יח"ד/חדר) and, when the row has no
@@ -30717,6 +30809,7 @@
                                         lines.push(['סיכום','היתרים', String(d.permits.totalPermits), String(Math.round(d.permits.totalIncludedUnits))]);
                                         d.plans.top.forEach(p => lines.push(['תב"ע', p.name, p.status, String(Math.round(p.unitsAdd))]));
                                         if (d.plans.rental > 0) { lines.push(['יח"ד להשכרה','סה"כ באזור','', String(Math.round(d.plans.rental))]); (d.plans.rentalRows||[]).forEach(r => lines.push(['יח"ד להשכרה', r.name, (r.duration ? (r.duration==='צמיתות'?'צמיתות':r.duration+' שנים') : ''), String(Math.round(r.rental))])); }
+                                        if (d.plans.protected > 0) { lines.push(['דיור מוגן (מחוץ ליח"ד)','סה"כ באזור','', String(Math.round(d.plans.protected))]); (d.plans.protectedRows||[]).forEach(r => lines.push(['דיור מוגן (מחוץ ליח"ד)', r.name, r.status || '', String(Math.round(r.units))])); }
                                         PERMIT_STAGES_ALL.forEach(st => { const a = d.permits.stageAgg[st]; if (a && (a.count||a.units)) lines.push(['היתרים — שלב', getPermitStageLabel(st), String(a.count)+' היתרים', String(Math.round(a.units))]); });
                                         Object.entries(d.permits.catAgg).forEach(([cat,a]) => lines.push(['היתרים — קטגוריה', getPermitCategoryLabel(cat), String(a.count)+' היתרים', String(Math.round(a.units))]));
                                         d.projector.byDomain.forEach(dm => lines.push(['פרויקטור', dm.label, dm.names.join(' · '), String(dm.count)]));
@@ -30892,6 +30985,12 @@
                                                     {fullReportTables['rentalTbl'] && d.plans.rentalRows && (
                                                         <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>יח"ד להשכרה</th><th style={th}>משך</th></tr></thead>
                                                         <tbody>{d.plans.rentalRows.map((r,i)=>{ const dur = r.duration ? (r.duration === 'צמיתות' ? 'צמיתות' : r.duration + ' שנים') : '—'; return (<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name||'—'}</td><td style={td}>{r.taba||'—'}</td><td style={{...td,color:'#81c784'}}>{Math.round(r.rental)}</td><td style={td}>{dur}</td></tr>); })}</tbody></table>
+                                                    )}
+                                                    {d.plans.protected > 0 && <div style={{...rowStyle,borderTop:'1px solid #2a2a3e',marginTop:6,paddingTop:6}}><span style={{color:'#cfd3dc'}} title="דיור מוגן אינו נספר ביח&quot;ד">🧓 דיור מוגן <span style={{color:'#8892a4',fontSize:10}}>(מחוץ ליח"ד)</span></span><span style={{color:'#c8a2e0',fontWeight:'bold'}}>{fmt(d.plans.protected)}</span></div>}
+                                                    {d.plans.protectedRows && d.plans.protectedRows.length > 0 && detailRow('protectedTbl', 'פירוט דיור מוגן (' + d.plans.protectedRows.length + ' תכניות)')}
+                                                    {fullReportTables['protectedTbl'] && d.plans.protectedRows && (
+                                                        <table style={tblWrap}><thead><tr><th style={th}>תכנית</th><th style={th}>מס' תב"ע</th><th style={th}>יחידות דיור מוגן</th><th style={th}>סטטוס</th></tr></thead>
+                                                        <tbody>{d.plans.protectedRows.map((r,i)=>(<tr key={i} onClick={()=>zoomTo(r.feat)} title={r.feat?'הצג על המפה':''} style={{cursor:r.feat?'pointer':'default'}}><td style={{...td,color:r.feat?'#9fd6ff':'#dfe3ea'}}>{r.name||'—'}</td><td style={td}>{r.taba||'—'}</td><td style={{...td,color:'#c8a2e0'}}>{Math.round(r.units)}</td><td style={td}>{r.status||'—'}</td></tr>))}</tbody></table>
                                                     )}
                                             </>)}
 
