@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-30-protected-housing';
+        const APP_VERSION = '2026-08-30-dev-aliases';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -33402,8 +33402,11 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                         const splitDevelopers = (raw) => {
                             let s = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
                             if (!s || GARB_DEV.includes(s) || s.indexOf('.4') === 0 || /^\d+$/.test(s)) return [];
-                            // validate per partner — a 3-way JV string is legit even at 70+ chars
-                            return s.split(' / ').map(x => x.trim())
+                            // validate per partner — a 3-way JV string is legit even at 70+ chars.
+                            // ' + ' is a second JV separator the הוראות use ("אזורים + מימושים",
+                            // 101-1446145) — without it the pair stays one unsplittable string and
+                            // neither partner ever matches an alias or aggregates in the report.
+                            return s.split(/ \/ | \+ /).map(x => x.trim())
                                 .filter(x => x && x.length < 60 && !GARB_DEV.includes(x) && !/^\d+$/.test(x));
                         };
                         // canonical display name per norm-key: alias wins, else first raw seen
