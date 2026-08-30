@@ -1,47 +1,8 @@
 {
- "scanned": 15,
- "generated": "2026-08-23",
- "confirmed_open": [
-  {
-   "tik": "2025/0513.00",
-   "address": "הטייסים 33",
-   "stored_status": "פורסמה בקשה להקלה",
-   "status_date": "03/08/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "24/08/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2025/0513.00",
-   "lnglat": [
-    35.207224,
-    31.765336
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  }
- ],
+ "scanned": 14,
+ "generated": "2026-08-30",
+ "confirmed_open": [],
  "verify": [
-  {
-   "tik": "2026/0267.00",
-   "address": "סעדיה גאון 12",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "16/07/2026",
-   "request_type": "תמ\"א 38 - תוספות",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "24/08/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0267.00",
-   "lnglat": [
-    35.21036,
-    31.773461
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
   {
    "tik": "2026/0181.00",
    "address": "אלי כהן 1",
@@ -57,44 +18,6 @@
    "lnglat": [
     35.213316,
     31.766507
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2026/0190.00",
-   "address": "הרב הרצוג 6",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "09/08/2026",
-   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית בריכה פרטית, תמ\"א 38 - תוספות, בנית מחסן/מחסנים",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "16/09/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0190.00",
-   "lnglat": [
-    35.210447,
-    31.769974
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2026/0106.00",
-   "address": "חובבי ציון 13",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "30/07/2026",
-   "request_type": "תמ\"א 38 - תוספות",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "07/09/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0106.00",
-   "lnglat": [
-    35.218723,
-    31.770607
    ],
    "in_district": true,
    "category": "verify"
@@ -102,44 +25,6 @@
  ],
  "open_in_district": [
   {
-   "tik": "2026/0267.00",
-   "address": "סעדיה גאון 12",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "16/07/2026",
-   "request_type": "תמ\"א 38 - תוספות",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "24/08/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0267.00",
-   "lnglat": [
-    35.21036,
-    31.773461
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2025/0513.00",
-   "address": "הטייסים 33",
-   "stored_status": "פורסמה בקשה להקלה",
-   "status_date": "03/08/2026",
-   "request_type": "",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "24/08/2026",
-   "basis": "תום מועד להגשת התנגדויות",
-   "shown_tik": "2025/0513.00",
-   "lnglat": [
-    35.207224,
-    31.765336
-   ],
-   "in_district": true,
-   "category": "confirmed"
-  },
-  {
    "tik": "2026/0181.00",
    "address": "אלי כהן 1",
    "stored_status": "תחילת פרסום הבקשה להקלה",
@@ -154,44 +39,6 @@
    "lnglat": [
     35.213316,
     31.766507
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2026/0190.00",
-   "address": "הרב הרצוג 6",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "09/08/2026",
-   "request_type": "תוספת בניה / הרחבה לבניין קיים, בניית בריכה פרטית, תמ\"א 38 - תוספות, בנית מחסן/מחסנים",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "16/09/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0190.00",
-   "lnglat": [
-    35.210447,
-    31.769974
-   ],
-   "in_district": true,
-   "category": "verify"
-  },
-  {
-   "tik": "2026/0106.00",
-   "address": "חובבי ציון 13",
-   "stored_status": "תחילת פרסום הבקשה להקלה",
-   "status_date": "30/07/2026",
-   "request_type": "תמ\"א 38 - תוספות",
-   "src": "tama38",
-   "open": true,
-   "route": "§149",
-   "deadline_publish": "07/09/2026",
-   "basis": "השלמת פרסום (משוער — אין שורת תום-מועד)",
-   "shown_tik": "2026/0106.00",
-   "lnglat": [
-    35.218723,
-    31.770607
    ],
    "in_district": true,
    "category": "verify"
