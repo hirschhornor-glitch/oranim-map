@@ -61,10 +61,22 @@ def parse_quantity_balance(text: str) -> dict:
         return ('מגורים' in lbl or 'דיור' in lbl or 'דירות' in lbl) and 'מסחר' not in lbl
     out = {'cards': cards}
     # residential units (יח"ד)
+    #
+    # No residential card at all ⇒ the accordion says NOTHING about housing, which
+    # is not the same as "0 existing units". Plan 101-1003177 (תוספות בניה לשם
+    # הרחבות יח"ד, בית"ר 34) renders a נתונים-כמותיים panel holding only
+    # "סה"כ שטח בדונם 0.593"; summing an empty list produced units_in=0, and the
+    # caller's `units_add = table5_total − units_in` then reported 10 brand-new
+    # יח"ד for a plan that only ENLARGES 10 existing ones (in 10 → out 10, add 0).
+    # Return None so callers — all of which guard with `is not None` — leave the
+    # field blank instead of writing a fabricated zero.
     ru = [c for c in cards if c['unit'] == 'יח"ד' and _is_resid(c['label'])]
-    out['units_total']  = int(round(sum(c['proposed'] for c in ru)))
-    out['units_in']     = int(round(sum(c['existing'] for c in ru)))
-    out['units_add']    = int(round(sum(c['change'] for c in ru)))
+    if ru:
+        out['units_total']  = int(round(sum(c['proposed'] for c in ru)))
+        out['units_in']     = int(round(sum(c['existing'] for c in ru)))
+        out['units_add']    = int(round(sum(c['change'] for c in ru)))
+    else:
+        out['units_total'] = out['units_in'] = out['units_add'] = None
     # commerce / employment / public (מ"ר) existing (נכנס) + proposed
     def _area(pred, key):
         sel = [c for c in cards if c['unit'] == 'מ"ר' and pred(c['label'])]
@@ -74,7 +86,8 @@ def parse_quantity_balance(text: str) -> dict:
     _area(lambda l: 'תעסוקה' in l or 'משרד' in l, 'employment')
     _area(lambda l: 'מבני ציבור' in l or 'מבנים ומוסדות' in l or 'מוסדות ציבור' in l, 'public')
     # multiplier
-    out['multiplier'] = round(out['units_total'] / out['units_in'], 2) if out['units_in'] else None
+    out['multiplier'] = (round(out['units_total'] / out['units_in'], 2)
+                         if out['units_in'] else None)
     return out
 
 

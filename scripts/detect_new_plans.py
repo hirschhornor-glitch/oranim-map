@@ -241,6 +241,25 @@ def get_israel_time():
     return datetime.now(tz_il).replace(tzinfo=None)
 
 
+def normalize_authority(auth):
+    """Mavat's planDetails.AUTH is a bare "מקומית" / "מחוזית". The GS `authority`
+    column (and every consumer of it — the objections report, the popup's
+    objection banner, normalizeAuthority() in app.jsx) is written as
+    "ועדה מקומית" / "ועדה מחוזית", so expand it here rather than leaving two
+    spellings in the column. Unknown values pass through untouched.
+    """
+    a = str(auth or '').strip()
+    if not a:
+        return ''
+    if a.startswith('ועדה') or a.startswith('וועדה'):
+        return a
+    if 'מקומית' in a:
+        return 'ועדה מקומית'
+    if 'מחוזית' in a:
+        return 'ועדה מחוזית'
+    return a
+
+
 def normalize_plan_number(pn):
     """Normalize plan number for comparison: '101-0216515' -> '216515'
     Also handles 'תתל/ 86' style national infrastructure plans."""
@@ -854,6 +873,12 @@ def update_sheets(new_plans):
         _minahak, _sub = admin_for(info)
         set_col('minahak', _minahak)
         set_col('SUB_N', _sub)
+        # סמכות (ועדה מקומית / ועדה מחוזית) — Mavat returns it as planDetails.AUTH
+        # on every plan, but until 2026-08-30 it was only echoed into the detection
+        # report and dropped on the floor. A blank authority makes the objection
+        # window unresolvable (the popup + objections report special-case מחוזית
+        # for the mavat_date+60 fallback), so write it with the rest of the row.
+        set_col('authority', normalize_authority(md.get('authority', '')))
 
         # Table 5 OUT fields — parsed in enrich_from_mavat via download_xlsx.
         # Only write non-zero values to avoid clobbering with sparse-table zeros.
@@ -1078,6 +1103,7 @@ def update_geojson(new_plans, push_to_github=False):
                 'overlapping_plans': 0.0,
                 'status_mavat': status,
                 'mavat_date': status_date,
+                'authority': normalize_authority(md.get('authority', '')),
                 'building_permit': '',
                 'permit_date': '',
                 'permit_status': '',
@@ -1296,10 +1322,15 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
         report['plans'][norm] = {
             'pl_number': info['pl_number'],
             'agam_ids': info['mp_ids'],
-            'name_he': md.get('name_he', ''),
-            'status': md.get('status', ''),
+            # Mavat's LAST_STEP_DES comes back EMPTY for local-committee plans
+            # (verified 2026-08-30 on 101-1003177 + 101-1562578), which left the
+            # סטטוס cell of the new-plans email blank even though the GS row and
+            # plans.geojson both got the status from XPLAN's station_desc. Use the
+            # same fallback the sheet/geojson writers use.
+            'name_he': md.get('name_he', '') or info.get('xplan_name', ''),
+            'status': md.get('status', '') or info.get('xplan_status', ''),
             'mavat_url': f'https://mavat.iplan.gov.il/SV4/1/{agam_id}/310' if agam_id else '',
-            'authority': md.get('authority', ''),
+            'authority': normalize_authority(md.get('authority', '')),
             'minahak': _minhak_by_plan.get(info['pl_number'], ''),
             'parcel_count': len(info['features']),
             'land_uses': info['mavat_names'][:10],
@@ -1338,7 +1369,9 @@ def write_report(new_plans, sheets_added, geojson_added, email_sent):
     ]
     for norm, info in new_plans.items():
         md = info.get('mavat_details', {})
-        lines.append(f"  {info['pl_number']}: {md.get('name_he', '?')[:50]} | {md.get('status', '?')}")
+        _nm = md.get('name_he', '') or info.get('xplan_name', '') or '?'
+        _st = md.get('status', '') or info.get('xplan_status', '') or '?'
+        lines.append(f"  {info['pl_number']}: {_nm[:50]} | {_st}")
 
     summary = '\n'.join(lines)
     with open(SUMMARY_FILE, 'w', encoding='utf-8') as f:

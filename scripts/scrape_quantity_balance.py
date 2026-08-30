@@ -127,7 +127,7 @@ def print_stats(results):
     succ = [r for r in results if r.get("status") == "success"]
     print(f"Processed: {len(results)} | success: {len(succ)} | "
           f"no_data: {sum(1 for r in results if r.get('status')=='no_data')}")
-    print(f"  with units_in>0:  {sum(1 for r in succ if r.get('units_in',0)>0)}")
+    print(f"  with units_in>0:  {sum(1 for r in succ if (r.get('units_in') or 0) > 0)}")
     print(f"  with units_add>0: {sum(1 for r in succ if r.get('units_add',0)>0)}")
     print(f"  with multiplier:  {sum(1 for r in succ if r.get('multiplier'))}")
     print(f"  with commerce_in>0: {sum(1 for r in succ if r.get('commerce_in',0)>0)}")
