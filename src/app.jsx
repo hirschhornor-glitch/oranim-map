@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-30-dev-aliases';
+        const APP_VERSION = '2026-08-30-exec-funnel';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -3503,6 +3503,7 @@
             const [eduForecastChumash, setEduForecastChumash] = useState(1); // 1 | 2 | 3
             const [eduForecastNb, setEduForecastNb] = useState('all'); // 'all' | 'גוננים א-ו' | 'קטמונים ח-ט' | 'רסקו' | 'פת'
             const [showAllocChooser, setShowAllocChooser] = useState(false); // scope chooser for the built-allocations report
+            const [showExecChooser, setShowExecChooser] = useState(false);   // scope chooser for the execution-funnel report
             const [dashSub, setDashSub] = useState('גוננים א-ו'); // selected sub-neighborhood for the neighborhood dashboard
             const [publicNeedsDrilldown, setPublicNeedsDrilldown] = useState(null); // { sub, serviceKey } or null
             const [balanceDrilldown, setBalanceDrilldown] = useState(null); // { sub, svcKey } or null — for existing-edu balance table
@@ -3921,6 +3922,7 @@
                         [devMapSel, clearDevMapSel],
                         [showAnnotations, () => setShowAnnotations(false)],
                         [showAllocChooser, () => setShowAllocChooser(false)],
+                        [showExecChooser, () => setShowExecChooser(false)],
                         [showFilter, () => setShowFilter(false)],
                         [showEduForecast, () => setShowEduForecast(false)],
                         [showReportsMenu, () => setShowReportsMenu(false)],
@@ -3933,7 +3935,7 @@
             }, [commerceCellReport, mimushCellReport, cellReport, unitsDrilldown, masterPlanReport,
                 minahakReport, showPrint, showUnits, showCommerceTable, showMimush, stagingReport, conditionsReport, showPermitsGap,
                 showPermitsBySub, showPublicNeeds, objectionsReport, permitObjectionsReport, treePermitsReport, meetingsReport, overlapReport,
-                shavazKayamReport, specialHousingReport, eduRenewalReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showFilter, showEduForecast, showReportsMenu]);
+                shavazKayamReport, specialHousingReport, eduRenewalReport, developersReport, devMapSel, showAnnotations, showAllocChooser, showExecChooser, showFilter, showEduForecast, showReportsMenu]);
 
             // Focus input when global search opens
             useEffect(() => {
@@ -9051,6 +9053,7 @@
             // Expose to window for use from React-rendered click handlers in the minahak modal
             window.__openProgramaForSubPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForSubPolygon(name); };
             window.__openAllocationsForSubPolygon = (name) => { reportKindRef.current = 'allocations'; openProgramaForSubPolygon(name); };
+            window.__openExecutionForSubPolygon = (name) => { reportKindRef.current = 'execution'; openProgramaForSubPolygon(name); };
 
             // Minahak Hebrew name → geojson layer key (matches dataFiles)
             const MINAHAK_HEB_TO_LAYER = {
@@ -9157,6 +9160,7 @@
             }
             window.__openProgramaForMinahakPolygon = (name) => { reportKindRef.current = 'programa'; openProgramaForMinahakPolygon(name); };
             window.__openAllocationsForMinahakPolygon = (name) => { reportKindRef.current = 'allocations'; openProgramaForMinahakPolygon(name); };
+            window.__openExecutionForMinahakPolygon = (name) => { reportKindRef.current = 'execution'; openProgramaForMinahakPolygon(name); };
 
             // ── Programa report — DOM modal triggered from area-select / radius-select ──
             // Renders the same outputs as the מינהל-level פרוגרמה שכונתית, but for an
@@ -9168,6 +9172,10 @@
                 if (reportKindRef.current === 'allocations') {
                     reportKindRef.current = 'programa';
                     return renderAllocationsModal({ candidatePlans: candidatePlans || [], scopeLabel });
+                }
+                if (reportKindRef.current === 'execution') {
+                    reportKindRef.current = 'programa';
+                    return renderExecutionModal({ candidatePlans: candidatePlans || [], scopeLabel });
                 }
                 candidatePlans = candidatePlans || [];
                 // Demographic source depends on the scope kind:
@@ -10688,6 +10696,292 @@
                     const win = window.open('', '_blank');
                     win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
                     win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#8d6e63;margin:0 0 8px}h4{color:#5c4636;margin:14px 0 6px}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#f0e8e0;color:#5c4636}img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}</style></head><body>');
+                    win.document.write('<h3>' + esc(title) + '</h3>');
+                    if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
+                    win.document.write(div.innerHTML);
+                    win.document.close();
+                    win.print();
+                });
+            }
+
+            // ── מצב ביצוע — משפך יח"ד, report for any scope (radius/area/sub/minahak) ──
+            // The one thing no existing report answers: for a given area, how many of the
+            // approved יח"ד have actually MOVED — are in licensing, hold a permit, are under
+            // construction, are finished. "היתרים לפי תת-שכונה" counts permits, "היתרים מול
+            // תב"ע" compares totals, "מיצוי יח"ד לפי מגרש" compares one plan's plots; none of
+            // them show the funnel. Every permit lands in exactly ONE bucket (getPermitStage,
+            // the same classifier the permits layer uses), so the buckets sum without
+            // double-counting and the remainder is a real "not started" figure.
+            // Shares the 4 programa scope collectors via reportKindRef, like renderAllocationsModal.
+            const EXEC_STAGES = [
+                { id: 'licensing',    label: 'ברישוי',   color: '#7fb3e8' },
+                { id: 'issued',       label: 'היתר',     color: '#4ba1f0' },
+                { id: 'construction', label: 'בביצוע',   color: '#f0824b' },
+                { id: 'built',        label: 'גמר בנייה', color: '#0d9488' },
+            ];
+            const EXEC_RANK = { licensing: 1, issued: 2, construction: 3, built: 4 };
+            // YK dates are DD/MM/YYYY strings — sortable only once reordered.
+            const dmyKey = (d) => { const m = String(d || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + m[2] + m[1] : ''; };
+            function renderExecutionModal({ candidatePlans, scopeLabel }) {
+                const gd = geoDataRef.current || {};
+                const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const propsByTaba = {};
+                if (gd.plans) gd.plans.features.forEach(f => {
+                    const t = String((f.properties || {}).taba || '').trim();
+                    if (t && !propsByTaba[t]) propsByTaba[t] = f.properties;
+                });
+                // permit_tik → מגרשים, from permit_footprints.geojson (the per-permit split)
+                const migByTik = {};
+                if (gd.permit_footprints && gd.permit_footprints.features) {
+                    gd.permit_footprints.features.forEach(ft => {
+                        const pr = ft.properties || {};
+                        const nums = pr.migrash_nums || [];
+                        if (pr.permit_tik && nums.length) migByTik[String(pr.permit_tik)] = nums;
+                    });
+                }
+                // 'pre_licensing' and 'licensing' are one thing to a planner — a file is open.
+                // 'done' (נסגר/בוטל) proves nothing and is dropped from every total.
+                const bucketOfPermit = (p) => {
+                    const st = getPermitStage(p);
+                    if (st === 'done') return '';
+                    return (st === 'pre_licensing') ? 'licensing' : st;
+                };
+                const rows = [];
+                const seen = new Set();
+                (candidatePlans || []).forEach(cp => {
+                    const taba = String(cp.taba || '').trim();
+                    if (!taba || seen.has(taba)) return;
+                    seen.add(taba);
+                    const p = propsByTaba[taba] || cp;
+                    const planU = parsePlanUnits(p.units_total) || parsePlanUnits(p.units_add) || 0;
+                    const permits = getPermitsForTaba(taba);   // already drops תשתיות/מוסתר plans
+                    // Group revisions under their base tik BEFORE counting: all_permits lists
+                    // 2022/0246.00/.01/.02 as three records, but permits_master merges them into
+                    // ONE record carrying the units — summing per revision would triple-count.
+                    // The tik lands in its most advanced revision's bucket.
+                    const byTik = {};
+                    permits.forEach(pm => {
+                        const b = bucketOfPermit(pm);
+                        if (!b) return;
+                        // masterPermit() keys by permit NUMBER (string), not by the record —
+                        // passing the object silently yields null and every count reads 0.
+                        const key = permitTik(pm.file_number) || String(pm.file_number);
+                        const mp = masterPermit(pm.file_number) || {};
+                        const cur = byTik[key];
+                        const rank = EXEC_RANK[b] || 0;
+                        if (!cur) {
+                            byTik[key] = { key, stage: b, rank, units: Number(mp.units_added) || 0,
+                                revs: [pm.file_number], status: pm.status, date: pm.status_date,
+                                desc: pm.request_description || '', mig: migByTik[String(pm.file_number)] || [] };
+                        } else {
+                            cur.revs.push(pm.file_number);
+                            if (!cur.mig.length) cur.mig = migByTik[String(pm.file_number)] || [];
+                            // A higher rung wins; at the SAME rung the newest revision speaks for
+                            // the file (all three 2022/0246 revisions are 'בביצוע', but only .02
+                            // carries the current "שולמה מקדמה 25/05/2026").
+                            if (rank > cur.rank || (rank === cur.rank && dmyKey(pm.status_date) > dmyKey(cur.date))) {
+                                cur.stage = b; cur.rank = rank; cur.status = pm.status; cur.date = pm.status_date;
+                                cur.desc = pm.request_description || cur.desc;
+                            }
+                        }
+                    });
+                    const byStage = {}; EXEC_STAGES.forEach(s => byStage[s.id] = { units: 0, tiks: [] });
+                    Object.values(byTik).forEach(t => {
+                        if (!byStage[t.stage]) return;
+                        byStage[t.stage].units += t.units;
+                        byStage[t.stage].tiks.push(t);
+                    });
+                    const moved = EXEC_STAGES.reduce((s, st) => s + byStage[st.id].units, 0);
+                    if (!planU && !permits.length) return;   // nothing to say about this plan
+                    rows.push({
+                        taba, name: p.plan_summary || p.plan_name_he || p.plan_name || taba,
+                        plan_name: p.plan_name || '', sub: p.sub_neighborhood || '', minahak: p.minahak || '',
+                        status: effectiveStatus(p), stage: (p.stage || '').trim(), stageSrc: p.stage_source || '',
+                        occupied: isOccupied(p), planU, byStage, moved,
+                        // a plan can be permitted for MORE than its own table-5 line (הגדלת זכויות,
+                        // overlapping plans) — clamp so the "not started" column never goes negative
+                        notStarted: Math.max(0, planU - moved),
+                        permitCount: permits.length,
+                    });
+                });
+                rows.sort((a, b) => b.planU - a.planU || b.moved - a.moved);
+
+                const tot = { planU: 0, notStarted: 0, plans: rows.length, permits: 0, occupied: 0 };
+                EXEC_STAGES.forEach(s => tot[s.id] = 0);
+                rows.forEach(r => {
+                    tot.planU += r.planU; tot.notStarted += r.notStarted; tot.permits += r.permitCount;
+                    if (r.occupied) tot.occupied++;
+                    EXEC_STAGES.forEach(s => tot[s.id] += r.byStage[s.id].units);
+                });
+                const totMoved = EXEC_STAGES.reduce((s, st) => s + tot[st.id], 0);
+                const pct = (v) => tot.planU > 0 ? Math.round(100 * v / tot.planU) : 0;
+
+                const kpi = (label, val, color, sub) =>
+                    '<div style="background:#141c26;border-right:3px solid ' + color + ';padding:8px 12px;border-radius:6px;min-width:118px">' +
+                    '<div style="font-size:11px;color:#9aa7b8">' + label + '</div>' +
+                    '<div style="font-size:20px;font-weight:bold;color:' + color + '">' + val + '</div>' +
+                    (sub ? '<div style="font-size:10px;color:#6f7d90">' + sub + '</div>' : '') + '</div>';
+
+                // one stacked bar = the whole funnel at a glance
+                const barSeg = (v, color, label) => {
+                    if (!v || !tot.planU) return '';
+                    const w = (100 * v / tot.planU).toFixed(2);
+                    return '<div title="' + esc(label) + ': ' + v.toLocaleString() + ' יח\"ד" style="width:' + w + '%;background:' + color +
+                        ';display:flex;align-items:center;justify-content:center;font-size:10px;color:#0d1117;font-weight:bold;overflow:hidden;white-space:nowrap">' +
+                        (w > 6 ? v.toLocaleString() : '') + '</div>';
+                };
+                const funnelBar = tot.planU
+                    ? '<div style="display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid #2a3a4a;margin-bottom:6px">' +
+                      EXEC_STAGES.map(s => barSeg(tot[s.id], s.color, s.label)).join('') +
+                      barSeg(tot.notStarted, '#3b4757', 'טרם החל') + '</div>' +
+                      '<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#9aa7b8;margin-bottom:14px">' +
+                      EXEC_STAGES.map(s => '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + s.color + ';margin-left:4px"></span>' + s.label + ' ' + pct(tot[s.id]) + '%</span>').join('') +
+                      '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#3b4757;margin-left:4px"></span>טרם החל ' + pct(tot.notStarted) + '%</span></div>'
+                    : '';
+
+                const stageCell = (r, id) => {
+                    const v = r.byStage[id].units;
+                    const n = r.byStage[id].tiks.length;
+                    if (!n) return '<td style="padding:5px 6px;text-align:center;color:#3f4a58">—</td>';
+                    const c = EXEC_STAGES.find(s => s.id === id).color;
+                    return '<td style="padding:5px 6px;text-align:center;color:' + c + ';font-weight:bold">' +
+                        (v ? v.toLocaleString() : '·') + '<span style="color:#6f7d90;font-weight:400;font-size:10px"> (' + n + ')</span></td>';
+                };
+                const planRows = rows.map((r, i) =>
+                    '<tr class="exec-row" data-i="' + i + '" style="border-bottom:1px solid #1c242e;cursor:pointer">' +
+                    '<td style="padding:5px 6px;direction:ltr;text-align:left;font-weight:bold;color:#4ba1f0">' + esc(r.taba) + '</td>' +
+                    '<td style="padding:5px 6px;color:#dce6f0">' + esc(r.name) + (r.permitCount ? ' <span style="color:#6f7d90;font-size:10px">▾</span>' : '') + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#9aa7b8">' + esc(r.status) + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#9aa7b8;white-space:nowrap">' + esc(r.stage || '—') +
+                        (r.stageSrc ? '<span title="נגזר מ' + (r.stageSrc === 'pikuah' ? 'תיק פיקוח' : 'תיק הרישוי') + '" style="color:' + (r.stageSrc === 'pikuah' ? '#0d9488' : '#4ba1f0') + ';font-size:9px"> ◆</span>' : '') + '</td>' +
+                    '<td style="padding:5px 6px;font-size:11px;color:#8a97a8">' + esc(r.sub) + '</td>' +
+                    '<td style="padding:5px 6px;text-align:center;font-weight:bold;color:#dce6f0">' + (r.planU ? r.planU.toLocaleString() : '—') + '</td>' +
+                    EXEC_STAGES.map(s => stageCell(r, s.id)).join('') +
+                    '<td style="padding:5px 6px;text-align:center;color:#8a97a8">' + (r.planU ? r.notStarted.toLocaleString() : '—') + '</td>' +
+                    '</tr>' +
+                    '<tr class="exec-detail" data-d="' + i + '" style="display:none;background:#0f151c"><td colspan="10" style="padding:0 6px 8px">' +
+                    (r.permitCount
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:4px 0 2px">' +
+                          '<thead><tr style="color:#6f7d90"><th style="padding:3px 6px;text-align:left">תיק</th><th style="padding:3px 6px;text-align:right">מהות</th><th style="padding:3px 6px">סטטוס</th><th style="padding:3px 6px">שלב</th><th style="padding:3px 6px">מגרשים</th><th style="padding:3px 6px">יח"ד</th></tr></thead><tbody>' +
+                          EXEC_STAGES.flatMap(s => r.byStage[s.id].tiks.map(t =>
+                            '<tr><td style="padding:3px 6px;direction:ltr;text-align:left;color:#9aa7b8">' + esc(t.key) + (t.revs.length > 1 ? '<span style="color:#6f7d90"> ×' + t.revs.length + '</span>' : '') + '</td>' +
+                            '<td style="padding:3px 6px;color:#8a97a8">' + esc(String(t.desc).slice(0, 70)) + '</td>' +
+                            '<td style="padding:3px 6px;color:#8a97a8;white-space:nowrap">' + esc(t.status) + (t.date ? ' · ' + esc(t.date) : '') + '</td>' +
+                            '<td style="padding:3px 6px;text-align:center;color:' + s.color + '">' + s.label + '</td>' +
+                            '<td style="padding:3px 6px;text-align:center;color:' + (t.mig.length ? '#dce6f0' : '#3f4a58') + '">' + (t.mig.length ? esc(t.mig.join(', ')) : '—') + '</td>' +
+                            '<td style="padding:3px 6px;text-align:center;color:#dce6f0">' + (t.units || '—') + '</td></tr>')).join('') +
+                          '</tbody></table>'
+                        : '<div style="color:#6f7d90;font-size:11px;padding:4px 6px">אין היתרים לתכנית זו.</div>') +
+                    '</td></tr>').join('');
+
+                const prevE = document.getElementById('exec-result');
+                if (prevE) prevE.remove();
+                const div = document.createElement('div');
+                div.id = 'exec-result';
+                div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;background:rgba(13,20,28,0.98);color:#dce6f0;padding:20px;border-radius:14px;border:2px solid #2f5d8a;direction:rtl;width:min(1080px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.8);font-family:Assistant,sans-serif';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #1e2a36">' +
+                        '<h3 id="exec-title" contenteditable="true" title="לחץ לעריכת הכותרת" style="margin:0;color:#dce6f0;font-size:16px;outline:none;border-bottom:1px dashed #2f5d8a;padding-bottom:2px;cursor:text">🚧 מצב ביצוע — משפך יח"ד — ' + esc(scopeLabel) + '</h3>' +
+                        '<button id="exec-close" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">&times;</button>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">' +
+                        kpi('יח"ד מאושרות', tot.planU.toLocaleString(), '#dce6f0', tot.plans + ' תכניות') +
+                        EXEC_STAGES.map(s => kpi(s.label, tot[s.id].toLocaleString(), s.color, pct(tot[s.id]) + '%')).join('') +
+                        kpi('טרם החל', tot.notStarted.toLocaleString(), '#8a97a8', pct(tot.notStarted) + '%') +
+                        kpi('מאוכלסות', tot.occupied, '#0d9488', 'תכניות (טופס 4)') +
+                    '</div>' +
+                    funnelBar +
+                    '<h4 style="color:#7fb3e8;margin:6px 0 6px;font-size:13px">פירוט לפי תכנית (' + rows.length + ') · לחיצה על שורה פותחת את ההיתרים</h4>' +
+                    (planRows
+                        ? '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#141c26">' +
+                          '<th style="padding:6px;text-align:left;color:#7fb3e8">תב"ע</th>' +
+                          '<th style="padding:6px;text-align:right;color:#7fb3e8">שם התכנית</th>' +
+                          '<th style="padding:6px;color:#7fb3e8">סטטוס</th>' +
+                          '<th style="padding:6px;color:#7fb3e8">שלב</th>' +
+                          '<th style="padding:6px;color:#7fb3e8">תת-שכונה</th>' +
+                          '<th style="padding:6px;color:#7fb3e8">יח"ד תב"ע</th>' +
+                          EXEC_STAGES.map(s => '<th style="padding:6px;color:' + s.color + '">' + s.label + '</th>').join('') +
+                          '<th style="padding:6px;color:#8a97a8">טרם החל</th>' +
+                          '</tr></thead><tbody>' + planRows +
+                          '<tr style="background:#141c26;font-weight:bold"><td colspan="5" style="padding:6px;color:#dce6f0">סה"כ</td>' +
+                          '<td style="padding:6px;text-align:center;color:#dce6f0">' + tot.planU.toLocaleString() + '</td>' +
+                          EXEC_STAGES.map(s => '<td style="padding:6px;text-align:center;color:' + s.color + '">' + tot[s.id].toLocaleString() + '</td>').join('') +
+                          '<td style="padding:6px;text-align:center;color:#8a97a8">' + tot.notStarted.toLocaleString() + '</td></tr>' +
+                          '</tbody></table>'
+                        : '<div style="color:#8a97a8;font-size:13px;padding:10px">לא נמצאו תכניות עם יח"ד או היתרים בתחום הנבחר.</div>') +
+                    '<div style="color:#6f7d90;font-size:10.5px;margin-top:10px;line-height:1.5">' +
+                        'יח"ד תב"ע = טבלה 5 / הגיליון. כל היתר מסווג לשלב אחד בלבד (אותו מסווג של שכבת ההיתרים), ' +
+                        'ולכן העמודות מסתכמות בלי כפל־ספירה. "טרם החל" = יח"ד תב"ע פחות סך ההיתרים, לא פחות מאפס — ' +
+                        'תכנית יכולה להיות מותרת ביותר יח"ד מהשורה שלה (הגדלת זכויות, תכניות חופפות). ' +
+                        'היתרים סגורים/מבוטלים אינם נספרים. מגרשים מתוך permit_footprints (זמין לחלק מהתכניות).' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-start">' +
+                        '<button id="exec-csv" style="background:#2d6a4f;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">📊 ייצוא אקסל</button>' +
+                        '<button id="exec-print" style="background:#3a5a8c;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">🖨️ הדפסה / PDF</button>' +
+                        '<button id="exec-expand" style="background:#1e2a36;border:1px solid #2f5d8a;color:#dce6f0;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">⇕ פתח הכל</button>' +
+                    '</div>';
+                document.body.appendChild(div);
+                document.getElementById('exec-close').addEventListener('click', () => div.remove());
+
+                div.querySelectorAll('tr.exec-row').forEach(tr => tr.addEventListener('click', () => {
+                    const d = div.querySelector('tr.exec-detail[data-d="' + tr.dataset.i + '"]');
+                    if (d) d.style.display = (d.style.display === 'none') ? '' : 'none';
+                }));
+                document.getElementById('exec-expand').addEventListener('click', (ev) => {
+                    const all = div.querySelectorAll('tr.exec-detail');
+                    const open = ev.target.dataset.open === '1';
+                    all.forEach(d => d.style.display = open ? 'none' : '');
+                    ev.target.dataset.open = open ? '0' : '1';
+                    ev.target.textContent = open ? '⇕ פתח הכל' : '⇕ סגור הכל';
+                });
+
+                document.getElementById('exec-csv').addEventListener('click', () => {
+                    const title = document.getElementById('exec-title')?.textContent || 'מצב_ביצוע';
+                    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+                    const lines = [];
+                    lines.push([q('מדד'), q('יח"ד'), q('אחוז')].join(','));
+                    lines.push([q('יח"ד מאושרות'), tot.planU, ''].join(','));
+                    EXEC_STAGES.forEach(s => lines.push([q(s.label), tot[s.id], pct(tot[s.id]) + '%'].join(',')));
+                    lines.push([q('טרם החל'), tot.notStarted, pct(tot.notStarted) + '%'].join(','));
+                    lines.push('');
+                    lines.push([q('תב"ע'), q('שם התכנית'), q('סטטוס'), q('שלב'), q('מקור השלב'), q('תת-שכונה'), q('מינהל'),
+                                q('יח"ד תב"ע'), ...EXEC_STAGES.map(s => q(s.label)), q('טרם החל'), q('מס\' היתרים'), q('מאוכלסת')].join(','));
+                    rows.forEach(r => lines.push([q(r.taba), q(r.name), q(r.status), q(r.stage), q(r.stageSrc), q(r.sub), q(r.minahak),
+                        r.planU, ...EXEC_STAGES.map(s => r.byStage[s.id].units), r.notStarted, r.permitCount, q(r.occupied ? 'כן' : '')].join(',')));
+                    lines.push('');
+                    lines.push([q('תב"ע'), q('תיק'), q('שלב'), q('סטטוס'), q('תאריך'), q('מגרשים'), q('יח"ד'), q('מהות')].join(','));
+                    rows.forEach(r => EXEC_STAGES.forEach(s => r.byStage[s.id].tiks.forEach(t =>
+                        lines.push([q(r.taba), q(t.key), q(s.label), q(t.status), q(t.date), q(t.mig.join(' ')), t.units, q(t.desc)].join(',')))));
+                    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = title.replace(/[^\w֐-׿]+/g, '_') + '.csv';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                });
+
+                document.getElementById('exec-print').addEventListener('click', async () => {
+                    const title = document.getElementById('exec-title')?.textContent || 'מצב ביצוע';
+                    let mapImg = '';
+                    try {
+                        const mapEl = mapInstanceRef.current && mapInstanceRef.current.getContainer();
+                        if (mapEl && window.html2canvas) {
+                            const prevDisplay = div.style.display;
+                            div.style.display = 'none';
+                            await new Promise(r => setTimeout(r, 100));
+                            const canvas = await window.html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
+                            div.style.display = prevDisplay;
+                            mapImg = canvas.toDataURL('image/jpeg', 0.85);
+                        }
+                    } catch (e) { console.warn('[Execution] map capture failed', e); }
+                    // print the per-permit detail too — on paper there is nothing to expand
+                    div.querySelectorAll('tr.exec-detail').forEach(d => d.style.display = '');
+                    const win = window.open('', '_blank');
+                    win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>' + esc(title) + '</title>');
+                    win.document.write('<style>body{font-family:Assistant,Arial,sans-serif;padding:20px;color:#222}h3{color:#1e88e5;margin:0 0 8px}h4{color:#3a5a8c;margin:14px 0 6px}' +
+                        'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px;text-align:right}th{background:#e8f0fa;color:#1e5a8c}' +
+                        'img.map-snapshot{max-width:100%;border:1px solid #aaa;border-radius:4px;display:block;margin:8px 0 14px}button{display:none!important}' +
+                        '@media print{h4{page-break-after:avoid}table{page-break-inside:auto}tr{page-break-inside:avoid}}</style></head><body>');
                     win.document.write('<h3>' + esc(title) + '</h3>');
                     if (mapImg) win.document.write('<img class="map-snapshot" src="' + mapImg + '"/>');
                     win.document.write(div.innerHTML);
@@ -14787,6 +15081,25 @@
                 programaAreaActiveRef.current = true;
                 setProgramaActive('area');
                 setAreaMode(true);
+            }, []);
+            // Same two activations for the execution-funnel report.
+            const startExecArea = useCallback(() => {
+                cancelAllModes('programa-area');
+                setAreaFinished(null);
+                ['area-select-result', 'programa-result', 'alloc-result', 'exec-result'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
+                reportKindRef.current = 'execution';
+                programaAreaActiveRef.current = true;
+                setProgramaActive('area');
+                setAreaMode(true);
+            }, []);
+            const startExecRadius = useCallback(() => {
+                cancelAllModes('programa-radius');
+                ['programa-result', 'radius-select-result', 'alloc-result', 'exec-result'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
+                setRadiusCenter(null);
+                reportKindRef.current = 'execution';
+                programaRadiusActiveRef.current = true;
+                setProgramaActive('radius');
+                setRadiusMode(true);
             }, []);
             const startAllocRadius = useCallback(() => {
                 cancelAllModes('programa-radius');
@@ -27745,6 +28058,7 @@
                             { key:'permits', title:'🔵 היתרים', color:'#1e88e5', bg:'rgba(30,136,229,0.06)', items:[
                                 { icon:'🏘️', title:'היתרים לפי תת-שכונה', desc:'פילוח שלב + יח"ד לכל תת-שכונה', onClick:() => go(() => { setPermitsBySubDrilldown(null); setShowPermitsBySub(true); }) },
                                 { icon:'📑', title:'היתרים מול תב"ע', desc:'פערים בין יח"ד מאושרות ליח"ד בהיתרים', onClick:() => go(() => { setPermitsGapDrilldown(null); setShowPermitsGap(true); }) },
+                                { icon:'🚧', title:'מצב ביצוע — משפך יח"ד', desc:'כמה מהיח"ד המאושרות ברישוי / בהיתר / בביצוע / הושלמו — לפי אזור מצויר, רדיוס, תת-שכונה או מינהל', onClick:() => go(() => setShowExecChooser(true)) },
                                 { icon:'📐', title:'מיצוי יח"ד לפי מגרש', desc:'יח"ד בהיתר מול תב"ע (טבלה 5) פר מגרש/קבוצת-בניין — דורש שכבת היתרים', onClick:() => { openMigrashUnitsReport(); } },
                                 { icon:'⚖️', title:'היתרים פתוחים להתנגדויות', desc:'בקשות להיתר עם הקלות (סעיף 149) + מועד אחרון', onClick:() => go(() => setPermitObjectionsReport(true)) },
                             ]},
@@ -28770,6 +29084,44 @@
                             </div>
                         );
                     })()}
+
+                    {showExecChooser && (
+                        <div className="units-overlay" onClick={() => setShowExecChooser(false)}>
+                            <div className="units-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+                                <div className="units-header">
+                                    <h2>🚧 מצב ביצוע — משפך יח"ד</h2>
+                                    <button className="units-close" onClick={() => setShowExecChooser(false)}>&times;</button>
+                                </div>
+                                <div className="units-body" style={{ padding: '12px 6px' }}>
+                                    <div style={{ color: '#bbb', fontSize: 13, marginBottom: 14 }}>
+                                        כמה מהיח"ד המאושרות באמת זזו — ברישוי, בהיתר, בביצוע, הושלמו. בחר תחום:
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                        <button onClick={() => { setShowExecChooser(false); startExecArea(); }}
+                                            style={{ flex: 1, background: '#2f5d8a', color: '#fff', border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>✏️ ציור אזור על המפה</button>
+                                        <button onClick={() => { setShowExecChooser(false); startExecRadius(); }}
+                                            style={{ flex: 1, background: '#2f5d8a', color: '#fff', border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>⊙ רדיוס סביב נקודה</button>
+                                    </div>
+                                    <div style={{ marginBottom: 12 }}>
+                                        <label style={{ display: 'block', color: '#aaa', fontSize: 12, marginBottom: 4 }}>לפי תת-שכונה:</label>
+                                        <select defaultValue="" onChange={e => { const v = e.target.value; if (!v) return; setShowExecChooser(false); window.__openExecutionForSubPolygon(v); }}
+                                            style={{ width: '100%', padding: '8px', background: '#2a2a4a', border: '1px solid #444', color: '#fff', borderRadius: 6, fontFamily: 'inherit', fontSize: 13 }}>
+                                            <option value="">— בחר תת-שכונה —</option>
+                                            {Object.keys(MINAHAK_SUBS).flatMap(mk => MINAHAK_SUBS[mk]).filter((v, i, a) => a.indexOf(v) === i).map(sn => <option key={sn} value={sn}>{sn}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#aaa', fontSize: 12, marginBottom: 4 }}>לפי מינהל קהילתי:</label>
+                                        <select defaultValue="" onChange={e => { const v = e.target.value; if (!v) return; setShowExecChooser(false); window.__openExecutionForMinahakPolygon(v); }}
+                                            style={{ width: '100%', padding: '8px', background: '#2a2a4a', border: '1px solid #444', color: '#fff', borderRadius: 6, fontFamily: 'inherit', fontSize: 13 }}>
+                                            <option value="">— בחר מינהל —</option>
+                                            {Object.keys(MINAHAK_HEB_TO_LAYER).map(mn => <option key={mn} value={mn}>{mn}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {showAllocChooser && (
                         <div className="units-overlay" onClick={() => setShowAllocChooser(false)}>
