@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v33-1419332';
+const CACHE_VERSION = 'v34-permit-dev';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
