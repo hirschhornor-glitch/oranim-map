@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v28-spv-sweep2';
+const CACHE_VERSION = 'v29-cosycasa';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
