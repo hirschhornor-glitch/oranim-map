@@ -175,13 +175,42 @@ async def _warm_homepage(page) -> None:
         pass
 
 
-async def download_xlsx(page, plan: Dict) -> Optional[Path]:
-    """Navigate to Mavat plan, expand accordions, download XLS. Returns path or None."""
+async def download_xlsx(page, plan: Dict, force: bool = False) -> Optional[Path]:
+    """Navigate to Mavat plan, expand accordions, download XLS. Returns path or None.
+
+    The cached temp_xlsx/<taba>.xlsx is reused by default. Pass force=True when the
+    plan's Mavat version may have moved on (status change / explicit --plans-file
+    refresh) — without it a re-deposited Table 5 is never seen, so the whole
+    "re-check Table 5 on status change" path silently re-parses a stale file
+    (diagnosed 2026-08-30 on 101-1322452). The old file is kept as <taba>.xlsx.prev
+    and restored if the fresh download fails, so a forced refresh can never lose data.
+    """
     agam = plan["agam_id"]
     taba = plan.get("taba") or plan["plan_number"]
     target = TEMP_DIR / f"{taba}.xlsx"
-    if target.exists() and target.stat().st_size > 500:
+    cached = target.exists() and target.stat().st_size > 500
+    if cached and not force:
         return target
+
+    prev = None
+    if cached:
+        prev = target.with_suffix(".xlsx.prev")
+        try:
+            if prev.exists():
+                prev.unlink()
+            target.replace(prev)
+        except Exception:
+            prev = None
+
+    def _restore():
+        """Put the cached file back when a forced refresh fails to fetch a new one."""
+        if prev and prev.exists() and not target.exists():
+            try:
+                prev.replace(target)
+                return target
+            except Exception:
+                pass
+        return None
 
     url = f"{MAVAT_BASE}/SV4/1/{agam}/310"
     try:
@@ -199,7 +228,7 @@ async def download_xlsx(page, plan: Dict) -> Optional[Path]:
         except Exception:
             pass
         if not await _wait_render(page, 28):
-            return None
+            return _restore()
 
     # Expand accordions (nested) and poll for the XLS link (loads lazily).
     has_xls = False
@@ -216,7 +245,7 @@ async def download_xlsx(page, plan: Dict) -> Optional[Path]:
             break
         await asyncio.sleep(2)
     if not has_xls:
-        return None
+        return _restore()
 
     # Locate the download icon and click it
     img_loc = page.locator(
@@ -232,9 +261,9 @@ async def download_xlsx(page, plan: Dict) -> Optional[Path]:
         await dl.save_as(str(target))
         if target.exists() and target.stat().st_size > 500:
             return target
-    except Exception as e:
-        return None
-    return None
+    except Exception:
+        return _restore()
+    return _restore()
 
 
 async def process_plan(page, plan: Dict) -> Dict:

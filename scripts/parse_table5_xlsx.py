@@ -155,6 +155,26 @@ class ParseResult:
     employment_sqm: float = 0.0       # built area of pure-תעסוקה/משרדים rows
     public_building_sqm: float = 0.0  # built area of pure-מבנים ומוסדות ציבור (שב"צ) — יעוד must be public
     hafrash_built_sqm: float = 0.0    # built area of institutional space WITHIN a residential lot (הפרשה מבונה)
+    # Below-grade area DROPPED from the two figures above by _above_grade_area.
+    # The rule assumes below-grade = parking/service, which is right when the plan
+    # folds parking into the building's own row (101-1322452: the נספח בינוי shows
+    # two levels of חניון under the school) but WRONG when the plan books חניון as
+    # its own Table-5 row and still puts program below the entrance — e.g.
+    # 101-1420926 "קומת מסד חלקית לשימושים ציבוריים, מתחת למפלס הכניסה הקובעת",
+    # 101-0650747 "מקלט ציבורי המשמש כחלל דו שימושי", 101-1370881 "השימושים
+    # שמוגדרים מתחת לכניסה הקובעת ... יתוכננו בקומת המרתף העליונה". Reported so the
+    # drop is auditable instead of silent — see audit_public_below_grade.py.
+    public_below_sqm: float = 0.0     # below-grade area dropped from public_building_sqm
+    hafrash_below_sqm: float = 0.0    # below-grade area dropped from hafrash_built_sqm
+    has_parking_row: bool = False     # Table 5 books חניון on its own row (→ the drop is suspect)
+    # Does Table 5 mention a public allocation AT ALL — including one that carries no
+    # above-grade area (below-grade only) or sits on a multi-use row? This is the
+    # question the 2026-08-02 hafrash-corroboration rule actually asks. Testing
+    # public_building_sqm/hafrash_built_sqm instead makes a plan whose whole public
+    # program is below the entrance look like a plan with no public program, and the
+    # rule then CLEARS a correct value (101-1422401: 935 מ"ר below + 700 מ"ר on a
+    # מבנים ומוסדות ציבור ומשרדים row → both filtered out → 1,635 wiped 2026-08-23).
+    has_public_mention: bool = False
     shatzap_sqm: float = 0.0          # land area of שטח ציבורי פתוח (שצ"פ) rows
     resident_shared_sqm: float = 0.0  # shared-tenant ("חדר דיירים") area from notes — PRIVATE, not program
     shared_tenant_notes: str = ""     # per-mention breakdown, e.g. 'פנאי משותף: 150 מ"ר; מרפסות משותפות: 500 מ"ר'
@@ -450,6 +470,10 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
     for r in rows_data:
         if r.is_total:
             continue
+        # A dedicated חניון row means parking is accounted for separately, so a
+        # below-grade figure on a PUBLIC row is program, not parking.
+        if "חניון" in (r.use or "") or "חניה" in (r.use or ""):
+            result.has_parking_row = True
         if r.units > 0:
             result.total_units += int(r.units)
             if r.is_conditional:
@@ -481,6 +505,9 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
         yiyud_cats = _categories(r.yiyud)
         use_cats = _categories(r.use)
         cats = use_cats or yiyud_cats  # generic combined view (back-compat)
+        # Any public program on this row at all, whatever its level or use-mix.
+        if "public" in cats and _is_public_program_use(r.use):
+            result.has_public_mention = True
         # שצ"פ is open land — use plot area, not built area, and count even if mixed.
         if "shatzap" in cats:
             result.shatzap_sqm += r.plot_size_sqm
@@ -506,8 +533,14 @@ def parse_table5_xlsx(path: Path) -> Optional[ParseResult]:
                 if _is_public_program_use(r.use):
                     # Above-grade only — below-grade is parking/service, not program.
                     pub_area = _above_grade_area(r)
+                    # What the line above discards, kept for audit (see the field docs).
+                    dropped = (r.total_below_sqm or 0.0) if (r.total_above_sqm or r.total_below_sqm) else 0.0
+                    yiyud_pure_public = "public" in yiyud_cats and not (yiyud_cats & {"resid", "commerce", "employment"})
+                    if yiyud_pure_public:
+                        result.public_below_sqm += dropped
+                    else:
+                        result.hafrash_below_sqm += dropped
                     if pub_area:
-                        yiyud_pure_public = "public" in yiyud_cats and not (yiyud_cats & {"resid", "commerce", "employment"})
                         if yiyud_pure_public:
                             result.public_building_sqm += pub_area
                         else:
@@ -553,6 +586,10 @@ def result_to_dict(r: ParseResult, include_rows: bool = False) -> dict:
         "employment_sqm": round(r.employment_sqm, 1),
         "public_building_sqm": round(r.public_building_sqm, 1),
         "hafrash_built_sqm": round(r.hafrash_built_sqm, 1),
+        "public_below_sqm": round(r.public_below_sqm, 1),
+        "hafrash_below_sqm": round(r.hafrash_below_sqm, 1),
+        "has_parking_row": r.has_parking_row,
+        "has_public_mention": r.has_public_mention,
         "shatzap_sqm": round(r.shatzap_sqm, 1),
         "resident_shared_sqm": round(r.resident_shared_sqm, 1),
         "shared_tenant_notes": r.shared_tenant_notes,

@@ -134,12 +134,17 @@ OUT_MAP = [
 ]
 
 
-async def scrape_plan(page, plan):
+async def scrape_plan(page, plan, force=False):
     """Download + parse both the Table 5 XLSX (OUT) and the accordion (IN).
-    Returns {'t5': <dict>, 'bal': <dict>}."""
+    Returns {'t5': <dict>, 'bal': <dict>}.
+
+    force=True re-downloads the Table 5 XLS instead of reusing temp_xlsx — pass it
+    whenever the plan's Mavat version may have moved (status change / explicit
+    refresh), or this re-check just re-parses the file cached on first sight.
+    """
     t5 = {}
     try:
-        path = await download_xlsx(page, plan)
+        path = await download_xlsx(page, plan, force=force)
         if path:
             parsed = parse_table5_xlsx(path)
             if parsed and not parsed.error:
@@ -177,6 +182,47 @@ def _fmt(field, v):
 PUBLIC_BUILDING_TERMS = ('גן ילדים', 'כיתות גן', 'מעון', 'בי"ס', 'בית ספר',
                          'בית-ספר', 'מבנה ציבור', 'מבני ציבור', 'ציבור', 'שב"צ',
                          'קהילה', 'מתנ"ס', 'בית כנסת', 'מרפאה', 'רווחה')
+
+# Phrases that only appear when the הוראות themselves impose a built public
+# allocation — deliberately narrow, so a passing mention of "צרכי ציבור" in a
+# boilerplate expropriation clause does not count.
+HORAOT_HAFRASH_TERMS = ('הפרשה מבונה', 'הפרשות מבונות', 'שטח מבונה לצרכי ציבור',
+                        'שטחים מבונים לצרכי ציבור', 'שטח בנוי לצרכי ציבור',
+                        'שטח המבונה לצרכי ציבור')
+
+
+def horaot_claims_hafrash(taba):
+    """True when the plan's local הוראות PDF imposes a built public allocation.
+
+    The user's rule (2026-08-02) is that a הפרשה is valid if Table 5 OR the הוראות
+    show it, but the clear below only ever consulted Table 5 — so a plan whose
+    allocation lives in the הוראות text got wiped (101-1338425, 2026-08-30: הוראות
+    §13 "קביעת הוראות להפרשות מבונות לצורכי ציבור" and 135 מ"ר עיקרי בקומה 6.60
+    לחינוך/קהילה/רווחה, while its Table 5 lists only מגורים ודרכים).
+
+    Best-effort and read-only: no local PDF, no text layer, or any failure returns
+    False, which just restores the previous (Table-5-only) behaviour.
+    """
+    try:
+        import re
+        from pathlib import Path
+        t = re.sub(r'^101-?0*', '', str(taba or '')).lstrip('0')
+        if not t:
+            return False
+        for p in (Path(r"C:\ORANIM\horaot") / f"101-{t}.pdf",
+                  Path(r"C:\ORANIM\temp_pdfs") / f"{t}.pdf"):
+            if not p.exists():
+                continue
+            try:
+                from pypdf import PdfReader
+            except ImportError:
+                from PyPDF2 import PdfReader
+            txt = "\n".join((pg.extract_text() or "") for pg in PdfReader(str(p)).pages)
+            if any(term in txt for term in HORAOT_HAFRASH_TERMS):
+                return True
+    except Exception:
+        pass
+    return False
 
 
 def compute_changes(h, row, scraped, plan_label=""):
@@ -266,9 +312,27 @@ def compute_changes(h, row, scraped, plan_label=""):
         prg_cur = cur("hafrash_prg")
         sqm_cur = _num(cur("hafrash_sqm")) or 0
         claims_public = any(t in prg_cur for t in PUBLIC_BUILDING_TERMS) or sqm_cur > 0
+        # "Does Table 5 show a public allocation" must mean *mentions one at all* —
+        # not "has above-grade area on a single-purpose row". The above-grade filter
+        # (2026-08-09) and the multi-use rule both zero real allocations, and testing
+        # only the filtered totals turned this corroboration check into a data eraser:
+        # 101-1422401 books 935 מ"ר ציבור below the entrance (its 26,125 מ"ר חניון is a
+        # separate row, so that area is program) plus 700 מ"ר on a "מבנים ומוסדות ציבור
+        # ומשרדים" row — both filtered to 0, and a correct 1,635 was cleared 2026-08-23.
+        # Clearing now needs Table 5 to be SILENT about public program.
         t5_shows_public = ((t5.get("hafrash_built_sqm") or 0) > 0
-                           or (t5.get("public_building_sqm") or 0) > 0)
-        if claims_public and not t5_shows_public:
+                           or (t5.get("public_building_sqm") or 0) > 0
+                           or (t5.get("hafrash_below_sqm") or 0) > 0
+                           or (t5.get("public_below_sqm") or 0) > 0
+                           or bool(t5.get("has_public_mention")))
+        plan_id = plan_label or cur("plan_name")
+        if claims_public and not t5_shows_public and horaot_claims_hafrash(plan_id):
+            # The rule is "Table 5 OR the הוראות". Table 5 is silent but the הוראות
+            # impose the allocation, so keep the value and say so instead of clearing.
+            report.append(
+                f"      🚩 הפרשה/מבנה ציבור ('{prg_cur or sqm_cur}') לא מופיע בטבלה 5 "
+                f"אך מעוגן בהוראות — הערך נשמר (לאמת מול ההוראות)")
+        elif claims_public and not t5_shows_public:
             ci_prg = h.get("hafrash_prg")
             ci_sqm = h.get("hafrash_sqm")
             if ci_prg is not None and prg_cur:

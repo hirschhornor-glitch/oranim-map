@@ -1791,17 +1791,26 @@ async def main():
                         break
 
                 # On status change, re-check Table 5 + quantity balance while the
-                # browser is on the plan page — mirrors the land-use check.
+                # browser is on the plan page — mirrors the land-use check. An
+                # explicit --plans-file (the enrichment pipeline naming the plans it
+                # just refreshed) also re-checks, even when the status string is
+                # unchanged: a re-deposited plan can carry a new Table 5 under the
+                # same status.
                 if (result.get('new_status') and not result.get('error')
-                        and result['new_status'] != item['current_status']):
+                        and (result['new_status'] != item['current_status']
+                             or PLANS_FILTER is not None)):
                     try:
                         _pn = item.get('plan_name', '')
                         _taba = str(int(_pn.split('-')[1])) if '-' in _pn else ''
                     except Exception:
                         _taba = ''
                     try:
+                        # force=True: the status moved, so the plan may carry a new
+                        # Table 5. Without it download_xlsx returns the file cached on
+                        # first sight and the re-check is a no-op (101-1322452, 2026-08).
                         result['t5_balance'] = await scrape_t5_balance(
-                            page, {'agam_id': aid, 'plan_number': item.get('plan_name', ''), 'taba': _taba})
+                            page, {'agam_id': aid, 'plan_number': item.get('plan_name', ''), 'taba': _taba},
+                            force=True)
                         log_msg("  ↳ Table 5 + נכנס re-checked")
                     except Exception as te:
                         log_msg(f"  ↳ Table 5 re-check failed: {te}")
