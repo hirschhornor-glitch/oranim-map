@@ -102,6 +102,19 @@ TARGET_STATUSES = {
     "נפתח תיק למתכנן",
 }
 
+# Statuses the weekly sweep deliberately stops polling — the plan is "done".
+# But "done" is not always final: 101-1215656 sat at נדחתה (13/05/2026) and was
+# already back at "הפקדה להתנגדויות/השגות" on 19/08/2026 — we missed an entire
+# objection window because nothing ever looked at it again. 309 plans were in this
+# blind spot on 2026-08-30 (97 נדחתה + 212 נגנזה), so they get their own slower
+# monthly sweep via --include-terminal instead of bloating the weekly run.
+TERMINAL_STATUSES = {
+    "נדחתה",
+    "נגנזה",
+    "נגנזה/נדחתה",
+    "ביטול פרסום",
+}
+
 def log_msg(msg):
     print(msg, flush=True)
     try:
@@ -1592,6 +1605,7 @@ async def main():
 
     ONLY_STATUS = None
     PLANS_FILTER = None  # optional set of plan_name values to restrict to
+    INCLUDE_TERMINAL = "--include-terminal" in sys.argv  # monthly revival sweep
     for arg in sys.argv[1:]:
         if arg.startswith('--only-status='):
             ONLY_STATUS = arg.split('=', 1)[1]
@@ -1616,7 +1630,14 @@ async def main():
                 f"Aborting to prevent row-shifted writes. Run _restore_gs_header.py first.")
         return
 
-    status_filter = {ONLY_STATUS} if ONLY_STATUS else TARGET_STATUSES
+    if ONLY_STATUS:
+        status_filter = {ONLY_STATUS}
+    elif INCLUDE_TERMINAL:
+        status_filter = TARGET_STATUSES | TERMINAL_STATUSES
+        log_msg(f"INCLUDE-TERMINAL: also re-checking {len(TERMINAL_STATUSES)} terminal statuses "
+                f"(נדחתה/נגנזה) — plans that may have come back to life.")
+    else:
+        status_filter = TARGET_STATUSES
 
     rows_to_check = []
     for row_idx, row in enumerate(all_data[1:], start=2):
