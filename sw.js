@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v36-add-company';
+const CACHE_VERSION = 'v37-review-closed';
 
 // Small, fast-changing data files we want fresh on every reload.
 // SWR (Strategy 3) shows yesterday's data until the SECOND refresh —
