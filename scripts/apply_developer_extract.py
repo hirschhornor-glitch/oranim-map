@@ -20,6 +20,7 @@ Usage:
     py apply_developer_extract.py           # apply to GS + geojson, commit+push
 """
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -27,7 +28,7 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-from git_sync import (pull_before_read, commit_and_push_after_write,
+from git_sync import (REPO_DIR, pull_before_read, commit_and_push_after_write,
                       update_json_and_push)
 
 MUNI_CO_JSON = "data/muni_cosubmitter.json"  # relative to the repo (oranim-app)
@@ -140,6 +141,107 @@ def _dedup(seq):
     return out
 
 
+REVIEW_FILE = r'C:\ORANIM\_developer_mismatches_review.json'
+
+
+def _merge_review(new_items):
+    """Keep already-dispositioned rows; only surface genuinely new mismatches.
+
+    A row that carries a 'verdict' has been decided by a human pass. It must
+    survive, and the same plan must not be re-raised — otherwise every run
+    undoes the review.
+    """
+    try:
+        with open(REVIEW_FILE, encoding='utf-8') as f:
+            old = json.load(f)
+    except (OSError, ValueError):
+        old = {}
+    merged = dict(old)
+    resurfaced, added = 0, 0
+    for pn, row in new_items.items():
+        prev = old.get(pn)
+        if prev and prev.get('verdict'):
+            # Already decided. Re-raise ONLY if the הוראות now says something
+            # different from what was reviewed — that is new information.
+            if str(prev.get('horaot') or '') == str(row.get('horaot') or ''):
+                continue
+            row = dict(row)
+            row['superseded_verdict'] = prev.get('verdict')
+            resurfaced += 1
+        elif pn not in old:
+            added += 1
+        merged[pn] = row
+    kept = sum(1 for r in merged.values() if r.get('verdict'))
+    print(f"review file: {added} new, {resurfaced} re-raised (הוראות changed), "
+          f"{kept} previously decided kept")
+    return merged
+
+
+def backfill_developer_from_muni_cosubmitter(sheet, h, geojson, dry):
+    """Fill an EMPTY developer from muni_cosubmitter.json's private `dev`.
+
+    muni_cosubmitter.json records {muni, dev} where `dev` IS the private
+    developer, but nothing ever fed it back into the developer column — rows
+    added by the 1.8.1 scan and the OCR backfill (src='scan'/'ocr') never came
+    through this script's extraction at all. 101-0512301 sat with its answer
+    in the side file for a month because of it.
+
+    Fill-only: an existing developer value is never touched.
+    """
+    path = os.path.join(REPO_DIR, MUNI_CO_JSON.replace('/', os.sep))
+    try:
+        with open(path, encoding='utf-8') as f:
+            rows = json.load(f)
+    except (OSError, ValueError):
+        print("muni-cosubmitter backfill: side file unreadable — skipped")
+        return
+
+    want = {}
+    for pn, row in rows.items():
+        devs = [d for d in (row.get('dev') or []) if str(d).strip()]
+        if devs:
+            want[pn] = ' / '.join(devs)
+    if not want:
+        return
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    batch, filled = [], []
+    for row_num, row in enumerate(sheet.get_all_values()[1:], start=2):
+        pn = row[h['plan_name']].strip() if h['plan_name'] < len(row) else ''
+        if pn not in want:
+            continue
+        cur = row[h['developer']] if h['developer'] < len(row) else ''
+        if str(cur or '').strip() and not is_garbage(cur):
+            continue
+        batch.append({'range': gspread.utils.rowcol_to_a1(row_num, h['developer'] + 1),
+                      'values': [[want[pn]]]})
+        batch.append({'range': gspread.utils.rowcol_to_a1(row_num, h['last_modified'] + 1),
+                      'values': [[now_str]]})
+        filled.append(pn)
+
+    print(f"muni-cosubmitter backfill: {len(filled)} empty developer(s) to fill")
+    for pn in filled:
+        print(f"  {pn} -> {want[pn][:70]}")
+    if dry or not filled:
+        return
+
+    for i in range(0, len(batch), 50):
+        sheet.spreadsheet.values_batch_update(
+            {'valueInputOption': 'RAW', 'data': batch[i:i + 50]})
+    for feat in geojson.get('features', []):
+        props = feat.get('properties') or {}
+        pn = str(props.get('plan_name') or '').strip()
+        if pn in filled and not str(props.get('developer') or '').strip():
+            props['developer'] = want[pn]
+            props['last_modified'] = now_str
+    with open(PLANS_GEOJSON, 'w', encoding='utf-8') as f:
+        json.dump(geojson, f, ensure_ascii=False)
+    commit_and_push_after_write(
+        'data/plans.geojson',
+        f'data: developer backfilled from muni_cosubmitter for {len(filled)} plans')
+    print("muni-cosubmitter backfill written + pushed.")
+
+
 def apply_muni_cosubmitter(results, dry):
     """Fold "העירייה כמגישה שותפה" (result['muni_co'] from section 1.8) into
     data/muni_cosubmitter.json. Upsert-only, keyed by plan_name; never deletes
@@ -240,7 +342,12 @@ def main():
                       f" | arch '{(cur_arch or '')[:20]}' -> '{r.get('architect','')[:30]}'")
 
     print(f"GS rows to update: {gs_updated} ({len(batch)} cells) | review-only mismatches: {len(review)}")
-    with open(r'C:\ORANIM\_developer_mismatches_review.json', 'w', encoding='utf-8') as f:
+    # MERGE, don't overwrite. Items already dispositioned carry a 'verdict'
+    # (gs_correct / applied_company / applied_horaot / fixed) written during a
+    # manual review pass; blowing the file away would resurrect every one of
+    # them as "to review" on the next pipeline run and lose the reasoning.
+    review = _merge_review(review)
+    with open(REVIEW_FILE, 'w', encoding='utf-8') as f:
         json.dump(review, f, ensure_ascii=False, indent=1)
     if not dry and batch:
         for i in range(0, len(batch), 50):
@@ -285,6 +392,12 @@ def main():
     # "העירייה כמגישה שותפה" — full 1.8 info (יזם + אדריכל כבר נכתבו למעלה; כאן
     # המגיש-העירוני) → data/muni_cosubmitter.json. רץ תמיד (גם כשאין שינוי GS).
     apply_muni_cosubmitter(results, dry)
+
+    # …and feed the side file BACK: rows whose private `dev` is known while the
+    # developer column is still empty. Runs after the upsert so rows added in
+    # this very run are included, and covers src='scan'/'ocr' rows that never
+    # pass through this script's extraction at all.
+    backfill_developer_from_muni_cosubmitter(sheet, h, geojson, dry)
 
 
 if __name__ == '__main__':

@@ -363,7 +363,7 @@
 
         // Bump when data files change to invalidate browser/SW caches.
         // SW strips ?v= for cache matching, so this only affects the browser HTTP cache.
-        const APP_VERSION = '2026-08-31-review-closed';
+        const APP_VERSION = '2026-08-31-infra-fixes';
 
         const GEOJSON_FILES = {
             plans: 'data/plans.geojson',
@@ -33750,7 +33750,12 @@ const csv = ['"#","מס\' תיק","כתובת","מהות","מועד אחרון",
                             aliasRev[autoNorm(canon)] = canon;
                             (list || []).forEach(a => { aliasRev[autoNorm(a)] = canon; });
                         });
-                        const GARB_DEV = ['כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד'];
+                        // Values that are placeholders or "not applicable", not names.
+                        // 'אין' and 'להשלים' each rendered as a real developer row
+                        // (47 and 32 יח"ד) until the underlying data was corrected —
+                        // filtering them here stops the next one from doing the same.
+                        const GARB_DEV = ['כתובת', 'זיהוי התכנית', 'סמכות:', 'מס\' יח"ד',
+                                          'אין', 'להשלים', 'ל"ר', 'ל.ר.', 'לא ידוע', 'לא רלוונטי'];
                         const splitDevelopers = (raw) => {
                             let s = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
                             if (!s || GARB_DEV.includes(s) || s.indexOf('.4') === 0 || /^\d+$/.test(s)) return [];
