@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-30T07:26:13",
+ "generated_at": "2026-08-31T05:59:31",
  "count": 1307,
  "bucket_counts": {
   "tava_gadol": 298,
@@ -35240,7 +35240,7 @@
    "lat": 31.765167,
    "lng": 35.207274,
    "on_committee_agenda": false,
-   "open_for_objections": true,
+   "open_for_objections": false,
    "has_field_obs": false,
    "unassigned": false,
    "is_tama38": false,
